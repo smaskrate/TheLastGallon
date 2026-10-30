@@ -2,6 +2,7 @@
 -- Multiplayer behaviour is NOT RUN (engine-capabilities G07).
 require "TLG/Authority/Handlers"
 require "TLG/Authority/MachineHandlers"
+require "TLG/Authority/ConversionHandlers"
 
 local Handlers = TLG.Authority.Handlers
 

@@ -5,6 +5,8 @@ require "TLG/Content/Storage"
 require "TLG/Content/Consumers"
 require "TLG/Content/Production"
 require "TLG/Content/Feedstocks"
+require "TLG/Content/Conversions"
+require "TLG/Integration/ConversionDevices"
 require "TLG/Integration/World"
 require "TLG/Integration/Containers"
 

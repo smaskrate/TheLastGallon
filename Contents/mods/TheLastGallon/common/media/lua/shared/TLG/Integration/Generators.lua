@@ -32,10 +32,23 @@ function G.keyOf(gen)
     return string.format("gen:%d,%d,%d", sq and sq:getX() or -1, sq and sq:getY() or -1, sq and sq:getZ() or -1)
 end
 
-function G.profile(gen)
+function G.baseProfile(gen)
     local side = gen:getModData().tlg
     return (side and side.profile) or G.DEFAULT_PROFILE
 end
+
+-- Effective profile: a Commissioned conversion wins (see ConversionDevices).
+function G.profile(gen)
+    local CD = TLG.Integration.ConversionDevices
+    if CD and gen:getModData()[CD.KEY] then
+        local p = CD.effective(gen:getModData(), CD.describeGenerator(gen, false))
+        if p then return p end
+    end
+    return G.baseProfile(gen)
+end
+
+-- Device identity and conversion projects travel with the generator.
+G.CARRIED_KEYS = { "tlgConv", "tlgDeviceId", "tlgEngineId" }
 
 local function fromSidecar(side, cap)
     local rec = Supply.new({ storage = "generator_tank", cap = cap, t = side.t, cond = side.cond, stab = side.stab,
@@ -82,7 +95,7 @@ local function sidecarOf(rec, profile)
 end
 
 function G.writeSidecar(gen, rec)
-    gen:getModData().tlg = sidecarOf(rec, G.profile(gen))
+    gen:getModData().tlg = sidecarOf(rec, G.baseProfile(gen))
     gen:transmitModData()
 end
 
@@ -145,7 +158,9 @@ local function installPickup()
         if World.isAuthority() then
             pcall(function()
                 local rec = Aging.advance((G.read(self.generator, true)), World.now(), World.env())
-                side = sidecarOf(rec, G.profile(self.generator))
+                side = sidecarOf(rec, G.baseProfile(self.generator))
+                local omd = self.generator:getModData()
+                for _, k in ipairs(G.CARRIED_KEYS) do side[k] = TLG.Tables.deepCopy(omd[k]) end
             end)
         end
         local inv = self.character:getInventory()
@@ -173,7 +188,13 @@ function G.attachFromItem(square, item)
     for i = 0, objs:size() - 1 do
         local o = objs:get(i)
         if instanceof(o, "IsoGenerator") and o:getModData().tlg == nil then
-            o:getModData().tlg = Tables.deepCopy(side)
+            local copy = Tables.deepCopy(side)
+            local omd = o:getModData()
+            for _, k in ipairs(G.CARRIED_KEYS) do
+                omd[k] = copy[k]
+                copy[k] = nil
+            end
+            omd.tlg = copy
             o:transmitModData()
             return true
         end
@@ -194,7 +215,13 @@ local function installPlacement()
         IsoGenerator.new = function(item, cell, square)
             local g = origNew(item, cell, square)
             if g and item and item:getModData().tlg and item:getModData().tlg.kind == "generator" then
-                g:getModData().tlg = Tables.deepCopy(item:getModData().tlg)
+                local copy = Tables.deepCopy(item:getModData().tlg)
+                local omd = g:getModData()
+                for _, k in ipairs(G.CARRIED_KEYS) do
+                    omd[k] = copy[k]
+                    copy[k] = nil
+                end
+                omd.tlg = copy
             end
             return g
         end

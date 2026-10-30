@@ -22,5 +22,15 @@
     "ContextMenu_TLG_PourVehicle": "Pour into this vehicle's tank",
     "ContextMenu_TLG_PourGenerator": "Pour into the generator",
     "ContextMenu_TLG_PourInto": "Pouring fuel",
-    "ContextMenu_TLG_PourStation": "Pour into the station reservoir"
+    "ContextMenu_TLG_PourStation": "Pour into the station reservoir",
+    "ContextMenu_TLG_ConvGenerator": "Workshop: convert this generator",
+    "ContextMenu_TLG_ConvVehicle": "Workshop: convert this vehicle",
+    "ContextMenu_TLG_ConvStatus": "Project status",
+    "ContextMenu_TLG_ConvBegin": "Start: %1",
+    "ContextMenu_TLG_ConvJoin": "Work on it",
+    "ContextMenu_TLG_ConvWork": "Report progress",
+    "ContextMenu_TLG_ConvDeliver": "Hand over parts",
+    "ContextMenu_TLG_ConvLeave": "Stop working",
+    "ContextMenu_TLG_ConvCancel": "Cancel the project",
+    "ContextMenu_TLG_ConvRemove": "Remove the conversion"
 }

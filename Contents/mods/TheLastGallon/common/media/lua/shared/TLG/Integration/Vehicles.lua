@@ -34,11 +34,26 @@ function V.keyOf(vehicle)
     return "veh:" .. tostring(vehicle:getSqlId()) .. ":" .. tostring(vehicle:getScriptName())
 end
 
--- Consumer profile: set by a completed conversion project, else stock.
-function V.profile(vehicle)
+-- Stock profile of this engine (before any conversion).
+function V.baseProfile(vehicle)
     local engine = vehicle:getPartById("Engine")
     local md = engine and engine:getModData().tlg
     return (md and md.profile) or V.DEFAULT_PROFILE
+end
+
+-- Effective profile: a Commissioned conversion for this exact engine wins
+-- (ConversionService.effectiveProfile), otherwise the stock profile.
+function V.profile(vehicle)
+    local CD = TLG.Integration.ConversionDevices
+    if CD then
+        local md = CD.vehicleStore(vehicle)
+        if md and md[CD.KEY] then
+            local device = CD.describeVehicle(vehicle, false)
+            local p = CD.effective(md, device)
+            if p then return p end
+        end
+    end
+    return V.baseProfile(vehicle)
 end
 
 function V.read(vehicle, persist)
