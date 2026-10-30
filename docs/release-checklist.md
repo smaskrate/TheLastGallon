@@ -11,7 +11,7 @@ decision and is **not** authorised by any task in this repository.
 | 1 | Every advertised pathway has a playable tested loop | OPEN | Ethanol chain implemented + domain-tested; in-game loop NOT RUN. Other pathways domain-only or in progress |
 | 2 | Every supported transfer path preserves fuel state | PARTIAL | Item↔item verified RT-DS; vehicle/pump/generator paths SRC-ONLY (`support-matrix.md`) |
 | 3 | Native and mod quantities reconciled | PARTIAL | Reconciliation domain-tested; RT-DS item checks pass; world objects NOT RUN |
-| 4 | Production and energy invariants pass | PARTIAL | Production suite passes; energy module pending merge |
+| 4 | Production and energy invariants pass | PARTIAL | Domain invariants pass (137 cases, incl. energy balance, mass balance per converter); no in-game production/energy run |
 | 5 | Multiplayer and dedicated-server tests pass | BLOCKED | DS loads the mod; two-client tests need a second client |
 | 6 | Save/load, pickup/placement, unloaded simulation pass | PARTIAL | Global ModData persists across DS restarts; catch-up domain-tested; object/item save/load NOT RUN (SP harness ready, blocked by locked desktop) |
 | 7 | Existing and late-world bootstrap scenarios pass | OPEN | Policies domain-tested; campaign runs NOT RUN |
@@ -29,7 +29,7 @@ decision and is **not** authorised by any task in this repository.
   propane cylinders and electrical networks (domains merged and tested).
 * Automation wiring (rules exist in the domain; no adapter yet).
 * "Prepare removal" admin command (`migrations.md`).
-* Vehicle start gate (only stall effect implemented).
+* Wood-gas and electric vehicle conversions (no shipped definitions).
 
 ## Commands for the remaining runtime gates
 
