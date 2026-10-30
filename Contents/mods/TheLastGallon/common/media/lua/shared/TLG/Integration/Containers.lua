@@ -27,6 +27,7 @@ local Tables = TLG.Tables
 
 C.SIDECAR = "tlg"
 C.SCHEMA = 1
+C.FLOAT_TOLERANCE = 1e-4
 
 local SIDECAR_FIELDS = { "id", "rev", "deg", "stab", "mic", "t", "storage", "sealed", "cond", "dirty", "label", "prov", "q" }
 
@@ -81,6 +82,17 @@ function C.read(owner, kind, persist)
     for id, q in pairs(side.q or {}) do rec.q[id] = q end
     for id, d in pairs(side.deg or {}) do rec.deg[id] = d end
     rec.prov = Tables.deepCopy(side.prov or {})
+    -- Native amounts are Java floats (RT-DS drift ~2.5e-7 L per transfer):
+    -- differences within C.FLOAT_TOLERANCE are adopted silently.
+    local maxDiff = 0
+    for id, q in pairs(comp) do maxDiff = math.max(maxDiff, math.abs(q - (rec.q[id] or 0))) end
+    for id, q in pairs(rec.q) do maxDiff = math.max(maxDiff, math.abs(q - (comp[id] or 0))) end
+    if maxDiff <= C.FLOAT_TOLERANCE then
+        rec.q = Tables.copy(comp)
+        Supply.normalize(rec)
+        rec.cap = cap
+        return rec, "ok"
+    end
     local base = { deg = 0, mic = 0 }
     for id, q in pairs(comp) do
         if q > (rec.q[id] or 0) + 1e-6 then base.deg = C.untrackedDeg(); break end
