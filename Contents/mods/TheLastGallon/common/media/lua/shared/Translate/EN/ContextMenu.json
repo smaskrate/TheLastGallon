@@ -18,5 +18,8 @@
     "ContextMenu_TLG_CollectEthanol": "Collect ethanol into a fuel can",
     "ContextMenu_TLG_Pause": "Pause",
     "ContextMenu_TLG_Resume": "Resume",
-    "ContextMenu_TLG_Abort": "Abort batch"
+    "ContextMenu_TLG_Abort": "Abort batch",
+    "ContextMenu_TLG_PourVehicle": "Pour into this vehicle's tank",
+    "ContextMenu_TLG_PourGenerator": "Pour into the generator",
+    "ContextMenu_TLG_PourInto": "Pouring fuel"
 }

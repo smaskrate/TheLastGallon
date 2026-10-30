@@ -18,5 +18,8 @@
     "ContextMenu_TLG_CollectEthanol": "Raccogli l'etanolo in una tanica",
     "ContextMenu_TLG_Pause": "Metti in pausa",
     "ContextMenu_TLG_Resume": "Riprendi",
-    "ContextMenu_TLG_Abort": "Interrompi il lotto"
+    "ContextMenu_TLG_Abort": "Interrompi il lotto",
+    "ContextMenu_TLG_PourVehicle": "Versa nel serbatoio di questo veicolo",
+    "ContextMenu_TLG_PourGenerator": "Versa nel generatore",
+    "ContextMenu_TLG_PourInto": "Versando carburante"
 }

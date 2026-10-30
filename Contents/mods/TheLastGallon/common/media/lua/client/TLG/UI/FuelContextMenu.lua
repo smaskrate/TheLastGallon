@@ -3,6 +3,7 @@
 require "TLG/Client/Net"
 require "TLG/UI/Format"
 require "TLG/Integration/Native"
+require "TLG/Actions/ISTLGPourFuel"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.FuelMenu = TLG.UI.FuelMenu or {}
@@ -83,6 +84,72 @@ function Menu.fill(playerNum, context, items)
     end
     if item:getFluidContainer():isEmpty() then
         sub:addOption(getText("ContextMenu_TLG_Clean"), nil, function() request("treat", { target = ref, op = "clean" }) end)
+    else
+        Menu.addPourOptions(player, sub, item)
+    end
+end
+
+-- Pouring into engines goes through the authoritative transfer so that any
+-- fuel (not only Petrol) and its condition reach the tank, and incompatible
+-- blends need an explicit experimental confirmation.
+local function queuePour(player, item, destination, face, experimental)
+    if luautils and luautils.equipItems then luautils.equipItems(player, item, nil) end
+    ISTimedActionQueue.add(ISTLGPourFuel:new(player, item, destination, face, experimental, function(reply)
+        if reply.ok then return end
+        if reply.reason == "incompatible" and not experimental then
+            local text = getText("IGUI_TLG_Fail_Incompatible") .. " <LINE> <LINE> " .. Fmt.evaluation(reply.evaluation)
+            local w, h = 440, 260
+            local dlg = ISModalDialog:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
+                w, h, text, true, nil, function(_, button)
+                    if button.internal == "YES" then queuePour(player, item, destination, face, true) end
+                end)
+            dlg:initialise()
+            dlg:addToUIManager()
+        else
+            show(Fmt.failure(reply))
+        end
+    end))
+end
+
+local function nearbyVehicleTank(player)
+    local vehicles = getCell():getVehicles()
+    for i = 0, vehicles:size() - 1 do
+        local v = vehicles:get(i)
+        local tank = v:getPartById("GasTank")
+        if tank and v:isInArea(tank:getArea(), player) then return v end
+    end
+    return nil
+end
+
+local function nearbyGenerator(player)
+    local sq = player:getSquare()
+    if sq == nil then return nil end
+    for dx = -2, 2 do
+        for dy = -2, 2 do
+            local s = getCell():getGridSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
+            if s then
+                local objs = s:getObjects()
+                for i = 0, objs:size() - 1 do
+                    if instanceof(objs:get(i), "IsoGenerator") then return objs:get(i) end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+function Menu.addPourOptions(player, sub, item)
+    local v = nearbyVehicleTank(player)
+    if v then
+        sub:addOption(getText("ContextMenu_TLG_PourVehicle"), nil, function()
+            queuePour(player, item, { kind = "vehicle", id = v:getId() }, v, false)
+        end)
+    end
+    local g = nearbyGenerator(player)
+    if g then
+        sub:addOption(getText("ContextMenu_TLG_PourGenerator"), nil, function()
+            queuePour(player, item, TLG.Authority.Resolver.refForObject(g, "generator"), g, false)
+        end)
     end
 end
 
