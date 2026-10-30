@@ -1,0 +1,81 @@
+module TLG
+{
+    /* Ethanol (hydrous/anhydrous is tracked by TLG supply state, not here). */
+    fluid TLG_Ethanol
+    {
+        ColorReference = PowderBlue,
+        DisplayName = Fluid_Name_TLG_Ethanol,
+        Categories
+        {
+            Fuel,
+            Hazardous,
+            Industrial,
+        }
+        Poison
+        {
+            maxEffect = Medium,
+            minAmount = 1.0,
+            diluteRatio = 0.0,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Fuel,
+            }
+        }
+    }
+
+    fluid TLG_Diesel
+    {
+        ColorReference = Khaki,
+        DisplayName = Fluid_Name_TLG_Diesel,
+        Categories
+        {
+            Fuel,
+            Hazardous,
+            Industrial,
+        }
+        Poison
+        {
+            maxEffect = Deadly,
+            minAmount = 1.0,
+            diluteRatio = 0.0,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Fuel,
+            }
+        }
+    }
+
+    fluid TLG_Biodiesel
+    {
+        ColorReference = Khaki,
+        DisplayName = Fluid_Name_TLG_Biodiesel,
+        Categories
+        {
+            Fuel,
+            Hazardous,
+            Industrial,
+        }
+        Poison
+        {
+            maxEffect = Medium,
+            minAmount = 1.0,
+            diluteRatio = 0.0,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Fuel,
+            }
+        }
+    }
+}

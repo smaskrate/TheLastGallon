@@ -1,0 +1,6 @@
+name=The Last Gallon
+id=TheLastGallon
+author=Manuel Alessio
+modversion=0.1.0-dev
+versionMin=42.21
+description=Fuel deterioration, alternative fuels, engine conversions and energy infrastructure. Development build tested only on Project Zomboid 42.21.0 (revision 4a0e9546ec).

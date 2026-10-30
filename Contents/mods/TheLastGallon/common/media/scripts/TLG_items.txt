@@ -1,0 +1,14 @@
+module TLG
+{
+    /* A01 sampling/testing kit. Placeholder icon reuses the vanilla GlassJar
+       icon reference (see docs/asset-audit.csv, A01). Display name comes from
+       Translate/<lang>/ItemName.json ("TLG.FuelSampleKit"). */
+    item FuelSampleKit
+    {
+        DisplayCategory = VehicleMaintenance,
+        ItemType = base:normal,
+        Weight = 0.4,
+        Icon = GlassJar,
+        Tags = base:glass,
+    }
+}

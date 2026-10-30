@@ -1,0 +1,7 @@
+name=The Last Gallon - Dev Harness (never publish)
+id=TheLastGallonHarness
+require=TheLastGallon
+author=Manuel Alessio
+modversion=0.0.0-dev
+versionMin=42.21
+description=Development-only engine experiments for The Last Gallon (docs/engine-capabilities.md). Not part of any release package.

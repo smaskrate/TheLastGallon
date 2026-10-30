@@ -1,0 +1,8 @@
+# Local build output and isolated test environments
+tools/kahlua-runner/build/
+.devcache/
+dist/
+tests/out/
+*.log
+Thumbs.db
+desktop.ini
