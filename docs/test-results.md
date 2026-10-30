@@ -71,3 +71,15 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
   drift 5e-5 L over 200 transfers; water bottle ignored.
 * Shutdown: first `quit` again arrived with a BOM; root cause was .NET's
   preamble on `Process.StandardInput` (controller fixed to absorb it).
+
+## 2026-10-30 — Suite after machines/migrations, package build
+
+* `tools/run-tests.ps1` → `modules=9 cases=67 passed=67 failed=0 assertions=32130 seed=20261030`
+* Compile check (package + harness, BOM guard): `compiled=70 errors=0`
+* `tools/check-translations.ps1` → OK (151 EN keys, IT parity)
+* `tools/package.ps1` → `dist/TheLastGallon-0.1.0-dev.zip` (65 files) with
+  SHA-256 manifest; warning: no preview.png. Not uploaded.
+* Not run: every adapter path that needs a world object (vehicles,
+  generators, pumps, machines on the ground), the TLG pour action, start
+  gates, UI menus, crafting recipes — all require a client session; the
+  desktop stayed locked for the whole session.
