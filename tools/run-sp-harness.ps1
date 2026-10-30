@@ -13,6 +13,12 @@
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 20)
 $ErrorActionPreference = "Stop"
+if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
+    # A locked Windows session cannot present the OpenGL window; the client
+    # stalls after the intro videos (2026-10-30, docs/test-results.md).
+    Write-Host "The Windows session is locked; unlock the desktop and run again."
+    exit 2
+}
 $repo = Split-Path -Parent $PSScriptRoot
 if (-not $GameDir) { $GameDir = $env:PZ_GAME_DIR }
 if (-not $GameDir) { $GameDir = (Resolve-Path (Join-Path $repo "..\..")).Path }

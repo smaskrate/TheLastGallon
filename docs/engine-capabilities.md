@@ -157,10 +157,14 @@ RT-DS results (`TLG_harness_server.txt`):
   `modData.fuel`, and sets object `modData.generatorFullType`.
 * SRC placement: `IsoGenerator.new(item, cell, square)` in
   `ISMoveableSpriteProps.lua:2173-2194` and `MOGenerator.lua:18`.
-* Design consequence: the generator adapter carries the TLG sidecar by
-  wrapping `ISTakeGenerator.complete` (object → item) and `IsoGenerator.new`
-  (item → object). Wrapping a Java class function from Lua is proven for
-  `FluidContainer.Transfer` only; `IsoGenerator.new` NOT RUN.
+* BC `IsoGridSquare.AddWorldInventoryItem` constructs `IsoGenerator(item, …)`
+  itself when a generator item is dropped, bypassing Lua's `IsoGenerator.new`.
+* Implemented (D-013): the adapter carries the TLG sidecar, device identity
+  and conversion project by wrapping `ISTakeGenerator.complete` (object →
+  item), `ISDropWorldItemAction.complete` (item → the new object on that
+  square) and `IsoGenerator.new` (Lua paths). Wrapping a Java class function
+  from Lua is proven for `FluidContainer.Transfer` only; these paths are
+  NOT RUN.
 
 ## G06 Stations — SRC-ONLY
 

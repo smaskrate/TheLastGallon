@@ -70,7 +70,9 @@ local function run(player, args, fn)
     end
     local d, err = openDevice(player, args.device)
     if d == nil then return err end
-    local project = d.md[CD.KEY]
+    -- Never overwrite a project written by a newer build.
+    local project, status = CD.project(d.md)
+    if d.md[CD.KEY] ~= nil and project == nil then return fail(status) end
     local actor = CD.actor(player, project)
     local req = { now = World.now(), expectedRev = args.expectedRevision, leave = args.leave }
     local r = fn(project, actor, d.device, req, d)
@@ -125,7 +127,8 @@ H.commands["conversion.status"] = function(player, args)
     if bad then return bad end
     local d, err = openDevice(player, args.device)
     if d == nil then return err end
-    local project = d.md[CD.KEY]
+    local project, status = CD.project(d.md)
+    if d.md[CD.KEY] ~= nil and project == nil then return fail(status) end
     local options = {}
     for _, row in ipairs(CS.matrix()) do
         if row.chassis == d.device.chassis then options[#options + 1] = row.conversion end

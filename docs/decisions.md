@@ -92,7 +92,10 @@ listed with their replacement.
   `ISTakeFuel`/`ISRefuelFromGasPump` are intercepted for managed pumps.
 * Reason: vanilla paths disagree on units (1 L vs 1.25 L per unit) and
   `ISTakeFuel:complete()` duplicates the final increment (G06, SRC).
-* Status: design; runtime verification NOT RUN.
+* Status: implemented in `TLG/Integration/Stations.lua` (both vanilla paths
+  are settled after the fact: pump set to reservoir − litres delivered, can
+  fluids set to the reservoir blend; fractional remainder kept). Adapter
+  installs cleanly on the dedicated server; dispensing itself NOT RUN.
 
 ## D-011 Electrical priorities only where control exists
 * Decision: dispatch priorities apply to TLG-owned consumers (chargers,
@@ -112,10 +115,16 @@ listed with their replacement.
   and is unit-tested; the network transport is an adapter (G07 NOT RUN).
 
 ## D-013 Generator sidecar carried through pickup/placement
-* Decision: wrap `ISTakeGenerator.complete` (object → item modData) and
-  `IsoGenerator.new` (item → object modData).
-* Evidence: SRC `ISTakeGenerator.lua:41-53`, BC `setInfoFromItem`.
-* Status: NOT RUN (G05).
+* Decision: wrap `ISTakeGenerator.complete` (object → item modData),
+  `ISDropWorldItemAction.complete` (item → object: Java converts a dropped
+  generator item in `IsoGridSquare.AddWorldInventoryItem`, BC, so this is the
+  normal player path) and `IsoGenerator.new` (Lua placement paths). Device
+  identity and conversion projects (`tlgDeviceId`, `tlgEngineId`,
+  `tlgConv`) travel the same way.
+* Evidence: SRC `ISTakeGenerator.lua:41-53`, `ISDropWorldItemAction.lua:81`;
+  BC `setInfoFromItem`, `IsoGridSquare.AddWorldInventoryItem`.
+* Status: implemented; `IsoGenerator.new` wrapping is the same mechanism
+  proven for `FluidContainer.Transfer` (RT-DS). Pickup/drop NOT RUN (G05).
 
 ## D-015 Production machines are placeable items
 * Decision: fermenter, stills and drying column are inventory items placed on

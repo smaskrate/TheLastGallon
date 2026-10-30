@@ -59,3 +59,11 @@ T.case("catch-up: a two-year unloaded interval is bounded work and equals steppe
     for d = 1, 730 do stepped = TLG.Domain.Aging.advance(stepped, d * 24, env) end
     F.assertSupplyClose(whole, stepped, 1e-9, "catch-up")
 end)
+
+T.case("migrations: process and project records have no pre-release format (v0 is invalid)", function()
+    -- Machines and conversion projects were introduced at schema 1; a record
+    -- without a version is not a known format and must be left alone.
+    T.eq(select(2, M.upgrade("process", { state = "Ready" })), "invalid")
+    T.eq(select(2, M.upgrade("project", { state = "InProgress" })), "invalid")
+    T.eq(select(2, M.upgrade("project", { v = 2, state = "InProgress" })), "future")
+end)

@@ -12,6 +12,7 @@
 require "TLG/Domain/Conversions/Project"
 require "TLG/Content/Conversions"
 require "TLG/Integration/World"
+require "TLG/Persistence/Migrations"
 
 TLG.Integration.ConversionDevices = TLG.Integration.ConversionDevices or {}
 local CD = TLG.Integration.ConversionDevices
@@ -61,9 +62,17 @@ function CD.describeGenerator(gen, withProject)
     }, md
 end
 
+-- Stored project after the schema check: nil plus "future_schema" or
+-- "invalid_schema" means the record must be left untouched (docs/migrations.md).
+function CD.project(md)
+    local raw = md and md[CD.KEY]
+    if raw == nil then return nil, "absent" end
+    return TLG.Persistence.Migrations.sidecar("project", raw)
+end
+
 -- Effective profile for a stored project (nil unless Commissioned and valid).
 function CD.effective(md, device)
-    local p = md and md[CD.KEY]
+    local p = CD.project(md)
     if p == nil then return nil end
     local ok, profile = pcall(CS.effectiveProfile, p, device)
     if ok then return profile end
