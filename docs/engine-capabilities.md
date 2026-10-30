@@ -17,7 +17,7 @@ alternative), **NOT RUN**.
 
 | Gate | Question | Status | Evidence / result |
 | --- | --- | --- | --- |
-| G01 Packaging | What structure loads? | **PASS (DS)**; client NOT RUN | `common/` + `42/` layout loads; script item instantiates; translations unresolved on DS (see below) |
+| G01 Packaging | What structure loads? | **PASS (DS)**; client NOT RUN | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations unresolved on DS |
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS) item level**; save/reload NOT RUN | Mod fluids register and blend; transfers proportional; TLG container adapter carries condition through the wrapped `FluidContainer.Transfer` (M2.* checks) |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | SRC-ONLY | Tank is `VehiclePart` content amount (float litres); burn is in Java; mod never subtracts |
 | G04 Generator consumption | Extend fuel/burn? | SRC-ONLY | `IsoGenerator.update()` burns `fuel` using `SandboxOptions.generatorFuelConsumption`; `failToStart()` exists |
@@ -243,3 +243,16 @@ evidence exists yet. Rerun the harness from an unlocked desktop.
    pump unit conversions and the `ISTakeFuel` defect, two identical vehicles.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
+
+## Scripts verified on the dedicated server (boot 4)
+
+Evidence: `docs/evidence/2026-10-30_rt-ds_harness_boot4.txt`. All TLG items
+instantiate (`FuelStabilizer`, `FuelFilter`, `ManualFuelSystems`,
+`YeastStarter`, `FermenterVessel`, `PotStill`, `RefluxStill`,
+`DryingColumn`); `getScriptManager():getCraftRecipe("TLG_Make…")` returns all
+seven recipes with the expected input/output counts and categories; custom
+sandbox options from `media/sandbox-options.txt` appear as
+`SandboxVars.TheLastGallon.*` with their defaults on an existing world; the
+vehicle, generator and station adapters install their wrappers without
+errors on the server. Crafting through the UI, icons/models rendering:
+NOT RUN (client).

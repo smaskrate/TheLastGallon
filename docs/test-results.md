@@ -83,3 +83,10 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
   generators, pumps, machines on the ground), the TLG pour action, start
   gates, UI menus, crafting recipes — all require a client session; the
   desktop stayed locked for the whole session.
+
+## 2026-10-30 — RT-DS harness boot 4 (scripts)
+
+* Evidence: `docs/evidence/2026-10-30_rt-ds_harness_boot4.txt`
+* Result: 32 PASS, 3 FAIL (dedicated-server translation checks, unchanged).
+  New PASS: 8 items, 7 craft recipes, sandbox options; machine process record
+  round-trips through item modData (in memory). Adapter install log clean.

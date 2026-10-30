@@ -3,6 +3,7 @@
 -- Results: <cachedir>/Lua/TLG_harness_server.txt (see docs/engine-capabilities.md).
 require "TLGHarness/Report"
 require "TLGHarness/LuaProbe"
+require "TLG/Integration/Machines"
 
 if not isServer() then return end
 
@@ -240,6 +241,40 @@ local function runAdapter(r)
     end)
 end
 
+-- Scripts added after boot 3: items, craft recipes, sandbox options.
+local function runScripts(r)
+    r:line("## Scripts (items, craft recipes, sandbox options)")
+    for _, id in ipairs({ "TLG.FuelStabilizer", "TLG.FuelFilter", "TLG.ManualFuelSystems", "TLG.YeastStarter",
+        "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+        r:check("SCRIPT.item " .. id, function()
+            local it = instanceItem(id)
+            return it ~= nil, it and it:getFullType() or "nil"
+        end)
+    end
+    for _, name in ipairs({ "TLG_MakeFermenterVessel", "TLG_MakePotStill", "TLG_MakeRefluxStill", "TLG_MakeDryingColumn",
+        "TLG_MakeSampleKit", "TLG_MakeFuelFilter", "TLG_MakeFuelStabilizer" }) do
+        r:check("SCRIPT.craftRecipe " .. name, function()
+            local rec = getScriptManager():getCraftRecipe(name) or getScriptManager():getCraftRecipe("TLG." .. name)
+            return rec ~= nil, rec and string.format("name=%s category=%s inputs=%d outputs=%d", tostring(rec:getName()),
+                tostring(rec:getCategory()), rec:getInputs():size(), rec:getOutputs():size()) or "nil"
+        end)
+    end
+    r:check("SCRIPT.sandbox_options", function()
+        local s = SandboxVars and SandboxVars.TheLastGallon
+        return s ~= nil and s.CampaignSpeed ~= nil, s and string.format("CampaignSpeed=%s ExistingSavePolicy=%s TransitionDays=%s",
+            tostring(s.CampaignSpeed), tostring(s.ExistingSavePolicy), tostring(s.TransitionDays)) or "nil"
+    end)
+    r:observe("SCRIPT.machine_process_roundtrip", function()
+        local it = instanceItem("TLG.PotStill")
+        local M = TLG.Integration.Machines
+        local rec = M.read(it, true)
+        M.write(it, rec)
+        local back = it:getModData().tlgProc
+        return string.format("machine=%s state=%s placed=%s", tostring(back and back.machine), tostring(back and back.state),
+            tostring(M.isPlaced(it)))
+    end)
+end
+
 local function runG08(r)
     r:line("## G08 global ModData across restarts")
     local md = ModData.getOrCreate("TLGHarness")
@@ -261,6 +296,7 @@ local function run()
     runG01(r)
     runG02(r)
     runAdapter(r)
+    runScripts(r)
     runG08(r)
     r:observe("G08.saveGame_call", function() saveGame(); return "called" end)
     r:finish()
