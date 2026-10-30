@@ -162,3 +162,24 @@ T.case("production: machine definitions keep their own kind (registry name store
     T.eq(R.get("machine", "reflux_still").kind, "still")
     T.eq(R.get("machine", "fermenter_barrel").registryKind, "machine")
 end)
+T.case("production: aborting a still batch conserves every litre (outputs + byproducts)", function()
+    local env = F.env()
+    local s = Process.load(still(), "ethanol_distill", { ethanol = 10, water = 100 }).proc
+    s = Process.addFirebox(s, 50).proc
+    s = Process.start(s, 0).proc
+    s = Process.advance(s, 4, env)
+    local a = Process.abort(s)
+    T.ok(a.ok)
+    local total = 0
+    for _, v in pairs(a.returned) do total = total + v end
+    for _, v in pairs(a.byproducts or {}) do total = total + v end
+    T.near(total, 110, 1e-9, "nothing disappears on abort")
+end)
+
+T.case("production: plan rejects NaN/negative amounts, stream recipes and oversized output", function()
+    local f = fermenter()
+    T.eq(Process.plan("ethanol_ferment", { sugar_eq = 0 / 0, water = 50 }, f).reason, "invalid_sugar_eq")
+    T.eq(Process.plan("ethanol_ferment", { sugar_eq = -3, water = 50 }, f).reason, "invalid_sugar_eq")
+    T.eq(Process.plan("ethanol_ferment", { sugar_eq = 1, water = 1 }, f).reason, "not_enough_sugar_eq",
+        "deterministic first failure (sorted inputs)")
+end)

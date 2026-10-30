@@ -28,15 +28,26 @@ end
 -- Distillation: wash -> hydrous ethanol (purity by still and skill) + stillage.
 Process.converters.distill = function(inputs, p, m, eff, skill, frac)
     frac = frac or 1
-    local eth = inputs.ethanol or 0
-    local water = inputs.water or 0
-    local recovered = eth * m.recovery * eff * frac
+    -- Only the processed fraction is distilled; an aborted batch returns the
+    -- untouched remainder of the wash with the distillate (conservation).
+    local eth = (inputs.ethanol or 0) * frac
+    local water = (inputs.water or 0) * frac
+    local sugar = (inputs.sugar_eq or 0) * frac
+    local recovered = eth * m.recovery * eff
     local purity = math.min(p.maxPurity, m.purity + 0.004 * (skill or 0))
     local waterOut = math.min(water, recovered * (1 - purity) / purity)
     local outputs = {}
     if recovered > 0 then outputs.ethanol = recovered end
     if waterOut > 0 then outputs.water = waterOut end
-    local stillage = (eth - recovered) + (water - waterOut) + (inputs.sugar_eq or 0)
+    if frac < 1 then
+        local restEth = (inputs.ethanol or 0) - eth
+        local restWater = (inputs.water or 0) - water
+        local restSugar = (inputs.sugar_eq or 0) - sugar
+        if restEth > 0 then outputs.ethanol = (outputs.ethanol or 0) + restEth end
+        if restWater > 0 then outputs.water = (outputs.water or 0) + restWater end
+        if restSugar > 0 then outputs.sugar_eq = restSugar end
+    end
+    local stillage = (eth - recovered) + (water - waterOut) + sugar
     return { outputs = outputs, byproducts = { stillage = stillage }, props = { deg = { ethanol = 0 } } }
 end
 

@@ -108,21 +108,32 @@ function Process.plan(recipeId, inputs, proc)
     if not Tables.contains(def.machines, m.id) then return fail("wrong_machine") end
     if proc.state ~= "Ready" then return fail("machine_busy") end
     if proc.cond <= 0 then return fail("needs_repair") end
-    for id, b in pairs(def.inputs) do
+    -- Deterministic order so the first reported problem never depends on pairs().
+    for _, id in ipairs(Tables.sortedKeys(inputs)) do
+        if def.inputs[id] == nil then return fail("ineligible_" .. id) end
+        if not Num.isFinite(inputs[id]) or inputs[id] < 0 then return fail("invalid_" .. id) end
+    end
+    for _, id in ipairs(Tables.sortedKeys(def.inputs)) do
+        local b = def.inputs[id]
         local q = inputs[id] or 0
         if b.min and q < b.min - 1e-9 then return fail("not_enough_" .. id) end
         if b.max and q > b.max + 1e-9 then return fail("too_much_" .. id) end
     end
-    for id in pairs(inputs) do
-        if def.inputs[id] == nil then return fail("ineligible_" .. id) end
-    end
     if m.capacity and sumTable(inputs) > m.capacity + 1e-9 then return fail("over_capacity") end
     local expected = Process.converters[def.converter](inputs, def.params or {}, m, 1)
+    -- Finished output must fit the machine's output buffer (validated field).
+    if m.outputCapacity and sumTable(expected.outputs or {}) > m.outputCapacity + 1e-9 then
+        return fail("output_capacity")
+    end
     return { ok = true, inputs = Tables.copy(inputs), expected = expected }
 end
 
 -- Ready -> InputsReserved. Inputs become owned by the machine.
 function Process.load(proc, recipeId, inputs, skill)
+    -- Continuous (stream) recipes are validated with plan() but run by their own
+    -- runtime (e.g. TLG.Domain.Gas.Gasifier), never loaded as a batch.
+    local def = Registry.get("recipe", recipeId)
+    if def and def.stream then return fail("stream_recipe") end
     local p = Process.plan(recipeId, inputs, proc)
     if not p.ok then return p end
     local out = Tables.deepCopy(proc)
@@ -335,7 +346,7 @@ function Process.abort(proc)
         return fail("nothing_to_abort")
     end
     local out = Tables.deepCopy(proc)
-    local partial = {}
+    local partial, partialBy = {}, nil
     if out.state ~= "InputsReserved" then
         local params = out.recipe.params
         local m = Registry.need("machine", out.machine)
@@ -348,13 +359,15 @@ function Process.abort(proc)
         end
         local frac = total > 0 and done / total or 0
         local conv = Process.converters[params.converter]
-        partial = conv(out.inputs, params.params or {}, m, 1, out.skill, frac).outputs
+        local res = conv(out.inputs, params.params or {}, m, 1, out.skill, frac)
+        partial, partialBy = res.outputs, res.byproducts
     else
         partial = out.inputs
     end
     out.inputs, out.recipe, out.state, out.pause, out.manualPause = {}, nil, "Ready", nil, nil
     out.stage, out.stageDone, out.pausedFor = 0, 0, 0
-    return { ok = true, proc = out, returned = partial }
+    -- Both outputs and byproducts are returned so an abort never loses material.
+    return { ok = true, proc = out, returned = partial, byproducts = partialBy }
 end
 
 function Process.repair(proc, amount)
