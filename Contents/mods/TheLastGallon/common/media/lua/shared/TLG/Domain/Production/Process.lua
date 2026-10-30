@@ -36,7 +36,9 @@ Process.STATES = {
 Process.converters = Process.converters or {}
 
 Registry.addValidator("machine", function(def, problem)
-    if type(def.kind) ~= "string" then problem("machine needs kind") end
+    -- Production machines carry a kind (fermenter, still, ...); energy devices
+    -- registered as machines carry energy instead (TLG/Content/Energy.lua).
+    if type(def.kind) ~= "string" and type(def.energy) ~= "string" then problem("machine needs kind or energy role") end
     if def.capacity ~= nil and not (Num.isFinite(def.capacity) and def.capacity > 0) then problem("invalid capacity") end
     if def.outputCapacity ~= nil and not (Num.isFinite(def.outputCapacity) and def.outputCapacity > 0) then
         problem("invalid outputCapacity")
@@ -93,7 +95,7 @@ end
 function Process.snapshot(recipeId)
     local def = Registry.need("recipe", recipeId)
     local snap = Tables.deepCopy(def)
-    snap.kind = nil
+    snap.registryKind = nil
     return { id = def.id, version = def.version, fp = Registry.fingerprint("recipe", def.id), params = snap }
 end
 

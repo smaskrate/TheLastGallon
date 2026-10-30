@@ -156,3 +156,9 @@ T.case("production: manual pause holds progress", function()
     T.ok(f.stageDone > done)
 end)
 
+
+T.case("production: machine definitions keep their own kind (registry name stored separately)", function()
+    T.eq(R.get("machine", "fermenter_barrel").kind, "fermenter")
+    T.eq(R.get("machine", "reflux_still").kind, "still")
+    T.eq(R.get("machine", "fermenter_barrel").registryKind, "machine")
+end)

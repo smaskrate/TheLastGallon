@@ -34,7 +34,9 @@ function Registry.define(kind, def)
     if Registry.entries[kind][def.id] ~= nil then
         error("registry " .. kind .. ": duplicate id " .. def.id)
     end
-    def.kind = kind
+    -- The registry name is kept separately: definitions may carry their own
+    -- `kind` field (machines use it for fermenter/still/dryer).
+    def.registryKind = kind
     Registry.entries[kind][def.id] = def
     return def
 end
