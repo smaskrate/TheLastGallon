@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
   Runs the TLGDev dedicated server with a controllable console (long-running).
 .DESCRIPTION
@@ -48,10 +48,13 @@ $psi.RedirectStandardInput = $true
 $psi.CreateNoWindow = $true
 $proc = [System.Diagnostics.Process]::Start($psi)
 $proc.Id | Set-Content (Join-Path $DevCache "server-controller.pid")
-# The default StandardInput writer emits a UTF-8 BOM before the first command,
-# which the server console rejects ("Unknown command <BOM>quit").
+# .NET writes a UTF-8 preamble (BOM) into the pipe when it creates
+# Process.StandardInput, so the server would read the first command as
+# "<BOM>quit" ("Unknown command"). Absorb the BOM with an empty first line and
+# send everything else through an ASCII writer.
 $stdin = New-Object System.IO.StreamWriter($proc.StandardInput.BaseStream, (New-Object System.Text.ASCIIEncoding))
 $stdin.AutoFlush = $true
+$stdin.WriteLine("")
 Write-Host "controller started server shell pid $($proc.Id)"
 while (-not $proc.HasExited) {
     Start-Sleep -Seconds 2

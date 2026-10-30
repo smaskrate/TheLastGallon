@@ -42,3 +42,32 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 * Result: `modules=1 cases=6 passed=6 failed=0 assertions=7510 seed=20261030`
 * Notes: an empty filter argument is dropped by PowerShell and `*` is
   glob-expanded by the Windows `java` launcher; the runner now uses `all`.
+
+## 2026-10-30 — RT-SP client harness attempt 1 (BLOCKED)
+
+* Command: `tools/run-sp-harness.ps1`
+* Result: client booted, passed terms screen, played intro videos, then no
+  progress for 7 minutes. Windows session was locked (`LogonUI.exe`), so the
+  window could not render. Client stopped by hand; **no client evidence**.
+  All RT-SP checks remain NOT RUN.
+
+## 2026-10-30 — Domain + authority + production suites
+
+* Command: `tools/run-tests.ps1` → `modules=8 cases=61 passed=61 failed=0`.
+* Compile check (package + harness): `compiled=54 errors=0`.
+* Bug found and fixed while writing tests: transition policy applied
+  pre-outbreak age at install time (expected fresh); BOM-prefixed files from
+  PowerShell broke Kahlua compilation.
+
+## 2026-10-30 — RT-DS harness boot 3 (container adapter)
+
+* Command: `tools/dev-server-controller.ps1` + `tools/stop-dev-server.ps1`
+* Evidence: `docs/evidence/2026-10-30_rt-ds_harness_boot3.txt`
+* Result: 16 PASS, 3 FAIL (the same three dedicated-server translation
+  checks). New PASS: world record (policy `transition`, existing world at
+  2.0 h), all mod fluids registered, native composition write, transfer hook
+  carries condition, untracked inflow reconciled, 200 hooked micro-transfers
+  consistent. Observations: `adjustSpecificFluidAmount` sets; native float
+  drift 5e-5 L over 200 transfers; water bottle ignored.
+* Shutdown: first `quit` again arrived with a BOM; root cause was .NET's
+  preamble on `Process.StandardInput` (controller fixed to absorb it).

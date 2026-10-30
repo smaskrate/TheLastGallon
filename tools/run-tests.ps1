@@ -46,6 +46,11 @@ $roots = @(
     "--root", (Join-Path $lua "client"),
     "--root", (Join-Path $repo "tests")
 )
+if ($Entry -like "*compile_check*") {
+    # Also syntax-check the dev harness mod.
+    $h = Join-Path $repo "tests\ingame\TheLastGallonHarness\common\media\lua"
+    $roots += @("--root", (Join-Path $h "shared"), "--root", (Join-Path $h "server"), "--root", (Join-Path $h "client"))
+}
 # PowerShell drops empty-string arguments to native programs and the Windows
 # java launcher glob-expands "*", so "all" is the no-filter placeholder.
 if (-not $Filter) { $Filter = "all" }

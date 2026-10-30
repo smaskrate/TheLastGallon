@@ -78,4 +78,107 @@ module TLG
             }
         }
     }
+
+    /* Contaminants carried inside fuel. Category Fuel so they can share a
+       container with Petrol (vanilla Water cannot blend with Petrol). */
+    fluid TLG_FuelWater
+    {
+        ColorReference = LightSkyBlue,
+        DisplayName = Fluid_Name_TLG_FuelWater,
+        Categories
+        {
+            Fuel,
+            Hazardous,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Fuel,
+            }
+        }
+    }
+
+    fluid TLG_FuelSediment
+    {
+        ColorReference = Khaki,
+        DisplayName = Fluid_Name_TLG_FuelSediment,
+        Categories
+        {
+            Fuel,
+            Hazardous,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Fuel,
+            }
+        }
+    }
+
+    /* Process liquids: Industrial only, never offered to engines. */
+    fluid TLG_Methanol
+    {
+        ColorReference = PowderBlue,
+        DisplayName = Fluid_Name_TLG_Methanol,
+        Categories
+        {
+            Hazardous,
+            Industrial,
+            Poisons,
+        }
+        Poison
+        {
+            maxEffect = Deadly,
+            minAmount = 0.1,
+            diluteRatio = 0.0,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Industrial,
+            }
+        }
+    }
+
+    fluid TLG_Glycerin
+    {
+        ColorReference = Khaki,
+        DisplayName = Fluid_Name_TLG_Glycerin,
+        Categories
+        {
+            Industrial,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Industrial,
+            }
+        }
+    }
+
+    fluid TLG_PlantOil
+    {
+        ColorReference = Yellow,
+        DisplayName = Fluid_Name_TLG_PlantOil,
+        Categories
+        {
+            Industrial,
+        }
+        BlendWhiteList
+        {
+            whitelist = true,
+            categories
+            {
+                Industrial,
+            }
+        }
+    }
 }

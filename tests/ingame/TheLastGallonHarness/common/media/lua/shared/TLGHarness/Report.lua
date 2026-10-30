@@ -1,20 +1,40 @@
 -- Result writer for in-game experiments. Results go to <cachedir>/Lua/<file>
--- through getFileWriter and are also echoed to the console log.
+-- through getFileWriter and are also echoed to the console log. The file is
+-- rewritten after every line so a crash or hang still leaves evidence.
 TLGH = TLGH or {}
 TLGH.Report = {}
 local Report = TLGH.Report
 Report.__index = Report
 
-function Report.new(fileName, title)
+function Report.new(fileName, title, append)
     local o = setmetatable({}, Report)
     o.fileName = fileName
     o.lines = {}
     o.pass = 0
     o.fail = 0
+    if append then
+        local r = getFileReader(fileName, false)
+        if r then
+            local l = r:readLine()
+            while l do
+                o.lines[#o.lines + 1] = l
+                l = r:readLine()
+            end
+            r:close()
+        end
+    end
     o:line("# %s", title)
     o:line("game=%s", tostring(getCore and getCore():getVersion() or "?"))
     o:line("isServer=%s isClient=%s", tostring(isServer()), tostring(isClient()))
     return o
+end
+
+function Report:flush()
+    local w = getFileWriter(self.fileName, true, false)
+    for _, l in ipairs(self.lines) do
+        w:write(l .. "\n")
+    end
+    w:close()
 end
 
 function Report:line(fmt, ...)
@@ -22,6 +42,7 @@ function Report:line(fmt, ...)
     if not ok then msg = tostring(fmt) end
     self.lines[#self.lines + 1] = msg
     print("[TLGH] " .. msg)
+    self:flush()
 end
 
 -- Records a named check. `fn` returns ok, detail; errors count as failures.
@@ -45,14 +66,9 @@ function Report:observe(name, fn)
     return ok and v or nil
 end
 
-function Report:finish()
+function Report:finish(final)
     self:line("SUMMARY pass=%d fail=%d", self.pass, self.fail)
-    self:line("DONE")
-    local w = getFileWriter(self.fileName, true, false)
-    for _, l in ipairs(self.lines) do
-        w:write(l .. "\n")
-    end
-    w:close()
+    if final ~= false then self:line("DONE") end
 end
 
 return Report

@@ -1,5 +1,10 @@
 {
     "Fluid_Name_TLG_Ethanol": "Etanolo",
     "Fluid_Name_TLG_Diesel": "Gasolio",
-    "Fluid_Name_TLG_Biodiesel": "Biodiesel"
+    "Fluid_Name_TLG_Biodiesel": "Biodiesel",
+    "Fluid_Name_TLG_FuelWater": "Acqua (nel carburante)",
+    "Fluid_Name_TLG_FuelSediment": "Sedimenti nel carburante",
+    "Fluid_Name_TLG_Methanol": "Metanolo",
+    "Fluid_Name_TLG_Glycerin": "Glicerina",
+    "Fluid_Name_TLG_PlantOil": "Olio vegetale"
 }

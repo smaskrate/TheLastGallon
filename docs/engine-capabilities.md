@@ -18,7 +18,7 @@ alternative), **NOT RUN**.
 | Gate | Question | Status | Evidence / result |
 | --- | --- | --- | --- |
 | G01 Packaging | What structure loads? | **PASS (DS)**; client NOT RUN | `common/` + `42/` layout loads; script item instantiates; translations unresolved on DS (see below) |
-| G02 Fluids | Type, mixtures, metadata | **PARTIAL (DS)** | Mod fluids register and blend; transfers proportional; `FluidContainer.Transfer` wrappable; save/reload NOT RUN |
+| G02 Fluids | Type, mixtures, metadata | **PASS (DS) item level**; save/reload NOT RUN | Mod fluids register and blend; transfers proportional; TLG container adapter carries condition through the wrapped `FluidContainer.Transfer` (M2.* checks) |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | SRC-ONLY | Tank is `VehiclePart` content amount (float litres); burn is in Java; mod never subtracts |
 | G04 Generator consumption | Extend fuel/burn? | SRC-ONLY | `IsoGenerator.update()` burns `fuel` using `SandboxOptions.generatorFuelConsumption`; `failToStart()` exists |
 | G05 Generator lifecycle | State survives pickup? | SRC-ONLY → requires adapter | Vanilla copies only `fuel` + condition between object and item |
@@ -104,7 +104,24 @@ RT-DS results (`TLG_harness_server.txt`):
   incrementally in `update()` (when not client) and in `complete()`.
 * `Base.PropaneTank` is a drainable with 5000 uses and no FluidContainer
   (`getCurrentUses()` = 5000).
-* NOT RUN: save/load of item fluids, drop/pickup, world-object containers.
+* RT-DS boot 3 (`docs/evidence/2026-10-30_rt-ds_harness_boot3.txt`), TLG
+  container adapter on real native containers:
+  * `fc:adjustSpecificFluidAmount(fluid, x)` **sets** that fluid to `x`
+    (5 → 3), it does not add.
+  * `TLG_FuelWater` and `TLG_FuelSediment` (category Fuel) share a container
+    with Petrol natively; `Native.writeComposition` round-trips
+    gasoline/ethanol/water/sediment exactly.
+  * Through the wrapped `FluidContainer.Transfer`, 4 L from a can with
+    deg 1.2/0.3 and stabilizer 0.5 arrived with the same deg, stabilizer and
+    proportional composition; source revision 5 → 6, destination 0 → 1,
+    provenance recorded.
+  * 200 hooked transfers of 0.01 L: sidecar composition stayed consistent
+    (rev 200, deg unchanged). Native total drifted 10 → 9.99995 L (Java float
+    rounding destroys ~2.5e-7 L per transfer; never creates). Reconciliation
+    tolerance is therefore 1e-4 L.
+  * A water bottle is ignored (`foreign_fluid`).
+* NOT RUN: save/load of item fluids and sidecars, drop/pickup, world-object
+  containers (rain barrels, FuelPump entity).
 
 ## G03 Vehicle fuel — SRC-ONLY
 
@@ -148,7 +165,15 @@ RT-DS results (`TLG_harness_server.txt`):
 ## G06 Stations — SRC-ONLY
 
 * BC `IsoObject.getPipedFuelAmount()/setPipedFuelAmount(int)`: an integer per
-  pump object.
+  pump object, **stored in the object's modData** under
+  `IsoPropertyType.FUEL_AMOUNT` and initialised from sandbox
+  (`FuelStationGasMin/Max/EmptyChance/Infinite`) when absent; the setter calls
+  `transmitModData()`. TLG's station sidecar can therefore live in the same
+  modData table.
+* SRC `media/scripts/entities/entity_fuelpump.txt`: B42.21 also defines an
+  entity `FuelPump` with a FluidContainer (capacity 22000, 5–15 % Petrol).
+  Whether map pumps use this entity, the piped amount, or both is NOT RUN
+  (the SP harness logs both).
 * SRC `ISRefuelFromGasPump.lua:96-102`: comment "Pumps start with 100 units";
   1 unit = `Vehicles.JerryCanLitres / 8` = 10/8 = **1.25 L** (SRC
   `server/Vehicles/Vehicles.lua:18`).
@@ -192,6 +217,24 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 * G14: anything that moves fluid in Java, or Lua code that writes fluid
   containers without `FluidContainer.Transfer`, bypasses the container
   adapter; reconciliation handles the result (D-006).
+
+## Client harness status
+
+`tools/run-sp-harness.ps1` (2026-10-30 21:33) started the client with
+`-debug -nosteam -nosound -cachedir=<devcache>`; it booted, passed the terms
+screen and played the intro videos, then produced no further output for
+7 minutes. The Windows session was **locked** (`LogonUI.exe` running), so the
+OpenGL window could not present frames. The client was stopped; no client
+evidence exists yet. Rerun the harness from an unlocked desktop.
+
+## Tooling pitfalls found
+
+* Kahlua rejects Lua files that start with a UTF-8 BOM (compile error
+  "Index 65022 out of bounds"); `tests/support/compile_check.lua` flags BOMs.
+  Windows PowerShell 5.1 `Set-Content -Encoding utf8` writes a BOM.
+* The Windows `java` launcher glob-expands a `*` argument.
+* .NET writes a UTF-8 BOM into a redirected process stdin; the server
+  console then rejects the first command.
 
 ## Next experiments
 

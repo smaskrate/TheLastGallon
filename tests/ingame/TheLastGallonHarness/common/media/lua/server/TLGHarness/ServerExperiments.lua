@@ -156,6 +156,90 @@ local function runG02(r)
     end)
 end
 
+-- M2-01 container adapter on real native containers (no world needed).
+local function runAdapter(r)
+    r:line("## M2-01 container adapter (TLG.Integration.Containers)")
+    TLG.Boot.install()
+    local World, C, Native = TLG.World, TLG.Integration.Containers, TLG.Integration.Native
+    local eth = Fluid.Get("TLG_Ethanol")
+    r:check("M2.world_record", function()
+        local w = World.ensure()
+        return w.v == 1 and w.seed ~= nil, string.format("policy=%s seed=%s epoch=%s installedAt=%s calendar=%s/%s",
+            tostring(w.policy), tostring(w.seed), tostring(w.epoch), tostring(w.installedAt),
+            tostring(w.calendar and w.calendar.dayOfYear), tostring(w.calendar and w.calendar.hourOfDay))
+    end)
+    r:check("M2.mod_fluids_all_registered", function()
+        local missing = {}
+        for _, n in ipairs({ "TLG_FuelWater", "TLG_FuelSediment", "TLG_Methanol", "TLG_Glycerin", "TLG_PlantOil" }) do
+            if Fluid.Get(n) == nil then missing[#missing + 1] = n end
+        end
+        return #missing == 0, "missing=" .. table.concat(missing, ",")
+    end)
+    r:observe("M2.adjustSpecificFluidAmount_semantics", function()
+        local _, fc = newEmptyCan("Base.PetrolCan")
+        fc:addFluid(Fluid.Petrol, 5.0)
+        fc:adjustSpecificFluidAmount(Fluid.Petrol, 3.0)
+        return string.format("after adjust(3) from 5 -> %.4f (3=set, 8=add)", fc:getSpecificFluidAmount(Fluid.Petrol))
+    end)
+    r:check("M2.native_write_composition", function()
+        local _, fc = newEmptyCan("Base.JerryCan")
+        fc:addFluid(Fluid.Petrol, 4.0)
+        fc:addFluid(eth, 1.0)
+        local ok, why = Native.writeComposition(fc, { gasoline = 2.0, ethanol = 3.0, water = 0.1, sediment = 0.02 })
+        local comp = Native.readComposition(fc)
+        return ok and math.abs((comp.gasoline or 0) - 2) < 1e-4 and math.abs((comp.ethanol or 0) - 3) < 1e-4
+            and math.abs((comp.water or 0) - 0.1) < 1e-4 and math.abs((comp.sediment or 0) - 0.02) < 1e-4,
+            tostring(why) .. " " .. fluidNames(fc)
+    end)
+    r:check("M2.transfer_hook_carries_condition", function()
+        local canA, fcA = newEmptyCan("Base.JerryCan")
+        fcA:addFluid(Fluid.Petrol, 6.0)
+        fcA:addFluid(eth, 2.0)
+        local now = World.now()
+        canA:getModData().tlg = { v = 1, id = "TEST-A", rev = 5, t = now, storage = "jerrycan_steel", sealed = true,
+            cond = 1, dirty = 0, stab = 0.5, mic = 0, deg = { gasoline = 1.2, ethanol = 0.3 },
+            q = { gasoline = 6.0, ethanol = 2.0 }, prov = {} }
+        local canB, fcB = newEmptyCan("Base.PetrolCan")
+        FluidContainer.Transfer(fcA, fcB, 4.0)
+        local sb = canB:getModData().tlg
+        local sa = canA:getModData().tlg
+        return sb ~= nil and sa.rev == 6 and math.abs(sb.deg.gasoline - 1.2) < 1e-6 and math.abs(sb.deg.ethanol - 0.3) < 1e-6
+            and math.abs(sb.stab - 0.5) < 1e-9 and math.abs(sb.q.gasoline - 3) < 1e-4 and math.abs(sb.q.ethanol - 1) < 1e-4,
+            string.format("A.rev=%s B=%s", tostring(sa.rev), sb and string.format("rev=%d deg=%.4f/%.4f q=%.4f/%.4f stab=%.3f prov=%s",
+                sb.rev, sb.deg.gasoline, sb.deg.ethanol, sb.q.gasoline, sb.q.ethanol, sb.stab, tostring(sb.prov[1] and sb.prov[1].from)) or "nil")
+    end)
+    r:check("M2.untracked_inflow_never_fresh", function()
+        local can, fc = newEmptyCan("Base.JerryCan")
+        fc:addFluid(Fluid.Petrol, 5.0)
+        can:getModData().tlg = { v = 1, id = "TEST-U", rev = 0, t = World.now(), storage = "jerrycan_steel", sealed = true,
+            cond = 1, dirty = 0, stab = 0, mic = 0, deg = { gasoline = 0.0 }, q = { gasoline = 5.0 }, prov = {} }
+        fc:addFluid(Fluid.Petrol, 5.0)
+        local rec, status = C.read(can, "item", false)
+        local base = C.untrackedDeg()
+        return status == "reconciled" and math.abs(rec.deg.gasoline - base / 2) < 1e-6,
+            string.format("status=%s deg=%.6f baseline=%.6f", tostring(status), rec.deg.gasoline, base)
+    end)
+    r:check("M2.many_small_hooked_transfers_conserve", function()
+        local canA, fcA = newEmptyCan("Base.JerryCan")
+        fcA:addFluid(Fluid.Petrol, 10.0)
+        canA:getModData().tlg = { v = 1, id = "TEST-S", rev = 0, t = World.now(), storage = "jerrycan_steel", sealed = true,
+            cond = 1, dirty = 0, stab = 0, mic = 0, deg = { gasoline = 2.0 }, q = { gasoline = 10.0 }, prov = {} }
+        local canB, fcB = newEmptyCan("Base.JerryCan")
+        for _ = 1, 200 do FluidContainer.Transfer(fcA, fcB, 0.01) end
+        local sb = canB:getModData().tlg
+        local total = fcA:getAmount() + fcB:getAmount()
+        return math.abs(total - 10) < 1e-3 and sb and math.abs(sb.deg.gasoline - 2.0) < 1e-6 and sb.rev == 200,
+            string.format("total=%.5f B=%.5f deg=%s rev=%s", total, fcB:getAmount(), tostring(sb and sb.deg.gasoline), tostring(sb and sb.rev))
+    end)
+    r:observe("M2.foreign_fluid_not_tracked", function()
+        local bottle = instanceItem("Base.WaterBottle")
+        local fc = bottle and bottle:getFluidContainer()
+        if not fc then return "no bottle item" end
+        local rec, why = C.read(bottle, "item", false)
+        return tostring(rec) .. " / " .. tostring(why)
+    end)
+end
+
 local function runG08(r)
     r:line("## G08 global ModData across restarts")
     local md = ModData.getOrCreate("TLGHarness")
@@ -176,6 +260,7 @@ local function run()
     TLGH.runLuaProbe(r)
     runG01(r)
     runG02(r)
+    runAdapter(r)
     runG08(r)
     r:observe("G08.saveGame_call", function() saveGame(); return "called" end)
     r:finish()
