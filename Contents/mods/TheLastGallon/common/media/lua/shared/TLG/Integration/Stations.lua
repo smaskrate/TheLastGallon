@@ -47,9 +47,11 @@ end
 -- Reservoir record; initialises original station fuel on first contact.
 function S.read(obj, persist)
     local units = obj:getPipedFuelAmount()
-    local side = obj:getModData().tlg
+    local raw = obj:getModData().tlg
+    local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", raw)
+    if raw ~= nil and side == nil then return nil, schemaStatus end
     local litres = units * S.LITRES_PER_UNIT + ((side and side.frac) or 0)
-    if side == nil or side.v ~= C.SCHEMA then
+    if side == nil then
         local key = S.keyOf(obj)
         local q = { gasoline = litres }
         if contaminationEnabled() then

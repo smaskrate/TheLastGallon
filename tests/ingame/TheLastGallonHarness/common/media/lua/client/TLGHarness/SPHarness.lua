@@ -581,6 +581,14 @@ end })
 ------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
+-- Diagnostics so a stall before the scenario can be located from the log.
+print("[TLGH] SPHarness loaded, request=" .. tostring(REQUEST) .. " debug=" .. tostring(getDebug()))
+Events.OnMainMenuEnter.Add(function()
+    print("[TLGH] OnMainMenuEnter request=" .. tostring(REQUEST) .. " debug=" .. tostring(getDebug()) ..
+        " scenarioA=" .. tostring(debugScenarios ~= nil and debugScenarios.TLGHarnessA ~= nil) ..
+        " forceLaunch=" .. tostring(getDebugOptions():getBoolean("DebugScenario.ForceLaunch")))
+end)
+
 if REQUEST == "sp-a" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}

@@ -1,6 +1,7 @@
 -- Server transport: client requests -> authoritative handlers -> reply.
 -- Multiplayer behaviour is NOT RUN (engine-capabilities G07).
 require "TLG/Authority/Handlers"
+require "TLG/Authority/MachineHandlers"
 
 local Handlers = TLG.Authority.Handlers
 

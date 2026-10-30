@@ -44,7 +44,7 @@ foreach ($f in $luaFiles) {
 foreach ($m in [regex]::Matches((Get-Content (Join-Path $media "scripts\TLG_fluids.txt") -Raw), 'DisplayName\s*=\s*([A-Za-z0-9_]+)')) {
     [void]$referenced.Add($m.Groups[1].Value)
 }
-foreach ($m in [regex]::Matches((Get-Content (Join-Path $media "scripts\TLG_items.txt") -Raw), '(?m)^\s*item\s+([A-Za-z0-9_]+)\s*\r?$')) {
+foreach ($m in [regex]::Matches(((Get-ChildItem (Join-Path $media "scripts") -Filter "TLG_*.txt" | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"), '(?m)^\s*item\s+([A-Za-z0-9_]+)\s*\r?$')) {
     [void]$referenced.Add("TLG." + $m.Groups[1].Value)
 }
 $sandbox = Get-Content (Join-Path $media "sandbox-options.txt") -Raw
@@ -65,6 +65,9 @@ foreach ($id in "gasoline","ethanol","diesel","biodiesel","water","sediment","pl
 }
 foreach ($op in "stabilize","filter","separate","seal","unseal","clean") { [void]$referenced.Add("IGUI_TLG_TreatDone_$op") }
 foreach ($m in "visual","kit","lab") { [void]$referenced.Add("IGUI_TLG_Method_$m") }
+foreach ($s in "Ready","InputsReserved","Processing","Paused","OutputReady","Faulted","Maintenance","Decommissioned") { [void]$referenced.Add("IGUI_TLG_MachineState_$s") }
+foreach ($s in "no_heat","too_cold","too_hot","paused_by_player","not_placed","output_full","batch_spoiled") { [void]$referenced.Add("IGUI_TLG_Pause_$s") }
+foreach ($s in "prepare","ferment","heat_up","distill","dry") { [void]$referenced.Add("IGUI_TLG_Stage_$s") }
 
 foreach ($k in $referenced) {
     if (-not $en.ContainsKey($k)) { $problems += "EN missing referenced key $k" }

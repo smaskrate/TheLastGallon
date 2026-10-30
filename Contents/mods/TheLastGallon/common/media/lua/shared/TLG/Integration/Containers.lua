@@ -17,6 +17,7 @@ require "TLG/Integration/Native"
 require "TLG/Integration/World"
 require "TLG/Authority/Transactions"
 require "TLG/Content/Containers"
+require "TLG/Persistence/Migrations"
 
 TLG.Integration.Containers = TLG.Integration.Containers or {}
 local C = TLG.Integration.Containers
@@ -58,10 +59,12 @@ function C.read(owner, kind, persist)
     local comp, foreign = Native.readComposition(fc)
     if foreign > 1e-6 then return nil, "foreign_fluid" end
     local md = owner:getModData()
-    local side = md[C.SIDECAR]
+    -- Newer (unknown) schemas stay untouched and read-only (docs/migrations.md).
+    local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", md[C.SIDECAR])
+    if md[C.SIDECAR] ~= nil and side == nil then return nil, schemaStatus end
     local storage = storageFor(owner, kind)
     local cap = fc:getCapacity()
-    if side == nil or side.v ~= C.SCHEMA then
+    if side == nil then
         local rec
         if Tables.isEmpty(comp) then
             rec = Supply.new({ storage = storage, cap = cap, t = World.now() })

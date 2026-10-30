@@ -8,5 +8,15 @@
     "ContextMenu_TLG_DrainWater": "Let settle and drain water",
     "ContextMenu_TLG_Seal": "Seal",
     "ContextMenu_TLG_Unseal": "Open",
-    "ContextMenu_TLG_Clean": "Clean empty container"
+    "ContextMenu_TLG_Clean": "Clean empty container",
+    "ContextMenu_TLG_Machine": "Machine (The Last Gallon)",
+    "ContextMenu_TLG_MachineStatus": "Status",
+    "ContextMenu_TLG_PlaceFirst": "Place it on the ground to operate it",
+    "ContextMenu_TLG_LoadFerment": "Load mash and start fermenting",
+    "ContextMenu_TLG_LoadWash": "Load wash from a nearby fermenter",
+    "ContextMenu_TLG_AddFirewood": "Feed the firebox",
+    "ContextMenu_TLG_CollectEthanol": "Collect ethanol into a fuel can",
+    "ContextMenu_TLG_Pause": "Pause",
+    "ContextMenu_TLG_Resume": "Resume",
+    "ContextMenu_TLG_Abort": "Abort batch"
 }

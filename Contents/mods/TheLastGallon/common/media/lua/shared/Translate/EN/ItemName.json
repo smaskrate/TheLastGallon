@@ -2,5 +2,10 @@
     "TLG.FuelSampleKit": "Fuel Sampling Kit",
     "TLG.FuelStabilizer": "Fuel Stabilizer",
     "TLG.FuelFilter": "Fuel Filter Cartridge",
-    "TLG.ManualFuelSystems": "Field Manual: Fuel Systems"
+    "TLG.ManualFuelSystems": "Field Manual: Fuel Systems",
+    "TLG.YeastStarter": "Yeast Starter Culture",
+    "TLG.DryingColumn": "Ethanol Drying Column",
+    "TLG.FermenterVessel": "Fermentation Vessel",
+    "TLG.PotStill": "Pot Still",
+    "TLG.RefluxStill": "Reflux Column Still"
 }

@@ -1,0 +1,98 @@
+-- Context menu for TLG machine items (fermenter, stills, drying column).
+-- All actions are authority requests; results are shown as text.
+require "TLG/Client/Net"
+require "TLG/Integration/Machines"
+require "TLG/UI/Format"
+
+TLG.UI = TLG.UI or {}
+TLG.UI.MachineMenu = TLG.UI.MachineMenu or {}
+local Menu = TLG.UI.MachineMenu
+local Machines, Fmt = TLG.Integration.Machines, TLG.UI.Format
+
+local function show(text)
+    local w, h = 420, 240
+    local modal = ISModalRichText:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
+        w, h, text, false, nil, nil, 0)
+    modal:initialise()
+    modal:addToUIManager()
+end
+
+function Menu.describe(reply)
+    local lines = { getText("IGUI_TLG_MachineState_" .. tostring(reply.state)) }
+    if reply.pause then lines[#lines + 1] = getText("IGUI_TLG_Pause_" .. tostring(reply.pause)) end
+    if reply.stage then lines[#lines + 1] = getText("IGUI_TLG_Stage", getText("IGUI_TLG_Stage_" .. reply.stage)) end
+    if reply.firebox and reply.firebox > 0 then
+        lines[#lines + 1] = getText("IGUI_TLG_Firebox", string.format("%.1f", reply.firebox))
+    end
+    if reply.outputs then
+        for _, id in ipairs(TLG.Tables.sortedKeys(reply.outputs)) do
+            lines[#lines + 1] = Fmt.componentName(id) .. ": " .. string.format("%.2f", reply.outputs[id])
+        end
+    end
+    return table.concat(lines, " <LINE> ")
+end
+
+local function onReply(reply)
+    if not reply.ok then
+        show(getText("IGUI_TLG_MachineFail_" .. tostring(reply.reason)) ~= ("IGUI_TLG_MachineFail_" .. tostring(reply.reason))
+            and getText("IGUI_TLG_MachineFail_" .. tostring(reply.reason)) or Fmt.failure(reply))
+        return
+    end
+    show(Menu.describe(reply))
+end
+
+local function req(command, args) TLG.Net.request(command, args, onReply) end
+
+local function firstItem(entry)
+    if instanceof(entry, "InventoryItem") then return entry end
+    return entry.items and entry.items[1]
+end
+
+local function fuelCanWithRoom(player)
+    local list = player:getInventory():getAllEvalRecurse(function(it)
+        local fc = it:getFluidContainer()
+        return fc ~= nil and fc:getFreeCapacity() > 0.1 and TLG.ContainerProfiles.items[it:getFullType()] ~= nil
+    end)
+    if list:size() > 0 then return list:get(0) end
+    return nil
+end
+
+function Menu.fill(playerNum, context, items)
+    local player = getSpecificPlayer(playerNum)
+    local item
+    for _, entry in ipairs(items) do
+        local it = firstItem(entry)
+        if Machines.machineFor(it) then item = it; break end
+    end
+    if item == nil or player == nil then return end
+    local kind = TLG.Registry.need("machine", Machines.machineFor(item)).kind
+    local root = context:addOption(getText("ContextMenu_TLG_Machine"), nil, nil)
+    local sub = ISContextMenu:getNew(context)
+    context:addSubMenu(root, sub)
+    local ref = Machines.refFor(item)
+    sub:addOption(getText("ContextMenu_TLG_MachineStatus"), nil, function() req("machine.status", { target = ref }) end)
+    if not Machines.isPlaced(item) then
+        local o = sub:addOption(getText("ContextMenu_TLG_PlaceFirst"), nil, nil)
+        o.notAvailable = true
+        return
+    end
+    if kind == "fermenter" then
+        sub:addOption(getText("ContextMenu_TLG_LoadFerment"), nil,
+            function() req("machine.loadFerment", { target = ref }) end)
+    elseif kind == "still" then
+        sub:addOption(getText("ContextMenu_TLG_LoadWash"), nil, function() req("machine.loadWash", { target = ref }) end)
+        sub:addOption(getText("ContextMenu_TLG_AddFirewood"), nil, function() req("machine.addFuel", { target = ref }) end)
+        local can = fuelCanWithRoom(player)
+        local o = sub:addOption(getText("ContextMenu_TLG_CollectEthanol"), nil, function()
+            req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
+        end)
+        if can == nil then o.notAvailable = true end
+    end
+    sub:addOption(getText("ContextMenu_TLG_Pause"), nil, function() req("machine.pause", { target = ref }) end)
+    sub:addOption(getText("ContextMenu_TLG_Resume"), nil, function() req("machine.resume", { target = ref }) end)
+    sub:addOption(getText("ContextMenu_TLG_Abort"), nil, function() req("machine.abort", { target = ref }) end)
+end
+
+Events.OnFillInventoryObjectContextMenu.Add(Menu.fill)
+
+return Menu

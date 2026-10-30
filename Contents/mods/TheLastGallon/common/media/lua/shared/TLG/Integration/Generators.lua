@@ -50,8 +50,10 @@ end
 function G.read(gen, persist)
     local fuel = gen:getFuel()
     local cap = math.max(gen:getMaxFuel(), fuel)
-    local side = gen:getModData().tlg
-    if side == nil or side.v ~= C.SCHEMA then
+    local raw = gen:getModData().tlg
+    local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", raw)
+    if raw ~= nil and side == nil then return nil, schemaStatus end
+    if side == nil then
         local rec
         if fuel <= 1e-6 then
             rec = Supply.new({ storage = "generator_tank", cap = cap, t = World.now() })

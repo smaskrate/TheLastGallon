@@ -40,4 +40,14 @@ module TLG
         Weight = 0.5,
         Icon = MagazineBlacksmith1,
     }
+
+    /* Saved from a finished ferment (>= 5 kg sugar): replaces bought yeast,
+       so the ethanol chain has a renewable starter culture. */
+    item YeastStarter
+    {
+        DisplayCategory = Food,
+        ItemType = base:normal,
+        Weight = 0.3,
+        Icon = GlassJar,
+    }
 }

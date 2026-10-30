@@ -1,0 +1,172 @@
+module TLG
+{
+    /* Machines are placeable items: process state lives in item modData
+       ("tlgProc", TLG.Integration.Machines) and travels with pickup.
+       Models/icons are verified vanilla references used as placeholders
+       (docs/asset-audit.csv A03/A04). Recipes use item ids verified in the
+       42.21 item scripts; craftRecipe grammar mirrors vanilla
+       generated/entities/*/craftRecipes. Runtime crafting NOT RUN. */
+
+    item FermenterVessel
+    {
+        DisplayCategory = Tools,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = WaterTank,
+        StaticModel = WaterTank,
+        WorldStaticModel = WaterTank,
+    }
+
+    item PotStill
+    {
+        DisplayCategory = Tools,
+        ItemType = base:normal,
+        Weight = 5.0,
+        Icon = Pot,
+        StaticModel = CookingPot,
+        WorldStaticModel = CookingPotGround,
+    }
+
+    item RefluxStill
+    {
+        DisplayCategory = Tools,
+        ItemType = base:normal,
+        Weight = 11.0,
+        Icon = Pot,
+        StaticModel = CookingPot,
+        WorldStaticModel = CookingPotGround,
+    }
+
+    item DryingColumn
+    {
+        DisplayCategory = Tools,
+        ItemType = base:normal,
+        Weight = 3.0,
+        Icon = AirFilters,
+        WorldStaticModel = SmallGasTank,
+    }
+
+    craftRecipe TLG_MakeFermenterVessel
+    {
+        time = 300,
+        timedAction = Making,
+        category = Carpentry,
+        SkillRequired = Woodwork:2,
+        inputs
+        {
+            item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeLight],
+            item 6 [Base.Plank],
+            item 12 [Base.Nails],
+            item 1 [Base.EmptyJar],
+        }
+        outputs
+        {
+            item 1 TLG.FermenterVessel,
+        }
+    }
+
+    craftRecipe TLG_MakePotStill
+    {
+        time = 200,
+        timedAction = Making,
+        category = Metalworking,
+        inputs
+        {
+            item 1 [Base.Pot],
+            item 2 [Base.MetalPipe],
+            item 1 [Base.RubberHose],
+            item 1 [Base.Screwdriver] mode:keep,
+        }
+        outputs
+        {
+            item 1 TLG.PotStill,
+        }
+    }
+
+    craftRecipe TLG_MakeRefluxStill
+    {
+        time = 400,
+        timedAction = Making,
+        category = Welding,
+        inputs
+        {
+            item 1 [TLG.PotStill],
+            item 2 [Base.SheetMetal],
+            item 3 [Base.MetalPipe],
+            item 2 [Base.BlowTorch] flags[DontRecordInput],
+            item 1 tags[base:weldingmask] mode:keep,
+        }
+        outputs
+        {
+            item 1 TLG.RefluxStill,
+        }
+    }
+
+    craftRecipe TLG_MakeDryingColumn
+    {
+        time = 150,
+        timedAction = Making,
+        category = Metalworking,
+        inputs
+        {
+            item 1 [Base.MetalPipe],
+            item 1 [Base.EmptyJar],
+            item 1 [Base.Screwdriver] mode:keep,
+        }
+        outputs
+        {
+            item 1 TLG.DryingColumn,
+        }
+    }
+
+    craftRecipe TLG_MakeSampleKit
+    {
+        time = 80,
+        timedAction = Making,
+        category = Tools,
+        inputs
+        {
+            item 3 [Base.EmptyJar],
+            item 1 [Base.RubberHose],
+        }
+        outputs
+        {
+            item 1 TLG.FuelSampleKit,
+        }
+    }
+
+    /* Renewable route: cloth and charcoal. */
+    craftRecipe TLG_MakeFuelFilter
+    {
+        time = 80,
+        timedAction = Making,
+        category = Tools,
+        inputs
+        {
+            item 2 [Base.RippedSheets],
+            item 1 [Base.Charcoal],
+            item 1 [Base.EmptyJar],
+        }
+        outputs
+        {
+            item 1 TLG.FuelFilter,
+        }
+    }
+
+    /* Renewable route (game abstraction: wood-tar antioxidant). */
+    craftRecipe TLG_MakeFuelStabilizer
+    {
+        time = 120,
+        timedAction = Making,
+        category = Cooking,
+        inputs
+        {
+            item 2 [Base.Charcoal],
+            item 1 [Base.EmptyJar],
+        }
+        outputs
+        {
+            item 1 TLG.FuelStabilizer,
+        }
+    }
+}

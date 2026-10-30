@@ -8,5 +8,15 @@
     "ContextMenu_TLG_DrainWater": "Lascia decantare e scarica l'acqua",
     "ContextMenu_TLG_Seal": "Sigilla",
     "ContextMenu_TLG_Unseal": "Apri",
-    "ContextMenu_TLG_Clean": "Pulisci il contenitore vuoto"
+    "ContextMenu_TLG_Clean": "Pulisci il contenitore vuoto",
+    "ContextMenu_TLG_Machine": "Macchinario (The Last Gallon)",
+    "ContextMenu_TLG_MachineStatus": "Stato",
+    "ContextMenu_TLG_PlaceFirst": "Appoggialo a terra per usarlo",
+    "ContextMenu_TLG_LoadFerment": "Carica il mosto e avvia la fermentazione",
+    "ContextMenu_TLG_LoadWash": "Carica il fermentato da un fermentatore vicino",
+    "ContextMenu_TLG_AddFirewood": "Alimenta il focolare",
+    "ContextMenu_TLG_CollectEthanol": "Raccogli l'etanolo in una tanica",
+    "ContextMenu_TLG_Pause": "Metti in pausa",
+    "ContextMenu_TLG_Resume": "Riprendi",
+    "ContextMenu_TLG_Abort": "Interrompi il lotto"
 }

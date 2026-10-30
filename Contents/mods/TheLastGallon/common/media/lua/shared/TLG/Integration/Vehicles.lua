@@ -46,8 +46,10 @@ function V.read(vehicle, persist)
     if part == nil then return nil, "no_tank" end
     local amount = part:getContainerContentAmount()
     local cap = part:getContainerCapacity()
-    local side = part:getModData()[V.SIDECAR]
-    if side == nil or side.v ~= C.SCHEMA then
+    local raw = part:getModData()[V.SIDECAR]
+    local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", raw)
+    if raw ~= nil and side == nil then return nil, schemaStatus end
+    if side == nil then
         local rec
         if amount <= 1e-6 then
             rec = Supply.new({ storage = "vehicle_tank", cap = cap, t = World.now() })

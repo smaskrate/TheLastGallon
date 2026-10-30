@@ -2,5 +2,10 @@
     "TLG.FuelSampleKit": "Kit di campionamento carburante",
     "TLG.FuelStabilizer": "Stabilizzante per carburante",
     "TLG.FuelFilter": "Cartuccia filtro carburante",
-    "TLG.ManualFuelSystems": "Manuale da campo: sistemi di carburante"
+    "TLG.ManualFuelSystems": "Manuale da campo: sistemi di carburante",
+    "TLG.YeastStarter": "Coltura di lievito madre",
+    "TLG.DryingColumn": "Colonna di disidratazione dell'etanolo",
+    "TLG.FermenterVessel": "Recipiente di fermentazione",
+    "TLG.PotStill": "Alambicco discontinuo",
+    "TLG.RefluxStill": "Alambicco a colonna di riflusso"
 }

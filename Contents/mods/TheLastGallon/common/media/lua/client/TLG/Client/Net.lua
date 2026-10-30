@@ -1,6 +1,7 @@
 -- Client request API. Every mutation is a request; the reply carries the
 -- authoritative result. Single-player calls the same handlers locally.
 require "TLG/Authority/Handlers"
+require "TLG/Authority/MachineHandlers"
 
 TLG.Net = TLG.Net or { pending = {}, counter = 0 }
 local Net = TLG.Net
