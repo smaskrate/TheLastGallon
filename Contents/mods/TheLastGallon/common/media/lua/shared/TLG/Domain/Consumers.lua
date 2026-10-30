@@ -65,6 +65,17 @@ function Consumers.evaluate(profileId, s, state)
     end
     local ref = Registry.need("fuel", p.referenceFuel)
     r.energyFactor = energy / ref.energyMJ
+    -- Fuel-specific power derate (e.g. wood gas), weighted by fuel share.
+    if p.derate then
+        local loss = 0
+        for _, id in ipairs(Tables.sortedKeys(p.derate)) do
+            loss = loss + ((s.q[id] or 0) / fuel) * (1 - p.derate[id])
+        end
+        if loss > 0 then
+            r.powerFactor = r.powerFactor * (1 - loss)
+            reason("derated")
+        end
+    end
 
     -- Chemical condition.
     local deg = Supply.blendDeg(s)

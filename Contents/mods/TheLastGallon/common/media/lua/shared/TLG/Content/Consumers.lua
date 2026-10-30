@@ -50,6 +50,8 @@ R.define("consumer", {
     accepts = { propane = { soft = 1.0, max = 1.0 }, biogas = { soft = 1.0, max = 1.0 },
         woodgas = { soft = 1.0, max = 1.0 } },
     foreignMax = 0.0, maxDeg = 10, waterMax = 0, sedimentMax = 0,
+    -- Producer gas is lean: engines lose power on it (game value).
+    derate = { woodgas = 0.6 },
 })
 
 return true

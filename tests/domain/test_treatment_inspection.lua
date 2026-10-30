@@ -123,3 +123,11 @@ T.case("world init: late discovery is aged, deterministic and policy dependent",
     T.near(tEnd, full, 1e-9, "converged after the transition period")
     T.eq(W.newId(world, "S"), "S99-1"); T.eq(W.newId(world, "S"), "S99-2")
 end)
+
+T.case("consumers: wood gas derates a gas generator, propane does not", function()
+    local C = TLG.Domain.Consumers
+    local wood = F.supply({ storage = "gas_holder", cap = 20, q = { woodgas = 5 } })
+    local propane = F.supply({ storage = "propane_cylinder", q = { propane = 2 } })
+    T.near(C.evaluate("generator_gas", wood).powerFactor, 0.6, 1e-12)
+    T.near(C.evaluate("generator_gas", propane).powerFactor, 1.0, 1e-12)
+end)
