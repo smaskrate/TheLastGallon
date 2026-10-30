@@ -90,3 +90,13 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 * Result: 32 PASS, 3 FAIL (dedicated-server translation checks, unchanged).
   New PASS: 8 items, 7 craft recipes, sandbox options; machine process record
   round-trips through item modData (in memory). Adapter install log clean.
+
+## 2026-10-30 — Merged worker modules
+
+* Conversions (21 cases), energy (23), pathways (17) merged after review.
+  Fixes made during integration: registry overwrote machine `kind`; abort
+  lost unprocessed wash; plan accepted NaN; output capacity unenforced;
+  wood gas ran at full power.
+* `tools/run-tests.ps1` → `modules=13 cases=137 passed=137 failed=0`
+  (also seeds 1 and 4242).
+* Compile check `compiled=90 errors=0`; translations OK (210 EN keys).

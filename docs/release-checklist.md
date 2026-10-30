@@ -25,10 +25,9 @@ decision and is **not** authorised by any task in this repository.
 
 ## Open implementation items
 
-* TLG pour action for non-petrol fuels into vehicles/generators (vanilla menus
-  require `Petrol`), with the experimental-pour confirmation UI.
-* Wire conversion projects, energy networks, biodiesel/wood gas/biogas/
-  propane modules into adapters and UI once merged.
+* Adapters, placeable machines and UI for biodiesel, wood gas, biogas,
+  propane cylinders and electrical networks (domains merged and tested).
+* Automation wiring (rules exist in the domain; no adapter yet).
 * "Prepare removal" admin command (`migrations.md`).
 * Vehicle start gate (only stall effect implemented).
 

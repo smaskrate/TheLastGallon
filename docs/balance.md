@@ -107,8 +107,54 @@ still → 10.12 L ethanol at 94 % (0.65 L water) using 1 h + 111 L ÷ 12 L/h
 = 10.25 h of 6 kW heat = 61.5 kWh (≈ 27 kg firewood at 55 %). The reflux
 still's 50 kg firebox covers one full batch.
 
-## Pending balance work
+## Electricity (`TLG/Content/Energy.lua`, `TLG/Domain/Energy/*`)
 
-Biodiesel, wood gas, biogas, propane and electricity numbers arrive with
-their modules; campaign playthrough results (fresh, six-month, one-year,
-inherited installation) are NOT RUN.
+| Device | Capacity / rating | Charge / discharge | Efficiency | Notes |
+| --- | --- | --- | --- | --- |
+| Base.CarBattery1 | 0.40 kWh usable | 0.16 / 0.60 kW | 0.85 × 0.92 (round trip 0.78) | self-discharge 7e-5/h, reconnect at 10 % |
+| Base.CarBattery2 | 0.65 kWh | 0.26 / 1.00 kW | same | heavy duty |
+| Base.CarBattery3 | 0.50 kWh | 0.20 / 0.80 kW | same | sport |
+| battery_bank (A12) | 3.9 kWh | 1.2 / 2.5 kW | 0.88 × 0.94 (0.83) | 4e-5/h |
+| solar_panel / solar_array | 0.25 / 1.5 kW | — | derate 0.8 | ≈5.6 kWh/kW/day July, 3.4 December (clear) |
+| wind_turbine_small | 1.0 kW | — | cut-in 3, rated 11, cut-out 25 m/s | |
+| hydro_wheel | 0.75 kW | — | 0.65 kW at the default site | authored sites only |
+| generator_flex_5kw | 5 kW | — | 22 % | 2.56 L/h at rated load, idle 0.77 L/h |
+| generator_diesel_6kw | 6 kW | — | 28 % | 2.14 L/h |
+| generator_gas_chp | 4 kW | — | 24 %, heat recovery 0.5 | 0.65 Nm³/h propane, 2.8 Nm³/h biogas |
+
+Auto-start: start ≤ 25 % state of charge, stop ≥ 90 % after ≥ 1 h. Wood gas
+derates a gas generator to 60 % power.
+
+## Biodiesel (`TLG/Content/Biodiesel.lua`)
+
+Oil press 0.30 kg oil/kg seed (+0.003/skill, max 0.33). Wood retort per kg
+firewood: methanol 0.04 kg, charcoal 0.28, tar 0.07, liquor water 0.32,
+off-gas 0.29 (loss). Lye 0.15 kg per kg ash. Reactor: 0.15 L methanol and
+0.0125 kg lye per L oil, conversion 98.5 % (+0.1 %/skill), per L oil 0.985 L
+biodiesel + 0.099 L glycerin. Wash removes 92 % soap, 97 % methanol. 40 kg
+oilseed → 12.85 L "good" biodiesel.
+
+## Wood gas (`TLG/Content/WoodGas.lua`, `TLG/Domain/Gas.lua`)
+
+Gas per kg: firewood 2.2 Nm³, dry chips 2.4, charcoal 4.2. Stationary
+gasifier 120 kg hopper, 8 kg/h, 0.5 h warm-up, 2 Nm³ buffer, filter 400 kg;
+vehicle module 60 kg, 15 kg/h, 0.3 h warm-up, 180 kg installed, 35 % cargo
+loss, power factor 0.65. Loads above 30 % moisture are refused.
+
+## Biogas (`TLG/Content/Biogas.lua`)
+
+Manure 0.05 Nm³/kg, food waste 0.15 Nm³/kg (souring above 50 % share).
+48 h inoculation, 360 h digestion unheated / 300 h heated (0.4 kW). Stalls
+below 10 °C, slow 10–20 °C and 40–50 °C. Yield cap 5.5 Nm³ per digester-day
+(documented anti-loop limit).
+
+## Propane (`TLG/Content/Propane.lua`)
+
+Vanilla `Base.PropaneTank` 5000 uses = 4.48 Nm³ = 9 kg = 417 MJ; propane does
+not age. Bulk tank profile 380 Nm³.
+
+## Not yet balanced
+
+Campaign playthroughs (fresh, six-month, one-year, inherited installation)
+and multi-pathway comparisons are NOT RUN; all values above are first
+estimates from the domain models.

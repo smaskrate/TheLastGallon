@@ -66,3 +66,24 @@ connection, replication and concurrency: NOT RUN.
 None tested. Mods that move fuel in Java, or write fluid containers directly
 from Lua without `FluidContainer.Transfer`, bypass condition propagation;
 their changes are reconciled conservatively.
+
+## Conversions (`ConversionService.matrix()`)
+
+| Device | Conversion | From → to | Evidence |
+| --- | --- | --- | --- |
+| Base.Generator, _Old, _Yellow, _Blue | flex_generator | generator_si_stock → generator_si_flex | domain-tested; runtime NOT RUN |
+| Base.Generator, _Old, _Yellow, _Blue | gas_generator | generator_si_stock → generator_gas | domain-tested; runtime NOT RUN |
+| Base.CarNormal | flex_car_normal | engine_si_stock → engine_si_flex | domain-tested; runtime NOT RUN |
+| Base.SmallCar | flex_small_car | same | domain-tested; runtime NOT RUN |
+| Base.PickUpTruck | flex_pickup_truck | same | domain-tested; runtime NOT RUN |
+| Base.StepVan | flex_step_van | same | domain-tested; runtime NOT RUN |
+
+Chassis/item ids were verified in the 42.21 scripts (file:line in
+`TLG/Content/Conversions.lua`). No electric or wood-gas vehicle conversion is
+shipped yet (domain data exists for the vehicle gasifier module only).
+
+## Pathway machines
+
+Biodiesel, wood gas, biogas, propane and electricity are implemented as
+domain modules with tests only; no game-facing adapters, placeable items or
+UI exist for them yet. They are not advertised as playable.
