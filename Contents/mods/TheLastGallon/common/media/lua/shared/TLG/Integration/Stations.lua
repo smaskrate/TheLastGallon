@@ -26,8 +26,15 @@ local Tables = TLG.Tables
 
 S.LITRES_PER_UNIT = 1.0
 
+-- A pump is an object with piped fuel, or one TLG already manages (restored
+-- stations keep working after the original reserve is exhausted). Exhausted
+-- pumps TLG never touched are recognised by the vanilla "fuelAmount" modData
+-- entry (BC IsoObject.getPipedFuelAmount stores it there; key name NOT RUN).
 function S.isPump(obj)
-    return obj ~= nil and obj:getPipedFuelAmount() > 0
+    if obj == nil then return false end
+    if obj:getPipedFuelAmount() > 0 then return true end
+    local md = obj:hasModData() and obj:getModData() or nil
+    return md ~= nil and (md.tlg ~= nil or type(md.fuelAmount) == "number")
 end
 
 function S.keyOf(obj)

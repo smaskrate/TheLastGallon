@@ -21,5 +21,6 @@
     "ContextMenu_TLG_Abort": "Interrompi il lotto",
     "ContextMenu_TLG_PourVehicle": "Versa nel serbatoio di questo veicolo",
     "ContextMenu_TLG_PourGenerator": "Versa nel generatore",
-    "ContextMenu_TLG_PourInto": "Versando carburante"
+    "ContextMenu_TLG_PourInto": "Versando carburante",
+    "ContextMenu_TLG_PourStation": "Versa nella cisterna della stazione"
 }

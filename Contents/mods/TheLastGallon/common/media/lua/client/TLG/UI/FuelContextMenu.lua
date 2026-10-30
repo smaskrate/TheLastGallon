@@ -138,7 +138,33 @@ local function nearbyGenerator(player)
     return nil
 end
 
+local function nearbyPump(player)
+    local sq = player:getSquare()
+    if sq == nil then return nil end
+    for dx = -2, 2 do
+        for dy = -2, 2 do
+            local s = getCell():getGridSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
+            if s then
+                local objs = s:getObjects()
+                for i = 0, objs:size() - 1 do
+                    if TLG.Integration.Stations.isPump(objs:get(i)) then return objs:get(i) end
+                end
+            end
+        end
+    end
+    return nil
+end
+
 function Menu.addPourOptions(player, sub, item)
+    local pump = nearbyPump(player)
+    if pump then
+        -- Restored station: the reservoir becomes player-run storage.
+        sub:addOption(getText("ContextMenu_TLG_PourStation"), nil, function()
+            request("transfer", { source = { kind = "item", id = item:getID() },
+                destination = TLG.Authority.Resolver.refForObject(pump, "pump"),
+                amount = item:getFluidContainer():getAmount() })
+        end)
+    end
     local v = nearbyVehicleTank(player)
     if v then
         sub:addOption(getText("ContextMenu_TLG_PourVehicle"), nil, function()
