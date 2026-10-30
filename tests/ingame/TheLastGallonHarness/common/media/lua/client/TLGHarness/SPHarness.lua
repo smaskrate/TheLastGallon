@@ -30,6 +30,20 @@ local function giveCan(fullType, fills)
     return item, fc
 end
 
+-- TLG sidecar summary (end-to-end proof: station -> can -> vehicle -> can -> generator).
+local function sidecar(md)
+    local s = md and md.tlg
+    if s == nil then return "no-sidecar" end
+    local q, d = {}, {}
+    for _, k in ipairs(TLG.Tables.sortedKeys(s.q or {})) do q[#q + 1] = string.format("%s=%.4f", k, s.q[k]) end
+    for _, k in ipairs(TLG.Tables.sortedKeys(s.deg or {})) do d[#d + 1] = string.format("%s=%.4f", k, s.deg[k]) end
+    return string.format("id=%s rev=%s q[%s] deg[%s] t=%.2f", tostring(s.id), tostring(s.rev), table.concat(q, ","),
+        table.concat(d, ","), s.t or -1)
+end
+local function chain(label, md)
+    R:line("CHAIN %s :: %s", label, sidecar(md))
+end
+
 local function speedUp()
     pcall(function() UIManager.getSpeedControls():SetCurrentGameSpeed(4) end)
 end
@@ -153,6 +167,8 @@ end, function(ctx)
         ctx.pumpBefore, ctx.pump.obj:getPipedFuelAmount(), dPump, ctx.canBefore, ctx.fc:getAmount(), dCan,
         TLGH.fluidSummary(ctx.fc))
     R:line("OBS  G06.pump_to_can litres_per_unit=%.4f created=%.4f", dPump > 0 and dCan / dPump or -1, dCan - dPump)
+    chain("1 pump after pump->can", ctx.pump.obj:getModData())
+    chain("1 can after pump->can", ctx.can:getModData())
 end))
 
 add({ name = "vehicle_spawn", timeout = 600, fn = function(ctx, ticks)
@@ -194,6 +210,7 @@ end, function(ctx)
     R:line("OBS  G06.pump_to_vehicle inArea=%s pumpUnits %d->%d (-%d) tankL %.4f->%.4f (+%.4f) litres_per_unit=%.4f",
         tostring(ctx.inArea), ctx.pumpBefore, ctx.pump.obj:getPipedFuelAmount(), dPump, ctx.tankBefore,
         ctx.part:getContainerContentAmount(), dTank, dPump > 0 and dTank / dPump or -1)
+    chain("2 tank after pump->vehicle", ctx.part:getModData())
 end))
 
 add(actionStep("g03_can_to_vehicle", function(ctx)
@@ -214,6 +231,7 @@ add(actionStep("g03_can_to_vehicle", function(ctx)
 end, function(ctx)
     R:line("OBS  G03.can_to_vehicle tankL %.4f->%.4f can %s -> %s", ctx.tankBefore, ctx.part:getContainerContentAmount(),
         ctx.canBefore, TLGH.fluidSummary(ctx.fc))
+    chain("3 tank after can->vehicle", ctx.part:getModData())
 end))
 
 add(actionStep("g03_vehicle_to_can", function(ctx)
@@ -227,6 +245,8 @@ add(actionStep("g03_vehicle_to_can", function(ctx)
 end, function(ctx)
     R:line("OBS  G03.vehicle_to_can tankL %.4f->%.4f can %s", ctx.tankBefore, ctx.part:getContainerContentAmount(),
         TLGH.fluidSummary(ctx.fc))
+    chain("4 can after siphon", ctx.fc:getOwner():getModData())
+    chain("4 tank after siphon", ctx.part:getModData())
 end))
 
 add({ name = "g03_vehicle_idle", timeout = 20000, fn = function(ctx, ticks)
@@ -327,6 +347,7 @@ add(actionStep("g04_can_to_generator", function(ctx)
 end, function(ctx)
     R:line("OBS  G04.can_to_generator gen %.4f->%.4f can %.4f->%.4f", ctx.genBefore, H.gen:getFuel(), ctx.canBefore,
         ctx.fc:getAmount())
+    chain("5 generator after can->generator", H.gen:getModData())
 end))
 
 add({ name = "g04_generator_burn", timeout = 20000, fn = function(ctx, ticks)
