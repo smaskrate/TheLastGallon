@@ -1,0 +1,12 @@
+{
+    "ContextMenu_TLG_Fuel": "Fuel (The Last Gallon)",
+    "ContextMenu_TLG_ShowKnown": "What I know about it",
+    "ContextMenu_TLG_Look": "Look and smell",
+    "ContextMenu_TLG_SampleKit": "Take a sample (kit)",
+    "ContextMenu_TLG_Stabilize": "Add stabilizer",
+    "ContextMenu_TLG_Filter": "Filter",
+    "ContextMenu_TLG_DrainWater": "Let settle and drain water",
+    "ContextMenu_TLG_Seal": "Seal",
+    "ContextMenu_TLG_Unseal": "Open",
+    "ContextMenu_TLG_Clean": "Clean empty container"
+}

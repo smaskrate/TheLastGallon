@@ -1,0 +1,55 @@
+VERSION = 1,
+
+option TheLastGallon.CampaignSpeed
+{
+    type = enum,
+    numValues = 4,
+    default = 1,
+    page = TheLastGallon,
+    translation = TLG_CampaignSpeed,
+    valueTranslation = TLG_CampaignSpeed,
+}
+
+option TheLastGallon.ExistingSavePolicy
+{
+    type = enum,
+    numValues = 3,
+    default = 1,
+    page = TheLastGallon,
+    translation = TLG_ExistingSavePolicy,
+    valueTranslation = TLG_ExistingSavePolicy,
+}
+
+option TheLastGallon.TransitionDays
+{
+    type = integer,
+    min = 1,
+    max = 180,
+    default = 30,
+    page = TheLastGallon,
+    translation = TLG_TransitionDays,
+}
+
+option TheLastGallon.ProtectIncompatiblePours
+{
+    type = boolean,
+    default = true,
+    page = TheLastGallon,
+    translation = TLG_ProtectIncompatiblePours,
+}
+
+option TheLastGallon.VehicleStalls
+{
+    type = boolean,
+    default = true,
+    page = TheLastGallon,
+    translation = TLG_VehicleStalls,
+}
+
+option TheLastGallon.StationContamination
+{
+    type = boolean,
+    default = true,
+    page = TheLastGallon,
+    translation = TLG_StationContamination,
+}

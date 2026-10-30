@@ -1,0 +1,19 @@
+{
+    "Sandbox_TheLastGallon": "The Last Gallon",
+    "Sandbox_TLG_CampaignSpeed": "Fuel ageing speed",
+    "Sandbox_TLG_CampaignSpeed_tooltip": "How quickly stored fuel deteriorates. Game-balance values, not real shelf lives.",
+    "Sandbox_TLG_CampaignSpeed_option1": "Default (several months)",
+    "Sandbox_TLG_CampaignSpeed_option2": "Slow",
+    "Sandbox_TLG_CampaignSpeed_option3": "Fast",
+    "Sandbox_TLG_CampaignSpeed_option4": "Off",
+    "Sandbox_TLG_ExistingSavePolicy": "Existing saves",
+    "Sandbox_TLG_ExistingSavePolicy_tooltip": "How fuel ages when the mod is added to a world that already exists. Chosen once per world.",
+    "Sandbox_TLG_ExistingSavePolicy_option1": "Transition period",
+    "Sandbox_TLG_ExistingSavePolicy_option2": "Age from world start",
+    "Sandbox_TLG_ExistingSavePolicy_option3": "Start ageing at installation",
+    "Sandbox_TLG_TransitionDays": "Transition period (days)",
+    "Sandbox_TLG_ProtectIncompatiblePours": "Protect against incompatible pours",
+    "Sandbox_TLG_ProtectIncompatiblePours_tooltip": "Pouring a fuel an engine cannot use requires an explicit experimental action.",
+    "Sandbox_TLG_VehicleStalls": "Bad fuel can stall engines",
+    "Sandbox_TLG_StationContamination": "Station tanks start with water and sediment"
+}

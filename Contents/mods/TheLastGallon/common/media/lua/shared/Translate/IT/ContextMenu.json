@@ -1,0 +1,12 @@
+{
+    "ContextMenu_TLG_Fuel": "Carburante (The Last Gallon)",
+    "ContextMenu_TLG_ShowKnown": "Cosa so di questo carburante",
+    "ContextMenu_TLG_Look": "Osserva e annusa",
+    "ContextMenu_TLG_SampleKit": "Preleva un campione (kit)",
+    "ContextMenu_TLG_Stabilize": "Aggiungi stabilizzante",
+    "ContextMenu_TLG_Filter": "Filtra",
+    "ContextMenu_TLG_DrainWater": "Lascia decantare e scarica l'acqua",
+    "ContextMenu_TLG_Seal": "Sigilla",
+    "ContextMenu_TLG_Unseal": "Apri",
+    "ContextMenu_TLG_Clean": "Pulisci il contenitore vuoto"
+}

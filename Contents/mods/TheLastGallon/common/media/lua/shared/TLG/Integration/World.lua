@@ -45,17 +45,26 @@ local function sandboxProfile()
     return Balance.profile(map[opt or 1] or "default")
 end
 
--- Creates the world record exactly once (authority only).
-function World.ensure()
+local function sandboxTransitionHours()
+    local days = SandboxVars and SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.TransitionDays
+    return (days or 30) * 24
+end
+
+-- Creates the world record exactly once (authority only). `isNewGame` comes
+-- from OnInitGlobalModData; new worlds report world age 2.0 h at first boot
+-- (RT-DS), so world age alone cannot tell a new world from an old one.
+function World.ensure(isNewGame)
     local md = ModData.getOrCreate(World.KEY)
     if md.v ~= nil then return md end
     if not World.isAuthority() then return md end
     local now = World.now()
-    local policy = now < 2 and "new_world" or sandboxPolicy()
+    local newGame = isNewGame
+    if newGame == nil then newGame = getGameTime():getHoursSurvived() < 0.5 end
+    local policy = newGame and "new_world" or sandboxPolicy()
     local profile = sandboxProfile()
     local rec = WorldInit.create({
         seed = Rng.hash(tostring(getWorld():getWorld()) .. ":" .. tostring(getTimestamp())),
-        policy = policy, now = now,
+        policy = policy, now = now, transitionHours = sandboxTransitionHours(),
         balanceHistory = { { from = -1e12, id = profile.id, agingMul = profile.agingMul,
             breathingMul = profile.breathingMul, microbialMul = profile.microbialMul } },
     })
@@ -63,9 +72,27 @@ function World.ensure()
     md.calendar = calendarOrigin()
     md.climateLog = {}
     md.modVersion = TLG.VERSION
-    TLG.Log.info("world fuel history created: policy=%s seed=%d epoch=%.2f installedAt=%.2f", md.policy, md.seed,
-        md.epoch, md.installedAt)
+    md.createdAsNewGame = newGame and true or false
+    TLG.Log.info("world fuel history created: policy=%s seed=%d epoch=%.2f installedAt=%.2f newGame=%s", md.policy,
+        md.seed, md.epoch, md.installedAt, tostring(isNewGame))
+    World.transmit()
     return md
+end
+
+-- Multiplayer: the server owns the record; clients receive a copy for UI
+-- previews (replication NOT RUN, engine-capabilities G07/G08).
+function World.transmit()
+    if isServer() then ModData.transmit(World.KEY) end
+end
+
+function World.requestFromServer()
+    if isClient() then ModData.request(World.KEY) end
+end
+
+function World.onReceive(key, data)
+    if key == World.KEY and isClient() and type(data) == "table" then
+        ModData.add(World.KEY, data)
+    end
 end
 
 function World.get()

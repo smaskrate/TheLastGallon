@@ -61,7 +61,9 @@ end
 local function open(ctx, ref, actor, which)
     local ep, why = ctx.resolve(ref, ctx)
     if ep == nil then return nil, reject("unknown_" .. which, { detail = why }) end
-    local ok, reason = ep:canAccess(actor)
+    -- Access is checked against the live player object when the transport
+    -- supplies one; the ledger and reservations use the stable actor key.
+    local ok, reason = ep:canAccess(ctx.player or actor)
     if not ok then return nil, reject("no_access_" .. which, { detail = reason }) end
     return ep
 end

@@ -40,11 +40,13 @@ function Boot.install()
     TLG.Log.info("The Last Gallon %s ready (server=%s client=%s)", TLG.VERSION, tostring(isServer()), tostring(isClient()))
 end
 
-Events.OnInitGlobalModData.Add(function()
-    TLG.World.ensure()
+Events.OnInitGlobalModData.Add(function(isNewGame)
+    TLG.World.ensure(isNewGame)
     TLG.World.applyProfileChange()
 end)
 Events.OnGameStart.Add(Boot.install)
+Events.OnGameStart.Add(TLG.World.requestFromServer)
+if Events.OnReceiveGlobalModData then Events.OnReceiveGlobalModData.Add(TLG.World.onReceive) end
 if Events.OnServerStarted then Events.OnServerStarted.Add(Boot.install) end
 Events.EveryHours.Add(function()
     local ok, err = pcall(TLG.World.recordClimate)

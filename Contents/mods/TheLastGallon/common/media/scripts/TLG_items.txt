@@ -1,8 +1,10 @@
 module TLG
 {
-    /* A01 sampling/testing kit. Placeholder icon reuses the vanilla GlassJar
-       icon reference (see docs/asset-audit.csv, A01). Display name comes from
-       Translate/<lang>/ItemName.json ("TLG.FuelSampleKit"). */
+    /* Placeholder icons reuse vanilla icon references verified in the 42.21
+       item scripts (docs/asset-audit.csv). Display names come from
+       Translate/<lang>/ItemName.json. */
+
+    /* A01 sampling/testing kit: enables "kit" precision inspection. */
     item FuelSampleKit
     {
         DisplayCategory = VehicleMaintenance,
@@ -10,5 +12,32 @@ module TLG
         Weight = 0.4,
         Icon = GlassJar,
         Tags = base:glass,
+    }
+
+    /* One bottle treats 20 L at full strength (TLG.Domain.Treatment). */
+    item FuelStabilizer
+    {
+        DisplayCategory = VehicleMaintenance,
+        ItemType = base:normal,
+        Weight = 0.3,
+        Icon = Bleach,
+    }
+
+    /* Filter cartridge: sediment, free water and some biomass. */
+    item FuelFilter
+    {
+        DisplayCategory = VehicleMaintenance,
+        ItemType = base:normal,
+        Weight = 0.2,
+        Icon = AirFilters,
+    }
+
+    /* Manual: teaches operation of stills, fermenters and conversions. */
+    item ManualFuelSystems
+    {
+        DisplayCategory = SkillBook,
+        ItemType = base:literature,
+        Weight = 0.5,
+        Icon = MagazineBlacksmith1,
     }
 }
