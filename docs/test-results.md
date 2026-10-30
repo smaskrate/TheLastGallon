@@ -100,3 +100,11 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 * `tools/run-tests.ps1` → `modules=13 cases=137 passed=137 failed=0`
   (also seeds 1 and 4242).
 * Compile check `compiled=90 errors=0`; translations OK (210 EN keys).
+
+## 2026-10-30 — RT-DS harness boot 5 (merged package)
+
+* Evidence: `docs/evidence/2026-10-30_rt-ds_harness_boot5.txt`
+* Result: 32 PASS, 3 FAIL (dedicated-server translation checks, unchanged).
+  With energy, biodiesel, biogas, wood gas, propane and conversion content
+  loaded at boot: no registry validation problems, no duplicate definitions,
+  all four adapters installed, "ready" logged. Clean `quit`.

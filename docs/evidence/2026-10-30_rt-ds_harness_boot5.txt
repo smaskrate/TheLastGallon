@@ -1,0 +1,82 @@
+# TLG dedicated-server harness
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+worldAgeHours=2.0000
+## Lua runtime (in-game environment)
+OBS  lua._VERSION :: Kahlua kahlua.major.kahlua.minor.kahlua.fix for Lua lua.version (J2SE)
+OBS  lua.type(next) :: nil
+OBS  lua.type(math.random) :: nil
+OBS  lua.type(table.unpack) :: nil
+OBS  lua.type(unpack) :: function
+OBS  lua.type(require) :: function
+OBS  lua.type(loadstring) :: function
+OBS  lua.type(getfenv) :: function
+OBS  lua.type(os) :: table
+OBS  lua.type(os.time) :: function
+OBS  lua.type(io) :: nil
+OBS  lua.-7 % 3 :: -1
+OBS  lua.error(table) type :: string
+OBS  lua.string.format('%s', nil) :: rejected
+OBS  lua.require returns module table :: true (table)
+OBS  lua.tostring(1e20) :: 1.0E20
+OBS  lua.deep recursion 3000 :: ERROR Stack overflow java.lang.RuntimeException
+## G01 packaging
+PASS G01.tlg_namespace_loaded :: 0.1.0-dev
+PASS G01.script_item_instance :: TLG.FuelSampleKit / TLG.FuelSampleKit
+FAIL G01.translation_IG_UI :: IGUI_TLG_ModName
+FAIL G01.translation_ItemName :: TLG.FuelSampleKit
+FAIL G01.translation_Fluid :: Fluid_Name_TLG_Ethanol
+OBS  G01.core_version :: 42.21.0 4a0e9546ec
+OBS  G01.activated_mods :: TheLastGallon;TheLastGallonHarness
+## G02 fluids (item level, no world)
+PASS G02.fluid_lookup_plain_name :: TLG_Ethanol
+OBS  G02.fluid_lookup_module_qualified :: nil
+OBS  G02.mod_fluids_registered :: TLG_FuelSediment(Modded),TLG_FuelWater(Modded),TLG_Diesel(Modded),TLG_Glycerin(Modded),TLG_Ethanol(Modded),TLG_Methanol(Modded),TLG_Biodiesel(Modded),TLG_PlantOil(Modded)
+PASS G02.fuel_category :: Fuel category
+PASS G02.blend_petrol_ethanol :: true/true
+OBS  G02.blend_petrol_water :: false
+OBS  G02.petrolcan_capacity :: 10
+OBS  G02.petrolcan_spawn_amount :: 10 Petrol=10.000000
+PASS G02.add_mixture :: Petrol=6.000000,TLG_Ethanol=2.000000
+OBS  G02.primary_fluid_of_mixture :: Petrol
+OBS  G02.canAddFluid_water_into_petrol :: false
+PASS G02.transfer_proportional :: A[Petrol=3.000000,TLG_Ethanol=1.000000] B[TLG_Ethanol=1.000000,Petrol=3.000000]
+PASS G02.adjustAmount_scales_proportionally :: TLG_Ethanol=0.500000,Petrol=1.500000
+PASS G02.transfer_clamped_to_capacity :: src=19.000000 dst=10.000000
+OBS  G02.tiny_transfers_drift :: total=13.0000000 (expected 13) E=Petrol=10.000000,TLG_Ethanol=3.000000 F=
+OBS  G02.item_moddata_roundtrip :: 1.25/x
+PASS G02.wrap_FluidContainer_Transfer_from_lua :: calls=1 dst=1
+OBS  G02.propane_tank_api :: uses=5000 usedDelta=nil fc=nil
+## M2-01 container adapter (TLG.Integration.Containers)
+PASS M2.world_record :: policy=transition seed=2108535790 epoch=0 installedAt=2 calendar=190/7
+PASS M2.mod_fluids_all_registered :: missing=
+OBS  M2.adjustSpecificFluidAmount_semantics :: after adjust(3) from 5 -> 3.0000 (3=set, 8=add)
+PASS M2.native_write_composition :: nil Petrol=2.000000,TLG_Ethanol=3.000000,TLG_FuelSediment=0.020000,TLG_FuelWater=0.100000
+PASS M2.transfer_hook_carries_condition :: A.rev=6 B=rev=1 deg=1.2000/0.3000 q=3.0000/1.0000 stab=0.500 prov=TEST-A
+PASS M2.untracked_inflow_never_fresh :: status=reconciled deg=0.000000 baseline=0.000000
+PASS M2.many_small_hooked_transfers_conserve :: total=9.99995 B=2.00000 deg=2 rev=200
+OBS  M2.foreign_fluid_not_tracked :: nil / foreign_fluid
+## Scripts (items, craft recipes, sandbox options)
+PASS SCRIPT.item TLG.FuelStabilizer :: TLG.FuelStabilizer
+PASS SCRIPT.item TLG.FuelFilter :: TLG.FuelFilter
+PASS SCRIPT.item TLG.ManualFuelSystems :: TLG.ManualFuelSystems
+PASS SCRIPT.item TLG.YeastStarter :: TLG.YeastStarter
+PASS SCRIPT.item TLG.FermenterVessel :: TLG.FermenterVessel
+PASS SCRIPT.item TLG.PotStill :: TLG.PotStill
+PASS SCRIPT.item TLG.RefluxStill :: TLG.RefluxStill
+PASS SCRIPT.item TLG.DryingColumn :: TLG.DryingColumn
+PASS SCRIPT.craftRecipe TLG_MakeFermenterVessel :: name=TLG_MakeFermenterVessel category=Carpentry inputs=4 outputs=1
+PASS SCRIPT.craftRecipe TLG_MakePotStill :: name=TLG_MakePotStill category=Metalworking inputs=4 outputs=1
+PASS SCRIPT.craftRecipe TLG_MakeRefluxStill :: name=TLG_MakeRefluxStill category=Welding inputs=5 outputs=1
+PASS SCRIPT.craftRecipe TLG_MakeDryingColumn :: name=TLG_MakeDryingColumn category=Metalworking inputs=3 outputs=1
+PASS SCRIPT.craftRecipe TLG_MakeSampleKit :: name=TLG_MakeSampleKit category=Tools inputs=2 outputs=1
+PASS SCRIPT.craftRecipe TLG_MakeFuelFilter :: name=TLG_MakeFuelFilter category=Tools inputs=3 outputs=1
+PASS SCRIPT.craftRecipe TLG_MakeFuelStabilizer :: name=TLG_MakeFuelStabilizer category=Cooking inputs=2 outputs=1
+PASS SCRIPT.sandbox_options :: CampaignSpeed=1 ExistingSavePolicy=1 TransitionDays=30
+OBS  SCRIPT.machine_process_roundtrip :: machine=pot_still state=Ready placed=false
+## G08 global ModData across restarts
+OBS  G08.boot_count :: 5
+OBS  G08.world_age_hours_history :: 2.0000,2.0000,2.0000,2.0000,2.0000
+OBS  G08.saveGame_call :: called
+SUMMARY pass=32 fail=3
+DONE
