@@ -117,6 +117,24 @@ listed with their replacement.
 * Evidence: SRC `ISTakeGenerator.lua:41-53`, BC `setInfoFromItem`.
 * Status: NOT RUN (G05).
 
+## D-015 Production machines are placeable items
+* Decision: fermenter, stills and drying column are inventory items placed on
+  the ground; the process record lives in item modData (`tlgProc`) and
+  processing only advances while placed. B42 `entity` world objects were
+  considered but their build/placement path is unverified at runtime.
+* Reason: item modData travels with pickup (spec "picking up a processing
+  machine"), vanilla placement/pickup need no new code, and vanilla models
+  serve as placeholders (asset target: zero bespoke models for the first
+  playable).
+* Consequence: picking a running machine up pauses it on next access without
+  crediting the carried time (conservative). Runtime persistence of
+  world-item modData is NOT RUN.
+
+## D-016 UI feedback through rich-text dialogs
+* Decision: inspection and machine results are shown in `ISModalRichText`
+  dialogs built from translated keys; unknown condition has its own wording.
+* Reason: readable without relying on colour or tiny world labels (spec §16).
+
 ## D-014 Gas fuels are not liquids
 * Decision: gases use normal cubic metres (Nm³); propane is displayed in kg
   (2.01 kg/Nm³). Vanilla `Base.PropaneTank` is a drainable with 5000 uses and
