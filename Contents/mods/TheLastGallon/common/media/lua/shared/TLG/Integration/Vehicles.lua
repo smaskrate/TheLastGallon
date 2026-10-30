@@ -236,9 +236,38 @@ function V.applyEffects(vehicle, rng)
     end
 end
 
+-- Start gate (SRC ISStartVehicleEngine.lua:26-44 calls tryStartEngine on the
+-- authoritative side): poor or incompatible fuel can make the engine crank
+-- and fail through the vanilla engine state API.
+V.startRoll = function() return ZombRandFloat(0, 1) end
+
+local function vehicleStallsEnabled()
+    local o = SandboxVars and SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.VehicleStalls
+    return o ~= false
+end
+
+local function installStartGate()
+    wrap(ISStartVehicleEngine, "complete", function(orig, self)
+        local vehicle = self.character and self.character:getVehicle()
+        if vehicle and World.isAuthority() and vehicleStallsEnabled() and vehicle:isDriver(self.character) then
+            local part = V.tank(vehicle)
+            if part and part:getContainerContentAmount() > 0 then
+                local ok, e = pcall(V.evaluate, vehicle)
+                if ok and e and e.grade ~= "empty" and (not e.compatible or V.startRoll() > e.startFactor) then
+                    vehicle:engineDoStartingFailed()
+                    TLG.Log.debug("vehicle start refused: %s", table.concat(e.reasons, ","))
+                    return true
+                end
+            end
+        end
+        return orig(self)
+    end)
+end
+
 function V.install()
     installAddGasoline()
     installTakeGasoline()
+    installStartGate()
     Events.EveryOneMinute.Add(function()
         if not World.isAuthority() then return end
         local cell = getCell()
