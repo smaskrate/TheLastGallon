@@ -87,6 +87,7 @@ function Menu.fill(playerNum, context, items)
     else
         Menu.addPourOptions(player, sub, item)
     end
+    Menu.addDrainOptions(player, sub, item)
 end
 
 -- Pouring into engines goes through the authoritative transfer so that any
@@ -153,6 +154,19 @@ local function nearbyPump(player)
         end
     end
     return nil
+end
+
+-- Vanilla has no way to empty a generator; conversions require a drained
+-- fuel system, so TLG offers an authoritative drain into a can.
+function Menu.addDrainOptions(player, sub, item)
+    local free = item:getFluidContainer():getFreeCapacity()
+    local g = nearbyGenerator(player)
+    if g and free > 0.05 and g:getFuel() > 0 then
+        sub:addOption(getText("ContextMenu_TLG_DrainGenerator"), nil, function()
+            request("transfer", { source = TLG.Authority.Resolver.refForObject(g, "generator"),
+                destination = { kind = "item", id = item:getID() }, amount = free })
+        end)
+    end
 end
 
 function Menu.addPourOptions(player, sub, item)
