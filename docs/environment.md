@@ -63,6 +63,13 @@ therefore deployed into a separate cache directory:
 * `tools/setup-devenv.ps1` creates it, pre-creates `options.ini`, mirror-copies
   the runtime package and the harness into `<devcache>/mods`, writes
   `mods/default.txt` (client) and `Server/TLGDev.ini` (server).
+* The client empties `mods/default.txt` (no mod active) when
+  `mods/reset-mods-42_00.txt` is missing; the game writes that marker on its
+  first launch and the main menu saves the active list back on every launch.
+  The first client launch (2026-10-30 21:33) therefore ran without any mod,
+  which is why the harness never started. The setup script now creates the
+  marker with the game's own text and rewrites `default.txt` before every
+  launch.
 * The user's own `%USERPROFILE%\Zomboid` (including the `Apocalypse` saves) is
   never read or written by any tool in this repository.
 

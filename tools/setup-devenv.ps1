@@ -50,9 +50,16 @@ function Sync-Mod([string]$source, [string]$target) {
 Sync-Mod (Join-Path $repo "Contents\mods\TheLastGallon") (Join-Path $mods "TheLastGallon")
 Sync-Mod (Join-Path $repo "tests\ingame\TheLastGallonHarness") (Join-Path $mods "TheLastGallonHarness")
 
-$defaultTxt = Join-Path $mods "default.txt"
-if ($Force -or -not (Test-Path $defaultTxt)) {
-    @"
+# The client empties mods/default.txt when reset-mods-42_00.txt is missing
+# (first launch of 2026-10-30: no mod loaded, the harness never ran) and the
+# main menu saves the active list back, so the marker is created with the
+# game's own text and the list is rewritten before every launch.
+$marker = Join-Path $mods "reset-mods-42_00.txt"
+if (-not (Test-Path $marker)) {
+    Set-Content -Encoding ascii -NoNewline -Path $marker `
+        -Value "If this file does not exist, default.txt will be reset to empty (no mods active)."
+}
+@"
 VERSION = 1,
 
 mods
@@ -64,8 +71,7 @@ mods
 maps
 {
 }
-"@ | Set-Content -Encoding ascii $defaultTxt
-}
+"@ | Set-Content -Encoding ascii (Join-Path $mods "default.txt")
 
 # Credentials for the loopback-only dev server; never committed.
 $cred = Join-Path $DevCache "dev-credentials.txt"

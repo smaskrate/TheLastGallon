@@ -9,9 +9,9 @@
   A watchdog kills the client if it has not finished in time.
   A game window opens for several minutes; do not interact with it.
 .PARAMETER TimeoutMinutes
-  Watchdog limit (default 20).
+  Watchdog limit (default 30; phase A alone took 10 minutes on 2026-10-31).
 #>
-param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 20)
+param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30)
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -26,11 +26,14 @@ if (-not $DevCache) { $DevCache = Join-Path $env:LOCALAPPDATA "TheLastGallon\dev
 & (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $DevCache | Out-Null
 
 # First-run prompts: copy the user's own already-answered values (read only).
+# The tutorial prompt and the Survival Guide window are switched off here
+# (2026-10-31: both waited for a click).
 $userOptions = Join-Path $env:USERPROFILE "Zomboid\options.ini"
-$keys = @("termsOfServiceVersion", "tutorialDone", "doneNewSaveFolder", "showFirstTimeSearchTutorial",
+$keys = @("termsOfServiceVersion", "doneNewSaveFolder", "showFirstTimeSearchTutorial",
     "showFirstAnimalZoneInfo", "shownWelcomeMessageVersion")
 $opts = [ordered]@{ version = "1"; fullScreen = "false"; screenWidth = "1280"; screenHeight = "720"; language = "EN";
-    showFirstTimeSneakTutorial = "false"; showWelcomeMessage2 = "false" }
+    showFirstTimeSneakTutorial = "false"; showWelcomeMessage2 = "false"; tutorialDone = "true";
+    showSurvivalGuide = "false" }
 if (Test-Path $userOptions) {
     foreach ($line in Get-Content $userOptions) {
         $k, $v = $line -split "=", 2
@@ -54,13 +57,49 @@ $p = Start-Process -FilePath (Join-Path $GameDir "jre64\bin\java.exe") -Argument
     -RedirectStandardOutput $out -RedirectStandardError $err -PassThru
 Write-Host "client started, pid $($p.Id)"
 
+# After every world load GameLoadingState waits for a left click ("Click to
+# Start"; BC GameLoadingState.update polls Mouse.isButtonDown(0)). The click is
+# posted to the game window only (no cursor movement, no other window can
+# receive it) while a load has finished but the loading state has not exited.
+Add-Type @"
+using System; using System.Runtime.InteropServices;
+public static class TlgWin {
+    [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, uint m, IntPtr w, IntPtr l);
+    [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr h, out RECT r);
+    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
+}
+"@
+function Send-GameClick([IntPtr]$hwnd) {
+    $r = New-Object TlgWin+RECT
+    [TlgWin]::GetClientRect($hwnd, [ref]$r) | Out-Null
+    $lp = [IntPtr]((([int](($r.B - $r.T) / 2)) -shl 16) -bor [int](($r.R - $r.L) / 2))
+    [TlgWin]::PostMessage($hwnd, 0x0201, [IntPtr]1, $lp) | Out-Null  # WM_LBUTTONDOWN
+    Start-Sleep -Milliseconds 300
+    [TlgWin]::PostMessage($hwnd, 0x0202, [IntPtr]0, $lp) | Out-Null  # WM_LBUTTONUP
+}
+function Read-Shared([string]$path) {
+    if (-not (Test-Path $path)) { return "" }
+    $fs = [System.IO.File]::Open($path, "Open", "Read", "ReadWrite, Delete")
+    try { return (New-Object System.IO.StreamReader($fs)).ReadToEnd() } finally { $fs.Dispose() }
+}
+$console = Join-Path $DevCache "console.txt"
+
 $results = Join-Path $luaDir "TLG_harness_sp.txt"
 $deadline = (Get-Date).AddMinutes($TimeoutMinutes)
 $finished = $false
+$clicks = 0
 while ((Get-Date) -lt $deadline -and -not $p.HasExited) {
     Start-Sleep -Seconds 5
-    if ((Test-Path $results) -and ((Get-Content $results -Raw) -match "(?m)^DONE")) { $finished = $true; break }
+    if ((Test-Path $results) -and ((Read-Shared $results) -match "(?m)^DONE")) { $finished = $true; break }
+    $log = Read-Shared $console
+    $loads = ([regex]::Matches($log, "game loading took")).Count
+    $exits = ([regex]::Matches($log, "STATE: exit zombie\.gameStates\.GameLoadingState")).Count
+    if ($loads -gt $exits) {
+        $p.Refresh()
+        if ($p.MainWindowHandle -ne [IntPtr]::Zero) { Send-GameClick $p.MainWindowHandle; $clicks++ }
+    }
 }
+Write-Host "click-to-start clicks sent: $clicks"
 if ($finished) {
     $grace = (Get-Date).AddSeconds(90)
     while ((Get-Date) -lt $grace -and -not $p.HasExited) { Start-Sleep -Seconds 3 }
@@ -71,4 +110,6 @@ if (-not $p.HasExited) {
 }
 Write-Host "finished=$finished exitCode=$(if ($p.HasExited) { $p.ExitCode } else { 'killed' })"
 if (Test-Path $results) { Get-Content $results } else { Write-Host "no results file"; Get-Content $out -Tail 40 }
+# Explicit status: otherwise robocopy's "files copied" code 1 from setup leaks out.
+if ($finished) { exit 0 } else { exit 1 }
 

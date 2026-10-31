@@ -224,12 +224,35 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 
 ## Client harness status
 
-`tools/run-sp-harness.ps1` (2026-10-30 21:33) started the client with
-`-debug -nosteam -nosound -cachedir=<devcache>`; it booted, passed the terms
-screen and played the intro videos, then produced no further output for
-7 minutes. The Windows session was **locked** (`LogonUI.exe` running), so the
-OpenGL window could not present frames. The client was stopped; no client
-evidence exists yet. Rerun the harness from an unlocked desktop.
+`tools/run-sp-harness.ps1` starts the client with
+`-debug -nosteam -nosound -cachedir=<devcache>`. Unattended runs needed four
+fixes, each found by a failed launch:
+
+1. 2026-10-30 21:33: no output after the intro videos. The Windows session
+   was locked, and (found 2026-10-31) **no mod was active**: on its first
+   launch the client empties `mods/default.txt` because
+   `mods/reset-mods-42_00.txt` did not exist yet, and the main menu saves the
+   empty list back. `setup-devenv.ps1` now writes the marker and the list
+   before every launch.
+2. 2026-10-31 09:45: **"Click to Start"**. After every world load
+   `GameLoadingState.update()` returns `Remain` until
+   `Mouse.isButtonDown(0)` or a joypad A press (BC, offsets 290–361); no
+   option or Lua call skips it. The launcher posts a left click to the game
+   window (`WM_LBUTTONDOWN/UP`) while a load has finished
+   (`game loading took`) and the state has not exited.
+3. Same run: the **Survival Guide** window (Core option `showSurvivalGuide`)
+   and the tutorial prompt (`tutorialDone`, SRC `MainScreen.lua:943-979`) are
+   switched off in the dev cache options and by the harness.
+4. Same run: a Lua error in a TLG event handler **halted the game in the Lua
+   debugger** because "Break On Error" was ticked (debug mode; toggle calls
+   `UIManager.setShowLuaDebuggerOnError`, SRC
+   `DebugUIs/DebugToolstrip.lua:28-29`). The harness switches it off so
+   errors are logged and the run continues. The error itself was a TLG bug:
+   on 42.21 `IsoCell.getVehicles()` returns a `java.util.HashSet` (BC), so
+   `getVehicles():get(i)` raises "tried to call nil". Fixed in the vehicle
+   adapter, the fuel menu and the workshop menu by iterating
+   `ipairs(set:toArray())`, the pattern vanilla uses for Sets (SRC
+   `server/Vehicles/Vehicles.lua:1037`).
 
 ## Tooling pitfalls found
 
