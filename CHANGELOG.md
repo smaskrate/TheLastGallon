@@ -23,9 +23,15 @@
   area for a game day: the fermenter caught up exactly on return.
 * Weather: machines and stored fuel now follow the day's real temperature.
   The mod used to record the season curve, so cold snaps and heat waves
-  never reached them; in a freezing January a fermenter now stops and,
-  after three days stopped, spoils (checked in game). Where a machine
-  stands makes no difference to its temperature.
+  never reached them; outdoors in a freezing January a fermenter now stops
+  and, after three days stopped, spoils (checked in game).
+* Placement: a machine takes the temperature of where it stands, as the
+  game computes it for a character there: outdoors the air, in a room
+  between the air and 22 °C (22 °C while the grid is on), warmer by a lit
+  fire, fireplace or barbecue. Fires count only while you are nearby.
+  Status shows the temperature at the machine. Checked in game in
+  January with the grid off: outdoors and in an unheated room the batch
+  stopped and spoiled; on a warmed tile it finished.
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

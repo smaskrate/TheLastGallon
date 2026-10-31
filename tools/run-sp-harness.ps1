@@ -13,8 +13,9 @@
 .PARAMETER Mode
   full (default): phase A, save, reload, phase B. realtime: only the ethanol
   loop with time passing on the game clock (no reload); took 7 minutes on
-  2026-10-31 (pass -TimeoutMinutes 60 for headroom). winter: one
-  fermentation on the game clock from 15 January.
+  2026-10-31 (pass -TimeoutMinutes 60 for headroom). winter: three
+  fermenters on the game clock from 15 January with the grid off,
+  outdoors, in a room and on a tile warmed by a heat source (D-021).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter")][string]$Mode = "full")

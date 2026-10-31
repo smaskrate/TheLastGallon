@@ -472,4 +472,60 @@ fix:
 Not run: a winter with alternating cold and mild days (whether separate
 cold spells add up to the 72 h, as the code does). A heated building is no
 test gap: machine temperature comes from the outdoor day mean only
-(`thermal = "sheltered"`), wherever the machine stands.
+(`thermal = "sheltered"`), wherever the machine stands. (No longer true
+since D-021: see launches 17–19.)
+
+## 2026-10-31 — RT-SP client harness, launches 17–19 (where the machines stand)
+
+Command: `tools/run-sp-harness.ps1 -Mode winter -TimeoutMinutes 60` (request
+`sp-rtw`, rewritten for D-021). From 15 January with the grid off
+(`ElecShut` 1, `ElecShutModifier` −1; `isHydroPowerOn()` false in every run),
+three fermenters within reach of one spot near the Muldraugh Gas2Go were
+loaded in the same hour with 6 kg of sugar and 30 L of water each:
+outdoors (10618,10627), in a room (10619,10628) and in a room on a tile
+with an `IsoHeatSource` of radius 1 and 35 °C added from Lua (10618,10628).
+Every game hour the harness read the game's air at the three tiles; before
+each status read it compared the readings the mod had filed with its own,
+after it the day temperature the status reported (against
+`siteDayMean` over the harness's readings) and the work done (against the
+stage rule fed by that temperature). A 12 game hour trip of 400 tiles on
+day 2 unloaded the tiles. Evidence:
+`docs/evidence/2026-10-31_rt-sp_harness_run17_sites.txt`, `…run18_sites.txt`,
+`…run19_sites.txt`.
+
+| | Run 17 | Run 18 | Run 19 |
+| --- | --- | --- | --- |
+| Result | **24 PASS / 0 FAIL** | 24 / 1 | **25 / 0** |
+| Room tile = `Climate.roomAir`, worst | 96 h, 0.00000 °C | 95 h, 0.00000 °C | 94 h, 0.00000 °C |
+| Outdoor tile = `getTemperature()` | exact | exact | exact |
+| Tile with the heat source | 28.0 °C every hour | same | same |
+| Filed = game's readings (out / room / heated) | 61 / 71 / 96 h, exact | 61 / 73 / 95, exact | 61 / 83 / 94, exact |
+| Status day temperature = readings' mean | exact | heated once 3.28 vs 28.00 °C | exact |
+| Hourly work = stage rule | exact | exact | exact |
+| Unloaded: hours filed / filed after return | 0 of 12 / 66 | 0 of 12 / 65 | 0 of 12 / 64 |
+| Outdoors | spoiled, `pausedFor` 72.00 | same | same |
+| Room | spoiled, `pausedFor` 72.00 | same | same |
+| Heated | finished, 7.28 h paused | finished, 5.26 h | finished, 5.26 h |
+
+Outdoor day means were −8.1 to +1.7 °C. The room ran 9.5–13.1 °C above the
+outdoor air, 4.5–11.4 °C at the room fermenter: slow on the first day, then
+mostly stopped, and spoiled in every run. A room alone did not carry a
+batch through these Januaries; the warmed tile did. Status read, e.g.,
+"Paused · Reason: too cold here · Stage: fermenting · Temperature here
+today: 45.3 °F, in a room" (this dev cache shows °F; the log holds a UTF-8
+"°").
+
+Found and fixed:
+
+* Run 17: the warmed fermenter paused after every midnight until the new
+  day's first reading was filed (7.28 paused hours in all). The hour in
+  progress now takes the previous hour's reading (`Climate.siteDayMean`);
+  in runs 18–19 its only pauses were the 5.26 hours of a morning spent
+  unloaded, and no read was paused on a day read throughout.
+* Run 18: right after midnight the status still showed the unheated value
+  (3.28 °C): the access pruned yesterday's last reading before the status
+  used it. `Machines.trimTemps` keeps that hour; run 19 exact.
+
+Not run: upper floors, a real fire, fireplace or barbecue (the heat source
+was added from Lua; the vanilla objects register the same kind, BC), the
+grid on, a player-built room, a machine moved between two accesses.

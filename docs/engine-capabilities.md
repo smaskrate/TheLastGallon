@@ -376,7 +376,7 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `option.onSelect(option.target, option.param1, …)`
   (SRC `ISContextMenu.lua:70`).
 
-## Climate (RT-SP runs 15–16)
+## Climate (RT-SP runs 15–19)
 
 * `ClimateManager.getDayMeanTemperature()` is the season curve: it returns
   `currentDay.season.getDayMeanTemperature()` (BC). In run 15 eleven
@@ -393,9 +393,41 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   day means −0.8, −2.7, −2.4 and −4.7 °C, paused "too cold" after the 1 h
   preparation, 68 hours exact, faulted `batch_spoiled` 73.2 game h after
   loading at `pausedFor` 72.00.
-* A machine's temperature does not depend on where it stands: the climate
-  model takes the outdoor day mean only (`thermal = "sheltered"`). No game
-  API for the temperature at a square has been checked yet.
+* Air at a tile (BC 42.21): `ClimateManager.getAirTemperatureForSquare(sq)`
+  calls the three-argument form with no vehicle and no wind chill.
+  Outdoors it is `getTemperature()`. In a room (`IsoGridSquare.isInARoom()`:
+  a map room, or `IWorldRegion.isPlayerRoom()` for a player-built one) it is
+  22 °C while `IsoWorld.isHydroPowerOn()`; otherwise the air moves a share
+  k = 0.4 + 0.2 × lagged daylight of the way to 22 °C on the ground floor
+  and 0.85 k above it (above 22 °C: 0.85 k on the ground floor, k + 0.2 ×
+  the lagged night upstairs; 42.21 fills the night value from
+  `getDayLightLagged()` as well). Then
+  `IsoCell.getHeatSourceHighestTemperature` raises it to the hottest
+  `IsoHeatSource` on the same floor within its radius R and in clear line
+  of sight (`LosUtil.lineClear`; an open door counts):
+  T + (1 − d/R) × (T_source + clamp(T − 30, −7, 7) − T), clamped to −15..5
+  instead when the source stands outdoors (`ClimateManager.lerp(t, a, b)` =
+  a + t (b − a)). The game's heat sources are `IsoFire` (35 °C, its light
+  radius), `IsoFireplace` (35 °C) and `IsoBarbecue` (25 °C, radius 3);
+  `IsoHeatSource` is exposed to Lua, and `IsoCell.updateHeatSources` drops
+  sources that are out of bounds. The lagged daylight is readable from Lua
+  as `getClimateValuesCopy():getDayLightLagged()`; vanilla formats
+  temperatures in the player's units with
+  `Temperature.getTemperatureString` (SRC `server/radio/ISWeatherChannel.lua:209`).
+* Runs 17–19 (request `sp-rtw` since D-021, grid off): the room formula
+  above matched the game's own value at a room tile to 0.00000 °C over
+  94–96 hours per run; the outdoor tile equalled `getTemperature()`; a
+  tile with a 35 °C, radius 1 `IsoHeatSource` added from Lua read 28.0 °C
+  every hour (35 + clamp(T − 30, −7, 7) in a cold room). In run 19 the
+  readings the mod filed, the day temperatures it reported and every
+  machine's hourly work matched the harness exactly; nothing was filed
+  while the tiles were unloaded and the readings resumed on return (runs
+  17–18 found two defects, see test results).
+* Grid power: `IsoWorld.hydroPowerOn` starts from
+  `SandboxOptions.doesPowerGridExist()`, true while the world's age in days
+  is at most `ElecShutModifier` (so −1: never);
+  `randomElectricityShut(ElecShut)` picks that day for presets 2–9 (14–30
+  days for 2).
 
 ## G10–G14
 
@@ -462,8 +494,9 @@ phase B 14/0, run 9 (conversion work as a timed action) phase A 83/0 and
 phase B 14/0, runs 10–11 (the player's path) 76/15 and 80/11 with phase B
 12/2 each, run 12 phase A **94/0** and phase B **14/0**, run 13 (the loop on
 the game clock, no reload) 10/1, the one failure a check bound that missed
-120 settling ticks, its rerun, run 14, **11/0**, and two January runs, run
-15 **5/0** and run 16 **8/0**. Most failures were
+120 settling ticks, its rerun, run 14, **11/0**, two January runs, run 15
+**5/0** and run 16 **8/0**, and three January runs by site, run 17
+**24/0**, run 18 24/1 and run 19 **25/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -471,6 +504,9 @@ ownership, G02), run 7's conversion refusals (tool counting), runs 10–11's
 crafting and work-action results (recipe tags, `mode:destroy`, the job
 delta on an open-ended action). Run 15 passed and still showed a defect:
 every January day had the same temperature (the season curve, D-020).
+Runs 17–18 found two in the site readings: a warmed machine paused after
+midnight until the day's first reading, and the status then still showed
+the unheated value (a pruned reading).
 
 ## Tooling pitfalls found
 
@@ -486,8 +522,10 @@ every January day had the same temperature (the season curve, D-020).
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
    distilling in the pot still, a winter with mild days between cold spells
    (the code adds paused hours up across spells), flex-engine starts in the
-   cold, pouring from a can lying on the ground, Italian text in game, the
-   crafting window itself, UI rendering checks beyond menu contents.
+   cold, a machine beside a real fireplace, fire or barbecue, upstairs, in
+   a player-built room or with the grid on, pouring from a can lying on the
+   ground, Italian text in game, the crafting window itself, UI rendering
+   checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
 

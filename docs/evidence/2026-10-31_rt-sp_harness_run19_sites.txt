@@ -1,0 +1,54 @@
+# TLG single-player harness, real game clock, winter
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=2801428839470619387 hours=2.0095 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rtw_sites begin
+OBS  RTW.spots outdoors 10618,10627 room 10619,10628 heated 10618,10628; heat source 35 C added=true ; grid power=false
+PASS RTW.grid_is_off :: isHydroPowerOn=false
+PASS RTW.sites_seen :: in a room: outdoors=false room=true heated=true
+STEP rtw_ferment begin
+OBS  RTW.load_outdoors menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTW.loaded_outdoors :: sugar=6 water=30
+OBS  RTW.load_room menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTW.loaded_room :: sugar=6 water=30
+OBS  RTW.load_heated menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTW.loaded_heated :: sugar=6 water=30
+OBS  RTW.status_outdoors menu "Status" -> ok=true reason=nil state=Paused stage=ferment outputs={} consumed=nil
+OBS  RTW.status_room menu "Status" -> ok=true reason=nil state=Paused stage=ferment outputs={} consumed=nil
+OBS  RTW.status_heated menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTW.trip away 12.01 game h, tiles unloaded=true, hours unread 12, filed for them 0, heat source again=true
+PASS RTW.nothing_filed_while_unloaded :: 12 hours unloaded, 0 filed
+OBS  RTW.day 01-15: air read outdoors -0.5 (13 h), room 10.0 (13 h), heated 28.0 (13 h); recorded t -0.62 r0 9.83; outdoors -0.23 C work 1.00 h paused 12.04 h; room 10.29 C work 5.01 h paused 2.01 h; heated 28.00 C work 12.04 h paused 0.00 h
+OBS  RTW.day 01-16: air read outdoors -3.0 (17 h), room 7.7 (17 h), heated 28.0 (17 h); recorded t -2.34 r0 8.20; outdoors -3.20 C work 0.00 h paused 17.09 h; room 7.48 C work 0.29 h paused 17.09 h; heated 28.00 C work 17.09 h paused 0.00 h
+OBS  RTW.day 01-17: air read outdoors -1.6 (19 h), room 8.9 (19 h), heated 28.0 (19 h); recorded t -2.48 r0 8.12; outdoors -1.70 C work 0.00 h paused 30.97 h; room 8.79 C work 3.20 h paused 22.97 h; heated 23.74 C work 22.69 h paused 12.90 h
+OBS  RTW.day 01-18: air read outdoors -3.1 (24 h), room 7.8 (24 h), heated 28.0 (24 h); recorded t -3.01 r0 7.84; outdoors -4.02 C work 0.00 h paused 12.04 h; room 7.86 C work 1.06 h paused 22.07 h; heated 28.00 C work 24.07 h paused 0.00 h
+OBS  RTW.day 01-19: air read outdoors -5.3 (21 h), room 6.7 (21 h), heated 28.0 (21 h); recorded t -5.27 r0 6.69; outdoors -6.47 C work 0.00 h paused 0.00 h; room 4.93 C work 0.00 h paused 10.02 h; heated 28.00 C work 21.11 h paused 0.00 h
+OBS  RTW.end outdoors state=Faulted pause=batch_spoiled pausedFor 72.00 h, after 106.2 game h; status: Paused <LINE> Reason: too cold here <LINE> Stage: fermenting <LINE> Temperature here today: 27.7 °F, outdoors
+OBS  RTW.end room state=Faulted pause=batch_spoiled pausedFor 72.00 h, after 106.2 game h; status: Paused <LINE> Reason: too cold here <LINE> Stage: fermenting <LINE> Temperature here today: 45.3 °F, in a room
+OBS  RTW.end heated state=OutputReady pause=nil pausedFor 5.26 h, after 106.2 game h; status: Working <LINE> Stage: fermenting <LINE> Temperature here today: 82.4 °F, in a room
+PASS RTW.room_air_is_the_formula :: 94 hours, worst 0.00000 C (air 0.075 daylight 0.374 power false: formula 10.4859, game 10.4859)
+PASS RTW.outdoor_air_is_the_air :: 94 hours, worst 0.000000 C
+PASS RTW.heated_tile_is_warmer :: 94 of 94 hours at least 10 C over the room tile
+PASS RTW.room_warmer_than_outdoors :: 5 days, smallest gap 10.49 C (01-17)
+PASS RTW.readings_filed_outdoors :: 61 hours, worst 0.000000 (hour 76: filed -2.4639525413513184, game -2.4640)
+PASS RTW.day_temperature_from_readings_outdoors :: 60 reads, worst 0.000000 (01-18: status -5.2546, readings -5.2546)
+PASS RTW.progress_follows_site_temperature_outdoors :: 56 hours, worst 0.0000 h (01-18, 72.1 h in at -5.25 C: did 0.0000 h, rule 0.0000 h)
+PASS RTW.readings_filed_room :: 83 hours, worst 0.000000 (hour 98: filed 5.497474670410156, game 5.4975)
+PASS RTW.day_temperature_from_readings_room :: 82 reads, worst 0.000000 (01-19: status 4.2685, readings 4.2685)
+PASS RTW.progress_follows_site_temperature_room :: 77 hours, worst 0.0000 h (01-18, 81.2 h in at 8.05 C: did 0.4000 h, rule 0.4000 h)
+PASS RTW.readings_filed_heated :: 94 hours, worst 0.000000 (hour 109: filed 28, game 28.0000)
+PASS RTW.day_temperature_from_readings_heated :: 93 reads, worst 0.000000 (01-19: status 28.0000, readings 28.0000)
+PASS RTW.progress_follows_site_temperature_heated :: 88 hours, worst 0.0000 h (01-18, 73.2 h in at 28.00 C: did 1.0074 h, rule 1.0074 h)
+PASS RTW.readings_resume_after_return :: 64 hours filed after the return
+PASS RTW.status_names_the_site :: Paused <LINE> Reason: too cold here <LINE> Stage: fermenting <LINE> Temperature here today: 27.7 °F, outdoors | Paused <LINE> Reason: too cold here <LINE> Stage: fermenting <LINE> Temperature here today: 45.3 °F, in a room | Working <LINE> Stage: fermenting <LINE> Temperature here today: 82.4 °F, in a room
+PASS RTW.heated_batch_finishes :: state=OutputReady after 106.2 game h
+PASS RTW.heated_never_paused_on_days_read_throughout :: 0 paused reads (first: none)
+PASS RTW.outdoors_spoils_after_72_paused_hours :: pause=batch_spoiled pausedFor 72.00
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 110.48
+SUMMARY pass=25 fail=0
+DONE

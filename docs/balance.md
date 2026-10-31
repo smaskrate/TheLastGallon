@@ -112,18 +112,39 @@ the new draw; existing reservoir records keep their water.
 | Distil | pot still (60 L) / reflux still (120 L) | wash | hydrous ethanol 80 % / 94 % purity, recovery 0.88 / 0.92 | 1 h heat-up + wash ÷ 8 or 12 L/h at 6 kW; firebox 30 / 50 kg, 4.2 kWh/kg, 45 % / 55 % efficient |
 | Dry | drying column | hydrous ethanol + quicklime | water down to 0.5 % | 12 h, 0.3 L water per kg quicklime |
 
-Temperature: machine rates use the day's mean temperature, not the hour's
-reading; since D-020 that is the mean of the day's hourly air temperature,
-weather included (before, the season curve). The machines are "sheltered"
-wherever they stand: (outdoor day mean + 16 °C) / 2, so a fermenter slows
-(below 18 °C) on days averaging under 20 °C outdoors and stops (below 8 °C)
-on days averaging under 0 °C; being indoors or near a heater changes
-nothing. Measured on the game clock (RT-SP): July, 97.2 h, the full-rate
-time (run 13); January on the season curve, 0.4 rate all through, 241.7 h
-(run 15); January with the weather, −0.8 to −4.7 °C day means, stopped from
-the first day and spoiled 73.2 h after loading, at 72 paused hours (run 16).
-Spoilage counts the batch's total paused hours, also across separate cold
-spells (not yet seen in game).
+Temperature: machine rates use the day's mean temperature at the machine,
+not the hour's reading: a batch has a day's thermal mass, so a few warm
+hours lift the whole day. Since D-021 that is the mean air temperature
+where the machine stands over the day's hours of the batch: the game's own
+hourly value at its tile while the area is loaded (rooms, grid power,
+fires), the day's unheated value for its site while it is not; the hour in
+progress takes the previous hour's reading. The weather is included
+(D-020). A fermenter slows below 18 °C and stops below 8 °C:
+
+| Where it stands | Its temperature | Slows below (outdoor day mean) | Stops below |
+| --- | --- | --- | --- |
+| Outdoors | the outdoor air | 18 °C | 8 °C |
+| Room, ground floor, grid off | T + k (22 − T), k = 0.4–0.6 with the daylight; 0.435 on January days (runs 17–19) | about 15 °C | about −3 °C in January |
+| Room upstairs, grid off | 0.85 of that pull | about 16 °C | about 0 °C in January |
+| Room, grid on | 22 °C | never | never |
+| By a lit fireplace, fire or barbecue, while you are near | the game's value: 28 °C on a 35 °C source's own tile in a cold room, less with distance | — | — |
+
+Days recorded before D-021 have no room means; for them a room assumes
+k = 0.5. Before D-021 every machine counted as "sheltered", (outdoor mean
++ 16 °C) / 2, wherever it stood; a record keeps that until its first access
+since.
+
+Measured on the game clock (RT-SP): July, 97.2 h, the full-rate time (run
+13, sheltered); January on the season curve, 0.4 all through, 241.7 h (run
+15); January with the weather, sheltered: stopped from the first day,
+spoiled 73.2 h after loading at 72 paused hours (run 16); January by site
+with the grid off, −8.1 to +1.7 °C day means (runs 17–19): outdoors stopped
+and spoiled at 72 paused hours; a ground-floor room ran 9.5–13.1 °C above
+the outdoor air (4.5–11.4 °C at the machine), slow on the first day, then
+mostly stopped, and spoiled every time; a tile warmed by a 35 °C heat
+source read 28 °C every hour and the batch finished, its only pauses the
+hours of a morning spent unloaded. Spoilage counts the batch's total
+paused hours, also across separate cold spells (not yet seen in game).
 
 Condition through production: distillate leaves the still fresh (ageing
 products stay in the stillage), while dried ethanol keeps the degradation it

@@ -246,3 +246,51 @@ listed with their replacement.
   slightly for that day (the exact G12 catch-up of runs 13–14 was in July,
   at full rate, where the temperature did not matter). Days recorded before
   the change keep their season values; no migration.
+* Superseded in part by D-021: a placed machine now takes the temperature
+  of where it stands; the sentence above on placement no longer holds.
+
+## D-021 A machine's temperature is the air where it stands
+* Decision: a placed machine's day temperature is the mean air temperature
+  at its tile over the day's hours of the batch. While its area is loaded
+  the authority reads the game's own value there every game hour
+  (`ClimateManager.getAirTemperatureForSquare`: what a character standing
+  there would feel, rooms, grid power and lit fires, fireplaces and
+  barbecues included). Hours without a reading take the site's unheated
+  value: outdoors the day's mean air temperature, in a room the day's mean
+  of the game's room formula, which the climate recorder now logs for the
+  ground and upper floors (`r0`, `r1`). The site (in a room or not, floor)
+  is recorded on every access. Records without a site keep the
+  definition's thermal exposure (`sheltered`). Fuel containers and tanks
+  keep their storage profiles.
+* Reason: after D-020 the weather reached the machines and nothing the
+  player did could keep a batch going through a cold spell, while the
+  status said "too cold here". The game already computes a temperature per
+  tile for its characters; using it makes rooms, the grid and fires matter
+  the way a player expects.
+* The game's formula (BC 42.21): outdoors `getTemperature()` (a tile gets
+  no wind chill); in a room (`IsoGridSquare.isInARoom()`, map rooms and
+  player-built rooms) 22 °C while `IsoWorld.isHydroPowerOn()`, otherwise
+  T + (22 − T) × (0.4 + 0.2 × lagged daylight) on the ground floor, 0.85 of
+  that pull above it, mirrored above 22 °C; then the hottest heat source
+  within its radius R in clear line of sight raises it to
+  T + (1 − d/R) × (T_source + clamp(T − 30, −7, 7) − T) (outdoor sources
+  clamp to −15..5): `IsoFire` 35 °C with its light radius, `IsoFireplace`
+  35 °C, `IsoBarbecue` 25 °C with radius 3.
+* Consequences: an unheated ground-floor room pulls the outdoor air
+  0.4–0.6 of the way to 22 °C with the daylight, 0.435 on January days, so
+  a fermenter there stops below about −3 °C outdoor day mean in January
+  and slows below about 15 °C; outdoors it slows below 18 °C and stops
+  below 8 °C; with the grid on, or warmed by a fire, it can run at full
+  rate. In three January runs a room alone was not enough (4.5–11.4 °C at
+  the machine; the batch spoiled each time) and a warmed tile was. Heat
+  counts only while the area is loaded: hours away take the unheated
+  value. The day mean averages its hours, so a few warm hours lift the
+  whole day (the batch has a day's thermal mass); the hour in progress
+  takes the previous hour's reading, otherwise a warmed machine paused
+  after every midnight (run 17). A machine moved without being used in
+  between counts at its new place for that time. Within the current day
+  the value moves as readings arrive (as in D-020).
+* Verified RT-SP 2026-10-31 runs 17–19: the room formula matched the
+  game's own room value exactly over 94–96 hours per run; the readings
+  filed, the day temperatures reported and the hourly work matched the
+  harness exactly in run 19.

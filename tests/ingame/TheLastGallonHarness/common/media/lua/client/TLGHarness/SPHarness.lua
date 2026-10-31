@@ -2588,16 +2588,26 @@ RT.finish = RT.add({ name = "rt_finish", timeout = 600, fn = function(ctx, ticks
 end })
 
 ------------------------------------------------------------------------------
--- Winter (request "sp-rtw"): one fermentation from 15 January on the game
--- clock, followed until it finishes, spoils or 400 game hours pass. Each
--- hour's progress is compared with the stage rules of ethanol_ferment
--- (Content/Production.lua: full rate 18-32 C, 0.4 between 8 and 18 C,
--- paused below 8 C, spoiled after 72 h paused) applied to the game's own day
--- mean, sheltered as the climate model does: (mean + 16) / 2.
+-- Winter (request "sp-rtw"): where the machines stand (D-021). From 15
+-- January with the grid off, three fermenters within reach of one spot are
+-- loaded in the same hour: outdoors, in a room, and in a room on a tile
+-- warmed by a heat source added from Lua (IsoHeatSource, radius 1: that tile
+-- only; vanilla's fires, fireplaces and barbecues register the same kind,
+-- BC). Every game hour the harness reads the game's air at the three tiles:
+-- the room tile must match the room formula derived from the bytecode
+-- (Climate.roomAir) and the outdoor tile the air temperature. Before every
+-- status read, the readings the mod filed must equal the harness's own;
+-- after it, the day temperature the status reports must be the mean of the
+-- harness's readings with the site's unheated value for hours without one,
+-- and the work since the last read must follow the stage rules of
+-- ethanol_ferment (full rate 18-32 C, 0.4 between 8 and 18 C, paused below
+-- 8 C, spoiled after 72 h paused) fed by that temperature. A 12 game hour
+-- trip on day 2 unloads the tiles: nothing is filed meanwhile, and the
+-- readings resume on return.
 ------------------------------------------------------------------------------
-function RT.fermentRate(shelteredC)
-    if shelteredC < 8 or shelteredC > 38 then return 0 end
-    if shelteredC < 18 or shelteredC > 32 then return 0.4 end
+function RT.fermentRate(c)
+    if c < 8 or c > 38 then return 0 end
+    if c < 18 or c > 32 then return 0.4 end
     return 1
 end
 
@@ -2607,150 +2617,448 @@ function RT.dayKey()
     return string.format("%02d-%02d", gt:getMonth() + 1, gt:getDay() + 1)
 end
 
--- The day mean TLG has recorded for today (what the machines advance with)
--- and the mod's day index.
-function RT.loggedMean()
-    local day = TLG.World.env():dayIndex(TLG.World.now())
-    local log = TLG.World.get().climateLog
-    return log and log[day] and log[day].t, day
+RT.W = { names = { "outdoors", "room", "heated" }, tripAt = 30, tripHours = 12, heatC = 35 }
+
+function RT.W.free(s)
+    if s == nil then return false end
+    local ok, r = pcall(function() return s:getFloor() ~= nil and s:isFree(false) end)
+    return ok and r == true
 end
 
-RT.winterFerment = { name = "rtw_ferment", timeout = 90000, fn = function(ctx, ticks)
-    if not ctx.t0 and RT.skip("rtw_ferment") then return true end
-    local cm = getClimateManager()
-    if not ctx.t0 then
-        local r = machineClick("RTW.ferment", RT.fermenter, "ContextMenu_TLG_LoadFerment")
-        R:check("RTW.ferment_loaded", function()
-            return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6,
-                string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
-        end)
-        ctx.t0, ctx.h0, ctx.next = ticks, hours(), hours() + 1
-        local _, dayIdx = RT.loggedMean()
-        ctx.prev = { h = hours(), done = RT.doneHours(RT.fermenter), dayIdx = dayIdx, stage = "prepare" }
-        ctx.days, ctx.order, ctx.pausedTally = {}, {}, 0
-        ctx.cmp = { n = 0, worst = 0, where = "none" }
-        ctx.cold = { n = 0, wrong = {} }
-        return nil
-    end
-    if ticks % 30 == 0 then RT.keepFit() end
-    RT.speed(RT.waitSpeed)
-    if hours() < ctx.next then return nil end
-    ctx.next = hours() + 1
-    local s = RT.statusOf(RT.fermenter)
-    local now, done = hours(), RT.doneHours(RT.fermenter)
-    local logT, dayIdx = RT.loggedMean()
-    local air = cm:getTemperature()
-    local p = ctx.prev
-    local dt, dd = now - p.h, done - p.done
-    -- Per TLG day: the recorded mean, the air readings taken here, work done.
-    local d = ctx.days[dayIdx]
-    if not d then
-        d = { label = RT.dayKey(), airSum = 0, airN = 0, airMin = 99, airMax = -99, work = 0, hours = 0, paused = 0 }
-        ctx.days[dayIdx], ctx.order[#ctx.order + 1] = d, dayIdx
-        local prevDay = ctx.days[p.dayIdx]
-        if prevDay and prevDay ~= d and prevDay.logT then
-            R:line("OBS  RTW.day %s: recorded mean %.1f C (air read here %.1f, %.1f..%.1f), sheltered %.1f C: work %.2f h in %.2f h, paused %.2f h",
-                prevDay.label, prevDay.logT, prevDay.airSum / math.max(1, prevDay.airN), prevDay.airMin, prevDay.airMax,
-                (prevDay.logT + 16) / 2, prevDay.work, prevDay.hours, prevDay.paused)
-        end
-    end
-    d.airSum, d.airN = d.airSum + air, d.airN + 1
-    d.airMin, d.airMax = math.min(d.airMin, air), math.max(d.airMax, air)
-    if logT then d.logT = logT end
-    d.work, d.hours = d.work + dd, d.hours + dt
-    local running = s.state == "Processing" or s.state == "Paused"
-    -- Compared: the same TLG day at both reads, the ferment stage at both, the
-    -- batch still running. The status read advanced the batch with the day
-    -- mean recorded at that moment, so that is the rule's input.
-    if p.dayIdx == dayIdx and logT and p.stage == "ferment" and s.stage == "ferment" and running then
-        local rate = RT.fermentRate((logT + 16) / 2)
-        local diff = math.abs(dd - rate * dt)
-        ctx.cmp.n = ctx.cmp.n + 1
-        if diff >= ctx.cmp.worst then
-            ctx.cmp.worst = diff
-            ctx.cmp.where = string.format("%s, %.1f h in: did %.4f h, rule %.4f h", d.label, now - ctx.h0, dd, rate * dt)
-        end
-        if rate == 0 then
-            ctx.cold.n = ctx.cold.n + 1
-            if not (s.state == "Paused" and s.pause == "too_cold") then
-                ctx.cold.wrong[#ctx.cold.wrong + 1] = string.format("%s %s/%s", d.label, tostring(s.state), tostring(s.pause))
+function RT.W.inRoom(s)
+    local ok, r = pcall(function() return s:isInARoom() end)
+    return ok and r == true
+end
+
+-- A free room tile with a free room neighbour and a free outdoor neighbour,
+-- searched outwards from (x0, y0): all three are within the authority's 2.5
+-- tiles of the middle one, where the character stands.
+function RT.W.findSpots(x0, y0)
+    local W = RT.W
+    for r = 1, 80 do
+        for dx = -r, r do
+            for dy = -r, r do
+                if math.max(math.abs(dx), math.abs(dy)) == r then
+                    local s = sq(x0 + dx, y0 + dy, 0)
+                    if W.free(s) and W.inRoom(s) then
+                        local room, out
+                        for ox = -1, 1 do
+                            for oy = -1, 1 do
+                                local n = (ox ~= 0 or oy ~= 0) and sq(s:getX() + ox, s:getY() + oy, 0) or nil
+                                if W.free(n) then
+                                    if W.inRoom(n) then room = room or n else out = out or n end
+                                end
+                            end
+                        end
+                        if room and out then return { out, s, room } end
+                    end
+                end
             end
         end
     end
-    if s.state == "Paused" then
-        d.paused, ctx.pausedTally = d.paused + dt, ctx.pausedTally + dt
-        if s.pause == "too_cold" and not ctx.dialog then
-            -- What the player reads during a cold stop.
-            local before = #H.dialogs.texts
-            machineClick("RTW.status", RT.fermenter, "ContextMenu_TLG_MachineStatus")
-            ctx.dialog = H.dialogs.texts[before + 1] or "none"
-            closeDialogs()
+    return nil
+end
+
+-- The heat source on the third tile (again after a reload: a Lua heat source
+-- is not saved, and IsoCell.updateHeatSources drops it once out of bounds).
+function RT.W.heat()
+    local W = RT.W
+    local h = W.spots[3]
+    if W.hs then pcall(function() getCell():removeHeatSource(W.hs) end) end
+    W.hs = nil
+    return pcall(function()
+        W.hs = IsoHeatSource.new(h.x, h.y, 0, 1, W.heatC)
+        getCell():addHeatSource(W.hs)
+    end)
+end
+
+function RT.W.air(i)
+    local p = RT.W.spots[i]
+    local s = sq(p.x, p.y, 0)
+    if s == nil then return nil end
+    local ok, t = pcall(function() return getClimateManager():getAirTemperatureForSquare(s) end)
+    return ok and t or nil
+end
+
+function RT.W.refind()
+    local W = RT.W
+    for i, p in ipairs(W.spots) do
+        local s = sq(p.x, p.y, 0)
+        local objs = s and s:getWorldObjects()
+        for j = 0, (objs and objs:size() or 0) - 1 do
+            local it = objs:get(j):getItem()
+            if it and it:getFullType() == "TLG.FermenterVessel" then W.items[i] = it end
         end
     end
-    ctx.prev = { h = now, done = done, dayIdx = dayIdx, stage = s.stage }
+end
+
+-- Every game hour: the game's air at the three tiles, filed by hour like the
+-- mod files its readings, and the room formula checked against the game.
+function RT.W.onHour()
+    local W = RT.W
+    if not W.active then return end
+    local slot = math.floor(hours() - 0.5)
+    local cm = getClimateManager()
+    local t = cm:getTemperature()
+    local dl, power
+    pcall(function() dl = cm:getClimateValuesCopy():getDayLightLagged() end)
+    pcall(function() power = getWorld():isHydroPowerOn() end)
+    for i = 1, 3 do
+        local air = W.air(i)
+        if air == nil then W.unloaded[slot] = true else W.readings[i][slot] = air end
+    end
+    local room, out = W.readings[2][slot], W.readings[1][slot]
+    if room and type(dl) == "number" then
+        local f = TLG.Domain.Climate.roomAir(t, false, dl, power == true)
+        W.formula.n = W.formula.n + 1
+        if math.abs(f - room) >= W.formula.worst then
+            W.formula.worst = math.abs(f - room)
+            W.formula.where = string.format("air %.3f daylight %.3f power %s: formula %.4f, game %.4f", t, dl,
+                tostring(power), f, room)
+        end
+    end
+    if out then
+        W.outside.n = W.outside.n + 1
+        W.outside.worst = math.max(W.outside.worst, math.abs(out - t))
+    end
+end
+
+RT.sitesSetup = { name = "rtw_sites", timeout = 3000, fn = function(ctx, ticks)
+    local W = RT.W
+    if not ctx.t0 and RT.skip("rtw_sites") then return true end
+    if not ctx.t0 then
+        local here = player():getSquare()
+        local spots = W.findSpots(here:getX(), here:getY())
+        if spots == nil then
+            RT.abort = "no free room tile with a room and an outdoor neighbour nearby"
+            R:line("OBS  RTW.spots none found")
+            return true
+        end
+        W.spots, W.items, W.readings, W.unloaded = {}, {}, { {}, {}, {} }, {}
+        W.formula, W.outside = { n = 0, worst = 0, where = "none" }, { n = 0, worst = 0 }
+        for i, s in ipairs(spots) do
+            W.spots[i] = { x = s:getX(), y = s:getY() }
+            local it = instanceItem("TLG.FermenterVessel")
+            s:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            W.items[i] = it
+        end
+        local ok, err = W.heat()
+        player():setPosition(W.spots[2].x + 0.5, W.spots[2].y + 0.5, 0)
+        local power
+        pcall(function() power = getWorld():isHydroPowerOn() end)
+        R:line("OBS  RTW.spots outdoors %d,%d room %d,%d heated %d,%d; heat source %d C added=%s %s; grid power=%s",
+            W.spots[1].x, W.spots[1].y, W.spots[2].x, W.spots[2].y, W.spots[3].x, W.spots[3].y, W.heatC, tostring(ok),
+            tostring(err or ""), tostring(power))
+        R:check("RTW.grid_is_off", function() return power == false, "isHydroPowerOn=" .. tostring(power) end)
+        if not W.hooked then
+            Events.EveryHours.Add(RT.W.onHour)
+            W.hooked = true
+        end
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local seen = {}
+    for i, p in ipairs(W.spots) do seen[i] = TLG.Integration.Machines.siteOf(sq(p.x, p.y, 0)).room end
+    R:check("RTW.sites_seen", function()
+        return seen[1] == false and seen[2] == true and seen[3] == true,
+            string.format("in a room: outdoors=%s room=%s heated=%s", tostring(seen[1]), tostring(seen[2]), tostring(seen[3]))
+    end)
+    return true
+end }
+
+-- Compares the readings the mod filed for machine i since the last
+-- comparison with the harness's own (before the status read, which drops
+-- the previous day's).
+local function compareFiled(m, i, item)
+    local W = RT.W
+    local p = item and item:getModData().tlgProc
+    local running = p and (p.state == "Processing" or p.state == "Paused")
+    for _, s in ipairs(TLG.Tables.sortedKeys(W.readings[i])) do
+        if s > m.compared then
+            m.compared = s
+            if running then
+                local filed = p.temps and p.temps[s]
+                local diff = filed and math.abs(filed - W.readings[i][s]) or 999
+                m.filed.n = m.filed.n + 1
+                if s >= (W.resumeFrom or math.huge) and filed then m.afterTrip = m.afterTrip + 1 end
+                if diff >= m.filed.worst then
+                    m.filed.worst = diff
+                    m.filed.where = string.format("hour %d: filed %s, game %.4f", s, tostring(filed), W.readings[i][s])
+                end
+            end
+        end
+    end
+end
+
+-- Whether any hour of `day` went unread because the tiles were unloaded.
+local function unloadedOn(env, day)
+    for s in pairs(RT.W.unloaded) do
+        if env:dayIndex(s + 0.5) == day then return true end
+    end
+    return false
+end
+
+-- One status read of machine i: the reported day temperature against the
+-- harness's readings, the work against the stage rule fed by it.
+local function readMachine(ctx, i, env, now, day)
+    local W, m, item = RT.W, ctx.m[i], RT.W.items[i]
+    compareFiled(m, i, item)
+    local s = RT.statusOf(item)
+    local done = RT.doneHours(item)
+    local p = m.prev
+    local dt, dd = now - p.h, done - p.done
+    local running = s.state == "Processing" or s.state == "Paused"
+    local rec = item:getModData().tlgProc
+    if running and type(s.siteC) == "number" and rec and rec.site then
+        local want = env:siteDayMean(day, { room = rec.site.room, z = rec.site.z, temps = W.readings[i],
+            from = rec.startedAt }, now)
+        m.mean.n = m.mean.n + 1
+        if math.abs(want - s.siteC) >= m.mean.worst then
+            m.mean.worst = math.abs(want - s.siteC)
+            m.mean.where = string.format("%s: status %.4f, readings %.4f", RT.dayKey(), s.siteC, want)
+        end
+    end
+    if p.day == day and p.stage == "ferment" and s.stage == "ferment" and running and type(s.siteC) == "number" then
+        local rate = RT.fermentRate(s.siteC)
+        m.rule.n = m.rule.n + 1
+        if math.abs(dd - rate * dt) >= m.rule.worst then
+            m.rule.worst = math.abs(dd - rate * dt)
+            m.rule.where = string.format("%s, %.1f h in at %.2f C: did %.4f h, rule %.4f h", RT.dayKey(), now - ctx.h0,
+                s.siteC, dd, rate * dt)
+        end
+    end
+    local d = m.days[day]
+    if not d then
+        d = { label = RT.dayKey(), work = 0, paused = 0, siteC = nil }
+        m.days[day] = d
+    end
+    d.work = d.work + math.max(0, dd)
+    if s.state == "Paused" then d.paused = d.paused + dt end
+    if type(s.siteC) == "number" then d.siteC = s.siteC end
+    if s.state == "Paused" then m.pausedTally = m.pausedTally + dt end
+    -- Run 17: the warmed machine paused after every midnight (no reading yet
+    -- for the new day). On days read throughout it must not pause.
+    if i == 3 and s.state == "Paused" and not unloadedOn(env, day) then
+        m.readPauses = (m.readPauses or 0) + 1
+        m.readPauseAt = m.readPauseAt or string.format("%s, %.1f h in: %s", RT.dayKey(), now - ctx.h0, tostring(s.pause))
+    end
+    if running and s.stage == "ferment" and not m.dialog then
+        local before = #H.dialogs.texts
+        machineClick("RTW.status_" .. W.names[i], item, "ContextMenu_TLG_MachineStatus")
+        m.dialog = H.dialogs.texts[before + 1] or "none"
+        closeDialogs()
+    end
+    m.prev = { h = now, done = done, day = day, stage = s.stage }
+    m.last = s
+end
+
+-- The 12 game hour trip: true while it is under way.
+local function sitesTrip(ctx, ticks)
+    local W = RT.W
+    if not ctx.trip then
+        if hours() - ctx.h0 < W.tripAt then return false end
+        ctx.trip = { from = hours(), tick = ticks }
+        RT.speed(1)
+        player():teleportTo(W.spots[2].x, W.spots[2].y - RT.away, 0)
+        return true
+    end
+    if not ctx.trip.back then
+        if ticks - ctx.trip.tick < 120 then RT.speed(1); return true end
+        ctx.trip.awayFrom = ctx.trip.awayFrom or hours()
+        if sq(W.spots[2].x, W.spots[2].y, 0) == nil then ctx.trip.unloaded = true end
+        RT.speed(RT.waitSpeed)
+        if hours() - ctx.trip.awayFrom < W.tripHours then return true end
+        RT.speed(1)
+        player():teleportTo(W.spots[2].x, W.spots[2].y, 0)
+        ctx.trip.back, ctx.trip.backTick = hours(), ticks
+        return true
+    end
+    if not ctx.trip.checked then
+        if ticks - ctx.trip.backTick < 120 then RT.speed(1); return true end
+        player():setPosition(W.spots[2].x + 0.5, W.spots[2].y + 0.5, 0)
+        W.refind()
+        local ok = W.heat()
+        -- Before any access: nothing filed for the hours the tiles were unloaded.
+        local rec = W.items[3] and W.items[3]:getModData().tlgProc
+        local filed, gap = 0, 0
+        for _, s in ipairs(TLG.Tables.sortedKeys(W.unloaded)) do
+            gap = gap + 1
+            if rec and rec.temps and rec.temps[s] then filed = filed + 1 end
+        end
+        R:line("OBS  RTW.trip away %.2f game h, tiles unloaded=%s, hours unread %d, filed for them %d, heat source again=%s",
+            ctx.trip.back - ctx.trip.from, tostring(ctx.trip.unloaded == true), gap, filed, tostring(ok))
+        if ctx.trip.unloaded then
+            R:check("RTW.nothing_filed_while_unloaded", function()
+                return gap >= 8 and filed == 0, string.format("%d hours unloaded, %d filed", gap, filed)
+            end)
+        else
+            R:line("OBS  RTW.nothing_filed_while_unloaded INCONCLUSIVE: the tiles stayed loaded")
+        end
+        W.resumeFrom = math.floor(hours() - 0.5) + 1
+        ctx.trip.checked = true
+        ctx.next = hours()
+        return true
+    end
+    return false
+end
+
+RT.sitesFerment = { name = "rtw_ferment", timeout = 120000, fn = function(ctx, ticks)
+    local W = RT.W
+    if not ctx.t0 and RT.skip("rtw_ferment") then return true end
+    if not ctx.t0 then
+        -- One load at a time: the menu takes all the sugar carried.
+        removeAll("Base.Sugar"); removeAll("Base.Yeast")
+        for i, name in ipairs(W.names) do
+            give("Base.Sugar", 6); give("Base.Yeast", 1)
+            for _ = 1, 3 do
+                local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+                fc:Empty()
+                fc:addFluid(Fluid.Water, 10)
+            end
+            local r = machineClick("RTW.load_" .. name, W.items[i], "ContextMenu_TLG_LoadFerment")
+            R:check("RTW.loaded_" .. name, function()
+                return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6,
+                    string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+            end)
+        end
+        W.active = true
+        local env = TLG.World.env()
+        ctx.t0, ctx.h0, ctx.next = ticks, hours(), hours() + 1
+        ctx.m = {}
+        for i = 1, 3 do
+            ctx.m[i] = { prev = { h = hours(), done = RT.doneHours(W.items[i]), day = env:dayIndex(hours()), stage = "prepare" },
+                rule = { n = 0, worst = 0, where = "none" }, mean = { n = 0, worst = 0, where = "none" },
+                filed = { n = 0, worst = 0, where = "none" }, compared = -math.huge, afterTrip = 0, days = {},
+                pausedTally = 0 }
+        end
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if sitesTrip(ctx, ticks) then return nil end
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return nil end
+    ctx.next = hours() + 1
+    local env, now = TLG.World.env(), hours()
+    local day = env:dayIndex(now)
+    for i = 1, 3 do readMachine(ctx, i, env, now, day) end
     local elapsed = now - ctx.h0
-    if s.ok ~= false and running and elapsed < 400 then return nil end
+    local outS, heatS = ctx.m[1].last, ctx.m[3].last
+    local over = heatS.state == "OutputReady" and (outS.state == "Faulted" or outS.state == "OutputReady")
+    if not over and elapsed < 200 then return nil end
 
     RT.speed(1)
-    local last = ctx.days[ctx.order[#ctx.order]]
-    if last and last.logT then
-        R:line("OBS  RTW.day %s (last, partial): recorded mean %.1f C (air read here %.1f), work %.2f h in %.2f h, paused %.2f h",
-            last.label, last.logT, last.airSum / math.max(1, last.airN), last.work, last.hours, last.paused)
+    W.active = false
+    if W.hs then pcall(function() getCell():removeHeatSource(W.hs) end) end
+    -- Per TLG day: the mean of the readings at each tile, what TLG recorded
+    -- (outdoor air t, unheated room r0), each machine's day temperature,
+    -- work and pauses.
+    local log = TLG.World.get().climateLog or {}
+    local daysSeen = {}
+    for _, i in ipairs({ 1, 2, 3 }) do
+        for d in pairs(ctx.m[i].days) do daysSeen[d] = true end
     end
-    local proc = RT.fermenter:getModData().tlgProc or {}
-    R:line("OBS  RTW.end state=%s pause=%s after %.1f game h; paused %.1f h by the hourly reads, pausedFor %.2f h in the record",
-        tostring(s.state), tostring(s.pause), elapsed, ctx.pausedTally, proc.pausedFor or -1)
-    -- Full days only (20+ hourly reads): the recorded mean has to be the mean
-    -- of the air, weather included.
-    local coldest, worstGap, gapAt, full = 99, 0, "none", 0
-    for _, k in ipairs(ctx.order) do
-        local x = ctx.days[k]
-        if x.logT then coldest = math.min(coldest, (x.logT + 16) / 2) end
-        if x.logT and x.airN >= 20 then
-            full = full + 1
-            local gap = math.abs(x.logT - x.airSum / x.airN)
-            if gap >= worstGap then worstGap, gapAt = gap, x.label end
+    local roomOverOut = { n = 0, worst = math.huge, where = "none" }
+    for _, d in ipairs(TLG.Tables.sortedKeys(daysSeen)) do
+        local means = {}
+        for i = 1, 3 do
+            local sum, n = 0, 0
+            for s, v in pairs(W.readings[i]) do
+                if env:dayIndex(s + 0.5) == d then sum, n = sum + v, n + 1 end
+            end
+            means[i] = n > 0 and string.format("%.1f (%d h)", sum / n, n) or "-"
+        end
+        local rec = log[d] or {}
+        local parts = {}
+        for i = 1, 3 do
+            local x = ctx.m[i].days[d]
+            parts[i] = x and string.format("%s %s C work %.2f h paused %.2f h", W.names[i],
+                x.siteC and string.format("%.2f", x.siteC) or "-", x.work, x.paused) or (W.names[i] .. " -")
+        end
+        local label = (ctx.m[1].days[d] or ctx.m[2].days[d] or {}).label or tostring(d)
+        R:line("OBS  RTW.day %s: air read outdoors %s, room %s, heated %s; recorded t %s r0 %s; %s; %s; %s", label,
+            means[1], means[2], means[3], rec.t and string.format("%.2f", rec.t) or "-",
+            rec.r0 and string.format("%.2f", rec.r0) or "-", parts[1], parts[2], parts[3])
+        local o, r = ctx.m[1].days[d], ctx.m[2].days[d]
+        if o and r and o.siteC and r.siteC and o.siteC < 22 then
+            roomOverOut.n = roomOverOut.n + 1
+            if r.siteC - o.siteC < roomOverOut.worst then
+                roomOverOut.worst, roomOverOut.where = r.siteC - o.siteC, label
+            end
         end
     end
-    R:check("RTW.recorded_day_mean_is_the_air_mean", function()
-        return full >= 2 and worstGap <= 1.5, string.format("%d full days, worst gap %.2f C on %s", full, worstGap, gapAt)
-    end)
-    R:check("RTW.cold_enough_to_slow", function()
-        return coldest < 18, string.format("coldest sheltered day %.1f C", coldest)
-    end)
-    R:check("RTW.progress_follows_the_day_temperature", function()
-        return ctx.cmp.n >= 24 and ctx.cmp.worst <= 0.01,
-            string.format("%d hours compared, worst %.4f h (%s)", ctx.cmp.n, ctx.cmp.worst, ctx.cmp.where)
-    end)
-    if ctx.cold.n > 0 then
-        R:check("RTW.too_cold_hours_paused", function()
-            return #ctx.cold.wrong == 0, string.format("%d cold hours, not paused as too cold: [%s]", ctx.cold.n,
-                table.concat(ctx.cold.wrong, " "))
-        end)
-        R:check("RTW.status_shows_too_cold", function()
-            return has(ctx.dialog, getText("IGUI_TLG_MachineState_Paused")) and has(ctx.dialog, getText("IGUI_TLG_Pause_too_cold")),
-                tostring(ctx.dialog)
-        end)
-    else
-        R:line("OBS  RTW.too_cold_hours_paused NOT REACHED: no day was cold enough to stall")
+    for i = 1, 3 do
+        local s, rec = ctx.m[i].last, W.items[i]:getModData().tlgProc or {}
+        R:line("OBS  RTW.end %s state=%s pause=%s pausedFor %.2f h, after %.1f game h; status: %s", W.names[i],
+            tostring(s.state), tostring(s.pause), rec.pausedFor or -1, elapsed, tostring(ctx.m[i].dialog))
     end
-    if s.state == "Faulted" then
-        R:check("RTW.spoils_after_72_paused_hours", function()
-            return s.pause == "batch_spoiled" and math.abs(ctx.pausedTally - 72) <= 1.5 and math.abs((proc.pausedFor or 0) - 72) < 1e-6,
-                string.format("pause=%s paused %.2f h by reads, pausedFor %.2f", tostring(s.pause), ctx.pausedTally,
-                    proc.pausedFor or -1)
+    R:check("RTW.room_air_is_the_formula", function()
+        return W.formula.n >= 24 and W.formula.worst <= 0.01,
+            string.format("%d hours, worst %.5f C (%s)", W.formula.n, W.formula.worst, W.formula.where)
+    end)
+    R:check("RTW.outdoor_air_is_the_air", function()
+        return W.outside.n >= 24 and W.outside.worst <= 1e-4, string.format("%d hours, worst %.6f C", W.outside.n, W.outside.worst)
+    end)
+    local warmer, both = 0, 0
+    for s, v in pairs(W.readings[3]) do
+        local r = W.readings[2][s]
+        if r then
+            both = both + 1
+            if v >= r + 10 then warmer = warmer + 1 end
+        end
+    end
+    R:check("RTW.heated_tile_is_warmer", function()
+        return both >= 24 and warmer >= both - 2, string.format("%d of %d hours at least 10 C over the room tile", warmer, both)
+    end)
+    R:check("RTW.room_warmer_than_outdoors", function()
+        return roomOverOut.n >= 2 and roomOverOut.worst >= 3,
+            string.format("%d days, smallest gap %.2f C (%s)", roomOverOut.n, roomOverOut.worst, roomOverOut.where)
+    end)
+    for i, name in ipairs(W.names) do
+        local m = ctx.m[i]
+        R:check("RTW.readings_filed_" .. name, function()
+            return m.filed.n >= 24 and m.filed.worst <= 1e-6,
+                string.format("%d hours, worst %.6f (%s)", m.filed.n, m.filed.worst, m.filed.where)
         end)
-    elseif s.state == "OutputReady" then
-        R:check("RTW.slowed_by_the_cold", function()
-            return elapsed > 98 and ctx.pausedTally < 72, string.format("finished after %.1f game h (97 h at full rate)", elapsed)
+        R:check("RTW.day_temperature_from_readings_" .. name, function()
+            return m.mean.n >= 24 and m.mean.worst <= 1e-6,
+                string.format("%d reads, worst %.6f (%s)", m.mean.n, m.mean.worst, m.mean.where)
+        end)
+        R:check("RTW.progress_follows_site_temperature_" .. name, function()
+            return m.rule.n >= 24 and m.rule.worst <= 0.01,
+                string.format("%d hours, worst %.4f h (%s)", m.rule.n, m.rule.worst, m.rule.where)
+        end)
+    end
+    if ctx.trip and ctx.trip.unloaded then
+        R:check("RTW.readings_resume_after_return", function()
+            return ctx.m[3].afterTrip >= 6, string.format("%d hours filed after the return", ctx.m[3].afterTrip)
+        end)
+    end
+    R:check("RTW.status_names_the_site", function()
+        return has(ctx.m[1].dialog, getText("IGUI_TLG_Site_outdoors")) and has(ctx.m[2].dialog, getText("IGUI_TLG_Site_room"))
+            and has(ctx.m[3].dialog, getText("IGUI_TLG_Site_room")), string.format("%s | %s | %s",
+            tostring(ctx.m[1].dialog), tostring(ctx.m[2].dialog), tostring(ctx.m[3].dialog))
+    end)
+    R:check("RTW.heated_batch_finishes", function()
+        return heatS.state == "OutputReady", string.format("state=%s after %.1f game h", tostring(heatS.state), elapsed)
+    end)
+    R:check("RTW.heated_never_paused_on_days_read_throughout", function()
+        return (ctx.m[3].readPauses or 0) == 0, string.format("%d paused reads (first: %s)", ctx.m[3].readPauses or 0,
+            tostring(ctx.m[3].readPauseAt or "none"))
+    end)
+    local outRec = W.items[1]:getModData().tlgProc or {}
+    if outS.state == "Faulted" then
+        R:check("RTW.outdoors_spoils_after_72_paused_hours", function()
+            return outS.pause == "batch_spoiled" and math.abs((outRec.pausedFor or 0) - 72) < 1e-6,
+                string.format("pause=%s pausedFor %.2f", tostring(outS.pause), outRec.pausedFor or -1)
         end)
     else
-        R:line("OBS  RTW.outcome NOT REACHED within 400 game hours: state=%s", tostring(s.state))
+        R:line("OBS  RTW.outdoors_spoils NOT REACHED: state=%s pausedFor %.2f", tostring(outS.state), outRec.pausedFor or -1)
     end
     return true
 end }
 
-RT.winterSteps = { RT.waitWorld, RT.setup, RT.winterFerment, RT.finish }
+RT.winterSteps = { RT.waitWorld, RT.setup, RT.sitesSetup, RT.sitesFerment, RT.finish }
 
 ------------------------------------------------------------------------------
 -- Wiring
@@ -2786,6 +3094,13 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" then
                 SandboxVars.StartMonth = 1
                 SandboxVars.StartDay = 15
                 SandboxVars.StartTime = 2
+                -- Grid off from the start: power exists while the world's
+                -- age in days is at most ElecShutModifier (BC
+                -- SandboxOptions.doesPowerGridExist), and a powered room
+                -- holds 22 C. ElecShut 1 is the preset without a random day
+                -- (BC SandboxOptions.randomElectricityShut).
+                SandboxVars.ElecShut = 1
+                SandboxVars.ElecShutModifier = -1
             end
         end,
         onStart = function()
