@@ -8,10 +8,11 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP client (translations, item save/load, vehicles, generators, pumps) | Client harness not yet executed |
+| RT-SP: vehicle/generator start gates via vanilla actions, stall on poor fuel, driving burn | Harness starts engines and generators directly |
+| RT-SP: TLG pour into a vehicle, station-reservoir pour, machines running a batch, crafting | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
-| Performance baseline | Requires a loaded client world |
-| Packaged-artifact install/upgrade rehearsal | Package not built yet |
+| Performance baseline | Requires a measured client session |
+| Packaged-artifact install/upgrade rehearsal | Not run |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -108,3 +109,51 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
   With energy, biodiesel, biogas, wood gas, propane and conversion content
   loaded at boot: no registry validation problems, no duplicate definitions,
   all four adapters installed, "ready" logged. Clean `quit`.
+
+## 2026-10-31 — RT-SP client harness, launches 1–5 (42.21.0)
+
+Command: `tools/run-sp-harness.ps1` from an unlocked desktop. Each launch
+runs phase A (debug scenario at the Muldraugh Gas2Go), saves, exits to the
+menu, continues the save and runs phase B (persistence).
+
+* Launch 1: no result. The client had emptied `mods/default.txt` on its
+  first start (no `reset-mods-42_00.txt` yet), so no mod loaded and the game
+  idled at the menu. Setup now writes the marker and the list every time.
+* Launch 2: no result. The user had to click "Click to Start" and close the
+  Survival Guide; then the TLG vehicle adapter raised "tried to call nil"
+  (`getVehicles():get(i)` on a `HashSet`) and "Break On Error" halted the
+  game in the Lua debugger. Fixed: Set iteration (adapter and two menus),
+  automatic click, options, debugger break off for harness runs.
+* Launch 3 (`docs/evidence/2026-10-31_rt-sp_harness_run3_phaseA.txt`):
+  phase A 41 PASS / 5 FAIL; phase B never ran (the world's `mods.txt` was
+  empty, then the 20-minute watchdog stopped the client). All 5 failures were
+  harness placement (pump → vehicle, second generator).
+* Launch 4 (`docs/evidence/2026-10-31_rt-sp_harness_run4.txt`): phase A
+  42 PASS / 1 FAIL (the TLG pour target generator was nearly full: 0.015 L
+  moved, conserved); phase B 9 PASS / 1 FAIL: a can on the ground came back
+  without an item FluidContainer, which exposed the container-ownership defect
+  (fixed, see engine-capabilities G02).
+* Launch 5 (`docs/evidence/2026-10-31_rt-sp_harness_run5.txt`): phase A
+  **47 PASS / 0 FAIL**; phase B 9 PASS / 2 FAIL. The two failures are harness
+  lookups that matched the neighbouring vehicle / generator; the records
+  found equal, to the four decimals logged, the phase A records of those
+  objects. Lookups now match by record id (not re-run).
+
+Verified at runtime (RT-SP, details in `engine-capabilities.md`):
+
+* End-to-end station → can → vehicle → can → generator with one batch:
+  10.00000 L at every hop, water/sediment and degradation carried (largest
+  per-hop deviation 2e-8; end-to-end 4e-5 from ageing during the run).
+* Pump → can 10 L = −10 units; pump → vehicle 59 L = −59 units.
+* Ethanol blend through the vanilla can → vehicle path; native idle burn of
+  a car and generator burn reconciled proportionally.
+* Generator record through pickup, drop action, `forceDropHeavyItems` and
+  floor drag; two identical cars keep separate part modData and engine power.
+* TLG pour into a generator (petrol 3 L accepted and conserved; E100 refused
+  without confirmation, nothing moved); fuel context menu (10 entries);
+  sample request round trip; EN translations on the client.
+* Save/reload of inventory, ground and machine items, vehicle tank,
+  generator and pump records, global ModData, TLG world record.
+
+Not run: see the standing list above. Domain suite after the fixes:
+`modules=13 cases=138 passed=138 failed=0`; compile check `compiled=90 errors=0`.

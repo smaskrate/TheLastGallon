@@ -11,49 +11,67 @@ compatible with another build until re-tested.
 | Item ↔ item pour (`ISFluidTransferAction`) | wrapped `FluidContainer.Transfer` | yes | native | **Verified RT-DS** (adapter calls without a character action); vanilla action itself NOT RUN |
 | Any Lua code calling `FluidContainer.Transfer` | same wrapper | yes | native | Verified RT-DS |
 | Java-side fluid moves (not via Lua) | none | no → reconciled as untracked inflow at baseline | native | SRC/BC reasoning |
-| Can → vehicle (`ISAddGasolineToVehicle`) | action wrap (new/complete/stop/serverStop) | yes | native | SRC-ONLY |
-| Vehicle → can siphon (`ISTakeGasolineFromVehicle`) | action wrap; can fluids corrected from Petrol to the tank blend | yes | native | SRC-ONLY |
-| Pump → can (`ISTakeFuel`) | action wrap; pump corrected (1 L/unit, no duplicate increment); can fluids set to reservoir blend | yes | pump: TLG-corrected native units | SRC-ONLY |
-| Pump → vehicle (`ISRefuelFromGasPump`) | action wrap; pump corrected from 1.25 L/unit to 1 L/unit | yes | same | SRC-ONLY |
-| Can → generator (`ISAddFuel`) | action wrap | yes | native | SRC-ONLY |
-| Generator pickup (`ISTakeGenerator`) | wrap copies sidecar to item | yes | native fuel copied by vanilla | SRC-ONLY |
-| Generator drop (`ISDropWorldItemAction`) / `IsoGenerator.new` | wrap copies sidecar to object | yes | native | SRC-ONLY |
+| Pump → can (`ISTakeFuel`) | action wrap; pump corrected (1 L/unit, no duplicate increment); can fluids set to reservoir blend | yes, incl. water/sediment | pump: TLG-corrected native units | **Verified RT-SP** (runs 3–5: 10 L = −10 units) |
+| Can → vehicle (`ISAddGasolineToVehicle`) | action wrap (new/complete/stop/serverStop) | yes | native | **Verified RT-SP** (station fuel; E25 blend 8 L) |
+| Vehicle → can siphon (`ISTakeGasolineFromVehicle`) | action wrap; can fluids corrected from Petrol to the tank blend | yes | native | **Verified RT-SP** |
+| Pump → vehicle (`ISRefuelFromGasPump`) | action wrap; pump corrected from 1.25 L/unit to 1 L/unit | yes | same | **Verified RT-SP** (run 5: 59 L = −59 units) |
+| Can → generator (`ISAddFuel`) | action wrap | yes | native | **Verified RT-SP** |
+| Station → can → vehicle → can → generator | all of the above, one batch | yes, end to end | — | **Verified RT-SP** (runs 3–5: 10.00000 L every hop) |
+| TLG pour (`ISTLGPourFuel`, any fuel) | authoritative transfer | yes | TLG sets native | **Verified RT-SP** into a generator (petrol accepted, E100 refused without confirmation); vehicle target NOT RUN |
+| Generator pickup (`ISTakeGenerator`) | wrap copies sidecar to the new hand item | yes | native fuel copied by vanilla | **Verified RT-SP**, incl. taking a second generator while carrying one |
+| Generator drop: drop action, `forceDropHeavyItems`, inventory drag to the floor; `IsoGenerator.new` | wraps re-attach the sidecar to the converted object | yes | native | **Verified RT-SP** (all three drop paths); drops done by Java alone are not seen |
+| Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Verified RT-SP** (run 5; the fluid sits on the world object after reload) |
 | Still → can (TLG command) | TLG writes native fluids + sidecar | yes (fresh) | TLG then native | SRC-ONLY |
 | Fermenter → still (TLG command) | machine-to-machine | n/a (wash) | TLG | Domain tests |
 | Third-party mods | not tested | — | — | NOT RUN |
 
-Vanilla refuel menus only offer containers that contain `Petrol`; pure
-ethanol cannot be poured into vehicles/generators through vanilla menus. A
-TLG pour action for non-petrol fuels is pending (see release checklist).
+Vanilla refuel menus only offer containers that contain `Petrol`
+(`contains(Fluid.Petrol)`): a station can with water and sediment is still
+offered (RT-SP), pure ethanol is not. Non-petrol fuels use the TLG pour
+action from the fuel menu. The TLG fuel menu is not shown for cans lying on
+the ground (pick the can up first): item commands resolve cans in the
+player's inventory only.
 
 ## Vehicles
 
 | Chassis | Stock profile | Conversion | Evidence |
 | --- | --- | --- | --- |
-| All vanilla cars | engine_si_stock (assumed: every vanilla tank is "Gasoline") | — | SRC (content type), NOT RUN |
+| Base.CarNormal | engine_si_stock (59 L tank) | — | **RT-SP**: refuel, siphon, idle burn reconciled, tank record survives reload |
+| Other vanilla cars | engine_si_stock (assumed: every vanilla tank is "Gasoline") | — | SRC (content type), NOT RUN |
 | Conversion chassis | see `TLG/Content/Conversions.lua` | flex / others | domain only, NOT RUN |
 
-Per-instance part modData and `setEngineFeature` are expected per vehicle
-(G09) but NOT RUN.
+Per-instance part modData and `setEngineFeature` act on one vehicle only
+(G09, RT-SP with two `Base.CarNormal`). The start gate
+(`ISStartVehicleEngine`) is NOT RUN: the harness starts engines directly. The
+per-minute effect handler ran without errors while idling on good fuel
+(run 5); a stall on poor or incompatible fuel has not been exercised.
 
 ## Generators
 
 `Base.Generator`, `Base.Generator_Old`, `Base.Generator_Yellow`,
 `Base.Generator_Blue` (item scripts, verified ids). Stock profile
 `generator_si_stock`. Burn is native; start gate uses `failToStart()`.
-Runtime NOT RUN.
+RT-SP (`Base.Generator`): max fuel 10 L; idle burn 0.015 L in 0.5–1.3 game
+hours with nothing connected; the native burn is reconciled proportionally
+into the record. Start gate (`ISActivateGenerator`) NOT RUN: the harness
+activates generators directly. Other generator types NOT RUN.
 
 ## Stations
 
 Pumps are objects whose `getPipedFuelAmount()` > 0 (amount stored in object
-modData). B42.21 also defines a `FuelPump` entity with a 22 000 L
-FluidContainer; which one map pumps use is NOT RUN. Infinite-pump sandbox:
-quantities are not corrected, reservoirs still age.
+modData). RT-SP: the Muldraugh Gas2Go has 8 such pump objects
+(`location_shop_gas2go_01_12/13`, about 4 000–15 000 units each); the
+station reservoir record and unit count survive save and reload. B42.21 also
+defines a `FuelPump` entity with a 22 000 L FluidContainer; the harness
+dispensed from the piped amount and did not check whether map pumps also
+carry that entity. Infinite-pump sandbox: quantities are not corrected,
+reservoirs still age (NOT RUN).
 
 ## Maps
 
 Muldraugh, KY is the only map referenced by tests (Gas2Go at 10639,10615 from
-`media/maps/Muldraugh, KY/objects.lua`). No map is verified at runtime.
+`media/maps/Muldraugh, KY/objects.lua`). RT-SP ran there (pumps at
+10636/10654, 10622–10630). No other map is verified at runtime.
 
 ## Multiplayer
 

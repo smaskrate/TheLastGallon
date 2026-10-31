@@ -6,7 +6,9 @@ Build: Project Zomboid **42.21.0** (`4a0e9546ec`). Evidence types:
 * **BC** – `javap` of `projectzomboid.jar` (method signatures/bytecode).
 * **RT-DS** – runtime experiment on the isolated dedicated server
   (`tests/ingame/TheLastGallonHarness`, result file `TLG_harness_server.txt`).
-* **RT-SP** – runtime experiment in a single-player client.
+* **RT-SP** – runtime experiment in a single-player client
+  (`tools/run-sp-harness.ps1`, result file `TLG_harness_sp.txt`; runs of
+  2026-10-31 in `docs/evidence/2026-10-31_rt-sp_harness_run*.txt`).
 * **RT-MP** – runtime experiment with a server and two clients.
 
 Status values: **PASS** (verified at runtime), **SRC-ONLY** (source evidence,
@@ -17,15 +19,15 @@ alternative), **NOT RUN**.
 
 | Gate | Question | Status | Evidence / result |
 | --- | --- | --- | --- |
-| G01 Packaging | What structure loads? | **PASS (DS)**; client NOT RUN | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations unresolved on DS |
-| G02 Fluids | Type, mixtures, metadata | **PASS (DS) item level**; save/reload NOT RUN | Mod fluids register and blend; transfers proportional; TLG container adapter carries condition through the wrapped `FluidContainer.Transfer` (M2.* checks) |
-| G03 Vehicle consumption | Where does driving/idling change quantity? | SRC-ONLY | Tank is `VehiclePart` content amount (float litres); burn is in Java; mod never subtracts |
-| G04 Generator consumption | Extend fuel/burn? | SRC-ONLY | `IsoGenerator.update()` burns `fuel` using `SandboxOptions.generatorFuelConsumption`; `failToStart()` exists |
-| G05 Generator lifecycle | State survives pickup? | SRC-ONLY → requires adapter | Vanilla copies only `fuel` + condition between object and item |
-| G06 Stations | Per-pump or shared? | SRC-ONLY | Per-object `getPipedFuelAmount()`; inconsistent native unit conversion; vanilla defect in `ISTakeFuel:complete()` |
+| G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), not on the DS |
+| G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
+| G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP)** idle; driving NOT RUN; start gate NOT RUN | Native idle burn (0.0148 L in 0.5 h) reconciled proportionally into the tank record; mod never subtracts |
+| G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn; start gate NOT RUN | Native burn (0.015 L, nothing connected) reconciled proportionally; `ISActivateGenerator` gate not exercised |
+| G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator) and drag to the floor all carry the record |
+| G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
 | G07 Action authority | Which stage mutates on the server? | SRC-ONLY | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`; MP NOT RUN |
-| G08 Persistence | Reliable stores/IDs | **PARTIAL (DS)** | Global ModData persists across DS restart after `saveGame()`; item/vehicle/object modData save/load NOT RUN |
-| G09 Per-instance vehicles | Modify one vehicle independently | SRC-ONLY | `VehiclePart:getModData()`, `BaseVehicle:setEngineFeature(q, l, p)` are per instance |
+| G08 Persistence | Reliable stores/IDs | **PASS (DS + SP)** single player | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5); MP reconnect NOT RUN |
+| G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
 | G12 Unloaded machines | What simulates unloaded? | NOT RUN | `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC) |
@@ -55,7 +57,7 @@ Probe: `tests/support/runtime_probe.lua` (runner) and
 | `loadstring`, `getfenv`, `os.time` | available | Not used by domain code |
 | `io`, `debug`, `load`, `dofile` | nil | — |
 
-## G01 Packaging — PASS on dedicated server
+## G01 Packaging — PASS (dedicated server and client)
 
 * **BC** `ZomboidFileSystem.getAllModFolders`: scan order `workshop,steam,mods`;
   `mods` = `getCacheDirSub("mods")` only. `getAllModFoldersAux` skips a folder
@@ -76,10 +78,13 @@ Probe: `tests/support/runtime_probe.lua` (runner) and
 * **RT-DS** translations: `getText("IGUI_TLG_ModName")`, item display name and
   `Fluid_Name_TLG_Ethanol` all returned their keys on the dedicated server.
   **BC** `Translator` loads `%s/media/lua/shared/Translate/%s/%s.json`.
-  Whether a dedicated server loads mod translations at all is unverified;
-  client check pending (RT-SP).
+  Whether a dedicated server loads mod translations at all is unverified.
+* **RT-SP** (runs 3–5): on the client `IGUI_TLG_ModName`, `Fluid_Name_TLG_Ethanol`,
+  `ContextMenu_TLG_Fuel` and the `TLG.FuelSampleKit` display name all resolve
+  to their English text. Mod and harness load from `<cachedir>/mods` once
+  `mods/default.txt` lists them (see "Client harness status").
 
-## G02 Fluids — PARTIAL
+## G02 Fluids — PASS (DS + SP)
 
 RT-DS results (`TLG_harness_server.txt`):
 
@@ -120,10 +125,39 @@ RT-DS results (`TLG_harness_server.txt`):
     rounding destroys ~2.5e-7 L per transfer; never creates). Reconciliation
     tolerance is therefore 1e-4 L.
   * A water bottle is ignored (`foreign_fluid`).
-* NOT RUN: save/load of item fluids and sidecars, drop/pickup, world-object
-  containers (rain barrels, FuelPump entity).
+* RT-SP (runs 4–5): fluids and modData of a can in the inventory and of a
+  can on the ground survive save and reload. **After reload a can on the
+  ground has no item FluidContainer: the fluid sits on its
+  `IsoWorldInventoryObject`** (`itemOwnContainer=false
+  ownerIsWorldObject=true`); `InventoryItem.getFluidContainerFromSelfOrWorldItem()`
+  (BC) returns it. Before the fix of 2026-10-31 the adapter treated such a
+  container as a world object (storage `drum_steel`, record written to the
+  world object instead of the item); it now resolves both to the item, and
+  run 5 found the ground can's TLG record after reload (`status=ok`).
+* NOT RUN: world-object containers (rain barrels, FuelPump entity), the
+  vanilla `ISFluidTransferAction` driven by a character.
 
-## G03 Vehicle fuel — SRC-ONLY
+## G03 Vehicle fuel — PASS (SP) for refuel, siphon and idle; start gate NOT RUN
+
+RT-SP (runs 3–5, `Base.CarNormal`, 59 L tank):
+
+* Can → tank (`ISAddGasolineToVehicle`) and tank → can (`ISTakeGasolineFromVehicle`)
+  move exactly the litres taken and carry composition, contaminants and
+  degradation (largest deviation 2e-8); an E25 blend (6 L petrol + 2 L
+  ethanol) arrives as 6 + 2 in the tank record.
+* A station can with `TLG_FuelWater`/`TLG_FuelSediment` still satisfies the
+  vanilla menu predicate `contains(Fluid.Petrol)`.
+* Idle on station fuel (profile `engine_si_stock`, grade good, compatible):
+  0.0148 L burned in 0.5 game hours at game speed 4; the next read reported
+  `reconciled`, totals equal to the native amount and unchanged proportions.
+  Driving consumption: NOT RUN.
+* The harness starts engines with `tryStartEngine`/`engineDoStartingSuccess`,
+  so the TLG start gate on `ISStartVehicleEngine` is NOT RUN. The per-minute
+  effect handler ran without errors on good fuel; a stall was not exercised.
+* `IsoCell.getVehicles()` returns a `java.util.HashSet` on 42.21 (BC); use
+  `ipairs(set:toArray())`.
+
+Source evidence:
 
 * SRC `ISAddGasolineToVehicle.lua`: tank = `part:setContainerContentAmount`
   (floored litres during `update()`, exact target in `complete()`); the can is
@@ -140,9 +174,23 @@ RT-DS results (`TLG_harness_server.txt`):
   `engineDoStartingFailed(reason)`, `engineDoStalling`, `isEngineRunning`) and
   per-instance `setEngineFeature(quality, loudness, power)`.
 * Consumption is Java-side; the adapter design never subtracts fuel itself.
-  Driving/idle instrumentation: NOT RUN.
 
-## G04/G05 Generators — SRC-ONLY
+## G04/G05 Generators — PASS (SP); start gate NOT RUN
+
+RT-SP (runs 3–5, `Base.Generator`, max fuel 10 L):
+
+* Can → generator (`ISAddFuel`) moves exactly the litres and carries the
+  record; native burn (0.015 L, nothing connected, `GeneratorFuelConsumption`
+  0.1) is reconciled proportionally on the next read. The harness activates
+  the generator with `setActivated(true)`, so the `ISActivateGenerator` start
+  gate is NOT RUN.
+* Pickup carries the record to the new item (found in the primary hand,
+  since vanilla equips it there); the drop action, `forceDropHeavyItems`
+  (taking a second generator while carrying one) and dragging the item to
+  the floor all carry it to the converted object, with vanilla fuel equal.
+  The second generator taken in the same action got its own record.
+
+Source evidence:
 
 * BC `IsoGenerator`: `getFuel/setFuel/getMaxFuel/getFuelPercentage`,
   `isActivated/setActivated`, `failToStart()`, `getCondition`,
@@ -161,12 +209,27 @@ RT-DS results (`TLG_harness_server.txt`):
   itself when a generator item is dropped, bypassing Lua's `IsoGenerator.new`.
 * Implemented (D-013): the adapter carries the TLG sidecar, device identity
   and conversion project by wrapping `ISTakeGenerator.complete` (object →
-  item), `ISDropWorldItemAction.complete` (item → the new object on that
-  square) and `IsoGenerator.new` (Lua paths). Wrapping a Java class function
-  from Lua is proven for `FluidContainer.Transfer` only; these paths are
-  NOT RUN.
+  item), every Lua drop path (`ISDropWorldItemAction.complete`,
+  `forceDropHeavyItems`, `ISTransferAction:transferItem` to the floor) and
+  `IsoGenerator.new` (wrapping verified RT-SP). Drops done by Java alone are
+  not seen.
 
-## G06 Stations — SRC-ONLY
+## G06 Stations — PASS (SP)
+
+RT-SP (runs 3–5, Muldraugh Gas2Go, 8 pump objects, contamination on):
+
+* With the TLG station adapter installed, pump → can took 10 L and the pump
+  lost exactly 10 units; pump → vehicle (run 5) put 59 L in the tank and the
+  pump lost exactly 59 units, so both vanilla conventions (1 L and 1.25 L per
+  unit) are corrected to 1 L per unit and the remaining fraction is kept in
+  the record (|frac| < 1e-11 after whole-litre draws).
+* The reservoir record (pre-aged, with water and sediment) is created on
+  first contact; the delivered parcel carries its composition and
+  degradation; record and unit count survive save and reload.
+* Not verified at runtime: the vanilla defects themselves (the adapter
+  overrides the pump amount after both actions, so the uncorrected values
+  were not observed), infinite-fuel sandbox, the TLG "pour into the station
+  reservoir" command.
 
 * BC `IsoObject.getPipedFuelAmount()/setPipedFuelAmount(int)`: an integer per
   pump object, **stored in the object's modData** under
@@ -202,15 +265,27 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 `ISRefuelFromGasPump:update()` has **no** `isClient()` guard
 (`ISRefuelFromGasPump.lua:14-46`). Two-client experiments: NOT RUN.
 
-## G08 Persistence — PARTIAL
+## G08 Persistence — PASS (DS + SP, single player)
 
 * RT-DS: `ModData.getOrCreate("TLGHarness")` counter incremented across a hard
   restart after `saveGame()` (boot 1 → 2). Clean `quit` via console saves and
   exits ("Shutdown handling finished").
 * World time does not advance on an empty server with `PauseEmpty=true`
   (`getWorldAgeHours()` stayed 2.0 across boots).
-* NOT RUN: item modData in containers across save/load, vehicle part modData,
-  generator object modData, chunk unload/reload, reconnect.
+* RT-SP (runs 4–5; `saveGame()`, exit to menu, continue): global ModData,
+  inventory item fluids + modData, the TLG record of a can in the inventory
+  and of a can on the ground, a mod item (`TLG.FermenterVessel`) lying on the
+  ground with its modData, vehicle tank records (vehicle 1 in run 4, the E25
+  blend of vehicle 2 in run 5), generator object records (both generators
+  across runs 4–5), the pump record and unit count, and the TLG world record
+  all came back unchanged. Run 5's vehicle and generator checks failed only
+  because the harness looked up a neighbouring object (both records it found
+  were intact); the lookup now matches by record id.
+* Debug-scenario worlds: the scenario launcher does not give the new world
+  any mods, so its `mods.txt` was empty and continuing it loaded none; the
+  harness copies the active mods into `currentGame` before `createWorld`,
+  as the Solo path does (SRC `MainScreen.lua:1400`).
+* NOT RUN: chunk unload/reload, MP reconnect.
 
 ## G10–G14
 
@@ -253,6 +328,19 @@ fixes, each found by a failed launch:
    adapter, the fuel menu and the workshop menu by iterating
    `ipairs(set:toArray())`, the pattern vanilla uses for Sets (SRC
    `server/Vehicles/Vehicles.lua:1037`).
+5. Run 3: the debug-scenario world was saved with an empty `mods.txt`, so
+   the continued save loaded no mod and phase B never ran (see G08).
+6. Runs 3–4: `teleportTo(x, y, 0)` resolves to `teleportTo(int, int, int)`
+   (BC overloads), so the player landed on the tile corner, outside the
+   vehicle's fuel-cap area, and `ISRefuelFromGasPump` (valid only in that
+   area) never started. `setPosition(float, float, float)` fixed it (run 5).
+
+Since run 3 a launch needs no input: the full run (both phases) takes about
+12 minutes. Results: run 3 phase A 41/5, run 4 phase A 42/1 and phase B 9/1,
+run 5 phase A **47/0** and phase B 9/2; every failure was traced to the
+harness itself (placement, a nearly full target generator, a lookup that
+matched the neighbouring object) except run 4's ground-can result, which
+found the container-ownership defect described under G02.
 
 ## Tooling pitfalls found
 
@@ -265,9 +353,10 @@ fixes, each found by a failed launch:
 
 ## Next experiments
 
-1. RT-SP harness (debug scenario, `DebugScenario.ForceLaunch`): translations,
-   item fluid save/load, vehicle idle burn, generator burn + pickup/placement,
-   pump unit conversions and the `ISTakeFuel` defect, two identical vehicles.
+1. RT-SP, not yet covered: vehicle and generator start gates through the
+   vanilla actions, a stall on poor fuel, driving consumption, TLG pour into
+   a vehicle, the station-reservoir pour, placed production machines running
+   a batch, crafting the machines, UI rendering checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
 

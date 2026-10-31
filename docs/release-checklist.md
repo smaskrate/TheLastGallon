@@ -8,16 +8,16 @@ decision and is **not** authorised by any task in this repository.
 
 | # | Gate (spec §25) | Status | Evidence / what is missing |
 | --- | --- | --- | --- |
-| 1 | Every advertised pathway has a playable tested loop | OPEN | Ethanol chain implemented + domain-tested; in-game loop NOT RUN. Other pathways domain-only or in progress |
-| 2 | Every supported transfer path preserves fuel state | PARTIAL | Item↔item verified RT-DS; vehicle/pump/generator paths SRC-ONLY (`support-matrix.md`) |
-| 3 | Native and mod quantities reconciled | PARTIAL | Reconciliation domain-tested; RT-DS item checks pass; world objects NOT RUN |
-| 4 | Production and energy invariants pass | PARTIAL | Domain invariants pass (137 cases, incl. energy balance, mass balance per converter); no in-game production/energy run |
+| 1 | Every advertised pathway has a playable tested loop | OPEN | Ethanol chain implemented + domain-tested; in-game production loop NOT RUN. Other pathways domain-only or in progress |
+| 2 | Every supported transfer path preserves fuel state | PARTIAL | Verified RT-SP: pump→can, pump→vehicle, can↔vehicle, can→generator, TLG pour, generator pickup/drop, end-to-end chain; item↔item RT-DS. Machine outputs and the station-reservoir pour SRC-ONLY (`support-matrix.md`) |
+| 3 | Native and mod quantities reconciled | PARTIAL | Verified RT-SP for vehicle idle burn and generator burn; driving burn and third-party paths NOT RUN |
+| 4 | Production and energy invariants pass | PARTIAL | Domain invariants pass (138 cases, incl. energy balance, mass balance per converter); no in-game production/energy run |
 | 5 | Multiplayer and dedicated-server tests pass | BLOCKED | DS loads the mod; two-client tests need a second client |
-| 6 | Save/load, pickup/placement, unloaded simulation pass | PARTIAL | Global ModData persists across DS restarts; catch-up domain-tested; object/item save/load NOT RUN (SP harness ready, blocked by locked desktop) |
+| 6 | Save/load, pickup/placement, unloaded simulation pass | PARTIAL | RT-SP: item, ground item, vehicle, generator and pump records survive save/reload; generator pickup/placement on all Lua paths. Unloaded catch-up domain-tested only; chunk unload NOT RUN |
 | 7 | Existing and late-world bootstrap scenarios pass | OPEN | Policies domain-tested; campaign runs NOT RUN |
-| 8 | Supported chassis and maps documented | PARTIAL | `support-matrix.md`; nothing runtime-verified |
-| 9 | Required assets verified and licensed | PARTIAL | Vanilla references only, unverified in game (`asset-audit.csv`); release art (preview.png) missing |
-| 10 | English/Italian text and player docs complete | PARTIAL | All shipped keys EN/IT (`check-translations.ps1`); docs for unfinished pathways pending |
+| 8 | Supported chassis and maps documented | PARTIAL | `support-matrix.md`; `Base.CarNormal`, `Base.Generator` and the Muldraugh Gas2Go verified RT-SP; other chassis NOT RUN |
+| 9 | Required assets verified and licensed | PARTIAL | Vanilla references only (`asset-audit.csv`); rendering not checked in game; release art (preview.png) missing |
+| 10 | English/Italian text and player docs complete | PARTIAL | All shipped keys EN/IT (`check-translations.ps1`); EN resolves in the client (RT-SP), IT not checked in game; docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | OPEN | No client baseline recorded |
 | 12 | Clean install and upgrade pass with the packaged artifact | OPEN | `tools/package.ps1` builds the artifact; install rehearsal NOT RUN |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | Machines use vanilla models as placeholders (functional, documented) |
@@ -34,7 +34,7 @@ decision and is **not** authorised by any task in this repository.
 ## Commands for the remaining runtime gates
 
 ```powershell
-tools\run-sp-harness.ps1              # from an unlocked desktop; ~5-10 min
+tools\run-sp-harness.ps1              # unlocked desktop, no input needed; ~12 min
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361
 tools\package.ps1                     # artifact for install rehearsal
 ```

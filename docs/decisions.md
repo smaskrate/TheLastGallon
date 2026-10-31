@@ -94,8 +94,9 @@ listed with their replacement.
   `ISTakeFuel:complete()` duplicates the final increment (G06, SRC).
 * Status: implemented in `TLG/Integration/Stations.lua` (both vanilla paths
   are settled after the fact: pump set to reservoir − litres delivered, can
-  fluids set to the reservoir blend; fractional remainder kept). Adapter
-  installs cleanly on the dedicated server; dispensing itself NOT RUN.
+  fluids set to the reservoir blend; fractional remainder kept). Verified
+  RT-SP 2026-10-31: 10 L into a can = −10 units, 59 L into a car = −59 units,
+  composition and degradation carried.
 
 ## D-011 Electrical priorities only where control exists
 * Decision: dispatch priorities apply to TLG-owned consumers (chargers,
@@ -133,8 +134,9 @@ listed with their replacement.
   `modData.generatorFullType`, nothing else), `IsoGridSquare.AddWorldInventoryItem`.
 * Limitation: a drop performed by Java alone (no Lua caller) is not seen; the
   generator then reads as untracked fuel at the pessimistic baseline (D-006).
-* Status: implemented; `IsoGenerator.new` wrapping is the same mechanism
-  proven for `FluidContainer.Transfer` (RT-DS). Pickup/drop NOT RUN (G05).
+* Status: verified RT-SP 2026-10-31 on `Base.Generator`: pickup, drop
+  action, `forceDropHeavyItems` (taking a second generator while carrying
+  one), drag to the floor and `IsoGenerator.new` all carry the record.
 
 ## D-015 Production machines are placeable items
 * Decision: fermenter, stills and drying column are inventory items placed on
@@ -146,8 +148,9 @@ listed with their replacement.
   serve as placeholders (asset target: zero bespoke models for the first
   playable).
 * Consequence: picking a running machine up pauses it on next access without
-  crediting the carried time (conservative). Runtime persistence of
-  world-item modData is NOT RUN.
+  crediting the carried time (conservative). A `TLG.FermenterVessel` lying
+  on the ground keeps its item modData across save and reload (RT-SP
+  2026-10-31, probe record); a machine running a batch in game is NOT RUN.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

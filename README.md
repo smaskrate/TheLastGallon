@@ -27,7 +27,7 @@ tools\run-tests.ps1 -Entry tests/support/compile_check.lua
 tools\check-translations.ps1
 tools\setup-devenv.ps1                                   # deploy to the isolated dev cache
 tools\dev-server-controller.ps1                          # isolated dedicated server
-tools\run-sp-harness.ps1                                 # automated SP experiments (needs an unlocked desktop)
+tools\run-sp-harness.ps1                                 # automated SP experiments (unlocked desktop, no input, ~12 min)
 tools\package.ps1                                        # build dist/ (never uploads)
 ```
 

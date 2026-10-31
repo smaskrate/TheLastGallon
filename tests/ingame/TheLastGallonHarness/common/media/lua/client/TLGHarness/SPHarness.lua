@@ -492,10 +492,21 @@ add(actionStep("g03_blend_can_to_vehicle", function(ctx)
 end, function(ctx) hopEnd(ctx, true) end))
 
 add({ name = "g03_vehicle_idle", timeout = 12000, fn = function(ctx, ticks)
-    local v, part = H.vehicle, H.tank
+    -- Idle the vehicle that has fuel: vehicle 1 holds station fuel only if
+    -- the pump step ran (runs 3-4 idled an empty tank); vehicle 2 holds the
+    -- 8 L blend from the G03 pour.
+    if not ctx.v then
+        ctx.v, ctx.part = H.vehicle, H.tank
+        if H.vehicle2 and H.tank2 and (ctx.part == nil
+            or ctx.part:getContainerContentAmount() < H.tank2:getContainerContentAmount()) then
+            ctx.v, ctx.part = H.vehicle2, H.tank2
+        end
+    end
+    local v, part = ctx.v, ctx.part
     if not (v and part) then return true end
     if not ctx.started then
         ctx.started = true
+        R:line("OBS  G03.idle vehicle id=%s tank=%.4f", tostring(v:getId()), part:getContainerContentAmount())
         ctx.view0 = tlgView("vehicle", v)
         R:observe("G03.evaluation_before_start", function()
             local e = TLG.Integration.Vehicles.evaluate(v)
@@ -937,14 +948,19 @@ addB({ name = "g08_reload_checks", fn = function()
     end
     if e["veh.x"] then
         R:check("G08.vehicle_tank_sidecar_and_amount", function()
+            -- Match by record id: the other vehicle's body can reach into the
+            -- search window (run 5 picked vehicle 2, whose record was intact).
+            local wantId = string.match(e["veh.side"] or "", "^id=(%S+)")
             local v
-            for dx = -3, 3 do
-                for dy = -3, 3 do
+            for dx = -4, 4 do
+                for dy = -4, 4 do
                     local s = sq(tonumber(e["veh.x"]) + dx, tonumber(e["veh.y"]) + dy, 0)
-                    if s and s:getVehicleContainer() then v = s:getVehicleContainer() end
+                    local c = s and s:getVehicleContainer()
+                    local side = c and c:getPartById("GasTank") and c:getPartById("GasTank"):getModData().tlg
+                    if side and tostring(side.id) == wantId then v = c end
                 end
             end
-            if not v then return false, "vehicle not found" end
+            if not v then return false, "vehicle with tank record " .. tostring(wantId) .. " not found" end
             local part = v:getPartById("GasTank")
             local s = sidecar(part:getModData())
             local amount = string.format("%.4f", part:getContainerContentAmount())
@@ -953,8 +969,12 @@ addB({ name = "g08_reload_checks", fn = function()
     end
     if e["gen.x"] then
         R:check("G08.generator_sidecar_and_fuel", function()
-            local g = findGenerator(tonumber(e["gen.x"]), tonumber(e["gen.y"]), 0, nil)
-            if not g then return false, "no generator object" end
+            -- Both generators can share a square (run 5); match by record id.
+            local wantId = string.match(e["gen.side"] or "", "^id=(%S+)")
+            local g = findGenerator(tonumber(e["gen.x"]), tonumber(e["gen.y"]), 1, wantId)
+            if not (g and g:getModData().tlg and tostring(g:getModData().tlg.id) == wantId) then
+                return false, "generator with record " .. tostring(wantId) .. " not found"
+            end
             local s = sidecar(g:getModData())
             local fuel = string.format("%.4f", g:getFuel())
             return s == e["gen.side"] and fuel == e["gen.fuel"], s .. " fuel=" .. fuel
