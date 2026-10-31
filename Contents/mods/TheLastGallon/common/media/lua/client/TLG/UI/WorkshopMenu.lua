@@ -3,7 +3,8 @@
 -- the device and starts ISTLGConversionWork, which reports while the
 -- character stays there; time away from the device is never credited.
 -- Start, Hand over parts and Work on it used RT-SP 2026-10-31 (run 12) on a
--- Base.Generator and a Base.CarNormal; Cancel and Remove are NOT RUN.
+-- Base.Generator and a Base.CarNormal; Project status, Cancel and Remove
+-- are NOT RUN.
 require "TLG/Client/Net"
 require "TLG/Authority/Resolver"
 require "TLG/Actions/ISTLGConversionWork"

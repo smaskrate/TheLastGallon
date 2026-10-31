@@ -199,8 +199,8 @@ listed with their replacement.
   A modified client sending bare reports gains at most 1 h per visit and has
   to be in reach when it reports. The action shows no progress bar:
   `setJobDelta` on an open-ended action makes vanilla's queue drop it as
-  stalled (BC `BaseAction`, found in run 11); progress is in "Project
-  status". Verified RT-SP (2026-10-31): a bare report after 3 h credited
+  stalled (BC `BaseAction`, found in run 11); "Project status" shows the
+  stage reached. Verified RT-SP (2026-10-31): a bare report after 3 h credited
   1 h; leaving reach stopped the action through `isValid()`; time away was
   not credited (run 9); from the menu, the walk to the engine area, a
   refused start and the ending on a missing tool (run 12).

@@ -85,9 +85,10 @@ still is welded in hand.
    blending with gasoline: wet ethanol in gasoline separates.
 
 Picking up a working machine pauses it; put it down to continue. *(Building
-the four machines, their menus and one batch through the fermenter, reflux
-still and drying column were checked in game; distilling in the pot still
-and picking up a working machine are untested in game.)*
+the four machines and one batch through the fermenter, reflux still and
+drying column, using the menu entries named above, were checked in game;
+distilling in the pot still, Pause/Resume/Abort and picking up a working
+machine are untested in game.)*
 
 ## Converting an engine
 
@@ -105,7 +106,7 @@ Right-click the generator or car → **Workshop: convert this generator** (or
    stage needs its tools (screwdriver, wrench, pliers), and the fuel tank
    must be empty while you drain the fuel system and install the parts. A
    helper can work alongside you. There is no progress bar: **Project
-   status** shows the stage and the hours done.
+   status** shows which stage the work has reached.
 4. When the status reads **Converted and commissioned**, the engine is flex.
 
 | | Generator | Standard car |

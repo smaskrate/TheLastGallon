@@ -46,7 +46,7 @@ function ISTLGConversionWork:onReply(r)
         -- No progress bar: setJobDelta sets currentTime = maxTime * delta
         -- (BC BaseAction), negative on this open-ended action, and vanilla's
         -- queue then drops it as stalled while it keeps running (RT-SP
-        -- 2026-10-31, runs 10-11). Progress shows in "Project status".
+        -- 2026-10-31, runs 10-11). "Project status" shows the stage.
         self.joined = true
         return
     end

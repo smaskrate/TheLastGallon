@@ -1,7 +1,8 @@
 -- Context menu for TLG machine items (fermenter, stills, drying column).
--- All actions are authority requests; results are shown as text. Every entry
--- of the fermenter, reflux still and drying column was used RT-SP
--- 2026-10-31 (run 12); the pot still's entries are NOT RUN.
+-- All actions are authority requests; results are shown as text. Used RT-SP
+-- 2026-10-31 (run 12) on the fermenter, reflux still and drying column:
+-- Load mash, Feed the firebox, Load wash, Collect ethanol, Dry ethanol with
+-- quicklime, Status. Pause, Resume, Abort and the pot still are NOT RUN.
 require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"
