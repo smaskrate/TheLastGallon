@@ -140,6 +140,9 @@ end
 -- `upto`: readings where the site was sampled (site.temps[s] covers world hours
 -- [s, s + 1)), the site's base elsewhere. site.from is the batch start; hours
 -- before it do not count, so a batch started late in the day is not diluted.
+-- The hour in progress has no reading yet (it is filed when the hour ends):
+-- the previous hour's reading stands in for it, so a warmed machine read just
+-- after midnight does not drop to the unheated value (RT-SP run 17).
 function Climate:siteDayMean(day, site, upto)
     local base, rh = self:siteBase(day, site)
     local from = math.max(self:dayStart(day), site.from or -math.huge)
@@ -154,6 +157,11 @@ function Climate:siteDayMean(day, site, upto)
             local overlap = math.min(to, s + 1) - math.max(from, s)
             if overlap > 0 then sum, covered = sum + overlap * v, covered + overlap end
         end
+    end
+    local current = math.floor(to)
+    if current < to and temps[current] == nil and temps[current - 1] ~= nil then
+        local tail = to - math.max(from, current)
+        if tail > 0 then sum, covered = sum + tail * temps[current - 1], covered + tail end
     end
     return (sum + (span - covered) * base) / span, rh
 end

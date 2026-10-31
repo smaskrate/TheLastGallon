@@ -5,8 +5,12 @@
 -- (run 7) and through the context menu (run 12), and their records
 -- survived save and reload. Runs 13-14 let the game clock run the batch (97.2 h
 -- of fermentation) and unloaded the machines' chunk for 24 game hours: the
--- next access caught up exactly. Distilling in the pot still, pickup while
--- processing and MP replication are NOT RUN.
+-- next access caught up exactly. Runs 17-19 (January, grid off) ran
+-- fermenters outdoors, in a room and on a tile warmed by a heat source: the
+-- readings filed equalled the game's, nothing was filed while unloaded,
+-- and the batches followed the day temperatures exactly (D-021). Distilling
+-- in the pot still, pickup while processing, a real fireplace or fire, upper
+-- floors and MP replication are NOT RUN.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
 --   processing         only while the item lies on the ground; picking it up
@@ -94,14 +98,17 @@ function M.airAt(sq)
 end
 
 -- Readings the batch no longer needs: hours before the day it has reached
--- (that day's mean is still recomputed), and all of them once it is done.
+-- (that day's mean is still recomputed), except the hour just before it,
+-- which stands in for the day's first hour until that hour is filed
+-- (Climate.siteDayMean; pruned, the status after midnight showed the
+-- unheated value, RT-SP run 18), and all of them once the batch is done.
 function M.trimTemps(rec, env)
     if rec.temps == nil then return end
     if rec.state ~= "Processing" and rec.state ~= "Paused" then
         rec.temps = nil
         return
     end
-    Climate.pruneSlots(rec.temps, math.floor(env:dayStart(env:dayIndex(rec.t))))
+    Climate.pruneSlots(rec.temps, math.floor(env:dayStart(env:dayIndex(rec.t))) - 1)
     local keys = Tables.sortedKeys(rec.temps)
     if #keys > M.MAX_READINGS then Climate.pruneSlots(rec.temps, keys[#keys - M.MAX_READINGS + 1]) end
 end

@@ -59,6 +59,19 @@ T.case("sites: readings cover their hour, the base fills the rest, hours before 
     T.near(e:siteDayMean(0, { room = false, z = 0, from = 30 }, 24), -5, 1e-9, "batch not started that day")
 end)
 
+T.case("sites: the hour in progress takes the previous hour's reading", function()
+    local e = env(coldLog(-5))
+    local warm = { room = true, z = 0, temps = { [22] = 28, [23] = 28 } }
+    T.near(e:siteDayMean(1, warm, 24.5), 28, 1e-9, "just after midnight: yesterday's last hour stands in")
+    T.near(e:siteDayMean(0, warm, 24), 28 * 2 / 24 + 8.5 * 22 / 24, 1e-9, "a whole day: no stand-in")
+    local gap = { room = true, z = 0, temps = { [22] = 28 } }
+    T.near(e:siteDayMean(1, gap, 24.5), 8.5, 1e-9, "only the hour just ended stands in")
+    local filed = { room = true, z = 0, temps = { [23] = 28, [24] = 10 } }
+    T.near(e:siteDayMean(1, filed, 24.5), 10, 1e-9, "a reading for the hour itself wins")
+    local started = { room = true, z = 0, temps = {}, from = 24.25 }
+    T.near(e:siteDayMean(1, started, 24.5), 8.5, 1e-9, "no reading before the batch: the base")
+end)
+
 T.case("sites: a January fermenter outdoors stops while the same batch in a room runs slowly", function()
     local e = env(coldLog(-3))
     local outside = Process.advance(batch({ room = false, z = 0 }), 48, e)
