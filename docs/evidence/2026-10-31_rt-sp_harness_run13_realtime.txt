@@ -1,0 +1,134 @@
+# TLG single-player harness, real game clock
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=76883768303858617853 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=1.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rt_ferment begin
+OBS  RT.ferment menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RT.ferment_loaded :: sugar=6 water=30
+OBS  RT.trip landed=true machines' square unloaded=true gone 24.01 game h, done 12.00 -> 36.02 h, state=Processing pause=nil
+FAIL RT.unloaded_machine_catches_up :: progress 24.02 h over 24.01 game h away
+OBS  RT.fermenting 36 h state=Processing pause=nil done=36.02 h temp=20.0
+OBS  RT.fermenting 48 h state=Processing pause=nil done=48.07 h temp=17.6
+OBS  RT.fermenting 60 h state=Processing pause=nil done=60.10 h temp=17.7
+OBS  RT.fermenting 72 h state=Processing pause=nil done=72.15 h temp=16.1
+OBS  RT.fermenting 84 h state=Processing pause=nil done=84.18 h temp=16.8
+OBS  RT.fermenting 96 h state=Processing pause=nil done=96.22 h temp=16.1
+PASS RT.ferment_completed_on_game_clock :: after 97.2 game h (97 h at full rate), temperature 10.9..28.0 C, state=OutputReady outputs={ethanol=3.3000000000000003,water=30}
+STEP rt_distill begin
+OBS  RT.firebox menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RT.load_wash menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RT.wash_loaded :: firebox=18 wash=33.3
+PASS RT.distill_completed_on_game_clock :: after 3.78 game h (about 3.8 h expected) ethanol=3.0360 water=0.1938 state=OutputReady
+OBS  RT.collect_still menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RT.hydrous_ethanol_bottled :: can id=S408846142-3 rev=1 total=3.2298 q[ethanol=3.0360,water=0.1938] deg[ethanol=0.0000] mic=0 stab=0
+STEP rt_dry begin
+OBS  RT.load_dry menu "Dry ethanol with quicklime" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RT.dry_loaded :: lime=1
+OBS  RT.collect_dry menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RT.dried_on_game_clock :: after 12.09 game h (12 h): can id=S408846142-3 rev=3 total=3.0512 q[ethanol=3.0360,water=0.0152] deg[ethanol=0.0000] mic=0 stab=0; degradation before drying 0.0000
+STEP RT.generator begin
+OBS  RT.generator.begin menu "Start: Flex-fuel generator conversion" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+OBS  RT.generator.deliver menu "Hand over parts" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed={Base.ElectricWire=1,Base.RubberHose=1,Base.Screws=4}
+OBS  RT.generator.work menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=nil expired=nil credited=nil done=0/7.5 reports=0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.25185394287109375 done=0.25185394287109375/7.5 reports=1
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.25185394287109375 done=0.5037078857421875/7.5 reports=2
+OBS  RT.generator working at multiplier 40, true 40.0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=0.7555694580078125/7.5 reports=3
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=1.0074310302734375/7.5 reports=4
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.25185394287109375 done=1.2592849731445312/7.5 reports=5
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25185394287109375 done=1.511138916015625/7.5 reports=6
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=1.76300048828125/7.5 reports=7
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=2.014862060546875/7.5 reports=8
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25185394287109375 done=2.2667160034179688/7.5 reports=9
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=2.5185775756835938/7.5 reports=10
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25185394287109375 done=2.7704315185546875/7.5 reports=11
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25185394287109375 done=3.0222854614257812/7.5 reports=12
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=3.2741470336914062/7.5 reports=13
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25185394287109375 done=3.5260009765625/7.5 reports=14
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=3.777862548828125/7.5 reports=15
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=4.02972412109375/7.5 reports=16
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=4.281585693359375/7.5 reports=17
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251861572265625 done=4.533447265625/7.5 reports=18
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251861572265625 done=4.785308837890625/7.5 reports=19
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.25185394287109375 done=5.037162780761719/7.5 reports=20
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251861572265625 done=5.289024353027344/7.5 reports=21
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251861572265625 done=5.540885925292969/7.5 reports=22
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251861572265625 done=5.792747497558594/7.5 reports=23
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.251861572265625 done=6.044609069824219/7.5 reports=24
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.251861572265625 done=6.296470642089844/7.5 reports=25
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.251861572265625 done=6.548332214355469/7.5 reports=26
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.25185394287109375 done=6.8001861572265625/7.5 reports=27
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.251861572265625 done=7.0520477294921875/7.5 reports=28
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.251861572265625 done=7.3039093017578125/7.5 reports=29
+OBS  WORK.reply ok=true reason=nil state=Commissioned stage=nil released=true expired=false credited=0.1960906982421875 done=nil/nil reports=30
+OBS  WORK.perform ended=true reports=30
+PASS RT.generator_on_game_clock :: 7.71 game h from the click (7.5 h of work) credit=7.5000 state=Commissioned dialog=Converted and commissioned
+STEP RT.car begin
+OBS  RT.car.begin menu "Start: Flex-fuel conversion (standard car)" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+OBS  RT.car.deliver menu "Hand over parts" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed={Base.ElectricWire=2,Base.EngineParts=2,Base.RubberHose=2,Base.Screws=6}
+OBS  RT.car.work menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=nil expired=nil credited=nil done=0/13 reports=0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.2519378662109375 done=0.2519378662109375/13 reports=1
+OBS  RT.car working at multiplier 40, true 40.0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.25185394287109375 done=0.5037918090820312/13 reports=2
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.251861572265625 done=0.7556533813476562/13 reports=3
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=1.0075149536132812/13 reports=4
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=1.2593765258789062/13 reports=5
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=1.5112380981445312/13 reports=6
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=1.7630996704101562/13 reports=7
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=2.0149612426757812/13 reports=8
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=2.2668228149414062/13 reports=9
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.25185394287109375 done=2.5186767578125/13 reports=10
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.251861572265625 done=2.770538330078125/13 reports=11
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25186920166015625 done=3.0224075317382812/13 reports=12
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=3.2742691040039062/13 reports=13
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2518463134765625 done=3.5261154174804688/13 reports=14
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251861572265625 done=3.7779769897460938/13 reports=15
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2518463134765625 done=4.029823303222656/13 reports=16
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=4.281608581542969/13 reports=17
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=4.533393859863281/13 reports=18
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=4.785194396972656/13 reports=19
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=5.036979675292969/13 reports=20
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=5.288780212402344/13 reports=21
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=5.540580749511719/13 reports=22
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=5.792366027832031/13 reports=23
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=6.044166564941406/13 reports=24
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=6.295967102050781/13 reports=25
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=6.547767639160156/13 reports=26
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=6.799568176269531/13 reports=27
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=7.051368713378906/13 reports=28
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=7.303169250488281/13 reports=29
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=7.554954528808594/13 reports=30
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=7.806739807128906/13 reports=31
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=8.058540344238281/13 reports=32
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=8.310325622558594/13 reports=33
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.251800537109375 done=8.562126159667969/13 reports=34
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2517852783203125 done=8.813911437988281/13 reports=35
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251800537109375 done=9.065711975097656/13 reports=36
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2517852783203125 done=9.317497253417969/13 reports=37
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2517852783203125 done=9.569282531738281/13 reports=38
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251800537109375 done=9.821083068847656/13 reports=39
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.251800537109375 done=10.072883605957031/13 reports=40
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2517852783203125 done=10.324668884277344/13 reports=41
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2518157958984375 done=10.576484680175781/13 reports=42
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2517852783203125 done=10.828269958496094/13 reports=43
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.251800537109375 done=11.080070495605469/13 reports=44
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2517852783203125 done=11.331855773925781/13 reports=45
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2517852783203125 done=11.583641052246094/13 reports=46
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2517852783203125 done=11.835426330566406/13 reports=47
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2518310546875 done=12.087257385253906/13 reports=48
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2518463134765625 done=12.339103698730469/13 reports=49
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.251861572265625 done=12.590965270996094/13 reports=50
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.2518463134765625 done=12.842811584472656/13 reports=51
+OBS  WORK.reply ok=true reason=nil state=Commissioned stage=nil released=true expired=false credited=0.15718841552734375 done=nil/nil reports=52
+OBS  WORK.perform ended=true reports=52
+PASS RT.car_on_game_clock :: 13.11 game h from the click (13.0 h of work) credit=13.0000 state=Commissioned dialog=Converted and commissioned
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 138.16
+SUMMARY pass=10 fail=1
+DONE

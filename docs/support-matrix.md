@@ -114,8 +114,9 @@ their changes are reconciled conservatively.
 
 Chassis/item ids were verified in the 42.21 scripts (file:line in
 `TLG/Content/Conversions.lua`). "Verified RT-SP" covers begin, parts
-delivery, work to `Commissioned` (time from a mod-clock fixture), the flex
-profile, running on ethanol and reload. The work runs through the timed
+delivery, work to `Commissioned`, the flex profile, running on ethanol and
+reload; the work ran with a mod-clock fixture (runs 8–12) and on the game
+clock at vanilla x40 (run 13). The work runs through the timed
 action `ISTLGConversionWork` (D-018): it stops when the worker leaves and
 time away is not credited (run 9); since run 12 every step comes from the
 workshop menu, including the walk to the engine area, a refused start and

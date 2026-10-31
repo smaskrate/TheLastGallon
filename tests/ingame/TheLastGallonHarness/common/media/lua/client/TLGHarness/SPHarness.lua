@@ -5,6 +5,8 @@
 --            save, write "sp-b", exit to menu
 --   sp-b  -> main menu continues the latest save, run phase B (persistence),
 --            write "done", quit to desktop
+--   sp-rt -> same scenario, only the ethanol loop on the real game clock,
+--            write "done", quit to desktop (no save/reload)
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -24,7 +26,7 @@ local function unattended()
     pcall(function() UIManager.setShowLuaDebuggerOnError(false) end)
     pcall(function() getCore():setOptionShowSurvivalGuide(false) end)
 end
-if REQUEST == "sp-a" or REQUEST == "sp-b" then
+if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -2215,6 +2217,373 @@ addB({ name = "quit", timeout = 600, fn = function(ctx, ticks)
 end })
 
 ------------------------------------------------------------------------------
+-- Real game clock (request "sp-rt"): the ethanol loop with time passing on
+-- the game clock and no mod-clock offset. Machines wait at a debug
+-- multiplier (the debug panel's Game Speed slider uses the same call,
+-- ISGameDebugPanel.lua:42); conversion work runs at vanilla's fastest speed,
+-- x40 (SpeedControlsHandler.lua:37); walking and teleports at x1. The
+-- machines' chunk is unloaded for 24 game hours during fermentation (G12).
+------------------------------------------------------------------------------
+local stepsRT = {}
+local RT = { x = LOOP.x, y = LOOP.y, waitSpeed = 100, workSpeed = 40, away = 400,
+    genAt = { x = LOOP.x + 5, y = LOOP.y }, carAt = { x = 10649, y = 10625 } }
+
+function RT.add(step) stepsRT[#stepsRT + 1] = step end
+
+function RT.speed(m)
+    pcall(function() getGameTime():setMultiplier(m) end)
+end
+
+function RT.trueSpeed()
+    local m = "?"
+    pcall(function() m = string.format("%.1f", getGameTime():getTrueMultiplier()) end)
+    return m
+end
+
+-- 150 game hours idle: needs are reset so the character neither starves
+-- nor falls asleep (it is invulnerable and invisible meanwhile).
+function RT.keepFit()
+    local st = player():getStats()
+    for _, k in ipairs({ "HUNGER", "THIRST", "FATIGUE", "BOREDOM", "UNHAPPINESS", "STRESS" }) do
+        pcall(function() st:reset(CharacterStat[k]) end)
+    end
+end
+
+function RT.temp()
+    local t
+    pcall(function() t = getClimateManager():getTemperature() end)
+    return t
+end
+
+function RT.statusOf(item)
+    local reply
+    TLG.Net.request("machine.status", { target = TLG.Integration.Machines.refFor(item) }, function(r) reply = r end)
+    return reply or {}
+end
+
+-- Work done on the current batch, in stage hours (rate-weighted).
+function RT.doneHours(item)
+    local p = item and item:getModData().tlgProc
+    if not (p and p.recipe) then return 0 end
+    local done = 0
+    for i, st in ipairs(p.recipe.params.stages) do
+        if i < p.stage then done = done + (st.hours or 0) elseif i == p.stage then done = done + (p.stageDone or 0) end
+    end
+    return done
+end
+
+-- After a chunk reload every Lua reference is stale: find the machines again.
+function RT.refind()
+    for i, t in ipairs({ "TLG.FermenterVessel", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+        local s = sq(RT.x + i - 1, RT.y, 0)
+        local objs = s and s:getWorldObjects()
+        for j = 0, (objs and objs:size() or 0) - 1 do
+            local it = objs:get(j):getItem()
+            if it and it:getFullType() == t then RT.items[i] = it end
+        end
+    end
+    RT.fermenter, RT.still, RT.dryer = RT.items[1], RT.items[2], RT.items[3]
+end
+
+function RT.skip(name)
+    if RT.abort then R:line("SKIP %s: %s", name, RT.abort); return true end
+    return false
+end
+
+RT.add({ name = "rt_wait_world", timeout = 3000, fn = function(ctx, ticks)
+    if player() and ticks > 120 then
+        R:line("worldName=%s hours=%.4f DayLength=%s", tostring(getWorld():getWorld()), hours(),
+            tostring(SandboxVars and SandboxVars.DayLength))
+        return true
+    end
+end })
+
+RT.add({ name = "rt_setup", timeout = 3000, fn = function(ctx, ticks)
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        pcall(function() p:setUnlimitedCarry(true) end)
+        p:setPerkLevelDebug(Perks.Mechanics, 4)
+        p:setPerkLevelDebug(Perks.Electricity, 2)
+        p:getKnownRecipes():add("Generator")
+        p:getKnownRecipes():add("Basic Mechanics")
+        captureDialogs(true)
+        instrumentWorkAction()
+        p:teleportTo(RT.x + 1, RT.y + 1, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 30 then return nil end
+    if not ctx.placed then
+        RT.items = {}
+        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+            local it = instanceItem(t)
+            sq(RT.x + i - 1, RT.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            RT.items[i] = it
+        end
+        RT.fermenter, RT.still, RT.dryer = RT.items[1], RT.items[2], RT.items[3]
+        give("Base.Sugar", 6); give("Base.Yeast", 1); give("Base.Log", 2); give("Base.Quicklime", 2)
+        for _ = 1, 3 do
+            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, 10)
+        end
+        RT.h0 = hours()
+        -- Measure the speed-up before relying on it.
+        RT.speed(RT.waitSpeed)
+        ctx.placed, ctx.h0, ctx.tick0 = true, hours(), ticks
+        return nil
+    end
+    RT.speed(RT.waitSpeed)
+    if ticks - ctx.tick0 < 300 then return nil end
+    local gh = hours() - ctx.h0
+    RT.speed(1)
+    R:line("OBS  RT.speed multiplier=%d true=%s game hours in 300 ticks=%.4f (about 0.02 at x1) %s", RT.waitSpeed,
+        RT.trueSpeed(), gh, loadText())
+    R:check("RT.game_clock_runs_fast", function() return gh >= 0.2, string.format("%.4f game h in 300 ticks", gh) end)
+    if gh < 0.2 then RT.abort = "the game clock did not speed up" end
+    return true
+end })
+
+-- Fermentation on the game clock, with a 24 game hour trip far enough away
+-- for the machines' chunk to unload.
+RT.add({ name = "rt_ferment", timeout = 120000, fn = function(ctx, ticks)
+    if not ctx.t0 and RT.skip("rt_ferment") then return true end
+    if not ctx.t0 then
+        local r = machineClick("RT.ferment", RT.fermenter, "ContextMenu_TLG_LoadFerment")
+        R:check("RT.ferment_loaded", function()
+            return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6,
+                string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+        end)
+        ctx.t0, ctx.h0, ctx.next, ctx.tmin, ctx.tmax = ticks, hours(), hours() + 1, 99, -99
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if not ctx.trip and hours() - ctx.h0 >= 12 then
+        RT.statusOf(RT.fermenter)
+        ctx.trip = { before = RT.doneHours(RT.fermenter), from = hours(), tick = ticks }
+        RT.speed(1)
+        player():teleportTo(RT.x, RT.y - RT.away, 0)
+        return nil
+    end
+    if ctx.trip and not ctx.trip.back then
+        if ticks - ctx.trip.tick < 120 then RT.speed(1); return nil end
+        if ctx.trip.awayFrom == nil then
+            ctx.trip.awayFrom, ctx.trip.landed = hours(), player():getSquare() ~= nil
+        end
+        if sq(RT.x, RT.y, 0) == nil then ctx.trip.unloaded = true end
+        RT.speed(RT.waitSpeed)
+        if hours() - ctx.trip.awayFrom < 24 then return nil end
+        RT.speed(1)
+        player():teleportTo(RT.x + 1, RT.y + 1, 0)
+        ctx.trip.back, ctx.trip.backTick = hours(), ticks
+        return nil
+    end
+    if ctx.trip and not ctx.trip.checked then
+        if ticks - ctx.trip.backTick < 120 then RT.speed(1); return nil end
+        RT.refind()
+        local s = RT.statusOf(RT.fermenter)
+        -- Between the two status reads (run 13 measured to the return
+        -- teleport instead and missed the 120 settling ticks).
+        local after, gone = RT.doneHours(RT.fermenter), hours() - ctx.trip.from
+        R:line("OBS  RT.trip landed=%s machines' square unloaded=%s gone %.2f game h, done %.2f -> %.2f h, state=%s pause=%s",
+            tostring(ctx.trip.landed), tostring(ctx.trip.unloaded == true), gone, ctx.trip.before, after,
+            tostring(s.state), tostring(s.pause))
+        if ctx.trip.unloaded then
+            R:check("RT.unloaded_machine_catches_up", function()
+                local d = after - ctx.trip.before
+                return d > 0 and d <= gone + 1e-6, string.format("progress %.2f h over %.2f game h away", d, gone)
+            end)
+        else
+            R:line("OBS  RT.unloaded_machine_catches_up INCONCLUSIVE: the machines' square stayed loaded")
+        end
+        ctx.trip.checked = true
+        return nil
+    end
+    RT.speed(RT.waitSpeed)
+    local t = RT.temp()
+    if t then ctx.tmin, ctx.tmax = math.min(ctx.tmin, t), math.max(ctx.tmax, t) end
+    if hours() < ctx.next then return nil end
+    ctx.next = hours() + 1
+    local s = RT.statusOf(RT.fermenter)
+    local elapsed = hours() - ctx.h0
+    if math.floor(elapsed) % 12 == 0 then
+        R:line("OBS  RT.fermenting %.0f h state=%s pause=%s done=%.2f h temp=%.1f", elapsed, tostring(s.state),
+            tostring(s.pause), RT.doneHours(RT.fermenter), t or -99)
+    end
+    if s.ok ~= false and s.state ~= "OutputReady" and s.state ~= "Faulted" and elapsed < 300 then return nil end
+    RT.speed(1)
+    local eth = (s.outputs or {}).ethanol or 0
+    R:check("RT.ferment_completed_on_game_clock", function()
+        return s.state == "OutputReady" and elapsed >= 96.5 and eth >= 3.2 and eth <= 3.7,
+            string.format("after %.1f game h (97 h at full rate), temperature %.1f..%.1f C, state=%s outputs=%s", elapsed,
+                ctx.tmin, ctx.tmax, tostring(s.state), brief(s.outputs))
+    end)
+    if s.state ~= "OutputReady" then RT.abort = "fermentation did not finish" end
+    return true
+end })
+
+RT.add({ name = "rt_distill", timeout = 30000, fn = function(ctx, ticks)
+    if not ctx.t0 and RT.skip("rt_distill") then return true end
+    if not ctx.t0 then
+        local fuel = machineClick("RT.firebox", RT.still, "ContextMenu_TLG_AddFirewood")
+        local wash = machineClick("RT.load_wash", RT.still, "ContextMenu_TLG_LoadWash")
+        R:check("RT.wash_loaded", function()
+            return fuel.ok == true and wash.ok == true, string.format("firebox=%s wash=%s", tostring(fuel.firebox), tostring(wash.washL))
+        end)
+        ctx.t0, ctx.h0, ctx.next = ticks, hours(), hours() + 0.25
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return nil end
+    ctx.next = hours() + 0.25
+    local s = RT.statusOf(RT.still)
+    local elapsed = hours() - ctx.h0
+    if s.ok ~= false and s.state ~= "OutputReady" and s.state ~= "Faulted" and elapsed < 24 then return nil end
+    RT.speed(1)
+    local eth, water = (s.outputs or {}).ethanol or 0, (s.outputs or {}).water or 0
+    R:check("RT.distill_completed_on_game_clock", function()
+        return s.state == "OutputReady" and eth > 2.5 and water / math.max(1e-9, eth + water) < 0.07 and elapsed >= 3.5,
+            string.format("after %.2f game h (about 3.8 h expected) ethanol=%.4f water=%.4f state=%s", elapsed, eth, water,
+                tostring(s.state))
+    end)
+    giveCan("Base.JerryCan")
+    local before = ethanolCans()
+    machineClick("RT.collect_still", RT.still, "ContextMenu_TLG_CollectEthanol")
+    RT.can1 = grownCan(before)
+    local v = RT.can1 and tlgView("item", RT.can1)
+    R:check("RT.hydrous_ethanol_bottled", function()
+        local q = v and v.q or {}
+        return v ~= nil and math.abs((q.ethanol or 0) - eth) < 1e-3 and math.abs((q.water or 0) - water) < 1e-3,
+            viewText(v, "can")
+    end)
+    if not RT.can1 then RT.abort = "no hydrous ethanol" end
+    return true
+end })
+
+RT.add({ name = "rt_dry", timeout = 40000, fn = function(ctx, ticks)
+    if not ctx.t0 and RT.skip("rt_dry") then return true end
+    if not ctx.t0 then
+        local v = tlgView("item", RT.can1)
+        ctx.deg0 = v and v.deg.ethanol or 0
+        local d = machineClick("RT.load_dry", RT.dryer, "ContextMenu_TLG_LoadDry")
+        R:check("RT.dry_loaded", function() return d.ok == true, string.format("lime=%s", tostring(d.limeKg)) end)
+        ctx.t0, ctx.h0, ctx.next = ticks, hours(), hours() + 0.5
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return nil end
+    ctx.next = hours() + 0.5
+    local s = RT.statusOf(RT.dryer)
+    local elapsed = hours() - ctx.h0
+    if s.ok ~= false and s.state ~= "OutputReady" and s.state ~= "Faulted" and elapsed < 48 then return nil end
+    RT.speed(1)
+    giveCan("Base.JerryCan")
+    local before = ethanolCans()
+    machineClick("RT.collect_dry", RT.dryer, "ContextMenu_TLG_CollectEthanol")
+    local can = grownCan(before)
+    local v = can and tlgView("item", can)
+    R:check("RT.dried_on_game_clock", function()
+        local q = v and v.q or {}
+        local e, w = q.ethanol or 0, q.water or 0
+        return s.state == "OutputReady" and elapsed >= 11.5 and e > 2.5 and w <= e * 0.005 + 1e-4
+            and math.abs((v.deg.ethanol or 0) - ctx.deg0) < 0.01,
+            string.format("after %.2f game h (12 h): %s; degradation before drying %.4f", elapsed, viewText(v, "can"), ctx.deg0)
+    end)
+    return true
+end })
+
+-- Conversion work on the game clock: x40 while the work action runs, x1
+-- while walking. A conversion that ends unfinished fails at once.
+function RT.convert(name, kind, menu, conversion, hoursNeeded, getDevice)
+    return { name = name, timeout = 60000, fn = function(ctx, ticks)
+        if not ctx.t0 and RT.skip(name) then return true end
+        local device = getDevice(ctx, ticks)
+        if not ctx.t0 then ctx.t0 = ticks; return nil end
+        if ticks - ctx.t0 < 60 then RT.speed(1); return nil end
+        if not ctx.started then
+            ctx.b = workshopClick(name .. ".begin", menu, startText(conversion))
+            ctx.d = workshopClick(name .. ".deliver", menu, getText("ContextMenu_TLG_ConvDeliver"))
+            ctx.dialogs = #H.dialogs.texts
+            workshopClick(name .. ".work", menu, getText("ContextMenu_TLG_ConvJoin"))
+            ctx.started, ctx.h0, ctx.t1 = true, hours(), ticks
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        local a = workAction()
+        if a then
+            RT.speed(RT.workSpeed)
+            if not ctx.measured and ticks - ctx.t1 > 300 then
+                ctx.measured = true
+                R:line("OBS  %s working at multiplier %d, true %s", name, RT.workSpeed, RT.trueSpeed())
+            end
+        else
+            RT.speed(1)
+        end
+        local p = projectOf(device, kind)
+        local done = p ~= nil and p.state == "Commissioned" and TLGH.Steps.actionsIdle(player())
+        local stopped = not done and a == nil and ticks - ctx.t1 > 600 and TLGH.Steps.actionsIdle(player())
+        if not done and not stopped and ticks - ctx.t1 < 55000 then return nil end
+        RT.speed(1)
+        local elapsed, text = hours() - ctx.h0, H.dialogs.texts[ctx.dialogs + 1]
+        R:check(name .. "_on_game_clock", function()
+            return done and math.abs(sumOf(p.credit) - hoursNeeded) < 1e-6 and elapsed >= hoursNeeded - 1e-6
+                and has(text, getText("IGUI_TLG_ConvState_Commissioned")),
+                string.format("%.2f game h from the click (%.1f h of work) credit=%.4f state=%s dialog=%s", elapsed,
+                    hoursNeeded, p and sumOf(p.credit) or -1, tostring(p and p.state), tostring(text))
+        end)
+        return true
+    end }
+end
+
+RT.add(RT.convert("RT.generator", "generator", GEN_MENU, "flex_generator", 7.5, function(ctx)
+    if not RT.generator then
+        RT.generator = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(RT.genAt.x, RT.genAt.y, 0))
+        RT.generator:setFuel(0)
+        RT.generator:getModData().tlg = nil
+        give("Base.Screwdriver", 1); give("Base.Wrench", 1); give("Base.Pliers", 1); give("Base.RubberHose", 3)
+        give("Base.Screws", 10); give("Base.ElectricWire", 3); give("Base.EngineParts", 2)
+        player():teleportTo(RT.genAt.x + 1, RT.genAt.y, 0)
+    end
+    return RT.generator
+end))
+
+RT.add(RT.convert("RT.car", "vehicle", CAR_MENU, "flex_car_normal", 13, function(ctx, ticks)
+    if not RT.car then
+        RT.car = addVehicleDebug("Base.CarNormal", IsoDirections.N, nil, sq(RT.carAt.x, RT.carAt.y, 0))
+        pcall(function() RT.car:repair() end)
+        player():teleportTo(RT.carAt.x + 2, RT.carAt.y, 0)
+    end
+    -- Emptied once the vehicle has settled (as in loop_setup), before work.
+    if ctx.t0 and not ctx.emptied and ticks - ctx.t0 >= 40 then
+        local tank = RT.car:getPartById("GasTank")
+        tank:setContainerContentAmount(0)
+        tank:getModData().tlg = nil
+        RT.car:transmitPartModData(tank)
+        ctx.emptied = true
+    end
+    return RT.car
+end))
+
+RT.add({ name = "rt_finish", timeout = 600, fn = function(ctx, ticks)
+    if not ctx.done then
+        RT.speed(1)
+        closeDialogs()
+        captureDialogs(false)
+        R:line("OBS  RT.summary game hours %.2f -> %.2f", RT.h0 or -1, hours())
+        TLGH.writeFile("TLG_harness_request.txt", { "done" })
+        R:finish(true)
+        ctx.done = true
+        return nil
+    end
+    if ticks == 60 then getCore():quitToDesktop() end
+    return nil
+end })
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -2225,11 +2594,11 @@ Events.OnMainMenuEnter.Add(function()
         " forceLaunch=" .. tostring(getDebugOptions():getBoolean("DebugScenario.ForceLaunch")))
 end)
 
-if REQUEST == "sp-a" then
+if REQUEST == "sp-a" or REQUEST == "sp-rt" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
-        name = "TLG harness phase A",
+        name = REQUEST == "sp-rt" and "TLG harness, real game clock" or "TLG harness phase A",
         forceLaunch = true,
         startLoc = START,
         setSandbox = function()
@@ -2244,8 +2613,13 @@ if REQUEST == "sp-a" then
             SandboxVars.FuelStationGasInfinite = false
         end,
         onStart = function()
-            R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
-            TLGH.Steps.run(R, stepsA, H, nil)
+            if REQUEST == "sp-rt" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock")
+                TLGH.Steps.run(R, stepsRT, H, nil)
+            else
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
+                TLGH.Steps.run(R, stepsA, H, nil)
+            end
         end,
     }
 else

@@ -10,7 +10,8 @@
 -- Verified RT-SP 2026-10-31: reports, ending itself at Commissioned, stop()
 -- when the character was moved out of reach, no credit for time away (run
 -- 9); queued from the workshop menu after the walk to the engine area, a
--- refused join and the ending on a missing tool (run 12).
+-- refused join and the ending on a missing tool (run 12); on the game clock
+-- at vanilla x40, 30 and 52 reports to Commissioned (run 13).
 require "TimedActions/ISBaseTimedAction"
 require "TLG/Integration/ConversionDevices"
 

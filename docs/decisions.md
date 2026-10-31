@@ -150,8 +150,9 @@ listed with their replacement.
 * Consequence: picking a running machine up pauses it on next access without
   crediting the carried time (conservative). A placed fermenter, reflux still
   and drying column each ran a batch in game and kept their records across
-  save and reload (RT-SP 2026-10-31, run 7; elapsed time from a mod-clock
-  fixture). Picking up a running machine is NOT RUN.
+  save and reload (RT-SP 2026-10-31, runs 7 and 12); on the game clock a
+  fermenter whose chunk was unloaded for 24 game hours caught up exactly on
+  the next access (run 13). Picking up a running machine is NOT RUN.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

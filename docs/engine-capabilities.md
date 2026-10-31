@@ -30,7 +30,7 @@ alternative), **NOT RUN**.
 | G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
-| G12 Unloaded machines | What simulates unloaded? | NOT RUN | `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC) |
+| G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP run 13). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
 | G13 Assets | Which props/sounds exist? | PARTIAL (catalogue from scripts) | See `asset-audit.csv`; runtime spawn/texture checks NOT RUN |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
@@ -332,6 +332,15 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   craft menu, placed with `ISDropWorldItemAction`, the batch run from the
   machine context menu, both conversions done from the workshop menu (the
   car's "Work on it" walked into the engine area first).
+* Game clock (run 13, request `sp-rt`): the same loop with the game's own
+  time running and no mod-clock offset, 136 game hours in all: fermentation
+  97.2 h, distillation 3.78 h, drying 12.09 h, the generator conversion
+  7.71 h from the click and the car 13.11 h at vanilla's x40. Game time can
+  be sped up from Lua with `getGameTime():setMultiplier(x)` (the debug
+  panel's Game Speed slider, SRC `ISGameDebugPanel.lua:42`): about 135
+  frames per game hour at x100. The waits in runs 3–12 used
+  `UIManager.getSpeedControls():SetCurrentGameSpeed(4)` and took about
+  13 400 frames per game hour, so that call gave little or no speed-up.
 * Run 7 found an adapter defect the domain tests could not: the actor for
   `conversion.begin` was built from the device's existing project, so with
   no project yet no tool was counted and every first conversion failed with
@@ -371,8 +380,13 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 
 * G10: no per-appliance enable/priority API found on `IsoGenerator`; electrical
   priorities will be offered only for mod-owned consumers (decision D-011).
-* G12: `IsoGenerator.chunkLoaded(IsoChunk)` (BC) indicates load-time catch-up
-  for generators; not instrumented.
+* G12: TLG machines keep their process in item modData and advance lazily
+  on access (`Process.advance` from the record's time to now). Run 13 moved
+  the character 400 tiles away for 24 game hours: the machines' square was
+  no longer loaded (`getGridSquare` nil), and the first status read after
+  return credited the full 24 h at the rate the climate allowed.
+  `IsoGenerator.chunkLoaded(IsoChunk)` (BC) indicates load-time catch-up for
+  vanilla generators; not instrumented.
 * G14: anything that moves fluid in Java, or Lua code that writes fluid
   containers without `FluidContainer.Transfer`, bypasses the container
   adapter; reconciliation handles the result (D-006).
@@ -422,7 +436,9 @@ pours into a vehicle) phase A 63/0 and phase B 11/0, run 7 (adds the
 renewable loop) phase A 74/8 and phase B 12/2, run 8 phase A 82/0 and
 phase B 14/0, run 9 (conversion work as a timed action) phase A 83/0 and
 phase B 14/0, runs 10–11 (the player's path) 76/15 and 80/11 with phase B
-12/2 each, run 12 phase A **94/0** and phase B **14/0**. Most failures were
+12/2 each, run 12 phase A **94/0** and phase B **14/0**, run 13 (the loop on
+the game clock, no reload) **10/1**, the one failure a check bound that
+missed 120 settling ticks. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -442,9 +458,9 @@ delta on an open-ended action).
 ## Next experiments
 
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
-   distilling in the pot still, machines and conversion work in real elapsed
-   game time, pouring from a can lying on the ground, Italian text in game,
-   the crafting window itself, UI rendering checks beyond menu contents.
+   distilling in the pot still, machines in winter (only July has run),
+   pouring from a can lying on the ground, Italian text in game, the
+   crafting window itself, UI rendering checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
 

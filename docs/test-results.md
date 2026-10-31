@@ -10,7 +10,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
 | RT-SP: crafting the sampling kit, filter and stabilizer; distilling in the pot still; picking up a running machine; machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
-| RT-SP: machines and conversion work in real elapsed game time; walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers | The harness advances the mod clock only; the rest is not in the harness yet |
+| RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
 | Packaged-artifact install/upgrade rehearsal | Not run |
@@ -385,3 +385,37 @@ queue warning in the console.
   launch 8.
 
 Not run: see the standing list.
+
+## 2026-10-31 — RT-SP client harness, launch 13 (real game clock)
+
+Command: `tools/run-sp-harness.ps1 -Mode realtime -TimeoutMinutes 60` (request
+`sp-rt`: the same scenario, only the ethanol loop, no mod-clock offset, no
+reload). Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run13_realtime.txt`.
+**10 PASS / 1 FAIL**; launcher exit code 0; no TLG error, TLG stack frame or
+queue warning in the console.
+
+Time ran on the game clock, 2.0 → 138.2 world hours. Machines waited at a
+debug multiplier (`GameTime.setMultiplier(100)`, as the debug panel's Game
+Speed slider; measured 2.22 game hours per 300 ticks); the conversion work
+ran at vanilla's fastest speed, x40 (measured true multiplier 40.0); walking
+and teleports at x1. The character was invulnerable, invisible and kept fed.
+
+* Fermentation (menu, 6 kg sugar, 30 L water) finished after 97.2 game
+  hours: 97 h at full rate. Outdoor temperature ranged 10.9–28.0 °C; the
+  climate model uses daily means and the fermenter's "sheltered" profile, so
+  July never slowed it.
+* Chunk unload (G12): 12 hours in, the character was moved 400 tiles away;
+  the machines' square was no longer loaded. After 24 game hours away and
+  back, the fermenter had done 24.02 h more work over the 24.02 h between
+  the two status reads, at full rate. The check failed by its own bound: it
+  compared with the time to the return teleport (24.01 h) and missed the
+  120 settling ticks before the read. Bound fixed in the harness; the mod's
+  catch-up was exact.
+* Distillation: 3.78 game hours (expected ~3.8), 3.036 L ethanol + 0.194 L
+  water. Drying: 12.09 game hours, water to 0.5 %.
+* Generator conversion from the menu: 7.71 game hours from the click for
+  7.5 h of work (30 reports), 7.5 h credited, "Converted and commissioned".
+  Car: 13.11 game hours for 13 h (52 reports), 13 h credited.
+
+Not run: pours and engine starts (unchanged from launch 12), a reload, any
+season other than summer.
