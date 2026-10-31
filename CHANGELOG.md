@@ -11,6 +11,9 @@
 * Server-authoritative commands with idempotent retries and revisions.
 * Adapters: item/object fluid containers (verified on the dedicated server),
   vehicles, generators, stations and machines (source evidence only).
+* Generators keep their fuel record when a carried generator is dropped by
+  taking another heavy item or by dragging it to the floor, not only through
+  the drop action.
 * Ethanol chain: fermentation vessel, pot/reflux still, drying column, yeast
   starter; EN/IT strings; sandbox options.
 * Migrations with preserved future schemas.

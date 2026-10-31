@@ -287,9 +287,11 @@ function V.install()
         if not World.isAuthority() then return end
         local cell = getCell()
         if cell == nil then return end
-        local vehicles = cell:getVehicles()
-        for i = 0, vehicles:size() - 1 do
-            local ok, err = pcall(V.applyEffects, vehicles:get(i))
+        -- A java.util.HashSet on 42.21 (BC IsoCell.vehicles), so no get(i);
+        -- iterated the way vanilla iterates Sets (SRC server/Vehicles/Vehicles.lua:1037).
+        -- RT-SP 2026-10-31: get(i) raised "tried to call nil" every minute.
+        for _, vehicle in ipairs(cell:getVehicles():toArray()) do
+            local ok, err = pcall(V.applyEffects, vehicle)
             if not ok then TLG.Log.debug("vehicle effects: %s", tostring(err)) end
         end
     end)

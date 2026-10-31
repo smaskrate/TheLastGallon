@@ -8,9 +8,14 @@
 --   replication        object:transmitModData()
 --   reconciliation     like vehicles (D-006)
 --   lifecycle          vanilla carries only fuel + condition between object and
---                      item (SRC ISTakeGenerator.lua:41-53, BC setInfoFromItem);
---                      TLG wraps pickup, drop (Java converts the dropped item in
---                      IsoGridSquare.AddWorldInventoryItem) and IsoGenerator.new
+--                      item (SRC ISTakeGenerator.lua:41-53; BC setInfoFromItem
+--                      copies condition, modData "fuel" and sets modData
+--                      "generatorFullType", nothing else). TLG wraps pickup,
+--                      IsoGenerator.new and every Lua drop path (Java converts
+--                      the dropped item in IsoGridSquare.AddWorldInventoryItem):
+--                      ISDropWorldItemAction, forceDropHeavyItems and
+--                      ISTransferAction to the floor. Drops done by Java alone
+--                      are not seen; such a generator reads as untracked fuel.
 --   effects            start gate on ISActivateGenerator: failToStart() when the
 --                      fuel is incompatible or the start roll fails
 require "TLG/Integration/Containers"
@@ -163,51 +168,119 @@ local function installPickup()
                 for _, k in ipairs(G.CARRIED_KEYS) do side[k] = TLG.Tables.deepCopy(omd[k]) end
             end)
         end
-        local inv = self.character:getInventory()
-        local before = inv:getItems():size()
         local r = orig(self)
         if side then
-            local items = inv:getItems()
-            for i = before, items:size() - 1 do
-                local it = items:get(i)
-                if it and G.ITEM_TYPES[it:getFullType()] then
-                    it:getModData().tlg = side
-                    it:syncItemFields()
+            -- Vanilla equips the new item in both hands (SRC ISTakeGenerator.lua:46-47).
+            -- It is found by hand, not by inventory index: forceDropHeavyItems
+            -- may have removed a carried generator from the list first.
+            local it = self.character:getPrimaryHandItem()
+            if not (it and G.ITEM_TYPES[it:getFullType()] and it:getModData().tlg == nil) then
+                it = nil
+                local items = self.character:getInventory():getItems()
+                for i = items:size() - 1, 0, -1 do
+                    local x = items:get(i)
+                    if x and G.ITEM_TYPES[x:getFullType()] and x:getModData().tlg == nil then
+                        it = x
+                        break
+                    end
                 end
+            end
+            if it then
+                it:getModData().tlg = side
+                it:syncItemFields()
             end
         end
         return r
     end)
 end
 
--- Item sidecar -> object sidecar, for any IsoGenerator on `square` without one.
-function G.attachFromItem(square, item)
+local function attach(obj, side)
+    local copy = Tables.deepCopy(side)
+    local omd = obj:getModData()
+    for _, k in ipairs(G.CARRIED_KEYS) do
+        omd[k] = copy[k]
+        copy[k] = nil
+    end
+    omd.tlg = copy
+end
+
+-- Item sidecar -> object sidecar: the generator converted from `item` is the
+-- one within `radius` squares that has no sidecar, the item's type (or none)
+-- and the item's fuel (setInfoFromItem copies both, BC).
+function G.attachNear(square, item, radius)
     local side = item and item:getModData().tlg
     if square == nil or side == nil or side.kind ~= "generator" then return false end
-    local objs = square:getObjects()
-    for i = 0, objs:size() - 1 do
-        local o = objs:get(i)
-        if instanceof(o, "IsoGenerator") and o:getModData().tlg == nil then
-            local copy = Tables.deepCopy(side)
-            local omd = o:getModData()
-            for _, k in ipairs(G.CARRIED_KEYS) do
-                omd[k] = copy[k]
-                copy[k] = nil
+    local fuel = tonumber(item:getModData().fuel) or 0
+    local r = radius or 0
+    for dx = -r, r do
+        for dy = -r, r do
+            local s = square
+            if dx ~= 0 or dy ~= 0 then s = getCell():getGridSquare(square:getX() + dx, square:getY() + dy, square:getZ()) end
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                local omd = instanceof(o, "IsoGenerator") and o:getModData() or nil
+                if omd and omd.tlg == nil and (omd.generatorFullType == nil or omd.generatorFullType == item:getFullType())
+                    and math.abs(o:getFuel() - fuel) <= 1e-3 then
+                    attach(o, side)
+                    o:transmitModData()
+                    return true
+                end
             end
-            omd.tlg = copy
-            o:transmitModData()
-            return true
         end
     end
     return false
 end
 
+-- Distinct generator items among `a`, `b` that carry a sidecar (a two-handed
+-- generator is both the primary and the secondary hand item).
+local function carriedGenerators(a, b)
+    local out = {}
+    for _, it in ipairs({ a or false, b or false }) do
+        if it and G.ITEM_TYPES[it:getFullType()] and it:getModData().tlg ~= nil
+            and not (out[1] and out[1]:getID() == it:getID()) then
+            out[#out + 1] = it
+        end
+    end
+    return out
+end
+
+local function reattach(items, square, radius)
+    for _, it in ipairs(items) do
+        local ok, done = pcall(G.attachNear, square, it, radius)
+        if not (ok and done) then TLG.Log.debug("generator sidecar not re-attached: %s", tostring(done)) end
+    end
+end
+
 local function installPlacement()
     wrap(ISDropWorldItemAction, "complete", function(orig, self)
-        local item, sq = self.item, self.sq
-        local isGen = item and G.ITEM_TYPES[item:getFullType()] and item:getModData().tlg ~= nil
+        local items = World.isAuthority() and carriedGenerators(self.item) or {}
+        local sq = self.sq
         local r = orig(self)
-        if isGen and World.isAuthority() then pcall(G.attachFromItem, sq, item) end
+        reattach(items, sq, 0)
+        return r
+    end)
+    -- Heavy items are dropped at the character's feet when another heavy item
+    -- is taken (SRC ISEquipWeaponAction.lua:75, called from 17 places).
+    if forceDropHeavyItems then
+        local origDrop = forceDropHeavyItems
+        forceDropHeavyItems = function(character, ...)
+            local items, sq = {}, nil
+            if character and World.isAuthority() then
+                items = carriedGenerators(character:getPrimaryHandItem(), character:getSecondaryHandItem())
+                sq = character:getCurrentSquare()
+            end
+            local r = origDrop(character, ...)
+            reattach(items, sq, 1)
+            return r
+        end
+    end
+    -- Inventory -> floor transfers (SRC ISTransferAction.lua:95-112).
+    wrap(ISTransferAction, "transferItem", function(orig, self, character, item, src, dest, dropSquare, ...)
+        local items = {}
+        if World.isAuthority() and dest and dest:getType() == "floor" then items = carriedGenerators(item) end
+        local r = orig(self, character, item, src, dest, dropSquare, ...)
+        reattach(items, dropSquare, 1)
         return r
     end)
     if IsoGenerator and IsoGenerator.new then
@@ -215,13 +288,7 @@ local function installPlacement()
         IsoGenerator.new = function(item, cell, square)
             local g = origNew(item, cell, square)
             if g and item and item:getModData().tlg and item:getModData().tlg.kind == "generator" then
-                local copy = Tables.deepCopy(item:getModData().tlg)
-                local omd = g:getModData()
-                for _, k in ipairs(G.CARRIED_KEYS) do
-                    omd[k] = copy[k]
-                    copy[k] = nil
-                end
-                omd.tlg = copy
+                attach(g, item:getModData().tlg)
             end
             return g
         end

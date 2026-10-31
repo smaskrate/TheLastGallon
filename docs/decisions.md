@@ -115,14 +115,24 @@ listed with their replacement.
   and is unit-tested; the network transport is an adapter (G07 NOT RUN).
 
 ## D-013 Generator sidecar carried through pickup/placement
-* Decision: wrap `ISTakeGenerator.complete` (object → item modData),
-  `ISDropWorldItemAction.complete` (item → object: Java converts a dropped
-  generator item in `IsoGridSquare.AddWorldInventoryItem`, BC, so this is the
-  normal player path) and `IsoGenerator.new` (Lua placement paths). Device
+* Decision: wrap `ISTakeGenerator.complete` (object → item modData), every
+  Lua path that drops a generator item (item → object: Java converts a
+  dropped generator item in `IsoGridSquare.AddWorldInventoryItem`, BC) and
+  `IsoGenerator.new` (Lua placement paths). The drop paths are
+  `ISDropWorldItemAction.complete` (place/drop), the global
+  `forceDropHeavyItems` (a carried generator is dropped at the character's
+  feet when another heavy item is taken; 17 vanilla callers) and
+  `ISTransferAction:transferItem` to the floor container (inventory drag).
+  After the drop the sidecar goes to the generator within one square that has
+  no sidecar, the item's `generatorFullType` and the item's fuel. Device
   identity and conversion projects (`tlgDeviceId`, `tlgEngineId`,
   `tlgConv`) travel the same way.
-* Evidence: SRC `ISTakeGenerator.lua:41-53`, `ISDropWorldItemAction.lua:81`;
-  BC `setInfoFromItem`, `IsoGridSquare.AddWorldInventoryItem`.
+* Evidence: SRC `ISTakeGenerator.lua:41-53`, `ISDropWorldItemAction.lua:81`,
+  `ISEquipWeaponAction.lua:75-98`, `ISTransferAction.lua:95-112`;
+  BC `setInfoFromItem` (copies condition and `modData.fuel`, sets
+  `modData.generatorFullType`, nothing else), `IsoGridSquare.AddWorldInventoryItem`.
+* Limitation: a drop performed by Java alone (no Lua caller) is not seen; the
+  generator then reads as untracked fuel at the pessimistic baseline (D-006).
 * Status: implemented; `IsoGenerator.new` wrapping is the same mechanism
   proven for `FluidContainer.Transfer` (RT-DS). Pickup/drop NOT RUN (G05).
 

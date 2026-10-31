@@ -31,13 +31,26 @@ C.FLOAT_TOLERANCE = 1e-4
 
 local SIDECAR_FIELDS = { "id", "rev", "deg", "stab", "mic", "t", "storage", "sealed", "cond", "dirty", "label", "prov", "q" }
 
+-- An item lying on the ground can hold its fluid on the world object
+-- instead of on the item (BC InventoryItem.getFluidContainerFromSelfOrWorldItem;
+-- RT-SP 2026-10-31: a reloaded jerry can on the ground had no item container).
+-- The record stays with the item either way: its modData persists with the
+-- world item (same run).
 function C.ownerOf(fc)
     if fc == nil then return nil end
     local owner = fc:getOwner()
     if owner == nil then return nil end
     if instanceof(owner, "InventoryItem") then return owner, "item" end
+    if instanceof(owner, "IsoWorldInventoryObject") and owner:getItem() then return owner:getItem(), "item" end
     if instanceof(owner, "IsoObject") then return owner, "object" end
     return nil
+end
+
+function C.fluidOf(owner, kind)
+    if kind == "item" and owner.getFluidContainerFromSelfOrWorldItem then
+        return owner:getFluidContainerFromSelfOrWorldItem()
+    end
+    return owner:getFluidContainer()
 end
 
 function C.keyOf(owner, kind)
@@ -55,7 +68,7 @@ end
 -- Builds the committed record for a container; nil when it does not hold
 -- TLG-tracked fuel. `persist` allows assigning ids/baselines (authority).
 function C.read(owner, kind, persist)
-    local fc = owner:getFluidContainer()
+    local fc = C.fluidOf(owner, kind)
     if fc == nil then return nil, "no_fluid_container" end
     local comp, foreign = Native.readComposition(fc)
     if foreign > 1e-6 then return nil, "foreign_fluid" end
@@ -150,7 +163,7 @@ function C.endpoint(owner, kind, actor)
         return rec
     end
     function ep:write(rec)
-        local ok, why = Native.writeComposition(owner:getFluidContainer(), rec.q)
+        local ok, why = Native.writeComposition(C.fluidOf(owner, kind), rec.q)
         if not ok then return false, why end
         C.writeSidecar(owner, kind, rec)
         return true

@@ -113,9 +113,8 @@ local function queuePour(player, item, destination, face, experimental)
 end
 
 local function nearbyVehicleTank(player)
-    local vehicles = getCell():getVehicles()
-    for i = 0, vehicles:size() - 1 do
-        local v = vehicles:get(i)
+    -- getVehicles() is a java.util.HashSet on 42.21 (see Integration/Vehicles.lua).
+    for _, v in ipairs(getCell():getVehicles():toArray()) do
         local tank = v:getPartById("GasTank")
         if tank and v:isInArea(tank:getArea(), player) then return v end
     end

@@ -12,7 +12,9 @@ P.items = {
 function P.forItem(item)
     local id = P.items[item:getFullType()]
     if id then return id end
-    local fc = item:getFluidContainer()
+    -- On the ground the fluid can sit on the world object (see Integration/Containers).
+    local fc = item.getFluidContainerFromSelfOrWorldItem and item:getFluidContainerFromSelfOrWorldItem()
+        or item:getFluidContainer()
     if fc and fc:getCapacity() <= 2 then return "bottle" end
     return "unknown"
 end

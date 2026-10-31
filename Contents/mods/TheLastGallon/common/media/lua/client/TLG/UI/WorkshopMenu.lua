@@ -60,9 +60,8 @@ end
 
 local function nearbyVehicle(player)
     local best, bestD
-    local vehicles = getCell():getVehicles()
-    for i = 0, vehicles:size() - 1 do
-        local v = vehicles:get(i)
+    -- getVehicles() is a java.util.HashSet on 42.21 (see Integration/Vehicles.lua).
+    for _, v in ipairs(getCell():getVehicles():toArray()) do
         local d = player:DistTo(v:getX(), v:getY())
         if d <= 4 and (bestD == nil or d < bestD) then best, bestD = v, d end
     end
