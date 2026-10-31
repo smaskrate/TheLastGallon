@@ -197,7 +197,28 @@ listed with their replacement.
   (`Project.WORKER_TIMEOUT_HOURS`) for callers that pass none, because its
   tests use multi-hour single reports; the in-game handlers always pass 1 h.
   A modified client sending bare reports gains at most 1 h per visit and has
-  to be in reach when it reports. Verified RT-SP (2026-10-31, run 9, action
-  queued by the harness): a bare report after 3 h credited 1 h; leaving
-  reach stopped the action through `isValid()`; time away was not credited.
-  The menu's walk to the device is NOT RUN.
+  to be in reach when it reports. The action shows no progress bar:
+  `setJobDelta` on an open-ended action makes vanilla's queue drop it as
+  stalled (BC `BaseAction`, found in run 11); progress is in "Project
+  status". Verified RT-SP (2026-10-31): a bare report after 3 h credited
+  1 h; leaving reach stopped the action through `isValid()`; time away was
+  not credited (run 9); from the menu, the walk to the engine area, a
+  refused start and the ending on a missing tool (run 12).
+
+## D-019 Where each TLG recipe is crafted
+* Decision: every TLG craft recipe carries vanilla's place tags. The
+  fermentation vessel `AnySurfaceCraft;Carpentry` (as vanilla
+  `MakeOilPress`), the pot still and drying column `AnySurfaceCraft` (as the
+  screwdriver assemblies in `recipes_electrical`/`recipes_radio`), the
+  reflux still `InHandCraft;Welding` (as `MakeMetalSheet`), the sampling kit
+  and filter `InHandCraft`, the stabilizer `InHandCraft;Cooking`.
+  `AnySurfaceCraft` needs a table or counter within two tiles. Pot and jar
+  inputs say `mode:destroy`.
+* Reason: the crafting window and the inventory "craft" menu only list
+  recipes with one of the two place tags (SRC `ISHandcraftWindow.lua:53`,
+  BC `CraftRecipeManager.getUniqueRecipeItems`); the recipes loaded but none
+  could be crafted. Container inputs are kept unless `mode:destroy`, so the
+  crafts handed the pot and jars back (RT-SP run 11).
+* Consequence: verified RT-SP 2026-10-31 (run 12) for the four machine
+  recipes through the inventory craft menu; the sampling kit, filter and
+  stabilizer are listed but were not crafted in game.

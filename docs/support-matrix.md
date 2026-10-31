@@ -26,6 +26,10 @@ compatible with another build until re-tested.
 | Fermenter → still (TLG command) | machine-to-machine | n/a (wash) | TLG | **Verified RT-SP** (run 7: 33.3 L wash; yeast starter returned) |
 | Third-party mods | not tested | — | — | NOT RUN |
 
+Vanilla refuses a `FluidContainer.Transfer` between items while the player's
+inventory is full (BC `FluidContainer.CanTransfer`, seen in run 10); TLG
+follows whatever vanilla moves, so nothing is moved and nothing recorded.
+
 Vanilla refuel menus only offer containers that contain `Petrol`
 (`contains(Fluid.Petrol)`): a station can with water and sediment is still
 offered (RT-SP), pure ethanol is not. Non-petrol fuels use the TLG pour
@@ -111,13 +115,30 @@ their changes are reconciled conservatively.
 Chassis/item ids were verified in the 42.21 scripts (file:line in
 `TLG/Content/Conversions.lua`). "Verified RT-SP" covers begin, parts
 delivery, work to `Commissioned` (time from a mod-clock fixture), the flex
-profile, running on ethanol and reload. Since run 9 the work runs through
-the timed action `ISTLGConversionWork` (D-018), queued by the harness:
-it stops when the worker leaves and time away is not credited. The menu
-entries and their walk to the device, cancel, remove and engine
-replacement are NOT RUN. No
+profile, running on ethanol and reload. The work runs through the timed
+action `ISTLGConversionWork` (D-018): it stops when the worker leaves and
+time away is not credited (run 9); since run 12 every step comes from the
+workshop menu, including the walk to the engine area, a refused start and
+the ending on a missing tool. Cancel, remove and engine replacement are
+NOT RUN. No
 electric or wood-gas vehicle conversion is shipped yet (domain data exists
 for the vehicle gasifier module only).
+
+## Crafting (`TLG_machines.txt`, D-019)
+
+| Recipe | Where | Evidence |
+| --- | --- | --- |
+| TLG_MakeFermenterVessel | table or counter (`AnySurfaceCraft;Carpentry`) | **Verified RT-SP** (run 12, inventory craft menu) |
+| TLG_MakePotStill | table or counter (`AnySurfaceCraft`) | **Verified RT-SP** (run 12) |
+| TLG_MakeRefluxStill | in hand (`InHandCraft;Welding`) | **Verified RT-SP** (run 12) |
+| TLG_MakeDryingColumn | table or counter (`AnySurfaceCraft`) | **Verified RT-SP** (run 12) |
+| TLG_MakeSampleKit, TLG_MakeFuelFilter, TLG_MakeFuelStabilizer | in hand | listed for crafting (RT-SP runs 10–12); not crafted in game |
+
+Verified means: offered by the inventory "craft" menu, crafted next to a
+counter (or in hand), output in the inventory, consumed inputs gone (pot and
+jars included) and kept tools still there. The crafting window itself was
+not opened. With a full inventory vanilla drops the output on the floor
+(`Actions.addOrDropItem`).
 
 ## Pathway machines
 

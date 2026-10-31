@@ -16,9 +16,18 @@
   client on 2026-10-31 (refuelling, siphoning, pumps, generator pickup/drop,
   start gates, stalls, the TLG pour, one ethanol batch through fermenter,
   reflux still and drying column, flex conversion of a generator and a
-  standard car that then run on that ethanol, save and reload). Machines and
-  conversions were driven through the mod's commands with elapsed time
-  supplied by the test harness; their menus are not yet exercised in game.
+  standard car that then run on that ethanol, save and reload). The machines
+  were crafted and run, and the conversions done, through the player's
+  menus; elapsed time was supplied by the test harness.
+* Crafting and menus, fixed in the client runs: nothing the mod adds could
+  be crafted (the recipes lacked the tags the crafting window and the craft
+  menu list by); the pot still and the jar recipes gave the pot and jars
+  back; "Load mash" from the menu could take up to 130 L of water for a
+  small mash (it now takes 5 L per kg of sugar loaded); "Collect ethanol"
+  could fill a can that held petrol (it now uses an empty can, or one
+  holding only ethanol); the workshop dialog named missing items by their
+  ids; the conversion work action was dropped from the game's action queue
+  while it kept running (its progress bar is gone; see "Project status").
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record
@@ -31,9 +40,9 @@
   generator. The character works there until the conversion is finished or
   something is missing; walking away stops the work and time away is not
   counted (a late report credits at most 1 h). The "Report progress" and
-  "Stop working" entries are gone (EN/IT). Checked in game with the action
-  queued by the test harness and the character moved out of reach; the menu
-  entry itself is not yet exercised.
+  "Stop working" entries are gone (EN/IT). Checked in game from the menu,
+  including the walk to the engine, the character moved out of reach and the
+  work ending on a missing tool.
 * Ethanol chain: fermentation vessel, pot/reflux still, drying column, yeast
   starter; EN/IT strings; sandbox options. The drying column can now be used
   ("Dry ethanol with quicklime"); before, it could be built but had no action.

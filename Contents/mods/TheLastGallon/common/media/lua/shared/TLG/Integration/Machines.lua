@@ -1,11 +1,12 @@
 -- Adapter: production machines as placeable items (decision D-015).
--- Runtime status: verified RT-SP 2026-10-31 (run 7): a placed fermenter,
--- reflux still and drying column each ran a batch through the commands
--- (load, firebox, wash, collect into a can, dry, collect) with real inventory
--- items, and their records survived save and reload. Elapsed time came from
--- a mod-clock fixture (the game clock did not run the 96 h); unloaded
--- catch-up is domain-tested only. The context menu, the pot still, pickup
--- while processing and MP replication are NOT RUN.
+-- Runtime status: verified RT-SP 2026-10-31: a placed fermenter, reflux
+-- still and drying column each ran a batch (load, firebox, wash, collect
+-- into a can, dry, collect) with real inventory items, through the commands
+-- (run 7) and through the context menu (run 12), and their records
+-- survived save and reload. Elapsed time came from a mod-clock fixture (the
+-- game clock did not run the 96 h); unloaded catch-up is domain-tested only.
+-- Distilling in the pot still, pickup while processing and MP replication
+-- are NOT RUN.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
 --   processing         only while the item lies on the ground; picking it up

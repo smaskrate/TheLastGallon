@@ -120,12 +120,15 @@ function H.machineLoadFerment(player, args)
     if not Machines.isPlaced(st.item) then return fail("not_placed") end
     local recipe = TLG.Registry.need("recipe", "ethanol_ferment")
     local sugarWanted = TLG.Num.clamp(tonumber(args.sugarKg) or recipe.inputs.sugar_eq.max, 0, recipe.inputs.sugar_eq.max)
-    local waterWanted = TLG.Num.clamp(tonumber(args.waterL) or sugarWanted * 5, 0, recipe.inputs.water.max)
     local yeast = player:getInventory():getFirstTypeRecurse("Base.Yeast")
         or player:getInventory():getFirstTypeRecurse("TLG.YeastStarter")
     if yeast == nil then return fail("needs_yeast") end
     -- Validate with what is actually available before taking anything.
     local sugarAvail = takeFeedstock(player, "sugar_eq", sugarWanted, recipe.inputs.sugar_eq.max, true)
+    -- Without an amount (the menu sends none) the water follows the sugar
+    -- actually there, 5 L per kg; it used to follow the 30 kg maximum, so up
+    -- to 130 L went into a 6 kg mash (found 2026-10-31).
+    local waterWanted = TLG.Num.clamp(tonumber(args.waterL) or sugarAvail * 5, 0, recipe.inputs.water.max)
     local waterAvail = takeWater(player, waterWanted, true)
     local plan = Process.plan("ethanol_ferment", { sugar_eq = sugarAvail, water = waterAvail }, st.rec)
     if not plan.ok then return fail(plan.reason, { sugarAvailableKg = sugarAvail, waterAvailableL = waterAvail }) end

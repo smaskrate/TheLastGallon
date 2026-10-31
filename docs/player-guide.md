@@ -55,29 +55,39 @@ home-made ethanol. The effects while driving are untested in game.)*
 
 ## Your first sustainable fuel: ethanol
 
-1. **Fermentation vessel** – planks, nails, an empty jar (Carpentry 2).
-   Place it on the ground, carry feedstock (sugar, corn, potatoes, sugar
-   beets, pumpkins, watermelons, fruit), clean water and yeast, choose
-   **Load mash and start fermenting**. About 4 days at room temperature;
-   slower in the cold, stalls below ~8 °C and spoils if stalled for 3 days.
+Build the machines from the crafting menu. The fermentation vessel, pot
+still and drying column need a table or counter within two tiles; the reflux
+still is welded in hand.
+
+1. **Fermentation vessel** – six planks, twelve nails, an empty jar and a
+   hammer (Carpentry 2). Place it on the ground, carry feedstock (sugar,
+   corn, potatoes, sugar beets, pumpkins, watermelons, fruit), clean water
+   and yeast, choose **Load mash and start fermenting**: it takes 5 L of
+   water per kg of sugar. About 4 days at room temperature; slower in the
+   cold, stalls below ~8 °C and spoils if stalled for 3 days.
 2. **Pot still** – a cooking pot, two metal pipes, a rubber hose
    (screwdriver). Place it within two tiles of a finished fermenter, **Load
-   wash**, **Feed the firebox** with firewood, logs, planks or twigs.
-3. **Collect ethanol into a fuel can**. A pot still gives ~80 % ethanol; a
-   **reflux column still** (welding) gives ~94 % and recovers more.
+   wash**, **Feed the firebox**: it burns all the wood you carry (firewood,
+   logs, twigs, planks too) up to what fits, so leave building planks
+   behind.
+3. **Collect ethanol into a fuel can**: the still fills an empty fuel can,
+   or one that already holds only ethanol, never a can with other fuel in
+   it. A pot still gives ~80 % ethanol; a **reflux column still** (the pot
+   still, two sheets of metal, three metal pipes, a blowtorch and a welding
+   mask) gives ~94 % and recovers more.
 4. Save the **yeast starter culture** from batches of 5 kg sugar or more –
    it replaces bought yeast.
-5. **Drying column** – place it, carry the can of ethanol and quicklime,
-   choose **Dry ethanol with quicklime** and collect the result into a fuel
-   can after about 12 hours. Pot-still ethanol holds too much water for any
-   engine until it is dried. Reflux ethanol runs converted engines as it is,
-   but dry it before blending with gasoline: wet ethanol in gasoline
-   separates.
+5. **Drying column** – a metal pipe and an empty jar (screwdriver). Place
+   it, carry the can of ethanol and quicklime, choose **Dry ethanol with
+   quicklime** and collect the result into a fuel can after about 12 hours.
+   Pot-still ethanol holds too much water for any engine until it is dried.
+   Reflux ethanol runs converted engines as it is, but dry it before
+   blending with gasoline: wet ethanol in gasoline separates.
 
-Picking up a working machine pauses it; put it down to continue. *(One batch
-through the fermenter, reflux still and drying column was checked in game;
-building the machines, their menus, the pot still and picking up a working
-machine are untested in game.)*
+Picking up a working machine pauses it; put it down to continue. *(Building
+the four machines, their menus and one batch through the fermenter, reflux
+still and drying column were checked in game; distilling in the pot still
+and picking up a working machine are untested in game.)*
 
 ## Converting an engine
 
@@ -94,7 +104,8 @@ Right-click the generator or car → **Workshop: convert this generator** (or
    away is never counted: choose **Work on it** again to carry on. Every
    stage needs its tools (screwdriver, wrench, pliers), and the fuel tank
    must be empty while you drain the fuel system and install the parts. A
-   helper can work alongside you.
+   helper can work alongside you. There is no progress bar: **Project
+   status** shows the stage and the hours done.
 4. When the status reads **Converted and commissioned**, the engine is flex.
 
 | | Generator | Standard car |
@@ -107,10 +118,10 @@ Right-click the generator or car → **Workshop: convert this generator** (or
 Cancelling returns three quarters of the parts handed over; removing a
 finished conversion returns half. Small cars, pickup trucks, step vans and
 the other generator models have their own conversions. *(A standard car and
-the basic generator were converted in game, the work stopped once the
-character was out of reach, and both then ran on ethanol. The menu entries
-themselves, walking to the device, the work ending because something is
-missing, cancelling, removing and the other models are untested in game.)*
+the basic generator were converted in game from this menu: the walk to the
+engine, the work stopping once the character was out of reach and ending
+when a tool was missing; both then ran on ethanol. Cancelling, removing and
+the other models are untested in game.)*
 
 ## Stations
 

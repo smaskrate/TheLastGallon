@@ -2,6 +2,8 @@
 -- vehicle. All steps are authority requests (TLG.Net). "Work on it" walks to
 -- the device and starts ISTLGConversionWork, which reports while the
 -- character stays there; time away from the device is never credited.
+-- Start, Hand over parts and Work on it used RT-SP 2026-10-31 (run 12) on a
+-- Base.Generator and a Base.CarNormal; Cancel and Remove are NOT RUN.
 require "TLG/Client/Net"
 require "TLG/Authority/Resolver"
 require "TLG/Actions/ISTLGConversionWork"
@@ -24,10 +26,27 @@ local function textOr(key, fallbackKey, arg)
     return t
 end
 
+-- What is missing, in the player's words: items by display name (vanilla
+-- getItemNameFromFullType), skills as "Mechanics 4", recipes as named.
+function Menu.missingText(m)
+    m = tostring(m)
+    local skill, level = string.match(m, "^(%a+):(%d+)$")
+    if skill then
+        local name = getText("IGUI_perks_" .. skill)
+        if name == "IGUI_perks_" .. skill then name = skill end
+        return name .. " " .. level
+    end
+    if string.find(m, ".", 1, true) then
+        local ok, name = pcall(getItemNameFromFullType, m)
+        if ok and name and name ~= "" then return name end
+    end
+    return m
+end
+
 function Menu.describe(reply)
     if not reply.ok then
         local lines = { textOr("IGUI_TLG_ConvReason_" .. tostring(reply.reason), "IGUI_TLG_Fail_Generic", tostring(reply.reason)) }
-        for _, m in ipairs(reply.missing or {}) do lines[#lines + 1] = "- " .. tostring(m) end
+        for _, m in ipairs(reply.missing or {}) do lines[#lines + 1] = "- " .. Menu.missingText(m) end
         return table.concat(lines, " <LINE> ")
     end
     local lines = { getText("IGUI_TLG_ConvState_" .. tostring(reply.state)) }
@@ -36,7 +55,7 @@ function Menu.describe(reply)
     if reply.blocked then
         lines[#lines + 1] = textOr("IGUI_TLG_ConvReason_" .. tostring(reply.blocked.reason), "IGUI_TLG_Fail_Generic",
             tostring(reply.blocked.reason))
-        for _, m in ipairs(reply.blocked.missing or {}) do lines[#lines + 1] = "- " .. tostring(m) end
+        for _, m in ipairs(reply.blocked.missing or {}) do lines[#lines + 1] = "- " .. Menu.missingText(m) end
     end
     if reply.profile then lines[#lines + 1] = getText("IGUI_TLG_ConvProfile", getText("IGUI_TLG_Profile_" .. reply.profile)) end
     return table.concat(lines, " <LINE> ")

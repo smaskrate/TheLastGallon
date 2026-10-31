@@ -7,11 +7,10 @@
 -- WORKER_TIMEOUT_HOURS). Walking away stops it with a final report.
 -- Reports go through TLG.Net (single player: locally; multiplayer: client
 -- requests, NOT RUN); a server-side copy of the action never reports.
--- Verified RT-SP 2026-10-31 (run 9): reports, ending itself at
--- Commissioned, stop() when the character was moved out of reach, no credit
--- for time away. Queued by the harness: the menu's walk to the device, the
--- endings on a block or a refused join, and the progress bar's rendering
--- are NOT RUN.
+-- Verified RT-SP 2026-10-31: reports, ending itself at Commissioned, stop()
+-- when the character was moved out of reach, no credit for time away (run
+-- 9); queued from the workshop menu after the walk to the engine area, a
+-- refused join and the ending on a missing tool (run 12).
 require "TimedActions/ISBaseTimedAction"
 require "TLG/Integration/ConversionDevices"
 
@@ -44,12 +43,11 @@ end
 function ISTLGConversionWork:onReply(r)
     if self.ended then return end
     if r.ok and r.state == "InProgress" and not r.released then
+        -- No progress bar: setJobDelta sets currentTime = maxTime * delta
+        -- (BC BaseAction), negative on this open-ended action, and vanilla's
+        -- queue then drops it as stalled while it keeps running (RT-SP
+        -- 2026-10-31, runs 10-11). Progress shows in "Project status".
         self.joined = true
-        if r.totalHours and r.totalHours > 0 then
-            -- Progress bar on an open-ended action: not verified to render.
-            local ok, err = pcall(self.setJobDelta, self, r.doneHours / r.totalHours)
-            if not ok then TLG.Log.error("conversion work progress: %s", tostring(err)) end
-        end
         return
     end
     self.ended, self.result = true, r

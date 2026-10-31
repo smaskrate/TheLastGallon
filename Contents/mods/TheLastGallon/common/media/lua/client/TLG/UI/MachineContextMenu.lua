@@ -1,5 +1,7 @@
 -- Context menu for TLG machine items (fermenter, stills, drying column).
--- All actions are authority requests; results are shown as text.
+-- All actions are authority requests; results are shown as text. Every entry
+-- of the fermenter, reflux still and drying column was used RT-SP
+-- 2026-10-31 (run 12); the pot still's entries are NOT RUN.
 require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"
@@ -48,26 +50,37 @@ local function firstItem(entry)
     return entry.items and entry.items[1]
 end
 
+local function onlyEthanolAndWater(fc)
+    local comp, foreign = TLG.Integration.Native.readComposition(fc)
+    if foreign > 1e-6 or (comp.ethanol or 0) <= 0 then return false end
+    for id in pairs(comp) do
+        if id ~= "ethanol" and id ~= "water" then return false end
+    end
+    return true
+end
+
+-- Where collected ethanol goes: an empty fuel can first, else one holding
+-- only ethanol and water. A can with any other fuel is never used; this used
+-- to take the first can with room, petrol can included (found 2026-10-31).
 local function fuelCanWithRoom(player, except)
     local list = player:getInventory():getAllEvalRecurse(function(it)
         local fc = it:getFluidContainer()
         return it ~= except and fc ~= nil and fc:getFreeCapacity() > 0.1 and TLG.ContainerProfiles.items[it:getFullType()] ~= nil
     end)
-    if list:size() > 0 then return list:get(0) end
-    return nil
+    local topUp
+    for i = 0, list:size() - 1 do
+        local fc = list:get(i):getFluidContainer()
+        if fc:isEmpty() then return list:get(i) end
+        if topUp == nil and onlyEthanolAndWater(fc) then topUp = list:get(i) end
+    end
+    return topUp
 end
 
 -- A can holding ethanol and water only (still output to dry).
 local function hydrousEthanolCan(player)
     local list = player:getInventory():getAllEvalRecurse(function(it)
         local fc = it:getFluidContainer()
-        if fc == nil or fc:isEmpty() then return false end
-        local comp, foreign = TLG.Integration.Native.readComposition(fc)
-        if foreign > 1e-6 or (comp.ethanol or 0) <= 0 then return false end
-        for id in pairs(comp) do
-            if id ~= "ethanol" and id ~= "water" then return false end
-        end
-        return true
+        return fc ~= nil and not fc:isEmpty() and onlyEthanolAndWater(fc)
     end)
     if list:size() > 0 then return list:get(0) end
     return nil

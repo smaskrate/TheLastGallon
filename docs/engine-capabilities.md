@@ -328,11 +328,44 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   ends itself with `forceComplete()` when the project is commissioned. When
   the character was moved out of reach, the game polled `isValid()` and
   called the action's `stop()`; nothing was credited for the time away.
+* Player path (run 12): the four machines crafted through the inventory
+  craft menu, placed with `ISDropWorldItemAction`, the batch run from the
+  machine context menu, both conversions done from the workshop menu (the
+  car's "Work on it" walked into the engine area first).
 * Run 7 found an adapter defect the domain tests could not: the actor for
   `conversion.begin` was built from the device's existing project, so with
   no project yet no tool was counted and every first conversion failed with
   `missing_tool`. Fixed in `ConversionDevices.actor`; regression cases in
   `tests/integration/test_conversion_devices.lua`.
+
+## Crafting, menus and timed actions (RT-SP runs 10–12)
+
+* Recipe listing: the crafting window queries
+  `"InHandCraft;AnySurfaceCraft"` (SRC `ISHandcraftWindow.lua:53`) and the
+  inventory "craft" menu takes only recipes with one of those tags (BC
+  `CraftRecipeManager.getUniqueRecipeItems`); untagged recipes load but are
+  offered nowhere. `AnySurfaceCraft` needs an object with
+  `isGenericCraftingSurface()` reachable within two tiles
+  (BC `HandcraftLogic.findCraftSurface`).
+* `canPerformCurrentRecipe` (BC `BaseCraftingLogic`) checks the recipe for
+  the character (skills, `NeedToBeLearn`), whether inputs can be consumed
+  and outputs created, and the workbench range.
+* Container inputs (pots, jars) are kept unless the input says
+  `mode:destroy` (vanilla pasta/rice recipes); outputs go through
+  `Actions.addOrDropItem` and land on the floor when the inventory is full.
+* `FluidContainer.CanTransfer` refuses item-to-item transfers while the
+  player's inventory is full (BC), so a Lua `FluidContainer.Transfer` moves
+  nothing then.
+* Timed actions: `BaseAction.setJobDelta(d)` sets `currentTime = maxTime × d`
+  (BC); on an open-ended action (`maxTime = -1`) that is negative,
+  `hasStalled()` becomes true and `ISTimedActionQueue:tick()` removes the
+  action from the Lua queue without stopping it in Java. The game then
+  treats the character as idle while the action runs. Open-ended actions
+  must not set a job delta. `isValid()` is polled; a `false` calls the
+  action's `stop()` (run 9, run 12).
+* Context menus can be driven from Lua the way `ISContextMenu` does it:
+  `option.onSelect(option.target, option.param1, …)`
+  (SRC `ISContextMenu.lua:70`).
 
 ## G10–G14
 
@@ -387,12 +420,15 @@ Since run 3 a launch needs no input: the full run (both phases) takes about
 run 5 phase A 47/0 and phase B 9/2, run 6 (adds start gates, stall and TLG
 pours into a vehicle) phase A 63/0 and phase B 11/0, run 7 (adds the
 renewable loop) phase A 74/8 and phase B 12/2, run 8 phase A 82/0 and
-phase B 14/0, run 9 (conversion work as a timed action) phase A **83/0** and
-phase B **14/0**. Every failure was traced to the harness itself (placement,
-a nearly full target generator, a lookup that matched the neighbouring
-object) except two that found mod defects: run 4's ground-can result (the
-container-ownership defect described under G02) and run 7's conversion
-refusals (the tool-counting defect described above).
+phase B 14/0, run 9 (conversion work as a timed action) phase A 83/0 and
+phase B 14/0, runs 10–11 (the player's path) 76/15 and 80/11 with phase B
+12/2 each, run 12 phase A **94/0** and phase B **14/0**. Most failures were
+traced to the harness itself (placement, a nearly full target generator, a
+lookup that matched the neighbouring object, an overloaded test character)
+and some found mod defects: run 4's ground-can result (container
+ownership, G02), run 7's conversion refusals (tool counting), runs 10–11's
+crafting and work-action results (recipe tags, `mode:destroy`, the job
+delta on an open-ended action).
 
 ## Tooling pitfalls found
 
@@ -406,10 +442,9 @@ refusals (the tool-counting defect described above).
 ## Next experiments
 
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
-   crafting the machines, the machine and workshop menus, the pot still,
-   machines and conversion work in real elapsed game time, pouring from a
-   can lying on the ground, Italian text in game, UI rendering checks beyond
-   menu contents.
+   distilling in the pot still, machines and conversion work in real elapsed
+   game time, pouring from a can lying on the ground, Italian text in game,
+   the crafting window itself, UI rendering checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
 

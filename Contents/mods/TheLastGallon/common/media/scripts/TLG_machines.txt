@@ -5,7 +5,20 @@ module TLG
        Models/icons are verified vanilla references used as placeholders
        (docs/asset-audit.csv A03/A04). Recipes use item ids verified in the
        42.21 item scripts; craftRecipe grammar mirrors vanilla
-       generated/entities/*/craftRecipes. Runtime crafting NOT RUN. */
+       generated/entities/*/craftRecipes. Tags decide where a recipe is
+       offered: the crafting window and the inventory "craft" menu list only
+       InHandCraft / AnySurfaceCraft recipes (ISHandcraftWindow.lua:53; BC
+       CraftRecipeManager.getUniqueRecipeItems). Without them none of these
+       recipes could be crafted (found 2026-10-31). Tags mirror vanilla
+       MakeOilPress (AnySurfaceCraft;Carpentry), the screwdriver assemblies in
+       recipes_electrical/radio (AnySurfaceCraft) and MakeMetalSheet
+       (InHandCraft;Welding); decision D-019. Pots and jars are containers,
+       which a recipe keeps unless the input says mode:destroy (vanilla
+       pasta/rice recipes: item 1 [Base.Pot;Base.PotForged] mode:destroy);
+       without it the crafts gave the pot and jars back (RT-SP run 11).
+       Crafted RT-SP 2026-10-31 (run 12) through the inventory craft menu:
+       fermenter, pot still, reflux still, drying column. The sampling kit,
+       filter and stabilizer are listed, not crafted in game. */
 
     item FermenterVessel
     {
@@ -51,13 +64,14 @@ module TLG
         time = 300,
         timedAction = Making,
         category = Carpentry,
+        Tags = AnySurfaceCraft;Carpentry,
         SkillRequired = Woodwork:2,
         inputs
         {
             item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeLight],
             item 6 [Base.Plank],
             item 12 [Base.Nails],
-            item 1 [Base.EmptyJar],
+            item 1 [Base.EmptyJar] mode:destroy,
         }
         outputs
         {
@@ -70,9 +84,10 @@ module TLG
         time = 200,
         timedAction = Making,
         category = Metalworking,
+        Tags = AnySurfaceCraft,
         inputs
         {
-            item 1 [Base.Pot],
+            item 1 [Base.Pot] mode:destroy,
             item 2 [Base.MetalPipe],
             item 1 [Base.RubberHose],
             item 1 [Base.Screwdriver] mode:keep,
@@ -88,6 +103,7 @@ module TLG
         time = 400,
         timedAction = Making,
         category = Welding,
+        Tags = InHandCraft;Welding,
         inputs
         {
             item 1 [TLG.PotStill],
@@ -107,10 +123,11 @@ module TLG
         time = 150,
         timedAction = Making,
         category = Metalworking,
+        Tags = AnySurfaceCraft,
         inputs
         {
             item 1 [Base.MetalPipe],
-            item 1 [Base.EmptyJar],
+            item 1 [Base.EmptyJar] mode:destroy,
             item 1 [Base.Screwdriver] mode:keep,
         }
         outputs
@@ -124,9 +141,10 @@ module TLG
         time = 80,
         timedAction = Making,
         category = Tools,
+        Tags = InHandCraft,
         inputs
         {
-            item 3 [Base.EmptyJar],
+            item 3 [Base.EmptyJar] mode:destroy,
             item 1 [Base.RubberHose],
         }
         outputs
@@ -141,11 +159,12 @@ module TLG
         time = 80,
         timedAction = Making,
         category = Tools,
+        Tags = InHandCraft,
         inputs
         {
             item 2 [Base.RippedSheets],
             item 1 [Base.Charcoal],
-            item 1 [Base.EmptyJar],
+            item 1 [Base.EmptyJar] mode:destroy,
         }
         outputs
         {
@@ -159,10 +178,11 @@ module TLG
         time = 120,
         timedAction = Making,
         category = Cooking,
+        Tags = InHandCraft;Cooking,
         inputs
         {
             item 2 [Base.Charcoal],
-            item 1 [Base.EmptyJar],
+            item 1 [Base.EmptyJar] mode:destroy,
         }
         outputs
         {

@@ -9,8 +9,8 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
-| RT-SP: crafting the machines, the machine and workshop menus, the pot still, picking up a running machine, Italian text in game | Not in the harness yet |
-| RT-SP: machines and conversion work in real elapsed game time; cancelling or removing a conversion | The harness advances the mod clock only; cancel/remove not in the harness yet |
+| RT-SP: crafting the sampling kit, filter and stabilizer; distilling in the pot still; picking up a running machine; Italian text in game | Not in the harness yet |
+| RT-SP: machines and conversion work in real elapsed game time; walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers | The harness advances the mod clock only; the rest is not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
 | Packaged-artifact install/upgrade rehearsal | Not run |
@@ -313,3 +313,75 @@ Not run: the menu entry itself (walking to the engine area or next to the
 generator), walking away (the character was moved), the action ending on a
 block (missing tool or parts, tank not empty) or on a refused join, the
 progress bar's rendering, two workers at once, multiplayer.
+
+## 2026-10-31 — RT-SP client harness, launches 10–12 (the player's path)
+
+The loop now goes through what a player uses: vanilla crafting
+(`ISInventoryPaneContextMenu.OnNewCraft`, next to a counter the harness
+finds), the vanilla drop action, the machine context menu and the workshop
+menu (entries clicked the way `ISContextMenu` does, replies and dialog text
+captured). Same mod-clock fixture as launches 7–9.
+
+Fixed before launch 10, from reading vanilla code and bytecode:
+
+* The crafting window (`ISHandcraftWindow.lua:53`) and the inventory "craft"
+  menu (BC `CraftRecipeManager.getUniqueRecipeItems`) only list recipes
+  tagged `InHandCraft` or `AnySurfaceCraft`; no TLG recipe had a tag, so
+  nothing the mod adds could be crafted. Tags added (D-019).
+* "Load mash" without amounts (the menu sends none) asked for 5 L of water
+  per kg of the 30 kg maximum, up to 130 L; it now follows the sugar
+  actually loaded.
+* "Collect ethanol" took the first fuel can with room, a can holding petrol
+  included; it now prefers an empty can, else one holding only ethanol and
+  water, and never another fuel.
+* The workshop dialog listed raw ids ("Base.Wrench"); it now shows item
+  names and skills as "Mechanics 4".
+
+Launch 10 (`docs/evidence/2026-10-31_rt-sp_harness_run10.txt`), phase A
+**76/15**, phase B 12/2: all 7 recipes listed; the mash took 30 L of the
+32 L carried; every menu dialog translated; the refused start showed "A tool
+is missing: - Wrench". Failures: every craft `canPerform=false`; the split
+into a second can moved nothing; both work actions went quiet after their
+first report; the rest followed from these.
+
+Launch 11 (`…run11.txt`), phase A **80/11**, phase B 12/2, with load and
+action logging. Found:
+
+* The harness carried everything at once (57.7 kg, `hasFullInventory`
+  true). Vanilla then refuses a can-to-can transfer (BC
+  `FluidContainer.CanTransfer`) and drops crafted outputs on the floor
+  (`Actions.addOrDropItem`), which the check did not see: the crafts did
+  work. Harness changed to hand materials over per step.
+* Pots and jars were not consumed by crafting: container inputs are kept
+  unless the recipe says `mode:destroy` (vanilla pasta/rice recipes). Fixed.
+* The work action made one good report and was then dropped from vanilla's
+  action queue while it kept running in Java: its progress call
+  `setJobDelta` sets `currentTime = maxTime × delta` (BC `BaseAction`),
+  negative for an open-ended action, and the queue's `tick()` then treats
+  it as stalled (`hasStalled`). The queue looked idle while the character
+  worked. Progress bar removed. Run 9 never looked at the queue, so it did
+  not show there.
+
+Launch 12 (`…run12.txt`): phase A **94 PASS / 0 FAIL**, phase B
+**14 PASS / 0 FAIL**; launcher exit code 0; no TLG error, TLG stack frame or
+queue warning in the console.
+
+* Crafted through the inventory craft menu, next to a counter: fermentation
+  vessel, pot still, reflux still (in hand, welding) and drying column; each
+  output in the inventory, consumed inputs gone (pot and jars included),
+  kept tools (hammer, screwdriver, blowtorch, welding mask) still there.
+* Placed with the vanilla drop action; the whole batch run from the machine
+  menu (load mash, feed the firebox, load wash, collect, dry, collect,
+  status), with the same quantities as launches 7–9.
+* Generator from the workshop menu: Start, Hand over parts, a refused "Work
+  on it" without the wrench, then "Work on it" to `Commissioned` (26
+  reports, 7.5 h) and the dialog "Converted and commissioned".
+* Car from the workshop menu: "Work on it" walked 3.6 tiles into the engine
+  area before working; moved away after 2 h, the action stopped and 3 h
+  away earned nothing; at 6 h the screwdriver was taken and the next report
+  ended the action with "A tool is missing: - Screwdriver" and no credit;
+  the third session reached `Commissioned` with 13 h credited.
+* Pours, generator start, car start (first attempt) and phase B as in
+  launch 8.
+
+Not run: see the standing list.

@@ -1068,31 +1068,269 @@ local function runUntilReady(label, ref, step, maxHours)
     return s, waited
 end
 
+------------------------------------------------------------------------------
+-- Player path: the loop goes through what a player uses (vanilla crafting,
+-- the vanilla drop action, the machine and workshop context menus and the
+-- work action they queue). Menu entries are clicked the way ISContextMenu
+-- does; the TLG reply and the dialog text are captured.
+------------------------------------------------------------------------------
+local function currentAction()
+    local q = ISTimedActionQueue.getTimedActionQueue(player())
+    return q and q.queue and q.queue[1] or nil
+end
+
+-- Dialogs the menus open: the text is kept (what the player reads), the
+-- windows are closed again at the end of each step.
+H.dialogs = H.dialogs or { texts = {}, open = {} }
+local function captureDialogs(on)
+    if on and not H.dialogs.orig then
+        H.dialogs.orig = ISModalRichText.new
+        ISModalRichText.new = function(self, x, y, w, h, text, ...)
+            local o = H.dialogs.orig(self, x, y, w, h, text, ...)
+            H.dialogs.texts[#H.dialogs.texts + 1] = tostring(text)
+            H.dialogs.open[#H.dialogs.open + 1] = o
+            return o
+        end
+    elseif not on and H.dialogs.orig then
+        ISModalRichText.new, H.dialogs.orig = H.dialogs.orig, nil
+    end
+end
+
+local function closeDialogs()
+    for _, o in ipairs(H.dialogs.open) do pcall(function() o:removeFromUIManager() end) end
+    H.dialogs.open = {}
+end
+
+local function has(text, part) return text ~= nil and string.find(text, part, 1, true) ~= nil end
+
+-- Runs an option as ISContextMenu does (onSelect(target, param1, ...)) and
+-- returns the TLG reply its request got.
+local function click(opt)
+    local reply
+    local orig = TLG.Net.request
+    TLG.Net.request = function(command, args, onReply)
+        return orig(command, args, function(r)
+            reply = r
+            if onReply then onReply(r) end
+        end)
+    end
+    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+    TLG.Net.request = orig
+    if not ok then R:line("OBS  menu entry %s raised %s", tostring(opt.name), tostring(err)) end
+    return reply
+end
+
+-- Builds a context menu as a right-click would and clicks one submenu entry.
+local function menuClick(label, fill, rootText, text)
+    local context = ISContextMenu.get(0, 100, 100)
+    fill(context)
+    local root = context:getOptionFromName(rootText)
+    local sub = root and root.subOption and context:getSubMenu(root.subOption)
+    local opt = sub and sub:getOptionFromName(text)
+    context:setVisible(false)
+    local reply
+    if opt == nil then
+        reply = { ok = false, reason = "no_menu_entry" }
+    elseif opt.notAvailable then
+        reply = { ok = false, reason = "entry_disabled" }
+    else
+        reply = click(opt) or { ok = true, reason = "queued" }
+    end
+    R:line("OBS  %s menu \"%s\" -> ok=%s reason=%s state=%s stage=%s outputs=%s consumed=%s", label, text,
+        tostring(reply.ok), tostring(reply.reason), tostring(reply.state), tostring(reply.stage), brief(reply.outputs),
+        brief(reply.consumed))
+    return reply
+end
+
+local function machineClick(label, item, key)
+    return menuClick(label, function(c) TLG.UI.MachineMenu.fill(0, c, { item }) end, getText("ContextMenu_TLG_Machine"),
+        getText(key))
+end
+
+local function workshopClick(label, rootKey, text)
+    return menuClick(label, function(c) TLG.UI.WorkshopMenu.fill(0, c, {}, false) end, getText(rootKey), text)
+end
+
+local function takeAway(fullType)
+    local it = player():getInventory():getFirstTypeRecurse(fullType)
+    if it then it:getContainer():Remove(it) end
+    return it
+end
+
+local function giveBack(it)
+    if it then player():getInventory():AddItem(it) end
+end
+
+local function waterCarried()
+    local total = 0
+    local list = player():getInventory():getAllEvalRecurse(function(it)
+        local fc = it:getFluidContainer()
+        return fc ~= nil and not fc:isEmpty() and fc:isPureFluid(Fluid.Water)
+    end)
+    for i = 0, list:size() - 1 do total = total + list:get(i):getFluidContainer():getAmount() end
+    return total
+end
+
+-- Ethanol per carried container: item id -> { item, litres }.
+local function ethanolCans()
+    local out = {}
+    local list = player():getInventory():getAllEvalRecurse(function(it)
+        local fc = it:getFluidContainer()
+        return fc ~= nil and not fc:isEmpty()
+    end)
+    for i = 0, list:size() - 1 do
+        local it = list:get(i)
+        local comp = TLG.Integration.Native.readComposition(it:getFluidContainer())
+        if (comp.ethanol or 0) > 0 then out[it:getID()] = { item = it, litres = comp.ethanol } end
+    end
+    return out
+end
+
+-- The container a collect filled: the one whose ethanol grew (and whether it
+-- held none before).
+local function grownCan(before)
+    for id, e in pairs(ethanolCans()) do
+        if e.litres > ((before[id] and before[id].litres) or 0) + 1e-6 then return e.item, before[id] == nil end
+    end
+    return nil, nil
+end
+
+local TLG_RECIPES = { "TLG_MakeFermenterVessel", "TLG_MakePotStill", "TLG_MakeRefluxStill", "TLG_MakeDryingColumn",
+    "TLG_MakeSampleKit", "TLG_MakeFuelFilter", "TLG_MakeFuelStabilizer" }
+
+-- Recipes the crafting window lists (ISHandcraftWindow.lua:53), by short name.
+local function windowRecipes()
+    local out = {}
+    local list = CraftRecipeManager.queryRecipes("InHandCraft;AnySurfaceCraft")
+    for i = 0, list:size() - 1 do
+        local r = list:get(i)
+        out[string.match(r:getName(), "([^%.]+)$")] = r
+    end
+    return out
+end
+
+-- Whether the inventory "craft" menu offers `recipe` on `item`.
+local function offeredFor(item, recipe)
+    local list = CraftRecipeManager.getUniqueRecipeItems(item, player(), ISInventoryPaneContextMenu.getContainers(player()))
+    for i = 0, list:size() - 1 do
+        if list:get(i):getName() == recipe:getName() then return true end
+    end
+    return false
+end
+
+-- The nearest generic crafting surface (table, counter) around (cx, cy) and
+-- a free square next to it, as vanilla finds one
+-- (IsoObject.isGenericCraftingSurface, AdjacentFreeTileFinder.Find).
+local function findSurface(cx, cy, radius)
+    for r = 0, radius do
+        for dx = -r, r do
+            for dy = -r, r do
+                if math.max(math.abs(dx), math.abs(dy)) == r then
+                    local s = getCell():getGridSquare(cx + dx, cy + dy, 0)
+                    local objs = s and s:getObjects()
+                    for i = 0, (objs and objs:size() or 0) - 1 do
+                        if objs:get(i):isGenericCraftingSurface() then
+                            local stand = AdjacentFreeTileFinder.Find(s, player())
+                            if stand then return objs:get(i), stand end
+                        end
+                    end
+                end
+            end
+        end
+    end
+    return nil, nil
+end
+
+-- Carried weight and vanilla's full-inventory flag: a full inventory stops
+-- FluidContainer.CanTransfer (BC) and may stop crafting (run 10).
+local function loadText()
+    local w, m, full = "?", "?", "?"
+    pcall(function() w = string.format("%.1f", player():getInventory():getCapacityWeight()) end)
+    pcall(function() m = string.format("%.1f", player():getMaxWeight()) end)
+    pcall(function() full = tostring(player():hasFullInventory()) end)
+    return string.format("load=%s/%s full=%s", w, m, full)
+end
+
+local function give(fullType, n)
+    for _ = 1, n do player():getInventory():AddItem(fullType) end
+end
+
+local function removeAll(fullType)
+    local n = 0
+    while takeAway(fullType) do n = n + 1 end
+    return n
+end
+
+-- Every reply the work action gets and why it stops (run 10: both actions
+-- stopped about five ticks in, without a report).
+local function instrumentWorkAction()
+    if H.workInstrumented then return end
+    H.workInstrumented = true
+    local W = ISTLGConversionWork
+    local onReply, stop, perform = W.onReply, W.stop, W.perform
+    W.onReply = function(self, r)
+        R:line("OBS  WORK.reply ok=%s reason=%s state=%s stage=%s released=%s expired=%s credited=%s done=%s/%s reports=%d",
+            tostring(r.ok), tostring(r.reason), tostring(r.state), tostring(r.stage), tostring(r.released),
+            tostring(r.expired), tostring(r.credited), tostring(r.doneHours), tostring(r.totalHours), self.reports or -1)
+        return onReply(self, r)
+    end
+    W.stop = function(self)
+        local valid = "?"
+        pcall(function() valid = tostring(self:isValid()) end)
+        R:line("OBS  WORK.stop valid=%s joined=%s ended=%s reports=%d at %.2f,%.2f %s", valid, tostring(self.joined),
+            tostring(self.ended), self.reports or -1, player():getX(), player():getY(), loadText())
+        return stop(self)
+    end
+    W.perform = function(self)
+        R:line("OBS  WORK.perform ended=%s reports=%d", tostring(self.ended), self.reports or -1)
+        return perform(self)
+    end
+end
+
+-- Each recipe's materials ({ type, count, kept tool }), handed over just
+-- before it is crafted: with everything at once the inventory was full and
+-- vanilla dropped the outputs on the floor (Actions.addOrDropItem, run 11).
+local CRAFTS = {
+    { recipe = "TLG_MakeFermenterVessel", via = "Base.Plank", out = "TLG.FermenterVessel",
+        mats = { { "Base.Hammer", 1, true }, { "Base.Plank", 6 }, { "Base.Nails", 12 }, { "Base.EmptyJar", 1 } } },
+    { recipe = "TLG_MakePotStill", via = "Base.Pot", out = "TLG.PotStill",
+        mats = { { "Base.Pot", 1 }, { "Base.MetalPipe", 2 }, { "Base.RubberHose", 1 } } },
+    { recipe = "TLG_MakeRefluxStill", via = "TLG.PotStill", out = "TLG.RefluxStill",
+        mats = { { "Base.SheetMetal", 2 }, { "Base.MetalPipe", 3 }, { "Base.BlowTorch", 1, true }, { "Base.WeldingMask", 1, true } } },
+    { recipe = "TLG_MakeDryingColumn", via = "Base.MetalPipe", out = "TLG.DryingColumn",
+        mats = { { "Base.MetalPipe", 1 }, { "Base.EmptyJar", 1 } } },
+}
+
+-- Items of a type lying on the floor within `radius` squares of the player.
+local function floorCount(fullType, radius)
+    local n, ps = 0, player():getSquare()
+    for dx = -radius, radius do
+        for dy = -radius, radius do
+            local s = ps and getCell():getGridSquare(ps:getX() + dx, ps:getY() + dy, ps:getZ())
+            local objs = s and s:getWorldObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local it = objs:get(i):getItem()
+                if it and it:getFullType() == fullType then n = n + 1 end
+            end
+        end
+    end
+    return n
+end
+
 add({ name = "loop_setup", timeout = 600, fn = function(ctx, ticks)
     if not ctx.done then
         installClockOffset()
+        captureDialogs(true)
+        instrumentWorkAction()
         local p = player()
         p:setPerkLevelDebug(Perks.Mechanics, 4)
         p:setPerkLevelDebug(Perks.Electricity, 2)
+        p:setPerkLevelDebug(Perks.Woodwork, 2)
         p:getKnownRecipes():add("Generator")
         p:getKnownRecipes():add("Basic Mechanics")
-        local inv = p:getInventory()
-        local function give(t, n) for _ = 1, n do inv:AddItem(t) end end
-        give("Base.Sugar", 6); give("Base.Yeast", 1); give("Base.Log", 2); give("Base.Quicklime", 2)
-        give("Base.Screwdriver", 1); give("Base.Wrench", 1); give("Base.Pliers", 1)
-        give("Base.RubberHose", 3); give("Base.Screws", 10); give("Base.ElectricWire", 3); give("Base.EngineParts", 2)
-        for _ = 1, 3 do
-            local fc = inv:AddItem("Base.BucketEmpty"):getFluidContainer()
-            fc:Empty()
-            fc:addFluid(Fluid.Water, 10)
-        end
-        LOOP.items = {}
-        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.RefluxStill", "TLG.DryingColumn" }) do
-            local it = instanceItem(t)
-            sq(LOOP.x + i - 1, LOOP.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
-            LOOP.items[i] = it
-        end
-        LOOP.fermenter, LOOP.still, LOOP.dryer = LOOP.items[1], LOOP.items[2], LOOP.items[3]
+        -- Materials are handed over step by step (crafting, production,
+        -- conversions) so the character is never overloaded: run 10 carried
+        -- them all at once and vanilla refused a can-to-can pour.
         LOOP.gen = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(LOOP.x + 5, LOOP.y, 0))
         if LOOP.gen then
             LOOP.gen:setFuel(0)
@@ -1114,33 +1352,200 @@ add({ name = "loop_setup", timeout = 600, fn = function(ctx, ticks)
         tank:getModData().tlg = nil
         LOOP.car:transmitPartModData(tank)
     end
-    R:line("OBS  LOOP.setup placed=%s/%s/%s generator=%s car=%s mechanics=%d electricity=%d cooking=%d buckets=%d",
-        tostring(LOOP.fermenter:getWorldItem() ~= nil), tostring(LOOP.still:getWorldItem() ~= nil),
-        tostring(LOOP.dryer:getWorldItem() ~= nil), tostring(LOOP.gen ~= nil), tostring(LOOP.car and LOOP.car:getId()),
-        player():getPerkLevel(Perks.Mechanics), player():getPerkLevel(Perks.Electricity), player():getPerkLevel(Perks.Cooking),
-        countType("Base.BucketEmpty"))
+    R:line("OBS  LOOP.setup generator=%s car=%s mechanics=%d electricity=%d woodwork=%d cooking=%d %s",
+        tostring(LOOP.gen ~= nil), tostring(LOOP.car and LOOP.car:getId()), player():getPerkLevel(Perks.Mechanics),
+        player():getPerkLevel(Perks.Electricity), player():getPerkLevel(Perks.Woodwork), player():getPerkLevel(Perks.Cooking),
+        loadText())
     return true
 end })
 
-add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
-    if not LOOP.fermenter then return true end
+-- Crafting through the inventory "craft" menu path
+-- (ISInventoryPaneContextMenu.OnNewCraft), next to a real counter for the
+-- AnySurfaceCraft recipes.
+add({ name = "loop_craft", timeout = 8000, fn = function(ctx, ticks)
+    if not ctx.t0 then
+        -- Two recipes keep a screwdriver; it later serves the conversions.
+        give("Base.Screwdriver", 1)
+        R:line("OBS  LOOP.craft_start %s", loadText())
+        ctx.listed = windowRecipes()
+        R:check("LOOP.recipes_listed_for_crafting", function()
+            local missing = {}
+            for _, n in ipairs(TLG_RECIPES) do if not ctx.listed[n] then missing[#missing + 1] = n end end
+            return #missing == 0, #missing == 0 and "all 7 TLG recipes listed" or ("not listed: " .. table.concat(missing, ","))
+        end)
+        local base = H.pumps[1] or { x = START.x, y = START.y }
+        ctx.surface, ctx.stand = findSurface(base.x, base.y, 25)
+        local spriteName = "?"
+        pcall(function() spriteName = ctx.surface:getSprite():getName() end)
+        R:line("OBS  LOOP.craft_surface %s", ctx.stand and string.format("%s at %d,%d, standing at %d,%d", spriteName,
+            ctx.surface:getSquare():getX(), ctx.surface:getSquare():getY(), ctx.stand:getX(), ctx.stand:getY())
+            or "none within 25 tiles of the pumps")
+        if ctx.stand then player():teleportTo(ctx.stand:getX(), ctx.stand:getY(), ctx.stand:getZ()) end
+        ctx.t0, ctx.i, ctx.stash = ticks, 0, {}
+        return nil
+    end
+    if ticks - ctx.t0 < 30 then return nil end
+    if ctx.waiting then
+        if ticks - ctx.waitFrom < 10 then return nil end
+        if not TLGH.Steps.actionsIdle(player()) and ticks - ctx.waitFrom < 3000 then return nil end
+        local c = CRAFTS[ctx.i]
+        local made, dropped = countType(c.out) - ctx.before, floorCount(c.out, 2) - ctx.floorBefore
+        -- Consumed inputs are gone, kept tools are still there.
+        local wrong = {}
+        for _, m in ipairs(c.mats) do
+            local want = ctx.base[m[1]] + (m[3] and m[2] or 0)
+            if countType(m[1]) ~= want then wrong[#wrong + 1] = string.format("%s=%d(want %d)", m[1], countType(m[1]), want) end
+        end
+        R:check("LOOP.craft_" .. c.out, function()
+            return ctx.inList and ctx.offered and made == 1 and #wrong == 0,
+                string.format("listed=%s offered=%s made=%d on floor=%d inputs left wrong=[%s] %s", tostring(ctx.inList),
+                    tostring(ctx.offered), made, dropped, table.concat(wrong, ","), loadText())
+        end)
+        -- Keep the load light: crafted machines are set aside (the pot still
+        -- is the reflux still's input) and kept tools go back.
+        if c.out ~= "TLG.PotStill" and made == 1 then ctx.stash[#ctx.stash + 1] = takeAway(c.out) end
+        for _, m in ipairs(c.mats) do
+            if m[3] then removeAll(m[1]) end
+        end
+        ctx.waiting = false
+    end
+    ctx.i = ctx.i + 1
+    local c = CRAFTS[ctx.i]
+    if c == nil then
+        for _, it in ipairs(ctx.stash) do giveBack(it) end
+        -- Later steps need the machines even when a craft failed.
+        for _, t in ipairs({ "TLG.FermenterVessel", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+            if countType(t) == 0 then
+                player():getInventory():AddItem(t)
+                R:line("OBS  LOOP.craft fallback: %s added directly", t)
+            end
+        end
+        -- Whatever the recipes did not use goes away (kept tools included),
+        -- except the screwdriver.
+        local left = {}
+        for _, t in ipairs({ "Base.Hammer", "Base.Plank", "Base.Nails", "Base.EmptyJar", "Base.Pot", "Base.MetalPipe",
+            "Base.SheetMetal", "Base.BlowTorch", "Base.WeldingMask", "Base.RubberHose", "TLG.PotStill" }) do
+            local n = removeAll(t)
+            if n > 0 then left[#left + 1] = t .. "=" .. n end
+        end
+        R:line("OBS  LOOP.craft_leftovers removed %s; %s", table.concat(left, ","), loadText())
+        return true
+    end
+    local recipe = ctx.listed[c.recipe] or getScriptManager():getCraftRecipe(c.recipe)
+    if recipe and recipe:isAnySurfaceCraft() and not ctx.stand then
+        R:line("SKIP LOOP.craft_%s: no crafting surface found; added directly", c.out)
+        player():getInventory():AddItem(c.out)
+        return nil
+    end
+    ctx.base = {}
+    for _, m in ipairs(c.mats) do ctx.base[m[1]] = countType(m[1]) end
+    for _, m in ipairs(c.mats) do give(m[1], m[2]) end
+    local via = player():getInventory():getFirstTypeRecurse(c.via)
+    ctx.inList, ctx.before, ctx.floorBefore = ctx.listed[c.recipe] ~= nil, countType(c.out), floorCount(c.out, 2)
+    ctx.offered = recipe ~= nil and via ~= nil and offeredFor(via, recipe)
+    if recipe and via then ISInventoryPaneContextMenu.OnNewCraft(via, recipe, 0, false) end
+    if TLGH.Steps.actionsIdle(player()) then
+        -- Nothing queued: say why, from the same logic the menu uses.
+        local why = string.format("recipe=%s item=%s", tostring(recipe ~= nil), tostring(via ~= nil))
+        if recipe and via then
+            -- The gates of BaseCraftingLogic.canPerformCurrentRecipe (BC):
+            -- valid for the character, inputs, outputs, workbench range.
+            local containers = ISInventoryPaneContextMenu.getContainers(player())
+            local logic = HandcraftLogic.new(player(), nil, nil)
+            logic:setIsoObject(logic:findCraftSurface(player(), 2))
+            logic:setContainers(containers)
+            logic:setRecipeFromContextClick(recipe, via)
+            local g = { valid = "?", learn = "?", inputs = "?", outputs = "?", range = "?" }
+            pcall(function() g.valid = tostring(CraftRecipeManager.isValidRecipeForCharacter(recipe, player(), nil, containers)) end)
+            pcall(function() g.learn = tostring(recipe:needToBeLearn()) .. "/" .. tostring(player():isRecipeKnown(recipe, true)) end)
+            pcall(function() g.inputs = tostring(logic:getRecipeData():areAllInputItemsSatisfied()) end)
+            pcall(function() g.outputs = tostring(logic:getRecipeData():canCreateOutputs(ArrayList.new(), player())) end)
+            pcall(function() g.range = tostring(logic:isCharacterInRangeOfWorkbench()) end)
+            local unmet = {}
+            pcall(function()
+                local inputs = recipe:getInputs()
+                for i = 0, inputs:size() - 1 do
+                    local d = logic:getRecipeData():getDataForInputScript(inputs:get(i))
+                    if d and not d:isInputItemsSatisfied() then unmet[#unmet + 1] = tostring(i + 1) end
+                end
+            end)
+            why = string.format("canPerform=%s surface=%s valid=%s learn/known=%s inputs=%s unmet=[%s] outputs=%s range=%s %s",
+                tostring(logic:canPerformCurrentRecipe()), tostring(logic:getIsoObject() ~= nil), g.valid, g.learn, g.inputs,
+                table.concat(unmet, ","), g.outputs, g.range, loadText())
+        end
+        R:line("OBS  LOOP.craft_%s not queued: %s", c.out, why)
+    end
+    ctx.waiting, ctx.waitFrom = true, ticks
+    return nil
+end })
+
+-- The machines go on the ground with the vanilla drop action.
+add({ name = "loop_place", timeout = 3000, fn = function(ctx, ticks)
     if not ctx.t0 then
         player():teleportTo(LOOP.x + 1, LOOP.y + 1, 0)
         ctx.t0 = ticks
         return nil
     end
     if ticks - ctx.t0 < 20 then return nil end
+    if not ctx.queued then
+        LOOP.items = {}
+        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+            local it = player():getInventory():getFirstTypeRecurse(t)
+            LOOP.items[i] = it
+            if it then
+                ISTimedActionQueue.add(ISDropWorldItemAction:new(player(), it, sq(LOOP.x + i - 1, LOOP.y, 0), 0.5, 0.5, 0, 0, false))
+            end
+        end
+        LOOP.fermenter, LOOP.still, LOOP.dryer = LOOP.items[1], LOOP.items[2], LOOP.items[3]
+        ctx.queued, ctx.t1 = true, ticks
+        return nil
+    end
+    if ticks - ctx.t1 < 10 or (not TLGH.Steps.actionsIdle(player()) and ticks - ctx.t1 < 2000) then return nil end
+    R:check("LOOP.machines_placed_with_the_drop_action", function()
+        local parts, ok = {}, true
+        for i = 1, 3 do
+            local it = LOOP.items[i]
+            local s = it and TLG.Integration.Machines.square(it)
+            ok = ok and s ~= nil and s:getX() == LOOP.x + i - 1 and s:getY() == LOOP.y
+            parts[#parts + 1] = string.format("%s at %s", it and it:getFullType() or "missing",
+                s and (s:getX() .. "," .. s:getY()) or "-")
+        end
+        return ok, table.concat(parts, " ")
+    end)
+    return true
+end })
+
+add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
+    if not (LOOP.fermenter and LOOP.still and LOOP.dryer) then R:line("SKIP loop_production: a machine is missing"); return true end
+    if not ctx.t0 then
+        player():teleportTo(LOOP.x + 1, LOOP.y + 1, 0)
+        give("Base.Sugar", 6); give("Base.Yeast", 1); give("Base.Log", 2); give("Base.Quicklime", 2)
+        -- 32 L of water: more than the 30 L a 6 kg mash takes, so a default
+        -- that ignores the sugar shows.
+        for _, litres in ipairs({ 10, 10, 10, 2 }) do
+            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, litres)
+        end
+        R:line("OBS  LOOP.production_materials %s", loadText())
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 20 then return nil end
     local M = TLG.Integration.Machines
     local fRef, sRef, dRef = M.refFor(LOOP.fermenter), M.refFor(LOOP.still), M.refFor(LOOP.dryer)
+    local dialogs0 = #H.dialogs.texts
 
-    -- Fermentation: 6 kg of sugar, 30 L of water and yeast.
-    local sugar0, yeast0 = countType("Base.Sugar"), countType("Base.Yeast")
-    local r = ask("LOOP.ferment", "machine.loadFerment", { target = fRef, sugarKg = 6, waterL = 30 })
-    R:check("LOOP.ferment_loaded", function()
+    -- Fermentation through the menu, which sends no amounts: 6 kg of sugar
+    -- and 32 L of water carried, so the default has to take 30 L (5 L per kg).
+    local sugar0, yeast0, water0 = countType("Base.Sugar"), countType("Base.Yeast"), waterCarried()
+    local r = machineClick("LOOP.ferment", LOOP.fermenter, "ContextMenu_TLG_LoadFerment")
+    R:check("LOOP.ferment_loaded_from_menu", function()
         return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6
+            and math.abs(waterCarried() - (water0 - 30)) < 1e-3
             and countType("Base.Sugar") == sugar0 - 6 and countType("Base.Yeast") == yeast0 - 1,
-            string.format("sugar=%s water=%s sugarItems %d->%d yeast %d->%d", tostring(r.sugarKg), tostring(r.waterL),
-                sugar0, countType("Base.Sugar"), yeast0, countType("Base.Yeast"))
+            string.format("sugar=%s water=%s carried %.2f->%.2f sugarItems %d->%d yeast %d->%d", tostring(r.sugarKg),
+                tostring(r.waterL), water0, waterCarried(), sugar0, countType("Base.Sugar"), yeast0, countType("Base.Yeast"))
     end)
     local f, fh = runUntilReady("LOOP.fermenting", fRef, 24, 400)
     local fEth = (f.outputs or {}).ethanol or 0
@@ -1149,14 +1554,16 @@ add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
             string.format("state=%s after %d h of mod time outputs=%s", tostring(f.state), fh, brief(f.outputs))
     end)
 
-    -- Reflux still: firewood, wash from the fermenter (returns a yeast starter).
+    -- Reflux still through the menu: all carried wood goes into the firebox,
+    -- the wash comes from the fermenter (a yeast starter comes back).
     local logs0 = countType("Base.Log")
-    local fuel = ask("LOOP.firebox", "machine.addFuel", { target = sRef, kg = 18 })
-    local wash = ask("LOOP.load_wash", "machine.loadWash", { target = sRef })
+    local fuel = machineClick("LOOP.firebox", LOOP.still, "ContextMenu_TLG_AddFirewood")
+    local wash = machineClick("LOOP.load_wash", LOOP.still, "ContextMenu_TLG_LoadWash")
     R:check("LOOP.wash_loaded_yeast_starter_returned", function()
-        return fuel.ok == true and wash.ok == true and countType("TLG.YeastStarter") >= 1,
+        return fuel.ok == true and math.abs((fuel.firebox or 0) - 18) < 1e-6 and countType("Base.Log") == logs0 - 2
+            and wash.ok == true and countType("TLG.YeastStarter") >= 1,
             string.format("firebox ok=%s kg=%s logs %d->%d wash ok=%s L=%s starter=%d", tostring(fuel.ok),
-                tostring(fuel.addedKg), logs0, countType("Base.Log"), tostring(wash.ok), tostring(wash.washL),
+                tostring(fuel.firebox), logs0, countType("Base.Log"), tostring(wash.ok), tostring(wash.washL),
                 countType("TLG.YeastStarter"))
     end)
     local s, sh = runUntilReady("LOOP.distilling", sRef, 2, 48)
@@ -1165,14 +1572,20 @@ add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
         return s.state == "OutputReady" and sEth > 2.5 and sWater / math.max(1e-9, sEth + sWater) < 0.07,
             string.format("state=%s after %d h ethanol=%.4f water=%.4f", tostring(s.state), sh, sEth, sWater)
     end)
-    local can1 = giveCan("Base.JerryCan")
-    local c1 = ask("LOOP.collect_still", "machine.collect", { target = sRef, destination = { kind = "item", id = can1:getID() } })
-    local v1 = tlgView("item", can1)
+    -- Collect through the menu: it has to choose an empty can.
+    giveCan("Base.JerryCan")
+    local before = ethanolCans()
+    local c1 = machineClick("LOOP.collect_still", LOOP.still, "ContextMenu_TLG_CollectEthanol")
+    local can1, wasEmpty = grownCan(before)
+    local v1 = can1 and tlgView("item", can1)
     R:check("LOOP.hydrous_ethanol_bottled", function()
         local q = v1 and v1.q or {}
-        return c1.ok == true and math.abs((q.ethanol or 0) - sEth) < 1e-3 and math.abs((q.water or 0) - sWater) < 1e-3,
-            string.format("%s fluids=%s", viewText(v1, "can"), TLGH.fluidSummary(can1:getFluidContainer()))
+        return c1.ok == true and wasEmpty == true and math.abs((q.ethanol or 0) - sEth) < 1e-3
+            and math.abs((q.water or 0) - sWater) < 1e-3,
+            string.format("into %s (no ethanol before=%s) %s fluids=%s", can1 and can1:getFullType() or "nothing",
+                tostring(wasEmpty), viewText(v1, "can"), can1 and TLGH.fluidSummary(can1:getFluidContainer()) or "-")
     end)
+    if can1 == nil then return true end
 
     -- Fixture: give the spirit an ageing history so drying can show that it
     -- keeps the degradation (fresh distillate has none).
@@ -1181,28 +1594,36 @@ add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
     aged.deg.ethanol = 0.8
     C.writeSidecar(can1, "item", aged)
 
-    -- Drying column: hydrous ethanol + quicklime.
+    -- Drying column through the menu: it picks the can holding only ethanol
+    -- and water.
     local lime0 = countType("Base.Quicklime")
-    local d = ask("LOOP.load_dry", "machine.loadDry", { target = dRef, source = { kind = "item", id = can1:getID() } })
+    local d = machineClick("LOOP.load_dry", LOOP.dryer, "ContextMenu_TLG_LoadDry")
     R:check("LOOP.dry_loaded", function()
         return d.ok == true and countType("Base.Quicklime") == lime0 - 1 and can1:getFluidContainer():getAmount() < 1e-3,
             string.format("ethanol=%s water=%s lime=%s lime items %d->%d can left=%.4f", tostring(d.ethanolL),
                 tostring(d.waterL), tostring(d.limeKg), lime0, countType("Base.Quicklime"), can1:getFluidContainer():getAmount())
     end)
     local dr, dh = runUntilReady("LOOP.drying", dRef, 4, 48)
-    local can2 = giveCan("Base.JerryCan")
-    local c2 = ask("LOOP.collect_dry", "machine.collect", { target = dRef, destination = { kind = "item", id = can2:getID() } })
-    local v2 = tlgView("item", can2)
+    giveCan("Base.JerryCan")
+    before = ethanolCans()
+    local c2 = machineClick("LOOP.collect_dry", LOOP.dryer, "ContextMenu_TLG_CollectEthanol")
+    local can2, wasEmpty2 = grownCan(before)
+    local v2 = can2 and tlgView("item", can2)
     R:check("LOOP.dried_ethanol_keeps_degradation", function()
         local q = v2 and v2.q or {}
         local e, w = q.ethanol or 0, q.water or 0
-        return dr.state == "OutputReady" and c2.ok == true and e > 2.5 and w <= e * 0.005 + 1e-4
+        return dr.state == "OutputReady" and c2.ok == true and wasEmpty2 == true and e > 2.5 and w <= e * 0.005 + 1e-4
             and v2 ~= nil and math.abs((v2.deg.ethanol or 0) - 0.8) < 0.01,
-            string.format("after %d h: %s", dh, viewText(v2, "can"))
+            string.format("after %d h into %s (no ethanol before=%s): %s", dh, can2 and can2:getFullType() or "nothing",
+                tostring(wasEmpty2), viewText(v2, "can"))
     end)
+    if can2 == nil then return true end
 
     -- Split through the wrapped FluidContainer.Transfer: one can per engine.
+    -- Vanilla refuses it when the inventory is full (CanTransfer, BC).
     local can3 = giveCan("Base.JerryCan")
+    R:line("OBS  LOOP.split %s canTransfer=%s", loadText(),
+        tostring(FluidContainer.CanTransfer(can2:getFluidContainer(), can3:getFluidContainer())))
     FluidContainer.Transfer(can2:getFluidContainer(), can3:getFluidContainer(), can2:getFluidContainer():getAmount() / 2)
     local va, vb = tlgView("item", can2), tlgView("item", can3)
     R:check("LOOP.split_keeps_state", function()
@@ -1212,6 +1633,20 @@ add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
             detail .. string.format(" a=%.4f b=%.4f", TLG.Domain.Supply.total(va), TLG.Domain.Supply.total(vb))
     end)
     LOOP.canGen, LOOP.canCar = can2, can3
+
+    -- Status through the menu; every result dialog in plain words.
+    local st = machineClick("LOOP.status", LOOP.fermenter, "ContextMenu_TLG_MachineStatus")
+    R:check("LOOP.menu_dialogs_translated", function()
+        local n, raw = 0, {}
+        for i = dialogs0 + 1, #H.dialogs.texts do
+            n = n + 1
+            local t = H.dialogs.texts[i]
+            if has(t, "IGUI_") or has(t, "ContextMenu_") then raw[#raw + 1] = t end
+        end
+        return st.ok == true and n >= 7 and #raw == 0, string.format("dialogs=%d untranslated=[%s] last=%s", n,
+            table.concat(raw, " | "), tostring(H.dialogs.texts[#H.dialogs.texts]))
+    end)
+    closeDialogs()
     return true
 end })
 
@@ -1231,25 +1666,43 @@ local function sumOf(t)
     return s
 end
 
-local function queueWork(ctx, ref, device)
-    ctx.endReply = nil
-    ctx.action = ISTLGConversionWork:new(player(), ref, device, function(r) ctx.endReply = r end)
-    ISTimedActionQueue.add(ctx.action)
+local function hoursOf(device, kind)
+    local p = projectOf(device, kind)
+    return p and sumOf(p.hours) or 0
 end
 
-add({ name = "loop_convert_generator", timeout = 3000, fn = function(ctx, ticks)
+-- The conversion work action, while it is the character's current action.
+local function workAction()
+    local a = currentAction()
+    if a and a.Type == "ISTLGConversionWork" then return a end
+    return nil
+end
+
+local GEN_MENU, CAR_MENU = "ContextMenu_TLG_ConvGenerator", "ContextMenu_TLG_ConvVehicle"
+local function startText(conversion)
+    return getText("ContextMenu_TLG_ConvBegin", getText("IGUI_TLG_Conversion_" .. conversion))
+end
+
+-- Generator through the workshop menu. The first "Work on it" is refused
+-- because the wrench is put away; the second runs to Commissioned.
+add({ name = "loop_convert_generator", timeout = 4000, fn = function(ctx, ticks)
     local g = LOOP.gen
     if not g then R:line("SKIP loop_convert_generator"); return true end
     if not ctx.t0 then
         player():teleportTo(g:getSquare():getX() + 1, g:getSquare():getY(), 0)
+        -- Parts and tools for both conversions (the screwdriver came with crafting).
+        give("Base.Wrench", 1); give("Base.Pliers", 1); give("Base.RubberHose", 3); give("Base.Screws", 10)
+        give("Base.ElectricWire", 3); give("Base.EngineParts", 2)
+        if countType("Base.Screwdriver") == 0 then give("Base.Screwdriver", 1) end
+        R:line("OBS  LOOP.conversion_materials %s", loadText())
         ctx.t0 = ticks
         return nil
     end
     if ticks - ctx.t0 < 20 then return nil end
-    local ref = TLG.Authority.Resolver.refForObject(g, "generator")
-    if not ctx.action then
-        ctx.b = ask("LOOP.gen_begin", "conversion.begin", { device = ref, conversion = "flex_generator" })
-        ctx.d = ask("LOOP.gen_deliver", "conversion.deliver", { device = ref })
+    if not ctx.phase then
+        local ref = TLG.Authority.Resolver.refForObject(g, "generator")
+        ctx.b = workshopClick("LOOP.gen_begin", GEN_MENU, startText("flex_generator"))
+        ctx.d = workshopClick("LOOP.gen_deliver", GEN_MENU, getText("ContextMenu_TLG_ConvDeliver"))
         -- A bare report three hours later, without the work action: at most
         -- the 1 h worker timeout is credited and the assignment ends.
         H.clockOffset = H.clockOffset + 3
@@ -1260,24 +1713,53 @@ add({ name = "loop_convert_generator", timeout = 3000, fn = function(ctx, ticks)
                 string.format("credited=%s expired=%s released=%s", tostring(late.credited), tostring(late.expired),
                     tostring(late.released))
         end)
-        queueWork(ctx, ref, g)
+        -- The project now stands at "prepare", which needs the wrench.
+        ctx.wrench = takeAway("Base.Wrench")
+        ctx.dialogs0, ctx.hours0 = #H.dialogs.texts, hoursOf(g, "generator")
+        workshopClick("LOOP.gen_work_without_wrench", GEN_MENU, getText("ContextMenu_TLG_ConvJoin"))
+        ctx.phase, ctx.t1 = "refused", ticks
         return nil
     end
-    H.clockOffset = H.clockOffset + CLOCK_PER_TICK
-    if not ctx.endReply then return nil end
-    local p, prof = projectOf(g, "generator"), TLG.Integration.Generators.profile(g)
+    if ctx.phase == "refused" then
+        if ticks - ctx.t1 < 30 or (not TLGH.Steps.actionsIdle(player()) and ticks - ctx.t1 < 600) then return nil end
+        local text = H.dialogs.texts[ctx.dialogs0 + 1]
+        R:check("LOOP.work_refused_without_the_tool", function()
+            return has(text, getText("IGUI_TLG_ConvReason_missing_tool")) and has(text, getItemNameFromFullType("Base.Wrench"))
+                and TLGH.Steps.actionsIdle(player()) and math.abs(hoursOf(g, "generator") - ctx.hours0) < 1e-9,
+                string.format("dialog=%s idle=%s hours %.4f->%.4f", tostring(text), tostring(TLGH.Steps.actionsIdle(player())),
+                    ctx.hours0, hoursOf(g, "generator"))
+        end)
+        giveBack(ctx.wrench)
+        ctx.dialogs1 = #H.dialogs.texts
+        workshopClick("LOOP.gen_work", GEN_MENU, getText("ContextMenu_TLG_ConvJoin"))
+        ctx.phase, ctx.t2 = "working", ticks
+        return nil
+    end
+    local a = workAction()
+    if a then
+        H.clockOffset = H.clockOffset + CLOCK_PER_TICK
+        ctx.reports = a.reports
+    end
+    local p = projectOf(g, "generator")
+    local done = p ~= nil and p.state == "Commissioned" and TLGH.Steps.actionsIdle(player())
+    if not done and ticks - ctx.t2 < 3000 then return nil end
+    local prof, text = TLG.Integration.Generators.profile(g), H.dialogs.texts[ctx.dialogs1 + 1]
     R:check("LOOP.flex_generator_commissioned", function()
-        return ctx.endReply.state == "Commissioned" and prof == "generator_si_flex" and math.abs(sumOf(p.credit) - 7.5) < 1e-6,
-            string.format("begin=%s deliver=%s consumed=%s reports=%d end=%s credit=%.4f profile=%s", tostring(ctx.b.ok),
-                tostring(ctx.d.ok), brief(ctx.d.consumed), ctx.action.reports, tostring(ctx.endReply.state),
-                sumOf(p.credit), tostring(prof))
+        return done and prof == "generator_si_flex" and math.abs(sumOf(p.credit) - 7.5) < 1e-6
+            and has(text, getText("IGUI_TLG_ConvState_Commissioned")),
+            string.format("begin=%s deliver=%s consumed=%s reports=%s state=%s credit=%.4f profile=%s dialog=%s",
+                tostring(ctx.b.ok), tostring(ctx.d.ok), brief(ctx.d.consumed), tostring(ctx.reports), tostring(p and p.state),
+                p and sumOf(p.credit) or -1, tostring(prof), tostring(text))
     end)
+    closeDialogs()
     return true
 end })
 
--- The car takes two sessions: after two credited hours the character leaves
--- (teleported 12 tiles away), three hours pass, and work resumes.
-add({ name = "loop_convert_car", timeout = 4000, fn = function(ctx, ticks)
+-- The car through the workshop menu, in three sessions. "Work on it" walks
+-- to the engine area. Session 1: after two credited hours the character is
+-- moved 12 tiles away and three hours pass. Session 2: at six hours the
+-- screwdriver is put away and the next report blocks. Session 3 finishes.
+add({ name = "loop_convert_car", timeout = 8000, fn = function(ctx, ticks)
     local v = LOOP.car
     if not v then R:line("SKIP loop_convert_car"); return true end
     local near = { x = math.floor(v:getX()) + 2, y = math.floor(v:getY()) }
@@ -1287,64 +1769,108 @@ add({ name = "loop_convert_car", timeout = 4000, fn = function(ctx, ticks)
         return nil
     end
     if ticks - ctx.t0 < 20 then return nil end
-    local ref = { kind = "vehicle", id = v:getId() }
-    if not ctx.action then
-        ctx.b = ask("LOOP.car_begin", "conversion.begin", { device = ref, conversion = "flex_car_normal" })
-        ctx.d = ask("LOOP.car_deliver", "conversion.deliver", { device = ref })
-        queueWork(ctx, ref, v)
+    if not ctx.phase then
+        ctx.b = workshopClick("LOOP.car_begin", CAR_MENU, startText("flex_car_normal"))
+        ctx.d = workshopClick("LOOP.car_deliver", CAR_MENU, getText("ContextMenu_TLG_ConvDeliver"))
+        ctx.clickedAt = { x = player():getX(), y = player():getY() }
+        workshopClick("LOOP.car_work_1", CAR_MENU, getText("ContextMenu_TLG_ConvJoin"))
+        ctx.phase, ctx.t1 = "session1", ticks
         return nil
     end
-    if not ctx.leftAt then
-        H.clockOffset = H.clockOffset + CLOCK_PER_TICK
-        local p = projectOf(v, "vehicle")
-        if ctx.endReply or ticks - ctx.t0 > 1500 then
+    local a = workAction()
+    if a then H.clockOffset = H.clockOffset + CLOCK_PER_TICK end
+    if ctx.phase == "session1" then
+        if a and not ctx.walk then
+            local engine = v:getPartById("Engine")
+            local dx, dy = player():getX() - ctx.clickedAt.x, player():getY() - ctx.clickedAt.y
+            ctx.walk = { moved = math.sqrt(dx * dx + dy * dy), inArea = engine ~= nil and v:isInArea(engine:getArea(), player()) }
+        end
+        if a and hoursOf(v, "vehicle") >= 2 then
+            ctx.action, ctx.hoursAtLeave = a, hoursOf(v, "vehicle")
+            player():teleportTo(near.x - 12, near.y, 0)
+            ctx.phase, ctx.t2 = "away", ticks
+        elseif ticks - ctx.t1 > 2500 then
             R:check("LOOP.car_first_session", function()
-                return false, string.format("ended before two hours: end=%s reason=%s",
-                    tostring(ctx.endReply and ctx.endReply.state), tostring(ctx.endReply and ctx.endReply.reason))
+                return false, string.format("no two hours of work: working=%s hours=%.4f walk=%s", tostring(a ~= nil),
+                    hoursOf(v, "vehicle"), brief(ctx.walk))
             end)
             return true
         end
-        if p and sumOf(p.hours) >= 2 then
-            ctx.leftAt, ctx.hoursAtLeave, ctx.firstReports = ticks, sumOf(p.hours), ctx.action.reports
-            player():teleportTo(near.x - 12, near.y, 0)
+        return nil
+    end
+    if ctx.phase == "away" then
+        -- The clock stands still while the action notices; then three hours
+        -- pass away from the car and the character comes back.
+        if ticks - ctx.t2 < 60 then return nil end
+        ctx.away = { stopped = ctx.action.stopped == true, ended = ctx.action.ended == true,
+            idle = TLGH.Steps.actionsIdle(player()) }
+        H.clockOffset = H.clockOffset + 3
+        player():teleportTo(near.x, near.y, 0)
+        ctx.phase, ctx.t3 = "back", ticks
+        return nil
+    end
+    if ctx.phase == "back" then
+        if ticks - ctx.t3 < 20 then return nil end
+        R:check("LOOP.work_walks_to_the_engine", function()
+            return ctx.walk ~= nil and ctx.walk.inArea == true,
+                string.format("in engine area when work began=%s moved %.2f tiles", tostring(ctx.walk and ctx.walk.inArea),
+                    ctx.walk and ctx.walk.moved or -1)
+        end)
+        local hoursBack = hoursOf(v, "vehicle")
+        R:check("LOOP.leaving_stops_the_work", function()
+            return ctx.away.idle and (ctx.away.stopped or ctx.away.ended) and math.abs(hoursBack - ctx.hoursAtLeave) < 1e-9,
+                string.format("stopped=%s ended=%s idle=%s hours at leave=%.4f after 3 h away=%.4f",
+                    tostring(ctx.away.stopped), tostring(ctx.away.ended), tostring(ctx.away.idle), ctx.hoursAtLeave, hoursBack)
+        end)
+        workshopClick("LOOP.car_work_2", CAR_MENU, getText("ContextMenu_TLG_ConvJoin"))
+        ctx.phase, ctx.t4 = "session2", ticks
+        return nil
+    end
+    if ctx.phase == "session2" then
+        if a and a.joined and not ctx.hoursAtRejoin then ctx.hoursAtRejoin = hoursOf(v, "vehicle") end
+        if a and hoursOf(v, "vehicle") >= 6 then
+            -- The install stage (hours 3-9) needs the screwdriver.
+            ctx.screwdriver = takeAway("Base.Screwdriver")
+            ctx.dialogsBlock, ctx.hoursAtBlock = #H.dialogs.texts, hoursOf(v, "vehicle")
+            ctx.phase, ctx.t5 = "blocked", ticks
+        elseif ticks - ctx.t4 > 2500 then
+            R:check("LOOP.car_second_session", function() return false, "never reached six hours" end)
+            return true
         end
         return nil
     end
-    if not ctx.back then
-        -- The clock stands still while the action notices; then three hours
-        -- pass away from the car and the character comes back.
-        if ticks - ctx.leftAt < 60 then return nil end
-        ctx.away = { stopped = ctx.action.stopped == true, ended = ctx.action.ended == true,
-            reason = ctx.endReply and ctx.endReply.reason, idle = TLGH.Steps.actionsIdle(player()) }
-        H.clockOffset = H.clockOffset + 3
-        player():teleportTo(near.x, near.y, 0)
-        ctx.back = ticks
-        return nil
-    end
-    if not ctx.second then
-        if ticks - ctx.back < 20 then return nil end
-        local hoursBack = sumOf(projectOf(v, "vehicle").hours)
-        R:check("LOOP.leaving_stops_the_work", function()
-            return ctx.away.idle and (ctx.away.stopped or ctx.away.ended) and math.abs(hoursBack - ctx.hoursAtLeave) < 1e-9,
-                string.format("stopped=%s ended=%s reason=%s idle=%s hours at leave=%.4f after 3 h away=%.4f reports=%d",
-                    tostring(ctx.away.stopped), tostring(ctx.away.ended), tostring(ctx.away.reason), tostring(ctx.away.idle),
-                    ctx.hoursAtLeave, hoursBack, ctx.firstReports)
+    if ctx.phase == "blocked" then
+        if not TLGH.Steps.actionsIdle(player()) and ticks - ctx.t5 < 600 then return nil end
+        local text, hoursEnd = H.dialogs.texts[ctx.dialogsBlock + 1], hoursOf(v, "vehicle")
+        -- An hour without the tool: nothing may accrue.
+        H.clockOffset = H.clockOffset + 1
+        R:check("LOOP.work_ends_on_a_block", function()
+            return TLGH.Steps.actionsIdle(player()) and has(text, getText("IGUI_TLG_ConvReason_missing_tool"))
+                and has(text, getItemNameFromFullType("Base.Screwdriver")) and math.abs(hoursEnd - ctx.hoursAtBlock) < 1e-9
+                and math.abs(hoursOf(v, "vehicle") - hoursEnd) < 1e-9,
+                string.format("dialog=%s hours at block=%.4f when it ended=%.4f an hour later=%.4f", tostring(text),
+                    ctx.hoursAtBlock, hoursEnd, hoursOf(v, "vehicle"))
         end)
-        queueWork(ctx, ref, v)
-        ctx.second = true
+        giveBack(ctx.screwdriver)
+        ctx.dialogsFinal = #H.dialogs.texts
+        workshopClick("LOOP.car_work_3", CAR_MENU, getText("ContextMenu_TLG_ConvJoin"))
+        ctx.phase, ctx.t6 = "session3", ticks
         return nil
     end
-    if ctx.action.joined and not ctx.hoursAtRejoin then ctx.hoursAtRejoin = sumOf(projectOf(v, "vehicle").hours) end
-    H.clockOffset = H.clockOffset + CLOCK_PER_TICK
-    if not ctx.endReply then return nil end
-    local p, prof = projectOf(v, "vehicle"), TLG.Integration.Vehicles.profile(v)
+    local p = projectOf(v, "vehicle")
+    local done = p ~= nil and p.state == "Commissioned" and TLGH.Steps.actionsIdle(player())
+    if not done and ticks - ctx.t6 < 3000 then return nil end
+    local prof, text = TLG.Integration.Vehicles.profile(v), H.dialogs.texts[ctx.dialogsFinal + 1]
     R:check("LOOP.flex_car_commissioned", function()
-        return ctx.endReply.state == "Commissioned" and prof == "engine_si_flex" and math.abs(sumOf(p.credit) - 13) < 1e-6
-            and ctx.hoursAtRejoin ~= nil and math.abs(ctx.hoursAtRejoin - ctx.hoursAtLeave) < 1e-9,
-            string.format("begin=%s deliver=%s consumed=%s end=%s credit=%.4f hours at rejoin=%s profile=%s", tostring(ctx.b.ok),
-                tostring(ctx.d.ok), brief(ctx.d.consumed), tostring(ctx.endReply.state), sumOf(p.credit),
-                tostring(ctx.hoursAtRejoin), tostring(prof))
+        return done and prof == "engine_si_flex" and math.abs(sumOf(p.credit) - 13) < 1e-6
+            and ctx.hoursAtRejoin ~= nil and math.abs(ctx.hoursAtRejoin - ctx.hoursAtLeave) < 1e-9
+            and has(text, getText("IGUI_TLG_ConvState_Commissioned")),
+            string.format("begin=%s deliver=%s consumed=%s state=%s credit=%.4f hours at rejoin=%s profile=%s dialog=%s",
+                tostring(ctx.b.ok), tostring(ctx.d.ok), brief(ctx.d.consumed), tostring(p and p.state),
+                p and sumOf(p.credit) or -1, tostring(ctx.hoursAtRejoin), tostring(prof), tostring(text))
     end)
+    closeDialogs()
+    captureDialogs(false)
     return true
 end })
 
