@@ -20,10 +20,22 @@ local function show(text)
     modal:addToUIManager()
 end
 
+-- In the player's units (vanilla's weather radio formats the same way,
+-- SRC server/radio/ISWeatherChannel.lua:209).
+local function temperatureText(c)
+    local ok, s = pcall(function() return Temperature.getTemperatureString(c) end)
+    if ok and type(s) == "string" then return s end
+    return string.format("%.0f C", c)
+end
+
 function Menu.describe(reply)
     local lines = { getText("IGUI_TLG_MachineState_" .. tostring(reply.state)) }
     if reply.pause then lines[#lines + 1] = getText("IGUI_TLG_Pause_" .. tostring(reply.pause)) end
     if reply.stage then lines[#lines + 1] = getText("IGUI_TLG_Stage", getText("IGUI_TLG_Stage_" .. reply.stage)) end
+    if type(reply.siteC) == "number" and reply.site then
+        lines[#lines + 1] = getText(reply.siteNow and "IGUI_TLG_SiteNow" or "IGUI_TLG_SiteToday",
+            temperatureText(reply.siteC), getText("IGUI_TLG_Site_" .. reply.site))
+    end
     if reply.firebox and reply.firebox > 0 then
         lines[#lines + 1] = getText("IGUI_TLG_Firebox", string.format("%.1f", reply.firebox))
     end

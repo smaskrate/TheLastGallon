@@ -110,6 +110,9 @@ end
 -- is the season curve (BC: currentDay.season.getDayMeanTemperature), so cold
 -- snaps and heat waves never reached machines or fuel ageing (RT-SP run 15);
 -- getTemperature() is the air temperature with the weather.
+-- The same readings give the day means of the game's room air without heat
+-- sources (Climate.roomAir from the hour's air, lagged daylight and grid
+-- power), which machines in rooms use while their area is not loaded (D-021).
 function World.recordClimate()
     if not World.isAuthority() then return end
     local md = World.get()
@@ -120,11 +123,25 @@ function World.recordClimate()
     local t = cm:getTemperature()
     local rh = cm:getHumidity()
     if rh > 1 then rh = rh / 100 end
+    local dl, power = nil, nil
+    pcall(function() dl = cm:getClimateValuesCopy():getDayLightLagged() end)
+    pcall(function() power = getWorld():isHydroPowerOn() end)
+    if (type(dl) ~= "number" or power == nil) and not World.roomWarned then
+        World.roomWarned = true
+        TLG.Log.warn("room air: daylight=%s power=%s unreadable; using daylight 0.5, no power", tostring(dl),
+            tostring(power))
+    end
+    if type(dl) ~= "number" then dl = Climate.ROOM_DAYLIGHT end
     local acc = md.climateAcc
     if acc == nil or acc.day ~= day then acc = { day = day, n = 0, t = 0, rh = 0 } end
     acc.n, acc.t, acc.rh = acc.n + 1, acc.t + t, acc.rh + rh
+    -- Counted apart: an accumulator from before D-021 has no room sums yet.
+    acc.rn = (acc.rn or 0) + 1
+    acc.r0 = (acc.r0 or 0) + Climate.roomAir(t, false, dl, power == true)
+    acc.r1 = (acc.r1 or 0) + Climate.roomAir(t, true, dl, power == true)
     md.climateAcc = acc
-    Climate.record(md.climateLog, day, acc.t / acc.n, acc.rh / acc.n, World.CLIMATE_KEEP_DAYS)
+    Climate.record(md.climateLog, day, acc.t / acc.n, acc.rh / acc.n, World.CLIMATE_KEEP_DAYS, acc.r0 / acc.rn,
+        acc.r1 / acc.rn)
 end
 
 -- A changed campaign speed applies from now on; the past keeps its profile.

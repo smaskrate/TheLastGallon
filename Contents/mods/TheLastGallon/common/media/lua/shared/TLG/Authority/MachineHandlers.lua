@@ -86,6 +86,7 @@ local function machineState(player, args)
     local rec, why = Machines.read(item, true)
     if rec == nil then return nil, fail(why) end
     rec = Machines.advance(item, rec, World.now(), World.env())
+    Machines.index(item, rec)
     if args.expectedRevision ~= nil and args.expectedRevision ~= rec.rev then
         return nil, fail("stale", { rev = rec.rev })
     end
@@ -108,9 +109,11 @@ function H.machineStatus(player, args)
     -- Status persists the catch-up so repeated views are cheap.
     Machines.write(st.item, st.rec)
     local s = Process.status(st.rec)
+    local siteC, siteNow, site = Machines.siteTemp(st.item, st.rec, World.now(), World.env())
     return { ok = true, requestId = args.requestId, state = s.state, pause = s.reason, stage = s.stage,
         outputs = st.rec.outputs, firebox = st.rec.firebox, cond = st.rec.cond, rev = st.rec.rev,
-        machine = st.rec.machine, inputs = st.rec.inputs, stageDone = st.rec.stageDone }
+        machine = st.rec.machine, inputs = st.rec.inputs, stageDone = st.rec.stageDone,
+        siteC = siteC, siteNow = siteNow, site = site }
 end
 
 function H.machineLoadFerment(player, args)

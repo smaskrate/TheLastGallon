@@ -58,6 +58,12 @@ if Events.OnServerStarted then Events.OnServerStarted.Add(Boot.install) end
 Events.EveryHours.Add(function()
     local ok, err = pcall(TLG.World.recordClimate)
     if not ok then TLG.Log.error("climate log: %s", tostring(err)) end
+    -- After the climate record: the machines' hourly air readings (D-021).
+    local machines = TLG.Integration.Machines
+    if machines then
+        ok, err = pcall(machines.sampleSites)
+        if not ok then TLG.Log.error("machine air readings: %s", tostring(err)) end
+    end
 end)
 
 return Boot
