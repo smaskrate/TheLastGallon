@@ -3,9 +3,14 @@
 -- Time is world hours (getWorldAgeHours). Segments are aligned to world day
 -- boundaries so that any split of an interval yields the same per-day values;
 -- together with closed-form aging this makes one large advance equal to many
--- small ones. Recorded daily climate (written by the server while the world
--- runs) overrides the deterministic seasonal model; the current temperature is
--- never applied to the past.
+-- small ones while the log does not change between them. Recorded daily
+-- climate (written by the server while the world runs) overrides the
+-- deterministic seasonal model; a reading is never applied to an earlier day.
+-- Today's record is the running mean of today's readings so far
+-- (World.recordClimate, D-020) and changes until midnight, so an advance made
+-- during the day uses the mean so far for today's hours and is not redone
+-- later: a machine read through the day and one caught up after midnight can
+-- differ slightly for that day.
 require "TLG/Util/Num"
 require "TLG/Util/Tables"
 

@@ -241,5 +241,8 @@ listed with their replacement.
   after loading). Where it stands makes no difference: machine temperature
   comes from the outdoor day mean only (`thermal = "sheltered"`), so in a
   long cold spell the player cannot keep a batch going. Early in a day the
-  mean rests on few readings. Days recorded before the change keep their
-  season values; no migration.
+  mean rests on few readings, and an advance made then is not redone: a
+  machine read through the day and one caught up after midnight can differ
+  slightly for that day (the exact G12 catch-up of runs 13–14 was in July,
+  at full rate, where the temperature did not matter). Days recorded before
+  the change keep their season values; no migration.

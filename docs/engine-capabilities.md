@@ -405,7 +405,10 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   on access (`Process.advance` from the record's time to now). Runs 13–14 moved
   the character 400 tiles away for 24 game hours: the machines' square was
   no longer loaded (`getGridSquare` nil), and the first status read after
-  return credited the full 24 h at the rate the climate allowed.
+  return credited the full 24 h at the rate the climate allowed. That was
+  July at full rate. Since D-020 today's climate record moves until
+  midnight, so in weather that changes the rate, a catch-up and a machine
+  read through the day can differ slightly; not measured.
   `IsoGenerator.chunkLoaded(IsoChunk)` (BC) indicates load-time catch-up for
   vanilla generators; not instrumented.
 * G14: anything that moves fluid in Java, or Lua code that writes fluid
