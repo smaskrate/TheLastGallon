@@ -70,7 +70,9 @@ still is welded in hand.
    a lit fireplace, fire or barbecue, but only while you are nearby.
    Fermenting slows below 18 °C and stops below 8 °C, and a batch stopped
    for 3 days in all spoils. In a freezing spell a room alone is not
-   enough: keep a fire going beside the fermenter and stay close.
+   enough: keep a fireplace or fire well fed near the fermenter (the more
+   fuel, the farther its warmth reaches, up to 8 tiles it can see) and
+   stay close.
    **Status** shows the temperature at the machine.
 2. **Pot still** – a cooking pot, two metal pipes, a rubber hose
    (screwdriver). Place it within two tiles of a finished fermenter, **Load

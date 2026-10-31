@@ -127,7 +127,7 @@ progress takes the previous hour's reading. The weather is included
 | Room, ground floor, grid off | T + k (22 − T), k = 0.4–0.6 with the daylight; 0.435 on January days (runs 17–19) | about 15 °C | about −3 °C in January |
 | Room upstairs, grid off | 0.85 of that pull | about 16 °C | about 0 °C in January |
 | Room, grid on | 22 °C | never | never |
-| By a lit fireplace, fire or barbecue, while you are near | the game's value: 28 °C on a 35 °C source's own tile in a cold room, less with distance | — | — |
+| Near a lit fireplace, fire or barbecue, while you are near | the game's value; a fireplace with an hour of fuel reaches 8 tiles in sight: in an 8 °C room about 25 °C one tile away, 20 °C three tiles away (28 °C on its own tile) | — | — |
 
 Days recorded before D-021 have no room means; for them a room assumes
 k = 0.5. Before D-021 every machine counted as "sheltered", (outdoor mean

@@ -408,7 +408,9 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   T + (1 − d/R) × (T_source + clamp(T − 30, −7, 7) − T), clamped to −15..5
   instead when the source stands outdoors (`ClimateManager.lerp(t, a, b)` =
   a + t (b − a)). The game's heat sources are `IsoFire` (35 °C, its light
-  radius), `IsoFireplace` (35 °C) and `IsoBarbecue` (25 °C, radius 3);
+  radius), `IsoFireplace` (35 °C; radius `calcLightRadius()` =
+  `GameTime.Lerp(1, 8, min(fuel, 60) / 60)`, fuel in minutes, so 8 tiles
+  with an hour of fuel) and `IsoBarbecue` (25 °C, radius 3);
   `IsoHeatSource` is exposed to Lua, and `IsoCell.updateHeatSources` drops
   sources that are out of bounds. The lagged daylight is readable from Lua
   as `getClimateValuesCopy():getDayLightLagged()`; vanilla formats
