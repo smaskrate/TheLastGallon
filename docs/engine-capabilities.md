@@ -22,7 +22,7 @@ alternative), **NOT RUN**.
 | G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), not on the DS |
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP)** idle; driving NOT RUN; start gate NOT RUN | Native idle burn (0.0148 L in 0.5 h) reconciled proportionally into the tank record; mod never subtracts |
-| G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn; start gate NOT RUN | Native burn (0.015 L, nothing connected) reconciled proportionally; `ISActivateGenerator` gate not exercised |
+| G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn; start gate NOT RUN | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` gate not exercised |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator) and drag to the floor all carry the record |
 | G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
 | G07 Action authority | Which stage mutates on the server? | SRC-ONLY | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`; MP NOT RUN |
@@ -180,7 +180,8 @@ Source evidence:
 RT-SP (runs 3–5, `Base.Generator`, max fuel 10 L):
 
 * Can → generator (`ISAddFuel`) moves exactly the litres and carries the
-  record; native burn (0.015 L, nothing connected, `GeneratorFuelConsumption`
+  record; native burn (0.015 L; connected with no appliance drawing,
+  `getTotalPowerUsing` 0.015; `GeneratorFuelConsumption`
   0.1) is reconciled proportionally on the next read. The harness activates
   the generator with `setActivated(true)`, so the `ISActivateGenerator` start
   gate is NOT RUN.

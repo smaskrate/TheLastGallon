@@ -20,7 +20,7 @@ compatible with another build until re-tested.
 | TLG pour (`ISTLGPourFuel`, any fuel) | authoritative transfer | yes | TLG sets native | **Verified RT-SP** into a generator (petrol accepted, E100 refused without confirmation); vehicle target NOT RUN |
 | Generator pickup (`ISTakeGenerator`) | wrap copies sidecar to the new hand item | yes | native fuel copied by vanilla | **Verified RT-SP**, incl. taking a second generator while carrying one |
 | Generator drop: drop action, `forceDropHeavyItems`, inventory drag to the floor; `IsoGenerator.new` | wraps re-attach the sidecar to the converted object | yes | native | **Verified RT-SP** (all three drop paths); drops done by Java alone are not seen |
-| Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Verified RT-SP** (run 5; the fluid sits on the world object after reload) |
+| Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Read verified RT-SP** (run 5: record found after reload, the fluid sits on the world object); pouring from a ground can NOT RUN |
 | Still → can (TLG command) | TLG writes native fluids + sidecar | yes (fresh) | TLG then native | SRC-ONLY |
 | Fermenter → still (TLG command) | machine-to-machine | n/a (wash) | TLG | Domain tests |
 | Third-party mods | not tested | — | — | NOT RUN |
@@ -52,7 +52,7 @@ per-minute effect handler ran without errors while idling on good fuel
 `Base.Generator_Blue` (item scripts, verified ids). Stock profile
 `generator_si_stock`. Burn is native; start gate uses `failToStart()`.
 RT-SP (`Base.Generator`): max fuel 10 L; idle burn 0.015 L in 0.5–1.3 game
-hours with nothing connected; the native burn is reconciled proportionally
+hours, connected with no appliance drawing; the native burn is reconciled proportionally
 into the record. Start gate (`ISActivateGenerator`) NOT RUN: the harness
 activates generators directly. Other generator types NOT RUN.
 
