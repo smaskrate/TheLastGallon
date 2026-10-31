@@ -148,9 +148,10 @@ listed with their replacement.
   serve as placeholders (asset target: zero bespoke models for the first
   playable).
 * Consequence: picking a running machine up pauses it on next access without
-  crediting the carried time (conservative). A `TLG.FermenterVessel` lying
-  on the ground keeps its item modData across save and reload (RT-SP
-  2026-10-31, probe record); a machine running a batch in game is NOT RUN.
+  crediting the carried time (conservative). A placed fermenter, reflux still
+  and drying column each ran a batch in game and kept their records across
+  save and reload (RT-SP 2026-10-31, run 7; elapsed time from a mod-clock
+  fixture). Picking up a running machine is NOT RUN.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

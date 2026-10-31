@@ -9,7 +9,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
-| RT-SP: machines running a batch, crafting, Italian text in game | Not in the harness yet |
+| RT-SP: crafting the machines, the machine and workshop menus, the pot still, picking up a running machine, Italian text in game | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
 | Packaged-artifact install/upgrade rehearsal | Not run |
@@ -197,3 +197,86 @@ dispense fuel that halves a stock car's start chance from the first day.
 * `tools/run-tests.ps1` → `modules=13 cases=139 passed=139 failed=0`.
 * Not re-run in game (the change is confined to the deterministic draw that
   the domain test covers).
+
+## 2026-10-31 — RT-SP client harness, launch 7 (renewable loop)
+
+Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run7.txt`. Phase A
+**74 PASS / 8 FAIL**, phase B **12 PASS / 2 FAIL**; launcher exit code 0.
+
+Time fixture: fermentation (96 h), distillation, drying (12 h) and the
+conversion work (7.5 h and 13 h) are too long to wait for, so the harness
+advances the mod clock only (`TLG.World.now` + an offset); the game clock
+does not move. Catch-up and work crediting are domain-tested; this run checks
+the commands, the inventory handling and the adapters. The harness sends the
+commands directly; the machine and workshop menus were not used.
+
+Passed: ethanol made from real inventory items through the authority
+commands.
+
+* Fermenter: 6 Sugar, 30 L of water from three buckets and 1 Yeast gave a
+  wash holding 3.30 L ethanol, ready after 120 h of mod time (checked every
+  24 h; 97 h needed).
+* Reflux still: 18 kg of firewood from 2 Logs; the 33.3 L wash loaded and a
+  yeast starter came back; 3.036 L ethanol + 0.194 L water (94 %) after 4 h;
+  collected into a jerry can with matching fluids and a fresh record.
+* Drying column: the can's spirit plus 1 quicklime (of 2); after 12 h,
+  3.036 L ethanol + 0.015 L water (0.5 %), collected into a second can. A
+  fixture degradation of 0.8 put on the spirit came through unchanged.
+* Splitting the dried ethanol into two cans through the wrapped transfer kept
+  identical states.
+* Phase B: the three machine records came back (`Ready`) after reload.
+* As a side result, this run's new world drew clean station fuel (0.038 %
+  water), the D-017 clean tier.
+
+Failed: one defect and its consequences.
+
+* `conversion.begin` refused both conversions with `missing_tool`
+  (`Base.Screwdriver`) although the player carried every tool. The adapter
+  counted only the items named by the device's existing project, and a first
+  conversion has none yet, so no conversion could ever be started in game.
+  The domain tests passed because they hand the service a ready-made actor.
+  Fixed: `CD.actor` also counts the requested conversion (and removal tools);
+  regression cases in `tests/integration/test_conversion_devices.lua`.
+* Consequences: both engines stayed stock, so the TLG pours of the dried
+  ethanol were refused as incompatible (correct for stock engines), the
+  generator stayed empty and did not start, and phase B found no conversion.
+* Harness weakness: `LOOP.flex_car_start.not_refused_by_tlg` passed with an
+  empty tank (TLG never refuses an empty tank). The gate step now also
+  requires fuel, and the loop's car has to actually start (up to three
+  attempts).
+
+## 2026-10-31 — RT-SP client harness, launch 8 (renewable loop after the fix)
+
+Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run8.txt`. Phase A
+**82 PASS / 0 FAIL**, phase B **14 PASS / 0 FAIL**; launcher exit code 0.
+Same time fixture as launch 7; commands sent directly, not through the menus.
+
+* Production repeated launch 7 exactly (3.30 L ethanol in the wash, 3.036 L
+  at 94 %, dried to 0.5 % water, degradation kept).
+* Generator conversion (`flex_generator` on `Base.Generator`): started, took
+  exactly its parts (1 rubber hose, 4 screws, 1 electric wire) and was
+  commissioned by one 8 h work report (7.5 h needed); profile
+  `generator_si_flex`.
+* Car conversion (`flex_car_normal` on `Base.CarNormal`): took 2 rubber
+  hoses, 2 engine parts, 6 screws and 2 electric wires; an 8 h report left it
+  at the install stage and a 6 h report commissioned it (13 h needed);
+  profile `engine_si_flex`.
+* The dried ethanol (1.53 L each) went into both with the TLG pour: accepted
+  without confirmation, litres conserved, records equal to the native
+  amounts.
+* The generator activated through `ISActivateGenerator` (grade good, start
+  factor 1). The car started through `ISStartVehicleEngine` on the first
+  attempt (`Running`). The harness repaired the car beforehand (battery 1.00,
+  engine 100) so that vanilla part condition could not decide the start.
+* Phase B: both conversions came back `Commissioned` with their flex profiles
+  (the generator still held its 1.5256 L), with the machine records and every
+  earlier record (14/14).
+* Station fuel in this world rated start factor 1 (clean tier); the
+  station-fuel car started.
+* Suite: `modules=14 cases=141 passed=141 failed=0` (adds
+  `tests/integration/test_conversion_devices.lua`); compile check
+  `compiled=91 errors=0`.
+
+Not run: the machine and workshop menus, crafting the machines, the pot
+still, machines and conversions in real elapsed game time, driving on
+ethanol, cancelling or removing a conversion, multiplayer.

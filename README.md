@@ -5,9 +5,11 @@ engine conversions and energy infrastructure. Specification:
 `The_Last_Gallon_Implementation_Plan.md`.
 
 Status: development build. Domain layer and authority logic are implemented
-and tested on the game's own Lua VM; several game-facing adapters are verified
-on the dedicated server, others only against shipped source. See
-`docs/release-checklist.md` for every open gate.
+and tested on the game's own Lua VM. In a single-player client (2026-10-31)
+the fuel adapters, start gates and the ethanol loop are verified: machines,
+then flex conversions of a generator and a standard car that run on the
+ethanol. Multiplayer is not tested. See `docs/release-checklist.md` for
+every open gate.
 
 ## Layout
 

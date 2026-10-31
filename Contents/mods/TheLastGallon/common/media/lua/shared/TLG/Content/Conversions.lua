@@ -6,11 +6,13 @@
 -- tools/modules are items in `module Base` (items/normal.txt:1,
 -- items/weapon.txt:1).
 --
--- Runtime status: domain-tested (tests/domain/test_conversions.lua). Applying
--- benefits through the vehicle/generator adapters is NOT RUN, so every route
--- below is "domain-tested, runtime NOT RUN" in the conversion matrix
--- (TLG.Domain.ConversionService.matrix()). Profession/police variants that
--- share these templates are deliberately not listed until tested.
+-- Runtime status: domain-tested (tests/domain/test_conversions.lua).
+-- flex_generator on Base.Generator and flex_car_normal on Base.CarNormal were
+-- verified in a single-player client (RT-SP 2026-10-31, run 8: commissioned,
+-- ran on ethanol, survived reload); every other route below is
+-- "domain-tested, runtime NOT RUN" in the conversion matrix
+-- (docs/support-matrix.md). Profession/police variants that share these
+-- templates are deliberately not listed until tested.
 require "TLG/Domain/Conversions/Project"
 require "TLG/Content/Fuels"
 require "TLG/Content/Storage"

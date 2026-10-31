@@ -1,5 +1,9 @@
 -- Adapter: vehicles and generators as conversion devices (ConversionService).
--- Runtime status: SOURCE EVIDENCE ONLY.
+-- Runtime status: verified RT-SP 2026-10-31 (run 8) for flex_generator on a
+-- Base.Generator and flex_car_normal on a Base.CarNormal: begin, deliver,
+-- work to Commissioned, flex profile, project after save and reload.
+-- Commands were sent directly; the workshop menu, cancel, remove, engine
+-- replacement, other chassis and MP are NOT RUN.
 --
 --   project store   vehicle Engine part modData "tlgConv"; generator object
 --                   modData "tlgConv" (carried through pickup/placement by the
@@ -79,13 +83,16 @@ function CD.effective(md, device)
     return nil
 end
 
-function CD.actor(player, project)
+-- Counts only the items the definitions name. `conversion` is the definition
+-- conversion.begin is about to start: its project does not exist yet, so
+-- without it nothing was counted and every first conversion failed with
+-- missing_tool (RT-SP 2026-10-31, run 7).
+function CD.actor(player, project, conversion)
     local actor = { id = TLG.Authority.Handlers and TLG.Authority.Handlers.actorKey(player) or tostring(player),
         skills = {}, recipes = {}, inventory = {} }
     for _, perk in ipairs({ "Mechanics", "Electricity", "MetalWelding", "Woodwork" }) do
         pcall(function() actor.skills[perk] = player:getPerkLevel(Perks[perk]) end)
     end
-    local def = project and (project.snap or TLG.Registry.get("conversion", project.conversion)) or nil
     local wanted = {}
     local function collect(list)
         for k, v in pairs(list or {}) do
@@ -94,7 +101,13 @@ function CD.actor(player, project)
             if type(v) == "table" then collect(v) end
         end
     end
-    if def then collect(def.requiredTools); collect(def.requiredModules); collect(def.workStages) end
+    local function collectDef(def)
+        if def == nil then return end
+        collect(def.requiredTools); collect(def.requiredModules); collect(def.workStages)
+        collect(def.reversalAndSalvageRules)
+    end
+    collectDef(project and (project.snap or TLG.Registry.get("conversion", project.conversion)) or nil)
+    if type(conversion) == "string" then collectDef(TLG.Registry.get("conversion", conversion)) end
     for _, id in ipairs(Tables.sortedKeys(wanted)) do
         actor.inventory[id] = player:getInventory():getCountTypeRecurse(id)
     end

@@ -910,7 +910,9 @@ add(vehiclePourStep("TLG.pour_e100_into_vehicle_unconfirmed", { { Fluid.Get("TLG
 add(vehiclePourStep("TLG.pour_e100_into_vehicle_confirmed", { { Fluid.Get("TLG_Ethanol"), 3.0 } }, true, true))
 
 -- Starts a vehicle through the vanilla action (ISStartVehicleEngine) as its driver.
-local function vehicleGateStep(name, getVehicle, expectRefused)
+-- mustRun: the engine has to end up running; like a driver, the step retries
+-- up to three times when it does not catch (vanilla start chance, TLG roll).
+local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
     return { name = name, timeout = 1500, fn = function(ctx, ticks)
         local v = getVehicle()
         if not v then R:line("SKIP %s", name); return true end
@@ -922,22 +924,43 @@ local function vehicleGateStep(name, getVehicle, expectRefused)
         end
         if not ctx.queued then
             if ticks - ctx.t0 < 30 then return nil end
-            R:line("OBS  %s driver=%s %s", name, tostring(v:isDriver(player())), evaluationText(TLG.Integration.Vehicles.evaluate(v)))
+            local e = TLG.Integration.Vehicles.evaluate(v)
+            ctx.grade = e and e.grade
+            local battery, engine = "?", "?"
+            pcall(function() battery = string.format("%.2f", v:getBatteryCharge()) end)
+            pcall(function() engine = tostring(v:getPartById("Engine"):getCondition()) end)
+            R:line("OBS  %s driver=%s battery=%s engine=%s %s", name, tostring(v:isDriver(player())), battery, engine,
+                evaluationText(e))
             captureTlgDebug(ctx)
             ISTimedActionQueue.add(ISStartVehicleEngine:new(player()))
-            ctx.queued, ctx.t1 = true, ticks
+            ctx.queued, ctx.t1, ctx.attempts = true, ticks, 1
             return nil
         end
         if ticks - ctx.t1 < 180 then return nil end
+        if mustRun and not v:isEngineRunning() and ctx.attempts < 3 then
+            R:line("OBS  %s attempt %d did not start (state=%s)", name, ctx.attempts, tostring(v:getEngineState()))
+            ISTimedActionQueue.add(ISStartVehicleEngine:new(player()))
+            ctx.t1, ctx.attempts = ticks, ctx.attempts + 1
+            return nil
+        end
         ctx.restoreLog()
         local refusal = loggedMatching(ctx, "vehicle start refused")
         local running = v:isEngineRunning()
-        R:line("OBS  %s state=%s running=%s refusal=%s", name, tostring(v:getEngineState()), tostring(running), tostring(refusal))
+        R:line("OBS  %s state=%s running=%s attempts=%d refusal=%s", name, tostring(v:getEngineState()), tostring(running),
+            ctx.attempts, tostring(refusal))
         if expectRefused then
             R:check(name .. ".refused_by_tlg", function() return refusal ~= nil and not running, tostring(refusal) end)
+        elseif mustRun then
+            R:check(name .. ".running", function()
+                return running, string.format("state=%s attempts=%d refusal=%s", tostring(v:getEngineState()), ctx.attempts,
+                    tostring(refusal))
+            end)
         else
+            -- An empty tank is never refused by TLG, so it proves nothing (run 7).
             R:check(name .. ".not_refused_by_tlg", function()
-                return refusal == nil, string.format("state=%s running=%s", tostring(v:getEngineState()), tostring(running))
+                return refusal == nil and ctx.grade ~= "empty",
+                    string.format("state=%s running=%s grade=%s", tostring(v:getEngineState()), tostring(running),
+                        tostring(ctx.grade))
             end)
         end
         pcall(function() v:shutOff() end)
@@ -1077,6 +1100,10 @@ add({ name = "loop_setup", timeout = 600, fn = function(ctx, ticks)
         end
         local base = H.pumps[1] or { x = START.x, y = START.y }
         LOOP.car = addVehicleDebug(H.vehicleScript or "Base.CarNormal", IsoDirections.N, nil, sq(base.x + 13, base.y + 3, 0))
+        -- Takes the vanilla start prerequisites (part condition) out of the
+        -- result, as vanilla's debug repair does (SRC ISVehicleMenu.lua:957).
+        -- The tank is emptied after this.
+        if LOOP.car then pcall(function() LOOP.car:repair() end) end
         ctx.done = true
         return nil
     end
@@ -1256,7 +1283,7 @@ end))
 
 add(generatorGateStep("LOOP.flex_generator_start", function() return LOOP.gen end, false))
 add(vehiclePourStep("LOOP.flex_car_pour", nil, false, true, function() return LOOP.car end, function() return LOOP.canCar end))
-add(vehicleGateStep("LOOP.flex_car_start", function() return LOOP.car end, false))
+add(vehicleGateStep("LOOP.flex_car_start", function() return LOOP.car end, false, true))
 
 add({ name = "tlg_ui", fn = function()
     local can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 2.0 } })

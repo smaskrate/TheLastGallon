@@ -73,7 +73,7 @@ local function run(player, args, fn)
     -- Never overwrite a project written by a newer build.
     local project, status = CD.project(d.md)
     if d.md[CD.KEY] ~= nil and project == nil then return fail(status) end
-    local actor = CD.actor(player, project)
+    local actor = CD.actor(player, project, args.conversion)
     local req = { now = World.now(), expectedRev = args.expectedRevision, leave = args.leave }
     local r = fn(project, actor, d.device, req, d)
     if not r.ok then return fail(r.reason, { missing = r.missing, rev = r.rev, state = r.state }) end

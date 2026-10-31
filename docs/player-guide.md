@@ -49,8 +49,9 @@ Stock gasoline engines are happy with up to 15 % ethanol, struggle up to
 25 %, and will not run on more. A converted (flex) engine runs on any
 gasoline/ethanol blend but starts poorly on near-pure ethanol in the cold.
 Stale, wet or dirty fuel makes starting harder, costs power and wears the
-engine; very bad fuel will not run at all. *(Vehicle and generator effects:
-untested in game.)*
+engine; very bad fuel will not run at all. *(Checked in game: refused starts
+and stalls on unsuitable fuel, and a converted car and generator running on
+home-made ethanol. The effects while driving are untested in game.)*
 
 ## Your first sustainable fuel: ethanol
 
@@ -66,11 +67,48 @@ untested in game.)*
    **reflux column still** (welding) gives ~94 % and recovers more.
 4. Save the **yeast starter culture** from batches of 5 kg sugar or more –
    it replaces bought yeast.
-5. For blending with gasoline, dry the ethanol in a **drying column** with
-   quicklime; wet ethanol in gasoline separates.
+5. **Drying column** – place it, carry the can of ethanol and quicklime,
+   choose **Dry ethanol with quicklime** and collect the result into a fuel
+   can after about 12 hours. Pot-still ethanol holds too much water for any
+   engine until it is dried. Reflux ethanol runs converted engines as it is,
+   but dry it before blending with gasoline: wet ethanol in gasoline
+   separates.
 
-Picking up a working machine pauses it; put it down to continue. *(Machines:
-untested in game.)*
+Picking up a working machine pauses it; put it down to continue. *(One batch
+through the fermenter, reflux still and drying column was checked in game;
+building the machines, their menus, the pot still and picking up a working
+machine are untested in game.)*
+
+## Converting an engine
+
+A flex conversion lets an engine run on any gasoline/ethanol blend.
+Right-click the generator or car → **Workshop: convert this generator** (or
+**vehicle**):
+
+1. **Start: …** – needs the skills and recipe below and a screwdriver. The
+   engine must be off.
+2. **Hand over parts** – takes the listed parts from your inventory.
+3. Stay with it and choose **Report progress** now and then: each report
+   counts the time since you started or last reported, at most 12 hours.
+   Every stage needs its tools (screwdriver, wrench, pliers), and the fuel
+   tank must be empty while you drain the fuel system and install the parts.
+   **Stop working** reports and leaves; **Work on it** joins again (a helper
+   can join too).
+4. When the status reads **Converted and commissioned**, the engine is flex.
+
+| | Generator | Standard car |
+| --- | --- | --- |
+| Skills | Mechanics 2, Electrical 2 | Mechanics 4 |
+| Recipe (magazine) | Generator ("How to Use Generators") | Basic Mechanics ("Laines Standard Auto Manual") |
+| Parts | 1 rubber hose, 4 screws, 1 electric wire | 2 rubber hoses, 2 engine parts, 6 screws, 2 electric wires |
+| Work | 7.5 hours | 13 hours |
+
+Cancelling returns three quarters of the parts handed over; removing a
+finished conversion returns half. Small cars, pickup trucks, step vans and
+the other generator models have their own conversions. *(A standard car and
+the basic generator were converted in game and ran on ethanol; the workshop
+menu itself, cancelling, removing and the other models are untested in
+game.)*
 
 ## Stations
 

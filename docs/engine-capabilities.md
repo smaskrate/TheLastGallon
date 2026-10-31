@@ -26,7 +26,7 @@ alternative), **NOT RUN**.
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator) and drag to the floor all carry the record |
 | G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
 | G07 Action authority | Which stage mutates on the server? | SRC-ONLY | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`; MP NOT RUN |
-| G08 Persistence | Reliable stores/IDs | **PASS (DS + SP)** single player | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5); MP reconnect NOT RUN |
+| G08 Persistence | Reliable stores/IDs | **PASS (DS + SP)** single player | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5), as do machine records and conversion projects (runs 7–8); MP reconnect NOT RUN |
 | G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
@@ -302,6 +302,33 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   as the Solo path does (SRC `MainScreen.lua:1400`).
 * NOT RUN: chunk unload/reload, MP reconnect.
 
+## Production machines and conversions (RT-SP runs 7–8)
+
+* Machines are mod items lying on the ground (D-015). A placed
+  `TLG.FermenterVessel`, `TLG.RefluxStill` and `TLG.DryingColumn` each ran a
+  batch through the authority commands with real inventory items: Sugar,
+  Yeast and bucket water in; Logs into the firebox; quicklime taken by the
+  dryer; outputs written into jerry cans as native fluids plus a TLG record.
+  Quantities matched the domain model (6 kg sugar → 3.30 L ethanol in the
+  wash → 3.036 L at 94 % → dried to 0.5 % water).
+* Time fixture: the harness advanced the mod clock (`TLG.World.now`), not the
+  game clock; nothing here shows how the machines behave while the game clock
+  runs or while their chunk is unloaded (G12 NOT RUN).
+* The three machine records survived save and reload (phase B).
+* Conversions (run 8): a `Base.Generator` (`flex_generator`) and a
+  `Base.CarNormal` (`flex_car_normal`) went through begin, parts delivery
+  and work reports to `Commissioned`, took exactly the listed parts from the
+  inventory, and then resolved to the flex profiles. Both accepted the dried
+  ethanol without confirmation; the generator activated
+  (`ISActivateGenerator`) and the car started (`ISStartVehicleEngine`) on it.
+  The projects (generator object modData, Engine part modData) survived
+  save and reload.
+* Run 7 found an adapter defect the domain tests could not: the actor for
+  `conversion.begin` was built from the device's existing project, so with
+  no project yet no tool was counted and every first conversion failed with
+  `missing_tool`. Fixed in `ConversionDevices.actor`; regression cases in
+  `tests/integration/test_conversion_devices.lua`.
+
 ## G10–G14
 
 * G10: no per-appliance enable/priority API found on `IsoGenerator`; electrical
@@ -353,10 +380,13 @@ fixes, each found by a failed launch:
 Since run 3 a launch needs no input: the full run (both phases) takes about
 12 minutes. Results: run 3 phase A 41/5, run 4 phase A 42/1 and phase B 9/1,
 run 5 phase A 47/0 and phase B 9/2, run 6 (adds start gates, stall and TLG
-pours into a vehicle) phase A **63/0** and phase B **11/0**. Every failure was
-traced to the harness itself (placement, a nearly full target generator, a
-lookup that matched the neighbouring object) except run 4's ground-can
-result, which found the container-ownership defect described under G02.
+pours into a vehicle) phase A 63/0 and phase B 11/0, run 7 (adds the
+renewable loop) phase A 74/8 and phase B 12/2, run 8 phase A **82/0** and
+phase B **14/0**. Every failure was traced to the harness itself (placement,
+a nearly full target generator, a lookup that matched the neighbouring
+object) except two that found mod defects: run 4's ground-can result (the
+container-ownership defect described under G02) and run 7's conversion
+refusals (the tool-counting defect described above).
 
 ## Tooling pitfalls found
 
@@ -370,9 +400,10 @@ result, which found the container-ownership defect described under G02.
 ## Next experiments
 
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
-   placed production machines running a batch, crafting the machines,
-   pouring from a can lying on the ground, Italian text in game, UI
-   rendering checks beyond menu contents.
+   crafting the machines, the machine and workshop menus, the pot still,
+   machines and conversion work in real elapsed game time, pouring from a
+   can lying on the ground, Italian text in game, UI rendering checks beyond
+   menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
 
