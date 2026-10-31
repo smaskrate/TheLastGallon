@@ -2337,10 +2337,10 @@ RT.add({ name = "rt_setup", timeout = 3000, fn = function(ctx, ticks)
     end
     RT.speed(RT.waitSpeed)
     if ticks - ctx.tick0 < 300 then return nil end
-    local gh = hours() - ctx.h0
+    local gh, trueSpeed = hours() - ctx.h0, RT.trueSpeed()
     RT.speed(1)
     R:line("OBS  RT.speed multiplier=%d true=%s game hours in 300 ticks=%.4f (about 0.02 at x1) %s", RT.waitSpeed,
-        RT.trueSpeed(), gh, loadText())
+        trueSpeed, gh, loadText())
     R:check("RT.game_clock_runs_fast", function() return gh >= 0.2, string.format("%.4f game h in 300 ticks", gh) end)
     if gh < 0.2 then RT.abort = "the game clock did not speed up" end
     return true

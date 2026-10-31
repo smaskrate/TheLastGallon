@@ -152,7 +152,7 @@ listed with their replacement.
   and drying column each ran a batch in game and kept their records across
   save and reload (RT-SP 2026-10-31, runs 7 and 12); on the game clock a
   fermenter whose chunk was unloaded for 24 game hours caught up exactly on
-  the next access (run 13). Picking up a running machine is NOT RUN.
+  the next access (runs 13–14). Picking up a running machine is NOT RUN.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

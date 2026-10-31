@@ -30,7 +30,7 @@ alternative), **NOT RUN**.
 | G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
-| G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP run 13). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
+| G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14; the check passed in run 14). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
 | G13 Assets | Which props/sounds exist? | PARTIAL (catalogue from scripts) | See `asset-audit.csv`; runtime spawn/texture checks NOT RUN |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
@@ -381,7 +381,7 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 * G10: no per-appliance enable/priority API found on `IsoGenerator`; electrical
   priorities will be offered only for mod-owned consumers (decision D-011).
 * G12: TLG machines keep their process in item modData and advance lazily
-  on access (`Process.advance` from the record's time to now). Run 13 moved
+  on access (`Process.advance` from the record's time to now). Runs 13–14 moved
   the character 400 tiles away for 24 game hours: the machines' square was
   no longer loaded (`getGridSquare` nil), and the first status read after
   return credited the full 24 h at the rate the climate allowed.
@@ -437,8 +437,8 @@ renewable loop) phase A 74/8 and phase B 12/2, run 8 phase A 82/0 and
 phase B 14/0, run 9 (conversion work as a timed action) phase A 83/0 and
 phase B 14/0, runs 10–11 (the player's path) 76/15 and 80/11 with phase B
 12/2 each, run 12 phase A **94/0** and phase B **14/0**, run 13 (the loop on
-the game clock, no reload) **10/1**, the one failure a check bound that
-missed 120 settling ticks. Most failures were
+the game clock, no reload) 10/1, the one failure a check bound that missed
+120 settling ticks, and its rerun, run 14, **11/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

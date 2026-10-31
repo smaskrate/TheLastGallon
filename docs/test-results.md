@@ -405,12 +405,12 @@ and teleports at x1. The character was invulnerable, invisible and kept fed.
   climate model uses daily means and the fermenter's "sheltered" profile, so
   July never slowed it.
 * Chunk unload (G12): 12 hours in, the character was moved 400 tiles away;
-  the machines' square was no longer loaded. After 24 game hours away and
-  back, the fermenter had done 24.02 h more work over the 24.02 h between
-  the two status reads, at full rate. The check failed by its own bound: it
-  compared with the time to the return teleport (24.01 h) and missed the
-  120 settling ticks before the read. Bound fixed in the harness; the mod's
-  catch-up was exact.
+  the machines' square was no longer loaded. Back after 24 game hours, the
+  fermenter had done 24.02 h more work. The check compared that with the
+  time to the return teleport (24.01 h, logged); the status read came 120
+  settling ticks later (about 0.01 game h at x1, not logged), so it failed
+  by its own bound. Bound changed to the time between the two reads and
+  rerun as launch 14.
 * Distillation: 3.78 game hours (expected ~3.8), 3.036 L ethanol + 0.194 L
   water. Drying: 12.09 game hours, water to 0.5 %.
 * Generator conversion from the menu: 7.71 game hours from the click for
@@ -419,3 +419,18 @@ and teleports at x1. The character was invulnerable, invisible and kept fed.
 
 Not run: pours and engine starts (unchanged from launch 12), a reload, any
 season other than summer.
+
+## 2026-10-31 — RT-SP client harness, launch 14 (real game clock, rerun)
+
+Same command as launch 13, with the catch-up bound measured between the two
+status reads and the true multiplier read before the speed is reset.
+Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run14_realtime.txt`.
+**11 PASS / 0 FAIL**; launcher exit code 0; console clean.
+
+* Measured x100 (true multiplier 100.0, 2.22 game hours per 300 ticks).
+* Chunk unload: the machines' square unloaded; 24.02 h more work over the
+  24.02 game hours between the status read before leaving and the one after
+  return (`RT.unloaded_machine_catches_up` PASS).
+* Fermentation 97.2 game hours (outdoor 11.8–30.9 °C), distillation 3.78 h,
+  drying 12.09 h, generator conversion 7.56 h from the click for 7.5 h of
+  work, car 13.11 h for 13 h; 2.0 → 138.0 world hours in all.

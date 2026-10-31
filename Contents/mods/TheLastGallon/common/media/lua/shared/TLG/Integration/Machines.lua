@@ -3,7 +3,7 @@
 -- still and drying column each ran a batch (load, firebox, wash, collect
 -- into a can, dry, collect) with real inventory items, through the commands
 -- (run 7) and through the context menu (run 12), and their records
--- survived save and reload. Run 13 let the game clock run the batch (97.2 h
+-- survived save and reload. Runs 13-14 let the game clock run the batch (97.2 h
 -- of fermentation) and unloaded the machines' chunk for 24 game hours: the
 -- next access caught up exactly. Distilling in the pot still, pickup while
 -- processing and MP replication are NOT RUN.
