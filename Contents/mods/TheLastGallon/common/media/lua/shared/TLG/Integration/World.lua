@@ -105,7 +105,11 @@ function World.env()
     return Climate.new(md.calendar, md.climateLog or {}, md.balanceHistory)
 end
 
--- Records today's mean temperature/humidity (server, once per hour is fine).
+-- Records today's mean temperature/humidity as the running mean of the hourly
+-- readings (called every game hour on the authority). getDayMeanTemperature()
+-- is the season curve (BC: currentDay.season.getDayMeanTemperature), so cold
+-- snaps and heat waves never reached machines or fuel ageing (RT-SP run 15);
+-- getTemperature() is the air temperature with the weather.
 function World.recordClimate()
     if not World.isAuthority() then return end
     local md = World.get()
@@ -113,10 +117,14 @@ function World.recordClimate()
     local env = World.env()
     local day = env:dayIndex(World.now())
     local cm = getClimateManager()
-    local t = cm:getDayMeanTemperature()
+    local t = cm:getTemperature()
     local rh = cm:getHumidity()
     if rh > 1 then rh = rh / 100 end
-    Climate.record(md.climateLog, day, t, rh, World.CLIMATE_KEEP_DAYS)
+    local acc = md.climateAcc
+    if acc == nil or acc.day ~= day then acc = { day = day, n = 0, t = 0, rh = 0 } end
+    acc.n, acc.t, acc.rh = acc.n + 1, acc.t + t, acc.rh + rh
+    md.climateAcc = acc
+    Climate.record(md.climateLog, day, acc.t / acc.n, acc.rh / acc.n, World.CLIMATE_KEEP_DAYS)
 end
 
 -- A changed campaign speed applies from now on; the past keeps its profile.

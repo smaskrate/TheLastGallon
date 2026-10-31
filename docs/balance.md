@@ -112,12 +112,18 @@ the new draw; existing reservoir records keep their water.
 | Distil | pot still (60 L) / reflux still (120 L) | wash | hydrous ethanol 80 % / 94 % purity, recovery 0.88 / 0.92 | 1 h heat-up + wash ÷ 8 or 12 L/h at 6 kW; firebox 30 / 50 kg, 4.2 kWh/kg, 45 % / 55 % efficient |
 | Dry | drying column | hydrous ethanol + quicklime | water down to 0.5 % | 12 h, 0.3 L water per kg quicklime |
 
-Temperature: machine rates use the climate model's daily mean, not the
-hour's reading. The machines are "sheltered": (outdoor daily mean + 16 °C)
-/ 2, so a fermenter slows (below 18 °C) only on days averaging under 20 °C
-outdoors. In the July run on the game clock that never happened: 97.2 h,
-the full-rate time, with hourly outdoor readings of 10.9–28.0 °C (RT-SP run
-13). The cold-weather slowdown and stall have not been seen in game.
+Temperature: machine rates use the day's mean temperature, not the hour's
+reading; since D-020 that is the mean of the day's hourly air temperature,
+weather included (before, the season curve). The machines are "sheltered"
+wherever they stand: (outdoor day mean + 16 °C) / 2, so a fermenter slows
+(below 18 °C) on days averaging under 20 °C outdoors and stops (below 8 °C)
+on days averaging under 0 °C; being indoors or near a heater changes
+nothing. Measured on the game clock (RT-SP): July, 97.2 h, the full-rate
+time (run 13); January on the season curve, 0.4 rate all through, 241.7 h
+(run 15); January with the weather, −0.8 to −4.7 °C day means, stopped from
+the first day and spoiled 73.2 h after loading, at 72 paused hours (run 16).
+Spoilage counts the batch's total paused hours, also across separate cold
+spells (not yet seen in game).
 
 Condition through production: distillate leaves the still fresh (ageing
 products stay in the stillage), while dried ethanol keeps the degradation it

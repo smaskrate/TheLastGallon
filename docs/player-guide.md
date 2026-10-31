@@ -63,8 +63,10 @@ still is welded in hand.
    hammer (Carpentry 2). Place it on the ground, carry feedstock (sugar,
    corn, potatoes, sugar beets, pumpkins, watermelons, fruit), clean water
    and yeast, choose **Load mash and start fermenting**: it takes 5 L of
-   water per kg of sugar. About 4 days at room temperature; slower in the
-   cold, stalls below ~8 °C and spoils if stalled for 3 days.
+   water per kg of sugar. About 4 days in warm weather. The machines follow
+   the day's outdoor temperature wherever they stand, indoors or not:
+   fermenting slows on days averaging under 20 °C and stops on days
+   averaging under 0 °C, and a batch stopped for 3 days in all spoils.
 2. **Pot still** – a cooking pot, two metal pipes, a rubber hose
    (screwdriver). Place it within two tiles of a finished fermenter, **Load
    wash**, **Feed the firebox**: it burns all the wood you carry (firewood,
@@ -86,9 +88,11 @@ still is welded in hand.
 
 Picking up a working machine pauses it; put it down to continue. *(Building
 the four machines and one batch through the fermenter, reflux still and
-drying column, using the menu entries named above, were checked in game;
-distilling in the pot still, Pause/Resume/Abort and picking up a working
-machine are untested in game.)*
+drying column, using the menu entries named above, were checked in game, as
+was a batch that stopped in a January cold spell and spoiled after 3 days;
+distilling in the pot still, Pause/Resume/Abort, picking up a working
+machine and stopped days adding up across separate cold spells are untested
+in game.)*
 
 ## Converting an engine
 
@@ -139,7 +143,7 @@ in game).
 | --- | --- | --- |
 | "Condition unknown" | never sampled | Look/smell or use a sampling kit |
 | Engine will not start on fresh-looking fuel | too much ethanol for a stock engine, or water | Sample; drain water; use gasoline or convert the engine |
-| Fermenter paused "too cold" | below ~8 °C | Move it indoors / warm room |
+| Fermenter paused "too cold" | a freezing day (outdoor mean below about 0 °C) | Wait for milder days; moving it does not help. After 3 days paused in all the batch spoils |
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
 | Machine paused "picked up" | it was carried | Place it on the ground |
 

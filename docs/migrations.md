@@ -7,7 +7,7 @@
 | Supply sidecar | 1 | item/object/part modData `tlg` | `v`, id, rev, deg, stab, mic, t, storage, sealed, cond, dirty, label, prov, q (+ `frac`, `cap` for pumps; `kind`, `profile` for generators) |
 | Process (machine) | 1 | machine item modData `tlgProc` | includes recipe snapshot `{ id, version, fp, params }` |
 | Conversion project | 1 | vehicle/generator modData | see `TLG/Domain/Conversions/Project.lua` |
-| World record | 1 | global ModData `TLG_World` | seed, epoch, policy, installedAt, transitionHours, nextId, calendar, climateLog, balanceHistory, createdAsNewGame |
+| World record | 1 | global ModData `TLG_World` | seed, epoch, policy, installedAt, transitionHours, nextId, calendar, climateLog, climateAcc (today's running climate sums, optional; D-020), balanceHistory, createdAsNewGame |
 | Recipe definitions | per recipe `version` + content fingerprint | registry | active batches keep their snapshot |
 | Consumer/adapter definitions | registry fingerprints | registry | `TLG.SCHEMA.adapter` = 1 |
 | Balance profile | `Balance.REVISION` = 1 | code + dated history | changes apply from the change time only |

@@ -21,6 +21,11 @@
   menus. A separate run let the game clock run the whole loop (136 game
   hours, the conversion work at the game's x40) and unloaded the machines'
   area for a game day: the fermenter caught up exactly on return.
+* Weather: machines and stored fuel now follow the day's real temperature.
+  The mod used to record the season curve, so cold snaps and heat waves
+  never reached them; in a freezing January a fermenter now stops and,
+  after three days stopped, spoils (checked in game). Where a machine
+  stands makes no difference to its temperature.
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

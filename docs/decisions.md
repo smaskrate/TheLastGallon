@@ -223,3 +223,23 @@ listed with their replacement.
 * Consequence: verified RT-SP 2026-10-31 (run 12) for the four machine
   recipes through the inventory craft menu; the sampling kit, filter and
   stabilizer are listed but were not crafted in game.
+
+## D-020 The recorded day temperature is the mean of the air, weather included
+* Decision: every game hour the authority records today's temperature and
+  humidity as the running mean of `ClimateManager.getTemperature()` and
+  `getHumidity()` (`World.recordClimate`, accumulator `climateAcc` in the
+  world record). Machines and fuel ageing read these day means through the
+  climate model as before.
+* Reason: the recorder used `getDayMeanTemperature()`, which is the season
+  curve (BC: `currentDay.season.getDayMeanTemperature`), so the day means
+  barely moved (0.5–0.6 °C for eleven January days, RT-SP run 15) and no
+  cold snap or heat wave ever reached a machine or a tank. The comment said
+  "today's mean temperature"; the code did not do that.
+* Consequences: fermenters, stills and stored fuel now feel the weather. A
+  fermenter stops on days averaging below 0 °C outdoors and spoils after 72
+  paused hours (RT-SP run 16: four freezing January days, spoiled 73.2 h
+  after loading). Where it stands makes no difference: machine temperature
+  comes from the outdoor day mean only (`thermal = "sheltered"`), so in a
+  long cold spell the player cannot keep a batch going. Early in a day the
+  mean rests on few readings. Days recorded before the change keep their
+  season values; no migration.
