@@ -177,3 +177,27 @@ listed with their replacement.
 * Consequences: deterministic per world seed and pump position (domain test:
   404 of 4000 grid sites contaminated); existing reservoir records keep their
   water; no schema change.
+
+## D-018 Conversion work is a timed action at the device
+* Decision: "Work on it" queues the timed action `ISTLGConversionWork`. The
+  character walks to the engine area or next to the generator, joins the
+  project (which forfeits any unreported gap) and reports every 15 minutes
+  of world time while staying in reach (4 tiles from a vehicle, 2.5 tiles
+  from a generator). Leaving stops the action with a final report. The menu
+  no longer offers "Report progress" or "Stop working". The authority passes
+  a 1 h worker timeout with every request
+  (`ConversionDevices.WORKER_TIMEOUT_HOURS`), so a report after a longer gap
+  credits at most 1 h and ends the assignment.
+* Reason: "Report progress" credited all the time since the previous report
+  (up to 12 h) as long as the player stood in reach at that moment, so a
+  player could start the work, leave and collect the hours later; the domain
+  assumed an hourly adapter report that nothing sent. Found reading the code
+  on 2026-10-31; the user asked to require the player to stay.
+* Consequences: the domain default timeout stays 12 h
+  (`Project.WORKER_TIMEOUT_HOURS`) for callers that pass none, because its
+  tests use multi-hour single reports; the in-game handlers always pass 1 h.
+  A modified client sending bare reports gains at most 1 h per visit and has
+  to be in reach when it reports. Verified RT-SP (2026-10-31, run 9, action
+  queued by the harness): a bare report after 3 h credited 1 h; leaving
+  reach stopped the action through `isValid()`; time away was not credited.
+  The menu's walk to the device is NOT RUN.

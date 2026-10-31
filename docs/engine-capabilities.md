@@ -323,6 +323,11 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   (`ISActivateGenerator`) and the car started (`ISStartVehicleEngine`) on it.
   The projects (generator object modData, Engine part modData) survived
   save and reload.
+* Work as a timed action (run 9, D-018): `ISTLGConversionWork` has no fixed
+  duration (`maxTime = -1`), reports every 15 minutes of world time and
+  ends itself with `forceComplete()` when the project is commissioned. When
+  the character was moved out of reach, the game polled `isValid()` and
+  called the action's `stop()`; nothing was credited for the time away.
 * Run 7 found an adapter defect the domain tests could not: the actor for
   `conversion.begin` was built from the device's existing project, so with
   no project yet no tool was counted and every first conversion failed with
@@ -381,7 +386,8 @@ Since run 3 a launch needs no input: the full run (both phases) takes about
 12 minutes. Results: run 3 phase A 41/5, run 4 phase A 42/1 and phase B 9/1,
 run 5 phase A 47/0 and phase B 9/2, run 6 (adds start gates, stall and TLG
 pours into a vehicle) phase A 63/0 and phase B 11/0, run 7 (adds the
-renewable loop) phase A 74/8 and phase B 12/2, run 8 phase A **82/0** and
+renewable loop) phase A 74/8 and phase B 12/2, run 8 phase A 82/0 and
+phase B 14/0, run 9 (conversion work as a timed action) phase A **83/0** and
 phase B **14/0**. Every failure was traced to the harness itself (placement,
 a nearly full target generator, a lookup that matched the neighbouring
 object) except two that found mod defects: run 4's ground-can result (the

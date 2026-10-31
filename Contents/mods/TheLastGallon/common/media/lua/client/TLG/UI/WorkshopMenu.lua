@@ -1,9 +1,10 @@
 -- World context menu: workshop conversions for a nearby generator or
--- vehicle. All steps are authority requests (TLG.Net); work credit comes
--- from world time on the authority, so "Report progress" can be used any
--- time and never credits more than really elapsed.
+-- vehicle. All steps are authority requests (TLG.Net). "Work on it" walks to
+-- the device and starts ISTLGConversionWork, which reports while the
+-- character stays there; time away from the device is never credited.
 require "TLG/Client/Net"
 require "TLG/Authority/Resolver"
+require "TLG/Actions/ISTLGConversionWork"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.WorkshopMenu = TLG.UI.WorkshopMenu or {}
@@ -68,7 +69,19 @@ local function nearbyVehicle(player)
     return best
 end
 
-local function addDeviceMenu(context, titleKey, deviceRef, kind, chassis)
+-- Walks to the engine area (vehicle) or next to the generator, then works.
+function Menu.work(player, deviceRef, device)
+    local action = ISTLGConversionWork:new(player, deviceRef, device, function(r) show(Menu.describe(r)) end)
+    if deviceRef.kind == "vehicle" then
+        local engine = device:getPartById("Engine")
+        if engine then ISTimedActionQueue.add(ISPathFindAction:pathToVehicleArea(player, device, engine:getArea())) end
+        ISTimedActionQueue.add(action)
+    elseif luautils.walkAdj(player, device:getSquare()) then
+        ISTimedActionQueue.add(action)
+    end
+end
+
+local function addDeviceMenu(context, player, titleKey, deviceRef, device, kind, chassis)
     local root = context:addOption(getText(titleKey), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
@@ -83,11 +96,8 @@ local function addDeviceMenu(context, titleKey, deviceRef, kind, chassis)
                 function() req("conversion.begin", { device = deviceRef, conversion = row.conversion }) end)
         end
     end
-    sub:addOption(getText("ContextMenu_TLG_ConvJoin"), nil, function() req("conversion.join", { device = deviceRef }) end)
-    sub:addOption(getText("ContextMenu_TLG_ConvWork"), nil, function() req("conversion.work", { device = deviceRef }) end)
     sub:addOption(getText("ContextMenu_TLG_ConvDeliver"), nil, function() req("conversion.deliver", { device = deviceRef }) end)
-    sub:addOption(getText("ContextMenu_TLG_ConvLeave"), nil,
-        function() req("conversion.work", { device = deviceRef, leave = true }) end)
+    sub:addOption(getText("ContextMenu_TLG_ConvJoin"), nil, function() Menu.work(player, deviceRef, device) end)
     sub:addOption(getText("ContextMenu_TLG_ConvCancel"), nil, function() req("conversion.cancel", { device = deviceRef }) end)
     sub:addOption(getText("ContextMenu_TLG_ConvRemove"), nil, function() req("conversion.remove", { device = deviceRef }) end)
 end
@@ -98,13 +108,13 @@ function Menu.fill(playerNum, context, worldobjects, test)
     if player == nil or player:getVehicle() ~= nil then return end
     local gen = nearbyGenerator(player)
     if gen then
-        addDeviceMenu(context, "ContextMenu_TLG_ConvGenerator", TLG.Authority.Resolver.refForObject(gen, "generator"),
-            "generator", gen:getGeneratorItemType())
+        addDeviceMenu(context, player, "ContextMenu_TLG_ConvGenerator",
+            TLG.Authority.Resolver.refForObject(gen, "generator"), gen, "generator", gen:getGeneratorItemType())
     end
     local v = nearbyVehicle(player)
     if v then
-        addDeviceMenu(context, "ContextMenu_TLG_ConvVehicle", { kind = "vehicle", id = v:getId() }, "vehicle",
-            v:getScriptName())
+        addDeviceMenu(context, player, "ContextMenu_TLG_ConvVehicle", { kind = "vehicle", id = v:getId() }, v,
+            "vehicle", v:getScriptName())
     end
 end
 

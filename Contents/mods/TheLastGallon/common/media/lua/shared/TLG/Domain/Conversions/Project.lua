@@ -37,7 +37,7 @@
 --
 -- Work: join assigns a worker (at most maxWorkers; joining again re-anchors).
 -- A work report credits the worker's time since their previous report (at most
--- WORKER_TIMEOUT_HOURS, after which the assignment ends) to the current stage
+-- the worker timeout, after which the assignment ends) to the current stage
 -- and spills into later stages while they are not blocked. A blocked report
 -- credits nothing further, records the concrete reason in project.blocked and
 -- releases the worker, so idle time is never credited and nobody is counted
@@ -86,11 +86,12 @@ Project.SKILLS = { Mechanics = true, Electricity = true, MetalWelding = true }
 Project.DRAIN_STAGES = { prepare = true, install = true }
 -- Litres a drained tank may still report (unsiphonable residue, float noise).
 Project.DRAIN_TOLERANCE = 0.05
--- Longest gap between two work reports of a live worker. Adapters are meant
--- to report at least once per in-game hour (none does yet: reports come only
--- from the player's "Report progress", docs/release-checklist.md); a later
--- report credits at most this much and ends the assignment
--- (crash/disconnect without leave).
+-- Default longest gap between two work reports of a live worker; a later
+-- report credits at most this much and ends the assignment (crash/disconnect
+-- without leave). A caller that reports often passes a tighter
+-- req.workerTimeoutHours: the in-game adapter reports every 15 minutes while
+-- the worker stays at the device and passes 1 h, so time away is not credited
+-- (ConversionDevices.WORKER_TIMEOUT_HOURS).
 Project.WORKER_TIMEOUT_HOURS = 12
 Project.DEFAULT_MAX_WORKERS = 2
 Project.MAX_WORKERS = 8
@@ -381,6 +382,9 @@ local function checkRequest(project, req)
     if type(req) ~= "table" then return fail("malformed_request") end
     if not Num.isFinite(req.now) or req.now < 0 then return fail("invalid_time") end
     if req.expectedRev ~= nil and not Num.isFinite(req.expectedRev) then return fail("malformed_request") end
+    if req.workerTimeoutHours ~= nil and not (Num.isFinite(req.workerTimeoutHours) and req.workerTimeoutHours > 0) then
+        return fail("malformed_request")
+    end
     if not validProject(project) then return fail("malformed_project") end
     if req.expectedRev ~= nil and req.expectedRev ~= project.rev then
         return fail("stale", { rev = project.rev, state = project.state })
@@ -448,6 +452,10 @@ end
 
 local function maxWorkers(p)
     return p.snap.maxWorkers or Project.DEFAULT_MAX_WORKERS
+end
+
+local function workerTimeout(req)
+    return req.workerTimeoutHours or Project.WORKER_TIMEOUT_HOURS
 end
 
 -- Modules still owed to a stage: { item = count }.
@@ -635,7 +643,7 @@ function Project.join(project, actor, device, req)
     local out = Tables.deepCopy(project)
     local evicted = {}
     for _, id in ipairs(Tables.sortedKeys(out.workers)) do
-        if id ~= actor.id and now - out.workers[id].t > Project.WORKER_TIMEOUT_HOURS then
+        if id ~= actor.id and now - out.workers[id].t > workerTimeout(req) then
             out.workers[id] = nil
             evicted[#evicted + 1] = id
         end
@@ -678,8 +686,8 @@ function Project.work(project, actor, device, req)
     end
     local out = Tables.deepCopy(project)
     local span, expired = elapsed, false
-    if span > Project.WORKER_TIMEOUT_HOURS then
-        span, expired = Project.WORKER_TIMEOUT_HOURS, true
+    if span > workerTimeout(req) then
+        span, expired = workerTimeout(req), true
     end
     local cursor, credited, block, events = w.t, 0, nil, {}
     local guard = 0

@@ -281,3 +281,33 @@ Same time fixture as launch 7; commands sent directly, not through the menus.
 Not run: the machine and workshop menus, crafting the machines, the pot
 still, machines and conversions in real elapsed game time, driving on
 ethanol, cancelling or removing a conversion, multiplayer.
+
+## 2026-10-31 — RT-SP client harness, launch 9 (conversion work as a timed action, D-018)
+
+Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run9.txt`. Phase A
+**83 PASS / 0 FAIL**, phase B **14 PASS / 0 FAIL**; launcher exit code 0; no
+TLG error or TLG stack frame in the console.
+
+The harness queues `ISTLGConversionWork` itself and moves the mod clock
+0.05 h per tick while it runs (same fixture as launches 7–8).
+
+* A bare `conversion.work` three hours after the last report, without the
+  action, credited exactly 1 h and ended the assignment (`expired`,
+  `released`).
+* Generator: the action re-joined, reported 26 times and ended by itself at
+  `Commissioned`; 7.5 h credited in total (1 h from the bare report).
+* Car, first session: after 8 reports (2.003 h credited) the character was
+  moved 12 tiles away. The game polled `isValid()` and called the action's
+  `stop()` (no refused report, no dialog); the queue was idle. Three hours
+  passed away from the car: still 2.003 h.
+* Car, second session: re-joining credited nothing for the time away
+  (2.003 h at re-join); the action ended by itself at `Commissioned` with
+  13 h credited in total.
+* Production, pours, the generator activation, the car start (first
+  attempt) and phase B as in launch 8.
+* Suite: `modules=14 cases=142 passed=142 failed=0` (new domain case for the
+  caller's worker timeout); compile check `compiled=92 errors=0`;
+  translations 213 EN keys, IT parity.
+
+Not run: the menu entry itself (walking to the engine area or next to the
+generator), the progress bar's rendering, two workers at once, multiplayer.

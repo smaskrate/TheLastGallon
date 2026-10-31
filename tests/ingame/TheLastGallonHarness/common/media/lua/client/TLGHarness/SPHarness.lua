@@ -1215,7 +1215,29 @@ add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
     return true
 end })
 
-add({ name = "loop_convert_generator", timeout = 600, fn = function(ctx, ticks)
+-- Conversion work runs as the timed action ISTLGConversionWork. The harness
+-- moves the mod clock CLOCK_PER_TICK hours per tick while it runs, so the
+-- action's quarter-hour reports come every few ticks.
+local CLOCK_PER_TICK = 0.05
+
+local function projectOf(device, kind)
+    local md = kind == "vehicle" and device:getPartById("Engine"):getModData() or device:getModData()
+    return md.tlgConv
+end
+
+local function sumOf(t)
+    local s = 0
+    for _, v in pairs(t or {}) do s = s + v end
+    return s
+end
+
+local function queueWork(ctx, ref, device)
+    ctx.endReply = nil
+    ctx.action = ISTLGConversionWork:new(player(), ref, device, function(r) ctx.endReply = r end)
+    ISTimedActionQueue.add(ctx.action)
+end
+
+add({ name = "loop_convert_generator", timeout = 3000, fn = function(ctx, ticks)
     local g = LOOP.gen
     if not g then R:line("SKIP loop_convert_generator"); return true end
     if not ctx.t0 then
@@ -1225,42 +1247,103 @@ add({ name = "loop_convert_generator", timeout = 600, fn = function(ctx, ticks)
     end
     if ticks - ctx.t0 < 20 then return nil end
     local ref = TLG.Authority.Resolver.refForObject(g, "generator")
-    local b = ask("LOOP.gen_begin", "conversion.begin", { device = ref, conversion = "flex_generator" })
-    local d = ask("LOOP.gen_deliver", "conversion.deliver", { device = ref })
-    H.clockOffset = H.clockOffset + 8
-    local w = ask("LOOP.gen_work", "conversion.work", { device = ref })
-    local prof = TLG.Integration.Generators.profile(g)
+    if not ctx.action then
+        ctx.b = ask("LOOP.gen_begin", "conversion.begin", { device = ref, conversion = "flex_generator" })
+        ctx.d = ask("LOOP.gen_deliver", "conversion.deliver", { device = ref })
+        -- A bare report three hours later, without the work action: at most
+        -- the 1 h worker timeout is credited and the assignment ends.
+        H.clockOffset = H.clockOffset + 3
+        local late = ask("LOOP.gen_late_report", "conversion.work", { device = ref })
+        R:check("LOOP.late_report_credits_at_most_the_timeout", function()
+            return late.ok == true and late.expired == true and late.released == true
+                and math.abs((late.credited or -1) - 1) < 1e-9,
+                string.format("credited=%s expired=%s released=%s", tostring(late.credited), tostring(late.expired),
+                    tostring(late.released))
+        end)
+        queueWork(ctx, ref, g)
+        return nil
+    end
+    H.clockOffset = H.clockOffset + CLOCK_PER_TICK
+    if not ctx.endReply then return nil end
+    local p, prof = projectOf(g, "generator"), TLG.Integration.Generators.profile(g)
     R:check("LOOP.flex_generator_commissioned", function()
-        return w.state == "Commissioned" and prof == "generator_si_flex",
-            string.format("begin=%s deliver=%s consumed=%s work=%s state=%s profile=%s", tostring(b.ok), tostring(d.ok),
-                brief(d.consumed), tostring(w.ok), tostring(w.state), tostring(prof))
+        return ctx.endReply.state == "Commissioned" and prof == "generator_si_flex" and math.abs(sumOf(p.credit) - 7.5) < 1e-6,
+            string.format("begin=%s deliver=%s consumed=%s reports=%d end=%s credit=%.4f profile=%s", tostring(ctx.b.ok),
+                tostring(ctx.d.ok), brief(ctx.d.consumed), ctx.action.reports, tostring(ctx.endReply.state),
+                sumOf(p.credit), tostring(prof))
     end)
     return true
 end })
 
-add({ name = "loop_convert_car", timeout = 600, fn = function(ctx, ticks)
+-- The car takes two sessions: after two credited hours the character leaves
+-- (teleported 12 tiles away), three hours pass, and work resumes.
+add({ name = "loop_convert_car", timeout = 4000, fn = function(ctx, ticks)
     local v = LOOP.car
     if not v then R:line("SKIP loop_convert_car"); return true end
+    local near = { x = math.floor(v:getX()) + 2, y = math.floor(v:getY()) }
     if not ctx.t0 then
-        player():teleportTo(math.floor(v:getX()) + 2, math.floor(v:getY()), 0)
+        player():teleportTo(near.x, near.y, 0)
         ctx.t0 = ticks
         return nil
     end
     if ticks - ctx.t0 < 20 then return nil end
     local ref = { kind = "vehicle", id = v:getId() }
-    local b = ask("LOOP.car_begin", "conversion.begin", { device = ref, conversion = "flex_car_normal" })
-    local d = ask("LOOP.car_deliver", "conversion.deliver", { device = ref })
-    -- 13 h of work; one report credits at most 12 h (WORKER_TIMEOUT_HOURS).
-    H.clockOffset = H.clockOffset + 8
-    local w1 = ask("LOOP.car_work_1", "conversion.work", { device = ref })
-    H.clockOffset = H.clockOffset + 6
-    local w2 = ask("LOOP.car_work_2", "conversion.work", { device = ref })
-    local prof = TLG.Integration.Vehicles.profile(v)
+    if not ctx.action then
+        ctx.b = ask("LOOP.car_begin", "conversion.begin", { device = ref, conversion = "flex_car_normal" })
+        ctx.d = ask("LOOP.car_deliver", "conversion.deliver", { device = ref })
+        queueWork(ctx, ref, v)
+        return nil
+    end
+    if not ctx.leftAt then
+        H.clockOffset = H.clockOffset + CLOCK_PER_TICK
+        local p = projectOf(v, "vehicle")
+        if ctx.endReply or ticks - ctx.t0 > 1500 then
+            R:check("LOOP.car_first_session", function()
+                return false, string.format("ended before two hours: end=%s reason=%s",
+                    tostring(ctx.endReply and ctx.endReply.state), tostring(ctx.endReply and ctx.endReply.reason))
+            end)
+            return true
+        end
+        if p and sumOf(p.hours) >= 2 then
+            ctx.leftAt, ctx.hoursAtLeave, ctx.firstReports = ticks, sumOf(p.hours), ctx.action.reports
+            player():teleportTo(near.x - 12, near.y, 0)
+        end
+        return nil
+    end
+    if not ctx.back then
+        -- The clock stands still while the action notices; then three hours
+        -- pass away from the car and the character comes back.
+        if ticks - ctx.leftAt < 60 then return nil end
+        ctx.away = { stopped = ctx.action.stopped == true, ended = ctx.action.ended == true,
+            reason = ctx.endReply and ctx.endReply.reason, idle = TLGH.Steps.actionsIdle(player()) }
+        H.clockOffset = H.clockOffset + 3
+        player():teleportTo(near.x, near.y, 0)
+        ctx.back = ticks
+        return nil
+    end
+    if not ctx.second then
+        if ticks - ctx.back < 20 then return nil end
+        local hoursBack = sumOf(projectOf(v, "vehicle").hours)
+        R:check("LOOP.leaving_stops_the_work", function()
+            return ctx.away.idle and (ctx.away.stopped or ctx.away.ended) and math.abs(hoursBack - ctx.hoursAtLeave) < 1e-9,
+                string.format("stopped=%s ended=%s reason=%s idle=%s hours at leave=%.4f after 3 h away=%.4f reports=%d",
+                    tostring(ctx.away.stopped), tostring(ctx.away.ended), tostring(ctx.away.reason), tostring(ctx.away.idle),
+                    ctx.hoursAtLeave, hoursBack, ctx.firstReports)
+        end)
+        queueWork(ctx, ref, v)
+        ctx.second = true
+        return nil
+    end
+    if ctx.action.joined and not ctx.hoursAtRejoin then ctx.hoursAtRejoin = sumOf(projectOf(v, "vehicle").hours) end
+    H.clockOffset = H.clockOffset + CLOCK_PER_TICK
+    if not ctx.endReply then return nil end
+    local p, prof = projectOf(v, "vehicle"), TLG.Integration.Vehicles.profile(v)
     R:check("LOOP.flex_car_commissioned", function()
-        return w2.state == "Commissioned" and prof == "engine_si_flex",
-            string.format("begin=%s deliver=%s consumed=%s work1=%s/%s work2=%s/%s profile=%s", tostring(b.ok),
-                tostring(d.ok), brief(d.consumed), tostring(w1.ok), tostring(w1.state), tostring(w2.ok), tostring(w2.state),
-                tostring(prof))
+        return ctx.endReply.state == "Commissioned" and prof == "engine_si_flex" and math.abs(sumOf(p.credit) - 13) < 1e-6
+            and ctx.hoursAtRejoin ~= nil and math.abs(ctx.hoursAtRejoin - ctx.hoursAtLeave) < 1e-9,
+            string.format("begin=%s deliver=%s consumed=%s end=%s credit=%.4f hours at rejoin=%s profile=%s", tostring(ctx.b.ok),
+                tostring(ctx.d.ok), brief(ctx.d.consumed), tostring(ctx.endReply.state), sumOf(p.credit),
+                tostring(ctx.hoursAtRejoin), tostring(prof))
     end)
     return true
 end })

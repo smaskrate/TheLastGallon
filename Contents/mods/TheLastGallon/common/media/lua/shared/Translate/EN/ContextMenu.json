@@ -29,9 +29,7 @@
     "ContextMenu_TLG_ConvStatus": "Project status",
     "ContextMenu_TLG_ConvBegin": "Start: %1",
     "ContextMenu_TLG_ConvJoin": "Work on it",
-    "ContextMenu_TLG_ConvWork": "Report progress",
     "ContextMenu_TLG_ConvDeliver": "Hand over parts",
-    "ContextMenu_TLG_ConvLeave": "Stop working",
     "ContextMenu_TLG_ConvCancel": "Cancel the project",
     "ContextMenu_TLG_ConvRemove": "Remove the conversion",
     "ContextMenu_TLG_DrainGenerator": "Drain the generator into this can"

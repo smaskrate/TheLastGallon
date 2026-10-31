@@ -111,8 +111,11 @@ their changes are reconciled conservatively.
 Chassis/item ids were verified in the 42.21 scripts (file:line in
 `TLG/Content/Conversions.lua`). "Verified RT-SP" covers begin, parts
 delivery, work to `Commissioned` (time from a mod-clock fixture), the flex
-profile, running on ethanol and reload, with commands sent directly: the
-workshop menu, cancel, remove and engine replacement are NOT RUN. No
+profile, running on ethanol and reload. Since run 9 the work runs through
+the timed action `ISTLGConversionWork` (D-018), queued by the harness:
+it stops when the worker leaves and time away is not credited. The menu
+entries and their walk to the device, cancel, remove and engine
+replacement are NOT RUN. No
 electric or wood-gas vehicle conversion is shipped yet (domain data exists
 for the vehicle gasifier module only).
 

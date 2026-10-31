@@ -88,12 +88,13 @@ Right-click the generator or car → **Workshop: convert this generator** (or
 1. **Start: …** – needs the skills and recipe below and a screwdriver. The
    engine must be off.
 2. **Hand over parts** – takes the listed parts from your inventory.
-3. Stay with it and choose **Report progress** now and then: each report
-   counts the time since you started or last reported, at most 12 hours.
-   Every stage needs its tools (screwdriver, wrench, pliers), and the fuel
-   tank must be empty while you drain the fuel system and install the parts.
-   **Stop working** reports and leaves; **Work on it** joins again (a helper
-   can join too).
+3. **Work on it** – your character walks to the engine (or the generator)
+   and works there until the conversion is finished or something is
+   missing; a message then says which. Walking away stops the work and time
+   away is never counted: choose **Work on it** again to carry on. Every
+   stage needs its tools (screwdriver, wrench, pliers), and the fuel tank
+   must be empty while you drain the fuel system and install the parts. A
+   helper can work alongside you.
 4. When the status reads **Converted and commissioned**, the engine is flex.
 
 | | Generator | Standard car |
@@ -106,9 +107,10 @@ Right-click the generator or car → **Workshop: convert this generator** (or
 Cancelling returns three quarters of the parts handed over; removing a
 finished conversion returns half. Small cars, pickup trucks, step vans and
 the other generator models have their own conversions. *(A standard car and
-the basic generator were converted in game and ran on ethanol; the workshop
-menu itself, cancelling, removing and the other models are untested in
-game.)*
+the basic generator were converted in game, the work stopped when the
+character walked away, and both then ran on ethanol. The menu entries
+themselves, walking to the device, cancelling, removing and the other
+models are untested in game.)*
 
 ## Stations
 

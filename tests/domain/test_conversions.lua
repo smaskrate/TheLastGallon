@@ -772,6 +772,31 @@ T.case("conversion: late reports credit at most the worker timeout; expired assi
     noProblems(j.project)
 end)
 
+T.case("conversion: a caller's tighter worker timeout limits credit for time away from the device", function()
+    local dev = gen()
+    local p, a = prepared("flex_generator", dev, 0)
+    -- reporting every quarter hour while present: everything is credited
+    for i = 1, 4 do p = must(P.work(p, a, dev, { now = i * 0.25, workerTimeoutHours = 1 })) end
+    T.near(p.credit.p1, 1, 1e-12)
+    -- three hours away, then a report: at most the timeout, and the worker is out
+    local r = P.work(p, a, dev, { now = 4, workerTimeoutHours = 1 })
+    p = must(r)
+    T.ok(r.expired and r.released, "late report ends the assignment")
+    T.near(r.credited, 1, 1e-12)
+    T.eq(P.work(p, a, dev, { now = 4.25, workerTimeoutHours = 1 }).reason, "not_assigned")
+    -- re-joining forfeits the gap; stale helpers are evicted after the same timeout
+    local b = actor("b")
+    p = must(P.join(p, b, dev, { now = 4, workerTimeoutHours = 1 }))
+    p = must(P.join(p, a, dev, { now = 5.5, workerTimeoutHours = 1 }))
+    T.eq(p.workers.b, nil, "b reported last at 4: evicted at 5.5")
+    p = must(P.work(p, a, dev, { now = 5.75, workerTimeoutHours = 1 }))
+    T.near(p.credit.p1, 2.25, 1e-12, "the 1.5 h before re-joining are not credited")
+    for _, bad in ipairs({ 0, -1, 0 / 0 }) do
+        T.eq(P.work(p, a, dev, { now = 6, workerTimeoutHours = bad }).reason, "malformed_request")
+    end
+    noProblems(p)
+end)
+
 T.case("conversion: content updates never reinterpret an active project", function()
     local dev = gen()
     local p, a = prepared("flex_generator", dev, 0)

@@ -1,8 +1,8 @@
 -- Adapter: vehicles and generators as conversion devices (ConversionService).
--- Runtime status: verified RT-SP 2026-10-31 (run 8) for flex_generator on a
--- Base.Generator and flex_car_normal on a Base.CarNormal: begin, deliver,
--- work to Commissioned, flex profile, project after save and reload.
--- Commands were sent directly; the workshop menu, cancel, remove, engine
+-- Runtime status: verified RT-SP 2026-10-31 (runs 8-9) for flex_generator on
+-- a Base.Generator and flex_car_normal on a Base.CarNormal: begin, deliver,
+-- work to Commissioned through ISTLGConversionWork (run 9), flex profile,
+-- project after save and reload. The workshop menu, cancel, remove, engine
 -- replacement, other chassis and MP are NOT RUN.
 --
 --   project store   vehicle Engine part modData "tlgConv"; generator object
@@ -23,6 +23,12 @@ local CD = TLG.Integration.ConversionDevices
 local CS, World, Tables = TLG.Domain.ConversionService, TLG.World, TLG.Tables
 
 CD.KEY = "tlgConv"
+-- Work is the timed action ISTLGConversionWork: it reports every
+-- REPORT_EVERY_HOURS of world time while the worker stays at the device, and
+-- the authority credits at most WORKER_TIMEOUT_HOURS per report, so time away
+-- from the device is not credited.
+CD.REPORT_EVERY_HOURS = 0.25
+CD.WORKER_TIMEOUT_HOURS = 1
 
 local function stamp(md, field, prefix)
     if md[field] == nil and World.isAuthority() then md[field] = World.newId(prefix) end
