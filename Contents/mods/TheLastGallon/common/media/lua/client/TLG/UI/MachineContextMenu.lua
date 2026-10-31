@@ -48,10 +48,26 @@ local function firstItem(entry)
     return entry.items and entry.items[1]
 end
 
-local function fuelCanWithRoom(player)
+local function fuelCanWithRoom(player, except)
     local list = player:getInventory():getAllEvalRecurse(function(it)
         local fc = it:getFluidContainer()
-        return fc ~= nil and fc:getFreeCapacity() > 0.1 and TLG.ContainerProfiles.items[it:getFullType()] ~= nil
+        return it ~= except and fc ~= nil and fc:getFreeCapacity() > 0.1 and TLG.ContainerProfiles.items[it:getFullType()] ~= nil
+    end)
+    if list:size() > 0 then return list:get(0) end
+    return nil
+end
+
+-- A can holding ethanol and water only (still output to dry).
+local function hydrousEthanolCan(player)
+    local list = player:getInventory():getAllEvalRecurse(function(it)
+        local fc = it:getFluidContainer()
+        if fc == nil or fc:isEmpty() then return false end
+        local comp, foreign = TLG.Integration.Native.readComposition(fc)
+        if foreign > 1e-6 or (comp.ethanol or 0) <= 0 then return false end
+        for id in pairs(comp) do
+            if id ~= "ethanol" and id ~= "water" then return false end
+        end
+        return true
     end)
     if list:size() > 0 then return list:get(0) end
     return nil
@@ -83,6 +99,17 @@ function Menu.fill(playerNum, context, items)
         sub:addOption(getText("ContextMenu_TLG_LoadWash"), nil, function() req("machine.loadWash", { target = ref }) end)
         sub:addOption(getText("ContextMenu_TLG_AddFirewood"), nil, function() req("machine.addFuel", { target = ref }) end)
         local can = fuelCanWithRoom(player)
+        local o = sub:addOption(getText("ContextMenu_TLG_CollectEthanol"), nil, function()
+            req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
+        end)
+        if can == nil then o.notAvailable = true end
+    elseif kind == "dryer" then
+        local src = hydrousEthanolCan(player)
+        local d = sub:addOption(getText("ContextMenu_TLG_LoadDry"), nil, function()
+            req("machine.loadDry", { target = ref, source = { kind = "item", id = src:getID() } })
+        end)
+        if src == nil then d.notAvailable = true end
+        local can = fuelCanWithRoom(player, src)
         local o = sub:addOption(getText("ContextMenu_TLG_CollectEthanol"), nil, function()
             req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
         end)

@@ -22,7 +22,8 @@
   a fuel can left on the ground keeps its record after reload (its fluid can
   sit on the ground object).
 * Ethanol chain: fermentation vessel, pot/reflux still, drying column, yeast
-  starter; EN/IT strings; sandbox options.
+  starter; EN/IT strings; sandbox options. The drying column can now be used
+  ("Dry ethanol with quicklime"); before, it could be built but had no action.
 * Migrations with preserved future schemas.
 
 Tested only on Project Zomboid 42.21.0 (4a0e9546ec).

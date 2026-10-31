@@ -850,12 +850,14 @@ end))
 
 add(generatorGateStep("G04.gate_e100", function() return H.genC end, true))
 
--- TLG pours into vehicle 2 (8 L E25 from the G03 pour). The transfer checks
--- that the player stands in the fuel-cap area, so the step places the
--- player first (see the G06 note on teleportTo).
-local function vehiclePourStep(name, fills, experimental, expectOk)
+-- TLG pours into a vehicle (default vehicle 2, 8 L E25 from the G03 pour)
+-- from a new can with `fills`, or from the can `getCan()` returns. The
+-- transfer checks that the player stands in the fuel-cap area, so the step
+-- places the player first (see the G06 note on teleportTo).
+local function vehiclePourStep(name, fills, experimental, expectOk, getVehicle, getCan)
     return { name = name, timeout = 4000, fn = function(ctx, ticks)
-        local v, part = H.vehicle2, H.tank2
+        local v = getVehicle and getVehicle() or H.vehicle2
+        local part = v and v:getPartById("GasTank")
         if not (v and part) then R:line("SKIP %s", name); return true end
         if not ctx.placedAt then
             local c = v:getAreaCenter(part:getArea())
@@ -867,7 +869,14 @@ local function vehiclePourStep(name, fills, experimental, expectOk)
         if ticks - ctx.placedAt == 5 then player():setPosition(ctx.target.x, ctx.target.y, 0) end
         if ticks - ctx.placedAt < 20 then return nil end
         if not ctx.queued then
-            local can, fc = giveCan("Base.PetrolCan", fills)
+            local can, fc
+            if getCan then
+                can = getCan()
+                if can == nil then R:line("SKIP %s: no can", name); return true end
+                fc = can:getFluidContainer()
+            else
+                can, fc = giveCan("Base.PetrolCan", fills)
+            end
             player():setPrimaryHandItem(can)
             ctx.fc = fc
             R:line("OBS  %s inArea=%s", name, tostring(v:isInArea(part:getArea(), player())))
@@ -983,6 +992,272 @@ end })
 
 add(vehicleGateStep("G03.gate_station_fuel", function() return H.vehicle end, false))
 
+------------------------------------------------------------------------------
+-- Renewable loop: ethanol made in the machines runs flex-converted engines.
+-- Time fixture: fermentation takes days and conversion work hours, so the
+-- harness advances the MOD clock only (TLG.World.now + offset; the game clock
+-- does not move). Catch-up and work crediting are domain-tested; this checks
+-- the commands, inventory handling, adapters and the effect on engines. The
+-- offset only grows and stays until the end of phase A, so this harness
+-- world's records end up ahead of its own clock: never reuse its save.
+------------------------------------------------------------------------------
+local LOOP = { x = 10641, y = 10632 }
+
+local function installClockOffset()
+    if H.clockOffset then return end
+    H.clockOffset = 0
+    local base = TLG.World.now
+    TLG.World.now = function() return base() + H.clockOffset end
+end
+
+local function brief(v, depth)
+    depth = depth or 0
+    if type(v) ~= "table" then return tostring(v) end
+    if depth > 2 then return "{...}" end
+    local parts = {}
+    for _, k in ipairs(TLG.Tables.sortedKeys(v)) do parts[#parts + 1] = tostring(k) .. "=" .. brief(v[k], depth + 1) end
+    return "{" .. table.concat(parts, ",") .. "}"
+end
+
+-- Authoritative request (synchronous in single player), logged in full.
+local function ask(label, command, args)
+    local reply
+    TLG.Net.request(command, args, function(r) reply = r end)
+    R:line("OBS  %s %s -> ok=%s reason=%s state=%s pause=%s stage=%s blocked=%s missing=%s outputs=%s", label, command,
+        tostring(reply and reply.ok), tostring(reply and reply.reason), tostring(reply and reply.state),
+        tostring(reply and reply.pause), tostring(reply and reply.stage), brief(reply and reply.blocked),
+        brief(reply and reply.missing), brief(reply and reply.outputs))
+    return reply or {}
+end
+
+local function countType(t) return player():getInventory():getCountTypeRecurse(t) end
+
+-- Advances the mod clock in `step`-hour jumps until the machine has output
+-- (or faults); every status is logged, including pause reasons.
+local function runUntilReady(label, ref, step, maxHours)
+    local s, waited = {}, 0
+    while waited < maxHours do
+        H.clockOffset = H.clockOffset + step
+        waited = waited + step
+        s = ask(label, "machine.status", { target = ref })
+        if not s.ok or s.state == "OutputReady" or s.state == "Faulted" then break end
+    end
+    return s, waited
+end
+
+add({ name = "loop_setup", timeout = 600, fn = function(ctx, ticks)
+    if not ctx.done then
+        installClockOffset()
+        local p = player()
+        p:setPerkLevelDebug(Perks.Mechanics, 4)
+        p:setPerkLevelDebug(Perks.Electricity, 2)
+        p:getKnownRecipes():add("Generator")
+        p:getKnownRecipes():add("Basic Mechanics")
+        local inv = p:getInventory()
+        local function give(t, n) for _ = 1, n do inv:AddItem(t) end end
+        give("Base.Sugar", 6); give("Base.Yeast", 1); give("Base.Log", 2); give("Base.Quicklime", 2)
+        give("Base.Screwdriver", 1); give("Base.Wrench", 1); give("Base.Pliers", 1)
+        give("Base.RubberHose", 3); give("Base.Screws", 10); give("Base.ElectricWire", 3); give("Base.EngineParts", 2)
+        for _ = 1, 3 do
+            local fc = inv:AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, 10)
+        end
+        LOOP.items = {}
+        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+            local it = instanceItem(t)
+            sq(LOOP.x + i - 1, LOOP.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            LOOP.items[i] = it
+        end
+        LOOP.fermenter, LOOP.still, LOOP.dryer = LOOP.items[1], LOOP.items[2], LOOP.items[3]
+        LOOP.gen = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(LOOP.x + 5, LOOP.y, 0))
+        if LOOP.gen then
+            LOOP.gen:setFuel(0)
+            LOOP.gen:getModData().tlg = nil
+        end
+        local base = H.pumps[1] or { x = START.x, y = START.y }
+        LOOP.car = addVehicleDebug(H.vehicleScript or "Base.CarNormal", IsoDirections.N, nil, sq(base.x + 13, base.y + 3, 0))
+        ctx.done = true
+        return nil
+    end
+    if ticks < 60 then return nil end
+    if LOOP.car then
+        local tank = LOOP.car:getPartById("GasTank")
+        tank:setContainerContentAmount(0)
+        tank:getModData().tlg = nil
+        LOOP.car:transmitPartModData(tank)
+    end
+    R:line("OBS  LOOP.setup placed=%s/%s/%s generator=%s car=%s mechanics=%d electricity=%d cooking=%d buckets=%d",
+        tostring(LOOP.fermenter:getWorldItem() ~= nil), tostring(LOOP.still:getWorldItem() ~= nil),
+        tostring(LOOP.dryer:getWorldItem() ~= nil), tostring(LOOP.gen ~= nil), tostring(LOOP.car and LOOP.car:getId()),
+        player():getPerkLevel(Perks.Mechanics), player():getPerkLevel(Perks.Electricity), player():getPerkLevel(Perks.Cooking),
+        countType("Base.BucketEmpty"))
+    return true
+end })
+
+add({ name = "loop_production", timeout = 600, fn = function(ctx, ticks)
+    if not LOOP.fermenter then return true end
+    if not ctx.t0 then
+        player():teleportTo(LOOP.x + 1, LOOP.y + 1, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 20 then return nil end
+    local M = TLG.Integration.Machines
+    local fRef, sRef, dRef = M.refFor(LOOP.fermenter), M.refFor(LOOP.still), M.refFor(LOOP.dryer)
+
+    -- Fermentation: 6 kg of sugar, 30 L of water and yeast.
+    local sugar0, yeast0 = countType("Base.Sugar"), countType("Base.Yeast")
+    local r = ask("LOOP.ferment", "machine.loadFerment", { target = fRef, sugarKg = 6, waterL = 30 })
+    R:check("LOOP.ferment_loaded", function()
+        return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6
+            and countType("Base.Sugar") == sugar0 - 6 and countType("Base.Yeast") == yeast0 - 1,
+            string.format("sugar=%s water=%s sugarItems %d->%d yeast %d->%d", tostring(r.sugarKg), tostring(r.waterL),
+                sugar0, countType("Base.Sugar"), yeast0, countType("Base.Yeast"))
+    end)
+    local f, fh = runUntilReady("LOOP.fermenting", fRef, 24, 400)
+    local fEth = (f.outputs or {}).ethanol or 0
+    R:check("LOOP.ferment_completed", function()
+        return f.state == "OutputReady" and fEth >= 3.2 and fEth <= 3.7,
+            string.format("state=%s after %d h of mod time outputs=%s", tostring(f.state), fh, brief(f.outputs))
+    end)
+
+    -- Reflux still: firewood, wash from the fermenter (returns a yeast starter).
+    local logs0 = countType("Base.Log")
+    local fuel = ask("LOOP.firebox", "machine.addFuel", { target = sRef, kg = 18 })
+    local wash = ask("LOOP.load_wash", "machine.loadWash", { target = sRef })
+    R:check("LOOP.wash_loaded_yeast_starter_returned", function()
+        return fuel.ok == true and wash.ok == true and countType("TLG.YeastStarter") >= 1,
+            string.format("firebox ok=%s kg=%s logs %d->%d wash ok=%s L=%s starter=%d", tostring(fuel.ok),
+                tostring(fuel.addedKg), logs0, countType("Base.Log"), tostring(wash.ok), tostring(wash.washL),
+                countType("TLG.YeastStarter"))
+    end)
+    local s, sh = runUntilReady("LOOP.distilling", sRef, 2, 48)
+    local sEth, sWater = (s.outputs or {}).ethanol or 0, (s.outputs or {}).water or 0
+    R:check("LOOP.distill_completed", function()
+        return s.state == "OutputReady" and sEth > 2.5 and sWater / math.max(1e-9, sEth + sWater) < 0.07,
+            string.format("state=%s after %d h ethanol=%.4f water=%.4f", tostring(s.state), sh, sEth, sWater)
+    end)
+    local can1 = giveCan("Base.JerryCan")
+    local c1 = ask("LOOP.collect_still", "machine.collect", { target = sRef, destination = { kind = "item", id = can1:getID() } })
+    local v1 = tlgView("item", can1)
+    R:check("LOOP.hydrous_ethanol_bottled", function()
+        local q = v1 and v1.q or {}
+        return c1.ok == true and math.abs((q.ethanol or 0) - sEth) < 1e-3 and math.abs((q.water or 0) - sWater) < 1e-3,
+            string.format("%s fluids=%s", viewText(v1, "can"), TLGH.fluidSummary(can1:getFluidContainer()))
+    end)
+
+    -- Fixture: give the spirit an ageing history so drying can show that it
+    -- keeps the degradation (fresh distillate has none).
+    local C = TLG.Integration.Containers
+    local aged = C.read(can1, "item", true)
+    aged.deg.ethanol = 0.8
+    C.writeSidecar(can1, "item", aged)
+
+    -- Drying column: hydrous ethanol + quicklime.
+    local lime0 = countType("Base.Quicklime")
+    local d = ask("LOOP.load_dry", "machine.loadDry", { target = dRef, source = { kind = "item", id = can1:getID() } })
+    R:check("LOOP.dry_loaded", function()
+        return d.ok == true and countType("Base.Quicklime") == lime0 - 1 and can1:getFluidContainer():getAmount() < 1e-3,
+            string.format("ethanol=%s water=%s lime=%s lime items %d->%d can left=%.4f", tostring(d.ethanolL),
+                tostring(d.waterL), tostring(d.limeKg), lime0, countType("Base.Quicklime"), can1:getFluidContainer():getAmount())
+    end)
+    local dr, dh = runUntilReady("LOOP.drying", dRef, 4, 48)
+    local can2 = giveCan("Base.JerryCan")
+    local c2 = ask("LOOP.collect_dry", "machine.collect", { target = dRef, destination = { kind = "item", id = can2:getID() } })
+    local v2 = tlgView("item", can2)
+    R:check("LOOP.dried_ethanol_keeps_degradation", function()
+        local q = v2 and v2.q or {}
+        local e, w = q.ethanol or 0, q.water or 0
+        return dr.state == "OutputReady" and c2.ok == true and e > 2.5 and w <= e * 0.005 + 1e-4
+            and v2 ~= nil and math.abs((v2.deg.ethanol or 0) - 0.8) < 0.01,
+            string.format("after %d h: %s", dh, viewText(v2, "can"))
+    end)
+
+    -- Split through the wrapped FluidContainer.Transfer: one can per engine.
+    local can3 = giveCan("Base.JerryCan")
+    FluidContainer.Transfer(can2:getFluidContainer(), can3:getFluidContainer(), can2:getFluidContainer():getAmount() / 2)
+    local va, vb = tlgView("item", can2), tlgView("item", can3)
+    R:check("LOOP.split_keeps_state", function()
+        if not (va and vb) then return false, "missing view" end
+        local ok, detail = sameFuel(va, vb, 1e-3)
+        return ok and math.abs(TLG.Domain.Supply.total(va) - TLG.Domain.Supply.total(vb)) < 1e-3,
+            detail .. string.format(" a=%.4f b=%.4f", TLG.Domain.Supply.total(va), TLG.Domain.Supply.total(vb))
+    end)
+    LOOP.canGen, LOOP.canCar = can2, can3
+    return true
+end })
+
+add({ name = "loop_convert_generator", timeout = 600, fn = function(ctx, ticks)
+    local g = LOOP.gen
+    if not g then R:line("SKIP loop_convert_generator"); return true end
+    if not ctx.t0 then
+        player():teleportTo(g:getSquare():getX() + 1, g:getSquare():getY(), 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 20 then return nil end
+    local ref = TLG.Authority.Resolver.refForObject(g, "generator")
+    local b = ask("LOOP.gen_begin", "conversion.begin", { device = ref, conversion = "flex_generator" })
+    local d = ask("LOOP.gen_deliver", "conversion.deliver", { device = ref })
+    H.clockOffset = H.clockOffset + 8
+    local w = ask("LOOP.gen_work", "conversion.work", { device = ref })
+    local prof = TLG.Integration.Generators.profile(g)
+    R:check("LOOP.flex_generator_commissioned", function()
+        return w.state == "Commissioned" and prof == "generator_si_flex",
+            string.format("begin=%s deliver=%s consumed=%s work=%s state=%s profile=%s", tostring(b.ok), tostring(d.ok),
+                brief(d.consumed), tostring(w.ok), tostring(w.state), tostring(prof))
+    end)
+    return true
+end })
+
+add({ name = "loop_convert_car", timeout = 600, fn = function(ctx, ticks)
+    local v = LOOP.car
+    if not v then R:line("SKIP loop_convert_car"); return true end
+    if not ctx.t0 then
+        player():teleportTo(math.floor(v:getX()) + 2, math.floor(v:getY()), 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 20 then return nil end
+    local ref = { kind = "vehicle", id = v:getId() }
+    local b = ask("LOOP.car_begin", "conversion.begin", { device = ref, conversion = "flex_car_normal" })
+    local d = ask("LOOP.car_deliver", "conversion.deliver", { device = ref })
+    -- 13 h of work; one report credits at most 12 h (WORKER_TIMEOUT_HOURS).
+    H.clockOffset = H.clockOffset + 8
+    local w1 = ask("LOOP.car_work_1", "conversion.work", { device = ref })
+    H.clockOffset = H.clockOffset + 6
+    local w2 = ask("LOOP.car_work_2", "conversion.work", { device = ref })
+    local prof = TLG.Integration.Vehicles.profile(v)
+    R:check("LOOP.flex_car_commissioned", function()
+        return w2.state == "Commissioned" and prof == "engine_si_flex",
+            string.format("begin=%s deliver=%s consumed=%s work1=%s/%s work2=%s/%s profile=%s", tostring(b.ok),
+                tostring(d.ok), brief(d.consumed), tostring(w1.ok), tostring(w1.state), tostring(w2.ok), tostring(w2.state),
+                tostring(prof))
+    end)
+    return true
+end })
+
+add(actionStep("LOOP.flex_generator_pour", function(ctx)
+    local g, can = LOOP.gen, LOOP.canGen
+    if not (g and can) then return nil end
+    player():setPrimaryHandItem(can)
+    player():teleportTo(g:getSquare():getX() + 1, g:getSquare():getY(), 0)
+    hopBegin(ctx, "LOOP.flex_generator_pour", "item", can, canAmount(can:getFluidContainer()), "generator", g,
+        function() return g:getFuel() end)
+    return ISTLGPourFuel:new(player(), can, TLG.Authority.Resolver.refForObject(g, "generator"), g, false,
+        function(reply) ctx.reply = reply end)
+end, function(ctx)
+    R:check("LOOP.flex_generator_pour.accepted_without_confirmation", function()
+        return ctx.reply ~= nil and ctx.reply.ok == true, tostring(ctx.reply and ctx.reply.reason)
+    end)
+    hopEnd(ctx, true)
+end))
+
+add(generatorGateStep("LOOP.flex_generator_start", function() return LOOP.gen end, false))
+add(vehiclePourStep("LOOP.flex_car_pour", nil, false, true, function() return LOOP.car end, function() return LOOP.canCar end))
+add(vehicleGateStep("LOOP.flex_car_start", function() return LOOP.car end, false))
+
 add({ name = "tlg_ui", fn = function()
     local can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 2.0 } })
     R:check("UI.fuel_context_menu_entry", function()
@@ -1053,6 +1328,23 @@ add({ name = "g02_world_container_and_expectations", fn = function()
         lines[#lines + 1] = "pump.y=" .. H.pump.y
         lines[#lines + 1] = "pump.units=" .. H.pump.obj:getPipedFuelAmount()
         lines[#lines + 1] = "pump.side=" .. sidecar(H.pump.obj:getModData())
+    end
+    if LOOP.gen then
+        lines[#lines + 1] = "loop.gen.x=" .. LOOP.gen:getSquare():getX()
+        lines[#lines + 1] = "loop.gen.y=" .. LOOP.gen:getSquare():getY()
+    end
+    if LOOP.car then
+        lines[#lines + 1] = "loop.car.x=" .. math.floor(LOOP.car:getX())
+        lines[#lines + 1] = "loop.car.y=" .. math.floor(LOOP.car:getY())
+    end
+    if LOOP.items then
+        lines[#lines + 1] = "loop.mach.x=" .. LOOP.x
+        lines[#lines + 1] = "loop.mach.y=" .. LOOP.y
+        for i, it in ipairs(LOOP.items) do
+            local p = it:getModData().tlgProc
+            lines[#lines + 1] = string.format("loop.mach.%d=%s:%s:%s", i, it:getFullType(), tostring(p and p.state),
+                tostring(p and p.batches))
+        end
     end
     local g = ModData.getOrCreate("TLGHarnessSP")
     g.marker = "phaseA"
@@ -1212,6 +1504,56 @@ addB({ name = "g08_reload_checks", fn = function()
                 end
             end
             return false, "pump not found"
+        end)
+    end
+    if e["loop.gen.x"] then
+        R:check("G08.flex_generator_conversion_persists", function()
+            local g = findGenerator(tonumber(e["loop.gen.x"]), tonumber(e["loop.gen.y"]), 0, nil)
+            if not g then return false, "no generator object" end
+            local p = g:getModData().tlgConv
+            local prof = TLG.Integration.Generators.profile(g)
+            return prof == "generator_si_flex" and p ~= nil and p.state == "Commissioned",
+                string.format("profile=%s state=%s fuel=%.4f", tostring(prof), tostring(p and p.state), g:getFuel())
+        end)
+    end
+    if e["loop.car.x"] then
+        R:check("G08.flex_car_conversion_persists", function()
+            for dx = -4, 4 do
+                for dy = -4, 4 do
+                    local s = sq(tonumber(e["loop.car.x"]) + dx, tonumber(e["loop.car.y"]) + dy, 0)
+                    local v = s and s:getVehicleContainer()
+                    local engine = v and v:getPartById("Engine")
+                    local p = engine and engine:getModData().tlgConv
+                    if p and p.conversion == "flex_car_normal" then
+                        local prof = TLG.Integration.Vehicles.profile(v)
+                        return prof == "engine_si_flex" and p.state == "Commissioned",
+                            string.format("profile=%s state=%s", tostring(prof), tostring(p.state))
+                    end
+                end
+            end
+            return false, "no vehicle with a flex conversion near " .. e["loop.car.x"] .. "," .. e["loop.car.y"]
+        end)
+    end
+    if e["loop.mach.x"] then
+        R:check("G08.machine_records_persist", function()
+            local got, allOk = {}, true
+            for i = 1, 3 do
+                local want = e["loop.mach." .. i]
+                local fullType = string.match(want or "", "^([^:]+):")
+                local s = sq(tonumber(e["loop.mach.x"]) + i - 1, tonumber(e["loop.mach.y"]), 0)
+                local found = "missing"
+                local wobjs = s and s:getWorldObjects()
+                for j = 0, (wobjs and wobjs:size() or 0) - 1 do
+                    local it = wobjs:get(j):getItem()
+                    if it and it:getFullType() == fullType then
+                        local p = it:getModData().tlgProc
+                        found = string.format("%s:%s:%s", it:getFullType(), tostring(p and p.state), tostring(p and p.batches))
+                    end
+                end
+                got[#got + 1] = found
+                if found ~= want then allOk = false end
+            end
+            return allOk, table.concat(got, " ")
         end)
     end
     R:check("G08.global_moddata_sp", function()

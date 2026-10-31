@@ -16,6 +16,7 @@
     "ContextMenu_TLG_LoadWash": "Carica il fermentato da un fermentatore vicino",
     "ContextMenu_TLG_AddFirewood": "Alimenta il focolare",
     "ContextMenu_TLG_CollectEthanol": "Raccogli l'etanolo in una tanica",
+    "ContextMenu_TLG_LoadDry": "Disidrata l'etanolo con calce viva",
     "ContextMenu_TLG_Pause": "Metti in pausa",
     "ContextMenu_TLG_Resume": "Riprendi",
     "ContextMenu_TLG_Abort": "Interrompi il lotto",

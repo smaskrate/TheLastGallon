@@ -22,6 +22,7 @@ compatible with another build until re-tested.
 | Generator drop: drop action, `forceDropHeavyItems`, inventory drag to the floor; `IsoGenerator.new` | wraps re-attach the sidecar to the converted object | yes | native | **Verified RT-SP** (all three drop paths); drops done by Java alone are not seen |
 | Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Read verified RT-SP** (run 5: record found after reload, the fluid sits on the world object); pouring from a ground can NOT RUN |
 | Still → can (TLG command) | TLG writes native fluids + sidecar | yes (fresh) | TLG then native | SRC-ONLY |
+| Can → drying column → can (`machine.loadDry`, `machine.collect`) | TLG takes the can's ethanol and water and the quicklime; bottles dried ethanol | yes (degradation kept) | TLG then native | SRC-ONLY (added 2026-10-31; the column had no command before) |
 | Fermenter → still (TLG command) | machine-to-machine | n/a (wash) | TLG | Domain tests |
 | Third-party mods | not tested | — | — | NOT RUN |
 

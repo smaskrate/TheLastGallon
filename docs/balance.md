@@ -112,6 +112,12 @@ the new draw; existing reservoir records keep their water.
 | Distil | pot still (60 L) / reflux still (120 L) | wash | hydrous ethanol 80 % / 94 % purity, recovery 0.88 / 0.92 | 1 h heat-up + wash ÷ 8 or 12 L/h at 6 kW; firebox 30 / 50 kg, 4.2 kWh/kg, 45 % / 55 % efficient |
 | Dry | drying column | hydrous ethanol + quicklime | water down to 0.5 % | 12 h, 0.3 L water per kg quicklime |
 
+Condition through production: distillate leaves the still fresh (ageing
+products stay in the stillage), while dried ethanol keeps the degradation it
+went in with (quicklime removes water only). Reflux spirit (94 %) holds its
+water in solution and runs flex engines without drying; pot-still spirit
+(80 %) carries free water and must be dried first.
+
 Feedstock sugar equivalents per vanilla item: Sugar 1.0 kg, Brown sugar 0.9,
 Sugar beet 0.16, Corn 0.12, Potato 0.09, Pumpkin 0.15, Watermelon 0.25,
 Apple 0.02, Grapes 0.03 (`TLG/Content/Feedstocks.lua`).

@@ -16,6 +16,7 @@
     "ContextMenu_TLG_LoadWash": "Load wash from a nearby fermenter",
     "ContextMenu_TLG_AddFirewood": "Feed the firebox",
     "ContextMenu_TLG_CollectEthanol": "Collect ethanol into a fuel can",
+    "ContextMenu_TLG_LoadDry": "Dry ethanol with quicklime",
     "ContextMenu_TLG_Pause": "Pause",
     "ContextMenu_TLG_Resume": "Resume",
     "ContextMenu_TLG_Abort": "Abort batch",

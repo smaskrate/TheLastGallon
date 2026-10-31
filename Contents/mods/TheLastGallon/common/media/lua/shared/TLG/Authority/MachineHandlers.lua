@@ -197,6 +197,58 @@ local function simple(fn)
     end
 end
 
+-- Dries hydrous ethanol from a can in the player's inventory with quicklime
+-- (drying column, recipe ethanol_dry). The ethanol and water move into the
+-- column; machine.collect bottles the result, which keeps the source's
+-- degradation (quicklime removes water, not ageing products).
+function H.machineLoadDry(player, args)
+    local st, err = machineState(player, args)
+    if not st then return err end
+    if Machines.machineFor(st.item) ~= "drying_column" then return fail("wrong_machine") end
+    if not Machines.isPlaced(st.item) then return fail("not_placed") end
+    if type(args.source) ~= "table" then return fail("malformed_source") end
+    local can = player:getInventory():getItemWithIDRecursiv(args.source.id or -1)
+    if can == nil or can:getFluidContainer() == nil then return fail("no_source") end
+    local now, env = World.now(), World.env()
+    local src = C.read(can, "item", true)
+    if src == nil then return fail("source_not_fuel") end
+    src = Aging.advance(src, now, env)
+    for _, id in ipairs(Tables.sortedKeys(src.q)) do
+        if id ~= "ethanol" and id ~= "water" and src.q[id] > 1e-6 then return fail("not_hydrous_ethanol") end
+    end
+    local recipe = TLG.Registry.need("recipe", "ethanol_dry")
+    local column = TLG.Registry.need("machine", "drying_column")
+    local p = recipe.params
+    local eth, water = src.q.ethanol or 0, src.q.water or 0
+    if eth < recipe.inputs.ethanol.min then return fail("not_hydrous_ethanol") end
+    if water <= eth * p.targetWater + 1e-9 then return fail("already_dry") end
+    local limeMax = recipe.inputs.quicklime_kg.max
+    -- Share of the can that fits the recipe bounds and the column (lime counts
+    -- towards the column's capacity).
+    local scale = math.min(1, recipe.inputs.ethanol.max / eth, recipe.inputs.water.max / water,
+        (column.capacity - limeMax) / (eth + water))
+    local limeNeed = (water - eth * p.targetWater) * scale / p.waterPerKgLime
+    local lime = takeFeedstock(player, "lime", limeNeed, limeMax, true)
+    if lime < recipe.inputs.quicklime_kg.min then return fail("needs_lime") end
+    local remaining, parcel = Mixing.removeProportional(src, (eth + water) * scale)
+    local inputs = { ethanol = parcel.ethanol or 0, water = parcel.water or 0, quicklime_kg = lime }
+    local plan = Process.plan("ethanol_dry", inputs, st.rec)
+    if not plan.ok then return fail(plan.reason) end
+    takeFeedstock(player, "lime", limeNeed, limeMax)
+    local ok, why = Native.writeComposition(can:getFluidContainer(), remaining.q)
+    if not ok then return fail("commit_failed", { detail = why }) end
+    remaining.rev = (src.rev or 0) + 1
+    C.writeSidecar(can, "item", remaining)
+    local loaded = Process.load(st.rec, "ethanol_dry", inputs, player:getPerkLevel(Perks.Cooking))
+    if not loaded.ok then
+        TLG.Log.error("dry load failed after validation: %s", tostring(loaded.reason))
+        return fail(loaded.reason)
+    end
+    local started = Process.start(loaded.proc, now)
+    started.proc.carryDeg = Tables.deepCopy(src.deg)
+    return commit(player, args, st, started.proc, { ethanolL = inputs.ethanol, waterL = inputs.water, limeKg = lime })
+end
+
 H.machinePause = simple(Process.pauseCmd)
 H.machineResume = simple(Process.resumeCmd)
 -- Aborting returns the partial result to the player as an explicit outcome
@@ -218,8 +270,12 @@ function H.machineCollect(player, args)
     dst = Aging.advance(dst, now, env)
     local collected = Process.collect(st.rec, Supply.free(dst))
     if not collected.ok then return fail(collected.reason) end
-    local parcel = Supply.new({ storage = dst.storage, cap = 1e9, q = collected.parcel, t = now,
-        deg = (collected.props and collected.props.deg) or {} })
+    -- Distillate is fresh (distillation leaves ageing products in the
+    -- stillage); dried ethanol keeps the degradation it went in with.
+    local deg = (collected.props and collected.props.deg) or {}
+    if st.rec.carryDeg then deg = Tables.deepCopy(st.rec.carryDeg) end
+    if collected.proc.state == "Ready" then collected.proc.carryDeg = nil end
+    local parcel = Supply.new({ storage = dst.storage, cap = 1e9, q = collected.parcel, t = now, deg = deg })
     local merged = Mixing.previewBlend({ { supply = dst, amount = Supply.total(dst) },
         { supply = parcel, amount = Supply.total(parcel) } }, dst.storage, dst.cap)
     merged.id, merged.rev, merged.cap, merged.sealed, merged.cond = dst.id, (dst.rev or 0) + 1, dst.cap, dst.sealed,
@@ -235,6 +291,7 @@ end
 H.commands["machine.status"] = H.machineStatus
 H.commands["machine.loadFerment"] = H.machineLoadFerment
 H.commands["machine.loadWash"] = H.machineLoadWash
+H.commands["machine.loadDry"] = H.machineLoadDry
 H.commands["machine.addFuel"] = H.machineAddFuel
 H.commands["machine.pause"] = H.machinePause
 H.commands["machine.resume"] = H.machineResume
