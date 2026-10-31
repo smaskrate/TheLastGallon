@@ -86,9 +86,11 @@ Project.SKILLS = { Mechanics = true, Electricity = true, MetalWelding = true }
 Project.DRAIN_STAGES = { prepare = true, install = true }
 -- Litres a drained tank may still report (unsiphonable residue, float noise).
 Project.DRAIN_TOLERANCE = 0.05
--- Longest gap between two work reports of a live worker. Adapters report at
--- least once per in-game hour; a later report credits at most this much and
--- ends the assignment (crash/disconnect without leave).
+-- Longest gap between two work reports of a live worker. Adapters are meant
+-- to report at least once per in-game hour (none does yet: reports come only
+-- from the player's "Report progress", docs/release-checklist.md); a later
+-- report credits at most this much and ends the assignment
+-- (crash/disconnect without leave).
 Project.WORKER_TIMEOUT_HOURS = 12
 Project.DEFAULT_MAX_WORKERS = 2
 Project.MAX_WORKERS = 8

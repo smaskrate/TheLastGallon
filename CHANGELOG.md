@@ -16,7 +16,9 @@
   client on 2026-10-31 (refuelling, siphoning, pumps, generator pickup/drop,
   start gates, stalls, the TLG pour, one ethanol batch through fermenter,
   reflux still and drying column, flex conversion of a generator and a
-  standard car that then run on that ethanol, save and reload).
+  standard car that then run on that ethanol, save and reload). Machines and
+  conversions were driven through the mod's commands with elapsed time
+  supplied by the test harness; their menus are not yet exercised in game.
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record

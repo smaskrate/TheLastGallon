@@ -10,6 +10,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
 | RT-SP: crafting the machines, the machine and workshop menus, the pot still, picking up a running machine, Italian text in game | Not in the harness yet |
+| RT-SP: machines and conversion work in real elapsed game time; cancelling or removing a conversion | The harness advances the mod clock only; cancel/remove not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
 | Packaged-artifact install/upgrade rehearsal | Not run |

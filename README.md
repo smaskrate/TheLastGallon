@@ -8,8 +8,9 @@ Status: development build. Domain layer and authority logic are implemented
 and tested on the game's own Lua VM. In a single-player client (2026-10-31)
 the fuel adapters, start gates and the ethanol loop are verified: machines,
 then flex conversions of a generator and a standard car that run on the
-ethanol. Multiplayer is not tested. See `docs/release-checklist.md` for
-every open gate.
+ethanol (driven through the mod's commands, elapsed time supplied by the
+test harness; the menus are not yet exercised). Multiplayer is not tested.
+See `docs/release-checklist.md` for every open gate.
 
 ## Layout
 
