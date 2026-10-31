@@ -32,7 +32,8 @@
   something is missing; walking away stops the work and time away is not
   counted (a late report credits at most 1 h). The "Report progress" and
   "Stop working" entries are gone (EN/IT). Checked in game with the action
-  queued by the test harness; the menu entry itself is not yet exercised.
+  queued by the test harness and the character moved out of reach; the menu
+  entry itself is not yet exercised.
 * Ethanol chain: fermentation vessel, pot/reflux still, drying column, yeast
   starter; EN/IT strings; sandbox options. The drying column can now be used
   ("Dry ethanol with quicklime"); before, it could be built but had no action.

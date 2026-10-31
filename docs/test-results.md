@@ -310,4 +310,6 @@ The harness queues `ISTLGConversionWork` itself and moves the mod clock
   translations 213 EN keys, IT parity.
 
 Not run: the menu entry itself (walking to the engine area or next to the
-generator), the progress bar's rendering, two workers at once, multiplayer.
+generator), walking away (the character was moved), the action ending on a
+block (missing tool or parts, tank not empty) or on a refused join, the
+progress bar's rendering, two workers at once, multiplayer.

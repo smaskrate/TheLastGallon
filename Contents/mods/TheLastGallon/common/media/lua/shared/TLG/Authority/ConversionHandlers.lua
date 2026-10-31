@@ -98,7 +98,7 @@ H.commands["conversion.begin"] = function(player, args)
         end
         local b = CS.begin(project, actor, device, req)
         if not b.ok then return b end
-        local j = CS.join(b.project, actor, device, { now = req.now })
+        local j = CS.join(b.project, actor, device, { now = req.now, workerTimeoutHours = req.workerTimeoutHours })
         if j.ok then return j end
         return b
     end)

@@ -8,9 +8,10 @@
 -- Reports go through TLG.Net (single player: locally; multiplayer: client
 -- requests, NOT RUN); a server-side copy of the action never reports.
 -- Verified RT-SP 2026-10-31 (run 9): reports, ending itself at
--- Commissioned, stop() when the character left reach, no credit for time
--- away. Queued by the harness: the menu's walk to the device and the
--- progress bar's rendering are NOT RUN.
+-- Commissioned, stop() when the character was moved out of reach, no credit
+-- for time away. Queued by the harness: the menu's walk to the device, the
+-- endings on a block or a refused join, and the progress bar's rendering
+-- are NOT RUN.
 require "TimedActions/ISBaseTimedAction"
 require "TLG/Integration/ConversionDevices"
 

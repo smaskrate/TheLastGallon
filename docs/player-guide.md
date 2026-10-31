@@ -107,10 +107,10 @@ Right-click the generator or car → **Workshop: convert this generator** (or
 Cancelling returns three quarters of the parts handed over; removing a
 finished conversion returns half. Small cars, pickup trucks, step vans and
 the other generator models have their own conversions. *(A standard car and
-the basic generator were converted in game, the work stopped when the
-character walked away, and both then ran on ethanol. The menu entries
-themselves, walking to the device, cancelling, removing and the other
-models are untested in game.)*
+the basic generator were converted in game, the work stopped once the
+character was out of reach, and both then ran on ethanol. The menu entries
+themselves, walking to the device, the work ending because something is
+missing, cancelling, removing and the other models are untested in game.)*
 
 ## Stations
 
