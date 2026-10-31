@@ -124,6 +124,37 @@ T.case("world init: late discovery is aged, deterministic and policy dependent",
     T.eq(W.newId(world, "S"), "S99-1"); T.eq(W.newId(world, "S"), "S99-2")
 end)
 
+T.case("world init: station water is low at most sites and high at about one in ten", function()
+    local W = TLG.Domain.WorldInit
+    local SW = W.STATION_WATER
+    local stockTolerance = TLG.Registry.get("consumer", "engine_si_stock").waterMax
+    T.le(SW.cleanMax, stockTolerance, "clean stations stay within the stock engine's tolerance")
+    T.ok(SW.badMin >= stockTolerance, "contaminated stations exceed it")
+    local world = W.create({ seed = 4242, policy = "new_world" })
+    local n, bad = 0, 0
+    -- Station keys as the adapter builds them (pump:x,y,z) on a map-like grid.
+    for x = 10000, 10199 do
+        for y = 9000, 9019 do
+            local c = W.stationContamination(world, string.format("pump:%d,%d,0", x, y), 1000)
+            local frac = c.water / 1000
+            n = n + 1
+            if frac >= SW.badMin then
+                bad = bad + 1
+                T.ok(frac < SW.badMax, "contaminated station within range")
+            else
+                T.ok(frac <= SW.cleanMax, "clean station below the cap")
+            end
+            T.ok(c.sediment >= 0 and c.sediment / 1000 < W.STATION_SEDIMENT_MAX, "sediment range")
+        end
+    end
+    T.ok(bad / n > 0.07 and bad / n < 0.13, string.format("about one in ten contaminated (%d of %d)", bad, n))
+    print(string.format("      station water: %d of %d stations contaminated", bad, n))
+    local a = W.stationContamination(world, "pump:10636,10622,0", 500)
+    local b = W.stationContamination(world, "pump:10636,10622,0", 500)
+    T.eq(a.water, b.water, "deterministic per site")
+    T.eq(a.sediment, b.sediment, "deterministic per site")
+end)
+
 T.case("consumers: wood gas derates a gas generator, propane does not", function()
     local C = TLG.Domain.Consumers
     local wood = F.supply({ storage = "gas_holder", cap = 20, q = { woodgas = 5 } })

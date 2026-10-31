@@ -182,6 +182,18 @@ New checks, all through the vanilla actions:
   amounts identical after reload, with the ground can, pump, items and world
   record (11/11).
 
-Finding (balance, not a code defect): station water is drawn from 0–0.4 %
+Finding (balance, not a code defect; changed by D-017 below): station water was drawn from 0–0.4 %
 while the stock engine tolerates 0.2 %, so about half of all stations
 dispense fuel that halves a stock car's start chance from the first day.
+
+## 2026-10-31 — Station water balance (D-017)
+
+* Change: station water drawn as 0–0.15 % at about 9 in 10 sites and
+  0.2–0.4 % at about 1 in 10 (was uniform 0–0.4 %).
+* New case "world init: station water is low at most sites and high at
+  about one in ten": 4000 pump keys on a map-like grid, 404 contaminated;
+  every clean site ≤ 0.15 %, every contaminated site in [0.2 %, 0.4 %),
+  deterministic per site; passes with seeds 20261030 and 1.
+* `tools/run-tests.ps1` → `modules=13 cases=139 passed=139 failed=0`.
+* Not re-run in game (the change is confined to the deterministic draw that
+  the domain test covers).

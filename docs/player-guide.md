@@ -74,9 +74,12 @@ untested in game.)*
 
 ## Stations
 
-Pumps hold old fuel that ages underground (slowly) and may contain water and
-sediment from the start. TLG keeps pump accounting consistent: every litre
-you take leaves the reservoir exactly once. *(Untested in game.)*
+Pumps hold old fuel that ages underground (slowly). Most stations hold only a
+trace of water, but about one in ten is contaminated: its fuel makes a stock
+car hard to start until you drain the water or dilute it with cleaner fuel.
+Sample before you fill up at an unknown station. TLG keeps pump accounting
+consistent: every litre you take leaves the reservoir exactly once (checked
+in game).
 
 ## Troubleshooting
 

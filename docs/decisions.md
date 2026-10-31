@@ -162,3 +162,17 @@ listed with their replacement.
   (2.01 kg/Nm³). Vanilla `Base.PropaneTank` is a drainable with 5000 uses and
   no fluid container (RT-DS); the propane adapter maps uses ↔ Nm³.
 * Reason: spec §5 forbids interchangeable liquid litres for gases.
+
+## D-017 Station water: mostly clean, a few contaminated stations
+* Decision: station reservoirs start with 0–0.15 % water at about 9 in 10
+  sites and 0.2–0.4 % at about 1 in 10 (`WorldInit.STATION_WATER`), instead
+  of a uniform 0–0.4 %. Sediment is unchanged (0–0.1 %).
+* Reason: with the uniform draw about half of all stations exceeded the
+  stock car's 0.2 % free-water tolerance from day one, halving start chance
+  before any progression route (ethanol, conversions, treatment) is
+  reachable (RT-SP 2026-10-31, `startFactor=0.5` at the Gas2Go pump). The
+  user chose the middle ground: keep a few bad stations to discover, let
+  ageing drive the decline.
+* Consequences: deterministic per world seed and pump position (domain test:
+  404 of 4000 grid sites contaminated); existing reservoir records keep their
+  water; no schema change.

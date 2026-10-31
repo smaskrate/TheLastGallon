@@ -46,11 +46,11 @@ RT-SP run 6): a 36 % ethanol blend is refused and the engine stays off;
 station fuel starts. Stall: the per-minute effect handler stalled an engine
 running on that blend within a game minute.
 
-Station fuel and stock engines: station water is 0–0.4 % (uniform) and
-`engine_si_stock` tolerates 0.2 %, so about half of all stations dispense
-fuel that halves a stock car's start chance from the first day (observed
-0.22–0.23 % at the Gas2Go pump). The "Drain water" can treatment removes
-free water (domain-tested; not exercised in game).
+Station fuel and stock engines (D-017): about 9 in 10 stations start with
+0–0.15 % water, inside every engine's tolerance; about 1 in 10 start at
+0.2–0.4 %, which halves a stock car's start chance (observed before D-017 at
+the Gas2Go pump: 0.22–0.23 %, `startFactor=0.5`). The "Drain water" can
+treatment removes free water (domain-tested; not exercised in game).
 
 ## Generators
 

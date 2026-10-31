@@ -88,14 +88,21 @@ biodiesel 33.0, propane 93 MJ/Nm³, biogas 21.5, wood gas 5.0, firewood
 
 Pre-outbreak fuel age up to 30 days (portable/vehicles) and 75 days
 (stations), seeded by world seed and stable identity. Station tanks start
-with up to 0.4 % water and 0.1 % sediment (sandbox toggle). Existing saves
+with up to 0.1 % sediment and, per station (`WorldInit.STATION_WATER`):
+
+* about 9 in 10: 0–0.15 % water, inside every engine's free-water tolerance;
+* about 1 in 10: 0.2–0.4 % water ("contaminated"): a stock car's start
+  chance is halved, and from 0.3 % a stock generator's too.
+
+Contamination can be switched off in the sandbox options. Existing saves
 default to a 30-day transition.
 
-Observed in game (2026-10-31): the water fraction is uniform on 0–0.4 %, and
-`engine_si_stock` tolerates 0.2 %, so about half of all stations dispense
-fuel that halves a stock car's start chance from the first day (Gas2Go pump:
-0.22–0.23 %, `startFactor=0.5`). Open design question: keep, or draw station
-water below the stock tolerance so that only aged or neglected stations fail.
+History: until 2026-10-31 water was uniform on 0–0.4 %, so about half of all
+stations exceeded the stock car tolerance from the first day (seen in game at
+the Gas2Go pump: 0.22–0.23 %, `startFactor=0.5`). Changed to the two tiers
+above (D-017) so that fuel trouble grows mainly with age, while a few bad
+stations remain to be found. Only stations initialised after the change use
+the new draw; existing reservoir records keep their water.
 
 ## Ethanol chain (`TLG/Content/Production.lua`)
 

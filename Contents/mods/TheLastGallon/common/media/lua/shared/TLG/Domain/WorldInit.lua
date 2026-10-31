@@ -90,12 +90,21 @@ function WorldInit.baseline(world, env, key, spec, now)
     return aged
 end
 
+-- Station reservoir water at the outbreak (volume fractions). Most stations
+-- stay below the stock spark engine's 0.2 % free-water tolerance; about one
+-- in ten is badly contaminated (balance decision 2026-10-31, docs/balance.md).
+WorldInit.STATION_WATER = { cleanMax = 0.0015, badShare = 0.1, badMin = 0.002, badMax = 0.004 }
+WorldInit.STATION_SEDIMENT_MAX = 0.001
+
 -- Deterministic contamination for a station reservoir, seeded by site id.
 function WorldInit.stationContamination(world, siteKey, litres)
+    local w = WorldInit.STATION_WATER
     local r = Rng.new(Rng.hash(siteKey, world.seed))
     r:next()
-    local waterFrac = r:next() * 0.004
-    local sedFrac = r:next() * 0.001
+    local bad = r:next() < w.badShare
+    local u = r:next()
+    local waterFrac = bad and (w.badMin + u * (w.badMax - w.badMin)) or (u * w.cleanMax)
+    local sedFrac = r:next() * WorldInit.STATION_SEDIMENT_MAX
     return { water = litres * waterFrac, sediment = litres * sedFrac }
 end
 

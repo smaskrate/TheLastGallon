@@ -7,7 +7,9 @@
 * Inspection with method precision, hysteresis and "unknown" state; filter,
   drain water, stabilize, seal/open, clean.
 * Consumer profiles separating compatibility, condition and energy.
-* World fuel history with new-world and existing-save policies.
+* World fuel history with new-world and existing-save policies. Station
+  tanks start mostly clean (0–0.15 % water); about one station in ten is
+  contaminated (0.2–0.4 %), enough to make stock cars hard to start.
 * Server-authoritative commands with idempotent retries and revisions.
 * Adapters: item/object fluid containers, vehicles, generators and stations,
   verified in a single-player client on 2026-10-31 (refuelling, siphoning,

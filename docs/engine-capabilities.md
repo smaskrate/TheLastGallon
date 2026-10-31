@@ -160,12 +160,12 @@ RT-SP (runs 3–5, `Base.CarNormal`, 59 L tank):
 * Stall (run 6): the same blend, started directly to bypass the gate, was
   stalled by the per-minute effect handler 0.6 game minutes later
   (`Stalling`).
-* **Balance observation:** station water is drawn uniformly from 0–0.4 %
-  (`WorldInit.stationContamination`, `balance.md`) while `engine_si_stock`
-  tolerates 0.2 % free water. About half of all stations therefore dispense
-  fuel that halves the start chance of stock cars from the first day
-  (runs 5–6: 0.216 % and 0.229 % water at the Gas2Go pump). This follows the
-  documented numbers; whether it is intended is a design decision.
+* **Balance observation → D-017:** station water was drawn uniformly from
+  0–0.4 % while `engine_si_stock` tolerates 0.2 % free water, so about half
+  of all stations halved the start chance of stock cars from the first day
+  (runs 5–6: 0.216 % and 0.229 % water at the Gas2Go pump). Since D-017 about
+  9 in 10 stations start at 0–0.15 % and about 1 in 10 at 0.2–0.4 %
+  (domain-tested; not re-run in game).
 * `IsoCell.getVehicles()` returns a `java.util.HashSet` on 42.21 (BC); use
   `ipairs(set:toArray())`.
 
