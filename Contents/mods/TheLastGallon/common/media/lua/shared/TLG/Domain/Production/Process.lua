@@ -171,6 +171,7 @@ function Process.start(proc, now)
     if math.abs(now - proc.t) > 1e-6 and now < proc.t then return fail("time_regression") end
     local out = Tables.deepCopy(proc)
     out.state, out.stage, out.stageDone, out.t = "Processing", 1, 0, now
+    out.startedAt = now
     return { ok = true, proc = out }
 end
 
@@ -231,8 +232,17 @@ local function completeBatch(out, m)
     out.completedAt = out.t
 end
 
+-- Where the machine stands, for the climate model (D-021): nil until an
+-- adapter records proc.site = { room, z }; proc.temps = { [hour] = tempC }
+-- are readings taken there. Without a site the definition's thermal
+-- exposure applies.
+function Process.site(proc)
+    if proc.site == nil then return nil end
+    return { room = proc.site.room == true, z = proc.site.z or 0, temps = proc.temps, from = proc.startedAt }
+end
+
 -- ProductionService.advance(process, resources, interval).
--- env: Climate instance (segments by machine thermal exposure).
+-- env: Climate instance (segments by the machine's site or thermal exposure).
 function Process.advance(proc, toT, env)
     local out = Tables.deepCopy(proc)
     local info = { events = {}, heatKWh = 0, fireboxBurned = 0 }
@@ -242,7 +252,7 @@ function Process.advance(proc, toT, env)
         return out, info
     end
     local m = Registry.need("machine", out.machine)
-    local segs = env:segments(out.t, toT, m.thermal or "sheltered")
+    local segs = env:segments(out.t, toT, m.thermal or "sheltered", Process.site(out))
     local guard = 0
     for _, seg in ipairs(segs) do
         local t = seg.t0
