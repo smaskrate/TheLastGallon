@@ -764,6 +764,225 @@ end, function(ctx)
     end)
 end))
 
+------------------------------------------------------------------------------
+-- Start gates, stall and TLG pours into a vehicle. Thresholds (Content/
+-- Consumers.lua): engine_si_stock accepts ethanol up to 25 %, generator_si_stock
+-- up to 15 %. Both gates report refusals through TLG.Log.debug, which the
+-- harness wraps for the duration of a step.
+------------------------------------------------------------------------------
+local function captureTlgDebug(ctx)
+    ctx.logged = {}
+    local orig = TLG.Log.debug
+    ctx.restoreLog = function() TLG.Log.debug = orig end
+    TLG.Log.debug = function(fmt, ...)
+        local ok, msg = pcall(string.format, fmt, ...)
+        ctx.logged[#ctx.logged + 1] = ok and msg or tostring(fmt)
+        return orig(fmt, ...)
+    end
+end
+
+local function loggedMatching(ctx, text)
+    for _, m in ipairs(ctx.logged or {}) do
+        if string.find(m, text, 1, true) then return m end
+    end
+    return nil
+end
+
+local function evaluationText(e)
+    if e == nil then return "nil" end
+    return string.format("grade=%s compatible=%s startFactor=%s reasons=%s", tostring(e.grade), tostring(e.compatible),
+        tostring(e.startFactor), table.concat(e.reasons or {}, ","))
+end
+
+-- Activates a generator through the vanilla action (ISActivateGenerator).
+local function generatorGateStep(name, getGen, expectRefused)
+    return actionStep(name, function(ctx)
+        local g = getGen()
+        if not (g and g:getObjectIndex() ~= -1) then R:line("SKIP %s: no generator", name); return nil end
+        player():setPrimaryHandItem(nil)
+        player():setSecondaryHandItem(nil)
+        player():teleportTo(g:getSquare():getX() + 1, g:getSquare():getY(), 0)
+        g:setConnected(true)
+        ctx.g = g
+        R:line("OBS  %s fuel=%.4f %s", name, g:getFuel(), evaluationText((TLG.Integration.Generators.evaluate(g))))
+        captureTlgDebug(ctx)
+        return ISActivateGenerator:new(player(), g, true)
+    end, function(ctx)
+        ctx.restoreLog()
+        local refusal = loggedMatching(ctx, "generator start refused")
+        local activated = ctx.g:isActivated()
+        R:line("OBS  %s activated=%s refusal=%s", name, tostring(activated), tostring(refusal))
+        if expectRefused then
+            R:check(name .. ".refused_by_tlg", function() return refusal ~= nil and not activated, tostring(refusal) end)
+        else
+            R:check(name .. ".activated", function() return activated and refusal == nil, tostring(refusal) end)
+        end
+        ctx.g:setActivated(false)
+        ctx.g:setConnected(false)
+    end)
+end
+
+add(generatorGateStep("G04.gate_petrol", function() return H.gen end, false))
+
+-- A third, empty generator receives E100 through the confirmed ("experimental")
+-- TLG pour, then must be refused by the start gate.
+add(actionStep("tlg_pour_e100_confirmed_generator", function(ctx)
+    local base = H.pumps[1] or { x = START.x, y = START.y }
+    local s = sq(base.x - 6, base.y + 6, 0)
+    local g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), s)
+    if not g then R:line("SKIP tlg_pour_e100_confirmed_generator: no generator"); return nil end
+    g:setFuel(0)
+    g:getModData().tlg = nil
+    H.genC = g
+    local can, fc = giveCan("Base.PetrolCan", { { Fluid.Get("TLG_Ethanol"), 3.0 } })
+    player():setPrimaryHandItem(can)
+    player():teleportTo(s:getX() + 1, s:getY(), 0)
+    hopBegin(ctx, "TLG.pour_e100_confirmed_generator", "item", can, canAmount(fc), "generator", g,
+        function() return g:getFuel() end)
+    return ISTLGPourFuel:new(player(), can, TLG.Authority.Resolver.refForObject(g, "generator"), g, true,
+        function(reply) ctx.reply = reply end)
+end, function(ctx)
+    R:check("TLG.pour_e100_confirmed_generator.reply_ok", function()
+        return ctx.reply ~= nil and ctx.reply.ok == true, tostring(ctx.reply and ctx.reply.reason)
+    end)
+    hopEnd(ctx, true)
+end))
+
+add(generatorGateStep("G04.gate_e100", function() return H.genC end, true))
+
+-- TLG pours into vehicle 2 (8 L E25 from the G03 pour). The transfer checks
+-- that the player stands in the fuel-cap area, so the step places the
+-- player first (see the G06 note on teleportTo).
+local function vehiclePourStep(name, fills, experimental, expectOk)
+    return { name = name, timeout = 4000, fn = function(ctx, ticks)
+        local v, part = H.vehicle2, H.tank2
+        if not (v and part) then R:line("SKIP %s", name); return true end
+        if not ctx.placedAt then
+            local c = v:getAreaCenter(part:getArea())
+            ctx.target = { x = c:getX(), y = c:getY() }
+            player():teleportTo(math.floor(ctx.target.x), math.floor(ctx.target.y), 0)
+            ctx.placedAt = ticks
+            return nil
+        end
+        if ticks - ctx.placedAt == 5 then player():setPosition(ctx.target.x, ctx.target.y, 0) end
+        if ticks - ctx.placedAt < 20 then return nil end
+        if not ctx.queued then
+            local can, fc = giveCan("Base.PetrolCan", fills)
+            player():setPrimaryHandItem(can)
+            ctx.fc = fc
+            R:line("OBS  %s inArea=%s", name, tostring(v:isInArea(part:getArea(), player())))
+            hopBegin(ctx, name, "item", can, canAmount(fc), "vehicle", v, tankAmount(part))
+            ISTimedActionQueue.add(ISTLGPourFuel:new(player(), can, { kind = "vehicle", id = v:getId() }, v, experimental,
+                function(reply) ctx.reply = reply end))
+            ctx.queued, ctx.t1 = true, ticks
+            return nil
+        end
+        if ticks - ctx.t1 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+        local r = ctx.reply
+        R:line("OBS  %s reply ok=%s reason=%s", name, tostring(r and r.ok), tostring(r and r.reason))
+        if expectOk then
+            R:check(name .. ".reply_ok", function() return r ~= nil and r.ok == true, tostring(r and r.reason) end)
+            hopEnd(ctx, false)
+        else
+            R:check(name .. ".refused_nothing_moved", function()
+                local dCan, dTank = ctx.s0 - ctx.srcAmount(), ctx.dstAmount() - ctx.d0
+                return r ~= nil and r.ok == false and r.reason == "incompatible" and math.abs(dCan) <= 1e-6
+                    and math.abs(dTank) <= 1e-6, string.format("reason=%s dCan=%.5f dTank=%.5f", tostring(r and r.reason), dCan, dTank)
+            end)
+        end
+        local e = TLG.Integration.Vehicles.evaluate(v)
+        R:line("OBS  %s tank now %s", name, evaluationText(e))
+        return true
+    end }
+end
+
+add(vehiclePourStep("TLG.pour_petrol_into_vehicle", { { Fluid.Petrol, 3.0 } }, false, true))
+add(vehiclePourStep("TLG.pour_e100_into_vehicle_unconfirmed", { { Fluid.Get("TLG_Ethanol"), 3.0 } }, false, false))
+add(vehiclePourStep("TLG.pour_e100_into_vehicle_confirmed", { { Fluid.Get("TLG_Ethanol"), 3.0 } }, true, true))
+
+-- Starts a vehicle through the vanilla action (ISStartVehicleEngine) as its driver.
+local function vehicleGateStep(name, getVehicle, expectRefused)
+    return { name = name, timeout = 1500, fn = function(ctx, ticks)
+        local v = getVehicle()
+        if not v then R:line("SKIP %s", name); return true end
+        if not ctx.t0 then
+            pcall(function() v:setHotwired(true) end)
+            ctx.entered = v:enter(0, player())
+            ctx.t0 = ticks
+            return nil
+        end
+        if not ctx.queued then
+            if ticks - ctx.t0 < 30 then return nil end
+            R:line("OBS  %s driver=%s %s", name, tostring(v:isDriver(player())), evaluationText(TLG.Integration.Vehicles.evaluate(v)))
+            captureTlgDebug(ctx)
+            ISTimedActionQueue.add(ISStartVehicleEngine:new(player()))
+            ctx.queued, ctx.t1 = true, ticks
+            return nil
+        end
+        if ticks - ctx.t1 < 180 then return nil end
+        ctx.restoreLog()
+        local refusal = loggedMatching(ctx, "vehicle start refused")
+        local running = v:isEngineRunning()
+        R:line("OBS  %s state=%s running=%s refusal=%s", name, tostring(v:getEngineState()), tostring(running), tostring(refusal))
+        if expectRefused then
+            R:check(name .. ".refused_by_tlg", function() return refusal ~= nil and not running, tostring(refusal) end)
+        else
+            R:check(name .. ".not_refused_by_tlg", function()
+                return refusal == nil, string.format("state=%s running=%s", tostring(v:getEngineState()), tostring(running))
+            end)
+        end
+        pcall(function() v:shutOff() end)
+        pcall(function() v:engineDoShuttingDown() end)
+        pcall(function() v:exit(player()) end)
+        return true
+    end }
+end
+
+add(vehicleGateStep("G03.gate_e36", function() return H.vehicle2 end, true))
+
+-- Stall: start vehicle 2 directly (bypassing the gate) on the incompatible
+-- blend; the per-minute effect handler must stall it.
+add({ name = "g03_stall_incompatible", timeout = 8000, fn = function(ctx, ticks)
+    local v = H.vehicle2
+    if not v then return true end
+    if not ctx.t0 then
+        pcall(function() v:setHotwired(true) end)
+        v:enter(0, player())
+        pcall(function() v:tryStartEngine(true) end)
+        ctx.t0 = ticks
+        return nil
+    end
+    if not ctx.h0 then
+        if ticks - ctx.t0 == 60 then pcall(function() v:engineDoStartingSuccess() end) end
+        if v:isEngineRunning() then
+            ctx.h0 = hours()
+            speedUp()
+            return nil
+        end
+        if ticks - ctx.t0 > 600 then
+            R:line("OBS  G03.stall NOT RUN: engine did not start (state=%s)", tostring(v:getEngineState()))
+            pcall(function() v:exit(player()) end)
+            return true
+        end
+        return nil
+    end
+    local elapsed = hours() - ctx.h0
+    if not v:isEngineRunning() or elapsed > 0.25 then
+        normalSpeed()
+        local stopped = not v:isEngineRunning()
+        R:line("OBS  G03.stall after %.3f game h state=%s", elapsed, tostring(v:getEngineState()))
+        R:check("G03.stall_on_incompatible_fuel", function()
+            return stopped, string.format("stopped=%s after %.1f game min", tostring(stopped), elapsed * 60)
+        end)
+        pcall(function() v:shutOff() end)
+        pcall(function() v:exit(player()) end)
+        return true
+    end
+    return nil
+end })
+
+add(vehicleGateStep("G03.gate_station_fuel", function() return H.vehicle end, false))
+
 add({ name = "tlg_ui", fn = function()
     local can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 2.0 } })
     R:check("UI.fuel_context_menu_entry", function()

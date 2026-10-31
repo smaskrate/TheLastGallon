@@ -8,10 +8,9 @@
 --                      did not see) leaves proportionally; unknown increase is
 --                      untracked inflow at the pessimistic baseline (D-006)
 --   effects            start/stall/power from ConsumerService; applied through
---                      per-instance engine controls only (G09 verified RT-SP;
---                      start gate and stall NOT RUN)
---   runtime status     refuel, siphon and idle-burn reconciliation verified
---                      RT-SP 2026-10-31
+--                      per-instance engine controls only (G09 verified RT-SP)
+--   runtime status     refuel, siphon, idle-burn reconciliation, start gate
+--                      and stall verified RT-SP 2026-10-31; driving NOT RUN
 --
 -- Vanilla actions mutate the tank incrementally in update() on the
 -- authoritative side and finish in complete() (SRC ISAddGasolineToVehicle.lua),
@@ -231,7 +230,7 @@ local function installTakeGasoline()
 end
 
 ------------------------------------------------------------------------------
--- Engine effects (start gate and stall NOT RUN, see engine-capabilities G03)
+-- Engine effects (start gate and stall verified RT-SP, engine-capabilities G03)
 ------------------------------------------------------------------------------
 V.STALL_CHANCE_PER_MINUTE = 0.04
 

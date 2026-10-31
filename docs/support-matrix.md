@@ -17,7 +17,7 @@ compatible with another build until re-tested.
 | Pump → vehicle (`ISRefuelFromGasPump`) | action wrap; pump corrected from 1.25 L/unit to 1 L/unit | yes | same | **Verified RT-SP** (run 5: 59 L = −59 units) |
 | Can → generator (`ISAddFuel`) | action wrap | yes | native | **Verified RT-SP** |
 | Station → can → vehicle → can → generator | all of the above, one batch | yes, end to end | — | **Verified RT-SP** (runs 3–5: 10.00000 L every hop) |
-| TLG pour (`ISTLGPourFuel`, any fuel) | authoritative transfer | yes | TLG sets native | **Verified RT-SP** into a generator (petrol accepted, E100 refused without confirmation); vehicle target NOT RUN |
+| TLG pour (`ISTLGPourFuel`, any fuel) | authoritative transfer | yes | TLG sets native | **Verified RT-SP** into generators and a car: petrol accepted, an incompatible result refused without confirmation (nothing moved), accepted with confirmation |
 | Generator pickup (`ISTakeGenerator`) | wrap copies sidecar to the new hand item | yes | native fuel copied by vanilla | **Verified RT-SP**, incl. taking a second generator while carrying one |
 | Generator drop: drop action, `forceDropHeavyItems`, inventory drag to the floor; `IsoGenerator.new` | wraps re-attach the sidecar to the converted object | yes | native | **Verified RT-SP** (all three drop paths); drops done by Java alone are not seen |
 | Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Read verified RT-SP** (run 5: record found after reload, the fluid sits on the world object); pouring from a ground can NOT RUN |
@@ -41,10 +41,16 @@ player's inventory only.
 | Conversion chassis | see `TLG/Content/Conversions.lua` | flex / others | domain only, NOT RUN |
 
 Per-instance part modData and `setEngineFeature` act on one vehicle only
-(G09, RT-SP with two `Base.CarNormal`). The start gate
-(`ISStartVehicleEngine`) is NOT RUN: the harness starts engines directly. The
-per-minute effect handler ran without errors while idling on good fuel
-(run 5); a stall on poor or incompatible fuel has not been exercised.
+(G09, RT-SP with two `Base.CarNormal`). Start gate (`ISStartVehicleEngine`,
+RT-SP run 6): a 36 % ethanol blend is refused and the engine stays off;
+station fuel starts. Stall: the per-minute effect handler stalled an engine
+running on that blend within a game minute.
+
+Station fuel and stock engines: station water is 0–0.4 % (uniform) and
+`engine_si_stock` tolerates 0.2 %, so about half of all stations dispense
+fuel that halves a stock car's start chance from the first day (observed
+0.22–0.23 % at the Gas2Go pump). The "Drain water" can treatment removes
+free water (domain-tested; not exercised in game).
 
 ## Generators
 
@@ -53,8 +59,8 @@ per-minute effect handler ran without errors while idling on good fuel
 `generator_si_stock`. Burn is native; start gate uses `failToStart()`.
 RT-SP (`Base.Generator`): max fuel 10 L; idle burn 0.015 L in 0.5–1.3 game
 hours, connected with no appliance drawing; the native burn is reconciled proportionally
-into the record. Start gate (`ISActivateGenerator`) NOT RUN: the harness
-activates generators directly. Other generator types NOT RUN.
+into the record. Start gate (`ISActivateGenerator`, RT-SP run 6): activates
+on petrol, refused on E100. Other generator types NOT RUN.
 
 ## Stations
 

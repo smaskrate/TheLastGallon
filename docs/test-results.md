@@ -8,8 +8,8 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP: vehicle/generator start gates via vanilla actions, stall on poor fuel, driving burn | Harness starts engines and generators directly |
-| RT-SP: TLG pour into a vehicle, station-reservoir pour, machines running a batch, crafting | Not in the harness yet |
+| RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
+| RT-SP: machines running a batch, crafting, Italian text in game | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
 | Packaged-artifact install/upgrade rehearsal | Not run |
@@ -157,3 +157,31 @@ Verified at runtime (RT-SP, details in `engine-capabilities.md`):
 
 Not run: see the standing list above. Domain suite after the fixes:
 `modules=13 cases=138 passed=138 failed=0`; compile check `compiled=90 errors=0`.
+
+## 2026-10-31 — RT-SP client harness, launch 6 (start gates, stall, vehicle pours)
+
+Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run6.txt`. Phase A
+**63 PASS / 0 FAIL**, phase B **11 PASS / 0 FAIL**; launcher exit code 0.
+
+New checks, all through the vanilla actions:
+
+* Generator start gate (`ISActivateGenerator`): petrol (grade good) activates;
+  3 L E100 put in an empty generator with the confirmed TLG pour is refused
+  (`too_much_ethanol`) and the generator stays off.
+* TLG pours into a car (8 L E25 tank): 3 L petrol accepted (11 L, 18 %
+  ethanol); 3 L E100 without confirmation refused with nothing moved
+  (`incompatible`); the same pour confirmed is accepted (14 L, 36 % ethanol).
+  Litres conserved and records match the native amounts each time.
+* Vehicle start gate (`ISStartVehicleEngine`, player as driver): refused on
+  the 36 % blend (engine `Idle`); allowed on station fuel (`Running`). The
+  station fuel rated `startFactor=0.5` (free water 0.23 % above the stock
+  engine's 0.2 %), so this allowed start depended on the 50 % roll.
+* Stall: the 36 % blend, started directly, was stalled by the per-minute
+  effect handler 0.6 game minutes later.
+* Phase B with id-matched lookups: vehicle tank and generator records and
+  amounts identical after reload, with the ground can, pump, items and world
+  record (11/11).
+
+Finding (balance, not a code defect): station water is drawn from 0–0.4 %
+while the stock engine tolerates 0.2 %, so about half of all stations
+dispense fuel that halves a stock car's start chance from the first day.

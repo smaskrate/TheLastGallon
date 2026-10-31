@@ -21,8 +21,8 @@ alternative), **NOT RUN**.
 | --- | --- | --- | --- |
 | G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), not on the DS |
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
-| G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP)** idle; driving NOT RUN; start gate NOT RUN | Native idle burn (0.0148 L in 0.5 h) reconciled proportionally into the tank record; mod never subtracts |
-| G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn; start gate NOT RUN | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` gate not exercised |
+| G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP)** idle, start gate, stall; driving NOT RUN | Native idle burn reconciled proportionally; `ISStartVehicleEngine` refused on a 36 % ethanol blend, allowed on station fuel; the blend stalled a force-started engine within a game minute; mod never subtracts |
+| G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator) and drag to the floor all carry the record |
 | G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
 | G07 Action authority | Which stage mutates on the server? | SRC-ONLY | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`; MP NOT RUN |
@@ -137,7 +137,7 @@ RT-DS results (`TLG_harness_server.txt`):
 * NOT RUN: world-object containers (rain barrels, FuelPump entity), the
   vanilla `ISFluidTransferAction` driven by a character.
 
-## G03 Vehicle fuel — PASS (SP) for refuel, siphon and idle; start gate NOT RUN
+## G03 Vehicle fuel — PASS (SP) for refuel, siphon, idle, start gate and stall
 
 RT-SP (runs 3–5, `Base.CarNormal`, 59 L tank):
 
@@ -151,9 +151,21 @@ RT-SP (runs 3–5, `Base.CarNormal`, 59 L tank):
   0.0148 L burned in 0.5 game hours at game speed 4; the next read reported
   `reconciled`, totals equal to the native amount and unchanged proportions.
   Driving consumption: NOT RUN.
-* The harness starts engines with `tryStartEngine`/`engineDoStartingSuccess`,
-  so the TLG start gate on `ISStartVehicleEngine` is NOT RUN. The per-minute
-  effect handler ran without errors on good fuel; a stall was not exercised.
+* Start gate (run 6, player as driver, hotwired, vanilla
+  `ISStartVehicleEngine`): on a 36 % ethanol blend (`compatible=false`,
+  reason `too_much_ethanol`) the gate called `engineDoStartingFailed` and the
+  engine stayed `Idle`; on station fuel the start went through to `Running`.
+  That station fuel rated `startFactor=0.5` (reason `water`), so the allowed
+  start depended on the 50 % roll; the deterministic evidence is the refusal.
+* Stall (run 6): the same blend, started directly to bypass the gate, was
+  stalled by the per-minute effect handler 0.6 game minutes later
+  (`Stalling`).
+* **Balance observation:** station water is drawn uniformly from 0–0.4 %
+  (`WorldInit.stationContamination`, `balance.md`) while `engine_si_stock`
+  tolerates 0.2 % free water. About half of all stations therefore dispense
+  fuel that halves the start chance of stock cars from the first day
+  (runs 5–6: 0.216 % and 0.229 % water at the Gas2Go pump). This follows the
+  documented numbers; whether it is intended is a design decision.
 * `IsoCell.getVehicles()` returns a `java.util.HashSet` on 42.21 (BC); use
   `ipairs(set:toArray())`.
 
@@ -175,16 +187,18 @@ Source evidence:
   per-instance `setEngineFeature(quality, loudness, power)`.
 * Consumption is Java-side; the adapter design never subtracts fuel itself.
 
-## G04/G05 Generators — PASS (SP); start gate NOT RUN
+## G04/G05 Generators — PASS (SP)
 
-RT-SP (runs 3–5, `Base.Generator`, max fuel 10 L):
+RT-SP (runs 3–6, `Base.Generator`, max fuel 10 L):
 
 * Can → generator (`ISAddFuel`) moves exactly the litres and carries the
   record; native burn (0.015 L; connected with no appliance drawing,
   `getTotalPowerUsing` 0.015; `GeneratorFuelConsumption`
-  0.1) is reconciled proportionally on the next read. The harness activates
-  the generator with `setActivated(true)`, so the `ISActivateGenerator` start
-  gate is NOT RUN.
+  0.1) is reconciled proportionally on the next read.
+* Start gate (run 6, vanilla `ISActivateGenerator`): a generator on petrol
+  (grade good) activated; a generator holding 3 L of E100, filled through the
+  confirmed TLG pour, was refused (`too_much_ethanol`, `failToStart`) and
+  stayed off.
 * Pickup carries the record to the new item (found in the primary hand,
   since vanilla equips it there); the drop action, `forceDropHeavyItems`
   (taking a second generator while carrying one) and dragging the item to
@@ -338,10 +352,11 @@ fixes, each found by a failed launch:
 
 Since run 3 a launch needs no input: the full run (both phases) takes about
 12 minutes. Results: run 3 phase A 41/5, run 4 phase A 42/1 and phase B 9/1,
-run 5 phase A **47/0** and phase B 9/2; every failure was traced to the
-harness itself (placement, a nearly full target generator, a lookup that
-matched the neighbouring object) except run 4's ground-can result, which
-found the container-ownership defect described under G02.
+run 5 phase A 47/0 and phase B 9/2, run 6 (adds start gates, stall and TLG
+pours into a vehicle) phase A **63/0** and phase B **11/0**. Every failure was
+traced to the harness itself (placement, a nearly full target generator, a
+lookup that matched the neighbouring object) except run 4's ground-can
+result, which found the container-ownership defect described under G02.
 
 ## Tooling pitfalls found
 
@@ -354,10 +369,10 @@ found the container-ownership defect described under G02.
 
 ## Next experiments
 
-1. RT-SP, not yet covered: vehicle and generator start gates through the
-   vanilla actions, a stall on poor fuel, driving consumption, TLG pour into
-   a vehicle, the station-reservoir pour, placed production machines running
-   a batch, crafting the machines, UI rendering checks beyond menu contents.
+1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
+   placed production machines running a batch, crafting the machines,
+   pouring from a can lying on the ground, Italian text in game, UI
+   rendering checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
 

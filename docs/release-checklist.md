@@ -9,8 +9,8 @@ decision and is **not** authorised by any task in this repository.
 | # | Gate (spec §25) | Status | Evidence / what is missing |
 | --- | --- | --- | --- |
 | 1 | Every advertised pathway has a playable tested loop | OPEN | Ethanol chain implemented + domain-tested; in-game production loop NOT RUN. Other pathways domain-only or in progress |
-| 2 | Every supported transfer path preserves fuel state | PARTIAL | Verified RT-SP: pump→can, pump→vehicle, can↔vehicle, can→generator, TLG pour, generator pickup/drop, end-to-end chain; item↔item RT-DS. Machine outputs and the station-reservoir pour SRC-ONLY (`support-matrix.md`) |
-| 3 | Native and mod quantities reconciled | PARTIAL | Verified RT-SP for vehicle idle burn and generator burn; driving burn and third-party paths NOT RUN |
+| 2 | Every supported transfer path preserves fuel state | PARTIAL | Verified RT-SP: pump→can, pump→vehicle, can↔vehicle, can→generator, TLG pour into generators and a car (with and without confirmation), generator pickup/drop, end-to-end chain; item↔item RT-DS. Machine outputs and the station-reservoir pour SRC-ONLY (`support-matrix.md`) |
+| 3 | Native and mod quantities reconciled | PARTIAL | Verified RT-SP for vehicle idle burn and generator burn; driving burn and third-party paths NOT RUN. Start gates and stall verified RT-SP |
 | 4 | Production and energy invariants pass | PARTIAL | Domain invariants pass (138 cases, incl. energy balance, mass balance per converter); no in-game production/energy run |
 | 5 | Multiplayer and dedicated-server tests pass | BLOCKED | DS loads the mod; two-client tests need a second client |
 | 6 | Save/load, pickup/placement, unloaded simulation pass | PARTIAL | RT-SP: item, ground item, vehicle, generator and pump records survive save/reload; generator pickup/placement on all Lua paths. Unloaded catch-up domain-tested only; chunk unload NOT RUN |

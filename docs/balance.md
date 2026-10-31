@@ -77,7 +77,8 @@ decays 0.001/h when dry.
 Effects: start factor falls to 0.55 at maxDeg, power to 0.8, wear rises to
 2×; marginal blends cost up to 40 % start, 15 % power; free water halves
 start chance; phase separation is incompatible for spark engines. Vehicle
-stall chance per running minute = 4 % × (1 − startFactor) (SRC-ONLY).
+stall chance per running minute = 4 % × (1 − startFactor); incompatible fuel
+stalls on the next minute (verified in game; the 4 % rate is not measured).
 
 Energy per unit (nominal): gasoline 32.0 MJ/L, ethanol 21.2, diesel 36.0,
 biodiesel 33.0, propane 93 MJ/Nm³, biogas 21.5, wood gas 5.0, firewood
@@ -89,6 +90,12 @@ Pre-outbreak fuel age up to 30 days (portable/vehicles) and 75 days
 (stations), seeded by world seed and stable identity. Station tanks start
 with up to 0.4 % water and 0.1 % sediment (sandbox toggle). Existing saves
 default to a 30-day transition.
+
+Observed in game (2026-10-31): the water fraction is uniform on 0–0.4 %, and
+`engine_si_stock` tolerates 0.2 %, so about half of all stations dispense
+fuel that halves a stock car's start chance from the first day (Gas2Go pump:
+0.22–0.23 %, `startFactor=0.5`). Open design question: keep, or draw station
+water below the stock tolerance so that only aged or neglected stations fail.
 
 ## Ethanol chain (`TLG/Content/Production.lua`)
 
