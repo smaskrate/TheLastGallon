@@ -8,7 +8,7 @@ decision and is **not** authorised by any task in this repository.
 
 | # | Gate (spec §25) | Status | Evidence / what is missing |
 | --- | --- | --- | --- |
-| 1 | Every advertised pathway has a playable tested loop | PARTIAL | Ethanol (the only advertised pathway) verified RT-SP through the player's path (run 12): the four machines crafted from the inventory craft menu, a whole batch run from the machine menu (fermenter → reflux still → drying column → cans), a `Base.Generator` and a `Base.CarNormal` converted from the workshop menu and run on the ethanol; everything survives reload. The same loop also ran on the game clock (run 13: 136 game hours, conversion work at vanilla x40). Distilling in the pot still, winter conditions and the crafting window itself NOT RUN. Other pathways are domain-only and not advertised |
+| 1 | Every advertised pathway has a playable tested loop | PARTIAL | Ethanol (the only advertised pathway) verified RT-SP through the player's path (run 12): the four machines crafted from the inventory craft menu, a whole batch run from the machine menu (fermenter → reflux still → drying column → cans), a `Base.Generator` and a `Base.CarNormal` converted from the workshop menu and run on the ethanol; everything survives reload. The same loop also ran on the game clock (runs 13–14: 136 game hours, conversion work at vanilla x40), and a January fermentation slowed (run 15) and, with weather, stopped and spoiled as specified (run 16). Distilling in the pot still and the crafting window itself NOT RUN. Other pathways are domain-only and not advertised |
 | 2 | Every supported transfer path preserves fuel state | PARTIAL | Verified RT-SP: pump→can, pump→vehicle, can↔vehicle, can→generator, TLG pour into generators and a car (with and without confirmation), generator pickup/drop, end-to-end chain, still→can, can→drying column→can; item↔item RT-DS. Station-reservoir pour SRC-ONLY (`support-matrix.md`) |
 | 3 | Native and mod quantities reconciled | PARTIAL | Verified RT-SP for vehicle idle burn and generator burn; driving burn and third-party paths NOT RUN. Start gates and stall verified RT-SP |
 | 4 | Production and energy invariants pass | PARTIAL | Domain invariants pass (142 cases, incl. energy balance, mass balance per converter); one in-game ethanol batch matched the model (runs 7–9); no in-game energy run |
@@ -36,6 +36,7 @@ decision and is **not** authorised by any task in this repository.
 ```powershell
 tools\run-sp-harness.ps1              # unlocked desktop, no input needed; ~15 min
 tools\run-sp-harness.ps1 -Mode realtime -TimeoutMinutes 60   # ethanol loop on the game clock; ~7 min
+tools\run-sp-harness.ps1 -Mode winter -TimeoutMinutes 60     # one fermentation from 15 January
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361
 tools\package.ps1                     # artifact for install rehearsal
 ```

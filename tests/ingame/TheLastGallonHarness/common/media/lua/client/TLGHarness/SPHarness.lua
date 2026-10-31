@@ -7,6 +7,7 @@
 --            write "done", quit to desktop
 --   sp-rt -> same scenario, only the ethanol loop on the real game clock,
 --            write "done", quit to desktop (no save/reload)
+--   sp-rtw -> the same from 15 January: one fermentation in the cold
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -26,7 +27,7 @@ local function unattended()
     pcall(function() UIManager.setShowLuaDebuggerOnError(false) end)
     pcall(function() getCore():setOptionShowSurvivalGuide(false) end)
 end
-if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" then
+if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -2228,7 +2229,10 @@ local stepsRT = {}
 local RT = { x = LOOP.x, y = LOOP.y, waitSpeed = 100, workSpeed = 40, away = 400,
     genAt = { x = LOOP.x + 5, y = LOOP.y }, carAt = { x = 10649, y = 10625 } }
 
-function RT.add(step) stepsRT[#stepsRT + 1] = step end
+function RT.add(step)
+    stepsRT[#stepsRT + 1] = step
+    return step
+end
 
 function RT.speed(m)
     pcall(function() getGameTime():setMultiplier(m) end)
@@ -2290,7 +2294,7 @@ function RT.skip(name)
     return false
 end
 
-RT.add({ name = "rt_wait_world", timeout = 3000, fn = function(ctx, ticks)
+RT.waitWorld = RT.add({ name = "rt_wait_world", timeout = 3000, fn = function(ctx, ticks)
     if player() and ticks > 120 then
         R:line("worldName=%s hours=%.4f DayLength=%s", tostring(getWorld():getWorld()), hours(),
             tostring(SandboxVars and SandboxVars.DayLength))
@@ -2298,7 +2302,7 @@ RT.add({ name = "rt_wait_world", timeout = 3000, fn = function(ctx, ticks)
     end
 end })
 
-RT.add({ name = "rt_setup", timeout = 3000, fn = function(ctx, ticks)
+RT.setup = RT.add({ name = "rt_setup", timeout = 3000, fn = function(ctx, ticks)
     if not ctx.t0 then
         local p = player()
         p:setGodMod(true)
@@ -2568,7 +2572,7 @@ RT.add(RT.convert("RT.car", "vehicle", CAR_MENU, "flex_car_normal", 13, function
     return RT.car
 end))
 
-RT.add({ name = "rt_finish", timeout = 600, fn = function(ctx, ticks)
+RT.finish = RT.add({ name = "rt_finish", timeout = 600, fn = function(ctx, ticks)
     if not ctx.done then
         RT.speed(1)
         closeDialogs()
@@ -2584,6 +2588,171 @@ RT.add({ name = "rt_finish", timeout = 600, fn = function(ctx, ticks)
 end })
 
 ------------------------------------------------------------------------------
+-- Winter (request "sp-rtw"): one fermentation from 15 January on the game
+-- clock, followed until it finishes, spoils or 400 game hours pass. Each
+-- hour's progress is compared with the stage rules of ethanol_ferment
+-- (Content/Production.lua: full rate 18-32 C, 0.4 between 8 and 18 C,
+-- paused below 8 C, spoiled after 72 h paused) applied to the game's own day
+-- mean, sheltered as the climate model does: (mean + 16) / 2.
+------------------------------------------------------------------------------
+function RT.fermentRate(shelteredC)
+    if shelteredC < 8 or shelteredC > 38 then return 0 end
+    if shelteredC < 18 or shelteredC > 32 then return 0.4 end
+    return 1
+end
+
+-- Game calendar day (getMonth/getDay are 0-based).
+function RT.dayKey()
+    local gt = getGameTime()
+    return string.format("%02d-%02d", gt:getMonth() + 1, gt:getDay() + 1)
+end
+
+-- The day mean TLG has recorded for today (what the machines advance with)
+-- and the mod's day index.
+function RT.loggedMean()
+    local day = TLG.World.env():dayIndex(TLG.World.now())
+    local log = TLG.World.get().climateLog
+    return log and log[day] and log[day].t, day
+end
+
+RT.winterFerment = { name = "rtw_ferment", timeout = 90000, fn = function(ctx, ticks)
+    if not ctx.t0 and RT.skip("rtw_ferment") then return true end
+    local cm = getClimateManager()
+    if not ctx.t0 then
+        local r = machineClick("RTW.ferment", RT.fermenter, "ContextMenu_TLG_LoadFerment")
+        R:check("RTW.ferment_loaded", function()
+            return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6,
+                string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+        end)
+        ctx.t0, ctx.h0, ctx.next = ticks, hours(), hours() + 1
+        local _, dayIdx = RT.loggedMean()
+        ctx.prev = { h = hours(), done = RT.doneHours(RT.fermenter), dayIdx = dayIdx, stage = "prepare" }
+        ctx.days, ctx.order, ctx.pausedTally = {}, {}, 0
+        ctx.cmp = { n = 0, worst = 0, where = "none" }
+        ctx.cold = { n = 0, wrong = {} }
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return nil end
+    ctx.next = hours() + 1
+    local s = RT.statusOf(RT.fermenter)
+    local now, done = hours(), RT.doneHours(RT.fermenter)
+    local logT, dayIdx = RT.loggedMean()
+    local air = cm:getTemperature()
+    local p = ctx.prev
+    local dt, dd = now - p.h, done - p.done
+    -- Per TLG day: the recorded mean, the air readings taken here, work done.
+    local d = ctx.days[dayIdx]
+    if not d then
+        d = { label = RT.dayKey(), airSum = 0, airN = 0, airMin = 99, airMax = -99, work = 0, hours = 0, paused = 0 }
+        ctx.days[dayIdx], ctx.order[#ctx.order + 1] = d, dayIdx
+        local prevDay = ctx.days[p.dayIdx]
+        if prevDay and prevDay ~= d and prevDay.logT then
+            R:line("OBS  RTW.day %s: recorded mean %.1f C (air read here %.1f, %.1f..%.1f), sheltered %.1f C: work %.2f h in %.2f h, paused %.2f h",
+                prevDay.label, prevDay.logT, prevDay.airSum / math.max(1, prevDay.airN), prevDay.airMin, prevDay.airMax,
+                (prevDay.logT + 16) / 2, prevDay.work, prevDay.hours, prevDay.paused)
+        end
+    end
+    d.airSum, d.airN = d.airSum + air, d.airN + 1
+    d.airMin, d.airMax = math.min(d.airMin, air), math.max(d.airMax, air)
+    if logT then d.logT = logT end
+    d.work, d.hours = d.work + dd, d.hours + dt
+    local running = s.state == "Processing" or s.state == "Paused"
+    -- Compared: the same TLG day at both reads, the ferment stage at both, the
+    -- batch still running. The status read advanced the batch with the day
+    -- mean recorded at that moment, so that is the rule's input.
+    if p.dayIdx == dayIdx and logT and p.stage == "ferment" and s.stage == "ferment" and running then
+        local rate = RT.fermentRate((logT + 16) / 2)
+        local diff = math.abs(dd - rate * dt)
+        ctx.cmp.n = ctx.cmp.n + 1
+        if diff >= ctx.cmp.worst then
+            ctx.cmp.worst = diff
+            ctx.cmp.where = string.format("%s, %.1f h in: did %.4f h, rule %.4f h", d.label, now - ctx.h0, dd, rate * dt)
+        end
+        if rate == 0 then
+            ctx.cold.n = ctx.cold.n + 1
+            if not (s.state == "Paused" and s.pause == "too_cold") then
+                ctx.cold.wrong[#ctx.cold.wrong + 1] = string.format("%s %s/%s", d.label, tostring(s.state), tostring(s.pause))
+            end
+        end
+    end
+    if s.state == "Paused" then
+        d.paused, ctx.pausedTally = d.paused + dt, ctx.pausedTally + dt
+        if s.pause == "too_cold" and not ctx.dialog then
+            -- What the player reads during a cold stop.
+            local before = #H.dialogs.texts
+            machineClick("RTW.status", RT.fermenter, "ContextMenu_TLG_MachineStatus")
+            ctx.dialog = H.dialogs.texts[before + 1] or "none"
+            closeDialogs()
+        end
+    end
+    ctx.prev = { h = now, done = done, dayIdx = dayIdx, stage = s.stage }
+    local elapsed = now - ctx.h0
+    if s.ok ~= false and running and elapsed < 400 then return nil end
+
+    RT.speed(1)
+    local last = ctx.days[ctx.order[#ctx.order]]
+    if last and last.logT then
+        R:line("OBS  RTW.day %s (last, partial): recorded mean %.1f C (air read here %.1f), work %.2f h in %.2f h, paused %.2f h",
+            last.label, last.logT, last.airSum / math.max(1, last.airN), last.work, last.hours, last.paused)
+    end
+    local proc = RT.fermenter:getModData().tlgProc or {}
+    R:line("OBS  RTW.end state=%s pause=%s after %.1f game h; paused %.1f h by the hourly reads, pausedFor %.2f h in the record",
+        tostring(s.state), tostring(s.pause), elapsed, ctx.pausedTally, proc.pausedFor or -1)
+    -- Full days only (20+ hourly reads): the recorded mean has to be the mean
+    -- of the air, weather included.
+    local coldest, worstGap, gapAt, full = 99, 0, "none", 0
+    for _, k in ipairs(ctx.order) do
+        local x = ctx.days[k]
+        if x.logT then coldest = math.min(coldest, (x.logT + 16) / 2) end
+        if x.logT and x.airN >= 20 then
+            full = full + 1
+            local gap = math.abs(x.logT - x.airSum / x.airN)
+            if gap >= worstGap then worstGap, gapAt = gap, x.label end
+        end
+    end
+    R:check("RTW.recorded_day_mean_is_the_air_mean", function()
+        return full >= 2 and worstGap <= 1.5, string.format("%d full days, worst gap %.2f C on %s", full, worstGap, gapAt)
+    end)
+    R:check("RTW.cold_enough_to_slow", function()
+        return coldest < 18, string.format("coldest sheltered day %.1f C", coldest)
+    end)
+    R:check("RTW.progress_follows_the_day_temperature", function()
+        return ctx.cmp.n >= 24 and ctx.cmp.worst <= 0.01,
+            string.format("%d hours compared, worst %.4f h (%s)", ctx.cmp.n, ctx.cmp.worst, ctx.cmp.where)
+    end)
+    if ctx.cold.n > 0 then
+        R:check("RTW.too_cold_hours_paused", function()
+            return #ctx.cold.wrong == 0, string.format("%d cold hours, not paused as too cold: [%s]", ctx.cold.n,
+                table.concat(ctx.cold.wrong, " "))
+        end)
+        R:check("RTW.status_shows_too_cold", function()
+            return has(ctx.dialog, getText("IGUI_TLG_MachineState_Paused")) and has(ctx.dialog, getText("IGUI_TLG_Pause_too_cold")),
+                tostring(ctx.dialog)
+        end)
+    else
+        R:line("OBS  RTW.too_cold_hours_paused NOT REACHED: no day was cold enough to stall")
+    end
+    if s.state == "Faulted" then
+        R:check("RTW.spoils_after_72_paused_hours", function()
+            return s.pause == "batch_spoiled" and math.abs(ctx.pausedTally - 72) <= 1.5 and math.abs((proc.pausedFor or 0) - 72) < 1e-6,
+                string.format("pause=%s paused %.2f h by reads, pausedFor %.2f", tostring(s.pause), ctx.pausedTally,
+                    proc.pausedFor or -1)
+        end)
+    elseif s.state == "OutputReady" then
+        R:check("RTW.slowed_by_the_cold", function()
+            return elapsed > 98 and ctx.pausedTally < 72, string.format("finished after %.1f game h (97 h at full rate)", elapsed)
+        end)
+    else
+        R:line("OBS  RTW.outcome NOT REACHED within 400 game hours: state=%s", tostring(s.state))
+    end
+    return true
+end }
+
+RT.winterSteps = { RT.waitWorld, RT.setup, RT.winterFerment, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -2594,11 +2763,11 @@ Events.OnMainMenuEnter.Add(function()
         " forceLaunch=" .. tostring(getDebugOptions():getBoolean("DebugScenario.ForceLaunch")))
 end)
 
-if REQUEST == "sp-a" or REQUEST == "sp-rt" then
+if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
-        name = REQUEST == "sp-rt" and "TLG harness, real game clock" or "TLG harness phase A",
+        name = (REQUEST == "sp-a") and "TLG harness phase A" or "TLG harness, real game clock",
         forceLaunch = true,
         startLoc = START,
         setSandbox = function()
@@ -2611,11 +2780,21 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" then
             SandboxVars.Zombies = 6
             SandboxVars.FuelStationGasEmptyChance = 0
             SandboxVars.FuelStationGasInfinite = false
+            if REQUEST == "sp-rtw" then
+                -- Mid-January, as vanilla scenarios set the date
+                -- (SRC DebugUIs/Scenarios/AiteronScenario.lua:16-18).
+                SandboxVars.StartMonth = 1
+                SandboxVars.StartDay = 15
+                SandboxVars.StartTime = 2
+            end
         end,
         onStart = function()
             if REQUEST == "sp-rt" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock")
                 TLGH.Steps.run(R, stepsRT, H, nil)
+            elseif REQUEST == "sp-rtw" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, winter")
+                TLGH.Steps.run(R, RT.winterSteps, H, nil)
             else
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
                 TLGH.Steps.run(R, stepsA, H, nil)

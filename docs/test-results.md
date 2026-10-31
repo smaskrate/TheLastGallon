@@ -434,3 +434,42 @@ Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run14_realtime.txt`.
 * Fermentation 97.2 game hours (outdoor 11.8–30.9 °C), distillation 3.78 h,
   drying 12.09 h, generator conversion 7.56 h from the click for 7.5 h of
   work, car 13.11 h for 13 h; 2.0 → 138.0 world hours in all.
+
+## 2026-10-31 — RT-SP client harness, launches 15–16 (winter)
+
+Command: `tools/run-sp-harness.ps1 -Mode winter -TimeoutMinutes 60` (request
+`sp-rtw`: the real-clock scenario from 15 January; one fermentation followed
+until it finishes, spoils or 400 game hours pass). Each hourly status read is
+compared with the stage rules of `ethanol_ferment` (full rate 18–32 °C,
+0.4 between 8 and 18 °C, paused below 8 °C, spoiled after 72 h paused)
+applied to the day temperature TLG had recorded, sheltered as the climate
+model does: (mean + 16) / 2.
+
+Launch 15 (`docs/evidence/2026-10-31_rt-sp_harness_run15_winter.txt`),
+**5 PASS / 0 FAIL**. Every day recorded 0.5–0.6 °C, so the fermenter sat at
+8.3 °C and ran at 0.4 (9.63 h of work per 24 h): finished after 241.7 game
+hours (97 at full rate); 229 hours compared, all exact. No day stalled.
+Finding: the constant value is the season curve. `getDayMeanTemperature()`
+returns `currentDay.season.getDayMeanTemperature()` (BC
+`ClimateManager`); the weather is in `getTemperature()`. Machines and fuel
+ageing had never seen a cold snap or a heat wave. Fixed:
+`World.recordClimate` now records the running mean of the hourly air
+temperature (D-020).
+
+Launch 16 (`…run16_winter.txt`), **8 PASS / 0 FAIL**, console clean, with the
+fix:
+
+* Recorded day means −0.8, −2.7, −2.4 and −4.7 °C (air −7.2 to 3.0 °C);
+  the recorded mean equalled the mean of the harness's own hourly air
+  readings within 0.01 °C on both full days.
+* After its 1 h preparation the batch was paused as too cold every hour
+  (68 of 68 compared hours exact); the Status dialog read "Paused · Reason:
+  too cold here · Stage: fermenting".
+* Spoiled after 72 paused hours (72.23 h by the hourly reads, `pausedFor`
+  72.00 in the record), 73.2 game hours after loading: state `Faulted`,
+  "batch_spoiled".
+
+Not run: a winter with alternating cold and mild days (whether separate
+cold spells add up to the 72 h, as the code does). A heated building is no
+test gap: machine temperature comes from the outdoor day mean only
+(`thermal = "sheltered"`), wherever the machine stands.

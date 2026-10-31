@@ -312,8 +312,8 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   Quantities matched the domain model (6 kg sugar → 3.30 L ethanol in the
   wash → 3.036 L at 94 % → dried to 0.5 % water).
 * Time fixture: the harness advanced the mod clock (`TLG.World.now`), not the
-  game clock; nothing here shows how the machines behave while the game clock
-  runs or while their chunk is unloaded (G12 NOT RUN).
+  game clock; nothing in runs 7–8 shows how the machines behave while the
+  game clock runs or while their chunk is unloaded (runs 13–14 did, G12).
 * The three machine records survived save and reload (phase B).
 * Conversions (run 8): a `Base.Generator` (`flex_generator`) and a
   `Base.CarNormal` (`flex_car_normal`) went through begin, parts delivery
@@ -375,6 +375,27 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 * Context menus can be driven from Lua the way `ISContextMenu` does it:
   `option.onSelect(option.target, option.param1, …)`
   (SRC `ISContextMenu.lua:70`).
+
+## Climate (RT-SP runs 15–16)
+
+* `ClimateManager.getDayMeanTemperature()` is the season curve: it returns
+  `currentDay.season.getDayMeanTemperature()` (BC). In run 15 eleven
+  January days all read 0.5–0.6 °C. `getTemperature()` is the air
+  temperature with the weather: −7.2 to 3.0 °C over the days of run 16.
+  TLG now records each day as the running mean of the hourly
+  `getTemperature()` readings (`World.recordClimate`, D-020); the recorded
+  mean matched the harness's own hourly readings within 0.01 °C on two full
+  days.
+* Request `sp-rtw` (`-Mode winter`): the real-clock scenario from 15
+  January, one fermentation compared hour by hour with the stage rules fed
+  the recorded day mean. Run 15 (season curve): 0.4 rate all through, done
+  after 241.7 game h (97 h at full rate), 229 hours exact. Run 16 (weather):
+  day means −0.8, −2.7, −2.4 and −4.7 °C, paused "too cold" after the 1 h
+  preparation, 68 hours exact, faulted `batch_spoiled` 73.2 game h after
+  loading at `pausedFor` 72.00.
+* A machine's temperature does not depend on where it stands: the climate
+  model takes the outdoor day mean only (`thermal = "sheltered"`). No game
+  API for the temperature at a square has been checked yet.
 
 ## G10–G14
 
@@ -438,13 +459,15 @@ phase B 14/0, run 9 (conversion work as a timed action) phase A 83/0 and
 phase B 14/0, runs 10–11 (the player's path) 76/15 and 80/11 with phase B
 12/2 each, run 12 phase A **94/0** and phase B **14/0**, run 13 (the loop on
 the game clock, no reload) 10/1, the one failure a check bound that missed
-120 settling ticks, and its rerun, run 14, **11/0**. Most failures were
+120 settling ticks, its rerun, run 14, **11/0**, and two January runs, run
+15 **5/0** and run 16 **8/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
 ownership, G02), run 7's conversion refusals (tool counting), runs 10–11's
 crafting and work-action results (recipe tags, `mode:destroy`, the job
-delta on an open-ended action).
+delta on an open-ended action). Run 15 passed and still showed a defect:
+every January day had the same temperature (the season curve, D-020).
 
 ## Tooling pitfalls found
 
@@ -458,8 +481,9 @@ delta on an open-ended action).
 ## Next experiments
 
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
-   distilling in the pot still, machines in winter (only July has run),
-   pouring from a can lying on the ground, Italian text in game, the
+   distilling in the pot still, a winter with mild days between cold spells
+   (the code adds paused hours up across spells), flex-engine starts in the
+   cold, pouring from a can lying on the ground, Italian text in game, the
    crafting window itself, UI rendering checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.

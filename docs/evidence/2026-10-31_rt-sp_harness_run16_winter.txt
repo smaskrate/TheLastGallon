@@ -1,0 +1,27 @@
+# TLG single-player harness, real game clock, winter
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=32684891152751227250 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rtw_ferment begin
+OBS  RTW.ferment menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTW.ferment_loaded :: sugar=6 water=30
+OBS  RTW.status menu "Status" -> ok=true reason=nil state=Paused stage=ferment outputs={} consumed=nil
+OBS  RTW.day 01-15: recorded mean -0.8 C (air read here -0.5, -3.0..2.5), sheltered 7.6 C: work 1.00 h in 12.02 h, paused 12.02 h
+OBS  RTW.day 01-16: recorded mean -2.7 C (air read here -2.7, -7.2..2.8), sheltered 6.7 C: work 0.00 h in 24.08 h, paused 24.08 h
+OBS  RTW.day 01-17: recorded mean -2.4 C (air read here -2.4, -6.9..3.0), sheltered 6.8 C: work 0.00 h in 24.08 h, paused 24.08 h
+OBS  RTW.day 01-18 (last, partial): recorded mean -4.7 C (air read here -4.7), work 0.00 h in 13.05 h, paused 12.04 h
+OBS  RTW.end state=Faulted pause=batch_spoiled after 73.2 game h; paused 72.2 h by the hourly reads, pausedFor 72.00 h in the record
+PASS RTW.recorded_day_mean_is_the_air_mean :: 2 full days, worst gap 0.01 C on 01-16
+PASS RTW.cold_enough_to_slow :: coldest sheltered day 5.6 C
+PASS RTW.progress_follows_the_day_temperature :: 68 hours compared, worst 0.0000 h (01-18, 72.2 h in: did 0.0000 h, rule 0.0000 h)
+PASS RTW.too_cold_hours_paused :: 68 cold hours, not paused as too cold: []
+PASS RTW.status_shows_too_cold :: Paused <LINE> Reason: too cold here <LINE> Stage: fermenting
+PASS RTW.spoils_after_72_paused_hours :: pause=batch_spoiled paused 72.23 h by reads, pausedFor 72.00
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 77.47
+SUMMARY pass=8 fail=0
+DONE

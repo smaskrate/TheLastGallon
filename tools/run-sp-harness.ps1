@@ -13,10 +13,11 @@
 .PARAMETER Mode
   full (default): phase A, save, reload, phase B. realtime: only the ethanol
   loop with time passing on the game clock (no reload); took 7 minutes on
-  2026-10-31 (pass -TimeoutMinutes 60 for headroom).
+  2026-10-31 (pass -TimeoutMinutes 60 for headroom). winter: one
+  fermentation on the game clock from 15 January.
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime")][string]$Mode = "full")
+    [ValidateSet("full", "realtime", "winter")][string]$Mode = "full")
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -50,7 +51,7 @@ if (Test-Path $userOptions) {
 $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
-$request = if ($Mode -eq "realtime") { "sp-rt" } else { "sp-a" }
+$request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
