@@ -1319,11 +1319,11 @@ installed" and no TLG or Lua error.
 | Abort, 2.006729 h in | "Batch stopped. Stopped early: what it made is ready to collect … Ethanol: 1.61, Water: 0.10, Thrown away: Ethanol 1.55, Stillage 15.98, Water 14.05". Kept and thrown away add up to the 33.3 L wash; 12.787717 kg of wood kept, what was not burned; the kept spirit went into a can and the still was empty |
 | **Design: kept spirit** | **FAIL**: 1.613889 L of ethanol kept. Its 1.006729 h of distilling (of 2.775 h) had made 1.101416 L. The amount kept is the share of all stage hours done, the heating-up hour included |
 
-Run 49's failure is a mod defect, still open. `Process.abort` keeps
-`done / total` of the batch's result, counting every stage, so it keeps
-spirit for the heating-up hour, when nothing distils. Aborted mid-way
-through heating up, a still would hand out spirit it never made. A fix
-has two constraints:
+Run 49's failure was a mod defect, fixed in commit `1cb67b7` (runs
+50–51). `Process.abort` kept `done / total` of the batch's result,
+counting every stage, so it kept spirit for the heating-up hour, when
+nothing distils. Aborted mid-way through heating up, a still would have
+handed out spirit it never made. The fix had two constraints:
 1. The same rule credits a fermenter's 1 h prepare stage (1/97 of its
    ethanol). Run 33's `RT.C.wash(done)` expects `done / 97`, so a fix
    changes that expectation too; run 33's evidence stays as it was.

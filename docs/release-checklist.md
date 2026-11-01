@@ -30,6 +30,9 @@ decision and is **not** authorised by any task in this repository.
 * Automation wiring (rules exist in the domain; no adapter yet).
 * "Prepare removal" admin command (`migrations.md`).
 * Wood-gas and electric vehicle conversions (no shipped definitions).
+* Mark the making stages (`makes`) of the biodiesel, biogas, wood retort
+  and ash pit recipes with their machines; until then Abort counts every
+  stage of them (D-023).
 
 ## Commands for the remaining runtime gates
 
