@@ -34,9 +34,12 @@
   fires: the January world; a campfire and a charcoal barbecue lit from
   their menus, the air around each checked against the heat formula, a
   fermenter beside each, and a 12 game hour trip away while they burn.
+.PARAMETER ModSource
+  Folder deployed as the mod (default: the repository's; see setup-devenv.ps1).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "fires")][string]$Mode = "full")
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "fires")][string]$Mode = "full",
+    [string]$ModSource = "")
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -48,7 +51,7 @@ $repo = Split-Path -Parent $PSScriptRoot
 if (-not $GameDir) { $GameDir = $env:PZ_GAME_DIR }
 if (-not $GameDir) { $GameDir = (Resolve-Path (Join-Path $repo "..\..")).Path }
 if (-not $DevCache) { $DevCache = Join-Path $env:LOCALAPPDATA "TheLastGallon\devcache" }
-& (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $DevCache | Out-Null
+& (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $DevCache -ModSource $ModSource | Out-Null
 
 # First-run prompts: copy the user's own already-answered values (read only).
 # The tutorial prompt and the Survival Guide window are switched off here

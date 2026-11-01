@@ -3,6 +3,17 @@
 Development build for Project Zomboid 42.21.0. Features marked *(untested in
 game)* are implemented but have not been verified in a running game yet.
 
+## Installing
+
+* **From the zip:** copy the folder `Contents/mods/TheLastGallon` out of the
+  zip into the `mods` folder of your Project Zomboid user folder
+  (`%UserProfile%\Zomboid\mods` on Windows, `~/Zomboid/mods` on Linux and
+  macOS), then enable *The Last Gallon* in the game's **Mods** menu.
+* **Steam Workshop:** not published.
+* **An existing world:** choose the "Existing saves" sandbox option before
+  you load it with the mod (see *Existing saves* below).
+* **Removing:** read *Removing the mod* below first.
+
 ## Why fuel behaves differently
 
 Fuel left behind by the old world slowly goes stale. How fast depends on what

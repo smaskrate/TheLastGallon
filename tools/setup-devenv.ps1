@@ -17,8 +17,12 @@
   Cache directory (default %LOCALAPPDATA%\TheLastGallon\devcache).
 .PARAMETER Force
   Rewrite generated configuration files even if they already exist.
+.PARAMETER ModSource
+  Folder deployed as mods/TheLastGallon (default: this repository's
+  Contents/mods/TheLastGallon; tools/rehearse-install.ps1 passes the one
+  unpacked from the release zip).
 #>
-param([string]$DevCache = "", [switch]$Force)
+param([string]$DevCache = "", [switch]$Force, [string]$ModSource = "")
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 if (-not $DevCache) { $DevCache = Join-Path $env:LOCALAPPDATA "TheLastGallon\devcache" }
@@ -47,7 +51,8 @@ function Sync-Mod([string]$source, [string]$target) {
     robocopy $source $target /MIR /NFL /NDL /NJH /NJS /NP /R:1 /W:1 | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE) for $source" }
 }
-Sync-Mod (Join-Path $repo "Contents\mods\TheLastGallon") (Join-Path $mods "TheLastGallon")
+if (-not $ModSource) { $ModSource = Join-Path $repo "Contents\mods\TheLastGallon" }
+Sync-Mod $ModSource (Join-Path $mods "TheLastGallon")
 Sync-Mod (Join-Path $repo "tests\ingame\TheLastGallonHarness") (Join-Path $mods "TheLastGallonHarness")
 
 # The client empties mods/default.txt when reset-mods-42_00.txt is missing

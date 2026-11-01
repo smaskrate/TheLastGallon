@@ -6,7 +6,9 @@
      check (syntax + BOM), translation parity.
   2. Copies only the runtime package (Contents/mods/TheLastGallon/{42,common})
      plus player-facing docs into dist/TheLastGallon/Contents/mods/TheLastGallon,
-     writes workshop.txt (visibility=private) and a SHA-256 manifest, and zips it.
+     writes workshop.txt (visibility=private) and a SHA-256 manifest, and zips it
+     (forward-slash entry names, sorted, stamped with the commit time).
+     tools/rehearse-install.ps1 installs that zip into a fresh cache and plays it.
   3. Rejects files outside the allowed runtime extensions and any test/harness
      content. Publication is a separate, manual step (docs/release-checklist.md).
 .PARAMETER SkipTests
@@ -42,7 +44,9 @@ New-Item -ItemType Directory -Force $docsOut | Out-Null
 foreach ($doc in "player-guide.md", "support-matrix.md", "migrations.md") {
     Copy-Item (Join-Path $repo "docs\$doc") $docsOut
 }
-foreach ($doc in "CHANGELOG.md", "NOTICE.md", "README.md") {
+# README.md is the developers' (its commands do not ship); the player guide
+# says how to install.
+foreach ($doc in "CHANGELOG.md", "NOTICE.md") {
     if (Test-Path (Join-Path $repo $doc)) { Copy-Item (Join-Path $repo $doc) $docsOut }
 }
 
@@ -73,10 +77,34 @@ Get-ChildItem -Recurse -File $item | Sort-Object FullName | ForEach-Object {
     $h = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
     "$h  $($_.FullName.Substring($item.Length + 1).Replace('\', '/'))"
 } | Set-Content -Encoding ascii $manifest
+# The zip: entry names with forward slashes (ZIP APPNOTE 4.4.17; Compress-
+# Archive in Windows PowerShell 5.1 writes backslashes, which unzip tools on
+# other systems mishandle), in sorted order, every entry stamped with the
+# commit's time, so one commit builds the same bytes.
 $zip = Join-Path $dist "TheLastGallon-$version.zip"
 if (Test-Path $zip) { Remove-Item $zip }
-Compress-Archive -Path (Join-Path $item "*") -DestinationPath $zip
-$count = (Get-ChildItem -Recurse -File $item).Count
+$stamp = [DateTimeOffset]::Parse((& git -C $repo log -1 --format=%cI))
+Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
+$files = Get-ChildItem -Recurse -File $item | Sort-Object FullName
+$fs = [System.IO.File]::Open($zip, [System.IO.FileMode]::CreateNew)
+try {
+    $archive = New-Object System.IO.Compression.ZipArchive($fs, [System.IO.Compression.ZipArchiveMode]::Create)
+    try {
+        foreach ($f in $files) {
+            $entry = $archive.CreateEntry($f.FullName.Substring($item.Length + 1).Replace('\', '/'),
+                [System.IO.Compression.CompressionLevel]::Optimal)
+            # Set before the entry is written: it is frozen afterwards.
+            $entry.LastWriteTime = $stamp
+            $out = $entry.Open()
+            $in = [System.IO.File]::OpenRead($f.FullName)
+            try { $in.CopyTo($out) } finally { $in.Dispose(); $out.Dispose() }
+        }
+    } finally { $archive.Dispose() }
+} finally { $fs.Dispose() }
+$check = [System.IO.Compression.ZipFile]::OpenRead($zip)
+try { $backslashed = @($check.Entries | Where-Object { $_.FullName.Contains('\') }).Count } finally { $check.Dispose() }
+if ($backslashed -gt 0) { throw "zip has $backslashed entry names with backslashes" }
+$count = $files.Count
 Write-Host "package: $zip ($count files), manifest $manifest. Not uploaded."
 # robocopy reports success codes 1-7; do not leak them as the script's exit code.
 exit 0
