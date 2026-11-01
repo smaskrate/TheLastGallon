@@ -1115,3 +1115,34 @@ Result: phase A **94/0**, phase B **14/0**, the same as runs 12 and 38.
 * After the save and continue, every record came back: cans, a vehicle
   tank, a generator, a pump, three machines, two conversions and the
   world record.
+
+## 2026-11-01 — RT-SP client harness, launches 43–44 (the client in Italian, gate 10)
+
+Command: `tools/run-sp-harness.ps1 -Mode italian -TimeoutMinutes 20` (new
+mode, request `sp-it`). The launcher sets `language=IT` and writes every
+Italian string the deployed mod ships to `TLG_it_expect.txt` as ASCII
+(`\uXXXX` for letters past ASCII). The harness decodes them and compares
+each with what the game gives: `getText` for the menu, interface, fluid
+and sandbox texts, an item's display name for each item id. It then fills
+two placeholders and opens the Fuel menu on a petrol can and the machine
+menu on a fermenter, with their Look and smell and Status dialogs.
+Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run43_italian.txt`,
+`docs/evidence/2026-11-01_rt-sp_harness_run44_italian.txt`.
+
+Run 43 (4/1) matched 220 of 237. The 17 others were exactly the strings
+with placeholders: the game stores `%1` as `%1$s`, which `getText`
+without arguments returns. The harness now expects that form. Run 44:
+**5 PASS / 0 FAIL**.
+
+| Run 44 | Result |
+| --- | --- |
+| Language | `Translator.getLanguage()` = IT |
+| Strings | 237 of 237 as shipped (menu 34, interface 169, fluids 8, items 9, sandbox 17); none unresolved, none garbled |
+| Placeholders | "Carburante principale: Etanolo", "Condizioni: Buono (stima 0.1, più o meno 0.3)" |
+| Fuel menu | "Carburante (The Last Gallon)" with its 7 entries in Italian; Look and smell: "Ispezione del carburante … Metodo: osservazione e odore (approssimativo)" |
+| Machine menu | "Macchinario (The Last Gallon)" > "Stato": "Pronto … Temperatura qui adesso: 55.0 °F, all'aperto" |
+
+Temperatures follow the game's unit option, not the language. Not
+checked: how the fonts draw the accents (no screenshot was looked at),
+the sandbox options screen itself, the workshop and crafting texts in
+their own windows.

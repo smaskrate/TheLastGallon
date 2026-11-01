@@ -19,7 +19,7 @@ alternative), **NOT RUN**.
 
 | Gate | Question | Status | Evidence / result |
 | --- | --- | --- | --- |
-| G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), not on the DS |
+| G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), in English and in Italian (runs 43–44), not on the DS |
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP)** idle, start gate, stall; driving NOT RUN | Native idle burn reconciled proportionally; `ISStartVehicleEngine` refused on a 36 % ethanol blend, allowed on station fuel; the blend stalled a force-started engine within a game minute; mod never subtracts |
 | G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 |
@@ -84,6 +84,12 @@ Probe: `tests/support/runtime_probe.lua` (runner) and
   `Fluid_Name_TLG_Ethanol` all returned their keys on the dedicated server.
   **BC** `Translator` loads `%s/media/lua/shared/Translate/%s/%s.json`.
   Whether a dedicated server loads mod translations at all is unverified.
+* **RT-SP** Italian (runs 43–44): with `language=IT` in `options.ini`,
+  `Translator.getLanguage():name()` is `IT`. The mod's Italian JSON files
+  (UTF-8 without a byte-order mark) load with their accents intact: all
+  237 strings, item display names included. The game stores a placeholder
+  `%N` as `%N$s`, so `getText(key)` without arguments returns `"Avvia:
+  %1$s"` for a shipped `"Avvia: %1"`, while `getText(key, ...)` fills it.
 * **RT-SP** (runs 3–5): on the client `IGUI_TLG_ModName`, `Fluid_Name_TLG_Ethanol`,
   `ContextMenu_TLG_Fuel` and the `TLG.FuelSampleKit` display name all resolve
   to their English text. Mod and harness load from `<cachedir>/mods` once
@@ -670,7 +676,9 @@ full mode on the release zip installed clean, run 36 90/4 with phase B
 run 38 **94/0** and **14/0**, then an existing save gaining the zip's mod,
 run 39 3/0, 7/1 and 3/0 (a harness error) and run 40 **3/0**, 9/1 and
 **3/0**, and after the fix run 41 **3/0**, **11/0** and **3/0**, then the full
-mode on the final zip installed clean, run 42 **94/0** and **14/0**. Most failures were
+mode on the final zip installed clean, run 42 **94/0** and **14/0**, and
+the client in Italian, run 43 4/1 (an expectation: the stored `%1$s`
+placeholder form) and run 44 **5/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
