@@ -230,8 +230,8 @@ recorded at installation were fresh, and a can first used 6 days later
 was a fifth of the way to the world's age. The other two settings and
 servers are untested in game.)* Known issue: Look and smell on fuel the
 mod has not recorded yet answers, but What I know about it then still
-says "unknown"; pour or refuel with it once and later looks are
-remembered.
+says "unknown". A pour or refuel records the fuel; that later looks are
+then remembered is untested in game.
 
 ## Removing the mod
 

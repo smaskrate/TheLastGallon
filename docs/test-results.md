@@ -1040,9 +1040,13 @@ expected condition from the policy's two ends, without the mod's
 `docs/evidence/2026-11-01_rt-sp_harness_run39_existing_launch1.txt` and
 `_launch2.txt`, the same for run 40.
 
-Run 40: launch 1 **3/0**, phase B **9/1**, phase C **3/0**. Run 39 was the
-same up to a harness error: for a can on the ground the game keeps the
-fluid on the world object, and the harness read it from the item.
+Run 40: launch 1 **3/0**, phase B **9/1**, phase C **3/0**. Run 39 hit a
+harness error at the can on the ground: the game keeps a ground item's
+fluid on the world object, and the harness read it from the item. So run
+39 never recorded that can, and its phase C check of the can passed
+vacuously ("none" before and after). The world-age figures vary by world
+seed and item, since the pre-outbreak age is seeded (run 39: 0.127 for
+the can, 0.560 for the pump).
 
 | Run 40 | Result |
 | --- | --- |
@@ -1050,7 +1054,7 @@ fluid on the world object, and the harness read it from the item.
 | The mod's world record | created on this first load: existing save, policy transition, 30 days, installed at the load hour (242.0272), `newGame=false` in the mod's own log line |
 | Sandbox options | the save took the mod's defaults (ExistingSavePolicy 1, TransitionDays 30); the load screen offers mods only |
 | Carried can, first recorded at installation | condition 0.000013, exactly the rule; the world-age condition would have been 0.387 |
-| Station pump, first recorded at installation | condition 0.000005, exactly the rule (world-age 0.079); water 34.86 L and sediment 11.54 L in 11,687 L, seeded |
+| Station pump, first recorded at installation | condition 0.000005, exactly the rule (world-age 0.079); water 34.86 L and sediment 11.54 L in 11,687 L. At 0.30 % water this is one of the one-in-ten contaminated stations (`docs/balance.md`); run 39 drew a clean one (4.85 L in 8,478 L, 0.06 %) |
 | Can on the ground, first recorded 144.02 h after installation | condition 0.120482, exactly the rule: 20 % of the way from aged since installation (0.057) to the world-age condition (0.374) |
 | After save, exit and continue | world record (seed, installed hour, policy), both cans' records and ids unchanged |
 | **Look and smell, then What I know about it** | **FAIL**: the look answered ("Condition: Good"), but What I know about it said "Condition unknown: not sampled yet". The observation was filed under `S326600847-1`, an id the can never received |
