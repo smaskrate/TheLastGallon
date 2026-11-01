@@ -458,8 +458,8 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   game's air on every floor tile within 9 of the fire at four fuel levels
   (no tile off; 34 tiles warmed at 360 min, 19 at 40, 11 at 20, none at
   5: the radius follows `calcLightRadius`), and unlit all 360 tiles had
-  the unwarmed value. Tiles in range behind walls stayed unwarmed (line
-  of sight). At the fermenter 2.24 tiles away the formula matched every
+  the unwarmed value. Tiles in range but out of its line of sight stayed
+  unwarmed. At the fermenter 2.24 tiles away the formula matched every
   hour of a 114 hour batch (worst 0.00000 °C). Left with 365 minutes of
   fuel for a 12 hour trip that unloaded its chunk, the fire was out with
   0 on the return: the reload burns the absence away, as the bytecode
@@ -539,7 +539,8 @@ the game clock, no reload) 10/1, the one failure a check bound that missed
 **5/0** and run 16 **8/0**, three January runs by site, run 17
 **24/0**, run 18 24/1 and run 19 **25/0**, and two beside a map
 fireplace, run 20 1/0 (the search found none near the start) and run 21
-**17/0**. Most failures were
+**17/0**, then the winter mode again with its helpers shared, run 22
+**25/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

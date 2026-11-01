@@ -574,7 +574,10 @@ hour trip. Evidence:
 The absence cost about 17 hours. The 7 unloaded hours of 16 January took
 the unheated room value (7.7 °C), which brought that day's mean to just
 below 18 °C (0.4). The 5 unloaded hours of 17 January had no reading at
-all: the day stood at 7.8 °C and the batch paused (the 5.36 h). Even with
+all: the day stood at 7.8 °C and the batch paused (the 5.36 h; the
+harness's day line for 17 January shows 12.91 h paused because it counts
+the whole interval since the previous read as paused when a read finds the
+batch paused, while the mod's own `pausedFor` is 5.36 h). Even with
 the fire lit again, the day's mean then stayed below 18 °C for about 11
 hours (0.4 rate; 14.6 °C at 48 h in). This is the day-mean rule of D-020
 and D-021 at work, matched exactly by the harness. Meanwhile the fire
@@ -585,3 +588,10 @@ room".
 
 Not run: a fire (`IsoFire`) or barbecue beside a machine, the fireplace's
 menu and timed actions, a fireplace upstairs.
+
+Run 22 repeated the winter mode (launches 17–19) once its status,
+filed-reading and trip helpers served both scenarios: **25 PASS / 0
+FAIL**, as run 19 (room formula exact over 94 hours; readings, day
+temperatures and work exact; outdoors and the room spoiled at 72.00
+paused hours, the warmed batch finished with 5.26 h paused). Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run22_sites.txt`.
