@@ -80,10 +80,17 @@ Get-ChildItem -Recurse -File $item | Sort-Object FullName | ForEach-Object {
 # The zip: entry names with forward slashes (ZIP APPNOTE 4.4.17; Compress-
 # Archive in Windows PowerShell 5.1 writes backslashes, which unzip tools on
 # other systems mishandle), in sorted order, every entry stamped with the
-# commit's time, so one commit builds the same bytes.
+# time of the last commit that changed what ships, so a clean checkout
+# builds the same bytes for the same content. Uncommitted changes are
+# packaged too, and then the zip belongs to no commit: say so.
 $zip = Join-Path $dist "TheLastGallon-$version.zip"
 if (Test-Path $zip) { Remove-Item $zip }
-$stamp = [DateTimeOffset]::Parse((& git -C $repo log -1 --format=%cI))
+$shipped = @("Contents", "docs/player-guide.md", "docs/support-matrix.md", "docs/migrations.md", "CHANGELOG.md",
+    "NOTICE.md", "tools/package.ps1")
+$stamp = [DateTimeOffset]::Parse((& git -C $repo log -1 --format=%cI -- $shipped))
+$commit = (& git -C $repo rev-parse --short HEAD)
+$dirty = @(& git -C $repo status --porcelain -- $shipped).Count -gt 0
+if ($dirty) { Write-Host "WARNING: uncommitted changes to shipped files: this zip is not the one commit $commit builds." }
 Add-Type -AssemblyName System.IO.Compression, System.IO.Compression.FileSystem
 $files = Get-ChildItem -Recurse -File $item | Sort-Object FullName
 $fs = [System.IO.File]::Open($zip, [System.IO.FileMode]::CreateNew)
@@ -105,6 +112,7 @@ $check = [System.IO.Compression.ZipFile]::OpenRead($zip)
 try { $backslashed = @($check.Entries | Where-Object { $_.FullName.Contains('\') }).Count } finally { $check.Dispose() }
 if ($backslashed -gt 0) { throw "zip has $backslashed entry names with backslashes" }
 $count = $files.Count
-Write-Host "package: $zip ($count files), manifest $manifest. Not uploaded."
+$from = if ($dirty) { "commit $commit plus uncommitted changes" } else { "commit $commit" }
+Write-Host "package: $zip ($count files, $from), manifest $manifest. Not uploaded."
 # robocopy reports success codes 1-7; do not leak them as the script's exit code.
 exit 0
