@@ -918,8 +918,8 @@ the sources before the run:
 | Air around the fire = heat formula | 528 tiles at each of 4 fuel levels, 0 off; 282 warmed at radius 10 (22 out of line of sight); radius 5 at 199 min, 2 at 100 and at 30 | 80 tiles, 0 off; 24 warmed (radius 3) |
 | Radius at a fuel level | truncated, 46 of 46 readings (rounded would fit 18) | always 3 |
 | Machine air = formula, readings filed | 42 h, 0.00000 °C; exact | 42 h, 0.00000 °C; exact |
-| Warming one tile away | 10.9 to 29.8 °C above the outdoor air; lowest air 3.5 °C (at radius 2) | 7.7 to 15.4 °C; lowest air 2.3 °C |
-| Day temperature at the machine (outdoors −6.4, −8.5, −8.2 °C) | 14.51 and 13.32 °C before the trip, rate 0.4; 7.61 °C on 17 January (the fire out from before midnight until the return) | 4.64, 3.54 and 0.82 °C: paused too cold 53.1 of 54.1 hours |
+| Warming one tile away | 10.9 to 29.8 °C above the outdoor air; lowest air 3.5 °C | 7.7 to 15.4 °C; lowest air 2.3 °C |
+| Day temperature at the machine (outdoors −6.4, −8.5, −8.2 °C) | 14.51 and 13.32 °C before the trip, rate 0.4; 7.61 °C on 17 January. Derived: the rule's 3.0332 h at rate 0.4 puts midnight 7.58 h after the 29.11 h read, and the noted fuel ran out about 0.2 h before that, so the day began with the fire out until the return | 4.64, 3.54 and 0.82 °C: paused too cold 53.1 of 54.1 hours |
 | Notes filed = harness's | **FAIL**: 44 hours, each "no fire" while the harness saw the campfire | 44 hours, all with the fire, 0 off |
 | Hours away credited | **FAIL**: 0.00 h of 12.01 (the harness's last note, 397 min, covers 6.48 h) | 6.02 h, as the harness's (369 min) |
 | Work over the trip = rule with the credit | **FAIL**: did 0.0000 h, the rule 3.0332 h: uncredited, 16 January fell below the 8 °C floor and the batch stopped | 0.0000 h, as the rule (too cold either way) |

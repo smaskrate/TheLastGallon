@@ -538,6 +538,11 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   read. Both fires burned out during a 12 hour trip that unloaded them:
   the campfire one minute per event, the barbecue by game time
   (`lastUpdateTime` is saved, BC `IsoBarbecue.save`).
+* Heat sources on a dedicated server (BC 42.21, not run in multiplayer):
+  `IsoBarbecue.update` returns before `updateHeatSource` when
+  `GameServer.server` is set, so there a barbecue warms no tile.
+  `IsoFireplace.update` calls `updateHeatSource` on the server too, and an
+  `IsoFire` adds its permanent heat source with no server check.
 * Grid power: `IsoWorld.hydroPowerOn` starts from
   `SandboxOptions.doesPowerGridExist()`, true while the world's age in days
   is at most `ElecShutModifier` (so −1: never);

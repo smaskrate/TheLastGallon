@@ -377,7 +377,9 @@ listed with their replacement.
   the hours away: 0 of the 6.48 hours its fuel covered, and the batch
   stopped for the rest of the day. The "campfire" in the list above is the
   map's campfire tile (`camping_03_16`–`_21`). A charcoal barbecue was
-  noted in all 44 hours and credited exactly (6.02 hours). Open.
+  noted in all 44 hours and credited exactly (6.02 hours). Open. On a
+  dedicated server a barbecue has no heat source at all (BC
+  `IsoBarbecue.update`), so there it warms nothing (not run).
 
 ## D-023 Abort batch keeps what the batch made
 * Decision: aborting a running or paused batch keeps what it made so far in
