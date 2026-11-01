@@ -97,7 +97,8 @@ still is welded in hand.
    Reflux ethanol runs converted engines as it is, but dry it before
    blending with gasoline: wet ethanol in gasoline separates.
 
-Picking up a working machine pauses it; put it down to continue. *(Building
+Picking up a working machine pauses it; put it down to continue. The hours
+around a move are not yet counted right (see Troubleshooting). *(Building
 the four machines and one batch through the fermenter, reflux still and
 drying column, using the menu entries named above, were checked in game, as
 were January batches outdoors, in a room and on a tile warmed by a heat
@@ -105,10 +106,12 @@ source added for the test (the first two stopped and spoiled, the warmed
 one finished), and a January batch beside a house fireplace kept fed with
 logs (it finished; the fire was lit and fed by the test without its
 menu, and its warmth counted through the first 6 hours of a 12 hour
-absence, as long as its fuel lasted); a barbecue's warmth while you are
-away, distilling in the pot still, Pause/Resume/Abort, picking up a
-working machine, a fire or barbecue beside a machine, upper floors and
-stopped days adding up across separate cold spells are untested in
+absence, as long as its fuel lasted), and working fermenters picked up and
+put down again (paused while carried, working again once down, the hours
+around the move miscounted); a barbecue's warmth while you are away,
+distilling in the pot still, Pause/Resume/Abort, picking up a working
+still or drying column, a fire or barbecue beside a machine, upper floors
+and stopped days adding up across separate cold spells are untested in
 game.)*
 
 ## Converting an engine
@@ -163,6 +166,7 @@ in game).
 | Fermenter paused "too cold" | below 8 °C at the machine today (see Status) | Move it into a room, or beside a lit fireplace, wood stove, campfire or barbecue; away, the fire keeps it warm only while its fuel lasts. After 3 days paused in all the batch spoils |
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
 | Machine paused "picked up" | it was carried | Place it on the ground |
+| A moved machine is behind or ahead of where it should be | the mod notices a move only the next time the machine is used | Until this is fixed: check Status just before you pick it up, once while you carry it, and right after you put it down |
 
 ## Existing saves
 

@@ -416,6 +416,24 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   as `getClimateValuesCopy():getDayLightLagged()`; vanilla formats
   temperatures in the player's units with
   `Temperature.getTemperatureString` (SRC `server/radio/ISWeatherChannel.lua:209`).
+  With the grid on, room tiles read 22.0000 °C at every hourly reading of
+  run 26 (July).
+* Moving a ground item (SRC 42.21), the paths run 26 used on running
+  fermenters, each keeping the item's mod data: the world menu's Grab
+  (`ISWorldObjectContextMenu.onGrabWItem`) queues `ISGrabItemAction`, whose
+  single-player `transferItem` removes the world object and moves the same
+  item into the inventory; the loot window's Grab
+  (`ISInventoryPaneContextMenu.onGrabItems`, the item listed in the floor
+  container by `ISInventoryPage:refreshBackpacks`) and the inventory menu's
+  Drop (`onDropItems`) queue `ISInventoryTransferAction`, which calls
+  `ISTransferAction:transferItem` (floor branches: remove the world object,
+  or `AddWorldInventoryItem` on the character's tile, a neighbour if that
+  one is full); the
+  place cursor queues `ISDropWorldItemAction`, whose `complete()` calls
+  `AddWorldInventoryItem`. In multiplayer the client asks the server for an
+  item transaction instead (`createItemTransaction`); the server's Lua
+  `TransactionProcessor` handles only moveables and `dropOnFloor`, so no
+  Lua sees a grab there (not run in MP).
 * Fireplaces (BC 42.21 `IsoFireplace`): the map loader makes one from a
   tile whose `container` property is `fireplace`, `campfire`, `brazier` or
   `woodstove` (`CellLoader`); the only one vanilla Lua builds itself is the
@@ -550,8 +568,9 @@ fireplace, run 20 1/0 (the search found none near the start) and run 21
 **17/0**, then the winter mode again with its helpers shared, run 22
 **25/0**, the fire credit of D-022 beside the same fireplace, run 23
 **21/0**, the winter mode with the fire notes running, run 24
-**25/0**, and the fireplace batch across a save, run 25 **8/0** before and
-**20/0** after it. Most failures were
+**25/0**, the fireplace batch across a save, run 25 **8/0** before and
+**20/0** after it, and running fermenters picked up and put down, run 26
+25/3. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -561,7 +580,8 @@ delta on an open-ended action). Run 15 passed and still showed a defect:
 every January day had the same temperature (the season curve, D-020).
 Runs 17–18 found two in the site readings: a warmed machine paused after
 midnight until the day's first reading, and the status then still showed
-the unheated value (a pruned reading).
+the unheated value (a pruned reading). Run 26's three failures are one mod
+defect: the work around a machine pickup does not follow D-015.
 
 ## Tooling pitfalls found
 

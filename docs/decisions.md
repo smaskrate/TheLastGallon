@@ -152,7 +152,16 @@ listed with their replacement.
   and drying column each ran a batch in game and kept their records across
   save and reload (RT-SP 2026-10-31, runs 7 and 12); on the game clock a
   fermenter whose chunk was unloaded for 24 game hours caught up exactly on
-  the next access (runs 13–14). Picking up a running machine is NOT RUN.
+  the next access (runs 13–14).
+* As built, this rule does not hold (RT-SP run 26, 3 FAIL). The adapter sees
+  a move only at the next access, so it cannot tell placed hours from
+  carried ones: an access while carried pauses the batch from the previous
+  access, dropping the hours it stood placed before the pickup; the first
+  access after it is put down starts it from that access, dropping the
+  hours since; with no access while carried, the carried hours count as if
+  it had stood at its new place. The record itself travels with the item
+  through both pickup paths and both put-down paths of the run. Open (gate
+  6).
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

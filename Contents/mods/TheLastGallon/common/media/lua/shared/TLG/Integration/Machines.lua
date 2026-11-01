@@ -12,14 +12,20 @@
 -- and 23 did the same beside a map fireplace; in run 23 the fire notes
 -- matched the harness's and the hours away were credited exactly (D-022);
 -- in run 25 such a record, "no fire" notes included, came back unchanged
--- from save, exit to menu and continue.
--- Distilling in the pot still, pickup while processing, a barbecue or open
--- fire, upper floors and MP replication are NOT RUN.
+-- from save, exit to menu and continue. In run 26 running fermenters were
+-- picked up and put down through the player's actions: the record travelled
+-- unchanged, but the work around the move failed D-015 (see processing).
+-- Distilling in the pot still, a still or drying column picked up while
+-- processing, a barbecue or open fire, upper floors and MP replication are
+-- NOT RUN.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
---   processing         only while the item lies on the ground; picking it up
---                      pauses the batch at the next access without crediting
---                      the unknown carried time (conservative)
+--   processing         meant only while the item lies on the ground (D-015),
+--                      but a move is seen only at the next access: one while
+--                      carried pauses the batch from the previous access
+--                      (the placed hours before the pickup are lost), the
+--                      first one after it is put down starts it from then
+--                      (the hours since are lost); RT-SP run 26
 --   unloaded           lazy, event-exact catch-up on access (Process.advance)
 --   owner of           machine inputs, outputs, firebox fuel (all TLG-owned)
 --   temperature        where it stands (D-021): the site (in a room or not,
@@ -30,7 +36,8 @@
 --                      BC 42.21 ClimateManager.getAirTemperatureForSquare)
 --                      into the record. Records only: the batch still advances
 --                      on access. A machine moved without being used in
---                      between counts at its new place for that time.
+--                      between counts at its new place for that time, the
+--                      hours carried included (run 26).
 --   fires              every ten game minutes the authority notes the fire
 --                      (fireplace, wood stove, campfire, brazier, barbecue)
 --                      that gives each such machine its air, with its fuel;

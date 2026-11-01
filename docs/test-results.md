@@ -9,7 +9,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
-| RT-SP: crafting the sampling kit, filter and stabilizer; distilling in the pot still; picking up a running machine; machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
+| RT-SP: crafting the sampling kit, filter and stabilizer; distilling in the pot still; picking up a running still or drying column (fermenters: run 26); machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
@@ -629,6 +629,7 @@ notes know, so nothing was credited: the day temperatures matched the
 harness's without notes. The outcomes were as in run 22 (outdoors and the
 room spoiled at 72.00 paused hours; the warmed batch finished, its 6.26
 paused hours all on the day of the trip; the weather differs per run).
+Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run24_sites.txt`.
 
 ## 2026-11-01 — RT-SP client harness, launch 25 (the fireplace batch across a save)
 
@@ -661,4 +662,42 @@ The first status after the reload read "Temperature here today: 58.5 °F,
 in a room": that day's mean still held the hours the fire was out before
 the save. It ended the day at 19.6 °C, and every reported day temperature
 matched the harness's.
-Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run24_sites.txt`.
+
+## 2026-11-01 — RT-SP client harness, launch 26 (running fermenters picked up)
+
+Command: `tools/run-sp-harness.ps1 -Mode pickup -TimeoutMinutes 30` (request
+`sp-rtp`; new). Summer with the grid on (`ElecShutModifier` 30): three
+fermenters on room tiles around the character, loaded in the same tick. A
+powered room holds 22 °C, so every placed hour is a full stage hour. Three
+game hours later A was picked up with the world menu's Grab and B with the
+loot window's Grab; C stayed where it was, as the control. A's Status was
+read while it was carried, B's was not. Three game hours later A was put
+down with the place action and B with the inventory menu's Drop, each on
+another room tile. All three were read two game hours later, and again
+two hours after that. The three `RTP.D015_` checks hold the work to D-015:
+processing advances only while the machine is placed. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run26_pickup.txt`.
+
+Result: **25 PASS / 3 FAIL**. The three failures are the D-015 checks: the
+work around a move does not follow the decision.
+
+| Run 26 | Result |
+| --- | --- |
+| Pickup | world menu Grab (`ISGrabItemAction`) and loot window Grab (`ISInventoryTransferAction` from the floor): both carried, records unchanged (7 readings and notes each) |
+| Menu while carried | Status only; "Place it on the ground to operate it" greyed |
+| A's Status while carried | Paused, "Reason: it was picked up; place it to continue" |
+| Hourly list | A left it at that Status, B at the next hourly reading, C stayed; nothing filed in the 3 h carried |
+| Put down | A with the place action on its tile, B with Drop on the character's tile; records unchanged; neither read in the 2 h before a Status |
+| After the Status | all three Processing and listed at their tiles; readings (filed 22 = game 22.0000 °C, 4 h) and fire notes resumed; A and B then did 2.0002 h each, like C |
+| Control C | 8.0319 h of work in 8.0319 game h |
+| **FAIL** A before the pickup | 0 h credited for 3.01 h placed: the Status while carried paused it from its last access, the load |
+| **FAIL** A after putting down | 0 h credited for 2.00 h placed: the first Status after putting down started it again from that moment |
+| **FAIL** B while carried | 8.03 h credited for 5.03 h placed: never read while carried, it counted the 3.00 h carried as if it had stood at its new tile |
+
+The mod learns of a move only when the machine is next used, and then
+cannot tell the hours placed from the hours carried: a Status while
+carried drops every hour since the last use, and without one every hour
+counts. With the grid on the game gave a room tile 22.0000 °C at every
+reading, as the room formula says (the first check of it in game with
+power). Not run: a still or drying column picked up, a move in
+multiplayer, a carried machine across a save.

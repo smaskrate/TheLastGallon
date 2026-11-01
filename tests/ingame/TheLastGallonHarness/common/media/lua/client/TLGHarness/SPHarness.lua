@@ -11,6 +11,7 @@
 --   sp-rtf -> the same January world: a fermenter beside a map fireplace
 --   sp-rtfs -> the same, saved mid-batch and exited to the menu ("sp-rtfb")
 --   sp-rtfb -> main menu continues that save, checks the records, finishes
+--   sp-rtp -> summer, grid on: fermenters picked up mid-batch and put down
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -31,7 +32,7 @@ local function unattended()
     pcall(function() getCore():setOptionShowSurvivalGuide(false) end)
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
-    or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" then
+    or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -3953,6 +3954,508 @@ RT.fireSaveSteps = { RT.waitWorld, RT.setup, RT.fireFind, RT.fireLight, RT.fireB
 RT.fireReloadSteps = { RT.fireReload, RT.fireFerment, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Pickup (request "sp-rtp"): a running fermenter picked up and put down
+-- again (D-015, release gate 6). Summer with the grid on (ElecShutModifier
+-- 30, as vanilla's Multiplayer debug scenario sets it): three fermenters on
+-- free room tiles around the character's tile, where a powered room holds
+-- 22 C (Climate.roomAir), so every placed hour is a full stage hour. All
+-- three are loaded in the same tick. Three game hours later A is picked up
+-- with the world menu's Grab (ISWorldObjectContextMenu.onGrabWItem, which
+-- queues ISGrabItemAction in single player) and B with the loot window's
+-- Grab (ISInventoryPaneContextMenu.onGrabItems: ISInventoryTransferAction
+-- from the floor); C stays, the control. A's Status is read while carried,
+-- B's is not. Three game hours later A is put down with
+-- ISDropWorldItemAction (what the place cursor queues) and B with the
+-- inventory menu's Drop (onDropItems: ISInventoryTransferAction to the
+-- floor), each on another room tile, and two game hours later all three
+-- are read. D-015: processing advances only while placed, so A and B must
+-- have done the work of their placed hours, carried hours not counted (the
+-- RTP.D015_ checks). Two more hours: both must progress like C again.
+------------------------------------------------------------------------------
+RT.P = { names = { "A", "B", "C" }, carryAt = 3, carryHours = 3, settleHours = 2, afterHours = 2, tol = 0.01 }
+
+function RT.P.free(s) return RT.W.free(s) and RT.W.inRoom(s) end
+
+-- A free room tile with four free room neighbours it can reach, searched
+-- outwards from (x0, y0): { the character's tile, A, B, C, A's new place },
+-- all within the authority's 2.5 tiles of the first. B is dropped where the
+-- character stands.
+function RT.P.findSpots(x0, y0)
+    for r = 0, 80 do
+        for dx = -r, r do
+            for dy = -r, r do
+                local s = math.max(math.abs(dx), math.abs(dy)) == r and sq(x0 + dx, y0 + dy, 0) or nil
+                if s and RT.P.free(s) then
+                    local out = { s }
+                    for ox = -1, 1 do
+                        for oy = -1, 1 do
+                            local n = (ox ~= 0 or oy ~= 0) and sq(s:getX() + ox, s:getY() + oy, 0) or nil
+                            if #out < 5 and RT.P.free(n) and s:canReachTo(n) and not s:isBlockedTo(n) then
+                                out[#out + 1] = n
+                            end
+                        end
+                    end
+                    if #out == 5 then return out end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- The fermenter whose record has process id `pid`, on the character's tile
+-- or a neighbour (looked up again after it is put down).
+function RT.P.placedById(pid)
+    local here = player():getSquare()
+    for dx = -1, 1 do
+        for dy = -1, 1 do
+            local s = here and sq(here:getX() + dx, here:getY() + dy, 0)
+            local objs = s and s:getWorldObjects()
+            for j = 0, (objs and objs:size() or 0) - 1 do
+                local it = objs:get(j):getItem()
+                local rec = it and it:getModData().tlgProc
+                if type(rec) == "table" and rec.id == pid then return it end
+            end
+        end
+    end
+    return nil
+end
+
+function RT.P.carried(item)
+    return item ~= nil and item:getWorldItem() == nil and player():getInventory():getItemWithIDRecursiv(item:getID()) ~= nil
+end
+
+function RT.P.maxKey(t)
+    local keys = TLG.Tables.sortedKeys(t or {})
+    return keys[#keys] or -1
+end
+
+-- Hours of readings or notes after hour `h`.
+function RT.P.after(t, h)
+    local n = 0
+    for k in pairs(t or {}) do
+        if k > h then n = n + 1 end
+    end
+    return n
+end
+
+function RT.P.newHours(ctx)
+    local a, b = RT.P.items[1]:getModData().tlgProc or {}, RT.P.items[2]:getModData().tlgProc or {}
+    return RT.P.after(a.temps, ctx.keys[1].temps) + RT.P.after(a.fires, ctx.keys[1].fires)
+        + RT.P.after(b.temps, ctx.keys[2].temps) + RT.P.after(b.fires, ctx.keys[2].fires)
+end
+
+-- Whether `after` still holds what `before` held: the same batch and every
+-- reading and note of `before` unchanged (the hourly reading and the fire
+-- notes may add hours meanwhile).
+function RT.P.kept(before, after)
+    if type(before) ~= "table" or type(after) ~= "table" then return false, "no record" end
+    for _, k in ipairs({ "id", "rev", "machine", "state", "pause", "stage", "stageDone", "t", "startedAt", "pausedFor" }) do
+        if before[k] ~= after[k] then return false, string.format("%s: %s -> %s", k, tostring(before[k]), tostring(after[k])) end
+    end
+    for _, k in ipairs({ "inputs", "site" }) do
+        if brief(before[k]) ~= brief(after[k]) then
+            return false, string.format("%s: %s -> %s", k, brief(before[k]), brief(after[k]))
+        end
+    end
+    local n = 0
+    for _, f in ipairs({ "temps", "fires" }) do
+        for k, v in pairs(before[f] or {}) do
+            n = n + 1
+            local w = (after[f] or {})[k]
+            if brief(v) ~= brief(w) then return false, string.format("%s[%s]: %s -> %s", f, tostring(k), brief(v), brief(w)) end
+        end
+    end
+    return true, string.format("id=%s state=%s pause=%s stage=%s done=%.4f t=%.4f, %d readings and notes", tostring(after.id),
+        tostring(after.state), tostring(after.pause), tostring(after.stage), after.stageDone or -1, after.t or -1, n)
+end
+
+-- The machine menu on a carried machine: Status offered, everything else
+-- replaced by "Place it on the ground to operate it" (greyed).
+function RT.P.menuWhileCarried(item)
+    local context = ISContextMenu.get(0, 100, 100)
+    TLG.UI.MachineMenu.fill(0, context, { item })
+    local root = context:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+    local sub = root and root.subOption and context:getSubMenu(root.subOption)
+    local status = sub and sub:getOptionFromName(getText("ContextMenu_TLG_MachineStatus"))
+    local place = sub and sub:getOptionFromName(getText("ContextMenu_TLG_PlaceFirst"))
+    local load = sub and sub:getOptionFromName(getText("ContextMenu_TLG_LoadFerment"))
+    context:setVisible(false)
+    return status ~= nil and not status.notAvailable, place ~= nil and place.notAvailable == true, load == nil
+end
+
+-- Every game hour: the game's air at each placed fermenter, filed by hour as
+-- the mod files its readings.
+function RT.P.onHour()
+    local P = RT.P
+    if not P.active then return end
+    local slot = math.floor(hours() - 0.5)
+    for i = 1, 3 do
+        local s = P.items[i] and TLG.Integration.Machines.square(P.items[i])
+        local ok, t = pcall(function() return getClimateManager():getAirTemperatureForSquare(s) end)
+        if s and ok and type(t) == "number" then P.readings[i][slot] = t end
+    end
+end
+
+RT.pickSetup = { name = "rtp_sites", timeout = 3000, fn = function(ctx, ticks)
+    local P = RT.P
+    if not ctx.t0 and RT.skip("rtp_sites") then return true end
+    if not ctx.t0 then
+        local here = player():getSquare()
+        local spots = P.findSpots(here:getX(), here:getY())
+        if spots == nil then
+            RT.abort = "no free room tile with four free room neighbours nearby"
+            R:line("OBS  RTP.spots none found")
+            return true
+        end
+        P.spots, P.items, P.readings = {}, {}, { {}, {}, {} }
+        for i, s in ipairs(spots) do P.spots[i] = { x = s:getX(), y = s:getY() } end
+        for i = 1, 3 do
+            local it = instanceItem("TLG.FermenterVessel")
+            spots[i + 1]:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            P.items[i] = it
+        end
+        player():setPosition(P.spots[1].x + 0.5, P.spots[1].y + 0.5, 0)
+        -- The prepare stage is shortened by Cooking (Process stageHours): at
+        -- 0 every stage hour is a game hour.
+        player():setPerkLevelDebug(Perks.Cooking, 0)
+        local power
+        pcall(function() power = getWorld():isHydroPowerOn() end)
+        local p = P.spots
+        R:line("OBS  RTP.spots character %d,%d; A %d,%d B %d,%d C %d,%d; A goes back down at %d,%d; grid power=%s", p[1].x,
+            p[1].y, p[2].x, p[2].y, p[3].x, p[3].y, p[4].x, p[4].y, p[5].x, p[5].y, tostring(power))
+        R:check("RTP.grid_is_on", function() return power == true, "isHydroPowerOn=" .. tostring(power) end)
+        if not P.hooked then
+            Events.EveryHours.Add(RT.P.onHour)
+            P.hooked = true
+        end
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local seen = {}
+    for i = 1, 5 do seen[i] = tostring(TLG.Integration.Machines.siteOf(sq(P.spots[i].x, P.spots[i].y, 0)).room) end
+    R:check("RTP.all_in_a_room", function()
+        return table.concat(seen, ",") == "true,true,true,true,true", "in a room: " .. table.concat(seen, ",")
+    end)
+    return true
+end }
+
+-- The phases of rtp_run, in order; each returns true to end the step.
+RT.P.phases = {}
+
+function RT.P.phases.load(ctx)
+    local P = RT.P
+    removeAll("Base.Sugar"); removeAll("Base.Yeast")
+    for i, name in ipairs(P.names) do
+        give("Base.Sugar", 6); give("Base.Yeast", 1)
+        for _ = 1, 3 do
+            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, 10)
+        end
+        local r = machineClick("RTP.load_" .. name, P.items[i], "ContextMenu_TLG_LoadFerment")
+        R:check("RTP.loaded_" .. name, function()
+            return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6,
+                string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+        end)
+    end
+    closeDialogs()
+    P.active = true
+    ctx.h0, ctx.pid, ctx.keys = hours(), {}, {}
+    for i = 1, 3 do
+        local rec = P.items[i]:getModData().tlgProc or {}
+        ctx.pid[i] = rec.id
+    end
+    local recA = P.items[1]:getModData().tlgProc or {}
+    R:line("OBS  RTP.loaded at %.4f game h: process ids %s %s %s; skill in the record %s", ctx.h0, tostring(ctx.pid[1]),
+        tostring(ctx.pid[2]), tostring(ctx.pid[3]), tostring(recA.skill))
+    ctx.phase = "wait"
+end
+
+function RT.P.phases.wait(ctx)
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.h0 < RT.P.carryAt then return end
+    RT.speed(1)
+    ctx.phase = "grabA"
+end
+
+-- Queues a pickup or drop once, then waits for the character to be idle;
+-- `seen` reports the moment the item changed place (first tick seen).
+function RT.P.action(ctx, ticks, key, start, seen)
+    local a = ctx[key]
+    if not a then
+        ctx[key] = { tick = ticks }
+        start()
+        return false
+    end
+    RT.speed(1)
+    if not a.at and seen() then a.at = hours() end
+    return ticks - a.tick >= 10 and TLGH.Steps.actionsIdle(player())
+end
+
+function RT.P.phases.grabA(ctx, ticks)
+    local P, A = RT.P, RT.P.items[1]
+    local idle = P.action(ctx, ticks, "grabA", function()
+        ctx.rec0 = { TLG.Tables.deepCopy(A:getModData().tlgProc) }
+        ctx.keys[1] = { temps = P.maxKey(ctx.rec0[1].temps), fires = P.maxKey(ctx.rec0[1].fires) }
+        ISWorldObjectContextMenu.onGrabWItem(nil, A:getWorldItem(), 0)
+    end, function() return A:getWorldItem() == nil end)
+    if idle then ctx.phase = "grabB" end
+end
+
+function RT.P.phases.grabB(ctx, ticks)
+    local P, B = RT.P, RT.P.items[2]
+    local idle = P.action(ctx, ticks, "grabB", function()
+        ctx.rec0[2] = TLG.Tables.deepCopy(B:getModData().tlgProc)
+        ctx.keys[2] = { temps = P.maxKey(ctx.rec0[2].temps), fires = P.maxKey(ctx.rec0[2].fires) }
+        -- The loot window lists the floor items around the character
+        -- (ISInventoryPage.refreshBackpacks); its Grab takes them from there.
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        ctx.lootListed = B:getContainer() == ISInventoryPage.GetFloorContainer(0)
+        R:line("OBS  RTP.grab_B the loot window lists B on the floor=%s", tostring(ctx.lootListed))
+        if ctx.lootListed then
+            ISInventoryPaneContextMenu.onGrabItems({ B }, 0)
+        else
+            ISWorldObjectContextMenu.onGrabWItem(nil, B:getWorldItem(), 0)
+        end
+    end, function() return B:getWorldItem() == nil end)
+    if idle then ctx.phase = "carried" end
+end
+
+function RT.P.phases.carried(ctx)
+    local P = RT.P
+    local A, B = P.items[1], P.items[2]
+    ctx.tPick = { ctx.grabA.at, ctx.grabB.at }
+    R:line("OBS  RTP.picked up A at %s, B at %s game h (load %.4f)", tostring(ctx.tPick[1]), tostring(ctx.tPick[2]), ctx.h0)
+    R:check("RTP.picked_up_A_world_menu_grab", function()
+        return P.carried(A) and ctx.tPick[1] ~= nil, "carried=" .. tostring(P.carried(A))
+    end)
+    R:check("RTP.picked_up_B_loot_window_grab", function()
+        return P.carried(B) and ctx.tPick[2] ~= nil and ctx.lootListed == true,
+            string.format("carried=%s listed in the loot window=%s", tostring(P.carried(B)), tostring(ctx.lootListed))
+    end)
+    R:check("RTP.record_travels_A", function() return P.kept(ctx.rec0[1], A:getModData().tlgProc) end)
+    R:check("RTP.record_travels_B", function() return P.kept(ctx.rec0[2], B:getModData().tlgProc) end)
+    local status, place, noLoad = P.menuWhileCarried(A)
+    R:check("RTP.menu_while_carried", function()
+        return status and place and noLoad,
+            string.format("status offered=%s place first greyed=%s load mash gone=%s", tostring(status), tostring(place),
+                tostring(noLoad))
+    end)
+    local before = #H.dialogs.texts
+    local r = machineClick("RTP.status_A_carried", A, "ContextMenu_TLG_MachineStatus")
+    local text = H.dialogs.texts[before + 1]
+    closeDialogs()
+    ctx.doneA1 = RT.doneHours(A)
+    if not (ctx.tPick[1] and ctx.tPick[2]) then
+        RT.abort = "a fermenter was not picked up"
+        return true
+    end
+    R:check("RTP.carried_status_paused", function()
+        return r.ok == true and r.state == "Paused" and r.pause == "not_placed" and has(text, getText("IGUI_TLG_Pause_not_placed")),
+            string.format("state=%s pause=%s dialog=%s", tostring(r.state), tostring(r.pause), tostring(text))
+    end)
+    -- D-015: the hours A stood placed before it was picked up count.
+    R:check("RTP.D015_A_placed_hours_before_pickup_count", function()
+        local want = (ctx.tPick[1] or ctx.h0) - ctx.h0
+        return math.abs(ctx.doneA1 - want) <= P.tol, string.format("done %.4f h after the carried status, placed %.4f h", ctx.doneA1,
+            want)
+    end)
+    local sites = TLG.World.get().machineSites or {}
+    R:line("OBS  RTP.hourly list after the carried status: A %s, B %s, C %s", tostring(sites[ctx.pid[1]] ~= nil),
+        tostring(sites[ctx.pid[2]] ~= nil), tostring(sites[ctx.pid[3]] ~= nil))
+    ctx.phase = "carry"
+end
+
+function RT.P.phases.carry(ctx)
+    local P = RT.P
+    local last = math.max(ctx.tPick[1] or ctx.h0, ctx.tPick[2] or ctx.h0)
+    RT.speed(RT.waitSpeed)
+    -- The first hourly reading after the pickups finds the tiles empty.
+    if not ctx.listChecked and hours() >= math.floor(last) + 1.05 then
+        local sites = TLG.World.get().machineSites or {}
+        R:check("RTP.hourly_list_drops_carried_machines", function()
+            return sites[ctx.pid[1]] == nil and sites[ctx.pid[2]] == nil and sites[ctx.pid[3]] ~= nil,
+                string.format("listed: A %s, B %s, C %s", tostring(sites[ctx.pid[1]] ~= nil), tostring(sites[ctx.pid[2]] ~= nil),
+                    tostring(sites[ctx.pid[3]] ~= nil))
+        end)
+        ctx.listChecked = true
+    end
+    if hours() - last < P.carryHours then return end
+    RT.speed(1)
+    R:check("RTP.nothing_filed_while_carried", function()
+        local n = P.newHours(ctx)
+        return n == 0, string.format("%d readings or notes after the pickups, %.2f game h carried", n, hours() - last)
+    end)
+    ctx.phase = "dropA"
+end
+
+function RT.P.phases.dropA(ctx, ticks)
+    local P = RT.P
+    local A = P.items[1]
+    local idle = P.action(ctx, ticks, "dropA", function()
+        ctx.rec1 = { TLG.Tables.deepCopy(A:getModData().tlgProc) }
+        local p = P.spots[5]
+        ISTimedActionQueue.add(ISDropWorldItemAction:new(player(), A, sq(p.x, p.y, 0), 0.5, 0.5, 0, 0, false))
+    end, function()
+        local it = P.placedById(ctx.pid[1])
+        if it then P.items[1] = it end
+        return it ~= nil
+    end)
+    if idle then ctx.phase = "dropB" end
+end
+
+function RT.P.phases.dropB(ctx, ticks)
+    local P = RT.P
+    local B = P.items[2]
+    local idle = P.action(ctx, ticks, "dropB", function()
+        ctx.rec1[2] = TLG.Tables.deepCopy(B:getModData().tlgProc)
+        ISInventoryPaneContextMenu.onDropItems({ B }, 0)
+    end, function()
+        local it = P.placedById(ctx.pid[2])
+        if it then P.items[2] = it end
+        return it ~= nil
+    end)
+    if idle then ctx.phase = "dropped" end
+end
+
+function RT.P.phases.dropped(ctx)
+    local P, M = RT.P, TLG.Integration.Machines
+    local A, B = P.items[1], P.items[2]
+    ctx.tDrop = { ctx.dropA.at, ctx.dropB.at }
+    local sa, sb = M.square(A), M.square(B)
+    local function at(s) return s and string.format("%d,%d", s:getX(), s:getY()) or "-" end
+    R:line("OBS  RTP.put down A at %s (%s game h), B at %s (%s game h)", at(sa), tostring(ctx.tDrop[1]), at(sb),
+        tostring(ctx.tDrop[2]))
+    R:check("RTP.put_down_A_place_action", function()
+        return sa ~= nil and ctx.tDrop[1] ~= nil and sa:getX() == P.spots[5].x and sa:getY() == P.spots[5].y, "at " .. at(sa)
+    end)
+    R:check("RTP.put_down_B_inventory_drop", function()
+        return sb ~= nil and ctx.tDrop[2] ~= nil and (sb:getX() ~= P.spots[3].x or sb:getY() ~= P.spots[3].y), "at " .. at(sb)
+    end)
+    R:check("RTP.record_survives_put_down_A", function() return P.kept(ctx.rec1[1], A:getModData().tlgProc) end)
+    R:check("RTP.record_survives_put_down_B", function() return P.kept(ctx.rec1[2], B:getModData().tlgProc) end)
+    if not (ctx.tDrop[1] and ctx.tDrop[2]) then
+        RT.abort = "a fermenter was not put down"
+        return true
+    end
+    ctx.phase = "settle"
+end
+
+function RT.P.phases.settle(ctx)
+    local P = RT.P
+    RT.speed(RT.waitSpeed)
+    if hours() - math.max(ctx.tDrop[1], ctx.tDrop[2]) < P.settleHours then return end
+    RT.speed(1)
+    -- Before any access the hourly reading does not know the new places.
+    local sites = TLG.World.get().machineSites or {}
+    R:check("RTP.not_read_until_accessed", function()
+        local n = P.newHours(ctx)
+        return sites[ctx.pid[1]] == nil and sites[ctx.pid[2]] == nil and n == 0,
+            string.format("listed: A %s, B %s; %d readings or notes since the pickups", tostring(sites[ctx.pid[1]] ~= nil),
+                tostring(sites[ctx.pid[2]] ~= nil), n)
+    end)
+    ctx.phase = "read"
+end
+
+function RT.P.phases.read(ctx)
+    local P, M = RT.P, TLG.Integration.Machines
+    local replies, texts, done = {}, {}, {}
+    for i, name in ipairs(P.names) do
+        local before = #H.dialogs.texts
+        replies[i] = machineClick("RTP.status_" .. name, P.items[i], "ContextMenu_TLG_MachineStatus")
+        texts[i] = H.dialogs.texts[before + 1]
+        done[i] = RT.doneHours(P.items[i])
+    end
+    closeDialogs()
+    local now = hours()
+    ctx.tEnd, ctx.doneEnd = now, done
+    local placedB = (ctx.tPick[2] - ctx.h0) + (now - ctx.tDrop[2])
+    R:line("OBS  RTP.read at %.4f game h, %.4f h after the load: done A %.4f B %.4f C %.4f h; carried A %.4f B %.4f h", now,
+        now - ctx.h0, done[1], done[2], done[3], ctx.tDrop[1] - ctx.tPick[1], ctx.tDrop[2] - ctx.tPick[2])
+    R:check("RTP.control_C_full_rate", function()
+        return math.abs(done[3] - (now - ctx.h0)) <= P.tol, string.format("done %.4f h in %.4f game h", done[3], now - ctx.h0)
+    end)
+    R:check("RTP.D015_A_placed_hours_after_put_down_count", function()
+        local want = now - ctx.tDrop[1]
+        return math.abs(done[1] - ctx.doneA1 - want) <= P.tol,
+            string.format("done %.4f h since the carried status, placed %.4f h since put down", done[1] - ctx.doneA1, want)
+    end)
+    R:check("RTP.D015_B_carried_hours_do_not_count", function()
+        return math.abs(done[2] - placedB) <= P.tol, string.format("done %.4f h, placed %.4f h, carried %.4f h", done[2], placedB,
+            ctx.tDrop[2] - ctx.tPick[2])
+    end)
+    R:check("RTP.processing_after_put_down", function()
+        return replies[1].state == "Processing" and replies[2].state == "Processing" and replies[3].state == "Processing",
+            string.format("A %s B %s C %s", tostring(replies[1].state), tostring(replies[2].state), tostring(replies[3].state))
+    end)
+    local sites = TLG.World.get().machineSites or {}
+    R:check("RTP.listed_again_at_the_new_place", function()
+        local ok, parts = true, {}
+        for i = 1, 2 do
+            local e, s = sites[ctx.pid[i]], M.square(P.items[i])
+            ok = ok and e ~= nil and s ~= nil and e.x == s:getX() and e.y == s:getY()
+            parts[i] = string.format("%s listed %s, stands %s", P.names[i], e and (e.x .. "," .. e.y) or "-",
+                s and (s:getX() .. "," .. s:getY()) or "-")
+        end
+        return ok, table.concat(parts, "; ")
+    end)
+    R:line("OBS  RTP.status A: %s | B: %s | C: %s", tostring(texts[1]), tostring(texts[2]), tostring(texts[3]))
+    ctx.phase = "after"
+end
+
+function RT.P.phases.after(ctx)
+    local P = RT.P
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.tEnd < P.afterHours then return end
+    RT.speed(1)
+    P.active = false
+    -- Readings and fire notes filed at the new places since the access.
+    local from = math.floor(ctx.tEnd)
+    local n, worst, where, notes = 0, 0, "none", {}
+    for i = 1, 2 do
+        local rec = P.items[i]:getModData().tlgProc or {}
+        for _, s in ipairs(TLG.Tables.sortedKeys(P.readings[i])) do
+            if s >= from then
+                local filed = rec.temps and rec.temps[s]
+                local d = filed and math.abs(filed - P.readings[i][s]) or 999
+                n = n + 1
+                if d >= worst then
+                    worst, where = d, string.format("%s hour %d: filed %s, game %.4f", P.names[i], s, tostring(filed),
+                        P.readings[i][s])
+                end
+            end
+        end
+        notes[i] = P.after(rec.fires, from - 1)
+    end
+    R:check("RTP.readings_resume_after_access", function()
+        return n >= 4 and worst <= 1e-6, string.format("%d hours, worst %.6f (%s)", n, worst, where)
+    end)
+    R:check("RTP.fire_notes_resume_after_access", function()
+        return notes[1] >= 2 and notes[2] >= 2, string.format("hours noted since the access: A %d, B %d", notes[1], notes[2])
+    end)
+    local d = {}
+    for i = 1, 3 do
+        RT.statusOf(P.items[i])
+        d[i] = RT.doneHours(P.items[i]) - ctx.doneEnd[i]
+    end
+    R:check("RTP.progress_like_the_control_after_the_move", function()
+        return math.abs(d[1] - d[3]) <= 1e-6 and math.abs(d[2] - d[3]) <= 1e-6,
+            string.format("in %.4f game h: A %.4f B %.4f C %.4f h", hours() - ctx.tEnd, d[1], d[2], d[3])
+    end)
+    return true
+end
+
+RT.pickRun = { name = "rtp_run", timeout = 60000, fn = function(ctx, ticks)
+    if not ctx.phase and RT.skip("rtp_run") then return true end
+    if ticks % 30 == 0 then RT.keepFit() end
+    return RT.P.phases[ctx.phase or "load"](ctx, ticks) == true
+end }
+
+RT.pickupSteps = { RT.waitWorld, RT.setup, RT.pickSetup, RT.pickRun, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -3963,7 +4466,8 @@ Events.OnMainMenuEnter.Add(function()
         " forceLaunch=" .. tostring(getDebugOptions():getBoolean("DebugScenario.ForceLaunch")))
 end)
 
-if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs" then
+if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
+    or REQUEST == "sp-rtp" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -3993,6 +4497,10 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- (BC SandboxOptions.randomElectricityShut).
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
+            elseif REQUEST == "sp-rtp" then
+                -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
+                -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
+                SandboxVars.ElecShutModifier = 30
             end
         end,
         onStart = function()
@@ -4008,6 +4516,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtfs" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, fireplace, before the save")
                 TLGH.Steps.run(R, RT.fireSaveSteps, H, nil)
+            elseif REQUEST == "sp-rtp" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, pickup")
+                TLGH.Steps.run(R, RT.pickupSteps, H, nil)
             else
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
                 TLGH.Steps.run(R, stepsA, H, nil)

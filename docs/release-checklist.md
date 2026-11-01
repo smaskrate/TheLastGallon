@@ -13,7 +13,7 @@ decision and is **not** authorised by any task in this repository.
 | 3 | Native and mod quantities reconciled | PARTIAL | Verified RT-SP for vehicle idle burn and generator burn; driving burn and third-party paths NOT RUN. Start gates and stall verified RT-SP |
 | 4 | Production and energy invariants pass | PARTIAL | Domain invariants pass (142 cases, incl. energy balance, mass balance per converter); one in-game ethanol batch matched the model (runs 7–9); no in-game energy run |
 | 5 | Multiplayer and dedicated-server tests pass | BLOCKED | DS loads the mod; two-client tests need a second client |
-| 6 | Save/load, pickup/placement, unloaded simulation pass | PARTIAL | RT-SP: item, ground item, vehicle, generator, pump and machine records and conversion projects survive save/reload; generator pickup/placement on all Lua paths; a fermenter whose chunk was unloaded for 24 game hours caught up exactly (RT-SP runs 13–14); machine sites and hourly readings (D-021) survived a chunk unload and the readings resumed (runs 17–19, 21); a fermenter mid-batch beside a fireplace survived save, exit to menu and continue with its site, readings, fire notes ("no fire" notes included), batch and place in the hourly list unchanged, then finished (run 25). Picking up a running machine NOT RUN |
+| 6 | Save/load, pickup/placement, unloaded simulation pass | PARTIAL | RT-SP: item, ground item, vehicle, generator, pump and machine records and conversion projects survive save/reload; generator pickup/placement on all Lua paths; a fermenter whose chunk was unloaded for 24 game hours caught up exactly (RT-SP runs 13–14); machine sites and hourly readings (D-021) survived a chunk unload and the readings resumed (runs 17–19, 21); a fermenter mid-batch beside a fireplace survived save, exit to menu and continue with its site, readings, fire notes ("no fire" notes included), batch and place in the hourly list unchanged, then finished (run 25). Running fermenters picked up (world menu Grab, loot window Grab) and put down (place action, Drop) kept their records, offered only Status while carried and were read hourly again after the next Status (run 26), but the work around a move FAILS D-015: a Status while carried drops the hours placed since the last use, the first Status after putting down drops the hours since, and without a Status while carried the carried hours count (3 FAIL). Stills and drying column picked up NOT RUN |
 | 7 | Existing and late-world bootstrap scenarios pass | OPEN | Policies domain-tested; campaign runs NOT RUN |
 | 8 | Supported chassis and maps documented | PARTIAL | `support-matrix.md`; `Base.CarNormal`, `Base.Generator` (stock and flex-converted) and the Muldraugh Gas2Go verified RT-SP; other chassis NOT RUN |
 | 9 | Required assets verified and licensed | PARTIAL | Vanilla references only (`asset-audit.csv`); rendering not checked in game; release art (preview.png) missing |
@@ -25,6 +25,8 @@ decision and is **not** authorised by any task in this repository.
 
 ## Open implementation items
 
+* Machine pickup: count exactly the hours a moved machine stood placed
+  (D-015; run 26 failed it, gate 6).
 * Adapters, placeable machines and UI for biodiesel, wood gas, biogas,
   propane cylinders and electrical networks (domains merged and tested).
 * Automation wiring (rules exist in the domain; no adapter yet).
@@ -39,6 +41,7 @@ tools\run-sp-harness.ps1 -Mode realtime -TimeoutMinutes 60   # ethanol loop on t
 tools\run-sp-harness.ps1 -Mode winter -TimeoutMinutes 60     # three fermenters by site from 15 January, grid off
 tools\run-sp-harness.ps1 -Mode fireplace -TimeoutMinutes 60  # one beside a map fireplace fed with logs, same January
 tools\run-sp-harness.ps1 -Mode fireplace-reload -TimeoutMinutes 60  # the same saved mid-batch, continued, finished
+tools\run-sp-harness.ps1 -Mode pickup -TimeoutMinutes 30     # two of three running fermenters picked up and put down
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361
 tools\package.ps1                     # artifact for install rehearsal
 ```

@@ -21,9 +21,12 @@
   beside it while tending the fire with logs. fireplace-reload: the same
   batch saved mid-way (the fire left to burn out first), exited to the
   menu and continued: the records must survive, then the batch runs on.
+  pickup: summer with the grid on; two of three running fermenters are
+  picked up (world menu Grab, loot window Grab), carried, put down again
+  (place action, inventory Drop) and read against the third.
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload")][string]$Mode = "full")
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup")][string]$Mode = "full")
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -58,7 +61,7 @@ $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } default { "sp-a" } }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
