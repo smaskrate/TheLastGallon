@@ -9,7 +9,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
-| RT-SP: crafting the sampling kit, filter and stabilizer; distilling in the pot still; picking up a running still or drying column (fermenters: runs 26–27); machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
+| RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
@@ -735,3 +735,42 @@ The three checks run 26 failed (`RTP.D015_`) passed, as did a fourth for
 B at the pickup. Not run: a still or drying column picked up, a move in
 multiplayer itself (D only stands in for its grab), a carried machine
 across a save.
+
+## 2026-11-01 — RT-SP client harness, launch 28 (the pot still)
+
+Command: `tools/run-sp-harness.ps1 -Mode pot-still -TimeoutMinutes 40`
+(request `sp-rtpot`; new). Summer with the grid on: a fermenter, a pot
+still and a drying column on room tiles around the character, everything
+done from the machine menu. 12 kg of sugar and 60 L of water fermented at
+full rate into 66.6 L of wash, more than the pot still's 60 L, so the wash
+went in two loads. The firebox got one log before the first run and was
+left to run out; an hour after Status showed it, four logs were offered.
+Both runs went into one fuel can, which was evaluated with
+`Consumers.evaluate`, the function the vehicle and generator start gates
+call, against every spark-ignition profile; it was then dried with
+quicklime and evaluated again. Expectations come from the definitions in
+`Content/Production.lua`. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run28_pot_still.txt`.
+
+Result: **25 PASS / 0 FAIL** (no TLG error or warning in the console).
+
+| Run 28 | Result |
+| --- | --- |
+| Fermentation | done 97.0000 h after loading; 6.6 L ethanol, 60 L water |
+| First "Load wash" | 60 L taken, the fermenter left OutputReady with 0.654 L ethanol and 5.946 L water; no yeast starter yet |
+| Firebox, one log (9 kg) | ran out mid-distillation (fuel for 2.835 h; Status at 2.904 h: "Reason: the firebox is out of fuel") |
+| Four logs offered an hour later | 27 kg taken, one log left (the firebox holds 30 kg) |
+| Run 1 | 9.605819 h = 8.5 h of stages + 1.105819 h without fuel, exactly the time it had none; firebox left 9.015873 kg; 5.232432 L ethanol and 1.308108 L water (recovery 0.88, purity 0.80); condition 0.98 |
+| Second "Load wash" | the remaining 6.6 L; the fermenter Ready; the yeast starter came with it |
+| Run 2 | 2 h (6.6 L at 8 L/h is under the 1 h minimum), no pause; the firebox's 9.015873 kg carried over, 2.666667 kg left; 0.572114 L ethanol and 0.143029 L water, the efficiency of condition 0.98; condition 0.96 |
+| One can | 5.8045 L ethanol, 1.4511 L water: unfit for all four spark profiles (free water; stock ones also too much ethanol) |
+| Dried with 5 kg quicklime | 12.000 h; 5.8045 L ethanol, 0.0290 L water: fit for the flex engine and the flex generator, still too much ethanol for stock ones |
+
+With wash left in it, the fermenter's Status read "Finished: output
+waiting", "Reason: output waiting, nowhere to put it", "Stage: fermenting":
+the batch is done and waits for the still, which those words do not say.
+The engines' verdicts are the start gates' evaluation, not engine starts;
+the engines ran on dried reflux ethanol in runs 13–14. Not run: the pot
+still built from the crafting window in this run (spawned; building it was
+run 12), the reflux still with this wash, a pot-still batch that spoils or
+is aborted.

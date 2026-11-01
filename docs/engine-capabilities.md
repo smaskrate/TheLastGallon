@@ -576,7 +576,8 @@ fireplace, run 20 1/0 (the search found none near the start) and run 21
 **21/0**, the winter mode with the fire notes running, run 24
 **25/0**, the fireplace batch across a save, run 25 **8/0** before and
 **20/0** after it, and running fermenters picked up and put down, run 26
-25/3 and, after the fix, run 27 **34/0**. Most failures were
+25/3 and, after the fix, run 27 **34/0**, and a batch through the pot still,
+run 28 **25/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -602,7 +603,7 @@ run 27).
 ## Next experiments
 
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
-   distilling in the pot still, a winter with mild days between cold spells
+   a winter with mild days between cold spells
    (the code adds paused hours up across spells), flex-engine starts in the
    cold, a machine beside a fire (`IsoFire`) or barbecue, upstairs or in a
    player-built room (with the grid on: runs 26–27), pouring from a can

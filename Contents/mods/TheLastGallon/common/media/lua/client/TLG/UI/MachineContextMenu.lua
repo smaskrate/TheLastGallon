@@ -2,7 +2,8 @@
 -- All actions are authority requests; results are shown as text. Used RT-SP
 -- 2026-10-31 (run 12) on the fermenter, reflux still and drying column:
 -- Load mash, Feed the firebox, Load wash, Collect ethanol, Dry ethanol with
--- quicklime, Status. Pause, Resume, Abort and the pot still are NOT RUN.
+-- quicklime, Status; on the pot still in run 28 (Feed the firebox, Load wash
+-- twice, Collect ethanol, Status). Pause, Resume and Abort are NOT RUN.
 require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"

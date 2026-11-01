@@ -25,9 +25,12 @@
   picked up (world menu Grab, loot window Grab, and the grab's own calls
   where no Lua sees them, as in multiplayer), carried, put down again
   (place action, inventory Drop) and read against the fourth.
+  pot-still: summer with the grid on; a 66.6 L wash through the 60 L pot
+  still in two runs (the firebox left to run out once), collected into one
+  can, dried with quicklime and evaluated against the engine profiles.
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup")][string]$Mode = "full")
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still")][string]$Mode = "full")
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -62,7 +65,7 @@ $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } default { "sp-a" } }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

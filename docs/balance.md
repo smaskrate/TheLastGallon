@@ -168,6 +168,13 @@ went in with (quicklime removes water only). Reflux spirit (94 %) holds its
 water in solution and runs flex engines without drying; pot-still spirit
 (80 %) carries free water and must be dried first.
 
+Example (RT-SP run 28): 12 kg sugar + 60 L water → 66.6 L of wash, two
+pot-still loads. 60 L: 1 h + 7.5 h, 26.98 kg of wood, 5.23 L ethanol and
+1.31 L water. The other 6.6 L: 2 h (the 1 h minimum), 6.35 kg, 0.57 L
+ethanol at 0.994 efficiency (condition 0.98 after the first run). The
+7.26 L of spirit held 1.04 L of free water (14 %); 5 kg of quicklime
+brought it to 5.80 L ethanol and 0.03 L water in 12 h.
+
 Feedstock sugar equivalents per vanilla item: Sugar 1.0 kg, Brown sugar 0.9,
 Sugar beet 0.16, Corn 0.12, Potato 0.09, Pumpkin 0.15, Watermelon 0.25,
 Apple 0.02, Grapes 0.03 (`TLG/Content/Feedstocks.lua`).

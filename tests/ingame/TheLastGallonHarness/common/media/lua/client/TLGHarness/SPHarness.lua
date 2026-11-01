@@ -13,6 +13,8 @@
 --   sp-rtfb -> main menu continues that save, checks the records, finishes
 --   sp-rtp -> summer, grid on: fermenters picked up mid-batch and put down,
 --             one of them grabbed where no Lua sees it (as in multiplayer)
+--   sp-rtpot -> summer, grid on: a batch through the pot still (two runs),
+--             dried and checked against the engines' rules
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -33,7 +35,7 @@ local function unattended()
     pcall(function() getCore():setOptionShowSurvivalGuide(false) end)
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
-    or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" then
+    or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -4562,6 +4564,396 @@ end }
 RT.pickupSteps = { RT.waitWorld, RT.setup, RT.pickSetup, RT.pickRun, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Pot still (request "sp-rtpot"): the ethanol loop through the pot still
+-- (gate 1). Summer with the grid on: a fermenter, a pot still and a drying
+-- column on room tiles around the character (RT.P.findSpots), so the batch
+-- ferments at full rate for 97 h. 12 kg of sugar and 60 L of water make
+-- 66.6 L of wash, more than the pot still's 60 L: "Load wash" twice, the
+-- first leaving the rest in the fermenter, the second run short enough for
+-- the stage's 1 h minimum. The firebox gets one log first, which runs out
+-- mid-distillation; an hour later four logs are offered and three fit.
+-- Every quantity is checked against the definitions (Content/Production:
+-- recovery 0.88, purity 0.80, 8 L/h, 6 kW from wood at 4.2 kWh/kg and 45 %,
+-- the efficiency of the still's condition before each batch). Both runs'
+-- spirit goes into one can, which is evaluated against every spark-ignition
+-- profile with Consumers.evaluate, the function the start gates call; then
+-- it is dried with quicklime and evaluated again.
+------------------------------------------------------------------------------
+RT.D = { names = { "fermenter", "pot still", "drying column" }, sugar = 12, water = 60, tol = 1e-6,
+    sparks = { "engine_si_stock", "engine_si_flex", "generator_si_stock", "generator_si_flex" } }
+
+-- The pot still and the heat its stages draw, from the definitions.
+function RT.D.def()
+    local m = TLG.Registry.need("machine", "pot_still")
+    local heat = TLG.Registry.need("recipe", "ethanol_distill").stages[1].heatKW
+    return m, heat / (m.firebox.kwhPerKg * m.firebox.efficiency)
+end
+
+function RT.D.rec(i) return RT.D.items[i]:getModData().tlgProc or {} end
+
+-- What a run of `wash` (ethanol, water) gives in a still at condition `cond`
+-- (Process.converters.distill and completeBatch).
+function RT.D.expected(eth, water, cond)
+    local m, burn = RT.D.def()
+    local out = eth * m.recovery * (1 - 0.3 * (1 - cond))
+    return { hours = 1 + math.max(1, (eth + water) / m.throughputLph), ethanol = out,
+        water = out * (1 - m.purity) / m.purity, burn = burn }
+end
+
+function RT.D.near(a, b, tol) return type(a) == "number" and type(b) == "number" and math.abs(a - b) <= (tol or RT.D.tol) end
+
+-- Status through the menu, with the dialog text the player reads.
+function RT.D.statusText(i)
+    local before = #H.dialogs.texts
+    local r = machineClick("RTPOT.status_" .. string.gsub(RT.D.names[i], " ", "_"), RT.D.items[i], "ContextMenu_TLG_MachineStatus")
+    local text = H.dialogs.texts[before + 1]
+    closeDialogs()
+    return r, text
+end
+
+-- The start gates' verdict on a can, per spark-ignition profile.
+function RT.D.verdicts(can)
+    local v = tlgView("item", can)
+    local out, parts = {}, {}
+    for _, id in ipairs(RT.D.sparks) do
+        local e = v and TLG.Domain.Consumers.evaluate(id, v) or { compatible = false, reasons = { "no_record" } }
+        out[id] = e
+        parts[#parts + 1] = string.format("%s %s (%s)", id, e.compatible and "fit" or "unfit", table.concat(e.reasons, ","))
+    end
+    return out, table.concat(parts, "; "), v
+end
+
+function RT.D.hasReason(e, code)
+    for _, r in ipairs(e.reasons or {}) do
+        if r == code then return true end
+    end
+    return false
+end
+
+RT.potSetup = { name = "rtpot_sites", timeout = 3000, fn = function(ctx, ticks)
+    local D = RT.D
+    if not ctx.t0 and RT.skip("rtpot_sites") then return true end
+    if not ctx.t0 then
+        local here = player():getSquare()
+        local spots = RT.P.findSpots(here:getX(), here:getY())
+        if spots == nil then
+            RT.abort = "no free room tile with free room neighbours nearby"
+            R:line("OBS  RTPOT.spots none found")
+            return true
+        end
+        D.spots, D.items = {}, {}
+        for i, s in ipairs(spots) do D.spots[i] = { x = s:getX(), y = s:getY() } end
+        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.PotStill", "TLG.DryingColumn" }) do
+            local it = instanceItem(t)
+            spots[i + 1]:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            D.items[i] = it
+        end
+        player():setPosition(D.spots[1].x + 0.5, D.spots[1].y + 0.5, 0)
+        -- Purity and the prepare stage follow Cooking (Process): at 0, 0.80 and 1 h.
+        player():setPerkLevelDebug(Perks.Cooking, 0)
+        local power
+        pcall(function() power = getWorld():isHydroPowerOn() end)
+        local p = D.spots
+        R:line("OBS  RTPOT.spots character %d,%d; fermenter %d,%d pot still %d,%d drying column %d,%d; grid power=%s", p[1].x,
+            p[1].y, p[2].x, p[2].y, p[3].x, p[3].y, p[4].x, p[4].y, tostring(power))
+        R:check("RTPOT.grid_is_on", function() return power == true, "isHydroPowerOn=" .. tostring(power) end)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local seen = {}
+    for i = 1, 4 do seen[i] = tostring(TLG.Integration.Machines.siteOf(sq(D.spots[i].x, D.spots[i].y, 0)).room) end
+    R:check("RTPOT.all_in_a_room", function()
+        return table.concat(seen, ",") == "true,true,true,true", "in a room: " .. table.concat(seen, ",")
+    end)
+    return true
+end }
+
+RT.D.phases = {}
+
+function RT.D.phases.ferment(ctx)
+    local D = RT.D
+    for _, t in ipairs({ "Base.Sugar", "Base.Yeast", "Base.Log", "Base.Quicklime" }) do removeAll(t) end
+    give("Base.Sugar", D.sugar); give("Base.Yeast", 1)
+    -- RT.setup gave three 10 L buckets; three more make the 60 L the load takes.
+    for _ = 1, 3 do
+        local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+        fc:Empty()
+        fc:addFluid(Fluid.Water, 10)
+    end
+    local r = machineClick("RTPOT.load_mash", D.items[1], "ContextMenu_TLG_LoadFerment")
+    R:check("RTPOT.mash_loaded", function()
+        return r.ok == true and D.near(r.sugarKg, D.sugar) and D.near(r.waterL, D.water),
+            string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+    end)
+    closeDialogs()
+    ctx.h0 = hours()
+    ctx.phase = "fermenting"
+end
+
+function RT.D.phases.fermenting(ctx)
+    local D = RT.D
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.h0 < 97.05 then return end
+    RT.speed(1)
+    local s = RT.statusOf(D.items[1])
+    local rec = D.rec(1)
+    local f = TLG.Registry.need("recipe", "ethanol_ferment").params
+    ctx.eth0 = D.sugar * f.ethanolYieldLPerKg
+    R:check("RTPOT.fermented_full_rate", function()
+        return s.state == "OutputReady" and D.near(rec.completedAt, ctx.h0 + 97) and D.near((rec.outputs or {}).ethanol, ctx.eth0)
+            and D.near((rec.outputs or {}).water, D.water), string.format("state=%s done at %.4f h after loading; outputs %s",
+            tostring(s.state), (rec.completedAt or -1) - ctx.h0, brief(rec.outputs))
+    end)
+    if s.state ~= "OutputReady" then
+        RT.abort = "the fermentation did not finish"
+        return true
+    end
+    ctx.phase = "load1"
+end
+
+-- Feeds the firebox through the menu with `logs` logs carried (all wood
+-- removed first).
+function RT.D.feed(label, logs)
+    removeAll("Base.Log")
+    give("Base.Log", logs)
+    return machineClick(label, RT.D.items[2], "ContextMenu_TLG_AddFirewood")
+end
+
+function RT.D.phases.load1(ctx)
+    local D = RT.D
+    local m = D.def()
+    local fuel = D.feed("RTPOT.feed_one_log", 1)
+    R:check("RTPOT.firebox_one_log", function()
+        return fuel.ok == true and D.near(fuel.addedKg, 9), "added kg " .. tostring(fuel.addedKg)
+    end)
+    ctx.starters = countType("TLG.YeastStarter")
+    ctx.cond1 = D.rec(2).cond or 1
+    local w = machineClick("RTPOT.load_wash_1", D.items[2], "ContextMenu_TLG_LoadWash")
+    ctx.t1 = hours()
+    closeDialogs()
+    local frac = m.capacity / (ctx.eth0 + D.water)
+    ctx.wash1 = { ethanol = ctx.eth0 * frac, water = D.water * frac }
+    local fr = D.rec(1)
+    local left = fr.outputs or {}
+    R:check("RTPOT.first_load_fills_the_still", function()
+        return w.ok == true and D.near(w.washL, m.capacity) and fr.state == "OutputReady" and fr.pause == "output_full"
+            and D.near(left.ethanol, ctx.eth0 - ctx.wash1.ethanol) and D.near(left.water, D.water - ctx.wash1.water),
+            string.format("wash %s L; fermenter %s/%s keeps %s", tostring(w.washL), tostring(fr.state), tostring(fr.pause), brief(left))
+    end)
+    R:check("RTPOT.no_starter_before_the_last_wash", function()
+        return countType("TLG.YeastStarter") == ctx.starters, string.format("%d -> %d", ctx.starters, countType("TLG.YeastStarter"))
+    end)
+    local _, text = D.statusText(1)
+    R:line("OBS  RTPOT.fermenter status with wash left: %s", tostring(text))
+    ctx.next, ctx.phase = hours() + 0.1, "run1"
+end
+
+-- Status every 0.1 game hours until the still's batch is ready; `onPoll`
+-- may act on each reply.
+function RT.D.poll(ctx, onPoll)
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return nil end
+    ctx.next = hours() + 0.1
+    local s = RT.statusOf(RT.D.items[2])
+    if onPoll then onPoll(s) end
+    return s
+end
+
+function RT.D.phases.run1(ctx)
+    local D = RT.D
+    local e = D.expected(ctx.wash1.ethanol, ctx.wash1.water, ctx.cond1)
+    local s = D.poll(ctx, function(s)
+        if s.pause == "no_heat" and not ctx.tOut then
+            ctx.tOut = hours()
+            RT.speed(1)
+            local r, text = D.statusText(2)
+            ctx.outText = text
+            R:check("RTPOT.firebox_runs_out_mid_run", function()
+                local due = ctx.t1 + 9 / e.burn
+                return r.state == "Paused" and r.pause == "no_heat" and has(text, getText("IGUI_TLG_Pause_no_heat"))
+                    and ctx.tOut >= due - D.tol and ctx.tOut <= due + 0.1 + 0.01,
+                    string.format("seen %.4f h after loading (fuel for %.4f h); dialog=%s", ctx.tOut - ctx.t1, 9 / e.burn, tostring(text))
+            end)
+        end
+        if ctx.tOut and not ctx.tRefeed and hours() >= ctx.tOut + 1 then
+            RT.speed(1)
+            local fuel = D.feed("RTPOT.feed_four_logs", 4)
+            ctx.tRefeed = hours()
+            R:check("RTPOT.firebox_takes_what_fits", function()
+                return fuel.ok == true and D.near(fuel.addedKg, 27) and countType("Base.Log") == 1,
+                    string.format("added kg %s, logs left %d", tostring(fuel.addedKg), countType("Base.Log"))
+            end)
+        end
+    end)
+    if s == nil or (s.state ~= "OutputReady" and s.state ~= "Faulted" and hours() - ctx.t1 < 30) then return end
+    RT.speed(1)
+    local rec = D.rec(2)
+    local o = rec.outputs or {}
+    local fed = 9 + 27
+    R:check("RTPOT.run1_paused_only_without_fuel", function()
+        local want = (ctx.tRefeed or 0) - (ctx.t1 + 9 / e.burn)
+        return ctx.tRefeed ~= nil and D.near(rec.pausedFor, want), string.format("paused %.6f h, out of fuel %.6f h",
+            rec.pausedFor or -1, want)
+    end)
+    R:check("RTPOT.run1_hours", function()
+        return D.near(rec.completedAt, ctx.t1 + e.hours + (rec.pausedFor or 0)),
+            string.format("done %.6f h after loading: %.4f h of stages + %.6f h paused", (rec.completedAt or -1) - ctx.t1, e.hours,
+                rec.pausedFor or -1)
+    end)
+    R:check("RTPOT.run1_firebox", function()
+        return D.near(rec.firebox, fed - e.hours * e.burn), string.format("left %.6f kg, expected %.6f (%.4f kg/h)", rec.firebox or -1,
+            fed - e.hours * e.burn, e.burn)
+    end)
+    R:check("RTPOT.run1_spirit", function()
+        return rec.state == "OutputReady" and D.near(o.ethanol, e.ethanol) and D.near(o.water, e.water),
+            string.format("ethanol %.6f (%.6f) water %.6f (%.6f); condition %.4f", o.ethanol or -1, e.ethanol, o.water or -1, e.water,
+                rec.cond or -1)
+    end)
+    ctx.run1 = e
+    ctx.phase = "collect1"
+end
+
+function RT.D.phases.collect1(ctx)
+    local D = RT.D
+    giveCan("Base.JerryCan")
+    local before = ethanolCans()
+    machineClick("RTPOT.collect_1", D.items[2], "ContextMenu_TLG_CollectEthanol")
+    closeDialogs()
+    ctx.can = grownCan(before)
+    local v = ctx.can and tlgView("item", ctx.can)
+    R:check("RTPOT.run1_bottled", function()
+        local q = v and v.q or {}
+        return v ~= nil and D.near(q.ethanol, ctx.run1.ethanol, 1e-3) and D.near(q.water, ctx.run1.water, 1e-3)
+            and D.rec(2).state == "Ready", string.format("%s; still %s", viewText(v, "can"), tostring(D.rec(2).state))
+    end)
+    if not ctx.can then
+        RT.abort = "the first run was not bottled"
+        return true
+    end
+    ctx.phase = "load2"
+end
+
+function RT.D.phases.load2(ctx)
+    local D = RT.D
+    ctx.cond2 = D.rec(2).cond or 1
+    ctx.fire2 = D.rec(2).firebox or 0
+    ctx.wash2 = { ethanol = ctx.eth0 - ctx.wash1.ethanol, water = D.water - ctx.wash1.water }
+    local before = countType("TLG.YeastStarter")
+    local w = machineClick("RTPOT.load_wash_2", D.items[2], "ContextMenu_TLG_LoadWash")
+    ctx.t2 = hours()
+    closeDialogs()
+    local fr = D.rec(1)
+    R:check("RTPOT.second_load_takes_the_rest", function()
+        return w.ok == true and D.near(w.washL, ctx.wash2.ethanol + ctx.wash2.water) and fr.state == "Ready"
+            and countType("TLG.YeastStarter") == before + 1, string.format("wash %s L; fermenter %s; yeast starters %d -> %d",
+            tostring(w.washL), tostring(fr.state), before, countType("TLG.YeastStarter"))
+    end)
+    R:check("RTPOT.firebox_carries_over", function()
+        return D.near(D.rec(2).firebox, ctx.fire2) and D.near(ctx.cond2, 1 - D.def().wearPerBatch),
+            string.format("firebox %.6f kg (%.6f before); condition %.4f", D.rec(2).firebox or -1, ctx.fire2, ctx.cond2)
+    end)
+    ctx.next, ctx.phase = hours() + 0.1, "run2"
+end
+
+function RT.D.phases.run2(ctx)
+    local D = RT.D
+    local e = D.expected(ctx.wash2.ethanol, ctx.wash2.water, ctx.cond2)
+    local s = D.poll(ctx)
+    if s == nil or (s.state ~= "OutputReady" and s.state ~= "Faulted" and hours() - ctx.t2 < 10) then return end
+    RT.speed(1)
+    local rec = D.rec(2)
+    local o = rec.outputs or {}
+    R:check("RTPOT.run2_minimum_hour", function()
+        return D.near(e.hours, 2) and D.near(rec.completedAt, ctx.t2 + 2) and D.near(rec.pausedFor, 0),
+            string.format("done %.6f h after loading (%.4f L of wash at 8 L/h, at least 1 h), paused %.6f", (rec.completedAt or -1) - ctx.t2,
+                ctx.wash2.ethanol + ctx.wash2.water, rec.pausedFor or -1)
+    end)
+    R:check("RTPOT.run2_spirit_after_wear", function()
+        return D.near(o.ethanol, e.ethanol) and D.near(o.water, e.water) and D.near(rec.firebox, ctx.fire2 - 2 * e.burn)
+            and D.near(rec.cond, ctx.cond2 - D.def().wearPerBatch), string.format(
+            "ethanol %.6f (%.6f at condition %.2f) water %.6f (%.6f); firebox %.6f kg; condition %.4f", o.ethanol or -1, e.ethanol,
+            ctx.cond2, o.water or -1, e.water, rec.firebox or -1, rec.cond or -1)
+    end)
+    ctx.run2 = e
+    ctx.phase = "collect2"
+end
+
+function RT.D.phases.collect2(ctx)
+    local D = RT.D
+    machineClick("RTPOT.collect_2", D.items[2], "ContextMenu_TLG_CollectEthanol")
+    closeDialogs()
+    local verdicts, text, v = D.verdicts(ctx.can)
+    local q = v and v.q or {}
+    ctx.potEth, ctx.potWater = ctx.run1.ethanol + ctx.run2.ethanol, ctx.run1.water + ctx.run2.water
+    R:check("RTPOT.both_runs_in_one_can", function()
+        return D.near(q.ethanol, ctx.potEth, 1e-3) and D.near(q.water, ctx.potWater, 1e-3),
+            string.format("%s; expected ethanol %.6f water %.6f", viewText(v, "can"), ctx.potEth, ctx.potWater)
+    end)
+    R:check("RTPOT.pot_spirit_unfit_for_spark_engines", function()
+        local ok = true
+        for _, id in ipairs(D.sparks) do ok = ok and verdicts[id].compatible == false end
+        return ok and D.hasReason(verdicts.engine_si_flex, "water") and D.hasReason(verdicts.generator_si_flex, "water"), text
+    end)
+    ctx.phase = "dry"
+end
+
+function RT.D.phases.dry(ctx)
+    local D = RT.D
+    removeAll("Base.Quicklime")
+    give("Base.Quicklime", 5)
+    local r = machineClick("RTPOT.load_dry", D.items[3], "ContextMenu_TLG_LoadDry")
+    ctx.tDry = hours()
+    closeDialogs()
+    R:check("RTPOT.dry_loaded", function()
+        return r.ok == true and D.near(r.limeKg, 5) and D.near(r.ethanolL, ctx.potEth, 1e-3) and D.near(r.waterL, ctx.potWater, 1e-3),
+            string.format("lime %s kg, ethanol %s L, water %s L", tostring(r.limeKg), tostring(r.ethanolL), tostring(r.waterL))
+    end)
+    ctx.next, ctx.phase = hours() + 0.5, "drying"
+end
+
+function RT.D.phases.drying(ctx)
+    local D = RT.D
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return end
+    ctx.next = hours() + 0.5
+    local s = RT.statusOf(D.items[3])
+    if s.state ~= "OutputReady" and s.state ~= "Faulted" and hours() - ctx.tDry < 30 then return end
+    RT.speed(1)
+    local rec = D.rec(3)
+    R:check("RTPOT.dried_in_12_hours", function()
+        return s.state == "OutputReady" and D.near(rec.completedAt, ctx.tDry + 12),
+            string.format("state=%s done %.6f h after loading", tostring(s.state), (rec.completedAt or -1) - ctx.tDry)
+    end)
+    giveCan("Base.JerryCan")
+    local before = ethanolCans()
+    machineClick("RTPOT.collect_dry", D.items[3], "ContextMenu_TLG_CollectEthanol")
+    closeDialogs()
+    local can = grownCan(before)
+    local verdicts, text, v = D.verdicts(can)
+    local q = v and v.q or {}
+    local target = TLG.Registry.need("recipe", "ethanol_dry").params.targetWater
+    R:check("RTPOT.dried_spirit", function()
+        return v ~= nil and D.near(q.ethanol, ctx.potEth, 1e-3) and D.near(q.water, ctx.potEth * target, 1e-3),
+            string.format("%s; expected water %.6f", viewText(v, "can"), ctx.potEth * target)
+    end)
+    R:check("RTPOT.dried_spirit_fits_flex_engines", function()
+        return verdicts.engine_si_flex.compatible == true and verdicts.generator_si_flex.compatible == true
+            and D.hasReason(verdicts.engine_si_stock, "too_much_ethanol") and D.hasReason(verdicts.generator_si_stock, "too_much_ethanol"),
+            text
+    end)
+    return true
+end
+
+RT.potRun = { name = "rtpot_run", timeout = 120000, fn = function(ctx, ticks)
+    if not ctx.phase and RT.skip("rtpot_run") then return true end
+    if ticks % 30 == 0 then RT.keepFit() end
+    return RT.D.phases[ctx.phase or "ferment"](ctx, ticks) == true
+end }
+
+RT.potSteps = { RT.waitWorld, RT.setup, RT.potSetup, RT.potRun, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -4573,7 +4965,7 @@ Events.OnMainMenuEnter.Add(function()
 end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
-    or REQUEST == "sp-rtp" then
+    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -4603,7 +4995,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- (BC SandboxOptions.randomElectricityShut).
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
-            elseif REQUEST == "sp-rtp" then
+            elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" then
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
@@ -4625,6 +5017,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtp" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, pickup")
                 TLGH.Steps.run(R, RT.pickupSteps, H, nil)
+            elseif REQUEST == "sp-rtpot" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, pot still")
+                TLGH.Steps.run(R, RT.potSteps, H, nil)
             else
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
                 TLGH.Steps.run(R, stepsA, H, nil)

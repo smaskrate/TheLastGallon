@@ -75,6 +75,11 @@
 * Ethanol chain: fermentation vessel, pot/reflux still, drying column, yeast
   starter; EN/IT strings; sandbox options. The drying column can now be used
   ("Dry ethanol with quicklime"); before, it could be built but had no action.
+  The pot still was checked in game with a batch larger than it holds (two
+  loads of wash), its firebox running out and fed again, and the yeast
+  starter coming with the last of the wash; its spirit (80 %) was unfit for
+  any engine by the mod's start check until dried, then fit for flex
+  engines.
 * Migrations with preserved future schemas.
 
 Tested only on Project Zomboid 42.21.0 (4a0e9546ec).

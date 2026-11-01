@@ -16,10 +16,11 @@
 -- picked up and put down through the player's actions: the record travelled
 -- unchanged, but the work around the move failed D-015. With the move hooks
 -- below, run 27 counted the placed hours exactly and credited a grab no Lua
--- saw up to the last time the machine was found placed.
--- Distilling in the pot still, a still or drying column picked up while
--- processing, a barbecue or open fire, upper floors and MP replication are
--- NOT RUN.
+-- saw up to the last time the machine was found placed. In run 28 a pot
+-- still took a wash larger than it holds in two loads, ran out of fuel and
+-- was fed again, and matched the definitions exactly.
+-- A still or drying column picked up while processing, a barbecue or open
+-- fire, upper floors and MP replication are NOT RUN.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
 --   processing         only while the item lies on the ground (D-015). The

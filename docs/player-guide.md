@@ -82,7 +82,9 @@ still is welded in hand.
    (screwdriver). Place it within two tiles of a finished fermenter, **Load
    wash**, **Feed the firebox**: it burns all the wood you carry (firewood,
    logs, twigs, planks too) up to what fits, so leave building planks
-   behind.
+   behind. The pot still takes up to 60 L of wash at a time: collect the
+   ethanol, then **Load wash** again for the rest. A full firebox (30 kg,
+   three logs) distils about 60 L.
 3. **Collect ethanol into a fuel can**: the still fills an empty fuel can,
    or one that already holds only ethanol, never a can with other fuel in
    it. A pot still gives ~80 % ethanol; a **reflux column still** (the pot
@@ -100,22 +102,25 @@ still is welded in hand.
 Picking up a working machine pauses it; put it down to continue. The hours
 it stood count, the hours you carry it do not (in multiplayer up to ten
 minutes before a pickup can be lost; multiplayer itself not checked).
-*(Building
-the four machines and one batch through the fermenter, reflux still and
-drying column, using the menu entries named above, were checked in game, as
-were January batches outdoors, in a room and on a tile warmed by a heat
-source added for the test (the first two stopped and spoiled, the warmed
-one finished), and a January batch beside a house fireplace kept fed with
-logs (it finished; the fire was lit and fed by the test without its
-menu, and its warmth counted through the first 6 hours of a 12 hour
-absence, as long as its fuel lasted), and working fermenters picked up and
-put down again (paused while carried, working again once down, the hours
-they stood counted to the minute and the hours carried not at all); a
-barbecue's warmth while you are away,
-distilling in the pot still, Pause/Resume/Abort, picking up a working
-still or drying column, a fire or barbecue beside a machine, upper floors
-and stopped days adding up across separate cold spells are untested in
-game.)*
+
+*(Building the four machines and one batch through the fermenter, reflux
+still and drying column, using the menu entries named above, were checked
+in game, as were January batches outdoors, in a room and on a tile warmed
+by a heat source added for the test (the first two stopped and spoiled,
+the warmed one finished), and a January batch beside a house fireplace
+kept fed with logs (it finished; the fire was lit and fed by the test
+without its menu, and its warmth counted through the first 6 hours of a
+12 hour absence, as long as its fuel lasted), working fermenters picked up
+and put down again (paused while carried, working again once down, the
+hours they stood counted to the minute and the hours carried not at all),
+and a 12 kg batch through the pot still in two loads (its firebox left to
+run out and fed again, the yeast starter coming with the last of the
+wash; the spirit was unfit for any engine until dried and then fit for
+flex engines, by the mod's start check, not an engine start); a
+barbecue's warmth while you are away, Pause/Resume/Abort, picking up a
+working still or drying column, a fire or barbecue beside a machine,
+upper floors and stopped days adding up across separate cold spells are
+untested in game.)*
 
 ## Converting an engine
 
@@ -168,6 +173,7 @@ in game).
 | Engine will not start on fresh-looking fuel | too much ethanol for a stock engine, or water | Sample; drain water; use gasoline or convert the engine |
 | Fermenter paused "too cold" | below 8 °C at the machine today (see Status) | Move it into a room, or beside a lit fireplace, wood stove, campfire or barbecue; away, the fire keeps it warm only while its fuel lasts. After 3 days paused in all the batch spoils |
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
+| Fermenter says "output waiting, nowhere to put it" | wash left after the still was filled | Collect the still's ethanol, then Load wash again |
 | Machine paused "picked up" | it was carried | Place it on the ground |
 
 ## Existing saves
