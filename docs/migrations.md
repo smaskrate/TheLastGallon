@@ -38,6 +38,16 @@ The world record is created once by the authority on `OnInitGlobalModData`:
   reinstalling or changing sandbox options later never re-grants fresh
   reserves. Fuel discovered late is aged as of discovery (no fresh fuel for
   late exploration).
+* "Discovered" means the first contact that writes a record: a pour,
+  refuel or other transfer. A look (Look and smell) reads the baseline
+  but writes nothing (open item, release checklist).
+* A single-player save that gains the mod (the load screen's Choose
+  Mods..., which rewrites the save's `mods.txt`) takes the options'
+  defaults: transition, 30 days. The load screen offers no sandbox
+  settings (SRC `LoadGameScreen.lua`). Verified RT-SP runs 39–40: record
+  created on the first load as an existing save, fuel first recorded at
+  installation fresh, a can first recorded 6 days later blended 20 %
+  towards the world-age condition, all unchanged after save and continue.
 
 ## Settings changes
 

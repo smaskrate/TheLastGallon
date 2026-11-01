@@ -33,6 +33,7 @@ tools\dev-server-controller.ps1                          # isolated dedicated se
 tools\run-sp-harness.ps1                                 # automated SP experiments (unlocked desktop, no input, ~12 min)
 tools\package.ps1                                        # build dist/ (never uploads)
 tools\rehearse-install.ps1                               # install the zip in a fresh cache and play it (~20 min)
+tools\rehearse-install.ps1 -Scenario existing            # the zip added to a save played without it (~30 min)
 ```
 
 Players install from the zip as `docs/player-guide.md` describes; this

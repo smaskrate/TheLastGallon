@@ -305,6 +305,20 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   any mods, so its `mods.txt` was empty and continuing it loaded none; the
   harness copies the active mods into `currentGame` before `createWorld`,
   as the Solo path does (SRC `MainScreen.lua:1400`).
+* A mod added to an existing save (runs 39–40). The load screen's Choose
+  Mods... rewrites the save's `mods.txt` (SRC `ModSelectorModel.lua`:
+  `manipulateSavefile(folder, "WriteModsDotTxt")`), and continuing a save
+  loads the mods its `mods.txt` lists (SRC
+  `MainScreen.continueLatestSaveAux`). The load screen offers no sandbox
+  settings. On the first load with the mod, `OnInitGlobalModData` reports
+  `isNewGame = false` and `SandboxVars.TheLastGallon` holds the options'
+  defaults (ExistingSavePolicy 1, TransitionDays 30, the rest default).
+  `getActivatedMods()` and the `TLG` global confirmed the mod absent in the
+  world played before.
+* An item lying on the ground keeps its fluid on the world object:
+  `item:getFluidContainer()` is nil there and
+  `getFluidContainerFromSelfOrWorldItem()` returns it (run 39), as the
+  container adapter reads it.
 * NOT RUN: chunk unload/reload, MP reconnect.
 
 ## Production machines and conversions (RT-SP runs 7–8)
@@ -645,7 +659,9 @@ longer offers) and run 33 **32/0**, and fermenters beside a campfire and
 a barbecue, run 34 35/4 and, after the fix, run 35 **39/0**, then the
 full mode on the release zip installed clean, run 36 90/4 with phase B
 14/0, on the repository's mod, run 37 90/4 and 14/0, and on the zip again,
-run 38 **94/0** and **14/0**. Most failures were
+run 38 **94/0** and **14/0**, then an existing save gaining the zip's mod,
+run 39 3/0, 7/1 and 3/0 (a harness error) and run 40 **3/0**, 9/1 and
+**3/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -664,7 +680,9 @@ one: a campfire the player builds was never noted, so its warmth was not
 credited while away (D-022; fixed, run 35). Runs 36–37's four were the
 harness's, in both installs alike: crafting needs light, and the
 workbench measured 0.15 in run 38, where a torch in hand let every craft
-through.
+through. Run 40's one failure is a mod defect: Look and smell writes no
+record onto fuel the mod has not recorded, so What I know about it stays
+unknown (open).
 
 ## Tooling pitfalls found
 

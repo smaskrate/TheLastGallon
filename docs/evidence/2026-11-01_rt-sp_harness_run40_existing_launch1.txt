@@ -1,0 +1,9 @@
+# TLG existing save, launch 1: a world played without the mod
+game=42.21.0 4a0e9546ec
+OBS  EXA.stocked world=85574461282104645817 hours=2.0097; can A (carried) id=611863276 10.00 L petrol; can D on 10663,10645 id=553011837 10.00 L petrol
+PASS EXA.mod_absent :: TLG loaded=false, listed active=false
+PASS EXA.world_aged :: 240.00 game hours since stocking (2.0097 -> 242.0135)
+PASS EXA.cans_kept :: A 10.0000 L, D 10.0000 L, D still on the ground=true
+OBS  EXA.saving at world hours 242.0135
+SUMMARY pass=3 fail=0
+DONE

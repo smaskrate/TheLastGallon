@@ -1015,3 +1015,51 @@ loading screens. Evidence:
 Not run: an install through the Steam Workshop (needs Steam), an upgrade
 (there is no previous supported version), the packaged mod on a dedicated
 server, unpacking on Linux or macOS.
+
+## 2026-11-01 — RT-SP client harness, launches 39–40 (an existing save gains the mod, gate 7)
+
+Command: `tools/rehearse-install.ps1 -Scenario existing` (new). The
+release zip (SHA-256 `0c73ecb5…`, the final package) goes into a fresh
+cache as in run 38, then two game launches:
+
+1. **Without the mod.** Only the new dev driver `TheLastGallonPreInstall`
+   is active; it does not require the mod, which never loads. It plays a
+   debug scenario at the Muldraugh Gas2Go: a 10 L can of petrol carried,
+   one on the ground, then 10 game days on the clock, and saves.
+2. **With the mod.** The save's `mods.txt` now lists the mod and the
+   harness, as the load screen's Choose mods writes it. The harness
+   continues the save (phase B), then saves, exits to the menu and
+   continues once more (phase C).
+
+Fuel counts as found on the first contact that writes a record, so the
+harness finds it the way a player's pour does. The can is poured from
+(`FluidContainer.Transfer`, which the mod wraps), the pump through the
+mod's own transfer. The harness notes the moment and computes the
+expected condition from the policy's two ends, without the mod's
+`WorldInit.baseline`. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run39_existing_launch1.txt` and
+`_launch2.txt`, the same for run 40.
+
+Run 40: launch 1 **3/0**, phase B **9/1**, phase C **3/0**. Run 39 was the
+same up to a harness error: for a can on the ground the game keeps the
+fluid on the world object, and the harness read it from the item.
+
+| Run 40 | Result |
+| --- | --- |
+| The save continued | same world, world hour 242.04 after 10 game days |
+| The mod's world record | created on this first load: existing save, policy transition, 30 days, installed at the load hour (242.0272), `newGame=false` in the mod's own log line |
+| Sandbox options | the save took the mod's defaults (ExistingSavePolicy 1, TransitionDays 30); the load screen offers mods only |
+| Carried can, first recorded at installation | condition 0.000013, exactly the rule; the world-age condition would have been 0.387 |
+| Station pump, first recorded at installation | condition 0.000005, exactly the rule (world-age 0.079); water 34.86 L and sediment 11.54 L in 11,687 L, seeded |
+| Can on the ground, first recorded 144.02 h after installation | condition 0.120482, exactly the rule: 20 % of the way from aged since installation (0.057) to the world-age condition (0.374) |
+| After save, exit and continue | world record (seed, installed hour, policy), both cans' records and ids unchanged |
+| **Look and smell, then What I know about it** | **FAIL**: the look answered ("Condition: Good"), but What I know about it said "Condition unknown: not sampled yet". The observation was filed under `S326600847-1`, an id the can never received |
+
+The failure is a mod defect, the same in runs 39 and 40. A look reads the
+fuel and allocates a record id without writing the record onto the can;
+only transfers write it. In a world the mod has just joined, most fuel is
+in that state.
+
+Not run: the other two policies (no single-player screen sets them for an
+existing save), a server, removing and re-adding the mod, late
+exploration in a new world.

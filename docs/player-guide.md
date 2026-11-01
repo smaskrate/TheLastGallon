@@ -10,8 +10,9 @@ game)* are implemented but have not been verified in a running game yet.
   (`%UserProfile%\Zomboid\mods` on Windows, `~/Zomboid/mods` on Linux and
   macOS), then enable *The Last Gallon* in the game's **Mods** menu.
 * **Steam Workshop:** not published.
-* **An existing world:** choose the "Existing saves" sandbox option before
-  you load it with the mod (see *Existing saves* below).
+* **An existing world:** pick the save on the load screen, press
+  **Choose Mods...** and add *The Last Gallon* (see *Existing saves*
+  below for the fuel already in that world).
 * **Removing:** read *Removing the mod* below first.
 
 ## Why fuel behaves differently
@@ -39,7 +40,9 @@ Right-click a fuel can → **Fuel (The Last Gallon)**:
   rubber hose). Better estimate, finds smaller amounts of water, shows the
   blend composition. Mechanics skill improves precision.
 * **What I know about it** – your last result. "Unknown" means *not
-  sampled*, not *bad*. Results go stale when the fuel changes.
+  sampled*, not *bad*. Results go stale when the fuel changes. Known
+  issue: a look at fuel you have never poured or refuelled with is not
+  remembered yet.
 
 ## Treatments
 
@@ -212,8 +215,23 @@ in game).
 
 ## Existing saves
 
-Choose the "Existing saves" sandbox option before loading an existing world
-with the mod. The default eases ageing in over 30 days.
+Add the mod to a save with the load screen's **Choose Mods...**. The fuel
+already in that world is eased in over 30 days:
+
+* Fuel the mod records in the first days, when you first pour or refuel
+  with it, starts almost fresh.
+* Fuel you first use later starts more aged.
+* From 30 days after installation, fuel starts as aged as the world.
+
+A single-player save takes the mod's default for this ("Existing saves",
+the transition period); the load screen has no setting for it. *(Checked
+in game: a world played 10 days without the mod. A can and a station pump
+recorded at installation were fresh, and a can first used 6 days later
+was a fifth of the way to the world's age. The other two settings and
+servers are untested in game.)* Known issue: Look and smell on fuel the
+mod has not recorded yet answers, but What I know about it then still
+says "unknown"; pour or refuel with it once and later looks are
+remembered.
 
 ## Removing the mod
 
