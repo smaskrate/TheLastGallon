@@ -99,7 +99,8 @@ still is welded in hand.
 
 Picking up a working machine pauses it; put it down to continue. The hours
 it stood count, the hours you carry it do not (in multiplayer up to ten
-minutes before a pickup can be lost). *(Building
+minutes before a pickup can be lost; multiplayer itself not checked).
+*(Building
 the four machines and one batch through the fermenter, reflux still and
 drying column, using the menu entries named above, were checked in game, as
 were January batches outdoors, in a room and on a tile warmed by a heat

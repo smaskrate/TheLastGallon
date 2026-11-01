@@ -604,9 +604,9 @@ run 27).
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
    distilling in the pot still, a winter with mild days between cold spells
    (the code adds paused hours up across spells), flex-engine starts in the
-   cold, a machine beside a fire (`IsoFire`) or barbecue, upstairs, in a
-   player-built room or with the grid on, pouring from a can lying on the
-   ground, Italian text in game, the crafting window itself, UI rendering
+   cold, a machine beside a fire (`IsoFire`) or barbecue, upstairs or in a
+   player-built room (with the grid on: runs 26–27), pouring from a can
+   lying on the ground, Italian text in game, the crafting window itself, UI rendering
    checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a
    second client session; NOT RUN.
