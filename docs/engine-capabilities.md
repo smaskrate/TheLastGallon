@@ -669,7 +669,8 @@ full mode on the release zip installed clean, run 36 90/4 with phase B
 14/0, on the repository's mod, run 37 90/4 and 14/0, and on the zip again,
 run 38 **94/0** and **14/0**, then an existing save gaining the zip's mod,
 run 39 3/0, 7/1 and 3/0 (a harness error) and run 40 **3/0**, 9/1 and
-**3/0**, and after the fix run 41 **3/0**, **11/0** and **3/0**. Most failures were
+**3/0**, and after the fix run 41 **3/0**, **11/0** and **3/0**, then the full
+mode on the final zip installed clean, run 42 **94/0** and **14/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

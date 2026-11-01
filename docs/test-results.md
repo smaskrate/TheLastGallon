@@ -1097,3 +1097,21 @@ Not run: a look with the sample kit (the same command past the kit
 check; the unit tests cover only a refused one), a look at a vehicle,
 pump or generator (no menu sends one), and what runs 39–40 left
 untested.
+
+## 2026-11-01 — RT-SP client harness, launch 42 (the final zip installed clean)
+
+Command: `tools/rehearse-install.ps1`, as in run 38, now on the final
+package. That is the zip of commit `6764990`, byte for byte the one
+`5e22a15` built: 82 files, SHA-256 `d1a6f5e1…`. It matched its manifest.
+Run 38 had used the zip of `2591370`, before D-024 changed five runtime
+files. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run42_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12 and 38.
+* The workbench was dark again (light 0.15 at 10:31 game time); with the
+  torch all four machines were crafted from the menu.
+* The fuel chain, vehicles, generators, pumps, start gates, the ethanol
+  loop and both conversions passed, through the endpoints D-024 changed.
+* After the save and continue, every record came back: cans, a vehicle
+  tank, a generator, a pump, three machines, two conversions and the
+  world record.
