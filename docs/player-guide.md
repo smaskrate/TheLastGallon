@@ -107,7 +107,7 @@ minutes before a pickup can be lost; multiplayer itself not checked).
 
 **Pause** holds a batch where it is and **Resume** carries on, but a paused
 fermenter still counts towards the 3 days that spoil it. **Abort batch**
-empties the machine and, for now, everything in it is lost without a word,
+empties the machine and, for now, the batch in it is lost without a word,
 even the ethanol in a drying column; and a spoiled batch cannot yet be
 cleared, so the fermenter stays spoiled (both to be fixed).
 

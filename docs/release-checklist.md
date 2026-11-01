@@ -27,8 +27,9 @@ decision and is **not** authorised by any task in this repository.
 
 * Abort batch: keep the partial result where the player can get it and
   list it; let a spoiled batch be cleared; readable refusals ("Not possible
-  right now (not_processing)") and controls offered only where they apply
-  (run 31, gate 1).
+  right now (not_processing)", and a spoiled fermenter answering Load mash
+  with "It is busy with another batch.") and controls offered only where
+  they apply (run 31, gate 1).
 * Adapters, placeable machines and UI for biodiesel, wood gas, biogas,
   propane cylinders and electrical networks (domains merged and tested).
 * Automation wiring (rules exist in the domain; no adapter yet).

@@ -815,10 +815,11 @@ the abort handler, and the domain tests pin its firebox and litres.
 Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run31_controls.txt`.
 
 Run 30 (19 PASS / 5 FAIL) filled the column's can with vanilla water, which
-the mod does not track as water in fuel (that is its own fluid,
-`TLG_FuelWater`): the load saw only ethanol and refused it as already dry,
-so the column's four checks meant nothing. Run 31 used the mod's fuel
-water. Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run30_controls_setup.txt`.
+never went into the can (the fluid the mod reads as water in fuel is its
+own, `TLG_FuelWater`; had the game's water been there, the menu would have
+greyed the entry as a can with something else in it): the load saw only
+ethanol and refused it as already dry, so the column's four checks meant
+nothing. Run 31 used the mod's fuel water. Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run30_controls_setup.txt`.
 
 Result, run 31: **20 PASS / 4 FAIL**. The four failures are the design
 checks: three defects.
