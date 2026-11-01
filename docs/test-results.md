@@ -1203,7 +1203,8 @@ Found by reading the code, not run: on a carried machine the authority
 refuses "Load mash and start fermenting", "Load wash from a nearby
 fermenter" and "Dry ethanol with quicklime" (`not_placed`). It accepts
 "Feed the firebox", "Collect ethanol into a fuel can", "Abort batch" and
-"Resume", which the menu hides while the machine is carried.
+"Resume", which the menu hides while the machine is carried. Fixed: they
+are refused since commit `f5c7b25` (run 46).
 
 ## 2026-11-01 — RT-SP client harness, launch 46 (a carried machine answers Status only)
 

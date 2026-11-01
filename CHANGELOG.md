@@ -54,7 +54,8 @@
   Status: feeding its firebox, collecting from it, Pause, Resume and Abort
   batch say "Place it on the ground first.", as loading already did. The
   menu never offered them while carried, but the server took them, and a
-  Resume could make the carried hours count (checked in game).
+  Resume could make the carried hours count. The refusals were checked in
+  game; the counted hours were shown by a test against the old code.
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars
