@@ -482,9 +482,9 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   single-player paths reached the wraps, and an item lifted with
   `ISGrabItemAction`'s own calls outside it reached none, as a multiplayer
   grab would. Run 45 also used the place action in the form the place cursor
-  queues (`isPlaceItem = true`; `isValid` then requires a tile next to the
-  character and at most 50 weight on it,
-  SRC `shared/TimedActions/ISDropWorldItemAction.lua`). It worked onto a
+  queues (`isPlaceItem = true`, under which `isValid` also requires a tile
+  next to the character; it refuses more than 50 weight on the tile either
+  way, SRC `shared/TimedActions/ISDropWorldItemAction.lua`). It worked onto a
   tile already holding a machine and reached the wrap, as did the same
   paths with stills and a drying column.
 * Fireplaces (BC 42.21 `IsoFireplace`): the map loader makes one from a
