@@ -416,8 +416,9 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   as `getClimateValuesCopy():getDayLightLagged()`; vanilla formats
   temperatures in the player's units with
   `Temperature.getTemperatureString` (SRC `server/radio/ISWeatherChannel.lua:209`).
-  With the grid on, room tiles read 22.0000 °C at every hourly reading of
-  run 26 (July).
+  With the grid on, the four room-tile readings run 26 compared were
+  22.0000 °C, and Status gave 71.6 °F (22 °C) as the day temperature at
+  all three of its tiles.
 * Moving a ground item (SRC 42.21), the paths run 26 used on running
   fermenters, each keeping the item's mod data: the world menu's Grab
   (`ISWorldObjectContextMenu.onGrabWItem`) queues `ISGrabItemAction`, whose

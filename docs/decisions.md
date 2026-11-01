@@ -297,7 +297,8 @@ listed with their replacement.
   whole day (the batch has a day's thermal mass); the hour in progress
   takes the previous hour's reading, otherwise a warmed machine paused
   after every midnight (run 17). A machine moved without being used in
-  between counts at its new place for that time. Within the current day
+  between counts at its new place for that time, the hours carried
+  included (RT-SP run 26; see D-015). Within the current day
   the value moves as readings arrive (as in D-020).
 * Verified RT-SP 2026-10-31 runs 17–19: the room formula matched the
   game's own room value exactly over 94–96 hours per run; the readings

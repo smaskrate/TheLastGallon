@@ -697,7 +697,7 @@ work around a move does not follow the decision.
 The mod learns of a move only when the machine is next used, and then
 cannot tell the hours placed from the hours carried: a Status while
 carried drops every hour since the last use, and without one every hour
-counts. With the grid on the game gave a room tile 22.0000 °C at every
-reading, as the room formula says (the first check of it in game with
-power). Not run: a still or drying column picked up, a move in
+counts. With the grid on, the four readings compared were 22.0000 °C, and
+Status gave 71.6 °F (22 °C) as the day temperature at all three tiles, as
+the room formula says (its first check in game with power). Not run: a still or drying column picked up, a move in
 multiplayer, a carried machine across a save.
