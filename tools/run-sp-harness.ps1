@@ -37,6 +37,10 @@
   sees them), carried two game hours and put down again (place action,
   inventory Drop); each must finish with the definitions' hours, fuel and
   spirit, nothing counted while carried.
+  still-save: the same, saved and exited to the menu an hour after the
+  pickups with the three machines carried; the save is continued, their
+  records must come back exactly as saved, and the run goes on to the
+  put-downs.
   fires: the January world; a campfire and a charcoal barbecue lit from
   their menus, the air around each checked against the heat formula, a
   fermenter beside each, and a 12 game hour trip away while they burn.
@@ -52,7 +56,7 @@
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
-        "fires", "existing-a", "existing-b", "italian")][string]$Mode = "full",
+        "still-save", "fires", "existing-a", "existing-b", "italian")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -104,7 +108,7 @@ if ($Mode -eq "italian") {
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "still-pickup" { "sp-rts" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
+    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

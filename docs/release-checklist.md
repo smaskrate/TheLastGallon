@@ -43,6 +43,7 @@ tools\run-sp-harness.ps1 -Mode pickup -TimeoutMinutes 30     # three of four run
 tools\run-sp-harness.ps1 -Mode pot-still -TimeoutMinutes 40  # a batch through the pot still in two runs, then dried
 tools\run-sp-harness.ps1 -Mode controls -TimeoutMinutes 30   # Pause, Resume and Abort batch from the machine menu
 tools\run-sp-harness.ps1 -Mode still-pickup -TimeoutMinutes 40  # two stills and a drying column picked up mid-batch and put down
+tools\run-sp-harness.ps1 -Mode still-save -TimeoutMinutes 40    # the same, saved and continued while the three are carried
 tools\run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60      # a campfire and a barbecue lit from their menus, a fermenter beside each, a trip away
 tools\run-sp-harness.ps1 -Mode italian -TimeoutMinutes 20    # the client in Italian: every Italian string, the Fuel and machine menus
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361

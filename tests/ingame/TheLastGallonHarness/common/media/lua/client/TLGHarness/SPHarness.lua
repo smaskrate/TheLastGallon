@@ -18,6 +18,9 @@
 --   sp-rtc -> summer, grid on: Pause, Resume and Abort batch from the menu
 --   sp-rts -> summer, grid on: two stills and a drying column picked up
 --             mid-batch and put down, the reflux still where no Lua sees it
+--   sp-rtss -> the same, saved and exited to the menu while carried ("sp-rtsb")
+--   sp-rtsb -> main menu continues that save, checks the carried records,
+--             then the put-downs and the rest of the run
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -44,7 +47,8 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rts" or REQUEST == "sp-rtof" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" then
+    or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtof" or REQUEST == "ex-b"
+    or REQUEST == "ex-c" or REQUEST == "sp-it" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -3890,21 +3894,26 @@ RT.fireBeforeSave = { name = "rtfs_before_save", timeout = 120000, fn = function
     return true
 end }
 
-RT.saveAndExit = { name = "rtfs_save_and_exit", timeout = 1200, fn = function(ctx, ticks)
-    if not ctx.saved then
-        RT.speed(1)
-        R:finish(false)
-        TLGH.writeFile("TLG_harness_request.txt", { "sp-rtfb" })
-        saveGame()
-        ctx.saved = true
+-- Saves, writes the request that continues the save and exits to the menu.
+function RT.saveAndExitAs(name, nextRequest)
+    return { name = name, timeout = 1200, fn = function(ctx, ticks)
+        if not ctx.saved then
+            RT.speed(1)
+            R:finish(false)
+            TLGH.writeFile("TLG_harness_request.txt", { nextRequest })
+            saveGame()
+            ctx.saved = true
+            return nil
+        end
+        if ticks == 180 then
+            R:line("EXIT phase 1 -> main menu")
+            getCore():exitToMenu()
+        end
         return nil
-    end
-    if ticks == 180 then
-        R:line("EXIT phase 1 -> main menu")
-        getCore():exitToMenu()
-    end
-    return nil
-end }
+    end }
+end
+
+RT.saveAndExit = RT.saveAndExitAs("rtfs_save_and_exit", "sp-rtfb")
 
 RT.fireReload = { name = "rtfb_reload", timeout = 3000, fn = function(ctx, ticks)
     local F = RT.F
@@ -5378,7 +5387,9 @@ RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.f
 -- definitions' fuel and spirit (Content/Production), the times taken from
 -- the records' own stamps (a move hook brings `t` to the moment of the move)
 -- and the reflux still's work credited up to the last time the mod found it
--- placed (`seen`). Then the spirit is collected into cans.
+-- placed (`seen`). Then the spirit is collected into cans. With request
+-- "sp-rtss" the run is saved and exited to the menu one game hour after the
+-- pickups, the three machines still carried (RT.stillReload goes on).
 ------------------------------------------------------------------------------
 RT.S = { names = { "F1", "F2", "pot_still", "reflux_still", "column" }, carryHours = 2, tol = 1e-6, near = 0.01 }
 
@@ -5390,6 +5401,19 @@ RT.S.KEPT = { "id", "machine", "startedAt", "stage", "stageDone", "firebox", "co
 function RT.S.rec(i) return RT.S.items[i]:getModData().tlgProc or {} end
 
 function RT.S.close(a, b, tol) return type(a) == "number" and type(b) == "number" and math.abs(a - b) <= (tol or RT.S.tol) end
+
+-- What the batch of `rec` must give at Cooking 0: its stage hours, a still's
+-- wood per hour, ethanol and water (Process.converters).
+function RT.S.expectedFor(rec)
+    local inputs = rec.inputs or {}
+    if rec.machine == "drying_column" then
+        local dry = TLG.Registry.need("recipe", "ethanol_dry")
+        local eth, water, p = inputs.ethanol or 0, inputs.water or 0, dry.params
+        local removed = math.max(0, math.min(water - eth * p.targetWater, (inputs.quicklime_kg or 0) * p.waterPerKgLime))
+        return { hours = dry.stages[1].hours, ethanol = eth, water = water - removed }
+    end
+    return RT.D.expected(inputs.ethanol or 0, inputs.water or 0, rec.cond or 1, rec.machine)
+end
 
 -- Machine i's record as it is now, kept once under ctx[key][i]: taken the
 -- first tick a move is seen, its `t` is the moment the move hook set.
@@ -5497,7 +5521,7 @@ function RT.S.loadStill(ctx, i, logs)
     local rec = S.rec(i)
     local inputs = rec.inputs or {}
     ctx.fed[i], ctx.pid[i] = fuel.addedKg or 0, rec.id
-    ctx.exp[i] = RT.D.expected(inputs.ethanol or 0, inputs.water or 0, rec.cond or 1, rec.machine)
+    ctx.exp[i] = S.expectedFor(rec)
     local e = ctx.exp[i]
     R:line("OBS  RTS.loaded %s at %.4f game h: %s, firebox %.4f kg; due %.6f stage hours at %.6f kg/h, ethanol %.6f water %.6f",
         S.names[i], rec.startedAt or -1, brief(inputs), rec.firebox or -1, e.hours, e.burn, e.ethanol, e.water)
@@ -5520,11 +5544,9 @@ function RT.S.loadColumn(ctx)
     closeDialogs()
     local rec = S.rec(5)
     local inputs = rec.inputs or {}
-    local dry = TLG.Registry.need("recipe", "ethanol_dry")
-    local eth, water, p = inputs.ethanol or 0, inputs.water or 0, dry.params
-    local removed = math.max(0, math.min(water - eth * p.targetWater, (inputs.quicklime_kg or 0) * p.waterPerKgLime))
+    local eth, water = inputs.ethanol or 0, inputs.water or 0
     ctx.pid[5] = rec.id
-    ctx.exp[5] = { hours = dry.stages[1].hours, ethanol = eth, water = water - removed }
+    ctx.exp[5] = S.expectedFor(rec)
     R:line("OBS  RTS.loaded column at %.4f game h: %s; due ethanol %.6f water %.6f", rec.startedAt or -1, brief(inputs),
         ctx.exp[5].ethanol, ctx.exp[5].water)
     R:check("RTS.loaded_column", function()
@@ -5696,8 +5718,11 @@ function RT.S.phases.carry(ctx)
         end)
         ctx.listChecked = true
     end
-    if hours() - ctx.tLift < S.carryHours then return end
+    -- Request "sp-rtss": the first hour carried, then the save.
+    local saving = S.saveAfter ~= nil and not ctx.continued
+    if hours() - ctx.tLift < (saving and S.saveAfter or S.carryHours) then return end
     RT.speed(1)
+    local tag = ctx.continued and "_after_the_save" or ""
     local ok, parts = true, {}
     for _, i in ipairs({ 3, 5 }) do
         local same, detail = P.sameBatch(ctx.held[i], S.rec(i), S.HELD)
@@ -5706,10 +5731,10 @@ function RT.S.phases.carry(ctx)
     end
     local same4, detail4 = P.sameBatch(ctx.pre[4], S.rec(4), P.WHOLE)
     parts[#parts + 1] = "reflux_still: " .. detail4
-    R:check("RTS.nothing_advances_while_carried", function()
+    R:check("RTS.nothing_advances_while_carried" .. tag, function()
         return ok and same4, string.format("%.4f game h carried; %s", hours() - ctx.tLift, table.concat(parts, " | "))
     end)
-    R:check("RTS.nothing_filed_while_carried", function()
+    R:check("RTS.nothing_filed_while_carried" .. tag, function()
         local n = 0
         for _, i in ipairs({ 3, 4, 5 }) do
             local rec = S.rec(i)
@@ -5717,7 +5742,32 @@ function RT.S.phases.carry(ctx)
         end
         return n == 0, string.format("%d readings or notes since the pickups", n)
     end)
+    if saving then
+        S.writeExpect(ctx)
+        return true
+    end
     ctx.phase = "dropPot"
+end
+
+-- Request "sp-rtss", before the save: what phase 2 needs to go on, and the
+-- carried machines' records as saved (brief: every field to three levels,
+-- numbers exactly).
+function RT.S.writeExpect(ctx)
+    local S = RT.S
+    local spots, sites = {}, TLG.World.get().machineSites or {}
+    for _, p in ipairs(S.spots) do spots[#spots + 1] = p.x .. "," .. p.y end
+    local listed = string.format("%s,%s,%s", tostring(sites[ctx.pid[3]] ~= nil), tostring(sites[ctx.pid[4]] ~= nil),
+        tostring(sites[ctx.pid[5]] ~= nil))
+    local lines = { "rtss.spots=" .. table.concat(spots, ";"), "rtss.tLift=" .. tostring(ctx.tLift),
+        "rtss.hours=" .. tostring(hours()), "rtss.fed3=" .. tostring(ctx.fed[3]), "rtss.fed4=" .. tostring(ctx.fed[4]),
+        "rtss.listed=" .. listed }
+    for _, i in ipairs({ 3, 4, 5 }) do
+        lines[#lines + 1] = "rtss.pid" .. i .. "=" .. tostring(ctx.pid[i])
+        lines[#lines + 1] = "rtss.rec" .. i .. "=" .. brief(S.rec(i))
+    end
+    TLGH.writeFile(EXPECT, lines)
+    R:line("OBS  RTSS.saving %.4f game h after the lift, the three machines carried; listed for the hourly reading %s",
+        hours() - ctx.tLift, listed)
 end
 
 -- Machine i put down through `start` (seen once it is found on a tile by its
@@ -5886,11 +5936,107 @@ end
 
 RT.stillRun = { name = "rts_run", timeout = 120000, fn = function(ctx, ticks)
     if not ctx.phase and RT.skip("rts_run") then return true end
+    -- After the save (request "sp-rtsb"): on from the carrying.
+    if not ctx.phase and RT.S.resume then
+        for k, v in pairs(RT.S.resume) do ctx[k] = v end
+        RT.S.resume = nil
+        ctx.phase = "carry"
+    end
     if ticks % 30 == 0 then RT.keepFit() end
     return RT.S.phases[ctx.phase or "ferment"](ctx, ticks) == true
 end }
 
 RT.stillSteps = { RT.waitWorld, RT.setup, RT.stillSetup, RT.stillRun, RT.finish }
+
+------------------------------------------------------------------------------
+-- Carried across a save (requests "sp-rtss", then "sp-rtsb"): the still
+-- pickup run, saved and exited to the menu one game hour after the pickups
+-- with the pot still, the reflux still and the column carried, the
+-- expectations file holding their records. Phase 2 continues the save: the
+-- three must still be in the inventory, their records exactly as saved and
+-- the hourly list as it was, before any access. The pot still's menu and
+-- Status must still say it was picked up. Then the run goes on where it
+-- stopped: another hour carried, the put-downs and every check after them.
+------------------------------------------------------------------------------
+RT.stillReload = { name = "rtsb_reload", timeout = 3000, fn = function(ctx, ticks)
+    local S = RT.S
+    if not (player() and ticks > 120) then return nil end
+    local e = TLGH.readKeyValues(EXPECT)
+    if e["rtss.pid3"] == nil then
+        RT.abort = "no expectations from phase 1"
+        R:line("OBS  RTSB.%s", RT.abort)
+        return true
+    end
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    pcall(function() p:setUnlimitedCarry(true) end)
+    captureDialogs(true)
+    S.spots, S.items = {}, {}
+    for x, y in string.gmatch(e["rtss.spots"], "(%-?%d+),(%-?%d+)") do S.spots[#S.spots + 1] = { x = tonumber(x), y = tonumber(y) } end
+    local here = p:getSquare()
+    R:line("OBS  RTSB.continued at world hour %.4f (saved at %s); character at %d,%d (left at %d,%d)", hours(),
+        tostring(e["rtss.hours"]), here and here:getX() or -1, here and here:getY() or -1, S.spots[1].x, S.spots[1].y)
+    -- The place action needs a tile next to the character: back on its tile.
+    p:setPosition(S.spots[1].x + 0.5, S.spots[1].y + 0.5, 0)
+    local r = { continued = true, listChecked = true, tLift = tonumber(e["rtss.tLift"]), pid = {}, exp = {}, held = {}, pre = {},
+        keys = {}, fed = { [3] = tonumber(e["rtss.fed3"]), [4] = tonumber(e["rtss.fed4"]) } }
+    local carried, same, parts = true, true, {}
+    for _, i in ipairs({ 3, 4, 5 }) do
+        local pid = e["rtss.pid" .. i]
+        local list = p:getInventory():getAllEvalRecurse(function(it)
+            local rec = it:getModData().tlgProc
+            return type(rec) == "table" and rec.id == pid
+        end)
+        local item = list:size() > 0 and list:get(0) or nil
+        local rec = item and item:getModData().tlgProc
+        S.items[i] = item
+        carried = carried and item ~= nil and item:getWorldItem() == nil
+        local kept = rec ~= nil and brief(rec) == e["rtss.rec" .. i]
+        same = same and kept
+        parts[#parts + 1] = S.names[i] .. (kept and " as saved" or (": " .. brief(rec)))
+        if rec then
+            r.pid[i], r.exp[i] = rec.id, S.expectedFor(rec)
+            r.keys[i] = { temps = RT.P.maxKey(rec.temps), fires = RT.P.maxKey(rec.fires) }
+        end
+    end
+    R:check("RTSB.machines_still_carried", function()
+        return carried, string.format("in the inventory, off the ground: pot still %s, reflux still %s, column %s",
+            tostring(S.items[3] ~= nil), tostring(S.items[4] ~= nil), tostring(S.items[5] ~= nil))
+    end)
+    R:check("RTSB.records_survive_the_save", function() return same, table.concat(parts, "; ") end)
+    local sites = TLG.World.get().machineSites or {}
+    local listed = string.format("%s,%s,%s", tostring(sites[r.pid[3]] ~= nil), tostring(sites[r.pid[4]] ~= nil),
+        tostring(sites[r.pid[5]] ~= nil))
+    R:check("RTSB.hourly_list_as_saved", function()
+        return listed == e["rtss.listed"], string.format("listed %s (saved %s)", listed, tostring(e["rtss.listed"]))
+    end)
+    if not (carried and same) then
+        RT.abort = "the carried machines did not come back as saved"
+        return true
+    end
+    -- The pot still after the continue: Status, and "Place it on the ground
+    -- to operate it" greyed; Status says it was picked up.
+    local want = getText("ContextMenu_TLG_MachineStatus") .. " | " .. getText("ContextMenu_TLG_PlaceFirst") .. " (greyed)"
+    local got = table.concat(RT.menuOffered(S.items[3]), " | ")
+    R:check("RTSB.menu_while_carried_pot_still", function() return got == want, "offered: " .. got end)
+    local before = #H.dialogs.texts
+    local s = machineClick("RTSB.status_pot_still_carried", S.items[3], "ContextMenu_TLG_MachineStatus")
+    local text = H.dialogs.texts[before + 1]
+    closeDialogs()
+    R:check("RTSB.carried_status_paused_pot_still", function()
+        return s.ok == true and s.state == "Paused" and s.pause == "not_placed" and has(text, getText("IGUI_TLG_Pause_not_placed")),
+            string.format("state=%s pause=%s dialog=%s", tostring(s.state), tostring(s.pause), tostring(text))
+    end)
+    -- What the next carried hour must leave as it is (after that Status).
+    for _, i in ipairs({ 3, 5 }) do r.held[i] = TLG.Tables.deepCopy(S.rec(i)) end
+    r.pre[4] = TLG.Tables.deepCopy(S.rec(4))
+    S.resume = r
+    return true
+end }
+
+RT.stillSaveSteps = { RT.waitWorld, RT.setup, RT.stillSetup, RT.stillRun, RT.saveAndExitAs("rtss_save_and_exit", "sp-rtsb") }
+RT.stillReloadSteps = { RT.stillReload, RT.stillRun, RT.finish }
 
 ------------------------------------------------------------------------------
 -- Open fires (request "sp-rtof"): a fermenter beside a campfire and one
@@ -7342,8 +7488,8 @@ Events.OnMainMenuEnter.Add(function()
 end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
-    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtof"
-    or REQUEST == "sp-it" then
+    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
+    or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -7373,7 +7519,8 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- (BC SandboxOptions.randomElectricityShut).
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
-            elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" then
+            elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts"
+                or REQUEST == "sp-rtss" then
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
@@ -7404,6 +7551,10 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rts" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, stills and column picked up")
                 TLGH.Steps.run(R, RT.stillSteps, H, nil)
+            elseif REQUEST == "sp-rtss" then
+                RT.S.saveAfter = 1
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, stills and column carried, before the save")
+                TLGH.Steps.run(R, RT.stillSaveSteps, H, nil)
             elseif REQUEST == "sp-rtof" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, open fires")
                 TLGH.Steps.run(R, RT.openFireSteps, H, nil)
@@ -7420,7 +7571,7 @@ else
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", false)
 end
 
-if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "ex-b" or REQUEST == "ex-c" then
+if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -7436,6 +7587,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "ex-b" or REQUEST == 
         elseif REQUEST == "ex-c" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, the existing save continued again", true)
             TLGH.Steps.run(R, RT.existingReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtsb" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, stills and column carried, after the save", true)
+            TLGH.Steps.run(R, RT.stillReloadSteps, H, nil)
         elseif REQUEST == "sp-rtfb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, fireplace, after the reload", true)
             TLGH.Steps.run(R, RT.fireReloadSteps, H, nil)
