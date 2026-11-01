@@ -32,8 +32,12 @@
   Status shows the temperature at the machine. Checked in game in
   January with the grid off: outdoors and in an unheated room the batch
   stopped and spoiled; on a warmed tile it finished, and so did a batch
-  two tiles from a house fireplace kept fed with logs (18 logs; the fire
-  burned out during a 12 hour absence and the batch lost about 17 hours).
+  two tiles from a house fireplace kept fed with logs (17 logs).
+* A fire left burning keeps a machine warm while you are away, for as long
+  as its fuel lasts (up to 8 hours with default settings): the game burns
+  that fuel while you are gone anyway. Checked in game: a fire's 6 hours
+  of fuel covered half of a 12 hour absence, and the batch finished 5
+  hours sooner than without it.
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

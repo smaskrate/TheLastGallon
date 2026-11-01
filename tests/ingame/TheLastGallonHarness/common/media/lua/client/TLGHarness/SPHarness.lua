@@ -2806,6 +2806,33 @@ local function compareFiled(S, m, i, item)
     end
 end
 
+-- Compares the fire notes the mod took for machine i (D-022) since the last
+-- comparison with the harness's own, where the scenario takes them.
+local function compareNotes(S, m, i, item)
+    local p = item and item:getModData().tlgProc
+    local mine = S.fires and S.fires[i]
+    if not (p and mine) then return end
+    for _, h in ipairs(TLG.Tables.sortedKeys(mine)) do
+        if h > m.notesCompared then
+            m.notesCompared = h
+            local a, b = mine[h], p.fires and p.fires[h]
+            local same
+            if a == false then
+                same = b == false
+            else
+                same = type(b) == "table" and b.f == a.f and b.x == a.x and b.y == a.y and b.r == a.r and b.c == a.c
+                    and b.rad == nil and math.abs(b.t - a.t) < 1e-6
+            end
+            m.notes.n = m.notes.n + 1
+            if a then m.notes.fire = m.notes.fire + 1 end
+            if not same then
+                m.notes.off = m.notes.off + 1
+                m.notes.where = m.notes.where or string.format("hour %d: harness %s, mod %s", h, brief(a), brief(b))
+            end
+        end
+    end
+end
+
 -- Whether any hour of `day` went unread because the tiles were unloaded.
 local function unloadedOn(S, env, day)
     for s in pairs(S.unloaded) do
@@ -2819,6 +2846,7 @@ end
 local function readMachine(S, ctx, i, env, now, day)
     local m, item = ctx.m[i], S.items[i]
     compareFiled(S, m, i, item)
+    compareNotes(S, m, i, item)
     local s = RT.statusOf(item)
     local done = RT.doneHours(item)
     local p = m.prev
@@ -2827,7 +2855,7 @@ local function readMachine(S, ctx, i, env, now, day)
     local rec = item:getModData().tlgProc
     if running and type(s.siteC) == "number" and rec and rec.site then
         local want = env:siteDayMean(day, { room = rec.site.room, z = rec.site.z, temps = S.readings[i],
-            from = rec.startedAt }, now)
+            fires = S.fires and S.fires[i], from = rec.startedAt }, now)
         m.mean.n = m.mean.n + 1
         if math.abs(want - s.siteC) >= m.mean.worst then
             m.mean.worst = math.abs(want - s.siteC)
@@ -3097,7 +3125,12 @@ RT.winterSteps = { RT.waitWorld, RT.setup, RT.sitesSetup, RT.sitesFerment, RT.fi
 -- fits under the 8 h cap), with the winter run's readings, day temperature,
 -- work and trip checks. Away for 12 game hours, the fire burns all the same:
 -- on reload IsoFireplace.update uses up the minutes since its saved
--- lastUpdateTime in one step (BC), so it must be out on the return.
+-- lastUpdateTime in one step (BC), so it must be out on the return. Since
+-- D-022 the mod notes the fire warming the machine every ten minutes and
+-- credits that warmth to the hours away while the noted fuel lasts: the
+-- harness takes its own notes at the same ticks and compares them, feeds
+-- the fire a quarter hour before leaving (so a note sees it), and checks the
+-- work over the trip against the day temperatures with the credit.
 ------------------------------------------------------------------------------
 -- cells: 256-tile map cells (x, y) whose .lotheader lists a working
 -- fireplace tile, nearest the start first (checked 2026-11-01 for cells
@@ -3292,9 +3325,51 @@ function RT.F.onHour()
     if F.tending then F.tend(fp) end
 end
 
+-- Every ten game minutes while the batch runs: the harness's own note of the
+-- fire warming the machine, as Machines.observeFires takes it (under the
+-- hour, the last one wins; false when the fire does not give the air).
+function RT.F.onTenMinutes()
+    local F = RT.F
+    if not F.active then return end
+    local s, fp = sq(F.home.x, F.home.y, 0), F.fireplace()
+    if s == nil or fp == nil then return end
+    local air = getClimateManager():getAirTemperatureForSquare(s)
+    local t0 = F.unwarmed(s, F.climate())
+    local dx, dy, fuel = F.fp.x - F.home.x, F.fp.y - F.home.y, fp:getFuelAmount()
+    local note = false
+    if fp:isLit() and fuel > 0 and air > t0 + F.tol
+        and math.abs(F.warmed(t0, dx, dy, F.radius(fuel), F.srcInRoom) - air) <= F.tol then
+        note = { t = hours(), f = fuel, x = dx, y = dy, r = F.srcInRoom, c = F.srcC }
+    end
+    F.fires[1][math.floor(hours())] = note
+end
+
 function RT.F.onLeave(ctx)
     local fp = RT.F.fireplace()
     ctx.trip.fire = { fuel = fp and fp:getFuelAmount() or -1, lit = fp ~= nil and fp:isLit() }
+end
+
+-- The work done over the trip against the stage rule fed by each day's
+-- temperature from the harness's readings and notes (the mod advances each
+-- day at its mean computed up to the read).
+function RT.F.checkWork(ctx, before, env, now)
+    local F, m = RT.F, ctx.m[1]
+    local rec = F.items[1]:getModData().tlgProc
+    local site = { room = rec.site.room, z = rec.site.z, temps = F.readings[1], fires = F.fires[1],
+        from = rec.startedAt }
+    local want, t = 0, before.h
+    while t < now - 1e-9 do
+        local d = env:dayIndex(t)
+        local stop = math.min(now, env:dayStart(d + 1))
+        want = want + RT.fermentRate((env:siteDayMean(d, site, now))) * (stop - t)
+        t = stop
+    end
+    local did = RT.doneHours(F.items[1]) - before.done
+    R:check("RTF.work_over_the_trip", function()
+        return before.stage == "ferment" and m.last.stage == "ferment" and math.abs(did - want) <= 0.01,
+            string.format("%.2f to %.2f h in: did %.4f h, rule with the credit %.4f h", before.h - ctx.h0,
+                now - ctx.h0, did, want)
+    end)
 end
 
 -- Back from the trip: the fire as the reload left it, then lit again.
@@ -3310,6 +3385,27 @@ function RT.F.onReturn(ctx)
             return before.lit and math.abs(fuel - want) <= 15 and lit == (fuel > 0),
                 string.format("left lit=%s with %d min; back after %.0f min: lit=%s with %d min (burning on: %.0f)",
                     tostring(before.lit), before.fuel, awayMin, tostring(lit), fuel, want)
+        end)
+        -- D-022: no note in an hour spent wholly away; the note standing last
+        -- before leaving covers the trip while its fuel lasts.
+        local rec = F.items[1] and F.items[1]:getModData().tlgProc or {}
+        local noted, last = 0, nil
+        for h in pairs(rec.fires or {}) do
+            if F.unloaded[h - 1] and F.unloaded[h] then noted = noted + 1 end
+        end
+        for _, h in ipairs(TLG.Tables.sortedKeys(F.fires[1])) do
+            if h <= ctx.trip.from then last = h end
+        end
+        local note = last and F.fires[1][last]
+        local credited = type(note) == "table" and math.max(0, math.min(ctx.trip.back, note.t + note.f / 60)
+            - ctx.trip.from) or 0
+        R:line("OBS  RTF.credit last note before leaving: %s; covers %.2f of %.2f h away", brief(note), credited,
+            ctx.trip.back - ctx.trip.from)
+        R:check("RTF.no_notes_while_unloaded", function()
+            return noted == 0, string.format("%d notes in hours spent away", noted)
+        end)
+        R:check("RTF.away_hours_credited", function()
+            return credited >= 1, string.format("%.2f h of the trip covered by the fire's noted fuel", credited)
         end)
     end
     local added = F.tend(fp)
@@ -3488,7 +3584,7 @@ RT.fireFerment = { name = "rtf_ferment", timeout = 120000, fn = function(ctx, ti
         end
         local it = instanceItem("TLG.FermenterVessel")
         sq(F.home.x, F.home.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
-        F.items, F.readings, F.unloaded, F.logDays = { it }, { {} }, {}, {}
+        F.items, F.readings, F.unloaded, F.logDays, F.fires = { it }, { {} }, {}, {}, { {} }
         F.hourly = { n = 0, worst = 0, where = "none", lit = 0, minFuel = math.huge, minGain = math.huge, minAir = math.huge }
         player():setPosition(F.home.x + 0.5, F.home.y + 0.5, 0)
         ctx.t0 = ticks
@@ -3515,6 +3611,7 @@ RT.fireFerment = { name = "rtf_ferment", timeout = 120000, fn = function(ctx, ti
         F.active, F.tending, F.logs0 = true, true, F.logs
         if not F.hooked then
             Events.EveryHours.Add(RT.F.onHour)
+            Events.EveryTenMinutes.Add(RT.F.onTenMinutes)
             F.hooked = true
         end
         local env = TLG.World.env()
@@ -3522,17 +3619,31 @@ RT.fireFerment = { name = "rtf_ferment", timeout = 120000, fn = function(ctx, ti
         ctx.m = { { prev = { h = hours(), done = RT.doneHours(F.items[1]), day = env:dayIndex(hours()), stage = "prepare" },
             rule = { n = 0, worst = 0, where = "none" }, mean = { n = 0, worst = 0, where = "none" },
             filed = { n = 0, worst = 0, where = "none" }, compared = -math.huge, afterTrip = 0, days = {},
-            pausedTally = 0 } }
+            pausedTally = 0, notes = { n = 0, fire = 0, off = 0 }, notesCompared = -math.huge } }
         return nil
     end
     if ticks % 30 == 0 then RT.keepFit() end
+    -- A quarter hour before leaving the fire gets what a log can add, so a
+    -- ten-minute note sees the fuel it leaves with.
+    if not ctx.fed and hours() - ctx.h0 >= F.tripAt - 0.25 then
+        local fp = F.fireplace()
+        ctx.fed = { added = fp and F.tend(fp), fuel = fp and fp:getFuelAmount() or -1 }
+    end
     if tripStep(F, ctx, ticks) then return nil end
     RT.speed(RT.waitSpeed)
     if hours() < ctx.next then return nil end
     ctx.next = hours() + 1
     local env, now = TLG.World.env(), hours()
+    local m = ctx.m[1]
+    -- The first read after the trip: the work over it is checked.
+    local before = ctx.trip and ctx.trip.checked and not ctx.workChecked
+        and { h = m.prev.h, done = m.prev.done, stage = m.prev.stage } or nil
     readMachine(F, ctx, 1, env, now, env:dayIndex(now))
-    local m, elapsed = ctx.m[1], now - ctx.h0
+    if before then
+        ctx.workChecked = true
+        F.checkWork(ctx, before, env, now)
+    end
+    local elapsed = now - ctx.h0
     local st = m.last
     if st.state ~= "OutputReady" and st.state ~= "Faulted" and elapsed < 200 then return nil end
 
@@ -3566,6 +3677,11 @@ RT.fireFerment = { name = "rtf_ferment", timeout = 120000, fn = function(ctx, ti
     R:check("RTF.readings_filed_fireplace", function()
         return m.filed.n >= 24 and m.filed.worst <= 1e-6,
             string.format("%d hours, worst %.6f (%s)", m.filed.n, m.filed.worst, m.filed.where)
+    end)
+    R:check("RTF.notes_filed_fireplace", function()
+        return m.notes.n >= 80 and m.notes.fire >= 60 and m.notes.off == 0,
+            string.format("%d hours noted, %d with the fire, %d off (%s); fed before leaving: %s", m.notes.n,
+                m.notes.fire, m.notes.off, tostring(m.notes.where or "none"), brief(ctx.fed))
     end)
     R:check("RTF.day_temperature_from_readings_fireplace", function()
         return m.mean.n >= 24 and m.mean.worst <= 1e-6,

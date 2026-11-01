@@ -595,3 +595,38 @@ FAIL**, as run 19 (room formula exact over 94 hours; readings, day
 temperatures and work exact; outdoors and the room spoiled at 72.00
 paused hours, the warmed batch finished with 5.26 h paused). Evidence:
 `docs/evidence/2026-11-01_rt-sp_harness_run22_sites.txt`.
+
+## 2026-11-01 — RT-SP client harness, launch 23 (a fire's fuel counts while away, D-022)
+
+Command: `tools/run-sp-harness.ps1 -Mode fireplace -TimeoutMinutes 60`,
+with D-022 in the mod and the harness; the same fireplace and tile as run
+21. Every ten game minutes the harness took its own note of the fire
+warming the fermenter, at the same ticks as the mod, and compared the two.
+It fed the fire a quarter hour before the trip (379 minutes left, so no log
+fitted) and checked the work over the trip against the stage rule fed by
+the credited day temperatures. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run23_fire_credit.txt`.
+
+Result: **21 PASS / 0 FAIL**.
+
+| Run 23 | Result |
+| --- | --- |
+| Notes filed = harness's | 99 hours noted, all with the fire, 0 off |
+| Notes in hours spent away | 0 |
+| Last note before leaving | 365 min, the fire at offset −2, −1 (2.24 tiles), its tile in a room |
+| Trip | 12.01 h unloaded; the noted fuel covered 6.08 h; the fire was out on the return (vanilla) |
+| Work over the trip = rule with the credit | 7.5633 h, exact |
+| Machine air = formula / readings filed / day temperature / hourly work | 97 h, 0.00000 °C / exact / exact / exact |
+| Batch | finished after 109.2 game h (run 21: 114.3), 5.36 h paused (the uncredited hours of 17 January), 17 logs |
+
+The tiles around the fire repeated run 21 exactly (34 / 19 / 11 / 0 warmed,
+none off). Not run: a barbecue as the noted fire (unit tests only), a
+fire fed less than ten minutes before leaving, two fires within reach.
+
+Run 24 repeated the winter mode with the fire notes running: **25 PASS /
+0 FAIL**. Its warmed tile has a heat source added from Lua, not a fire the
+notes know, so nothing was credited: the day temperatures matched the
+harness's without notes. The outcomes were as in run 22 (outdoors and the
+room spoiled at 72.00 paused hours; the warmed batch finished, its 6.26
+paused hours all on the day of the trip; the weather differs per run).
+Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run24_sites.txt`.

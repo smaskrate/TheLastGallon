@@ -299,4 +299,44 @@ listed with their replacement.
   and the batch finished in January (20.7 °C or more at 2.24 tiles from
   the fire). A 12 hour absence cost it about 17 hours: the hours away took
   the unheated room value, and the fire, which burns its fuel during an
-  absence all the same (vanilla), was out on the return.
+  absence all the same (vanilla), was out on the return. Superseded in
+  part by D-022 (a fire's fuel now counts while away).
+
+## D-022 A fire left burning keeps warming a machine while its fuel lasts
+* Decision: every ten game minutes the authority notes, for each loaded,
+  placed machine with a batch running, the fire that gives its tile its
+  air: a lit fireplace (any `IsoFireplace`: fireplace, wood stove,
+  campfire, brazier, barrel oven) or barbecue (`IsoBarbecue`) on the same
+  floor within 8 tiles whose heat by the game's formula is the air read
+  there, with its fuel, its offset and whether its tile is in a room (the
+  one with most fuel if several match). Notes are kept per hour, the
+  hour's last one standing, "none" when no fire warms the machine. An hour
+  without a reading (its area was not loaded) takes the warmth of the fire
+  in the last note before it, from the start of the noted hour until that
+  fuel would have burned out at one minute a minute: the formula applied
+  to the site's unheated day value (D-021's value for unread hours), with
+  the radius at the fuel left at the start of each hour. After that the
+  unheated value.
+* Reason: vanilla burns a fire's fuel while its area is not loaded: on
+  reload `IsoFireplace.update` and `IsoBarbecue.update` use up every
+  minute since their saved `lastUpdateTime` in one step (BC 42.21). In run
+  21 a fire left with 365 minutes was out on the return while the machine
+  had been counted unheated for all 12 hours, and the batch lost about 17
+  hours. Crediting the warmth for the minutes the game spends the fuel
+  keeps the two accounts the same.
+* Consequences: with the default cap of 8 hours of fuel, a fire fed before
+  leaving keeps a machine warm for up to 8 hours away; longer absences cool
+  it as before. Fuel added after the last note (at most ten minutes old) is
+  not counted, so feed the fire a few minutes before you go. Only the fire
+  that gave the air at the last note counts: a second fire within reach
+  that would outlast it does not take over. Open fires (`IsoFire`, no fuel)
+  and other mods' heat sources never count, and the unheated value is the
+  day's, not the hour's. Notes stay on the authority and are not sent to
+  clients.
+* Verified RT-SP 2026-11-01 run 23 (21/0), beside run 21's fireplace: the
+  notes the mod took matched the harness's in all 99 hours, none was taken
+  while the area was unloaded, the last note before a 12 hour trip (365
+  minutes) covered 6.08 hours of it, and the work over the trip matched the
+  rule fed by the credited day temperatures exactly. The batch finished
+  after 109.2 game hours instead of 114.3. A barbecue as the noted fire is
+  covered by unit tests only.

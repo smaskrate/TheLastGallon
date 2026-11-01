@@ -117,8 +117,9 @@ not the hour's reading: a batch has a day's thermal mass, so a few warm
 hours lift the whole day. Since D-021 that is the mean air temperature
 where the machine stands over the day's hours of the batch: the game's own
 hourly value at its tile while the area is loaded (rooms, grid power,
-fires), the day's unheated value for its site while it is not; the hour in
-progress takes the previous hour's reading. The weather is included
+fires), the day's unheated value for its site while it is not, except
+that a fire noted warming it keeps doing so while its noted fuel lasts
+(D-022); the hour in progress takes the previous hour's reading. The weather is included
 (D-020). A fermenter slows below 18 °C and stops below 8 °C:
 
 | Where it stands | Its temperature | Slows below (outdoor day mean) | Stops below |
@@ -127,7 +128,7 @@ progress takes the previous hour's reading. The weather is included
 | Room, ground floor, grid off | T + k (22 − T), k = 0.4–0.6 with the daylight; 0.435 on January days (runs 17–19) | about 15 °C | about −3 °C in January |
 | Room upstairs, grid off | 0.85 of that pull | about 16 °C | about 0 °C in January |
 | Room, grid on | 22 °C | never | never |
-| Near a lit fireplace, fire or barbecue, while you are near | the game's value; a fireplace with an hour of fuel reaches 8 tiles in sight: in an 8 °C room about 25 °C one tile away, 20 °C three tiles away (28 °C on its own tile); measured beside a map fireplace kept fed in January: 20.7 °C or more at 2.24 tiles (run 21) | — | — |
+| Near a lit fireplace, wood stove, campfire or barbecue (while away: as long as its fuel lasts) | the game's value; a fireplace with an hour of fuel reaches 8 tiles in sight: in an 8 °C room about 25 °C one tile away, 20 °C three tiles away (28 °C on its own tile); measured beside a map fireplace kept fed in January: 20.7 °C or more at 2.24 tiles (run 21) | — | — |
 
 Days recorded before D-021 have no room means; for them a room assumes
 k = 0.5. Before D-021 every machine counted as "sheltered", (outdoor mean
@@ -148,14 +149,18 @@ logs (run 21, 2.24 tiles from the fire, outdoor day means −9.4 to
 −1.1 °C): 20.7 °C or more every hour, and the batch finished after 114.3
 game hours for 97 hours of work. The 12 hour trip in it cost about 17
 hours (unheated room value while away, a cold day mean after the return)
-and the batch burned 18 logs. Spoilage counts the batch's total
+and the batch burned 18 logs. Since D-022 the fire's fuel counts while
+away: in the same run with the credit (run 23) its 365 minutes covered
+6.08 of the 12 hours and the batch finished after 109.2 hours with 17
+logs. Spoilage counts the batch's total
 paused hours, also across separate cold spells (not yet seen in game).
 
 Fire fuel (vanilla, default sandbox): a log adds 6 hours, and a fireplace
 holds at most 8 (`MaximumFireFuelHours`; the menu offers no fuel past
 it), so a log only goes in once 2 hours or less are left. A fire kept
-going burns 4 logs a game day, and it burns its fuel while you are away
-too.
+going burns 4 logs a game day. It burns its fuel while you are away too,
+and since D-022 its warmth counts for those minutes: a fire fed before
+leaving keeps a machine warm for up to 8 hours away.
 
 Condition through production: distillate leaves the still fresh (ageing
 products stay in the stillage), while dried ethanol keeps the degradation it

@@ -433,7 +433,10 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   table value and its weight × 2/3 hours: a log 6 h). Vanilla's actions add
   fuel with `addFuel` and `sendObjectChange(STATE)` and light with
   `turnOn()` (SRC `shared/TimedActions/ISBBQAddFuel.lua:72-87`,
-  `ISBBQLightFromLiterature.lua:60-75`). In `newtiledefinitions.tiles`
+  `ISBBQLightFromLiterature.lua:60-75`). `IsoBarbecue` keeps its fuel the
+  same way (minutes, `lastUpdateTime` saved and caught up on reload,
+  `MaxFuelAmount` 1200) with a fixed heat source of 25 °C, radius 3; both
+  classes are exposed to Lua (vanilla tests them with `instanceof`). In `newtiledefinitions.tiles`
   only `fixtures_fireplaces_01_0`–`_5` carry `container=fireplace` (the
   other 74 tiles of that set are chimney and wall pieces); woodstoves are
   `appliances_cooking_01_16`–`_19` and `crafted_05_4`–`_7`, campfires
@@ -540,6 +543,8 @@ the game clock, no reload) 10/1, the one failure a check bound that missed
 **24/0**, run 18 24/1 and run 19 **25/0**, and two beside a map
 fireplace, run 20 1/0 (the search found none near the start) and run 21
 **17/0**, then the winter mode again with its helpers shared, run 22
+**25/0**, the fire credit of D-022 beside the same fireplace, run 23
+**21/0**, and the winter mode with the fire notes running, run 24
 **25/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
