@@ -62,6 +62,13 @@
   nowhere to put it" (it now says the wash is ready for a still and that
   the rest goes in once the still is free; a still or drying column says
   its ethanol is ready to collect; checked in game).
+* Abort batch keeps what the batch made so far, to collect (a fermenter's
+  wash for a still, a still's spirit, a drying column's ethanol), and its
+  message lists what it throws away; before, all of it was lost without a
+  word, 4 L of ethanol in a drying column included (found in game). A
+  spoiled batch can now be emptied with Abort batch (the fermenter used to
+  stay spoiled for good), Pause, Resume and Abort batch are offered only
+  where they apply, and refusals read as sentences instead of codes.
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record

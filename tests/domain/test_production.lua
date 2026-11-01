@@ -142,14 +142,31 @@ T.case("production: recipe updates never reinterpret an active batch", function(
     T.ok(f.recipe == nil or f.recipe.fp ~= nil)
 end)
 
-T.case("production: abort returns the partial result; invalid transitions are refused", function()
+T.case("production: abort keeps the wash so far for a still; invalid transitions are refused", function()
     local env = F.env()
     local f = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc
     f = Process.advance(f, 49, env)
     local a = Process.abort(f)
-    T.ok(a.ok); T.eq(a.proc.state, "Ready")
-    T.ok(a.returned.ethanol > 0 and a.returned.ethanol < 5.5, "partially fermented")
-    T.ok(a.returned.sugar_eq > 0, "unfermented sugar returned")
+    T.ok(a.ok); T.eq(a.proc.state, "OutputReady"); T.eq(a.proc.stoppedEarly, true)
+    local k = a.kept
+    T.ok(k.ethanol > 0 and k.ethanol < 5.5, "partially fermented")
+    T.near(k.sugar_eq + k.ethanol / 0.55, 10, 1e-9, "every kg of sugar in the wash, fermented or not")
+    T.near(k.water, 50, 1e-9); T.ok(TLG.Tables.isEmpty(a.discarded))
+    -- A still takes the weak wash, sugar and all; collecting empties the vessel.
+    local c = Process.collect(a.proc, 120)
+    T.eq(c.proc.state, "Ready"); T.ok(c.proc.stoppedEarly == nil)
+    T.ok(Process.load(still(), "ethanol_distill", c.parcel).ok)
+    -- A second abort throws the kept wash away instead.
+    local twice = Process.abort(a.proc)
+    T.eq(twice.proc.state, "Ready"); T.near(twice.discarded.water, 50, 1e-9); T.ok(TLG.Tables.isEmpty(twice.kept))
+    -- A finished batch's output is collected, not aborted.
+    local done = runToEnd(Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc, env, 24)
+    T.eq(Process.abort(done).reason, "nothing_to_abort")
+    -- The starter culture of the last finished batch is not handed out again.
+    local used = Process.collect(done, 1000).proc
+    local next = Process.start(Process.load(used, "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, used.t).proc
+    local cut = Process.collect(Process.abort(Process.advance(next, used.t + 49, env)).proc, 1000)
+    T.ok(cut.byproducts == nil, "no starter culture from an aborted batch")
     T.eq(Process.start(fermenter(), 0).reason, "not_loaded")
     T.eq(Process.resumeCmd(fermenter()).reason, "not_paused")
     T.eq(Process.decommission(f).reason, "busy")
@@ -176,18 +193,38 @@ T.case("production: machine definitions keep their own kind (registry name store
     T.eq(R.get("machine", "reflux_still").kind, "still")
     T.eq(R.get("machine", "fermenter_barrel").registryKind, "machine")
 end)
-T.case("production: aborting a still batch conserves every litre (outputs + byproducts)", function()
+T.case("production: aborting a still keeps its spirit, throws the rest of the wash away, every litre accounted", function()
     local env = F.env()
     local s = Process.load(still(), "ethanol_distill", { ethanol = 10, water = 100 }).proc
     s = Process.addFirebox(s, 50).proc
     s = Process.start(s, 0).proc
     s = Process.advance(s, 4, env)
     local a = Process.abort(s)
-    T.ok(a.ok)
+    T.ok(a.ok); T.eq(a.proc.state, "OutputReady")
     local total = 0
-    for _, v in pairs(a.returned) do total = total + v end
-    for _, v in pairs(a.byproducts or {}) do total = total + v end
+    for _, v in pairs(a.kept) do total = total + v end
+    for _, v in pairs(a.discarded) do total = total + v end
     T.near(total, 110, 1e-9, "nothing disappears on abort")
+    T.near(a.kept.water / (a.kept.ethanol + a.kept.water), 0.06, 1e-9, "only the spirit is kept (94 %)")
+    T.ok(a.discarded.stillage > 0 and a.discarded.water > 0 and a.discarded.ethanol > 0, "the undistilled wash, listed")
+    T.near(a.proc.firebox, s.firebox, 1e-12, "the firebox keeps its wood")
+end)
+
+T.case("production: a drying column keeps its ethanol on abort; a spoiled batch is refused a load and thrown away", function()
+    local env = F.env()
+    local d = Process.load(Process.new({ id = "D1", machine = "drying_column", t = 0 }), "ethanol_dry",
+        { ethanol = 4, water = 1, quicklime_kg = 4 }).proc
+    local a = Process.abort(Process.advance(Process.start(d, 0).proc, 6, env))
+    T.eq(a.proc.state, "OutputReady"); T.near(a.kept.ethanol, 4, 1e-9); T.near(a.kept.water, 1 - 0.98 * 0.5, 1e-9)
+    T.near(a.discarded.spent_lime, 4 + 0.98 * 0.5, 1e-9)
+    local f = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 6, water = 30 }).proc, 0).proc
+    f = Process.advance(Process.pauseCmd(Process.advance(f, 5, env)).proc, 5 + 73, env)
+    T.eq(f.state, "Faulted"); T.eq(f.pause, "batch_spoiled")
+    T.eq(Process.plan("ethanol_ferment", { sugar_eq = 6, water = 30 }, f).reason, "batch_spoiled")
+    local s = Process.abort(f)
+    T.ok(s.ok and s.spoiled); T.eq(s.proc.state, "Ready"); T.ok(TLG.Tables.isEmpty(s.kept))
+    T.near(s.discarded.water, 30, 1e-9); T.near(s.discarded.sugar_eq, 6, 1e-9)
+    T.ok(Process.load(s.proc, "ethanol_ferment", { sugar_eq = 6, water = 30 }).ok, "the fermenter takes a new mash")
 end)
 
 T.case("production: plan rejects NaN/negative amounts, stream recipes and oversized output", function()

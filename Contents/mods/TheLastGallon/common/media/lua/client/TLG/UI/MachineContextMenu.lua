@@ -4,8 +4,10 @@
 -- Load mash, Feed the firebox, Load wash, Collect ethanol, Dry ethanol with
 -- quicklime, Status; on the pot still in run 28 (Feed the firebox, Load wash
 -- twice, Collect ethanol, Status); Pause, Resume and Abort batch on fermenters
--- and the drying column in run 31, where Abort discarded the batch unlisted
--- (open, docs/release-checklist.md).
+-- and the drying column in run 31, where Abort discarded the batch unlisted.
+-- Abort now keeps what the batch made and lists what it throws away, and
+-- Pause, Resume and Abort are offered only where they apply (not yet run in
+-- game).
 require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"
@@ -40,10 +42,24 @@ local function kindText(key, kind)
     return getText(key)
 end
 
+-- "Water 29.67, Stillage 0.40": what an abort threw away.
+local function amounts(t)
+    local parts = {}
+    for _, id in ipairs(TLG.Tables.sortedKeys(t)) do
+        parts[#parts + 1] = Fmt.componentName(id) .. " " .. string.format("%.2f", t[id])
+    end
+    return table.concat(parts, ", ")
+end
+
 function Menu.describe(reply)
     local def = reply.machine and TLG.Registry.get("machine", reply.machine)
     local kind = def and def.kind
-    local lines = { kindText("IGUI_TLG_MachineState_" .. tostring(reply.state), kind) }
+    local lines = {}
+    if reply.aborted then lines[1] = getText(reply.spoiled and "IGUI_TLG_AbortedSpoiled" or "IGUI_TLG_Aborted") end
+    -- Output an abort kept is not a finished batch.
+    local state = "IGUI_TLG_MachineState_" .. tostring(reply.state)
+    if reply.stoppedEarly and reply.state == "OutputReady" then state = state .. "_stopped" end
+    lines[#lines + 1] = kindText(state, kind)
     if reply.pause then lines[#lines + 1] = kindText("IGUI_TLG_Pause_" .. tostring(reply.pause), kind) end
     if reply.stage then lines[#lines + 1] = getText("IGUI_TLG_Stage", getText("IGUI_TLG_Stage_" .. reply.stage)) end
     if type(reply.siteC) == "number" and reply.site then
@@ -57,6 +73,12 @@ function Menu.describe(reply)
         for _, id in ipairs(TLG.Tables.sortedKeys(reply.outputs)) do
             lines[#lines + 1] = Fmt.componentName(id) .. ": " .. string.format("%.2f", reply.outputs[id])
         end
+    end
+    if reply.aborted and reply.discarded and not TLG.Tables.isEmpty(reply.discarded) then
+        lines[#lines + 1] = getText("IGUI_TLG_Discarded", amounts(reply.discarded))
+    end
+    if reply.aborted and reply.stoppedEarly and reply.state == "OutputReady" then
+        lines[#lines + 1] = getText("IGUI_TLG_AbortAgain")
     end
     return table.concat(lines, " <LINE> ")
 end
@@ -155,9 +177,27 @@ function Menu.fill(playerNum, context, items)
         end)
         if can == nil then o.notAvailable = true end
     end
-    sub:addOption(getText("ContextMenu_TLG_Pause"), nil, function() req("machine.pause", { target = ref }) end)
-    sub:addOption(getText("ContextMenu_TLG_Resume"), nil, function() req("machine.resume", { target = ref }) end)
-    sub:addOption(getText("ContextMenu_TLG_Abort"), nil, function() req("machine.abort", { target = ref }) end)
+    local c = Menu.controls(item)
+    if c.pause then sub:addOption(getText("ContextMenu_TLG_Pause"), nil, function() req("machine.pause", { target = ref }) end) end
+    if c.resume then sub:addOption(getText("ContextMenu_TLG_Resume"), nil, function() req("machine.resume", { target = ref }) end) end
+    if c.abort then sub:addOption(getText("ContextMenu_TLG_Abort"), nil, function() req("machine.abort", { target = ref }) end) end
+end
+
+-- Which of Pause, Resume and Abort batch apply to the machine now, from its
+-- record brought to now without writing it (records advance lazily, so the
+-- stored state can lag). Run 31 showed all three in every state.
+function Menu.controls(item)
+    local rec = item:getModData()[Machines.SIDECAR]
+    if type(rec) ~= "table" then return {} end
+    local ok, now = pcall(function() return Machines.advance(item, Machines.read(item, false), TLG.World.now(), TLG.World.env()) end)
+    if ok and type(now) == "table" then rec = now end
+    local s = rec.state
+    return {
+        pause = s == "Processing",
+        resume = s == "Paused" and rec.manualPause == true,
+        abort = s == "Processing" or s == "Paused" or s == "InputsReserved" or (s == "Faulted" and rec.pause == "batch_spoiled")
+            or (s == "OutputReady" and rec.stoppedEarly == true),
+    }
 end
 
 Events.OnFillInventoryObjectContextMenu.Add(Menu.fill)

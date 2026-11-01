@@ -107,9 +107,11 @@ minutes before a pickup can be lost; multiplayer itself not checked).
 
 **Pause** holds a batch where it is and **Resume** carries on, but a paused
 fermenter still counts towards the 3 days that spoil it. **Abort batch**
-empties the machine and, for now, the batch in it is lost without a word,
-even the ethanol in a drying column; and a spoiled batch cannot yet be
-cleared, so the fermenter stays spoiled (both to be fixed).
+stops a batch and keeps what it made so far: a fermenter's weaker wash for
+a still, a still's spirit, a drying column's ethanol. The rest (a still's
+undistilled wash, spent lime) is thrown away, and the message lists both.
+Abort batch again to throw the kept part away too; a spoiled batch is
+emptied the same way.
 
 *(Building the four machines and one batch through the fermenter, reflux
 still and drying column, using the menu entries named above, were checked
@@ -184,7 +186,7 @@ in game).
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
 | Fermenter says "Wash is left" | the still holds 60 L (pot) or 120 L (reflux) | Collect the still's ethanol, then Load wash again |
 | Machine paused "picked up" | it was carried | Place it on the ground |
-| Fermenter "Faulted", "the batch spoiled while stalled" | stopped for 3 days in all, hand pauses included | It cannot be cleared yet: build a new fermenter (to be fixed) |
+| Fermenter "Faulted", "the batch spoiled while stalled" | stopped for 3 days in all, hand pauses included | Abort batch empties it; then load a new mash |
 
 ## Existing saves
 

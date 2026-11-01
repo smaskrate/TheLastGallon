@@ -48,7 +48,14 @@ Process.converters.distill = function(inputs, p, m, eff, skill, frac)
         if restSugar > 0 then outputs.sugar_eq = restSugar end
     end
     local stillage = (eth - recovered) + (water - waterOut) + sugar
-    return { outputs = outputs, byproducts = { stillage = stillage }, props = { deg = { ethanol = 0 } } }
+    -- rest: the part of `outputs` that is undistilled wash (an aborted batch
+    -- keeps only the spirit, Process.abort).
+    local rest = nil
+    if frac < 1 then
+        rest = { ethanol = (inputs.ethanol or 0) - eth, water = (inputs.water or 0) - water,
+            sugar_eq = (inputs.sugar_eq or 0) - sugar }
+    end
+    return { outputs = outputs, byproducts = { stillage = stillage }, props = { deg = { ethanol = 0 } }, rest = rest }
 end
 
 -- Drying with quicklime: removes water from hydrous ethanol.

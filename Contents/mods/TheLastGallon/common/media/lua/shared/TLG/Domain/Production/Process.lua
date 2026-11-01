@@ -106,6 +106,7 @@ function Process.plan(recipeId, inputs, proc)
     if def == nil then return fail("unknown_recipe") end
     local m = Registry.need("machine", proc.machine)
     if not Tables.contains(def.machines, m.id) then return fail("wrong_machine") end
+    if proc.state == "Faulted" and proc.pause == "batch_spoiled" then return fail("batch_spoiled") end
     if proc.state ~= "Ready" then return fail("machine_busy") end
     if proc.cond <= 0 then return fail("needs_repair") end
     -- Deterministic order so the first reported problem never depends on pairs().
@@ -345,41 +346,65 @@ function Process.collect(proc, room)
         if out.outputs[id] <= Num.DUST then out.outputs[id] = nil end
     end
     if Tables.isEmpty(out.outputs) then
-        out.state, out.recipe, out.outProps = "Ready", nil, {}
+        out.state, out.recipe, out.outProps, out.stoppedEarly = "Ready", nil, {}, nil
     else
         out.pause = "output_full"
     end
     return { ok = true, proc = out, parcel = parcel, props = proc.outProps, byproducts = (Tables.isEmpty(out.outputs) and proc.byproducts) or nil }
 end
 
--- Abort a paused/processing batch: the partial result is returned explicitly.
-function Process.abort(proc)
-    if proc.state ~= "Processing" and proc.state ~= "Paused" and proc.state ~= "InputsReserved" then
-        return fail("nothing_to_abort")
+local function addInto(into, from, sign)
+    for _, id in ipairs(Tables.sortedKeys(from or {})) do
+        local q = (into[id] or 0) + (sign or 1) * from[id]
+        into[id] = q > Num.DUST and q or nil
     end
+    return into
+end
+
+-- Abort a batch. What it made so far stays in the machine as output to
+-- collect (`kept`, the record OutputReady and stoppedEarly): a fermenter's
+-- wash, weaker, for a still; a still's spirit; a drying column's ethanol,
+-- partly dried. A still's undistilled wash and every byproduct are thrown
+-- away (`discarded`). Abort also throws away a spoiled batch, and the output
+-- an earlier abort kept. kept + discarded account for the whole batch. A
+-- finished batch's output is collected, not aborted.
+function Process.abort(proc)
+    local spoiled = proc.state == "Faulted" and proc.pause == "batch_spoiled"
+    local leftover = proc.state == "OutputReady" and proc.stoppedEarly == true
+    local running = proc.state == "Processing" or proc.state == "Paused" or proc.state == "InputsReserved"
+    if not (spoiled or leftover or running) then return fail("nothing_to_abort") end
     local out = Tables.deepCopy(proc)
-    local partial, partialBy = {}, nil
-    if out.state ~= "InputsReserved" then
+    local kept, discarded = {}, {}
+    if spoiled then
+        addInto(discarded, proc.spoiled)
+    elseif leftover then
+        addInto(discarded, proc.outputs)
+    else
         local params = out.recipe.params
         local m = Registry.need("machine", out.machine)
-        local done = 0
-        local total = 0
+        local done, total = 0, 0
         for i, st in ipairs(params.stages) do
             local h = stageHours(out, st)
             total = total + h
             if i < out.stage then done = done + h elseif i == out.stage then done = done + out.stageDone end
         end
-        local frac = total > 0 and done / total or 0
-        local conv = Process.converters[params.converter]
-        local res = conv(out.inputs, params.params or {}, m, 1, out.skill, frac)
-        partial, partialBy = res.outputs, res.byproducts
-    else
-        partial = out.inputs
+        -- Loaded but not started: nothing done (frac 0).
+        local frac = (out.state ~= "InputsReserved" and total > 0) and done / total or 0
+        local res = Process.converters[params.converter](out.inputs, params.params or {}, m, 1, out.skill, frac)
+        addInto(kept, res.outputs)
+        addInto(kept, res.rest, -1)
+        addInto(discarded, res.rest)
+        addInto(discarded, res.byproducts)
+        out.outProps = res.props or {}
     end
-    out.inputs, out.recipe, out.state, out.pause, out.manualPause = {}, nil, "Ready", nil, nil
+    out.inputs, out.recipe, out.pause, out.manualPause, out.spoiled, out.byproducts = {}, nil, nil, nil, nil, nil
     out.stage, out.stageDone, out.pausedFor = 0, 0, 0
-    -- Both outputs and byproducts are returned so an abort never loses material.
-    return { ok = true, proc = out, returned = partial, byproducts = partialBy }
+    if Tables.isEmpty(kept) then
+        out.state, out.outputs, out.outProps, out.stoppedEarly, out.carryDeg = "Ready", {}, {}, nil, nil
+    else
+        out.state, out.outputs, out.stoppedEarly = "OutputReady", kept, true
+    end
+    return { ok = true, proc = out, kept = kept, discarded = discarded, spoiled = spoiled }
 end
 
 function Process.repair(proc, amount)

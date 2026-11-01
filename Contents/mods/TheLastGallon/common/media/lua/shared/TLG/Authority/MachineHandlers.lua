@@ -97,7 +97,7 @@ local function commit(player, args, st, rec, extra)
     rec.rev = (st.rec.rev or 0) + 1
     Machines.write(st.item, rec)
     local r = { ok = true, requestId = args.requestId, state = rec.state, pause = rec.pause, rev = rec.rev,
-        outputs = rec.outputs, firebox = rec.firebox }
+        outputs = rec.outputs, firebox = rec.firebox, machine = rec.machine, stoppedEarly = rec.stoppedEarly }
     for k, v in pairs(extra or {}) do r[k] = v end
     H.ledger:record(H.actorKey(player), args.requestId, r)
     return r
@@ -113,7 +113,7 @@ function H.machineStatus(player, args)
     return { ok = true, requestId = args.requestId, state = s.state, pause = s.reason, stage = s.stage,
         outputs = st.rec.outputs, firebox = st.rec.firebox, cond = st.rec.cond, rev = st.rec.rev,
         machine = st.rec.machine, inputs = st.rec.inputs, stageDone = st.rec.stageDone,
-        siteC = siteC, siteNow = siteNow, site = site }
+        siteC = siteC, siteNow = siteNow, site = site, stoppedEarly = st.rec.stoppedEarly }
 end
 
 function H.machineLoadFerment(player, args)
@@ -199,7 +199,7 @@ local function simple(fn)
         if not st then return err end
         local r = fn(st.rec)
         if not r.ok then return fail(r.reason) end
-        return commit(player, args, st, r.proc, { returned = r.returned })
+        return commit(player, args, st, r.proc)
     end
 end
 
@@ -257,9 +257,18 @@ end
 
 H.machinePause = simple(Process.pauseCmd)
 H.machineResume = simple(Process.resumeCmd)
--- Aborting returns the partial result to the player as an explicit outcome
--- (reported; wash/mash that cannot be bottled is discarded and listed).
-H.machineAbort = simple(Process.abort)
+
+-- Aborting keeps what the batch made in the machine, to collect, and throws
+-- the rest away; the reply lists both (Process.abort). It also empties a
+-- spoiled batch and the output an earlier abort kept. Until run 31 the
+-- partial result was only reported, and lost.
+function H.machineAbort(player, args)
+    local st, err = machineState(player, args)
+    if not st then return err end
+    local r = Process.abort(st.rec)
+    if not r.ok then return fail(r.reason) end
+    return commit(player, args, st, r.proc, { aborted = true, kept = r.kept, discarded = r.discarded, spoiled = r.spoiled })
+end
 
 -- Collect still output (hydrous ethanol) into a fuel container in inventory.
 function H.machineCollect(player, args)
