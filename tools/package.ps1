@@ -62,7 +62,7 @@ version=1
 title=The Last Gallon (development build $version)
 description=Fuel deterioration, alternative fuels, engine conversions and energy infrastructure.
 description=Tested only on Project Zomboid 42.21.0 (4a0e9546ec). See docs/support-matrix.md inside the mod.
-description=Development build: several features are untested in game (docs/release-checklist.md).
+description=Development build: several features are untested in game (marked in docs/player-guide.md inside the mod).
 tags=Build 42;Realistic;Vehicles
 visibility=private
 "@ | Set-Content -Encoding ascii (Join-Path $item "workshop.txt")
