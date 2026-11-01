@@ -1,0 +1,103 @@
+# TLG single-player harness, stills and column carried, before the save
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=39487670702359622924 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rts_sites begin
+OBS  RTS.spots character 10618,10628; F1 10617,10628 F2 10617,10629 pot still 10618,10629 reflux still 10619,10628 column 10619,10629; grid power=true
+PASS RTS.grid_is_on :: isHydroPowerOn=true
+PASS RTS.all_in_a_room :: in a room: true,true,true,true,true,true
+STEP rts_run begin
+OBS  RTS.load_mash_F1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTS.mash_loaded_F1 :: sugar=6 water=30
+OBS  RTS.load_mash_F2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTS.mash_loaded_F2 :: sugar=6 water=30
+PASS RTS.fermented_F1 :: state=OutputReady outputs {ethanol=3.3000000000000003,water=30}
+PASS RTS.fermented_F2 :: state=OutputReady outputs {ethanol=3.3000000000000003,water=30}
+OBS  RTS.feed_pot_still menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTS.load_wash_pot_still menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTS.loaded pot_still at 101.2923 game h: {ethanol=3.3000000000000003,water=30}, firebox 27.0000 kg; due 5.162500 stage hours at 3.174603 kg/h, ethanol 2.904000 water 0.726000
+PASS RTS.loaded_pot_still :: firebox 27 kg for the 16.3889 kg the batch burns; wash 33.3 L; Processing
+OBS  RTS.load_dry_column menu "Dry ethanol with quicklime" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTS.loaded column at 101.2923 game h: {ethanol=3.9998768813727263,quicklime_kg=4,water=1.0001231186272737}; due ethanol 3.999877 water 0.019999
+PASS RTS.loaded_column :: ethanol 3.9998768813727263 water 1.0001231186272737 lime 4; Processing
+OBS  RTS.feed_reflux_still menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTS.load_wash_reflux_still menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTS.loaded reflux_still at 102.2924 game h: {ethanol=3.3000000000000003,water=30}, firebox 18.0000 kg; due 3.775000 stage hours at 2.597403 kg/h, ethanol 3.036000 water 0.193787
+PASS RTS.loaded_reflux_still :: firebox 18 kg for the 9.8052 kg the batch burns; wash 33.3 L; Processing
+OBS  RTS.grab_column the loot window lists the column on the floor=true
+OBS  RTS.grab_reflux_still lifted without the game's Lua at 102.8238 game h: ok=true 
+PASS RTS.picked_up_pot_still_world_menu_grab :: carried=true
+PASS RTS.picked_up_column_loot_window_grab :: carried=true listed in the loot window=true
+PASS RTS.picked_up_reflux_still_unseen :: carried=true
+PASS RTS.pickup_counts_the_placed_hours_pot_still :: id=P805915909-3 state=Paused pause=not_placed done=1.5173 t=102.8096, 3 readings and notes kept; done 1.517288 h of 1.517288 h placed (picked up at 102.809608, seen lifted at 102.8097)
+PASS RTS.pickup_counts_the_placed_hours_column :: id=P805915909-4 state=Paused pause=not_placed done=1.5313 t=102.8237, 3 readings and notes kept; done 1.531349 h of 1.531349 h placed (picked up at 102.823669, seen lifted at 102.8237)
+PASS RTS.pickup_pot_still_distilling_burned_its_placed_hours :: stage 2; firebox 22.183212 kg, expected 22.183212 (3.174603 kg/h for 1.517288 h)
+PASS RTS.unseen_pickup_changes_nothing_yet :: id=P805915909-6 state=Processing pause=nil done=0.0000 t=102.2924, 1 readings and notes kept
+PASS RTS.hourly_list_at_pickup :: listed: pot still false, reflux still true, column false
+PASS RTS.menu_while_carried_pot_still :: offered: Status | Place it on the ground to operate it (greyed)
+PASS RTS.menu_while_carried_column :: offered: Status | Place it on the ground to operate it (greyed)
+OBS  RTS.carried_feed_pot_still machine.addFuel -> ok=false reason=not_placed state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTS.carried_refuses_feed_pot_still :: reason not_placed; record untouched; the menu shows "Place it on the ground first."
+OBS  RTS.carried_collect_pot_still machine.collect -> ok=false reason=not_placed state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTS.carried_refuses_collect_pot_still :: reason not_placed; record untouched; the menu shows "Place it on the ground first."
+OBS  RTS.carried_pause_pot_still machine.pause -> ok=false reason=not_placed state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTS.carried_refuses_pause_pot_still :: reason not_placed; record untouched; the menu shows "Place it on the ground first."
+OBS  RTS.carried_resume_column machine.resume -> ok=false reason=not_placed state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTS.carried_refuses_resume_column :: reason not_placed; record untouched; the menu shows "Place it on the ground first."
+OBS  RTS.carried_abort_column machine.abort -> ok=false reason=not_placed state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTS.carried_refuses_abort_column :: reason not_placed; record untouched; the menu shows "Place it on the ground first."
+OBS  RTS.status_pot_still_carried menu "Status" -> ok=true reason=nil state=Paused stage=distill outputs={} consumed=nil
+PASS RTS.carried_status_paused_pot_still :: state=Paused pause=not_placed dialog=Paused <LINE> Reason: it was picked up; place it to continue <LINE> Stage: distilling <LINE> Firebox: 22.2 kg of wood
+PASS RTS.hourly_list_drops_unseen_machine :: reflux still listed: false
+PASS RTS.nothing_advances_while_carried :: 1.0025 game h carried; pot_still: id=P805915909-3 state=Paused pause=not_placed done=1.5173 t=102.8239, 3 readings and notes kept | column: id=P805915909-4 state=Paused pause=not_placed done=1.5313 t=102.8237, 3 readings and notes kept | reflux_still: id=P805915909-6 state=Processing pause=nil done=0.0000 t=102.2924, 1 readings and notes kept
+PASS RTS.nothing_filed_while_carried :: 0 readings or notes since the pickups
+OBS  RTSS.saving 1.0025 game h after the lift, the three machines carried; listed for the hourly reading false,false,false
+STEP rtss_save_and_exit begin
+SUMMARY pass=29 fail=0
+EXIT phase 1 -> main menu
+# TLG single-player harness, stills and column carried, after the save
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rtsb_reload begin
+OBS  RTSB.continued at world hour 103.8495 (saved at 103.8262939453125); character at 10618,10628 (left at 10618,10628)
+PASS RTSB.machines_still_carried :: in the inventory, off the ground: pot still true, reflux still true, column true
+PASS RTSB.records_survive_the_save :: pot_still as saved; reflux_still as saved; column as saved
+PASS RTSB.hourly_list_as_saved :: listed false,false,false (saved false,false,false)
+PASS RTSB.menu_while_carried_pot_still :: offered: Status | Place it on the ground to operate it (greyed)
+OBS  RTSB.status_pot_still_carried menu "Status" -> ok=true reason=nil state=Paused stage=distill outputs={} consumed=nil
+PASS RTSB.carried_status_paused_pot_still :: state=Paused pause=not_placed dialog=Paused <LINE> Reason: it was picked up; place it to continue <LINE> Stage: distilling <LINE> Firebox: 22.2 kg of wood
+STEP rts_run begin
+PASS RTS.nothing_advances_while_carried_after_the_save :: 2.0035 game h carried; pot_still: id=P805915909-3 state=Paused pause=not_placed done=1.5173 t=103.8495, 3 readings and notes kept | column: id=P805915909-4 state=Paused pause=not_placed done=1.5313 t=102.8237, 3 readings and notes kept | reflux_still: id=P805915909-6 state=Processing pause=nil done=0.0000 t=102.2924, 1 readings and notes kept
+PASS RTS.nothing_filed_while_carried_after_the_save :: 0 readings or notes since the pickups
+OBS  RTS.put down pot still at 10617,10628, column at 10618,10628, reflux still at 10618,10628
+PASS RTS.put_down_pot_still_place_action :: at 10617,10628
+PASS RTS.put_down_column_inventory_drop :: at 10618,10628
+PASS RTS.put_down_reflux_still_inventory_drop :: at 10618,10628
+PASS RTS.put_down_resumes_pot_still :: id=P805915909-3 state=Processing pause=nil done=1.5173 t=104.8287, 3 readings and notes kept; put down at 104.828735 (seen at 104.8288); listed here true
+PASS RTS.put_down_resumes_column :: id=P805915909-4 state=Processing pause=nil done=1.5313 t=104.8302, 3 readings and notes kept; put down at 104.830223 (seen at 104.8303); listed here true
+PASS RTS.unseen_pickup_credited_up_to_last_seen :: last seen 102.67029571533203, 0.1535 h before the grab; done 0.377846 h (seen - load 0.377846); stage 1; firebox 17.018582 kg, expected 17.018582; Processing; listed here true
+OBS  RTS.pot_still done at 108.473947 game h, 7.181627 h after loading (5.1625 stage hours); firebox 10.611111111111116 kg; outputs {ethanol=2.9040000000000004,water=0.726}
+PASS RTS.finished_its_stage_hours_after_put_down_pot_still :: OutputReady at 108.473947, due 108.473947 (put down at 104.828735 with 1.517288 of 5.1625 h done); paused 0.000000 h
+PASS RTS.firebox_burned_only_while_placed_pot_still :: 10.611111 kg left of 27.0000, expected 10.611111 (5.1625 h at 3.174603 kg/h)
+PASS RTS.spirit_pot_still :: ethanol 2.904000 (2.904000) water 0.726000 (0.726000)
+OBS  RTS.reflux_still done at 108.228865 game h, 5.936415 h after loading (3.7750 stage hours); firebox 8.194805194805195 kg; outputs {ethanol=3.0360000000000005,water=0.1937872340425534}
+PASS RTS.finished_its_stage_hours_after_put_down_reflux_still :: OutputReady at 108.228865, due 108.228865 (put down at 104.831711 with 0.377846 of 3.7750 h done); paused 0.000000 h
+PASS RTS.firebox_burned_only_while_placed_reflux_still :: 8.194805 kg left of 18.0000, expected 8.194805 (3.7750 h at 2.597403 kg/h)
+PASS RTS.spirit_reflux_still :: ethanol 3.036000 (3.036000) water 0.193787 (0.193787)
+OBS  RTS.column done at 115.298874 game h, 14.006554 h after loading (12.0000 stage hours); firebox 0 kg; outputs {ethanol=3.9998768813727263,water=0.019999384406863663}
+PASS RTS.finished_its_stage_hours_after_put_down_column :: OutputReady at 115.298874, due 115.298874 (put down at 104.830223 with 1.531349 of 12.0000 h done); paused 0.000000 h
+PASS RTS.spirit_column :: ethanol 3.999877 (3.999877) water 0.019999 (0.019999)
+OBS  RTS.collect_pot_still menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTS.collected_pot_still :: can id=S805915909-5 rev=2 total=3.6300 q[ethanol=2.9040,water=0.7260] deg[ethanol=0.0000] mic=0 stab=0; it held {ethanol=2.9040000000000004,water=0.726}; machine Ready
+OBS  RTS.collect_reflux_still menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTS.collected_reflux_still :: can id=S805915909-7 rev=1 total=3.2298 q[ethanol=3.0360,water=0.1938] deg[ethanol=0.0000] mic=0 stab=0; it held {ethanol=3.0360000000000005,water=0.1937872340425534}; machine Ready
+OBS  RTS.collect_column menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTS.collected_column :: can id=S805915909-8 rev=1 total=4.0199 q[ethanol=3.9999,water=0.0200] deg[ethanol=0.0313] mic=0 stab=0; it held {ethanol=3.9998768813727263,water=0.019999384406863663}; machine Ready
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 115.41
+SUMMARY pass=24 fail=0
+DONE

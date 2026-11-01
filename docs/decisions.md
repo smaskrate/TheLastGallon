@@ -194,6 +194,12 @@ listed with their replacement.
   by `tests/authority/test_machine_commands.lua` and RT-SP run 46 (46/0):
   the five, sent as requests for a carried pot still and drying column,
   were refused and the records left untouched.
+* Across a save (RT-SP run 48, 29/0 and 24/0): a pot still, a reflux
+  still grabbed unseen and a drying column were saved and exited to the
+  menu while carried, and the save was continued. Their records came back
+  from the inventory exactly as saved, still marked carried, or for the
+  unseen one, unchanged. After another carried hour and the put-downs,
+  each finished at its due time with exactly its wood and spirit.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

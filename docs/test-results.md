@@ -1253,3 +1253,39 @@ Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38 and 42.
   TLG error or warning. Its four Lua error dumps are the dev harness's own
   runtime probe, a deliberate deep recursion (`LuaProbe.lua`); no stack
   frame names the mod.
+
+## 2026-11-01 — RT-SP client harness, launch 48 (stills and the drying column carried across a save, gate 6)
+
+Command: `tools/run-sp-harness.ps1 -Mode still-save -TimeoutMinutes 40`
+(new mode, requests `sp-rtss`, then `sp-rtsb`). Phase 1 was the still
+pickup run up to one game hour after the pickups, with the same three
+pickup paths. Then, with the pot still, the reflux still (grabbed unseen)
+and the column all carried, it wrote their records to the expectations
+file, saved and exited to the menu. Phase 2 continued the save and
+checked, before any access, that:
+* the three were still in the inventory;
+* their records were exactly as saved (every field to three levels,
+  numbers exact);
+* the hourly list was as it had been.
+The run then carried them another hour and went on with run 45's
+put-downs and every check after them. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run48_still_save.txt`.
+
+Result: phase 1 **29 PASS / 0 FAIL**, phase 2 **24 PASS / 0 FAIL**. The
+launcher sent the two click-to-start clicks, and the console showed
+"machine move hooks installed" on both loads, with no TLG error or
+warning and no Lua error.
+
+| Run 48 | Result |
+| --- | --- |
+| Before the save | as in run 45: the pickups counted the placed hours (1.517288 h and 1.531349 h); the five commands were refused; nothing advanced over 1.0025 game h carried. Saved at world hour 103.8263, none of the three on the hourly list |
+| Continued | at world hour 103.8495, the character on the tile it was left on. All three were still in the inventory, off the ground, and their records were exactly as saved. The hourly list was as saved (none listed) |
+| The pot still after the continue | the menu offered only Status and "Place it on the ground to operate it" (greyed). Status read "Paused, Reason: it was picked up; place it to continue, Stage: distilling, Firebox: 22.2 kg of wood" |
+| Another hour carried | nothing advanced on any of the three over 2.0035 game h carried in all |
+| Put down | the pot still and the column Processing from the put-down with the work and wood they had. The reflux still was credited up to the last time it was found placed, 0.1535 h before the grab (0.377846 h, 17.018582 kg of wood left) |
+| Finished | each at its due time to 1e-6: the pot still with 10.611111 kg of wood left, the reflux still with 8.194805 kg, the column after its 12 stage hours. Spirit as the definitions give it, each collected into its own can |
+
+The hours carried span both sides of the save. The continue step first
+read world hour 103.8495, 0.0232 h after the hour of the save. The
+carried time is the game hours from pickup to put-down, and none of it
+counted. Not run: a move in multiplayer itself.

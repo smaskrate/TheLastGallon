@@ -486,7 +486,11 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   next to the character; it refuses more than 50 weight on the tile either
   way, SRC `shared/TimedActions/ISDropWorldItemAction.lua`). It worked onto a
   tile already holding a machine and reached the wrap, as did the same
-  paths with stills and a drying column.
+  paths with stills and a drying column. Machine items in the player's
+  inventory keep their mod data through a save, exit to the menu and
+  continue, exactly (run 48: every field and number as saved). In that
+  run the harness's first step after the continue read world hour
+  103.8495, 0.0232 h after the hour the save was taken at (103.8263).
 * Fireplaces (BC 42.21 `IsoFireplace`): the map loader makes one from a
   tile whose `container` property is `fireplace`, `campfire`, `brazier` or
   `woodstove` (`CellLoader`); the only one vanilla Lua builds itself is the
@@ -686,8 +690,9 @@ the client in Italian, run 43 4/1 (an expectation: the stored `%1$s`
 placeholder form) and run 44 **5/0**, then two stills and a drying
 column picked up mid-batch, run 45 **41/0**, and again with every command
 but Status refused on a carried machine, run 46 **46/0**, then the full
-mode on the rebuilt zip installed clean, run 47 **94/0** and **14/0**. Most
-failures were
+mode on the rebuilt zip installed clean, run 47 **94/0** and **14/0**, and
+the stills and column carried across a save, run 48 **29/0** and **24/0**.
+Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
