@@ -1289,3 +1289,45 @@ The hours carried span both sides of the save. The continue step first
 read world hour 103.8495, 0.0232 h after the hour of the save. The
 carried time is the game hours from pickup to put-down, and none of it
 counted. Not run: a move in multiplayer itself.
+
+## 2026-11-01 — RT-SP client harness, launch 49 (Pause, Resume and Abort batch on running stills, gate 1)
+
+Command: `tools/run-sp-harness.ps1 -Mode still-controls -TimeoutMinutes 40`
+(new mode, request `sp-rtsc`). The still pickup run's sites and washes
+(33.3 L each): the pot still fed three logs, the reflux still two, both
+loaded in the same tick. Everything was pressed from the machine menu:
+* The pot still was paused half an hour in, while heating up, held three
+  game hours and resumed.
+* The reflux still was aborted two hours in, an hour into distilling, and
+  what it kept was collected into a can.
+
+The player guide says Abort batch "keeps what it made so far: … a still's
+spirit". The check `RTSC.design_abort_keeps_only_what_it_distilled` holds
+the kept spirit to what the distilling stage has made, since nothing
+distils while heating up. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run49_still_controls.txt`.
+
+Result: **27 PASS / 1 FAIL**. The console showed "machine move hooks
+installed" and no TLG or Lua error.
+
+| Run 49 | Result |
+| --- | --- |
+| Menu | running: Pause and Abort batch; paused by hand: Resume and Abort batch; stopped early: Abort batch only. Pause again was refused ("It is not working on a batch right now."), and so was Resume again ("It is not paused."), each record unchanged |
+| Pause, heating up | 0.502914 h done; 25.403446 kg of wood left, what those hours burn. Status read "Paused, Reason: paused by hand, Stage: heating up" |
+| Held 3.007393 h | no work and no wood burned; paused hours 3.007393 |
+| Resumed | done 8.169893 h after loading = 5.1625 stage hours + 3.007393 h paused, to 1e-6; 10.611111 kg of wood left = 27 − 5.1625 × 3.174603; 2.904 L ethanol and 0.726 L water as defined; collected |
+| Abort, 2.006729 h in | "Batch stopped. Stopped early: what it made is ready to collect … Ethanol: 1.61, Water: 0.10, Thrown away: Ethanol 1.55, Stillage 15.98, Water 14.05". Kept and thrown away add up to the 33.3 L wash; 12.787717 kg of wood kept, what was not burned; the kept spirit went into a can and the still was empty |
+| **Design: kept spirit** | **FAIL**: 1.613889 L of ethanol kept. Its 1.006729 h of distilling (of 2.775 h) had made 1.101416 L. The amount kept is the share of all stage hours done, the heating-up hour included |
+
+Run 49's failure is a mod defect, still open. `Process.abort` keeps
+`done / total` of the batch's result, counting every stage, so it keeps
+spirit for the heating-up hour, when nothing distils. Aborted mid-way
+through heating up, a still would hand out spirit it never made. A fix
+has two constraints:
+1. The same rule credits a fermenter's 1 h prepare stage (1/97 of its
+   ethanol). Run 33's `RT.C.wash(done)` expects `done / 97`, so a fix
+   changes that expectation too; run 33's evidence stays as it was.
+2. Recipes are snapshotted into running batches ("recipe updates never
+   reinterpret an active batch"). A new stage flag in the definitions
+   would not reach batches already running, so the rule may belong in
+   `Process.abort` itself.

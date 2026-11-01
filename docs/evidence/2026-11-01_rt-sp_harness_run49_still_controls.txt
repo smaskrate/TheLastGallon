@@ -1,0 +1,65 @@
+# TLG single-player harness, real game clock, controls on running stills
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=81306545249010458920 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rts_sites begin
+OBS  RTS.spots character 10618,10628; F1 10617,10628 F2 10617,10629 pot still 10618,10629 reflux still 10619,10628 column 10619,10629; grid power=true
+PASS RTS.grid_is_on :: isHydroPowerOn=true
+PASS RTS.all_in_a_room :: in a room: true,true,true,true,true,true
+STEP rtsc_run begin
+OBS  RTS.load_mash_F1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTS.mash_loaded_F1 :: sugar=6 water=30
+OBS  RTS.load_mash_F2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTS.mash_loaded_F2 :: sugar=6 water=30
+PASS RTS.fermented_F1 :: state=OutputReady outputs {ethanol=3.3000000000000003,water=30}
+PASS RTS.fermented_F2 :: state=OutputReady outputs {ethanol=3.3000000000000003,water=30}
+OBS  RTS.feed_pot_still menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTS.load_wash_pot_still menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTS.loaded pot_still at 101.2924 game h: {ethanol=3.3000000000000003,water=30}, firebox 27.0000 kg; due 5.162500 stage hours at 3.174603 kg/h, ethanol 2.904000 water 0.726000
+PASS RTS.loaded_pot_still :: firebox 27 kg for the 16.3889 kg the batch burns; wash 33.3 L; Processing
+OBS  RTS.feed_reflux_still menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTS.load_wash_reflux_still menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTS.loaded reflux_still at 101.2924 game h: {ethanol=3.3000000000000003,water=30}, firebox 18.0000 kg; due 3.775000 stage hours at 2.597403 kg/h, ethanol 3.036000 water 0.193787
+PASS RTS.loaded_reflux_still :: firebox 18 kg for the 9.8052 kg the batch burns; wash 33.3 L; Processing
+OBS  RTSC.menu pot_still running: Status, Load wash from a nearby fermenter, Feed the firebox, Collect ethanol into a fuel can (greyed), Pause, Abort batch
+PASS RTSC.menu_running_pot_still :: pause,resume,abort offered true,false,true (want true,false,true)
+OBS  RTSC.menu reflux_still running: Status, Load wash from a nearby fermenter, Feed the firebox, Collect ethanol into a fuel can (greyed), Pause, Abort batch
+PASS RTSC.menu_running_reflux_still :: pause,resume,abort offered true,false,true (want true,false,true)
+OBS  RTSC.pause_pot_still menu "Pause" -> ok=true reason=nil state=Paused stage=nil outputs={} consumed=nil
+PASS RTSC.pause_pot_still_heating_up :: state=Paused pause=paused_by_player stage 1; done 0.502914 h in 0.502914 h; firebox 25.403446 kg; dialog=Paused <LINE> Reason: paused by hand <LINE> Firebox: 25.4 kg of wood
+OBS  RTSC.menu pot_still paused_by_hand: Status, Load wash from a nearby fermenter, Feed the firebox, Collect ethanol into a fuel can (greyed), Resume, Abort batch
+PASS RTSC.menu_paused_by_hand_pot_still :: pause,resume,abort offered false,true,true (want false,true,true)
+OBS  RTSC.pause_again_pot_still machine.pause -> ok=false reason=not_processing state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTSC.pause_again_refused_pot_still :: reason not_processing (want not_processing); record unchanged; the menu shows "It is not working on a batch right now."
+OBS  RTSC.abort_reflux_still menu "Abort batch" -> ok=true reason=nil state=OutputReady stage=nil outputs={ethanol=1.613888642772144,water=0.10301416868758295} consumed=nil
+OBS  RTSC.abort reflux still 2.006729 h in (1.000000 h heating up, 1.006729 of 2.775000 h distilling): kept {ethanol=1.613888642772144,water=0.10301416868758295}, thrown away {ethanol=1.5457732143781044,stillage=15.984840207088494,water=14.052483767073674}; dialog=Batch stopped. <LINE> Stopped early: what it made is ready to collect <LINE> Firebox: 12.8 kg of wood <LINE> Ethanol: 1.61 <LINE> Water: 0.10 <LINE> Thrown away: Ethanol 1.55, Stillage 15.98, Water 14.05 <LINE> Abort batch again to throw it away.
+FAIL RTSC.design_abort_keeps_only_what_it_distilled :: kept ethanol 1.613889 L and water 0.103014 L; distilled so far 1.101416 L of ethanol (0.3628 of the distilling stage); 1.613889 L is the share of all stage hours, heating up included
+PASS RTSC.abort_accounts_for_the_whole_wash :: kept and thrown away 33.300000 L of the 33.300000 L wash; thrown away {ethanol=1.5457732143781044,stillage=15.984840207088494,water=14.052483767073674}
+PASS RTSC.abort_keeps_the_wood_not_burned :: OutputReady stoppedEarly=true; firebox 12.787717 kg, expected 12.787717; holds {ethanol=1.613888642772144,water=0.10301416868758295}
+PASS RTSC.abort_dialog_lists_both :: dialog: Batch stopped. <LINE> Stopped early: what it made is ready to collect <LINE> Firebox: 12.8 kg of wood <LINE> Ethanol: 1.61 <LINE> Water: 0.10 <LINE> Thrown away: Ethanol 1.55, Stillage 15.98, Water 14.05 <LINE> Abort batch again to throw it away.
+OBS  RTSC.menu reflux_still stopped_early: Status, Load wash from a nearby fermenter, Feed the firebox, Collect ethanol into a fuel can (greyed), Abort batch
+PASS RTSC.menu_stopped_early_reflux_still :: pause,resume,abort offered false,false,true (want false,false,true)
+OBS  RTSC.collect_reflux_still menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTSC.collected_what_abort_kept :: can id=S1922563968-5 rev=1 total=1.7169 q[ethanol=1.6139,water=0.1030] deg[ethanol=0.0000] mic=0 stab=0; it held {ethanol=1.613888642772144,water=0.10301416868758295}; still Ready
+OBS  RTSC.status_paused_pot_still menu "Status" -> ok=true reason=nil state=Paused stage=heat_up outputs={} consumed=nil
+PASS RTSC.paused_hours_hold_work_and_wood :: done 0.502914 h (0.502914 at the pause); firebox 25.403446 kg (25.403446); paused 3.007393 h of 3.007393; dialog=Paused <LINE> Reason: paused by hand <LINE> Stage: heating up <LINE> Temperature here today: 71.6 °F, in a room <LINE> Firebox: 25.4 kg of wood
+OBS  RTSC.resume_pot_still menu "Resume" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTSC.resume_pot_still :: state=Processing manual=nil dialog=Working <LINE> Firebox: 25.4 kg of wood
+OBS  RTSC.resume_again_pot_still machine.resume -> ok=false reason=not_paused state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTSC.resume_again_refused_pot_still :: reason not_paused (want not_paused); record unchanged; the menu shows "It is not paused."
+OBS  RTSC.menu pot_still resumed: Status, Load wash from a nearby fermenter, Feed the firebox, Collect ethanol into a fuel can, Pause, Abort batch
+PASS RTSC.menu_resumed_pot_still :: pause,resume,abort offered true,false,true (want true,false,true)
+OBS  RTSC.pot still done at 109.462289 game h, 8.169893 h after loading (5.1625 stage hours, 3.007393 h paused); firebox 10.61111111111112 kg; outputs {ethanol=2.9040000000000004,water=0.726}
+PASS RTSC.pot_still_finished_its_stage_hours_plus_the_pause :: OutputReady at 109.462289, due 109.462289; paused 3.007393 h, expected 3.007393
+PASS RTSC.pot_still_burned_wood_only_while_working :: 10.611111 kg left of 27.0000, expected 10.611111 (5.1625 h at 3.174603 kg/h)
+PASS RTSC.pot_still_spirit :: ethanol 2.904000 (2.904000) water 0.726000 (0.726000)
+OBS  RTSC.collect_pot_still menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTSC.collected_pot_still :: can id=S1922563968-6 rev=1 total=3.6300 q[ethanol=2.9040,water=0.7260] deg[ethanol=0.0000] mic=0 stab=0; it held {ethanol=2.9040000000000004,water=0.726}; still Ready
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 109.59
+SUMMARY pass=27 fail=1
+DONE
