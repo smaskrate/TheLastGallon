@@ -481,7 +481,12 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `ISDropWorldItemAction.complete` (D-015); in run 27 the four
   single-player paths reached the wraps, and an item lifted with
   `ISGrabItemAction`'s own calls outside it reached none, as a multiplayer
-  grab would.
+  grab would. Run 45 also used the place action in the form the place cursor
+  queues (`isPlaceItem = true`; `isValid` then requires a tile next to the
+  character and at most 50 weight on it,
+  SRC `shared/TimedActions/ISDropWorldItemAction.lua`). It worked onto a
+  tile already holding a machine and reached the wrap, as did the same
+  paths with stills and a drying column.
 * Fireplaces (BC 42.21 `IsoFireplace`): the map loader makes one from a
   tile whose `container` property is `fireplace`, `campfire`, `brazier` or
   `woodstove` (`CellLoader`); the only one vanilla Lua builds itself is the
@@ -678,7 +683,8 @@ run 39 3/0, 7/1 and 3/0 (a harness error) and run 40 **3/0**, 9/1 and
 **3/0**, and after the fix run 41 **3/0**, **11/0** and **3/0**, then the full
 mode on the final zip installed clean, run 42 **94/0** and **14/0**, and
 the client in Italian, run 43 4/1 (an expectation: the stored `%1$s`
-placeholder form) and run 44 **5/0**. Most failures were
+placeholder form) and run 44 **5/0**, then two stills and a drying
+column picked up mid-batch, run 45 **41/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

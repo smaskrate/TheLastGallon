@@ -175,8 +175,14 @@ listed with their replacement.
   up with the Grab and the loot window and put down with the place action
   and Drop did the work of their placed hours exactly; one lifted with the
   grab's own calls outside its Lua (standing in for multiplayer) was
-  credited up to 0.10 h before the grab. A move in multiplayer itself is
-  NOT RUN.
+  credited up to 0.10 h before the grab. Verified on the stills and the
+  drying column in RT-SP run 45 (41/0). A pot still picked up while
+  distilling, a reflux still while heating up (grabbed unseen) and a drying
+  column were carried two hours and put down again. Each then finished its
+  remaining stage hours with exactly the wood and spirit of its
+  definitions: no wood burned and no paused hours counted while carried.
+  The unseen grab lost the 0.15 h since the last note. A move in
+  multiplayer itself is NOT RUN.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

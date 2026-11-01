@@ -1146,3 +1146,61 @@ Temperatures follow the game's unit option, not the language. Not
 checked: how the fonts draw the accents (no screenshot was looked at),
 the sandbox options screen itself, the workshop and crafting texts in
 their own windows.
+
+## 2026-11-01 — RT-SP client harness, launch 45 (stills and the drying column picked up, gate 6)
+
+Command: `tools/run-sp-harness.ps1 -Mode still-pickup -TimeoutMinutes 40`
+(new mode, request `sp-rts`). Summer with the grid on, room tiles around
+the character. Two fermenters made two 33.3 L washes at full rate (6 kg of
+sugar and 30 L of water each). The pot still was fed three logs and took
+one wash. The drying column took 4 L of ethanol and 1 L of water from a
+can, with 4 kg of quicklime. An hour later the reflux still was fed two
+logs and took the other wash. Both fireboxes held more wood than their
+batches burn.
+
+Half an hour later all three were picked up:
+* the pot still, distilling, with the world menu's Grab;
+* the column with the loot window's Grab;
+* the reflux still, still heating up, with the grab's own calls outside its
+  Lua. This is how a multiplayer grab happens (run 27's D).
+
+They were carried for two game hours, then put down:
+* the pot still with the place action as the place cursor queues it
+  (`isPlaceItem`, which requires a tile next to the character), onto a spent
+  fermenter's tile;
+* the other two with the inventory menu's Drop.
+
+Every time the checks use comes from the records themselves (a move hook
+sets `t` to the moment of the move). Every expectation comes from the
+definitions. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run45_still_pickup.txt`.
+
+Result: **41 PASS / 0 FAIL**. The console showed "machine move hooks
+installed" and no TLG error or warning. The run took about 5 minutes.
+
+| Run 45 | Result |
+| --- | --- |
+| At pickup | the pot still had counted to that moment: 1.517303 h of work for 1.517303 h placed, distilling, with 22.183164 kg of wood left (what those hours burn). The column had 1.531364 h for 1.531364 h. Both were Paused, "it was picked up", and left the hourly list at once |
+| The reflux still, grabbed unseen | record untouched; it stayed listed until the next hourly reading, which dropped it |
+| Carried | the menu offered only Status and "Place it on the ground to operate it" (greyed). Status read "Paused, Reason: it was picked up; place it to continue, Stage: distilling, Firebox: 22.2 kg of wood". Over 2.0001 game h nothing changed on any of the three: work, wood, paused hours, readings and notes |
+| Put down | the pot still and the column were Processing from the put-down, with the work and wood they had, listed at their new tiles. The reflux still was found moved and credited up to the last time the mod had found it placed, 0.1535 h before the grab: 0.377846 h of work, still heating up, 17.018582 kg of wood left. Then it was Processing |
+| Pot still | done 7.178232 h after loading: its 5.1625 stage hours plus 2.015732 h carried. 10.611111 kg of wood left = 27 − 5.1625 × 3.174603. 2.904 L ethanol, 0.726 L water; paused 0 h |
+| Reflux still | done 5.933020 h after loading: 3.775 stage hours plus the 2.158020 h from when it was last found to the put-down. 8.194805 kg left = 18 − 3.775 × 2.597403. 3.036 L ethanol, 0.193787 L water; paused 0 h |
+| Drying column | done 14.003166 h after loading: 12 stage hours plus 2.003166 h carried. 3.999968 L ethanol, 0.020000 L water |
+| Collected | each machine's output into an empty can of its own, matching to 1e-3 L; every machine then Ready |
+
+Completion times, wood and spirit all matched to 1e-6. For the unseen
+grab, the reflux still lost the 0.1535 h between the mod's last
+ten-minute note and the grab. That is the shortfall D-015 accepts when no
+Lua sees a grab.
+
+Not run:
+* a move in multiplayer itself;
+* a carried machine across a save;
+* a still picked up after its wood ran out.
+
+Found by reading the code, not run: on a carried machine the authority
+refuses "Load mash and start fermenting", "Load wash from a nearby
+fermenter" and "Dry ethanol with quicklime" (`not_placed`). It accepts
+"Feed the firebox", "Collect ethanol into a fuel can", "Abort batch" and
+"Resume", which the menu hides while the machine is carried.

@@ -139,9 +139,11 @@ by a heat source added for the test (the first two stopped and spoiled,
 the warmed one finished), and a January batch beside a house fireplace
 kept fed with logs (it finished; the fire was lit and fed by the test
 without its menu, and its warmth counted through the first 6 hours of a
-12 hour absence, as long as its fuel lasted), working fermenters picked up
-and put down again (paused while carried, working again once down, the
-hours they stood counted to the minute and the hours carried not at all),
+12 hour absence, as long as its fuel lasted), working fermenters, both
+stills and the drying column picked up and put down again (paused while
+carried, working again once down, the hours they stood counted to the
+minute and the hours carried not at all, a still's firewood burning only
+while it stands),
 and a 12 kg batch through the pot still in two loads (its firebox left to
 run out and fed again, the yeast starter coming with the last of the
 wash; the spirit was unfit for any engine until dried and then fit for
