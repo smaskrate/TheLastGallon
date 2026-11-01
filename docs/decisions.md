@@ -293,4 +293,10 @@ listed with their replacement.
 * Verified RT-SP 2026-10-31 runs 17–19: the room formula matched the
   game's own room value exactly over 94–96 hours per run; the readings
   filed, the day temperatures reported and the hourly work matched the
-  harness exactly in run 19.
+  harness exactly in run 19. Run 21 (2026-11-01) did the same beside a
+  fireplace of the map, tended with logs: the heat formula matched every
+  tile around it at four fuel levels and the machine's air every hour,
+  and the batch finished in January (20.7 °C or more at 2.24 tiles from
+  the fire). A 12 hour absence cost it about 17 hours: the hours away took
+  the unheated room value, and the fire, which burns its fuel during an
+  absence all the same (vanilla), was out on the return.

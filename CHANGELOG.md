@@ -31,7 +31,9 @@
   fire, fireplace or barbecue. Fires count only while you are nearby.
   Status shows the temperature at the machine. Checked in game in
   January with the grid off: outdoors and in an unheated room the batch
-  stopped and spoiled; on a warmed tile it finished.
+  stopped and spoiled; on a warmed tile it finished, and so did a batch
+  two tiles from a house fireplace kept fed with logs (18 logs; the fire
+  burned out during a 12 hour absence and the batch lost about 17 hours).
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

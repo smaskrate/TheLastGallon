@@ -528,4 +528,60 @@ Found and fixed:
 
 Not run: upper floors, a real fire, fireplace or barbecue (the heat source
 was added from Lua; the vanilla objects register the same kind, BC), the
-grid on, a player-built room, a machine moved between two accesses.
+grid on, a player-built room, a machine moved between two accesses. (A
+fireplace of the map: see launches 20–21.)
+
+## 2026-11-01 — RT-SP client harness, launches 20–21 (a fireplace of the map)
+
+Command: `tools/run-sp-harness.ps1 -Mode fireplace -TimeoutMinutes 60`
+(request `sp-rtf`, new). The same January world with the grid off. The
+harness looks for a working fireplace of the map, lights it with a log
+through the calls the vanilla actions make (`addFuel`, `turnOn`,
+`sendObjectChange`; the actions and their menu were not used), compares
+the air on every floor tile within 9 of it with the heat formula unlit and
+at four fuel levels (set as vanilla's `fireplace.setFuel` command does),
+then runs one fermentation (6 kg of sugar, 30 L of water) on a room tile
+beside it. Meanwhile it tends the fire as a player can (a log adds 360
+minutes and only goes in once it fits under the 480 minute cap) and makes
+the winter run's checks of readings, day temperature, work and a 12 game
+hour trip. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run20_fireplace_search.txt`,
+`…run21_fireplace.txt`.
+
+* Run 20 (1 PASS / 0 FAIL, the search only): 49 windows of 97 × 97 tiles
+  up to 288 tiles around the start held two campfires and two braziers
+  and no fireplace, and the later steps were skipped. Only
+  `fixtures_fireplaces_01_0`–`_5` are working fireplaces (the rest of that
+  tileset is chimney and wall), and the map cells' headers list them only
+  north of the start. The search now scans those cells, nearest first.
+* Run 21 (**17 PASS / 0 FAIL**): `fixtures_fireplaces_01_5` at
+  10677,10296, its tile in a room; the fermenter stood at 10679,10297,
+  2.24 tiles away.
+
+| Run 21 | Result |
+| --- | --- |
+| Floor tiles within 9, unlit | 360, all at the unwarmed value |
+| Lit with 360 min (radius 8) | 34 warmed exactly as the formula says, 158 in range but not warmed (no line of sight), 168 out of range, 0 off |
+| Lit with 40 / 20 / 5 min (radius 5 / 3 / 1) | 19 / 11 / 0 warmed, 0 off |
+| Machine tile | warmed at 360, 40 and 20 min, not at 5 |
+| Machine air = formula at the fire's fuel, hourly | 102 h, worst 0.00000 °C; lit at all 102, lowest fuel 82 min |
+| Air at the machine | 20.7 °C or more every hour, at least 9.99 °C above the unheated room; unheated room 3.2–9.6 °C, outdoors −9.4 to −1.1 °C as day means |
+| Filed = game's readings / day temperature = mean / work = rule | 102 h exact / 101 reads exact / 95 h exact |
+| Trip (12.01 h, tiles unloaded) | 0 of 12 hours filed; 72 filed after the return |
+| Fire on the return | left lit with 365 min, found out with 0 after 721 min; relit |
+| Batch | finished after 114.3 game h; 97 stage hours of work; 5.36 h paused; 18 logs |
+
+The absence cost about 17 hours. The 7 unloaded hours of 16 January took
+the unheated room value (7.7 °C), which brought that day's mean to just
+below 18 °C (0.4). The 5 unloaded hours of 17 January had no reading at
+all: the day stood at 7.8 °C and the batch paused (the 5.36 h). Even with
+the fire lit again, the day's mean then stayed below 18 °C for about 11
+hours (0.4 rate; 14.6 °C at 48 h in). This is the day-mean rule of D-020
+and D-021 at work, matched exactly by the harness. Meanwhile the fire
+burned its 365 minutes during the absence, in one step on the reload, and
+was out on the return (vanilla, BC `IsoFireplace.update`). Status read
+"Working · Stage: fermenting · Temperature here today: 72.0 °F, in a
+room".
+
+Not run: a fire (`IsoFire`) or barbecue beside a machine, the fireplace's
+menu and timed actions, a fireplace upstairs.

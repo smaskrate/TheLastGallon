@@ -416,6 +416,34 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   as `getClimateValuesCopy():getDayLightLagged()`; vanilla formats
   temperatures in the player's units with
   `Temperature.getTemperatureString` (SRC `server/radio/ISWeatherChannel.lua:209`).
+* Fireplaces (BC 42.21 `IsoFireplace`): the map loader makes one from a
+  tile whose `container` property is `fireplace`, `campfire`, `brazier` or
+  `woodstove` (`CellLoader`); the only one vanilla Lua builds itself is the
+  barrel oven (SRC `server/BuildRecipeCode/buildRecipeCode.lua:603-608`).
+  Fuel is whole minutes: a lit fire burns one per game minute in
+  `update()` and goes out at 0 (put out with fuel left, it smoulders for
+  10 minutes). `fuelAmountMinutes`, `lit` and `lastUpdateTime` are saved
+  with the object and `update()` burns every minute since `lastUpdateTime`
+  in one step, so after a chunk reload a fire has used its fuel as if it
+  had burned while nobody was near; its heat source exists only while it
+  is loaded and lit. `addFuel` has no cap; the cap is in Lua: the menu
+  offers no fuel past `getCampingFuelMax()` = sandbox
+  `MaximumFireFuelHours` × 60 (8 h in the Apocalypse preset), and an item
+  gives `ISCampingMenu.getFuelDurationForItem` minutes (the smaller of its
+  table value and its weight × 2/3 hours: a log 6 h). Vanilla's actions add
+  fuel with `addFuel` and `sendObjectChange(STATE)` and light with
+  `turnOn()` (SRC `shared/TimedActions/ISBBQAddFuel.lua:72-87`,
+  `ISBBQLightFromLiterature.lua:60-75`). In `newtiledefinitions.tiles`
+  only `fixtures_fireplaces_01_0`–`_5` carry `container=fireplace` (the
+  other 74 tiles of that set are chimney and wall pieces); woodstoves are
+  `appliances_cooking_01_16`–`_19` and `crafted_05_4`–`_7`, campfires
+  `camping_01_4`–`_6` and `camping_03_16`–`_21`, braziers
+  `crafted_02_42`–`_44`. A map cell's `.lotheader` lists the tiles it uses:
+  none of the start's cell 41_41 and its eight neighbours lists a working
+  fireplace except 41_40 (to the north); 41_39, 42_39, 41_38, 42_38 and
+  41_37 do. Run 20 (RT-SP 2026-11-01) scanned 49 windows of 97 × 97 tiles
+  up to 288 tiles around the Muldraugh Gas2Go: two campfires and two
+  braziers (fire objects of the map), no fireplace.
 * Runs 17–19 (request `sp-rtw` since D-021, grid off): the room formula
   above matched the game's own value at a room tile to 0.00000 °C over
   94–96 hours per run; the outdoor tile equalled `getTemperature()`; a
@@ -425,6 +453,17 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   machine's hourly work matched the harness exactly; nothing was filed
   while the tiles were unloaded and the readings resumed on return (runs
   17–18 found two defects, see test results).
+* Run 21 (request `sp-rtf`, a map fireplace, `fixtures_fireplaces_01_5`
+  at 10677,10296, grid off, January): the heat formula above matched the
+  game's air on every floor tile within 9 of the fire at four fuel levels
+  (no tile off; 34 tiles warmed at 360 min, 19 at 40, 11 at 20, none at
+  5: the radius follows `calcLightRadius`), and unlit all 360 tiles had
+  the unwarmed value. Tiles in range behind walls stayed unwarmed (line
+  of sight). At the fermenter 2.24 tiles away the formula matched every
+  hour of a 114 hour batch (worst 0.00000 °C). Left with 365 minutes of
+  fuel for a 12 hour trip that unloaded its chunk, the fire was out with
+  0 on the return: the reload burns the absence away, as the bytecode
+  says. A log is 360 minutes and the cap 480 (sandbox default).
 * Grid power: `IsoWorld.hydroPowerOn` starts from
   `SandboxOptions.doesPowerGridExist()`, true while the world's age in days
   is at most `ElecShutModifier` (so −1: never);
@@ -497,8 +536,10 @@ phase B 14/0, runs 10–11 (the player's path) 76/15 and 80/11 with phase B
 12/2 each, run 12 phase A **94/0** and phase B **14/0**, run 13 (the loop on
 the game clock, no reload) 10/1, the one failure a check bound that missed
 120 settling ticks, its rerun, run 14, **11/0**, two January runs, run 15
-**5/0** and run 16 **8/0**, and three January runs by site, run 17
-**24/0**, run 18 24/1 and run 19 **25/0**. Most failures were
+**5/0** and run 16 **8/0**, three January runs by site, run 17
+**24/0**, run 18 24/1 and run 19 **25/0**, and two beside a map
+fireplace, run 20 1/0 (the search found none near the start) and run 21
+**17/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -524,8 +565,8 @@ the unheated value (a pruned reading).
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
    distilling in the pot still, a winter with mild days between cold spells
    (the code adds paused hours up across spells), flex-engine starts in the
-   cold, a machine beside a real fireplace, fire or barbecue, upstairs, in
-   a player-built room or with the grid on, pouring from a can lying on the
+   cold, a machine beside a fire (`IsoFire`) or barbecue, upstairs, in a
+   player-built room or with the grid on, pouring from a can lying on the
    ground, Italian text in game, the crafting window itself, UI rendering
    checks beyond menu contents.
 2. RT-MP: dedicated server + two clients for G07/G08 reconnect. Requires a

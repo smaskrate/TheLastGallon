@@ -1,0 +1,67 @@
+# TLG single-player harness, real game clock, fireplace
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=3744285186317972882 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2155 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2155 game h in 300 ticks
+STEP rtf_find begin
+OBS  RTF.hop 1 at 10660,10645: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 2 at 10564,10645: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 3 at 10660,10549: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 4 at 10660,10741: 9409 tiles loaded after 120 ticks; 1 fire objects [campfire camping_03_18 at 10706,10702]; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 5 at 10756,10645: 9409 tiles loaded after 120 ticks; 1 fire objects [campfire camping_03_19 at 10777,10631]; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 6 at 10564,10549: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 7 at 10564,10741: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 8 at 10756,10549: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 9 at 10756,10741: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 10 at 10468,10645: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 11 at 10660,10453: 9409 tiles loaded after 120 ticks; 1 fire objects [brazier crafted_02_42 at 10694,10478]; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 12 at 10660,10837: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 13 at 10852,10645: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 14 at 10468,10549: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 15 at 10468,10741: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 16 at 10564,10453: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 17 at 10564,10837: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 18 at 10756,10453: 9409 tiles loaded after 120 ticks; 1 fire objects [campfire camping_03_19 at 10725,10479]; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 19 at 10756,10837: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 20 at 10852,10549: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 21 at 10852,10741: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 22 at 10468,10453: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 23 at 10468,10837: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 24 at 10852,10453: 9409 tiles loaded after 120 ticks; 1 fire objects [brazier crafted_02_42 at 10816,10422]; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 25 at 10852,10837: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 26 at 10372,10645: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 27 at 10660,10357: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 28 at 10660,10933: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 29 at 10948,10645: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 30 at 10372,10549: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 31 at 10372,10741: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 32 at 10564,10357: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 33 at 10564,10933: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 34 at 10756,10357: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 35 at 10756,10933: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 36 at 10948,10549: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 37 at 10948,10741: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 38 at 10372,10453: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 39 at 10372,10837: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 40 at 10468,10357: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 41 at 10468,10933: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 42 at 10852,10357: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 43 at 10852,10933: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 44 at 10948,10453: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 45 at 10948,10837: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 46 at 10372,10357: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 47 at 10372,10933: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 48 at 10948,10357: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.hop 49 at 10948,10933: 9409 tiles loaded after 120 ticks; 0 fire objects []; fireplaces with a free room tile beside them 0
+OBS  RTF.find no fireplace with a free room tile beside it in 49 hops
+STEP rtf_light begin
+SKIP rtf_light: no fireplace with a free room tile beside it in 49 hops
+STEP rtf_ferment begin
+SKIP rtf_ferment: no fireplace with a free room tile beside it in 49 hops
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 4.67
+SUMMARY pass=1 fail=0
+DONE

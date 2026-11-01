@@ -72,7 +72,11 @@ still is welded in hand.
    for 3 days in all spoils. In a freezing spell a room alone is not
    enough: keep a fireplace or fire well fed near the fermenter (the more
    fuel, the farther its warmth reaches, up to 8 tiles it can see) and
-   stay close.
+   stay close. A log burns 6 hours and a fireplace holds at most 8 hours
+   of fuel (default settings), so a log only fits once 2 hours or less are
+   left: a fire kept going takes about 4 logs a day. The fire burns on
+   while you are away and its warmth does not count then, so expect it out
+   and the batch slowed when you come back.
    **Status** shows the temperature at the machine.
 2. **Pot still** – a cooking pot, two metal pipes, a rubber hose
    (screwdriver). Place it within two tiles of a finished fermenter, **Load
@@ -98,10 +102,12 @@ the four machines and one batch through the fermenter, reflux still and
 drying column, using the menu entries named above, were checked in game, as
 were January batches outdoors, in a room and on a tile warmed by a heat
 source added for the test (the first two stopped and spoiled, the warmed
-one finished); distilling in the pot still, Pause/Resume/Abort, picking up
-a working machine, a real fireplace, fire or barbecue beside a machine,
-upper floors and stopped days adding up across separate cold spells are
-untested in game.)*
+one finished), and a January batch beside a house fireplace kept fed with
+logs (it finished; the fire was lit and fed by the test without its
+menu); distilling in the pot still, Pause/Resume/Abort, picking up a
+working machine, a fire or barbecue beside a machine, upper floors and
+stopped days adding up across separate cold spells are untested in
+game.)*
 
 ## Converting an engine
 
