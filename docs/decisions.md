@@ -372,8 +372,8 @@ listed with their replacement.
   minutes) covered 6.08 hours of it, and the work over the trip matched the
   rule fed by the credited day temperatures exactly. The batch finished
   after 109.2 game hours (run 21, without the credit and in a colder
-  January: 114.3). A barbecue as the noted fire is covered by unit tests
-  only. A `false` note survives a save: item mod data saves boolean values
+  January: 114.3). A barbecue as the noted fire was covered by unit tests
+  only until runs 34–35 (below). A `false` note survives a save: item mod data saves boolean values
   (BC `KahluaTableImpl.save`), and in run 25 a record saved with two "no
   fire" notes came back from save, exit and continue unchanged; the credit
   then worked as before (a 424 minute note covered 7.07 hours of a trip).

@@ -74,8 +74,8 @@ still is welded in hand.
    fuel, the farther its warmth reaches, to the tiles it can see: a
    fireplace up to 8 tiles with an hour of fuel, a campfire up to 10 with
    six hours. A barbecue's warmth is milder and reaches 3 tiles: outdoors
-   in January it kept a fermenter one tile away at 1–5 °C, too cold to
-   ferment. A log burns 6 hours and a fire holds at most 8 hours
+   in January a fermenter one tile away averaged 1–8 °C a day over two
+   tests, too cold to ferment most of the time. A log burns 6 hours and a fire holds at most 8 hours
    of fuel (default settings), so a log only fits once 2 hours or less are
    left: a fire kept going takes about 4 logs a day. The fire burns on
    while you are away, and its warmth still counts for as long as its fuel
