@@ -20,6 +20,7 @@
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
+--   sp-it -> the client in Italian: every Italian string and two menus
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -41,7 +42,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtof" or REQUEST == "ex-b" or REQUEST == "ex-c" then
+    or REQUEST == "sp-rtof" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -6637,6 +6638,156 @@ RT.existingSteps = { RT.waitWorld, RT.X.setup, RT.X.load, RT.X.look, RT.X.discov
 RT.existingReloadSteps = { RT.X.reload, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Italian (request "sp-it", release gate 10): the client in Italian
+-- (options.ini language=IT). tools/run-sp-harness.ps1 -Mode italian writes
+-- every Italian string the mod ships to TLG_it_expect.txt, its letters past
+-- ASCII as \uXXXX. Each must come back exactly as shipped: getText for the
+-- menu, interface, fluid and sandbox texts, the display name of an item
+-- made from each item id. Placeholders must be filled, and the Fuel menu
+-- and the machine menu, with the dialogs they open, must read Italian with
+-- no key left unresolved and no letter garbled (UTF-8 read as Latin-1
+-- gives "Ã" or "Â", which Italian never uses).
+------------------------------------------------------------------------------
+RT.I = {}
+
+function RT.I.decode(s)
+    return (string.gsub(s, "\\u(%x%x%x%x)", function(h) return string.char(tonumber(h, 16)) end))
+end
+
+function RT.I.garbled(s)
+    return s ~= nil and (string.find(s, string.char(195), 1, true) ~= nil or string.find(s, string.char(194), 1, true) ~= nil)
+end
+
+-- A dialog or name the game shows: Italian as shipped, nothing unresolved.
+function RT.I.clean(s)
+    return s ~= nil and not string.find(s, "IGUI_TLG_", 1, true) and not string.find(s, "ContextMenu_TLG_", 1, true)
+        and not RT.I.garbled(s)
+end
+
+RT.itSetup = { name = "rti_setup", timeout = 600, fn = function(ctx, ticks)
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        captureDialogs(true)
+        ctx.t0 = ticks
+        return nil
+    end
+    return ticks - ctx.t0 >= 30 or nil
+end }
+
+RT.itText = { name = "rti_text", timeout = 600, fn = function(ctx, ticks)
+    local I = RT.I
+    local lang = "?"
+    pcall(function() lang = tostring(Translator.getLanguage():name()) end)
+    R:check("RTI.language_is_italian", function() return lang == "IT", "Translator.getLanguage() = " .. lang end)
+    local r = getFileReader("TLG_it_expect.txt", false)
+    if r == nil then
+        RT.abort = "no TLG_it_expect.txt"
+        R:line("OBS  RTI %s", RT.abort)
+        return true
+    end
+    I.want = {}
+    local n, same, unresolved, garbled, off, cats, order = 0, 0, 0, 0, {}, {}, {}
+    local line = r:readLine()
+    while line do
+        local cat, key, raw = string.match(line, "^([^|]+)|([^=]+)=(.*)$")
+        if cat then
+            local want = I.decode(raw)
+            I.want[key] = want
+            local got
+            if cat == "ItemName" then
+                local ok, it = pcall(instanceItem, key)
+                got = ok and it and it:getDisplayName() or "(no item)"
+            else
+                got = getText(key)
+            end
+            n = n + 1
+            if not cats[cat] then
+                cats[cat] = { n = 0, same = 0 }
+                order[#order + 1] = cat
+            end
+            cats[cat].n = cats[cat].n + 1
+            if got == want then
+                same, cats[cat].same = same + 1, cats[cat].same + 1
+            else
+                if got == key then unresolved = unresolved + 1 end
+                if #off < 6 then off[#off + 1] = string.format("%s: game \"%s\", shipped \"%s\"", key, tostring(got), want) end
+            end
+            if I.garbled(got) then garbled = garbled + 1 end
+        end
+        line = r:readLine()
+    end
+    r:close()
+    local parts = {}
+    for _, c in ipairs(order) do parts[#parts + 1] = string.format("%s %d/%d", c, cats[c].same, cats[c].n) end
+    R:line("OBS  RTI.strings %s; samples: %s | %s | %s", table.concat(parts, ", "), tostring(getText("ContextMenu_TLG_Fuel")),
+        tostring(getText("IGUI_TLG_ConditionUnknown")), tostring(getText("Sandbox_TLG_ExistingSavePolicy")))
+    R:check("RTI.every_string_as_shipped", function()
+        return n > 0 and same == n and garbled == 0,
+            string.format("%d of %d as shipped, %d unresolved, %d garbled; off: %s", same, n, unresolved, garbled,
+                #off > 0 and table.concat(off, " || ") or "none")
+    end)
+    -- Placeholders filled as the game does it.
+    local p1 = getText("IGUI_TLG_Primary", "Etanolo")
+    local w1 = (string.gsub(I.want.IGUI_TLG_Primary or "?", "%%1", "Etanolo"))
+    local p3 = getText("IGUI_TLG_ConditionEstimate", "Buono", "0.1", "0.3")
+    local w3 = I.want.IGUI_TLG_ConditionEstimate or "?"
+    w3 = (string.gsub((string.gsub((string.gsub(w3, "%%1", "Buono")), "%%2", "0.1")), "%%3", "0.3"))
+    R:check("RTI.placeholders_filled", function()
+        return p1 == w1 and p3 == w3, string.format("\"%s\" | \"%s\"", tostring(p1), tostring(p3))
+    end)
+    return true
+end }
+
+-- The Fuel menu on a petrol can and the machine menu on a fermenter, with
+-- the dialogs their entries open.
+RT.itMenus = { name = "rti_menus", timeout = 600, fn = function(ctx, ticks)
+    local I = RT.I
+    if RT.skip("rti_menus") then return true end
+    local can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 5 } })
+    local context = ISContextMenu.get(0, 100, 100)
+    TLG.UI.FuelMenu.fill(0, context, { can })
+    local root = context:getOptionFromName(I.want.ContextMenu_TLG_Fuel or "?")
+    local sub = root and root.subOption and context:getSubMenu(root.subOption)
+    local names = {}
+    for j = 1, (sub and sub.numOptions or 1) - 1 do
+        local o = sub.options[j]
+        if o then names[#names + 1] = tostring(o.name) end
+    end
+    context:setVisible(false)
+    local n = #H.dialogs.texts
+    menuClick("RTI.look", function(c) TLG.UI.FuelMenu.fill(0, c, { can }) end, I.want.ContextMenu_TLG_Fuel or "?",
+        I.want.ContextMenu_TLG_Look or "?")
+    local look = H.dialogs.texts[n + 1]
+    closeDialogs()
+    R:line("OBS  RTI.fuel_menu \"%s\" > %s; Look and smell: %s", tostring(root and root.name), table.concat(names, " / "),
+        tostring(look))
+    R:check("RTI.fuel_menu_italian", function()
+        local all = root ~= nil and #names >= 5
+        for _, nm in ipairs(names) do all = all and I.clean(nm) end
+        return all and look ~= nil and I.clean(look) and has(look, I.want.IGUI_TLG_InspectionTitle or "?"),
+            string.format("%d entries; look dialog %s", #names, tostring(look))
+    end)
+    local s = player():getSquare()
+    local item = instanceItem("TLG.FermenterVessel")
+    s:AddWorldInventoryItem(item, 0.5, 0.5, 0, false)
+    n = #H.dialogs.texts
+    local r = menuClick("RTI.status", function(c) TLG.UI.MachineMenu.fill(0, c, { item }) end,
+        I.want.ContextMenu_TLG_Machine or "?", I.want.ContextMenu_TLG_MachineStatus or "?")
+    local status = H.dialogs.texts[n + 1]
+    closeDialogs()
+    R:line("OBS  RTI.machine_menu Status: %s", tostring(status))
+    R:check("RTI.machine_menu_italian", function()
+        return r.ok == true and status ~= nil and I.clean(status) and has(status, I.want.IGUI_TLG_MachineState_Ready or "?"),
+            tostring(status)
+    end)
+    return true
+end }
+
+RT.italianSteps = { RT.waitWorld, RT.itSetup, RT.itText, RT.itMenus, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -6648,7 +6799,7 @@ Events.OnMainMenuEnter.Add(function()
 end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
-    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rtof" then
+    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -6709,6 +6860,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtof" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, open fires")
                 TLGH.Steps.run(R, RT.openFireSteps, H, nil)
+            elseif REQUEST == "sp-it" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the client in Italian")
+                TLGH.Steps.run(R, RT.italianSteps, H, nil)
             else
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
                 TLGH.Steps.run(R, stepsA, H, nil)

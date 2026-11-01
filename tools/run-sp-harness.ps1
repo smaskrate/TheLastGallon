@@ -37,6 +37,8 @@
   existing-a, existing-b: the two launches of the existing-save rehearsal
   (tools/rehearse-install.ps1 -Scenario existing): a world played without
   the mod, then that save continued with it.
+  italian: the client in Italian; every Italian string the mod ships must
+  come back exactly as shipped, and the Fuel and machine menus read Italian.
 .PARAMETER ModSource
   Folder deployed as the mod (default: the repository's; see setup-devenv.ps1).
 .PARAMETER ActiveMods
@@ -44,7 +46,7 @@
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "fires",
-        "existing-a", "existing-b")][string]$Mode = "full",
+        "existing-a", "existing-b", "italian")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -74,14 +76,29 @@ if (Test-Path $userOptions) {
         if ($keys -contains $k) { $opts[$k] = $v }
     }
 }
+if ($Mode -eq "italian") { $opts["language"] = "IT" }
 ($opts.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) | Set-Content -Encoding ascii (Join-Path $DevCache "options.ini")
 
 $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
+if ($Mode -eq "italian") {
+    # Every Italian string the deployed mod ships, as category|key=value in
+    # ASCII: letters past ASCII and backslashes as \uXXXX, which the harness
+    # decodes, so no file encoding stands between the file and the check.
+    $src = if ($ModSource) { $ModSource } else { Join-Path $repo "Contents\mods\TheLastGallon" }
+    $lines = foreach ($f in Get-ChildItem (Join-Path $src "common\media\lua\shared\Translate\IT") -Filter *.json | Sort-Object Name) {
+        $obj = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
+        foreach ($p in $obj.PSObject.Properties) {
+            $v = -join ([string]$p.Value).ToCharArray().ForEach({ if ([int]$_ -gt 126 -or $_ -eq '\') { '\u{0:x4}' -f [int]$_ } else { [string]$_ } })
+            "$($f.BaseName)|$($p.Name)=$v"
+        }
+    }
+    Set-Content -Encoding ascii -Path (Join-Path $luaDir "TLG_it_expect.txt") -Value $lines
+}
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } default { "sp-a" } }
+    "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
