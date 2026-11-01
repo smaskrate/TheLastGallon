@@ -8,9 +8,11 @@
 -- next access caught up exactly. Runs 17-19 (January, grid off) ran
 -- fermenters outdoors, in a room and on a tile warmed by a heat source: the
 -- readings filed equalled the game's, nothing was filed while unloaded,
--- and the batches followed the day temperatures exactly (D-021). Distilling
--- in the pot still, pickup while processing, a real fireplace or fire, upper
--- floors and MP replication are NOT RUN.
+-- and the batches followed the day temperatures exactly (D-021). Runs 21
+-- and 23 did the same beside a map fireplace; in run 23 the fire notes
+-- matched the harness's and the hours away were credited exactly (D-022).
+-- Distilling in the pot still, pickup while processing, a barbecue or open
+-- fire, upper floors and MP replication are NOT RUN.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
 --   processing         only while the item lies on the ground; picking it up
@@ -27,6 +29,11 @@
 --                      into the record. Records only: the batch still advances
 --                      on access. A machine moved without being used in
 --                      between counts at its new place for that time.
+--   fires              every ten game minutes the authority notes the fire
+--                      (fireplace, wood stove, campfire, brazier, barbecue)
+--                      that gives each such machine its air, with its fuel;
+--                      hours the area is not loaded keep that fire's warmth
+--                      while the fuel noted last would last (D-022).
 require "TLG/Domain/Production/Process"
 require "TLG/Persistence/Migrations"
 require "TLG/Integration/World"
@@ -40,8 +47,12 @@ M.SIDECAR = "tlgProc"
 -- Placed machines the hourly reading visits, at most.
 M.MAX_INDEXED = 256
 -- Hourly readings kept per record (20 days unaccessed; older hours fall back
--- to the site's unheated value).
+-- to the site's unheated value), and as many hours of fire notes.
 M.MAX_READINGS = 24 * 20
+-- A fire is the one warming a machine when the game's formula for it gives
+-- the air read there to within this (C); the formula matched the game to
+-- 0.00000 C in RT-SP run 21.
+M.FIRE_TOL = 1e-3
 M.ITEMS = {
     ["TLG.FermenterVessel"] = "fermenter_barrel",
     ["TLG.PotStill"] = "pot_still",
@@ -97,20 +108,84 @@ function M.airAt(sq)
     return nil
 end
 
--- Readings the batch no longer needs: hours before the day it has reached
--- (that day's mean is still recomputed), except the hour just before it,
--- which stands in for the day's first hour until that hour is filed
--- (Climate.siteDayMean; pruned, the status after midnight showed the
--- unheated value, RT-SP run 18), and all of them once the batch is done.
+-- The air at a tile without heat sources now, as the game computes it before
+-- adding them: outdoors the air, in a room the room formula (Climate.roomAir,
+-- matched exactly in RT-SP runs 17-22).
+function M.unwarmedAt(sq)
+    local cm = getClimateManager()
+    local t = cm:getTemperature()
+    local room = false
+    pcall(function() room = sq:isInARoom() == true end)
+    if not room then return t end
+    local dl, power = Climate.ROOM_DAYLIGHT, false
+    pcall(function() dl = cm:getClimateValuesCopy():getDayLightLagged() end)
+    pcall(function() power = getWorld():isHydroPowerOn() == true end)
+    return Climate.roomAir(t, sq:getZ() >= 1, dl, power)
+end
+
+-- The fire that gives a machine's tile its air now, as a note for the record
+-- ({ t = now, f = fuel minutes, x, y = its offset, r = its tile in a room,
+-- c = its heat, rad = a fixed radius }), or nil. A lit fireplace (any
+-- IsoFireplace: fireplace, wood stove, campfire, brazier, barrel oven) or
+-- barbecue (IsoBarbecue) on the same floor within reach whose heat at the
+-- tile by the game's formula is the air read there, so nothing blocks it;
+-- the one with most fuel if several match. Their fuel is minutes burned one
+-- per game minute, also while the area is not loaded (BC update).
+function M.warmingFire(sq, air, now)
+    if air == nil then return nil end
+    local t0 = M.unwarmedAt(sq)
+    if air <= t0 + M.FIRE_TOL then return nil end
+    local x, y, z, cell, best = sq:getX(), sq:getY(), sq:getZ(), getCell(), nil
+    local reach = Climate.FIRE_REACH
+    for dx = -reach, reach do
+        for dy = -reach, reach do
+            local s = dx * dx + dy * dy < reach * reach and cell:getGridSquare(x + dx, y + dy, z) or nil
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                local c, rad
+                if instanceof(o, "IsoFireplace") then
+                    c = Climate.FIREPLACE_C
+                elseif instanceof(o, "IsoBarbecue") then
+                    c, rad = Climate.BARBECUE_C, Climate.BARBECUE_RADIUS
+                end
+                if c and o:isLit() and o:getFuelAmount() > 0 then
+                    local fuel, srcRoom = o:getFuelAmount(), false
+                    pcall(function() srcRoom = s:isInARoom() == true end)
+                    local w = Climate.warmed(t0, dx, dy, rad or Climate.fireRadius(fuel), srcRoom, c)
+                    if math.abs(w - air) <= M.FIRE_TOL and (best == nil or fuel > best.f) then
+                        best = { t = now, f = fuel, x = dx, y = dy, r = srcRoom, c = c, rad = rad }
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
+-- Readings and fire notes the batch no longer needs: hours before the day it
+-- has reached (that day's mean is still recomputed), except the reading of
+-- the hour just before it, which stands in for the day's first hour until
+-- that hour is filed (Climate.siteDayMean; pruned, the status after midnight
+-- showed the unheated value, RT-SP run 18), and the latest note before it,
+-- which still governs the unread hours after it; all of them once the batch
+-- is done.
 function M.trimTemps(rec, env)
-    if rec.temps == nil then return end
     if rec.state ~= "Processing" and rec.state ~= "Paused" then
-        rec.temps = nil
+        rec.temps, rec.fires = nil, nil
         return
     end
-    Climate.pruneSlots(rec.temps, math.floor(env:dayStart(env:dayIndex(rec.t))) - 1)
-    local keys = Tables.sortedKeys(rec.temps)
-    if #keys > M.MAX_READINGS then Climate.pruneSlots(rec.temps, keys[#keys - M.MAX_READINGS + 1]) end
+    local cut = math.floor(env:dayStart(env:dayIndex(rec.t))) - 1
+    if rec.temps ~= nil then
+        Climate.pruneSlots(rec.temps, cut)
+        local keys = Tables.sortedKeys(rec.temps)
+        if #keys > M.MAX_READINGS then Climate.pruneSlots(rec.temps, keys[#keys - M.MAX_READINGS + 1]) end
+    end
+    if rec.fires ~= nil then
+        Climate.pruneNotes(rec.fires, cut)
+        local keys = Tables.sortedKeys(rec.fires)
+        if #keys > M.MAX_READINGS then Climate.pruneNotes(rec.fires, keys[#keys - M.MAX_READINGS + 1]) end
+    end
 end
 
 local function advanceFrom(item, rec, now, env)
@@ -218,8 +293,41 @@ function M.sampleSites()
     end
 end
 
-function M.write(item, rec)
+-- Every ten game minutes on the authority: a note of the fire warming each
+-- loaded, placed machine with a batch running, under the hour it is taken in
+-- (the hour's last note wins; false when no fire warms it, written once an
+-- hour). Records only, kept on the authority: clients never read them.
+function M.observeFires()
+    if not World.isAuthority() then return end
+    local md = World.get()
+    local sites = md.machineSites
+    if md.v == nil or sites == nil then return end
+    local now, env, cell = World.now(), World.env(), getCell()
+    local hour = math.floor(now)
+    for _, id in ipairs(Tables.sortedKeys(sites)) do
+        local p = sites[id]
+        local sq = cell:getGridSquare(p.x, p.y, p.z)
+        local item = sq and onSquareById(sq, id)
+        local rec = item and M.read(item, false)
+        local air = rec and (rec.state == "Processing" or rec.state == "Paused") and M.airAt(sq) or nil
+        if air ~= nil then
+            local note = M.warmingFire(sq, air, now) or false
+            local fires = rec.fires or {}
+            if note or fires[hour] ~= false then
+                fires[hour] = note
+                rec.fires = fires
+                rec.site = M.siteOf(sq)
+                M.trimTemps(rec, env)
+                M.write(item, rec, true)
+            end
+        end
+    end
+end
+
+-- quiet: kept on the authority, not sent to clients (fire notes).
+function M.write(item, rec, quiet)
     item:getModData()[M.SIDECAR] = rec
+    if quiet then return end
     if item.syncItemFields then item:syncItemFields() end
     local wi = item:getWorldItem()
     if wi and wi.transmitModData then pcall(function() wi:transmitModData() end) end

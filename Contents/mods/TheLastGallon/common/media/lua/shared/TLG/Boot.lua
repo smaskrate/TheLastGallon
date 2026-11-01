@@ -65,5 +65,13 @@ Events.EveryHours.Add(function()
         if not ok then TLG.Log.error("machine air readings: %s", tostring(err)) end
     end
 end)
+-- The fire warming each machine, noted every ten minutes (D-022).
+Events.EveryTenMinutes.Add(function()
+    local machines = TLG.Integration.Machines
+    if machines then
+        local ok, err = pcall(machines.observeFires)
+        if not ok then TLG.Log.error("machine fire notes: %s", tostring(err)) end
+    end
+end)
 
 return Boot
