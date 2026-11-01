@@ -6693,8 +6693,10 @@ RT.itText = { name = "rti_text", timeout = 600, fn = function(ctx, ticks)
     while line do
         local cat, key, raw = string.match(line, "^([^|]+)|([^=]+)=(.*)$")
         if cat then
-            local want = I.decode(raw)
-            I.want[key] = want
+            I.want[key] = I.decode(raw)
+            -- The game stores a placeholder %N as %N$s (seen in run 43:
+            -- getText without arguments returns that form).
+            local want = (string.gsub(I.want[key], "%%(%d)", "%%%1$s"))
             local got
             if cat == "ItemName" then
                 local ok, it = pcall(instanceItem, key)
