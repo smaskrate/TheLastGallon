@@ -1,0 +1,12 @@
+# TLG removal, launch 2: the save continued without the mod
+game=42.21.0 4a0e9546ec
+PASS RMB.mod_away :: TLG loaded=false, listed active=false
+OBS  RMB.can P: 9.0000 L, fluid Petrol, record true
+OBS  RMB.can Q: 4.0000 L, fluid Petrol, record true
+OBS  RMB.can E: 0.0000 L, fluid -, record true
+OBS  RMB.fermenter tile 10661,10645 holds: nothing; the world record in global mod data: true
+PASS RMB.petrol_cans_and_records_kept :: P 9.0000 L, fluid Petrol, record true; Q 4.0000 L, fluid Petrol, record true
+OBS  RMB.poured without the mod: P 7.0000 L, fluid Petrol, record true; Q 7.0000 L, fluid Petrol, record true
+OBS  RMB.saving at world hour 26.0417, 24.00 game hours after continuing
+SUMMARY pass=2 fail=0
+DONE

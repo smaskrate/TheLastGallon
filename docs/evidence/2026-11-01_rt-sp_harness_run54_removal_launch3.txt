@@ -1,0 +1,16 @@
+# TLG single-player harness, removal launch 3: the mod back
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rtm_back begin
+OBS  RTM.launch 2 (the mod away) saw: {canE=0.0000 L, fluid -, record true,fTile=nothing,litresE=0,litresP=7,litresQ=7,worldRecord=true}
+PASS RTM.records_survive_the_mod_away :: P as saved, 7.0000 L now; Q as saved, 7.0000 L now; E as saved, 0.0000 L now
+PASS RTM.world_record_the_same_one :: seed 151808538 (151808538), installedAt 2 (2), policy new_world (new_world), epoch 0 (0), nextId 8 (8 at launch 1)
+PASS RTM.poured_from_while_away_keeps_its_condition :: condition 0.083816353, its record aged to now 0.083816353; 7.0000 L recorded of 7.0000 L in the can (9 L at launch 1)
+FAIL RTM.design_inflow_while_away_mixed_in_at_the_world_baseline :: condition 0.049706059; its own fuel aged to now with 3.0000 L at the untracked baseline 0.070983207 mixed in: 0.044564895; mixed in at the record's last write (world hour 2.0120) and then aged: 0.049706059
+PASS RTM.inflow_while_away_reconciled :: 7.0000 L recorded of 7.0000 L in the can; 3.0000 L came in while the mod was away
+OBS  RTM.ethanol can E: 0 L in it now (4 at launch 1, 0 at launch 2); read reconciled S151808538-5|-1.000000000|0.0000
+OBS  RTM.fermenter on 10661,10645: not found (launch 2 saw: nothing)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 26.07
+SUMMARY pass=4 fail=1
+DONE

@@ -1414,3 +1414,47 @@ one-span calculation uses the day's final mean. The size depends on how
 far the early readings sat from the day's mean, which was not measured.
 Not run: the other two existing-save policies, a server, removing and
 re-adding the mod.
+
+## 2026-11-01 — RT-SP client harness, launch 54 (the mod removed from a save and added back, gate 7)
+
+Command: `tools/rehearse-install.ps1 -NoBuild -Scenario removal` (new
+scenario) on the current zip (`75873ed3…`, matched its manifest), in a
+fresh isolated cache. There were three launches, and between them the
+save's `mods.txt` was rewritten as the load screen's Choose mods does:
+1. The mod and the harness (`rm-a`), a new world. Cans P and Q of petrol
+   and can E of the mod's ethanol were each recorded by a first pour. A
+   fermenter F was placed with a batch running. The game saved and the
+   client quit.
+2. Only the TheLastGallonPreInstall driver (`rm-b`), the mod not loaded.
+   It continued the save and noted what was left, poured 2 L out of P and
+   3 L of fresh petrol into Q, let a game day pass and saved.
+3. The mod and the harness again (`rm-c`), continuing the save.
+
+Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run54_removal_launch1.txt`,
+`…_launch2.txt`, `…_launch2_console.txt`, `…_launch3.txt`.
+
+Result: launch 1 **1/0**, launch 2 **2/0**, launch 3 **4/1**.
+
+| Run 54 | Result |
+| --- | --- |
+| Launch 1 | P 9 L, Q 4 L, E 4 L of ethanol, each recorded; F working since world hour 2.0142. World record: seed 151808538, `new_world`, created at hour 2, next id 8 |
+| Launch 2, the mod away | the save loaded with no dialog in the way. P and Q kept their petrol, and the item records (mod data `tlg`) were kept too. **E was empty**: the game dropped the mod's ethanol without a word. **F was gone**: the console says `InventoryItemFactory.CreateItem() cannot create item … "TLG.FermenterVessel"` and `InventoryItem.loadItem() item == null, skipped bytes`. The world record was still in the global mod data. Poured: P 7 L, Q 7 L; saved at world hour 26.0417 |
+| Launch 3, the mod back | the cans' records were exactly as launch 1 had left them. The world record was the same one (seed, start, policy, epoch, next id), and the console showed no second "world fuel history created". P's condition 0.083816353 was its record aged to now, exactly, with the 7 L it holds now. E's record reconciled to empty. F stayed gone |
+| **Design: Q's inflow** | **FAIL**: condition 0.049706059. D-006's words (its own fuel aged to now, the 3 L mixed in at the untracked baseline 0.070983207) give 0.044564895. The code mixes the inflow in at the record's last write (world hour 2.0120) and then ages the whole can, which gives exactly 0.049706059. So the inflow was aged a second time, over the day the mod was away |
+
+Run 54's failure is a mod defect, still open. `Containers.read` reconciles
+an untracked change at the record's last write (`side.t`). The caller
+then ages the result to now, so fuel that came in unseen carries the
+baseline condition of the moment it is found and also the aging of the
+whole time since the record was written. After a day away that is
+11.5 % more than the baseline D-006 names; it grows with the time since
+the last read. In ordinary play, reads come often and the gap is small.
+
+Found for players: removing the mod loses its machines (with their
+batches) and any of its fluids (ethanol, fuel water) in containers. The
+game skips the unknown items when it loads and drops the unknown fluids.
+Petrol and the mod's records on vanilla items survive, and adding the mod
+back finds them. This is what the open "Prepare removal" item is for.
+
+Launch 2's 16 Lua error lines are the driver's own: a guarded lookup of
+the empty can's fluid name. Launches 1 and 3 had none.

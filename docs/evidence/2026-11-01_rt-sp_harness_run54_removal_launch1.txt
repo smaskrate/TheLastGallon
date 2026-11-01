@@ -1,0 +1,14 @@
+# TLG single-player harness, removal launch 1: a new world with the mod
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=15214860625127170696 hours=2.0096 DayLength=4
+STEP rtx_setup begin
+STEP rtm_stock begin
+OBS  RTM.load_mash_F menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTM.stocked_and_recorded :: P 9.0000 L, Q 4.0000 L, E 4.0000 L, each recorded=true; fermenter on 10661,10645 Processing since 2.0142393112182617
+OBS  RTM.world record seed=151808538 installedAt=2 policy=new_world epoch=0 nextId=8; saving at world hour 2.0142
+STEP rtm_save_and_quit begin
+EXIT -> main menu, then the desktop
+SUMMARY pass=1 fail=0
+DONE
