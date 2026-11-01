@@ -179,11 +179,17 @@ function H.machineLoadWash(player, args)
     return commit(player, args, st, started.proc, { washL = (parcel.ethanol or 0) + (parcel.water or 0) })
 end
 
+-- A carried machine answers Status only (D-015): every other command needs
+-- it placed, as the menu offers nothing else while it is carried. Feeding,
+-- collecting, Pause, Resume and Abort used to be taken from a carried
+-- machine (found 2026-11-01); a Resume then let the carried hours count if
+-- the machine went back down on the tile it came from.
 function H.machineAddFuel(player, args)
     local st, err = machineState(player, args)
     if not st then return err end
     local m = TLG.Registry.need("machine", st.rec.machine)
     if not m.firebox then return fail("no_firebox") end
+    if not Machines.isPlaced(st.item) then return fail("not_placed") end
     local room = m.firebox.capacityKg - st.rec.firebox
     local wanted = TLG.Num.clamp(tonumber(args.kg) or room, 0, room)
     local kg = takeFeedstock(player, "wood", wanted, room)
@@ -197,6 +203,7 @@ local function simple(fn)
     return function(player, args)
         local st, err = machineState(player, args)
         if not st then return err end
+        if not Machines.isPlaced(st.item) then return fail("not_placed") end
         local r = fn(st.rec)
         if not r.ok then return fail(r.reason) end
         return commit(player, args, st, r.proc)
@@ -265,6 +272,7 @@ H.machineResume = simple(Process.resumeCmd)
 function H.machineAbort(player, args)
     local st, err = machineState(player, args)
     if not st then return err end
+    if not Machines.isPlaced(st.item) then return fail("not_placed") end
     local r = Process.abort(st.rec)
     if not r.ok then return fail(r.reason) end
     return commit(player, args, st, r.proc, { aborted = true, kept = r.kept, discarded = r.discarded, spoiled = r.spoiled })
@@ -276,6 +284,7 @@ function H.machineCollect(player, args)
     if not st then return err end
     local mid = Machines.machineFor(st.item)
     if mid == "fermenter_barrel" then return fail("use_still") end
+    if not Machines.isPlaced(st.item) then return fail("not_placed") end
     if type(args.destination) ~= "table" then return fail("malformed_destination") end
     local can = player:getInventory():getItemWithIDRecursiv(args.destination.id or -1)
     if can == nil or can:getFluidContainer() == nil then return fail("no_destination") end

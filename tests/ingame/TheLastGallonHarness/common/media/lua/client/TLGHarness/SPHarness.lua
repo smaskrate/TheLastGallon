@@ -5371,7 +5371,8 @@ RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.f
 -- transaction is in multiplayer). Two game hours later the pot still is put
 -- down with the place action as the place cursor queues it (isPlaceItem),
 -- on the tile of a spent fermenter next to the character, and the other two
--- with the inventory menu's Drop where the character stands. D-015: while
+-- with the inventory menu's Drop where the character stands. While carried,
+-- every command but Status, sent as a request, must be refused. D-015: while
 -- carried nothing advances, no work, no fuel burned, no paused hours. So
 -- each batch must finish its stage hours after the put-down with exactly the
 -- definitions' fuel and spirit (Content/Production), the times taken from
@@ -5651,6 +5652,27 @@ function RT.S.phases.carried(ctx)
         local got = table.concat(RT.menuOffered(S.items[i]), " | ")
         R:check("RTS.menu_while_carried_" .. S.names[i], function() return got == want, "offered: " .. got end)
     end
+    -- The authority refuses the same, sent as requests: everything but Status
+    -- waits until the machine is placed, its record untouched. A log and an
+    -- empty can are carried, so nothing but the placement refuses (run 45:
+    -- feeding, collecting, Abort batch and Resume were taken).
+    removeAll("Base.Log")
+    give("Base.Log", 1)
+    local can = giveCan("Base.JerryCan")
+    for _, k in ipairs({ { 3, "machine.addFuel", "feed" }, { 3, "machine.collect", "collect" }, { 3, "machine.pause", "pause" },
+        { 5, "machine.resume", "resume" }, { 5, "machine.abort", "abort" } }) do
+        local i, item = k[1], S.items[k[1]]
+        local rec0 = TLG.Tables.deepCopy(item:getModData().tlgProc)
+        local r = ask("RTS.carried_" .. k[3] .. "_" .. S.names[i], k[2], { target = TLG.Integration.Machines.refFor(item),
+            destination = { kind = "item", id = can:getID() } })
+        local same = TLG.Tables.deepEqual(rec0, item:getModData().tlgProc)
+        R:check("RTS.carried_refuses_" .. k[3] .. "_" .. S.names[i], function()
+            return r.ok == false and r.reason == "not_placed" and same and getText("IGUI_TLG_MachineFail_not_placed") ~= "IGUI_TLG_MachineFail_not_placed",
+                string.format("reason %s; record %s; the menu shows \"%s\"", tostring(r.reason), same and "untouched" or "changed",
+                    getText("IGUI_TLG_MachineFail_" .. tostring(r.reason)))
+        end)
+    end
+    removeAll("Base.Log")
     local before = #H.dialogs.texts
     local r = machineClick("RTS.status_pot_still_carried", pot, "ContextMenu_TLG_MachineStatus")
     local text = H.dialogs.texts[before + 1]
