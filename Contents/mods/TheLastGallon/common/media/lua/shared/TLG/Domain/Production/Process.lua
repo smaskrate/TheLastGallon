@@ -405,9 +405,13 @@ function Process.decommission(proc)
 end
 
 -- Human-facing status: state plus concrete pause reason (spec §13).
+-- What the machine is doing, for display. The stage only while the batch
+-- runs: a finished batch keeps its recipe until collected, and showed the
+-- last stage as current ("Stage: fermenting" on finished wash, RT-SP run 28).
 function Process.status(proc)
-    return { state = proc.state, reason = proc.pause, stage = proc.recipe and proc.recipe.params.stages[proc.stage] and
-        proc.recipe.params.stages[proc.stage].id or nil }
+    local running = proc.state == "Processing" or proc.state == "Paused"
+    local st = running and proc.recipe and proc.recipe.params.stages[proc.stage] or nil
+    return { state = proc.state, reason = proc.pause, stage = st and st.id or nil }
 end
 
 return Process

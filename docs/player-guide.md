@@ -175,7 +175,7 @@ in game).
 | Engine will not start on fresh-looking fuel | too much ethanol for a stock engine, or water | Sample; drain water; use gasoline or convert the engine |
 | Fermenter paused "too cold" | below 8 °C at the machine today (see Status) | Move it into a room, or beside a lit fireplace, wood stove, campfire or barbecue; away, the fire keeps it warm only while its fuel lasts. After 3 days paused in all the batch spoils |
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
-| Fermenter says "output waiting, nowhere to put it" | wash left after the still was filled | Collect the still's ethanol, then Load wash again |
+| Fermenter says "Wash is left" | the still holds 60 L (pot) or 120 L (reflux) | Collect the still's ethanol, then Load wash again |
 | Machine paused "picked up" | it was carried | Place it on the ground |
 
 ## Existing saves

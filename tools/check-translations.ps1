@@ -66,7 +66,9 @@ foreach ($id in "gasoline","ethanol","diesel","biodiesel","water","sediment","pl
 foreach ($op in "stabilize","filter","separate","seal","unseal","clean") { [void]$referenced.Add("IGUI_TLG_TreatDone_$op") }
 foreach ($m in "visual","kit","lab") { [void]$referenced.Add("IGUI_TLG_Method_$m") }
 foreach ($s in "Ready","InputsReserved","Processing","Paused","OutputReady","Faulted","Maintenance","Decommissioned") { [void]$referenced.Add("IGUI_TLG_MachineState_$s") }
+foreach ($s in "OutputReady_fermenter","OutputReady_still","OutputReady_dryer") { [void]$referenced.Add("IGUI_TLG_MachineState_$s") }
 foreach ($s in "no_heat","too_cold","too_hot","paused_by_player","not_placed","output_full","batch_spoiled") { [void]$referenced.Add("IGUI_TLG_Pause_$s") }
+foreach ($s in "output_full_fermenter") { [void]$referenced.Add("IGUI_TLG_Pause_$s") }
 foreach ($s in "prepare","ferment","heat_up","distill","dry") { [void]$referenced.Add("IGUI_TLG_Stage_$s") }
 foreach ($s in "none","Planned","InProgress","Commissioned","Cancelled","Removed","Reverted","Invalidated") { [void]$referenced.Add("IGUI_TLG_ConvState_$s") }
 foreach ($s in "inspect","prepare","install","configure","test","commission") { [void]$referenced.Add("IGUI_TLG_ConvStage_$s") }

@@ -29,9 +29,20 @@ local function temperatureText(c)
     return string.format("%.0f C", c)
 end
 
+-- The machine kind's own wording where it has one (a fermenter's finished
+-- wash waits for a still, a still's ethanol for a can), else the shared one.
+local function kindText(key, kind)
+    local own = key .. "_" .. tostring(kind)
+    local text = getText(own)
+    if text ~= own then return text end
+    return getText(key)
+end
+
 function Menu.describe(reply)
-    local lines = { getText("IGUI_TLG_MachineState_" .. tostring(reply.state)) }
-    if reply.pause then lines[#lines + 1] = getText("IGUI_TLG_Pause_" .. tostring(reply.pause)) end
+    local def = reply.machine and TLG.Registry.get("machine", reply.machine)
+    local kind = def and def.kind
+    local lines = { kindText("IGUI_TLG_MachineState_" .. tostring(reply.state), kind) }
+    if reply.pause then lines[#lines + 1] = kindText("IGUI_TLG_Pause_" .. tostring(reply.pause), kind) end
     if reply.stage then lines[#lines + 1] = getText("IGUI_TLG_Stage", getText("IGUI_TLG_Stage_" .. reply.stage)) end
     if type(reply.siteC) == "number" and reply.site then
         lines[#lines + 1] = getText(reply.siteNow and "IGUI_TLG_SiteNow" or "IGUI_TLG_SiteToday",

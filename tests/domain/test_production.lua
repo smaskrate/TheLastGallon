@@ -100,6 +100,20 @@ T.case("production: cold stalls fermentation and spoils it after the grace perio
     T.near(f.spoiled.sugar_eq, 10, 1e-12, "spoiled contents are accounted, not deleted")
 end)
 
+T.case("production: status names the stage only while the batch runs", function()
+    local env = F.env()
+    local f = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc
+    T.eq(Process.status(f).stage, "prepare")
+    T.eq(Process.status(Process.advance(f, 2, env)).stage, "ferment")
+    f = runToEnd(f, env, 24)
+    local s = Process.status(f)
+    T.eq(s.state, "OutputReady"); T.ok(s.stage == nil, "finished: no current stage (RT-SP run 28 showed fermenting)")
+    local part = Process.collect(f, 10).proc
+    s = Process.status(part)
+    T.eq(s.state, "OutputReady"); T.eq(s.reason, "output_full"); T.ok(s.stage == nil)
+    T.ok(Process.status(Process.collect(part, 1000).proc).stage == nil)
+end)
+
 T.case("production: outputs are emitted once and a full destination cannot duplicate them", function()
     local env = F.env()
     local f = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc
