@@ -50,7 +50,11 @@
   in game with the world menu's Grab, the loot window, the place action and
   Drop, and with a grab made outside the game's Lua (multiplayer itself not
   checked). Checked on fermenters, both stills and the drying column: a
-  still burns no firewood while carried.
+  still burns no firewood while carried. A carried machine now answers only
+  Status: feeding its firebox, collecting from it, Pause, Resume and Abort
+  batch say "Place it on the ground first.", as loading already did. The
+  menu never offered them while carried, but the server took them, and a
+  Resume could make the carried hours count (checked in game).
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

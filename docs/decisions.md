@@ -183,6 +183,17 @@ listed with their replacement.
   definitions: no wood burned and no paused hours counted while carried.
   The unseen grab lost the 0.15 h since the last note. A move in
   multiplayer itself is NOT RUN.
+* Amendment (2026-11-01): a carried machine answers Status only. Until
+  then the authority refused loading a carried machine but took Feed the
+  firebox, Collect, Pause, Resume and Abort batch, which the menu hides
+  while it is carried (found reading the handlers after run 45). A Resume
+  sent for a carried machine made the batch count from that moment.
+  Put back on the tile it came from, the machine then counted its carried
+  hours as work and burned wood for them (shown against the old handler:
+  4 h of work for 2 h placed). All five now return `not_placed`. Verified
+  by `tests/authority/test_machine_commands.lua` and RT-SP run 46 (46/0):
+  the five, sent as requests for a carried pot still and drying column,
+  were refused and the records left untouched.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

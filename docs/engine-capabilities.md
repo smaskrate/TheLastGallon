@@ -684,7 +684,8 @@ run 39 3/0, 7/1 and 3/0 (a harness error) and run 40 **3/0**, 9/1 and
 mode on the final zip installed clean, run 42 **94/0** and **14/0**, and
 the client in Italian, run 43 4/1 (an expectation: the stored `%1$s`
 placeholder form) and run 44 **5/0**, then two stills and a drying
-column picked up mid-batch, run 45 **41/0**. Most failures were
+column picked up mid-batch, run 45 **41/0**, and again with every command
+but Status refused on a carried machine, run 46 **46/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

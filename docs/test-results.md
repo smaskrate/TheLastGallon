@@ -1204,3 +1204,31 @@ refuses "Load mash and start fermenting", "Load wash from a nearby
 fermenter" and "Dry ethanol with quicklime" (`not_placed`). It accepts
 "Feed the firebox", "Collect ethanol into a fuel can", "Abort batch" and
 "Resume", which the menu hides while the machine is carried.
+
+## 2026-11-01 — RT-SP client harness, launch 46 (a carried machine answers Status only)
+
+Command: `tools/run-sp-harness.ps1 -Mode still-pickup -TimeoutMinutes 40`,
+with the fix of commit `f5c7b25`. Run 45's reading of the handlers found
+that the authority took Feed the firebox, Collect, Pause, Resume and Abort
+batch on a carried machine, though the menu hides them. Those five now
+return `not_placed`, as the loads did. While the pot still and the column
+were carried, the mode now sends each of the five as a request: Feed the
+firebox, Collect and Pause to the pot still, Resume and Abort batch to the
+column. A log and an empty can were carried, so nothing but the placement
+could refuse them. The rest of the mode is run 45's. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run46_still_pickup_refusals.txt`.
+
+Result: **46 PASS / 0 FAIL** (the console showed "machine move hooks
+installed" and no TLG error or warning).
+
+| Run 46 | Result |
+| --- | --- |
+| The five commands while carried | each refused with `not_placed`, the dialog "Place it on the ground first.", the record untouched |
+| The rest (run 45's 41 checks) | all passed again with the same figures: work at pickup equal to the hours placed (1.517288 h and 1.531342 h); the unseen grab credited up to 0.1535 h before it; the pot still done its 5.1625 stage hours after the put-down with 10.611111 kg of wood left; the reflux still its 3.775 h with 8.194805 kg; the column its 12 h; the definitions' spirit to 1e-6; every can as collected |
+
+The domain tests (`tests/authority/test_machine_commands.lua`, 3 cases)
+cover the case the run does not stage. With the old handler, a Resume
+sent for a carried still was taken, and once the still went back down on
+its own tile the batch counted 4 h of work for 2 h placed. Two of the
+three cases fail against the old handler (the third, a placed still
+taking the same commands, is the control); all three pass with the fix.
