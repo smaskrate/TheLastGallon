@@ -18,10 +18,12 @@
   outdoors, in a room and on a tile warmed by a heat source (D-021).
   fireplace: the same January world; finds a fireplace of the map, checks
   the air around it against the heat formula and runs one fermentation
-  beside it while tending the fire with logs.
+  beside it while tending the fire with logs. fireplace-reload: the same
+  batch saved mid-way (the fire left to burn out first), exited to the
+  menu and continued: the records must survive, then the batch runs on.
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace")][string]$Mode = "full")
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload")][string]$Mode = "full")
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -55,7 +57,8 @@ if (Test-Path $userOptions) {
 $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
-$request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" } default { "sp-a" } }
+$request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
+    "fireplace-reload" { "sp-rtfs" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

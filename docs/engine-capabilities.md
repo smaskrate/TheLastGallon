@@ -440,7 +440,8 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   mod data is saved with the item (`InventoryItem.save` calls
   `KahluaTable.save`), which keeps string and number keys and string,
   number, boolean and table values (BC `KahluaTableImpl.save`/`load`), so
-  a `false` in a record survives a save. In `newtiledefinitions.tiles`
+  a `false` in a record survives a save (seen in run 25: save, exit to
+  menu and continue). In `newtiledefinitions.tiles`
   only `fixtures_fireplaces_01_0`–`_5` carry `container=fireplace` (the
   other 74 tiles of that set are chimney and wall pieces); woodstoves are
   `appliances_cooking_01_16`–`_19` and `crafted_05_4`–`_7`, campfires
@@ -548,8 +549,9 @@ the game clock, no reload) 10/1, the one failure a check bound that missed
 fireplace, run 20 1/0 (the search found none near the start) and run 21
 **17/0**, then the winter mode again with its helpers shared, run 22
 **25/0**, the fire credit of D-022 beside the same fireplace, run 23
-**21/0**, and the winter mode with the fire notes running, run 24
-**25/0**. Most failures were
+**21/0**, the winter mode with the fire notes running, run 24
+**25/0**, and the fireplace batch across a save, run 25 **8/0** before and
+**20/0** after it. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

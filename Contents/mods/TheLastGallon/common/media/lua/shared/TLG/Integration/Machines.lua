@@ -10,7 +10,9 @@
 -- readings filed equalled the game's, nothing was filed while unloaded,
 -- and the batches followed the day temperatures exactly (D-021). Runs 21
 -- and 23 did the same beside a map fireplace; in run 23 the fire notes
--- matched the harness's and the hours away were credited exactly (D-022).
+-- matched the harness's and the hours away were credited exactly (D-022);
+-- in run 25 such a record, "no fire" notes included, came back unchanged
+-- from save, exit to menu and continue.
 -- Distilling in the pot still, pickup while processing, a barbecue or open
 -- fire, upper floors and MP replication are NOT RUN.
 --

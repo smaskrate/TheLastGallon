@@ -9,6 +9,8 @@
 --            write "done", quit to desktop (no save/reload)
 --   sp-rtw -> the same from 15 January: fermenters by site in the cold
 --   sp-rtf -> the same January world: a fermenter beside a map fireplace
+--   sp-rtfs -> the same, saved mid-batch and exited to the menu ("sp-rtfb")
+--   sp-rtfb -> main menu continues that save, checks the records, finishes
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -28,7 +30,8 @@ local function unattended()
     pcall(function() UIManager.setShowLuaDebuggerOnError(false) end)
     pcall(function() getCore():setOptionShowSurvivalGuide(false) end)
 end
-if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" then
+if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
+    or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -3574,52 +3577,79 @@ RT.fireLight = { name = "rtf_light", timeout = 30000, fn = function(ctx, ticks)
     return true
 end }
 
+-- Places a fermenter on the chosen tile and a second later loads it from the
+-- menu; true once its batch runs.
+function RT.F.placeAndLoad(ctx, ticks)
+    local F = RT.F
+    if not ctx.t0 then
+        local it = instanceItem("TLG.FermenterVessel")
+        sq(F.home.x, F.home.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+        F.items, F.readings, F.unloaded, F.logDays, F.fires = { it }, { {} }, {}, {}, { {} }
+        player():setPosition(F.home.x + 0.5, F.home.y + 0.5, 0)
+        ctx.t0 = ticks
+        return false
+    end
+    if ticks - ctx.t0 < 60 then return false end
+    local site = TLG.Integration.Machines.siteOf(sq(F.home.x, F.home.y, 0))
+    R:check("RTF.site_seen", function()
+        return site.room == true and site.z == 0, string.format("room=%s z=%s", tostring(site.room), tostring(site.z))
+    end)
+    removeAll("Base.Sugar"); removeAll("Base.Yeast")
+    give("Base.Sugar", 6); give("Base.Yeast", 1)
+    for _ = 1, 3 do
+        local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+        fc:Empty()
+        fc:addFluid(Fluid.Water, 10)
+    end
+    local r = machineClick("RTF.load", F.items[1], "ContextMenu_TLG_LoadFerment")
+    R:check("RTF.loaded", function()
+        return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6,
+            string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+    end)
+    F.logs0 = F.logs
+    return true
+end
+
+-- Starts the batch's bookkeeping from the batch start h0: hooks, the hourly
+-- read and the machine's tallies. After a reload (F.resumed) the readings and
+-- notes of before the save were compared then and are not compared again,
+-- and the first read comes at once.
+function RT.F.startAccounting(ctx, h0)
+    local F = RT.F
+    F.active, F.tending = true, true
+    F.hourly = { n = 0, worst = 0, where = "none", lit = 0, minFuel = math.huge, minGain = math.huge, minAir = math.huge }
+    if not F.hooked then
+        Events.EveryHours.Add(RT.F.onHour)
+        Events.EveryTenMinutes.Add(RT.F.onTenMinutes)
+        F.hooked = true
+    end
+    local env = TLG.World.env()
+    local function last(t)
+        local keys = TLG.Tables.sortedKeys(t)
+        return keys[#keys] or -math.huge
+    end
+    ctx.h0, ctx.next = h0, F.resumed and hours() or hours() + 1
+    ctx.m = { { prev = { h = hours(), done = RT.doneHours(F.items[1]), day = env:dayIndex(hours()),
+        stage = (not F.resumed) and "prepare" or nil },
+        rule = { n = 0, worst = 0, where = "none" }, mean = { n = 0, worst = 0, where = "none" },
+        filed = { n = 0, worst = 0, where = "none" }, compared = F.resumed and last(F.readings[1]) or -math.huge,
+        afterTrip = 0, days = {}, pausedTally = 0, notes = { n = 0, fire = 0, off = 0 },
+        notesCompared = F.resumed and last(F.fires[1]) or -math.huge } }
+end
+
 RT.fireFerment = { name = "rtf_ferment", timeout = 120000, fn = function(ctx, ticks)
     local F = RT.F
-    if not ctx.t0 and RT.skip("rtf_ferment") then return true end
-    if not ctx.t0 then
+    if not ctx.h0 and not ctx.t0 and RT.skip("rtf_ferment") then return true end
+    if not ctx.h0 then
+        if F.resumed then
+            F.startAccounting(ctx, F.h0)
+            return nil
+        end
         if not F.home then
             RT.abort = "no machine tile beside a fireplace"
             return true
         end
-        local it = instanceItem("TLG.FermenterVessel")
-        sq(F.home.x, F.home.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
-        F.items, F.readings, F.unloaded, F.logDays, F.fires = { it }, { {} }, {}, {}, { {} }
-        F.hourly = { n = 0, worst = 0, where = "none", lit = 0, minFuel = math.huge, minGain = math.huge, minAir = math.huge }
-        player():setPosition(F.home.x + 0.5, F.home.y + 0.5, 0)
-        ctx.t0 = ticks
-        return nil
-    end
-    if not ctx.h0 then
-        if ticks - ctx.t0 < 60 then return nil end
-        local site = TLG.Integration.Machines.siteOf(sq(F.home.x, F.home.y, 0))
-        R:check("RTF.site_seen", function()
-            return site.room == true and site.z == 0, string.format("room=%s z=%s", tostring(site.room), tostring(site.z))
-        end)
-        removeAll("Base.Sugar"); removeAll("Base.Yeast")
-        give("Base.Sugar", 6); give("Base.Yeast", 1)
-        for _ = 1, 3 do
-            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
-            fc:Empty()
-            fc:addFluid(Fluid.Water, 10)
-        end
-        local r = machineClick("RTF.load", F.items[1], "ContextMenu_TLG_LoadFerment")
-        R:check("RTF.loaded", function()
-            return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6,
-                string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
-        end)
-        F.active, F.tending, F.logs0 = true, true, F.logs
-        if not F.hooked then
-            Events.EveryHours.Add(RT.F.onHour)
-            Events.EveryTenMinutes.Add(RT.F.onTenMinutes)
-            F.hooked = true
-        end
-        local env = TLG.World.env()
-        ctx.h0, ctx.next = hours(), hours() + 1
-        ctx.m = { { prev = { h = hours(), done = RT.doneHours(F.items[1]), day = env:dayIndex(hours()), stage = "prepare" },
-            rule = { n = 0, worst = 0, where = "none" }, mean = { n = 0, worst = 0, where = "none" },
-            filed = { n = 0, worst = 0, where = "none" }, compared = -math.huge, afterTrip = 0, days = {},
-            pausedTally = 0, notes = { n = 0, fire = 0, off = 0 }, notesCompared = -math.huge } }
+        if F.placeAndLoad(ctx, ticks) then F.startAccounting(ctx, hours()) end
         return nil
     end
     if ticks % 30 == 0 then RT.keepFit() end
@@ -3678,8 +3708,10 @@ RT.fireFerment = { name = "rtf_ferment", timeout = 120000, fn = function(ctx, ti
         return m.filed.n >= 24 and m.filed.worst <= 1e-6,
             string.format("%d hours, worst %.6f (%s)", m.filed.n, m.filed.worst, m.filed.where)
     end)
+    -- After a reload only the hours since the save are compared here.
+    local noted = F.resumed and 40 or 80
     R:check("RTF.notes_filed_fireplace", function()
-        return m.notes.n >= 80 and m.notes.fire >= 60 and m.notes.off == 0,
+        return m.notes.n >= noted and m.notes.fire >= noted * 3 / 4 and m.notes.off == 0,
             string.format("%d hours noted, %d with the fire, %d off (%s); fed before leaving: %s", m.notes.n,
                 m.notes.fire, m.notes.off, tostring(m.notes.where or "none"), brief(ctx.fed))
     end)
@@ -3712,6 +3744,215 @@ end }
 RT.fireplaceSteps = { RT.waitWorld, RT.setup, RT.fireFind, RT.fireLight, RT.fireFerment, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Fireplace across a save (requests "sp-rtfs", then "sp-rtfb"). Phase 1 runs
+-- the batch beside the fire, tended for 14 game hours, then leaves the fire
+-- to burn out with the character beside it until two hours of notes say no
+-- fire warms the machine; it writes the record, the harness's own readings
+-- and notes and the fire to the expectations file, saves and exits to the
+-- menu. Phase 2 continues the save: before any access the record must hold
+-- every reading and note of the save, "no fire" notes included (item mod
+-- data saves booleans, BC KahluaTableImpl.save), its batch, site and place
+-- in the world's hourly list, and the fire must be as left. Then the fire is
+-- lit again and the batch runs on with the trip and every check of the
+-- fireplace run.
+------------------------------------------------------------------------------
+-- Readings and notes as text (tostring gives numbers back exactly).
+function RT.F.encodeTemps(t)
+    local parts = {}
+    for _, k in ipairs(TLG.Tables.sortedKeys(t or {})) do parts[#parts + 1] = tostring(k) .. "=" .. tostring(t[k]) end
+    return table.concat(parts, ";")
+end
+
+function RT.F.encodeNotes(n)
+    local parts = {}
+    for _, k in ipairs(TLG.Tables.sortedKeys(n or {})) do
+        local v, text = n[k], "false"
+        if v then
+            text = table.concat({ tostring(v.t), tostring(v.f), tostring(v.x), tostring(v.y), tostring(v.r),
+                tostring(v.c), tostring(v.rad) }, ",")
+        end
+        parts[#parts + 1] = tostring(k) .. "=" .. text
+    end
+    return table.concat(parts, ";")
+end
+
+local function entries(s)
+    local out = {}
+    for part in string.gmatch(s or "", "([^;]+)") do
+        local k, v = string.match(part, "^([^=]+)=(.*)$")
+        if k then out[#out + 1] = { tonumber(k), v } end
+    end
+    return out
+end
+
+function RT.F.decodeTemps(s)
+    local t = {}
+    for _, e in ipairs(entries(s)) do t[e[1]] = tonumber(e[2]) end
+    return t
+end
+
+function RT.F.decodeNotes(s)
+    local n = {}
+    for _, e in ipairs(entries(s)) do
+        if e[2] == "false" then
+            n[e[1]] = false
+        else
+            local a = {}
+            for p in string.gmatch(e[2], "([^,]+)") do a[#a + 1] = p end
+            n[e[1]] = { t = tonumber(a[1]), f = tonumber(a[2]), x = tonumber(a[3]), y = tonumber(a[4]),
+                r = a[5] == "true", c = tonumber(a[6]), rad = tonumber(a[7]) }
+        end
+    end
+    return n
+end
+
+RT.fireBeforeSave = { name = "rtfs_before_save", timeout = 120000, fn = function(ctx, ticks)
+    local F = RT.F
+    if not ctx.h0 and not ctx.t0 and RT.skip("rtfs_before_save") then return true end
+    if not ctx.h0 then
+        if not F.home then
+            RT.abort = "no machine tile beside a fireplace"
+            return true
+        end
+        if F.placeAndLoad(ctx, ticks) then F.startAccounting(ctx, hours()) end
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    RT.speed(RT.waitSpeed)
+    if F.tending and hours() - ctx.h0 >= 14 then F.tending = false end
+    if hours() < ctx.next then return nil end
+    ctx.next = hours() + 1
+    local env, now = TLG.World.env(), hours()
+    readMachine(F, ctx, 1, env, now, env:dayIndex(now))
+    local h = math.floor(now)
+    local out = F.fires[1][h] == false and F.fires[1][h - 1] == false
+    if not out and now - ctx.h0 < 26 then return nil end
+    RT.speed(1)
+    F.active = false
+    local item, fp = F.items[1], F.fireplace()
+    local rec = item:getModData().tlgProc
+    local cold = 0
+    for _, v in pairs(rec.fires or {}) do
+        if v == false then cold = cold + 1 end
+    end
+    R:check("RTFS.fire_out_noted", function()
+        return out and cold >= 2, string.format("fire lit=%s with %d min; %d notes without a fire in the record",
+            tostring(fp:isLit()), fp:getFuelAmount(), cold)
+    end)
+    TLGH.writeFile(EXPECT, {
+        "rtfs.fp=" .. F.fp.x .. "," .. F.fp.y, "rtfs.home=" .. F.home.x .. "," .. F.home.y,
+        "rtfs.room=" .. tostring(F.srcInRoom), "rtfs.sprite=" .. tostring(F.fp.sprite),
+        "rtfs.perLog=" .. tostring(F.perLog), "rtfs.cap=" .. tostring(F.cap), "rtfs.h0=" .. tostring(ctx.h0),
+        "rtfs.logs=" .. tostring(F.logs), "rtfs.logs0=" .. tostring(F.logs0), "rtfs.hours=" .. tostring(now),
+        "rtfs.id=" .. tostring(rec.id), "rtfs.state=" .. tostring(rec.state), "rtfs.stage=" .. tostring(rec.stage),
+        "rtfs.stageDone=" .. tostring(rec.stageDone), "rtfs.pausedFor=" .. tostring(rec.pausedFor),
+        "rtfs.startedAt=" .. tostring(rec.startedAt), "rtfs.site=" .. tostring(rec.site.room) .. "," .. tostring(rec.site.z),
+        "rtfs.temps=" .. F.encodeTemps(rec.temps), "rtfs.fires=" .. F.encodeNotes(rec.fires),
+        "rtfs.readings=" .. F.encodeTemps(F.readings[1]), "rtfs.notes=" .. F.encodeNotes(F.fires[1]),
+        "rtfs.fuel=" .. tostring(fp:getFuelAmount()), "rtfs.lit=" .. tostring(fp:isLit()),
+    })
+    R:line("OBS  RTFS.saving at %.2f h in: %d readings and %d notes (%d without a fire) in the record; %s stage %s, %.4f stage h done",
+        now - ctx.h0, #TLG.Tables.sortedKeys(rec.temps or {}), #TLG.Tables.sortedKeys(rec.fires or {}), cold,
+        tostring(rec.state), tostring(rec.stage), RT.doneHours(item))
+    return true
+end }
+
+RT.saveAndExit = { name = "rtfs_save_and_exit", timeout = 1200, fn = function(ctx, ticks)
+    if not ctx.saved then
+        RT.speed(1)
+        R:finish(false)
+        TLGH.writeFile("TLG_harness_request.txt", { "sp-rtfb" })
+        saveGame()
+        ctx.saved = true
+        return nil
+    end
+    if ticks == 180 then
+        R:line("EXIT phase 1 -> main menu")
+        getCore():exitToMenu()
+    end
+    return nil
+end }
+
+RT.fireReload = { name = "rtfb_reload", timeout = 3000, fn = function(ctx, ticks)
+    local F = RT.F
+    if not (player() and ticks > 120) then return nil end
+    local e = TLGH.readKeyValues(EXPECT)
+    if e["rtfs.home"] == nil then
+        RT.abort = "no expectations from phase 1"
+        R:line("OBS  RTFB.%s", RT.abort)
+        return true
+    end
+    local fx, fy = string.match(e["rtfs.fp"], "^([^,]+),([^,]+)$")
+    local hx, hy = string.match(e["rtfs.home"], "^([^,]+),([^,]+)$")
+    F.fp = { x = tonumber(fx), y = tonumber(fy), kind = "fireplace", sprite = e["rtfs.sprite"] }
+    F.home = { x = tonumber(hx), y = tonumber(hy) }
+    F.srcInRoom, F.perLog, F.cap = e["rtfs.room"] == "true", tonumber(e["rtfs.perLog"]), tonumber(e["rtfs.cap"])
+    F.h0, F.logs, F.logs0 = tonumber(e["rtfs.h0"]), tonumber(e["rtfs.logs"]), tonumber(e["rtfs.logs0"])
+    F.readings, F.fires = { F.decodeTemps(e["rtfs.readings"]) }, { F.decodeNotes(e["rtfs.notes"]) }
+    F.unloaded, F.logDays = {}, {}
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    pcall(function() p:setUnlimitedCarry(true) end)
+    captureDialogs(true)
+    give("Base.Log", 30)
+    p:setPosition(F.home.x + 0.5, F.home.y + 0.5, 0)
+    local item = fermenterOn(F.home.x, F.home.y)
+    F.items = { item }
+    local rec = item and item:getModData().tlgProc
+    R:line("OBS  RTFB.continued at world hour %.4f (saved at %s); machine found=%s", hours(), tostring(e["rtfs.hours"]),
+        tostring(rec ~= nil))
+    R:check("RTFB.machine_found", function() return rec ~= nil, tostring(item) end)
+    if rec == nil then
+        RT.abort = "machine not found after the reload"
+        return true
+    end
+    -- The saved hours, read back from the record before any access.
+    local temps, notes, cold = {}, {}, 0
+    for k in pairs(F.decodeTemps(e["rtfs.temps"])) do temps[k] = rec.temps and rec.temps[k] end
+    for k, v in pairs(F.decodeNotes(e["rtfs.fires"])) do
+        if rec.fires then notes[k] = rec.fires[k] end
+        if v == false then cold = cold + 1 end
+    end
+    R:check("RTFB.readings_survive", function()
+        local got = F.encodeTemps(temps)
+        return got == e["rtfs.temps"] and got ~= "", string.format("%d hours", #TLG.Tables.sortedKeys(temps))
+    end)
+    R:check("RTFB.notes_survive", function()
+        local got = F.encodeNotes(notes)
+        return got == e["rtfs.fires"] and cold >= 2,
+            string.format("%d hours, %d of them without a fire%s", #TLG.Tables.sortedKeys(notes), cold,
+                got == e["rtfs.fires"] and "" or (": got " .. got))
+    end)
+    R:check("RTFB.batch_survives", function()
+        local same = tostring(rec.id) == e["rtfs.id"] and tostring(rec.state) == e["rtfs.state"]
+            and tostring(rec.stage) == e["rtfs.stage"] and tostring(rec.stageDone) == e["rtfs.stageDone"]
+            and tostring(rec.pausedFor) == e["rtfs.pausedFor"] and tostring(rec.startedAt) == e["rtfs.startedAt"]
+            and (tostring(rec.site and rec.site.room) .. "," .. tostring(rec.site and rec.site.z)) == e["rtfs.site"]
+        return same, string.format("%s stage %s, %s stage h, paused %s h, started %s, site %s,%s", tostring(rec.state),
+            tostring(rec.stage), tostring(rec.stageDone), tostring(rec.pausedFor), tostring(rec.startedAt),
+            tostring(rec.site and rec.site.room), tostring(rec.site and rec.site.z))
+    end)
+    R:check("RTFB.hourly_list_survives", function()
+        local s = (TLG.World.get().machineSites or {})[rec.id]
+        return s ~= nil and s.x == F.home.x and s.y == F.home.y and s.z == 0, brief(s)
+    end)
+    local fp = F.fireplace()
+    R:check("RTFB.fire_as_left", function()
+        return fp ~= nil and tostring(fp:getFuelAmount()) == e["rtfs.fuel"] and tostring(fp:isLit()) == e["rtfs.lit"],
+            string.format("lit=%s with %s min (left lit=%s with %s)", tostring(fp and fp:isLit()),
+                tostring(fp and fp:getFuelAmount()), e["rtfs.lit"], e["rtfs.fuel"])
+    end)
+    if fp then F.tend(fp) end
+    R:line("OBS  RTFB.fire lit again=%s with %s min", tostring(fp and fp:isLit()), tostring(fp and fp:getFuelAmount()))
+    F.resumed = true
+    return true
+end }
+
+RT.fireSaveSteps = { RT.waitWorld, RT.setup, RT.fireFind, RT.fireLight, RT.fireBeforeSave, RT.saveAndExit }
+RT.fireReloadSteps = { RT.fireReload, RT.fireFerment, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -3722,7 +3963,7 @@ Events.OnMainMenuEnter.Add(function()
         " forceLaunch=" .. tostring(getDebugOptions():getBoolean("DebugScenario.ForceLaunch")))
 end)
 
-if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" then
+if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -3739,7 +3980,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             SandboxVars.Zombies = 6
             SandboxVars.FuelStationGasEmptyChance = 0
             SandboxVars.FuelStationGasInfinite = false
-            if REQUEST == "sp-rtw" or REQUEST == "sp-rtf" then
+            if REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs" then
                 -- Mid-January, as vanilla scenarios set the date
                 -- (SRC DebugUIs/Scenarios/AiteronScenario.lua:16-18).
                 SandboxVars.StartMonth = 1
@@ -3764,6 +4005,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtf" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, fireplace")
                 TLGH.Steps.run(R, RT.fireplaceSteps, H, nil)
+            elseif REQUEST == "sp-rtfs" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, fireplace, before the save")
+                TLGH.Steps.run(R, RT.fireSaveSteps, H, nil)
             else
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
                 TLGH.Steps.run(R, stepsA, H, nil)
@@ -3774,7 +4018,7 @@ else
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", false)
 end
 
-if REQUEST == "sp-b" then
+if REQUEST == "sp-b" or REQUEST == "sp-rtfb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -3783,7 +4027,12 @@ if REQUEST == "sp-b" then
         MainScreen.continueLatestSave(MainScreen.latestSaveGameMode, MainScreen.latestSaveWorld)
     end)
     Events.OnGameStart.Add(function()
-        R = TLGH.Report.new(RESULTS, "TLG single-player harness phase B", true)
-        TLGH.Steps.run(R, stepsB, H, nil)
+        if REQUEST == "sp-rtfb" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, fireplace, after the reload", true)
+            TLGH.Steps.run(R, RT.fireReloadSteps, H, nil)
+        else
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness phase B", true)
+            TLGH.Steps.run(R, stepsB, H, nil)
+        end
     end)
 end

@@ -629,4 +629,36 @@ notes know, so nothing was credited: the day temperatures matched the
 harness's without notes. The outcomes were as in run 22 (outdoors and the
 room spoiled at 72.00 paused hours; the warmed batch finished, its 6.26
 paused hours all on the day of the trip; the weather differs per run).
+
+## 2026-11-01 — RT-SP client harness, launch 25 (the fireplace batch across a save)
+
+Command: `tools/run-sp-harness.ps1 -Mode fireplace-reload -TimeoutMinutes 60`
+(requests `sp-rtfs`, then `sp-rtfb`; new). Phase 1 found the same fireplace,
+checked the tiles around it, and ran the batch beside it with the fire
+tended for 14 game hours. It then left the fire to burn out with the
+character beside it until two hours of notes said no fire warmed the
+machine. It wrote the record, its own readings and notes and the fire's
+state to the expectations file, saved and exited to the menu. Phase 2
+continued the save from the main menu and, before any access, compared the
+record with the expectations. It then relit the fire and ran the batch on
+with the trip and every check of the fireplace run. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run25_fire_reload.txt`.
+
+Result: phase 1 **8 PASS / 0 FAIL**, phase 2 **20 PASS / 0 FAIL**.
+
+| Run 25 | Result |
+| --- | --- |
+| Saved | 19.04 h into the batch, the fire out with 0 min; the record held 7 readings and 9 notes, 2 of them without a fire (earlier hours pruned as designed) |
+| Continued | world hour 23.3992 (saved at 23.3762) |
+| Readings / notes after the reload | identical, both "no fire" notes kept |
+| Batch | identical: Processing, stage 2, 16.833 stage h, 0 h paused, started at 4.339, site in a room on the ground floor |
+| Hourly list entry / the fire | kept at 10679,10297 / out with 0 min, as left |
+| Trip after the reload | last note 424 min, covering 7.07 of 12.01 h; no note while away; work over the trip = rule with the credit, 7.5415 h |
+| Notes / readings / day temperature / hourly work after the reload | 84 h noted, 0 off / 83 h exact / 83 reads exact / 78 h exact |
+| Batch | finished after 114.2 game h, 6.37 h paused, 18 logs |
+
+The first status after the reload read "Temperature here today: 58.5 °F,
+in a room": that day's mean still held the hours the fire was out before
+the save. It ended the day at 19.6 °C, and every reported day temperature
+matched the harness's.
 Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run24_sites.txt`.

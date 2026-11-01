@@ -341,4 +341,6 @@ listed with their replacement.
   after 109.2 game hours (run 21, without the credit and in a colder
   January: 114.3). A barbecue as the noted fire is covered by unit tests
   only. A `false` note survives a save: item mod data saves boolean values
-  (BC `KahluaTableImpl.save`).
+  (BC `KahluaTableImpl.save`), and in run 25 a record saved with two "no
+  fire" notes came back from save, exit and continue unchanged; the credit
+  then worked as before (a 424 minute note covered 7.07 hours of a trip).
