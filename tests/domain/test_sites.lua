@@ -190,3 +190,32 @@ T.case("fires: the credit can carry a January batch at full rate through an abse
     local cold = Process.advance(batch({ room = true, z = 0 }, temps), 24, e)
     T.near(cold.stageDone, 23 * 0.4, 1e-9, "without the note the day mean is 14.9 C")
 end)
+
+T.case("fires: a campfire's radius follows its fuel, truncated, up to 10 tiles outdoors and 18 inside", function()
+    T.eq(Climate.campfireRadius(361.5, 10), 10); T.eq(Climate.campfireRadius(360, 10), 10)
+    T.eq(Climate.campfireRadius(359, 10), 9, "9.97 truncated")
+    T.eq(Climate.campfireRadius(199, 10), 5, "RT-SP run 34: 5 at 199 minutes")
+    T.eq(Climate.campfireRadius(108, 10), 3); T.eq(Climate.campfireRadius(107, 10), 2)
+    T.eq(Climate.campfireRadius(100, 10), 2, "run 34: 2 at 100 minutes"); T.eq(Climate.campfireRadius(30, 10), 2)
+    T.eq(Climate.campfireRadius(0, 10), 2); T.eq(Climate.campfireRadius(-4, 10), 2)
+    T.eq(Climate.campfireRadius(480, 18), 18); T.eq(Climate.campfireRadius(200, 18), 10)
+    T.eq(Climate.campfireRadius(200), 5, "outdoors unless told otherwise")
+    local camp = { t = 0, f = 199, x = -1, y = 0, r = false, c = 35, k = "campfire", rmax = 10 }
+    T.eq(Climate.noteRadius(camp, 199), 5)
+    camp.rmax = 18
+    T.eq(Climate.noteRadius(camp, 199), 9, "inside: 18 x 199 / 360 = 9.95")
+end)
+
+T.case("fires: a campfire's credit shrinks with its fuel, hour by hour", function()
+    local e = env(coldLog(-3, 7.7))
+    local temps = {}
+    for s = 0, 9 do temps[s] = 18 end
+    -- Outdoors, the base is the day's -3 C. Noted at 10.0 with 300 minutes:
+    -- warm until 15.0, each hour at the radius of the fuel left at its start
+    -- (300, 240, 180, 120 and 60 minutes: 8, 6, 5, 3 and 2 tiles).
+    local note = { t = 10, f = 300, x = -1, y = 0, r = false, c = 35, k = "campfire", rmax = 10 }
+    local site = { room = false, z = 0, temps = temps, fires = { [10] = note } }
+    local function w(radius) return Climate.warmed(-3, -1, 0, radius, false, 35) end
+    T.near(e:siteDayMean(0, site, 24), (10 * 18 + w(8) + w(6) + w(5) + w(3) + w(2) + 9 * -3) / 24, 1e-9)
+    T.ok(w(2) < w(8), "a low fire warms the tile beside it less")
+end)

@@ -70,6 +70,21 @@ local function fireOn(sq, class, lit, fuel)
     return o
 end
 
+-- A campfire a player built (SCampfireSystem): the object named "Campfire"
+-- holding its fuel in mod data, and the permanent IsoFire it keeps lit,
+-- whose light radius is its heat radius.
+local function campfireOn(sq, fuel, exterior, radius)
+    local camp, md = { class = "IsoObject" }, { fuelAmt = fuel, isLit = true, exterior = exterior }
+    function camp:getName() return "Campfire" end
+    function camp:getModData() return md end
+    local flame = { class = "IsoFire", radius = radius }
+    function flame:isPermanent() return true end
+    function flame:getLightRadius() return self.radius end
+    sq.fires[#sq.fires + 1] = camp
+    sq.fires[#sq.fires + 1] = flame
+    return md
+end
+
 local function machine(sq, rec)
     local item, wi, md = {}, {}, { tlgProc = rec }
     function wi:getSquare() return item.on end
@@ -262,6 +277,39 @@ T.case("integration: every ten minutes the fire warming a machine is noted with 
         out.state = "Ready"
         Machines.trimTemps(out, env)
         T.ok(out.fires == nil and out.temps == nil)
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: a campfire a player built is noted with its fuel and largest radius", function()
+    local g = fakeGame(2)
+    local ok, err = pcall(function()
+        local Climate = TLG.Domain.Climate
+        local sq = square(g, 10, 10, 0, false, -3)
+        local item = machine(sq, running("P5", 2))
+        Machines.index(item, Machines.read(item, false))
+        -- Nine tiles away, past a fireplace's reach, with 397 minutes of fuel
+        -- (radius 10; RT-SP run 34's last note before its trip).
+        local cs = square(g, 19, 10, 0, false, 0)
+        local md = campfireOn(cs, 397, true, 10)
+        sq.air = Climate.warmed(-3, 9, 0, 10, false, 35)
+        g.now = 10.5
+        Machines.observeFires()
+        local note = item:getModData().tlgProc.fires[10]
+        T.eq(note.k, "campfire"); T.eq(note.rmax, 10); T.eq(note.f, 397); T.eq(note.c, 35)
+        T.eq(note.x, 9); T.eq(note.y, 0); T.eq(note.r, false)
+        T.ok(note.rad == nil, "its radius follows its fuel"); T.near(note.t, 10.5, 1e-12)
+        -- Built inside: up to 18 tiles.
+        md.exterior = false
+        g.now = 11.0
+        Machines.observeFires()
+        T.eq(item:getModData().tlgProc.fires[11].rmax, 18)
+        -- The flame without its campfire (another open fire): no fuel to count.
+        table.remove(cs.fires, 1)
+        g.now = 12.0
+        Machines.observeFires()
+        T.eq(item:getModData().tlgProc.fires[12], false)
     end)
     g.restore()
     if not ok then error(err, 0) end

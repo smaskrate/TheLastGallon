@@ -140,14 +140,54 @@ function M.unwarmedAt(sq)
     return Climate.roomAir(t, sq:getZ() >= 1, dl, power)
 end
 
+-- The campfire a player builds, on its square (SCampfireSystem, SRC 42.21):
+-- the object named "Campfire", whose mod data holds the campfire's fuel in
+-- minutes, whether it burns and whether it stands outside, copied there at
+-- every change (SCampfireGlobalObject:saveData).
+function M.campfireData(s)
+    local objs = s:getObjects()
+    for i = 0, objs:size() - 1 do
+        local o = objs:get(i)
+        local ok, name = pcall(function() return o:getName() end)
+        if ok and name == "Campfire" then return o:getModData() end
+    end
+    return nil
+end
+
+-- What object o on square s warms with, when it is a lit fire with fuel:
+-- heat c, fuel f in minutes, radius now, and a barbecue's fixed radius
+-- (rad) or a campfire's kind and largest radius (k, rmax). A campfire heats
+-- through the permanent IsoFire it keeps lit (BC IsoFire.update: 35 C, its
+-- light radius); other open fires have no fuel to count.
+function M.fireOf(o, s)
+    if instanceof(o, "IsoFireplace") then
+        local fuel = o:isLit() and o:getFuelAmount() or 0
+        if fuel > 0 then return { c = Climate.FIREPLACE_C, f = fuel, radius = Climate.fireRadius(fuel) } end
+    elseif instanceof(o, "IsoBarbecue") then
+        local fuel = o:isLit() and o:getFuelAmount() or 0
+        if fuel > 0 then
+            return { c = Climate.BARBECUE_C, f = fuel, radius = Climate.BARBECUE_RADIUS, rad = Climate.BARBECUE_RADIUS }
+        end
+    elseif instanceof(o, "IsoFire") and o:isPermanent() then
+        local md = M.campfireData(s)
+        if md and md.isLit == true and type(md.fuelAmt) == "number" and md.fuelAmt > 0 then
+            return { c = Climate.CAMPFIRE_C, f = md.fuelAmt, radius = o:getLightRadius(), k = "campfire",
+                rmax = md.exterior == false and Climate.CAMPFIRE_RADIUS_INSIDE or Climate.CAMPFIRE_RADIUS }
+        end
+    end
+    return nil
+end
+
 -- The fire that gives a machine's tile its air now, as a note for the record
 -- ({ t = now, f = fuel minutes, x, y = its offset, r = its tile in a room,
--- c = its heat, rad = a fixed radius }), or nil. A lit fireplace (any
--- IsoFireplace: fireplace, wood stove, campfire, brazier, barrel oven) or
--- barbecue (IsoBarbecue) on the same floor within reach whose heat at the
--- tile by the game's formula is the air read there, so nothing blocks it;
--- the one with most fuel if several match. Their fuel is minutes burned one
--- per game minute, also while the area is not loaded (BC update).
+-- c = its heat, rad = a fixed radius, or k = "campfire" and rmax = its
+-- largest radius }), or nil. A lit fireplace (any IsoFireplace: fireplace,
+-- wood stove, the map's campfire tiles, brazier, barrel oven), barbecue
+-- (IsoBarbecue) or campfire a player built (M.fireOf) on the same floor
+-- within reach whose heat at the tile by the game's formula is the air read
+-- there, so nothing blocks it; the one with most fuel if several match.
+-- Their fuel is minutes burned one per game minute, also while the area is
+-- not loaded (BC update; a campfire's one per minute event, RT-SP run 34).
 function M.warmingFire(sq, air, now)
     if air == nil then return nil end
     local t0 = M.unwarmedAt(sq)
@@ -159,19 +199,14 @@ function M.warmingFire(sq, air, now)
             local s = dx * dx + dy * dy < reach * reach and cell:getGridSquare(x + dx, y + dy, z) or nil
             local objs = s and s:getObjects()
             for i = 0, (objs and objs:size() or 0) - 1 do
-                local o = objs:get(i)
-                local c, rad
-                if instanceof(o, "IsoFireplace") then
-                    c = Climate.FIREPLACE_C
-                elseif instanceof(o, "IsoBarbecue") then
-                    c, rad = Climate.BARBECUE_C, Climate.BARBECUE_RADIUS
-                end
-                if c and o:isLit() and o:getFuelAmount() > 0 then
-                    local fuel, srcRoom = o:getFuelAmount(), false
+                local fire = M.fireOf(objs:get(i), s)
+                if fire then
+                    local srcRoom = false
                     pcall(function() srcRoom = s:isInARoom() == true end)
-                    local w = Climate.warmed(t0, dx, dy, rad or Climate.fireRadius(fuel), srcRoom, c)
-                    if math.abs(w - air) <= M.FIRE_TOL and (best == nil or fuel > best.f) then
-                        best = { t = now, f = fuel, x = dx, y = dy, r = srcRoom, c = c, rad = rad }
+                    local w = Climate.warmed(t0, dx, dy, fire.radius, srcRoom, fire.c)
+                    if math.abs(w - air) <= M.FIRE_TOL and (best == nil or fire.f > best.f) then
+                        best = { t = now, f = fire.f, x = dx, y = dy, r = srcRoom, c = fire.c, rad = fire.rad,
+                            k = fire.k, rmax = fire.rmax }
                     end
                 end
             end

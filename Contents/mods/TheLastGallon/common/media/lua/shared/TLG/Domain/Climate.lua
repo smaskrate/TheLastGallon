@@ -17,9 +17,10 @@
 -- hourly reading where one was taken there (rooms, grid power, fires) and the
 -- day's unheated value for its site elsewhere. A fire burns its fuel while
 -- its area is not loaded (BC IsoFireplace/IsoBarbecue.update use up the
--- minutes since their saved lastUpdateTime on reload), so unread hours after
--- a note of the fire warming the machine keep that warmth while its fuel
--- lasts (D-022).
+-- minutes since their saved lastUpdateTime on reload; SCampfireSystem takes
+-- a minute off every lit campfire per minute event, loaded or not), so
+-- unread hours after a note of the fire warming the machine keep that
+-- warmth while its fuel lasts (D-022).
 require "TLG/Util/Num"
 require "TLG/Util/Tables"
 
@@ -42,11 +43,18 @@ Climate.ROOM_TARGET = 22
 -- Lagged daylight (0..1) assumed for days recorded without room means.
 Climate.ROOM_DAYLIGHT = 0.5
 -- Fires (BC 42.21): a fireplace's heat source is 35 C with a radius that
--- grows with its fuel up to 8 tiles; a barbecue's is 25 C, radius 3.
+-- grows with its fuel up to 8 tiles; a barbecue's is 25 C, radius 3. A
+-- campfire a player builds heats through the permanent IsoFire it keeps lit:
+-- 35 C, a radius that grows with its fuel up to 10 tiles outdoors and 18
+-- inside (SRC SCampfireGlobalObject:fireRadius). FIRE_REACH is the farthest
+-- any of them warms.
 Climate.FIREPLACE_C = 35
-Climate.FIRE_REACH = 8
+Climate.FIRE_REACH = 18
 Climate.BARBECUE_C = 25
 Climate.BARBECUE_RADIUS = 3
+Climate.CAMPFIRE_C = 35
+Climate.CAMPFIRE_RADIUS = 10
+Climate.CAMPFIRE_RADIUS_INSIDE = 18
 
 Climate.__index = Climate
 
@@ -152,9 +160,19 @@ function Climate.warmed(t, dx, dy, radius, srcInRoom, srcC)
     return math.max(t, t + (1 - math.sqrt(dsq) / radius) * (srcC + adj - t))
 end
 
+-- Heat radius of a campfire from its fuel in minutes
+-- (SCampfireGlobalObject:fireRadius: max(2, R x min(fuel, 360) / 360), R
+-- its largest radius, made whole by IsoFire.setLightRadius(int); truncated
+-- in RT-SP run 34, 46 of 46 readings).
+function Climate.campfireRadius(fuel, rmax)
+    return math.floor(math.max(2, (rmax or Climate.CAMPFIRE_RADIUS) * math.min(math.max(fuel, 0), 360) / 360))
+end
+
 -- A note's heat radius when the fire has `fuel` minutes left: a barbecue's
--- is fixed (note.rad), a fireplace's follows its fuel.
+-- is fixed (note.rad), a campfire's (note.k) and a fireplace's follow
+-- their fuel.
 function Climate.noteRadius(note, fuel)
+    if note.k == "campfire" then return Climate.campfireRadius(fuel, note.rmax) end
     return note.rad or Climate.fireRadius(fuel)
 end
 
