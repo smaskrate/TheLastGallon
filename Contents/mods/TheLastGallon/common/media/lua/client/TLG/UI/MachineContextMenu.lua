@@ -6,8 +6,7 @@
 -- twice, Collect ethanol, Status); Pause, Resume and Abort batch on fermenters
 -- and the drying column in run 31, where Abort discarded the batch unlisted.
 -- Abort now keeps what the batch made and lists what it throws away, and
--- Pause, Resume and Abort are offered only where they apply (not yet run in
--- game).
+-- Pause, Resume and Abort are offered only where they apply (run 33).
 require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"

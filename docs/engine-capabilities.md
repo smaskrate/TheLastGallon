@@ -579,7 +579,8 @@ fireplace, run 20 1/0 (the search found none near the start) and run 21
 25/3 and, after the fix, run 27 **34/0**, and a batch through the pot still,
 run 28 **25/0**, again with the finished machines' Status wording, run 29
 **28/0**, and Pause, Resume and Abort batch, run 30 19/5 (a harness setup
-error) and run 31 20/4. Most failures were
+error), run 31 20/4 and, after the fix, run 32 29/3 (presses the menu no
+longer offers) and run 33 **32/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -591,9 +592,9 @@ Runs 17–18 found two in the site readings: a warmed machine paused after
 midnight until the day's first reading, and the status then still showed
 the unheated value (a pruned reading). Run 26's three failures were one
 mod defect: the work around a machine pickup did not follow D-015 (fixed,
-run 27). Run 31's four are three: Abort batch discards the partial result
-unlisted (4 L of ethanol in the drying column), and a spoiled batch cannot
-be cleared from the menu.
+run 27). Run 31's four were three: Abort batch discarded the partial
+result unlisted (4 L of ethanol in the drying column), and a spoiled batch
+could not be cleared from the menu (fixed, run 33).
 
 ## Tooling pitfalls found
 

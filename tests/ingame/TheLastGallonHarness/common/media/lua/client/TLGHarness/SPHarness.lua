@@ -4974,20 +4974,21 @@ RT.potSteps = { RT.waitWorld, RT.setup, RT.potSetup, RT.potRun, RT.finish }
 ------------------------------------------------------------------------------
 -- Machine controls (request "sp-rtc"): Pause, Resume and Abort batch from
 -- the machine menu. Summer with the grid on, room tiles (RT.P.findSpots):
--- three fermenters and a drying column loaded in the same tick, every batch
--- at full rate. F1 is paused 5 h in, resumed 6 h later and read 4 h after;
--- Pause, Resume and Abort are also pressed where they do not apply. F2 is
--- aborted 5 h in and loaded again. The drying column, loaded from a can of
--- 4 L ethanol and 1 L water, is aborted 6 h in. F3 is paused 5 h in and left:
--- the player guide says a batch stopped for 3 days in all spoils; then Abort
--- and Load mash are tried on it. The RTC.design_ checks hold Abort to its
--- handler's description ("returns the partial result to the player ...
--- discarded and listed") and to Process.abort's ("an abort never loses
--- material"), and a spoiled batch to a way out from the menu. The still is
--- left out: it shares the abort handler, and the domain tests pin its
--- firebox and litres.
+-- three fermenters, a drying column and a pot still, the batches loaded in
+-- the same tick at full rate. F1 is paused 5 h in, resumed 6 h later and
+-- read 4 h after, then aborted twice; Pause, Resume and Abort are also
+-- pressed where they do not apply. F2 is aborted 5 h in, its wash taken by
+-- the pot still, and loaded again. The drying column, loaded from a can of
+-- 4 L ethanol and 1 L water, is aborted 6 h in and its ethanol collected.
+-- F3 is paused 5 h in and left until it spoils (the player guide: a batch
+-- stopped for 3 days in all spoils), then emptied with Abort and reloaded.
+-- The RTC.design_ checks hold Abort to keeping what the batch made and
+-- listing what it throws away (Process.abort), and a spoiled batch to a way
+-- out from the menu; run 31 failed them before the fix. Abort on a running
+-- still is left to the domain tests (its spirit kept, the rest of the wash
+-- listed, every litre accounted).
 ------------------------------------------------------------------------------
-RT.C = { names = { "F1", "F2", "F3", "column" }, tol = 1e-6 }
+RT.C = { names = { "F1", "F2", "F3", "column", "still" }, tol = 1e-6 }
 
 function RT.C.rec(i) return RT.C.items[i]:getModData().tlgProc or {} end
 
@@ -5000,7 +5001,7 @@ function RT.C.click(i, key, label)
     return r, text
 end
 
--- The machine menu's entries for machine i as offered now.
+-- The machine menu's entry names for machine i as offered now.
 function RT.C.offered(i)
     local context = ISContextMenu.get(0, 100, 100)
     TLG.UI.MachineMenu.fill(0, context, { RT.C.items[i] })
@@ -5012,7 +5013,25 @@ function RT.C.offered(i)
         if o then out[#out + 1] = tostring(o.name) .. (o.notAvailable and " (greyed)" or "") end
     end
     context:setVisible(false)
-    return table.concat(out, ", ")
+    return out
+end
+
+-- Which of Pause, Resume and Abort batch the menu offers machine i, as
+-- "pause,resume,abort" true/false.
+function RT.C.controls(i, label)
+    local names = RT.C.offered(i)
+    R:line("OBS  RTC.menu %s %s: %s", RT.C.names[i], label, table.concat(names, ", "))
+    local set = {}
+    for _, n in ipairs(names) do set[n] = true end
+    return string.format("%s,%s,%s", tostring(set[getText("ContextMenu_TLG_Pause")] == true),
+        tostring(set[getText("ContextMenu_TLG_Resume")] == true), tostring(set[getText("ContextMenu_TLG_Abort")] == true))
+end
+
+function RT.C.checkControls(i, label, want)
+    local got = RT.C.controls(i, label)
+    R:check("RTC.menu_" .. label .. "_" .. RT.C.names[i], function()
+        return got == want, string.format("pause,resume,abort offered %s (want %s)", got, want)
+    end)
 end
 
 function RT.C.loadMash(i)
@@ -5032,28 +5051,40 @@ function RT.C.key(p)
         tostring(p.rev))
 end
 
--- A refused press: the reply's reason and the record unchanged.
-function RT.C.refused(i, key, label, reason)
+-- A press the menu no longer offers there (run 32: "no menu entry"), sent as
+-- a menu deciding on a stale copy of the record would: refused, the record
+-- unchanged, and the menu has a sentence for the reason (run 31 showed "Not
+-- possible right now (not_processing).").
+function RT.C.refused(i, command, label, reason)
     local before = RT.C.key(RT.C.rec(i))
-    local r, text = RT.C.click(i, key, label)
+    local r = ask("RTC." .. label .. "_" .. RT.C.names[i], command, { target = TLG.Integration.Machines.refFor(RT.C.items[i]) })
     local after = RT.C.key(RT.C.rec(i))
-    R:line("OBS  RTC.%s_%s refused: reason=%s dialog=%s", label, RT.C.names[i], tostring(r.reason), tostring(text))
+    local key = "IGUI_TLG_MachineFail_" .. tostring(r.reason)
+    local text = getText(key)
     R:check("RTC." .. label .. "_refused_" .. RT.C.names[i], function()
-        return r.ok == false and r.reason == reason and before == after,
-            string.format("reason %s (want %s); record %s", tostring(r.reason), reason, before == after and "unchanged" or
-                ("changed: " .. before .. " -> " .. after))
+        return r.ok == false and r.reason == reason and before == after and text ~= key,
+            string.format("reason %s (want %s); record %s; the menu shows \"%s\"", tostring(r.reason), reason,
+                before == after and "unchanged" or ("changed: " .. before .. " -> " .. after), tostring(text))
     end)
 end
 
--- Whether a dialog names each returned component (what an abort discards).
-function RT.C.lists(text, returned)
-    for _, id in ipairs({ "ethanol", "water" }) do
-        if (returned or {})[id] and not has(text, TLG.UI.Format.componentName(id)) then return false end
+-- Whether a dialog names each component of `t` with its amount.
+function RT.C.lists(text, t)
+    if text == nil then return false end
+    for _, id in ipairs(TLG.Tables.sortedKeys(t or {})) do
+        if not has(text, TLG.UI.Format.componentName(id)) or not has(text, string.format("%.2f", t[id])) then return false end
     end
     return true
 end
 
 function RT.C.near(a, b) return type(a) == "number" and type(b) == "number" and math.abs(a - b) <= RT.C.tol end
+
+function RT.C.same(a, b)
+    for _, id in ipairs({ "ethanol", "water", "sugar_eq" }) do
+        if not RT.C.near((a or {})[id] or 0, (b or {})[id] or 0) then return false end
+    end
+    return true
+end
 
 RT.controlSetup = { name = "rtc_sites", timeout = 3000, fn = function(ctx, ticks)
     local C = RT.C
@@ -5067,7 +5098,7 @@ RT.controlSetup = { name = "rtc_sites", timeout = 3000, fn = function(ctx, ticks
             return true
         end
         C.items = {}
-        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.FermenterVessel", "TLG.FermenterVessel", "TLG.DryingColumn" }) do
+        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.FermenterVessel", "TLG.FermenterVessel", "TLG.DryingColumn", "TLG.PotStill" }) do
             local it = instanceItem(t)
             spots[i + 1]:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
             C.items[i] = it
@@ -5076,9 +5107,9 @@ RT.controlSetup = { name = "rtc_sites", timeout = 3000, fn = function(ctx, ticks
         player():setPerkLevelDebug(Perks.Cooking, 0)
         local power
         pcall(function() power = getWorld():isHydroPowerOn() end)
-        R:line("OBS  RTC.spots character %d,%d; F1 %d,%d F2 %d,%d F3 %d,%d column %d,%d; grid power=%s", spots[1]:getX(),
-            spots[1]:getY(), spots[2]:getX(), spots[2]:getY(), spots[3]:getX(), spots[3]:getY(), spots[4]:getX(), spots[4]:getY(),
-            spots[5]:getX(), spots[5]:getY(), tostring(power))
+        R:line("OBS  RTC.spots character %d,%d; F1 %d,%d F2 %d,%d F3 %d,%d column %d,%d still %d,%d; grid power=%s",
+            spots[1]:getX(), spots[1]:getY(), spots[2]:getX(), spots[2]:getY(), spots[3]:getX(), spots[3]:getY(), spots[4]:getX(),
+            spots[4]:getY(), spots[5]:getX(), spots[5]:getY(), spots[6]:getX(), spots[6]:getY(), tostring(power))
         R:check("RTC.grid_is_on", function() return power == true, "isHydroPowerOn=" .. tostring(power) end)
         ctx.t0 = ticks
         return nil
@@ -5109,7 +5140,8 @@ function RT.C.phases.load(ctx)
             tostring(d.waterL), tostring(d.limeKg), left)
     end)
     ctx.h0 = hours()
-    R:line("OBS  RTC.menu while running: %s", C.offered(1))
+    C.checkControls(1, "working", "true,false,true")
+    C.checkControls(5, "idle", "false,false,false")
     ctx.phase = "to5"
 end
 
@@ -5125,6 +5157,12 @@ end
 
 function RT.C.phases.to5(ctx) RT.C.waitUntil(ctx, ctx.h0 + 5, "at5") end
 
+-- The wash a fermenter has made `done` hours into the 6 kg batch.
+function RT.C.wash(done)
+    local frac = done / 97
+    return { ethanol = 3.3 * frac, water = 30, sugar_eq = 6 * (1 - frac) }
+end
+
 function RT.C.phases.at5(ctx)
     local C = RT.C
     -- F1: Pause, and Pause again.
@@ -5134,30 +5172,32 @@ function RT.C.phases.at5(ctx)
         return r.ok == true and r.state == "Paused" and r.pause == "paused_by_player" and has(text, getText("IGUI_TLG_Pause_paused_by_player")),
             string.format("state=%s pause=%s dialog=%s", tostring(r.state), tostring(r.pause), tostring(text))
     end)
-    local _, st = C.click(1, "ContextMenu_TLG_MachineStatus", "status")
-    R:line("OBS  RTC.status of paused F1: %s", tostring(st))
-    R:line("OBS  RTC.menu while paused: %s", C.offered(1))
-    C.refused(1, "ContextMenu_TLG_Pause", "pause_again", "not_processing")
-    -- F2: Abort 5 h in, Abort again, Load mash again.
-    local sugar = countType("Base.Sugar")
+    C.checkControls(1, "paused_by_hand", "false,true,true")
+    C.refused(1, "machine.pause", "pause_again", "not_processing")
+    -- F2: Abort 5 h in: the wash so far stays for a still.
     local a, atext = C.click(2, "ContextMenu_TLG_Abort", "abort")
-    local frac = (hours() - ctx.h0) / 97
-    local ret, p2 = a.returned or {}, C.rec(2)
-    R:line("OBS  RTC.abort_F2 reply returned=%s; dialog=%s; sugar carried %d -> %d", brief(a.returned), tostring(atext), sugar,
-        countType("Base.Sugar"))
-    R:check("RTC.abort_returns_the_partial_batch_F2", function()
-        return a.ok == true and C.near(ret.ethanol, 3.3 * frac) and C.near(ret.water, 30) and C.near(ret.sugar_eq, 6 * (1 - frac)),
-            string.format("returned %s; expected ethanol %.6f water 30 sugar %.6f (%.4f of the batch done)", brief(a.returned),
-                3.3 * frac, 6 * (1 - frac), frac)
+    local want, p2 = C.wash(hours() - ctx.h0), C.rec(2)
+    R:line("OBS  RTC.abort_F2 kept=%s discarded=%s; dialog=%s", brief(a.kept), brief(a.discarded), tostring(atext))
+    R:check("RTC.abort_keeps_the_wash_F2", function()
+        return a.ok == true and C.same(a.kept, want) and TLG.Tables.isEmpty(a.discarded or {}) and p2.state == "OutputReady"
+            and p2.stoppedEarly == true and C.same(p2.outputs, want),
+            string.format("kept %s, discarded %s; vessel %s holding %s; expected %s", brief(a.kept), brief(a.discarded),
+                tostring(p2.state), brief(p2.outputs), brief(want))
     end)
-    R:check("RTC.abort_clears_the_machine_F2", function()
-        return p2.state == "Ready" and p2.recipe == nil and TLG.Tables.isEmpty(p2.inputs or {}) and TLG.Tables.isEmpty(p2.outputs or {}),
-            string.format("state=%s inputs=%s outputs=%s", tostring(p2.state), brief(p2.inputs), brief(p2.outputs))
+    R:check("RTC.design_abort_lists_what_it_kept_F2", function()
+        return a.ok == true and has(atext, getText("IGUI_TLG_Aborted")) and has(atext,
+            getText("IGUI_TLG_MachineState_OutputReady_stopped_fermenter")) and C.lists(atext, p2.outputs)
+            and has(atext, getText("IGUI_TLG_AbortAgain")), "dialog: " .. tostring(atext)
     end)
-    R:check("RTC.design_abort_lists_what_is_lost_F2", function()
-        return a.ok == true and C.lists(atext, ret), "dialog: " .. tostring(atext)
+    C.checkControls(2, "stopped_early", "false,false,true")
+    -- The pot still takes that wash, sugar and all; the vessel is free again.
+    local w = C.click(5, "ContextMenu_TLG_LoadWash", "load_wash")
+    local s = C.rec(5)
+    R:check("RTC.still_takes_the_stopped_wash", function()
+        return w.ok == true and C.near(w.washL, want.ethanol + want.water) and C.same(s.inputs, want) and C.rec(2).state == "Ready",
+            string.format("wash %s L; still inputs %s; vessel %s", tostring(w.washL), brief(s.inputs), tostring(C.rec(2).state))
     end)
-    C.refused(2, "ContextMenu_TLG_Abort", "abort_again", "nothing_to_abort")
+    C.refused(2, "machine.abort", "abort_again", "nothing_to_abort")
     local again = C.loadMash(2)
     R:check("RTC.loads_again_after_abort_F2", function() return again.ok == true, "reason " .. tostring(again.reason) end)
     -- F3: Pause and leave it.
@@ -5173,29 +5213,32 @@ function RT.C.phases.at6(ctx)
     local C = RT.C
     local a, atext = C.click(4, "ContextMenu_TLG_Abort", "abort")
     local frac = (hours() - ctx.h0) / 12
-    local ret, p = a.returned or {}, C.rec(4)
-    local cans = ethanolCans()
-    local carried = 0
-    for _, e in pairs(cans) do carried = carried + e.litres end
-    R:line("OBS  RTC.abort_column reply returned=%s; dialog=%s; ethanol carried %.4f L", brief(a.returned), tostring(atext), carried)
+    local p = C.rec(4)
     -- Process.converters.dry at the share done.
     local dry, target = ctx.dry, TLG.Registry.need("recipe", "ethanol_dry").params
-    local water = dry.water - math.min(dry.water - dry.eth * target.targetWater, dry.lime * target.waterPerKgLime) * frac
-    R:check("RTC.abort_returns_the_partial_batch_column", function()
-        return a.ok == true and C.near(ret.ethanol, dry.eth) and C.near(ret.water, water),
-            string.format("returned %s; expected ethanol %.6f water %.6f (%.4f done)", brief(a.returned), dry.eth, water, frac)
-    end)
-    R:check("RTC.abort_clears_the_machine_column", function()
-        return p.state == "Ready" and TLG.Tables.isEmpty(p.outputs or {}), string.format("state=%s outputs=%s", tostring(p.state),
-            brief(p.outputs))
+    local removed = math.min(dry.water - dry.eth * target.targetWater, dry.lime * target.waterPerKgLime) * frac
+    local water = dry.water - removed
+    R:line("OBS  RTC.abort_column kept=%s discarded=%s; dialog=%s", brief(a.kept), brief(a.discarded), tostring(atext))
+    R:check("RTC.abort_keeps_the_ethanol_in_the_column", function()
+        local k = a.kept or {}
+        return a.ok == true and C.near(k.ethanol, dry.eth) and C.near(k.water, water) and p.state == "OutputReady"
+            and C.near((a.discarded or {}).spent_lime, dry.lime + removed),
+            string.format("kept %s, discarded %s; column %s; expected ethanol %.6f water %.6f (%.4f done)", brief(a.kept),
+                brief(a.discarded), tostring(p.state), dry.eth, water, frac)
     end)
     R:check("RTC.design_abort_lists_what_is_lost_column", function()
-        return a.ok == true and C.lists(atext, ret), "dialog: " .. tostring(atext)
+        return a.ok == true and C.lists(atext, p.outputs) and has(atext, getText("IGUI_TLG_MachineState_OutputReady_stopped"))
+            and C.lists(atext, a.discarded), "dialog: " .. tostring(atext)
     end)
+    giveCan("Base.JerryCan")
+    local before = ethanolCans()
+    C.click(4, "ContextMenu_TLG_CollectEthanol", "collect")
+    local can = grownCan(before)
+    local v = can and tlgView("item", can)
     R:check("RTC.design_abort_keeps_the_ethanol", function()
-        local inColumn = (p.outputs or {}).ethanol or 0
-        return a.ok == true and (carried >= dry.eth - 1e-3 or inColumn >= dry.eth - 1e-3),
-            string.format("ethanol in carried cans %.4f L, in the column %.4f L, returned %s", carried, inColumn, brief(a.returned))
+        local q = v and v.q or {}
+        return math.abs((q.ethanol or 0) - dry.eth) < 1e-3 and math.abs((q.water or 0) - water) < 1e-3 and C.rec(4).state == "Ready",
+            string.format("%s; column %s", viewText(v, "can"), tostring(C.rec(4).state))
     end)
     ctx.phase = "toResume"
 end
@@ -5216,7 +5259,7 @@ function RT.C.phases.resume(ctx)
     R:check("RTC.resume_F1", function()
         return r.ok == true and r.state == "Processing", string.format("state=%s dialog=%s", tostring(r.state), tostring(text))
     end)
-    C.refused(1, "ContextMenu_TLG_Resume", "resume_again", "not_paused")
+    C.refused(1, "machine.resume", "resume_again", "not_paused")
     ctx.phase = "toRead"
 end
 
@@ -5231,6 +5274,18 @@ function RT.C.phases.read(ctx)
         return C.near(done, want) and C.near(p.pausedFor, ctx.tResume - ctx.tPause) and p.state == "Processing",
             string.format("done %.6f h (want %.6f); paused %.6f h; state %s", done, want, p.pausedFor or -1, tostring(p.state))
     end)
+    -- F1: Abort keeps the wash; Abort again throws it away; a new mash goes in.
+    local a = C.click(1, "ContextMenu_TLG_Abort", "abort")
+    local kept = C.rec(1).outputs
+    local b, btext = C.click(1, "ContextMenu_TLG_Abort", "abort_again")
+    R:check("RTC.second_abort_throws_it_away_F1", function()
+        return a.ok == true and b.ok == true and C.rec(1).state == "Ready" and C.same(b.discarded, kept)
+            and has(btext, getText("IGUI_TLG_MachineState_Ready")) and C.lists(btext, b.discarded),
+            string.format("kept %s, then thrown away %s; vessel %s; dialog %s", brief(kept), brief(b.discarded), tostring(C.rec(1).state),
+                tostring(btext))
+    end)
+    local again = C.loadMash(1)
+    R:check("RTC.loads_again_after_throwing_away_F1", function() return again.ok == true, "reason " .. tostring(again.reason) end)
     ctx.phase = "toSpoil"
 end
 
@@ -5244,18 +5299,21 @@ function RT.C.phases.spoiled(ctx)
         return s.state == "Faulted" and s.pause == "batch_spoiled" and C.near(p.pausedFor, 72),
             string.format("state=%s pause=%s paused for %.6f h", tostring(s.state), tostring(s.pause), p.pausedFor or -1)
     end)
-    local _, st = C.click(3, "ContextMenu_TLG_MachineStatus", "status")
-    R:line("OBS  RTC.status of spoiled F3: %s", tostring(st))
-    R:line("OBS  RTC.menu while spoiled: %s", C.offered(3))
-    local a, atext = C.click(3, "ContextMenu_TLG_Abort", "abort")
-    R:line("OBS  RTC.abort_spoiled reason=%s dialog=%s", tostring(a.reason), tostring(atext))
+    C.checkControls(3, "spoiled", "false,false,true")
     local l, ltext = C.loadMash(3)
-    R:line("OBS  RTC.load_spoiled reason=%s dialog=%s", tostring(l.reason), tostring(ltext))
-    R:check("RTC.design_spoiled_batch_can_be_cleared", function()
-        local q = C.rec(3)
-        return q.state == "Ready" or q.state == "Processing", string.format("after Abort (%s) and Load mash (%s): state %s",
-            tostring(a.reason or "ok"), tostring(l.reason or "ok"), tostring(q.state))
+    R:check("RTC.spoiled_load_refused_F3", function()
+        return l.ok == false and l.reason == "batch_spoiled" and ltext == getText("IGUI_TLG_MachineFail_batch_spoiled"),
+            string.format("reason %s; dialog %s", tostring(l.reason), tostring(ltext))
     end)
+    local a, atext = C.click(3, "ContextMenu_TLG_Abort", "abort")
+    local q = C.rec(3)
+    R:check("RTC.design_spoiled_batch_can_be_cleared", function()
+        return a.ok == true and q.state == "Ready" and has(atext, getText("IGUI_TLG_AbortedSpoiled"))
+            and C.same(a.discarded, { sugar_eq = 6, water = 30 }) and C.lists(atext, a.discarded),
+            string.format("state %s; thrown away %s; dialog %s", tostring(q.state), brief(a.discarded), tostring(atext))
+    end)
+    local again = C.loadMash(3)
+    R:check("RTC.loads_again_after_spoiling_F3", function() return again.ok == true, "reason " .. tostring(again.reason) end)
     return true
 end
 

@@ -128,7 +128,9 @@ run out and fed again, the yeast starter coming with the last of the
 wash; the spirit was unfit for any engine until dried and then fit for
 flex engines, by the mod's start check, not an engine start), and Pause,
 Resume and Abort batch on fermenters and a drying column (as described
-above); a barbecue's warmth while you are away, Pause or Abort on a still,
+above; a pot still took a stopped fermenter's wash, and a spoiled
+fermenter was emptied and loaded again); a barbecue's warmth while you are
+away, Pause or Abort on a still,
 picking up a working still or drying column, a fire or barbecue beside a
 machine, upper floors and stopped days adding up across separate cold
 spells are untested in game.)*

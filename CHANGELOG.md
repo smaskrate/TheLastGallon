@@ -69,6 +69,7 @@
   spoiled batch can now be emptied with Abort batch (the fermenter used to
   stay spoiled for good), Pause, Resume and Abort batch are offered only
   where they apply, and refusals read as sentences instead of codes.
+  Checked in game, a pot still taking a stopped fermenter's wash included.
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record

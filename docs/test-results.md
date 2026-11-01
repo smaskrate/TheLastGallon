@@ -840,4 +840,39 @@ checks: three defects.
 | **FAIL** clearing the spoiled batch | Abort refused (nothing_to_abort), Load mash refused (busy): the fermenter stays spoiled; nothing in the menu reaches `Process.repair` |
 
 Not run: Abort on a still (shared handler; the domain pins its firebox and
-litres), Pause on a still, the Italian text.
+litres), Pause on a still, the Italian text. (Fixed: runs 32–33.)
+
+## 2026-11-01 — RT-SP client harness, launches 32–33 (Abort after the fix)
+
+Command: `tools/run-sp-harness.ps1 -Mode controls -TimeoutMinutes 30`, with
+the fix of commit `3db39b7`: an aborted batch keeps what it made in the
+machine and lists what it throws away, a second Abort or a spoiled batch
+is emptied, refusals read as sentences, and the menu offers Pause, Resume
+and Abort only where they apply. The mode now expects that and adds a pot
+still beside the fermenters to take a stopped wash; F1 is aborted twice at
+the end and F3 is emptied and reloaded after it spoils. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run33_controls_fix.txt`.
+
+Run 32 (29 PASS / 3 FAIL) still pressed Pause, Resume and Abort from the
+menu where they no longer appear, and found no entry; the menu was doing
+its job. Run 33 sends those presses as a menu deciding on a stale copy of
+the record would. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run32_controls_fix.txt`.
+
+Result, run 33: **32 PASS / 0 FAIL**, the four design checks run 31 failed
+among them.
+
+| Run 33 | Result |
+| --- | --- |
+| The menu | working: Pause and Abort batch; paused by hand: Resume and Abort batch; stopped early or spoiled: Abort batch only; an idle still: none |
+| Pause and Resume (F1) | 5.004412 h held through 6.002127 h paused; 9.004629 h after 4 h more, exact |
+| Presses that do not apply | refused, the record unchanged: "It is not working on a batch right now.", "It is not paused.", "There is no batch to stop." |
+| Abort F2, 5 h in | kept 0.170 L ethanol, 30 L water and 5.690 kg sugar as wash; "Batch stopped.", "Stopped early: the wash so far is ready for a still", the amounts, "Abort batch again to throw it away." |
+| The pot still | took that wash, sugar and all (30.17 L); the vessel empty and loaded again |
+| Abort the drying column, 6 h in | kept 3.999836 L ethanol and 0.509576 L water (the dry converter at 0.50 done), threw away 4.49 kg of spent lime and said so; collected into a can: 3.9998 L ethanol, 0.5096 L water |
+| Abort F1 twice | the wash kept, then thrown away and listed ("Ethanol 0.31, Sugar 5.44, Water 30.00"); a new mash went in |
+| F3 left paused | spoiled at 72.000000 paused hours; Load mash refused with "The batch in it has spoiled: use Abort batch to empty it."; Abort: "The spoiled batch was thrown away.", sugar 6 kg and water 30 L listed; a new mash went in |
+
+Not run: Pause or Abort on a running still (the domain tests keep its
+spirit, list the rest of the wash and account for every litre), the
+Italian text.
