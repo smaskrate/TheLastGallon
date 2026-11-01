@@ -1352,3 +1352,23 @@ move hooks installed" and no TLG or Lua error.
 | Pot still paused 3.000252 h while heating up | as in run 49: finished at its stage hours plus exactly the pause, 10.611111 kg of wood left, the defined spirit |
 | Fermenter F2 aborted 5 h in | kept 0.137513 L of ethanol (4 of its 96 fermenting hours), 5.749976 kg of sugar and 30 L of water, the preparing hour making none; the pot still took that wash |
 | The rest of run 33's checks | all passed again: Pause, Resume and Abort on F1, the drying column's ethanol kept and collected, the spoiled F3 emptied and loaded again |
+
+## 2026-11-01 — RT-SP client harness, launch 52 (the zip with the Abort fix installed clean)
+
+Command: `tools/rehearse-install.ps1 -NoBuild`, on the zip in `dist/`. That
+is the package of commit `8b2435c`: 82 files, SHA-256 `75873ed3…`, 203,579
+bytes, with the carried-machine and Abort fixes. It differs from run 47's
+zip (`b608f4c5…`) in four files: `Process.lua`, `Production.lua`, the
+player guide and the changelog. The zip matched its manifest (82 files),
+was installed into a fresh isolated cache and ran the full harness.
+Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run52_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42 and
+47.
+* The workbench was dark (light 0.15 at 10.59 game time); with the torch
+  in hand all four machines were crafted from the menu.
+* After the save and continue, every record came back.
+* The console showed "machine move hooks installed" on both loads and no
+  TLG error or warning. Its four Lua error dumps are the harness's own
+  deliberate deep recursion (`LuaProbe.lua`); no stack frame names the
+  mod.
