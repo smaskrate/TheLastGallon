@@ -6331,7 +6331,9 @@ end
 -- A petrol can's first recording: a litre poured into an empty can, with
 -- the moment and the expected condition.
 function RT.X.pourFirst(item)
-    local fc = item:getFluidContainer()
+    -- A can on the ground keeps its fluid on the world object (run 39:
+    -- getFluidContainer() was nil there; the mod reads it the same way).
+    local fc = item:getFluidContainerFromSelfOrWorldItem()
     local comp = TLG.Integration.Native.readComposition(fc)
     local spec = { storage = TLG.ContainerProfiles.forItem(item), cap = fc:getCapacity(), q = comp }
     local into = player():getInventory():AddItem("Base.PetrolCan")

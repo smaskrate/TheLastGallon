@@ -1,0 +1,39 @@
+# TLG single-player harness, an existing save's first load with the mod
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=13283828352365113777 hours=242.0368 DayLength=4
+STEP rtx_setup begin
+STEP rtx_load begin
+PASS RTX.same_world_continued :: world 13283828352365113777 (launch 1: 13283828352365113777), world hour 242.0392 (saved at 242.013535 after 10 days on the clock)
+PASS RTX.record_created_as_existing_save :: v=1 createdAsNewGame=false policy=transition transitionHours=720 installedAt=242.02720642089844 (the game started at 242.0272) seed=686246151 epoch=0 modVersion=0.1.0-dev nextId=1
+OBS  RTX.sandbox SandboxVars.TheLastGallon as this save has it: {CampaignSpeed=1,ExistingSavePolicy=1,ProtectIncompatiblePours=true,StationContamination=true,TransitionDays=30,VehicleStalls=true}
+STEP rtx_look begin
+PASS RTX.carried_can_untracked_before :: record nil
+OBS  RTX.look menu "Look and smell" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTX.what_i_know menu "What I know about it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  RTX.look Look and smell: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.5, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough) | What I know about it: Fuel inspection <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel. | observations filed under S686246151-1
+PASS RTX.look_and_smell_answers :: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.5, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough)
+FAIL RTX.what_i_know_after_a_look :: the can's record nil; its observation not found: the can carries no id
+STEP rtx_discover begin
+PASS RTX.found_at_installation_is_fresh :: recorded at world hour 242.0394, 0.01 h after installation: condition 0.000008131, the rule 0.000008131 (aged since installation 0.000005983, world-age condition 0.127029231, share 0.0000); record S686246151-2|0.000008131|9.0000
+OBS  RTX.pump_to_can transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTX.pump_found_at_installation_is_fresh :: pump 10654,10630 (8478 units) untouched before=true; transfer ok=true; recorded at world hour 242.0399, 0.01 h after installation: condition 0.000013343, the rule 0.000013343 (aged since installation 0.000003464, world-age condition 0.560278358, share 0.0000); record R686246151-4|0.000013343|8476.0000; water 4.8493 L, sediment 6.6450 L
+STEP rtx_wait begin
+STEP rtx_late begin
+PASS RTX.ground_can_untracked_until_found :: record nil
+STEPERR rtx_late :: attempted index: createFluidSample of non-table: null java.lang.RuntimeException
+STEP rtx_save_and_exit begin
+SUMMARY pass=7 fail=1
+EXIT phase B -> main menu
+# TLG single-player harness, the existing save continued again
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rtx_reload begin
+PASS RTX.record_kept_after_reload :: seed 686246151 (686246151), installedAt 242.027206 (242.027206), policy transition (transition), epoch 0 (0), createdAsNewGame=false
+PASS RTX.carried_can_record_kept :: S686246151-2|0.000008131|9.0000 (before the save S686246151-2|0.000008131|9.0000)
+PASS RTX.ground_can_record_kept :: none (before the save none)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 386.07
+SUMMARY pass=3 fail=0
+DONE
