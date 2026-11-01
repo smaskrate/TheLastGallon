@@ -369,3 +369,29 @@ listed with their replacement.
   (BC `KahluaTableImpl.save`), and in run 25 a record saved with two "no
   fire" notes came back from save, exit and continue unchanged; the credit
   then worked as before (a 424 minute note covered 7.07 hours of a trip).
+
+## D-023 Abort batch keeps what the batch made
+* Decision: aborting a running or paused batch keeps what it made so far in
+  the machine as output to collect, marked stopped early: a fermenter's
+  wash, weaker and with its unfermented sugar, for a still; a still's
+  spirit; a drying column's ethanol, partly dried. What cannot be kept is
+  thrown away and listed: a still's undistilled wash (its converter
+  reports it as `rest`) and every byproduct (stillage, spent lime). Kept
+  plus thrown away account for the whole batch. A second Abort throws the
+  kept output away; Abort also empties a spoiled batch. A finished batch's
+  output is collected, not aborted. The menu offers Pause while a batch
+  works, Resume while it is paused by hand, and Abort while a batch runs,
+  was stopped early or has spoiled, judged on the record brought to now.
+* Reason: until run 31 the handler only reported the partial result, so
+  an abort lost the whole batch without a word (4 L of ethanol from a
+  drying column in that run), and a spoiled fermenter could be neither
+  aborted nor loaded again: a dead machine, while the winter design makes
+  spoiling routine (runs 16-19 each spoiled one).
+* Consequences: a misclicked Abort keeps the output; losing it takes a
+  second Abort. A fermenter stopped early holds its wash until a still
+  takes it or a second Abort throws it away. An aborted batch hands out no
+  starter culture, and not the last finished batch's either (the record's
+  byproducts are cleared). Verified RT-SP run 33 (32/0): a pot still took
+  a stopped wash, a drying column's ethanol was collected after an abort,
+  a spoiled fermenter was emptied and loaded again. Pause or Abort on a
+  running still is covered by the domain tests only.
