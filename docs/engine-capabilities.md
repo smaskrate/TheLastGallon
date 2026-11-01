@@ -319,6 +319,14 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `item:getFluidContainer()` is nil there and
   `getFluidContainerFromSelfOrWorldItem()` returns it (run 39), as the
   container adapter reads it.
+* A transition baseline takes the world-age supply's quantities, which can
+  include water breathed in over the world's age that the native fluid
+  does not hold. Run 41's look recorded 9.999969 L petrol and 0.0000307 L
+  water for a can holding 10 L of petrol; run 40's pour-written records
+  had the same shape. By the code, a difference under
+  `C.FLOAT_TOLERANCE` (1e-4 L) is adopted from the native composition at
+  the next read; larger ones (older worlds, bigger containers) go through
+  reconciliation. Not observed beyond that.
 * NOT RUN: chunk unload/reload, MP reconnect.
 
 ## Production machines and conversions (RT-SP runs 7–8)
