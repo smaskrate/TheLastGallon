@@ -1233,3 +1233,23 @@ sent for a carried still was taken, and once the still went back down on
 its own tile the batch counted 4 h of work for 2 h placed. Two of the
 three cases fail against the old handler (the third, a placed still
 taking the same commands, is the control); all three pass with the fix.
+
+## 2026-11-01 — RT-SP client harness, launch 47 (the rebuilt zip installed clean)
+
+Command: `tools/rehearse-install.ps1 -NoBuild`, on the zip in `dist/`. That
+is the package of commit `21ef95c`: 82 files, SHA-256 `b608f4c5…`, 203,050
+bytes. It has the fix that has a carried machine answer Status only. It
+differs from run 42's zip (`d1a6f5e1…`) in three files:
+`MachineHandlers.lua`, the player guide and the changelog. The zip matched
+its manifest (82 files), was installed into a fresh isolated cache and ran
+the full harness. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run47_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38 and 42.
+* The workbench was dark again (light 0.15 at 10.59 game time); with the
+  torch in hand all four machines were crafted from the menu.
+* After the save and continue, every record came back.
+* The console showed "machine move hooks installed" on both loads and no
+  TLG error or warning. Its four Lua error dumps are the dev harness's own
+  runtime probe, a deliberate deep recursion (`LuaProbe.lua`); no stack
+  frame names the mod.
