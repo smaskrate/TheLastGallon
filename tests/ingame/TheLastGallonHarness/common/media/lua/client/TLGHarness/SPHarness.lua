@@ -1427,6 +1427,11 @@ add({ name = "loop_craft", timeout = 8000, fn = function(ctx, ticks)
     ctx.i = ctx.i + 1
     local c = CRAFTS[ctx.i]
     if c == nil then
+        if ctx.torch then
+            player():setSecondaryHandItem(nil)
+            removeAll("Base.HandTorch")
+            ctx.torch = nil
+        end
         for _, it in ipairs(ctx.stash) do giveBack(it) end
         -- Later steps need the machines even when a craft failed.
         for _, t in ipairs({ "TLG.FermenterVessel", "TLG.RefluxStill", "TLG.DryingColumn" }) do
@@ -1455,6 +1460,20 @@ add({ name = "loop_craft", timeout = 8000, fn = function(ctx, ticks)
     ctx.base = {}
     for _, m in ipairs(c.mats) do ctx.base[m[1]] = countType(m[1]) end
     for _, m in ipairs(c.mats) do give(m[1], m[2]) end
+    -- Crafting needs light unless a recipe says otherwise (BC
+    -- CraftRecipeData.consumeInputsInternal: CraftRecipe.canBeDoneInDark and
+    -- IsoPlayer.tooDarkToRead, a light level under 0.43 on the character's
+    -- square with no lit light in hand or on the belt). In the dark a player
+    -- switches a torch on; so does the harness, and says so (runs 36-37:
+    -- every craft refused at the workbench run 12 used).
+    if player():tooDarkToRead() and not ctx.torch then
+        local here = player():getSquare()
+        ctx.torch = player():getInventory():AddItem("Base.HandTorch")
+        ctx.torch:setActivated(true)
+        player():setSecondaryHandItem(ctx.torch)
+        R:line("OBS  LOOP.craft too dark to craft (light %.2f at %.2f o'clock): a torch switched on in hand, dark now=%s",
+            here and here:getLightLevel(0) or -1, getGameTime():getTimeOfDay(), tostring(player():tooDarkToRead()))
+    end
     local via = player():getInventory():getFirstTypeRecurse(c.via)
     ctx.inList, ctx.before, ctx.floorBefore = ctx.listed[c.recipe] ~= nil, countType(c.out), floorCount(c.out, 2)
     ctx.offered = recipe ~= nil and via ~= nil and offeredFor(via, recipe)
@@ -1484,9 +1503,9 @@ add({ name = "loop_craft", timeout = 8000, fn = function(ctx, ticks)
                     if d and not d:isInputItemsSatisfied() then unmet[#unmet + 1] = tostring(i + 1) end
                 end
             end)
-            why = string.format("canPerform=%s surface=%s valid=%s learn/known=%s inputs=%s unmet=[%s] outputs=%s range=%s %s",
+            why = string.format("canPerform=%s surface=%s valid=%s learn/known=%s inputs=%s unmet=[%s] outputs=%s range=%s dark=%s %s",
                 tostring(logic:canPerformCurrentRecipe()), tostring(logic:getIsoObject() ~= nil), g.valid, g.learn, g.inputs,
-                table.concat(unmet, ","), g.outputs, g.range, loadText())
+                table.concat(unmet, ","), g.outputs, g.range, tostring(player():tooDarkToRead()), loadText())
         end
         R:line("OBS  LOOP.craft_%s not queued: %s", c.out, why)
     end
