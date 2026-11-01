@@ -55,4 +55,5 @@ tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16
 tools\package.ps1                     # the release zip (never uploads)
 tools\rehearse-install.ps1            # that zip installed in a fresh cache and played through a save; ~20 min
 tools\rehearse-install.ps1 -Scenario existing   # a save played 10 days without the mod, then with it; ~30 min
+tools\rehearse-install.ps1 -Scenario removal    # a save with the mod, continued without it, then with it again
 ```

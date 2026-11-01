@@ -24,6 +24,9 @@
 --   sp-rtsc -> summer, grid on: Pause, Resume and Abort batch on running stills
 --   sp-rtn -> a new world: fuel first found 7 days in, and a can found at the
 --             start read again
+--   rm-a  -> a new world: cans and a fermenter recorded, saved, quit ("rm-a-done")
+--   rm-c  -> main menu continues that save after the driver's "rm-b" played it
+--            without the mod: the mod back
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -52,7 +55,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof"
-    or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" then
+    or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -7741,6 +7744,227 @@ end }
 RT.lateFindSteps = { RT.waitWorld, RT.X.setup, RT.N.start, RT.N.wait, RT.N.late, RT.finish }
 
 ------------------------------------------------------------------------------
+-- The mod removed from a save and added back (requests "rm-a" and "rm-c",
+-- the TheLastGallonPreInstall driver's "rm-b" between them; release gate 7;
+-- tools/rehearse-install.ps1 -Scenario removal). Launch 1, a new world:
+-- three cans recorded by a first pour: P, petrol, to be poured from while
+-- the mod is away; Q, petrol, to be topped up with fresh petrol while it is
+-- away; E, the mod's ethanol. A fermenter F is placed with a batch running.
+-- The cans' records and the world record go to TLG_removal_expect.txt, the
+-- game is saved and the client quits. Launch 2 (the driver; the mod not
+-- loaded) continues the save, notes what is left, pours 2 L out of P and
+-- 3 L of fresh petrol into Q, lets a game day pass and saves. Launch 3
+-- (the mod back): before any read the cans' records must be exactly as
+-- launch 1 left them, and the world record the same one (never created
+-- again: reinstalling grants no fresh fuel). P must keep its condition with
+-- the litres it holds now (D-006: a decrease leaves proportionally). The
+-- RTM.design_ check holds Q to D-006's words, the inflow "mixed in … with
+-- the pessimistic world-baseline condition": its own fuel aged to now, then
+-- the 3 L at the untracked baseline, by the mod's own mixing. The code
+-- reconciles at the record's last write and ages the mixture afterwards,
+-- which ages the inflow over the time away as well. What the game did with
+-- the ethanol and the fermenter while the mod was away is observed, not
+-- judged.
+------------------------------------------------------------------------------
+RT.M = { expect = "TLG_removal_expect.txt", launch2 = "TLG_removal_launch2.txt", tol = 1e-6 }
+
+-- A record as Containers.read builds it from a sidecar, before reconciling.
+function RT.M.fromSide(side, cap)
+    local rec = TLG.Domain.Supply.new({ storage = side.storage, cap = cap, t = side.t, sealed = side.sealed, cond = side.cond,
+        dirty = side.dirty, stab = side.stab, mic = side.mic, label = side.label })
+    for id, q in pairs(side.q or {}) do rec.q[id] = q end
+    for id, d in pairs(side.deg or {}) do rec.deg[id] = d end
+    return rec
+end
+
+function RT.M.litres(item)
+    local fc = item and item:getFluidContainerFromSelfOrWorldItem()
+    return fc and fc:getAmount() or -1
+end
+
+-- Saves, then writes the request for the next launch and DONE and exits to
+-- the menu, where that request quits to the desktop.
+function RT.saveAndQuitAs(name, nextRequest)
+    return { name = name, timeout = 1200, fn = function(ctx, ticks)
+        if not ctx.saved then
+            RT.speed(1)
+            saveGame()
+            ctx.saved = true
+            return nil
+        end
+        if ticks == 180 then
+            TLGH.writeFile("TLG_harness_request.txt", { nextRequest })
+            R:line("EXIT -> main menu, then the desktop")
+            R:finish(true)
+            getCore():exitToMenu()
+        end
+        return nil
+    end }
+end
+
+RT.M.stock = { name = "rtm_stock", timeout = 3000, fn = function(ctx, ticks)
+    local M = RT.M
+    if not ctx.t0 and RT.skip("rtm_stock") then return true end
+    local inv = player():getInventory()
+    if not ctx.t0 then
+        -- P and Q, petrol, and E, the mod's ethanol, each recorded by a first
+        -- pour (the container adapter wraps FluidContainer.Transfer).
+        M.cans = {}
+        for _, c in ipairs({ { "P", "Base.PetrolCan", Fluid.Petrol, 10 }, { "Q", "Base.PetrolCan", Fluid.Petrol, 5 },
+            { "E", "Base.JerryCan", Fluid.Get("TLG_Ethanol"), 5 } }) do
+            local it = giveCan(c[2], { { c[3], c[4] } })
+            local into = inv:AddItem("Base.PetrolCan")
+            into:getFluidContainer():Empty()
+            FluidContainer.Transfer(it:getFluidContainer(), into:getFluidContainer(), 1.0)
+            M.cans[c[1]] = it
+        end
+        -- F on a free tile next to the character, a mash loaded.
+        local here = player():getSquare()
+        for _, off in ipairs({ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 }, { 1, 1 } }) do
+            local s = sq(here:getX() + off[1], here:getY() + off[2], 0)
+            if not M.fTile and RT.W.free(s) then M.fTile = s end
+        end
+        M.fTile = M.fTile or sq(here:getX() + 1, here:getY(), 0)
+        M.f = instanceItem("TLG.FermenterVessel")
+        M.fTile:AddWorldInventoryItem(M.f, 0.5, 0.5, 0, false)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 30 then return nil end
+    for _, t in ipairs({ "Base.Sugar", "Base.Yeast" }) do removeAll(t) end
+    give("Base.Sugar", 6); give("Base.Yeast", 1)
+    for _ = 1, 3 do
+        local fc = inv:AddItem("Base.BucketEmpty"):getFluidContainer()
+        fc:Empty()
+        fc:addFluid(Fluid.Water, 10)
+    end
+    local r = machineClick("RTM.load_mash_F", M.f, "ContextMenu_TLG_LoadFerment")
+    closeDialogs()
+    local frec = M.f:getModData().tlgProc or {}
+    local recorded = M.cans.P:getModData().tlg ~= nil and M.cans.Q:getModData().tlg ~= nil and M.cans.E:getModData().tlg ~= nil
+    R:check("RTM.stocked_and_recorded", function()
+        return recorded and r.ok == true and frec.state == "Processing", string.format(
+            "P %.4f L, Q %.4f L, E %.4f L, each recorded=%s; fermenter on %d,%d %s since %s",
+            M.litres(M.cans.P), M.litres(M.cans.Q), M.litres(M.cans.E), tostring(recorded), M.fTile:getX(), M.fTile:getY(),
+            tostring(frec.state), tostring(frec.startedAt))
+    end)
+    local md = TLG.World.get()
+    local lines = { "seed=" .. tostring(md.seed), "installedAt=" .. tostring(md.installedAt), "policy=" .. tostring(md.policy),
+        "epoch=" .. tostring(md.epoch), "nextId=" .. tostring(md.nextId), "hours=" .. tostring(hours()),
+        "f.x=" .. M.fTile:getX(), "f.y=" .. M.fTile:getY(), "pidF=" .. tostring(frec.id),
+        "startedF=" .. tostring(frec.startedAt) }
+    for _, k in ipairs({ "P", "Q", "E" }) do
+        local it = M.cans[k]
+        lines[#lines + 1] = "can" .. k .. "=" .. tostring(it:getID())
+        lines[#lines + 1] = "side" .. k .. "=" .. brief(it:getModData().tlg)
+        lines[#lines + 1] = "litres" .. k .. "=" .. tostring(M.litres(it))
+    end
+    TLGH.writeFile(M.expect, lines)
+    R:line("OBS  RTM.world record seed=%s installedAt=%s policy=%s epoch=%s nextId=%s; saving at world hour %.4f",
+        tostring(md.seed), tostring(md.installedAt), tostring(md.policy), tostring(md.epoch), tostring(md.nextId), hours())
+    return true
+end }
+
+RT.removalSteps = { RT.waitWorld, RT.X.setup, RT.M.stock, RT.saveAndQuitAs("rtm_save_and_quit", "rm-a-done") }
+
+-- Launch 3: the mod back on the save the driver played without it.
+RT.M.back = { name = "rtm_back", timeout = 3000, fn = function(ctx, ticks)
+    local M = RT.M
+    if not (player() and ticks > 120) then return nil end
+    local e, b = TLGH.readKeyValues(M.expect), TLGH.readKeyValues(M.launch2)
+    if e.canP == nil then
+        RT.abort = "no expectations from launch 1"
+        R:line("OBS  RTM.%s", RT.abort)
+        return true
+    end
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    pcall(function() p:setUnlimitedCarry(true) end)
+    captureDialogs(true)
+    local inv = p:getInventory()
+    local cans = {}
+    for _, k in ipairs({ "P", "Q", "E" }) do cans[k] = inv:getItemWithIDRecursiv(tonumber(e["can" .. k]) or -1) end
+    R:line("OBS  RTM.launch 2 (the mod away) saw: %s", brief(b))
+    -- Before any read: the cans' records as launch 1 left them.
+    local kept, parts, sides = true, {}, {}
+    for _, k in ipairs({ "P", "Q", "E" }) do
+        local side = cans[k] and cans[k]:getModData().tlg
+        sides[k] = side and TLG.Tables.deepCopy(side)
+        local same = side ~= nil and brief(side) == e["side" .. k]
+        kept = kept and same
+        parts[#parts + 1] = string.format("%s %s, %.4f L now", k, same and "as saved" or ("changed: " .. brief(side)),
+            M.litres(cans[k]))
+    end
+    R:check("RTM.records_survive_the_mod_away", function() return kept, table.concat(parts, "; ") end)
+    local md = TLG.World.get()
+    R:check("RTM.world_record_the_same_one", function()
+        return tostring(md.seed) == e.seed and tostring(md.installedAt) == e.installedAt and tostring(md.policy) == e.policy
+            and tostring(md.epoch) == e.epoch and (md.nextId or 0) >= (tonumber(e.nextId) or math.huge),
+            string.format("seed %s (%s), installedAt %s (%s), policy %s (%s), epoch %s (%s), nextId %s (%s at launch 1)",
+                tostring(md.seed), e.seed, tostring(md.installedAt), e.installedAt, tostring(md.policy), e.policy,
+                tostring(md.epoch), e.epoch, tostring(md.nextId), e.nextId)
+    end)
+    local D, env, now = TLG.Domain, TLG.World.env(), TLG.World.now()
+    -- P: poured from while the mod was away. A decrease leaves
+    -- proportionally: its condition is that of its record aged to now.
+    if sides.P then
+        local cap = cans.P:getFluidContainerFromSelfOrWorldItem():getCapacity()
+        local want = D.Aging.advance(M.fromSide(sides.P, cap), now, env).deg.gasoline or -1
+        local v = tlgView("item", cans.P)
+        R:check("RTM.poured_from_while_away_keeps_its_condition", function()
+            local deg = v and v.deg and v.deg.gasoline
+            return deg ~= nil and math.abs(deg - want) <= M.tol and math.abs(D.Supply.total(v) - M.litres(cans.P)) < 1e-3,
+                string.format("condition %s, its record aged to now %.9f; %.4f L recorded of %.4f L in the can (%s L at launch 1)",
+                    deg and string.format("%.9f", deg) or "none", want, v and D.Supply.total(v) or -1, M.litres(cans.P),
+                    tostring(e.litresP))
+        end)
+    end
+    -- Q: topped up with fresh petrol while the mod was away.
+    if sides.Q then
+        local cap = cans.Q:getFluidContainerFromSelfOrWorldItem():getCapacity()
+        local rec = M.fromSide(sides.Q, cap)
+        local inflow = M.litres(cans.Q) - (rec.q.gasoline or 0)
+        local base = { deg = TLG.Integration.Containers.untrackedDeg(), mic = 0 }
+        local promised = D.Mixing.addUntracked(D.Aging.advance(rec, now, env), "gasoline", inflow, base)
+        local mixedFirst = D.Aging.advance(D.Mixing.addUntracked(rec, "gasoline", inflow, base), now, env)
+        local v = tlgView("item", cans.Q)
+        R:check("RTM.design_inflow_while_away_mixed_in_at_the_world_baseline", function()
+            local deg = v and v.deg and v.deg.gasoline
+            return deg ~= nil and math.abs(deg - (promised.deg.gasoline or -1)) <= M.tol,
+                string.format("condition %s; its own fuel aged to now with %.4f L at the untracked baseline %.9f mixed in: %.9f; mixed in at the record's last write (world hour %.4f) and then aged: %.9f",
+                    deg and string.format("%.9f", deg) or "none", inflow, base.deg, promised.deg.gasoline or -1, rec.t,
+                    mixedFirst.deg.gasoline or -1)
+        end)
+        R:check("RTM.inflow_while_away_reconciled", function()
+            return v ~= nil and math.abs(D.Supply.total(v) - M.litres(cans.Q)) < 1e-3 and inflow > 2.9,
+                string.format("%.4f L recorded of %.4f L in the can; %.4f L came in while the mod was away", v and D.Supply.total(v) or -1,
+                    M.litres(cans.Q), inflow)
+        end)
+    end
+    -- E and F: what the game left of the mod's fluid and item.
+    local ev, estatus = nil, "no can"
+    if cans.E then ev, estatus = tlgView("item", cans.E) end
+    R:line("OBS  RTM.ethanol can E: %s L in it now (%s at launch 1, %s at launch 2); read %s %s", tostring(M.litres(cans.E)),
+        tostring(e.litresE), tostring(b.litresE), tostring(estatus), ev and RT.X.sideKey(ev) or "-")
+    local fx, fy = tonumber(e["f.x"]), tonumber(e["f.y"])
+    local found
+    local wobjs = sq(fx, fy, 0) and sq(fx, fy, 0):getWorldObjects()
+    for i = 0, (wobjs and wobjs:size() or 0) - 1 do
+        local it = wobjs:get(i):getItem()
+        local rec = it and it:getModData().tlgProc
+        if type(rec) == "table" and tostring(rec.id) == e.pidF then found = it end
+    end
+    local frec = found and found:getModData().tlgProc
+    R:line("OBS  RTM.fermenter on %s,%s: %s%s (launch 2 saw: %s)", tostring(fx), tostring(fy),
+        found and "found" or "not found", frec and string.format(", process %s started %s, %s", tostring(frec.id),
+        tostring(frec.startedAt), tostring(frec.state)) or "", tostring(b.fTile))
+    return true
+end }
+
+RT.removalBackSteps = { RT.M.back, RT.finish }
+
+------------------------------------------------------------------------------
 -- Italian (request "sp-it", release gate 10): the client in Italian
 -- (options.ini language=IT). tools/run-sp-harness.ps1 -Mode italian writes
 -- every Italian string the mod ships to TLG_it_expect.txt, its letters past
@@ -7905,7 +8129,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
+    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -7971,6 +8195,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 RT.S.saveAfter = 1
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, stills and column carried, before the save")
                 TLGH.Steps.run(R, RT.stillSaveSteps, H, nil)
+            elseif REQUEST == "rm-a" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, removal launch 1: a new world with the mod")
+                TLGH.Steps.run(R, RT.removalSteps, H, nil)
             elseif REQUEST == "sp-rtn" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, a new world: fuel first found late")
                 TLGH.Steps.run(R, RT.lateFindSteps, H, nil)
@@ -7993,7 +8220,13 @@ else
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", false)
 end
 
-if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c" then
+-- Launch 1 of the removal scenario, back at the menu after its save: leave.
+if REQUEST == "rm-a-done" then
+    Events.OnMainMenuEnter.Add(function() getCore():quitToDesktop() end)
+end
+
+if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
+    or REQUEST == "rm-c" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -8009,6 +8242,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "ex-c" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, the existing save continued again", true)
             TLGH.Steps.run(R, RT.existingReloadSteps, H, nil)
+        elseif REQUEST == "rm-c" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, removal launch 3: the mod back", true)
+            TLGH.Steps.run(R, RT.removalBackSteps, H, nil)
         elseif REQUEST == "sp-rtsb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, stills and column carried, after the save", true)
             TLGH.Steps.run(R, RT.stillReloadSteps, H, nil)

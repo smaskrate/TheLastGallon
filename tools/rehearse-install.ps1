@@ -18,6 +18,13 @@
      "ex-a") and saves it; the save's mods.txt then lists the mod and the
      harness, as the load screen's Choose mods writes it; launch 2 continues
      that save with the mod (requests "ex-b", then "ex-c").
+     -Scenario removal (release gate 7): launch 1 plays a new world with the
+     mod and the harness (request "rm-a") and saves it; the save's mods.txt
+     then lists only the driver; launch 2 continues it without the mod
+     ("rm-b") and saves; mods.txt lists the mod and the harness again;
+     launch 3 continues it with the mod back ("rm-c"). Each launch's results
+     and console are kept in the cache's Lua folder as
+     TLG_removal_launch<n>.results.txt and .console.txt.
   The rehearsal folders are removed and recreated only when they carry this
   script's marker file. Nothing is uploaded.
 .PARAMETER NoBuild
@@ -25,9 +32,9 @@
 .PARAMETER TimeoutMinutes
   Watchdog limit for each game launch (default 40).
 .PARAMETER Scenario
-  clean or existing (see above).
+  clean, existing or removal (see above).
 #>
-param([switch]$NoBuild, [int]$TimeoutMinutes = 40, [ValidateSet("clean", "existing")][string]$Scenario = "clean")
+param([switch]$NoBuild, [int]$TimeoutMinutes = 40, [ValidateSet("clean", "existing", "removal")][string]$Scenario = "clean")
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = (Select-String -Path (Join-Path $repo "Contents\mods\TheLastGallon\42\mod.info") -Pattern '^modversion=(.+)$').Matches[0].Groups[1].Value
@@ -77,6 +84,45 @@ if (-not (Test-Path (Join-Path $mod "42\mod.info"))) { throw "the zip has no Con
 $harness = Join-Path $PSScriptRoot "run-sp-harness.ps1"
 if ($Scenario -eq "clean") {
     & $harness -DevCache $cache -ModSource $mod -Mode full -TimeoutMinutes $TimeoutMinutes
+    exit 0
+}
+
+# The save's mod list as the load screen's Choose mods writes it
+# (SRC ModSelectorModel.lua: manipulateSavefile(folder, "WriteModsDotTxt")).
+function Write-ModsTxt([string]$folder, [string[]]$mods) {
+    $lines = @("VERSION = 1,", "", "mods", "{") + ($mods | ForEach-Object { "    mod = $_," }) + @("}", "", "maps", "{", "}")
+    $lines | Set-Content -Encoding ascii (Join-Path $folder "mods.txt")
+}
+
+if ($Scenario -eq "removal") {
+    $lua = Join-Path $cache "Lua"
+    # The game starts console.txt afresh on every launch: keep each one.
+    function Save-Launch([int]$n) {
+        Copy-Item (Join-Path $lua "TLG_harness_sp.txt") (Join-Path $lua "TLG_removal_launch$n.results.txt") -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $cache "console.txt") (Join-Path $lua "TLG_removal_launch$n.console.txt") -ErrorAction SilentlyContinue
+    }
+    # Launch 1: a new world with the mod; cans and a fermenter recorded, saved.
+    & $harness -DevCache $cache -ModSource $mod -Mode removal-a -TimeoutMinutes $TimeoutMinutes
+    Save-Launch 1
+    $saves = @(Get-ChildItem -Directory (Join-Path $cache "Saves\Sandbox") -ErrorAction SilentlyContinue)
+    if ($saves.Count -ne 1) { throw "expected the one save of launch 1, found $($saves.Count)" }
+    # The mod taken off the save; the driver plays it.
+    Write-ModsTxt $saves[0].FullName @("TheLastGallonPreInstall")
+    Write-Host "save $($saves[0].Name): mods.txt now lists only TheLastGallonPreInstall"
+    # Launch 2: the save continued without the mod.
+    & $harness -DevCache $cache -ModSource $mod -Mode removal-b -ActiveMods @("TheLastGallonPreInstall") -TimeoutMinutes $TimeoutMinutes
+    Save-Launch 2
+    # The mod back on the save.
+    Write-ModsTxt $saves[0].FullName @("TheLastGallon", "TheLastGallonHarness")
+    Write-Host "save $($saves[0].Name): mods.txt lists TheLastGallon and TheLastGallonHarness again"
+    # Launch 3: the save continued with the mod.
+    & $harness -DevCache $cache -ModSource $mod -Mode removal-c -TimeoutMinutes $TimeoutMinutes
+    Save-Launch 3
+    foreach ($n in 1, 2, 3) {
+        Select-String -Path (Join-Path $lua "TLG_removal_launch$n.console.txt") -Pattern "world fuel history created" -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host "launch $n console: $($_.Line.Trim())" }
+    }
+    Write-Host "results and consoles: $lua\TLG_removal_launch<n>.results.txt / .console.txt"
     exit 0
 }
 
