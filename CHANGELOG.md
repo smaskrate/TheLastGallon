@@ -36,8 +36,8 @@
 * A fire left burning keeps a machine warm while you are away, for as long
   as its fuel lasts (up to 8 hours with default settings): the game burns
   that fuel while you are gone anyway. Checked in game: a fire's 6 hours
-  of fuel covered half of a 12 hour absence, and the batch finished 5
-  hours sooner than without it.
+  of fuel covered half of a 12 hour absence, and the work done over it
+  matched the credited temperatures exactly.
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

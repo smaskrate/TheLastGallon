@@ -436,7 +436,11 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `ISBBQLightFromLiterature.lua:60-75`). `IsoBarbecue` keeps its fuel the
   same way (minutes, `lastUpdateTime` saved and caught up on reload,
   `MaxFuelAmount` 1200) with a fixed heat source of 25 °C, radius 3; both
-  classes are exposed to Lua (vanilla tests them with `instanceof`). In `newtiledefinitions.tiles`
+  classes are exposed to Lua (vanilla tests them with `instanceof`). Item
+  mod data is saved with the item (`InventoryItem.save` calls
+  `KahluaTable.save`), which keeps string and number keys and string,
+  number, boolean and table values (BC `KahluaTableImpl.save`/`load`), so
+  a `false` in a record survives a save. In `newtiledefinitions.tiles`
   only `fixtures_fireplaces_01_0`–`_5` carry `container=fireplace` (the
   other 74 tiles of that set are chimney and wall pieces); woodstoves are
   `appliances_cooking_01_16`–`_19` and `crafted_05_4`–`_7`, campfires

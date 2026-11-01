@@ -150,9 +150,9 @@ logs (run 21, 2.24 tiles from the fire, outdoor day means −9.4 to
 game hours for 97 hours of work. The 12 hour trip in it cost about 17
 hours (unheated room value while away, a cold day mean after the return)
 and the batch burned 18 logs. Since D-022 the fire's fuel counts while
-away: in the same run with the credit (run 23) its 365 minutes covered
-6.08 of the 12 hours and the batch finished after 109.2 hours with 17
-logs. Spoilage counts the batch's total
+away: in the same setup with the credit (run 23, a milder January) its 365
+minutes covered 6.08 of the 12 hours and the batch finished after 109.2
+hours with 17 logs. Spoilage counts the batch's total
 paused hours, also across separate cold spells (not yet seen in game).
 
 Fire fuel (vanilla, default sandbox): a log adds 6 hours, and a fireplace

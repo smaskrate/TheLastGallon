@@ -617,7 +617,7 @@ Result: **21 PASS / 0 FAIL**.
 | Trip | 12.01 h unloaded; the noted fuel covered 6.08 h; the fire was out on the return (vanilla) |
 | Work over the trip = rule with the credit | 7.5633 h, exact |
 | Machine air = formula / readings filed / day temperature / hourly work | 97 h, 0.00000 °C / exact / exact / exact |
-| Batch | finished after 109.2 game h (run 21: 114.3), 5.36 h paused (the uncredited hours of 17 January), 17 logs |
+| Batch | finished after 109.2 game h (run 21, no credit, a colder January: 114.3), 5.36 h paused (the uncredited hours of 17 January), 17 logs |
 
 The tiles around the fire repeated run 21 exactly (34 / 19 / 11 / 0 warmed,
 none off). Not run: a barbecue as the noted fire (unit tests only), a

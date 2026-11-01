@@ -284,7 +284,7 @@ listed with their replacement.
   rate. In three January runs a room alone was not enough (4.5–11.4 °C at
   the machine; the batch spoiled each time) and a warmed tile was. Heat
   counts only while the area is loaded: hours away take the unheated
-  value. The day mean averages its hours, so a few warm hours lift the
+  value (until D-022: a fire's noted fuel now counts while away). The day mean averages its hours, so a few warm hours lift the
   whole day (the batch has a day's thermal mass); the hour in progress
   takes the previous hour's reading, otherwise a warmed machine paused
   after every midnight (run 17). A machine moved without being used in
@@ -338,5 +338,7 @@ listed with their replacement.
   while the area was unloaded, the last note before a 12 hour trip (365
   minutes) covered 6.08 hours of it, and the work over the trip matched the
   rule fed by the credited day temperatures exactly. The batch finished
-  after 109.2 game hours instead of 114.3. A barbecue as the noted fire is
-  covered by unit tests only.
+  after 109.2 game hours (run 21, without the credit and in a colder
+  January: 114.3). A barbecue as the noted fire is covered by unit tests
+  only. A `false` note survives a save: item mod data saves boolean values
+  (BC `KahluaTableImpl.save`).
