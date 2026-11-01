@@ -1446,15 +1446,22 @@ Run 54's failure is a mod defect, still open. `Containers.read` reconciles
 an untracked change at the record's last write (`side.t`). The caller
 then ages the result to now, so fuel that came in unseen carries the
 baseline condition of the moment it is found and also the aging of the
-whole time since the record was written. After a day away that is
-11.5 % more than the baseline D-006 names; it grows with the time since
-the last read. In ordinary play, reads come often and the gap is small.
+whole time since the record was written. After a day away the can read
+11.5 % more degraded than D-006's rule gives. The added fuel itself
+came out at about 0.083, some 17 % above the baseline of 0.071. The
+excess grows with the time since the last read; in ordinary play, reads
+come often and the gap is small.
 
 Found for players: removing the mod loses its machines (with their
-batches) and any of its fluids (ethanol, fuel water) in containers. The
-game skips the unknown items when it loads and drops the unknown fluids.
-Petrol and the mod's records on vanilla items survive, and adding the mod
-back finds them. This is what the open "Prepare removal" item is for.
+batches) and its ethanol in containers. The game skips the unknown items
+when it loads and drops the unknown fluid; the mod's other fluids would
+go the same way but were not tried. Petrol and the mod's records on
+vanilla items survive, and adding the mod back finds them. This is what
+the open "Prepare removal" item is for. The run removed the mod the way a
+player does with the load screen's Choose mods, which rewrites the save's
+`mods.txt`. Not run: a save that still lists the mod after it was
+uninstalled (unsubscribed on the Workshop), where the game asks about
+missing mods.
 
 Launch 2's 16 Lua error lines are the driver's own: a guarded lookup of
 the empty can's fluid name. Launches 1 and 3 had none.
