@@ -772,5 +772,4 @@ the batch is done and waits for the still, which those words do not say.
 The engines' verdicts are the start gates' evaluation, not engine starts;
 the engines ran on dried reflux ethanol in runs 13–14. Not run: the pot
 still built from the crafting window in this run (spawned; building it was
-run 12), the reflux still with this wash, a pot-still batch that spoils or
-is aborted.
+run 12), the reflux still with this wash, a pot-still batch aborted.

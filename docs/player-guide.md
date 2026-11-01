@@ -83,15 +83,17 @@ still is welded in hand.
    wash**, **Feed the firebox**: it burns all the wood you carry (firewood,
    logs, twigs, planks too) up to what fits, so leave building planks
    behind. The pot still takes up to 60 L of wash at a time: collect the
-   ethanol, then **Load wash** again for the rest. A full firebox (30 kg,
-   three logs) distils about 60 L.
+   ethanol, then **Load wash** again for the rest. Three logs (27 kg)
+   distil about 60 L; the firebox holds 30 kg, so a fourth log stays in
+   your bag.
 3. **Collect ethanol into a fuel can**: the still fills an empty fuel can,
    or one that already holds only ethanol, never a can with other fuel in
    it. A pot still gives ~80 % ethanol; a **reflux column still** (the pot
    still, two sheets of metal, three metal pipes, a blowtorch and a welding
    mask) gives ~94 % and recovers more.
 4. Save the **yeast starter culture** from batches of 5 kg sugar or more –
-   it replaces bought yeast.
+   it replaces bought yeast. It comes with the last of the wash, so with a
+   big batch and a pot still it appears on the second **Load wash**.
 5. **Drying column** – a metal pipe and an empty jar (screwdriver). Place
    it, carry the can of ethanol and quicklime, choose **Dry ethanol with
    quicklime** and collect the result into a fuel can after about 12 hours.
