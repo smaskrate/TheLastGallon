@@ -958,3 +958,60 @@ The air around both fires repeated run 34's figures (the campfire's 282 /
 68 / 8 / 8 warmed tiles at its four fuel levels, none off). Its radius was
 truncated in all 46 readings. Not run: a campfire built indoors, a
 propane barbecue, a fire upstairs, multiplayer.
+
+## 2026-11-01 — RT-SP client harness, launches 36–38 (the release zip installed clean, gate 12)
+
+Command: `tools/rehearse-install.ps1` (new). It:
+
+1. builds the package;
+2. unpacks the zip into a fresh folder and checks every file against the
+   SHA-256 manifest, both ways;
+3. installs `Contents/mods/TheLastGallon` from it into a fresh, isolated
+   cache (`%LOCALAPPDATA%\TheLastGallon\installcache`), as the player
+   guide says, with the dev harness mod beside it;
+4. runs the full harness: phase A, save, exit to the menu, continue,
+   phase B.
+
+With Steam off the game scans only `<cachedir>/mods` (BC), so this is the
+manual install; the Workshop paths need Steam.
+
+The zip itself was fixed first. `Compress-Archive` (Windows PowerShell
+5.1) had written 91 of its 92 entry names with backslashes.
+`tools/package.ps1` now writes forward slashes, sorted, every entry stamped
+with the commit's time, and refuses a backslash. Two builds of commit
+`a54f998` gave identical zips (SHA-256 `7410a9da…`, 201,414 bytes).
+
+| Run | Mod | Phase A | Phase B |
+| --- | --- | --- | --- |
+| 36 | installed from the zip of commit `f956597` | 90 / 4 | 14 / 0 |
+| 37 | the repository's, in the ordinary dev cache | 90 / 4 | 14 / 0 |
+| 38 | installed from the zip of commit `2591370` (82 files, SHA-256 `b83e3aa9…`) | **94 / 0** | **14 / 0** |
+
+Runs 36 and 37 failed the same four checks. None of the four machines
+could be crafted from the craft menu: the recipes were listed and the
+inputs, surface and range all found, yet the game's own check refused. The
+package was not the cause, since the repository's mod failed identically.
+The game's check needs light (BC `CraftRecipeData.consumeInputsInternal`,
+`IsoPlayer.tooDarkToRead`). The harness's craft step now switches a torch
+on in hand when it is too dark. In run 38 it logged a light level of 0.15
+at the workbench at 10:37 game time (the threshold is 0.43). Run 12 had
+crafted at the same bench, its light level not logged. Every other gate
+of the check had passed in runs 36–37, so darkness is inferred for them,
+not measured. With the torch all four machines were crafted from the
+menu.
+
+Everything else in run 38 matched run 12:
+* the fuel chain, pumps, vehicles, generators and start gates;
+* the ethanol loop and both conversions;
+* after the save and reload, every record: cans, a vehicle tank, a
+  generator, a pump, three machines, two conversions and the world record.
+
+The run needed no input: the launcher's two clicks passed the two
+loading screens. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run36_install_rehearsal.txt`,
+`docs/evidence/2026-11-01_rt-sp_harness_run37_full_repository.txt`,
+`docs/evidence/2026-11-01_rt-sp_harness_run38_install_rehearsal.txt`.
+
+Not run: an install through the Steam Workshop (needs Steam), an upgrade
+(there is no previous supported version), the packaged mod on a dedicated
+server, unpacking on Linux or macOS.

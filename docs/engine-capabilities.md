@@ -60,7 +60,12 @@ Probe: `tests/support/runtime_probe.lua` (runner) and
 ## G01 Packaging — PASS (dedicated server and client)
 
 * **BC** `ZomboidFileSystem.getAllModFolders`: scan order `workshop,steam,mods`;
-  `mods` = `getCacheDirSub("mods")` only. `getAllModFoldersAux` skips a folder
+  `mods` = `getCacheDirSub("mods")` only. `workshop` (staged items,
+  `getStagedItemModsFolders`) and `steam` (subscribed items,
+  `getInstalledItemModsFolders`) are scanned only when
+  `SteamUtils.isSteamModeEnabled()`: with `-nosteam` a client sees
+  `<cachedir>/mods` alone, so the manual install from the release zip is
+  the path a launch without Steam can rehearse (`tools/rehearse-install.ps1`). `getAllModFoldersAux` skips a folder
   named `examplemod` and accepts a mod when `common/mod.info` or
   `<versionDir>/mod.info` exists. `getModVersionDirName` picks the highest
   folder whose `getGameVersionIntFromName` (`major*1000 + min(minor, 999)`) is
@@ -358,7 +363,16 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   (BC `HandcraftLogic.findCraftSurface`).
 * `canPerformCurrentRecipe` (BC `BaseCraftingLogic`) checks the recipe for
   the character (skills, `NeedToBeLearn`), whether inputs can be consumed
-  and outputs created, and the workbench range.
+  and outputs created, and the workbench range. Consuming the inputs also
+  needs light unless the recipe `canBeDoneInDark()` (BC
+  `CraftRecipeData.consumeInputsInternal`): `IsoPlayer.tooDarkToRead()` is
+  true when no lit light is in hand or on the belt and (L / m + L) / 2 <
+  0.43, L the light level of the character's square and m the worn items'
+  vision modifier (so L < 0.43 without such items); in a vehicle only with
+  a flat battery. In runs 36–37 every machine craft was refused at the
+  workbench run 12 used; in run 38 its light level was 0.15 at 10:37, and
+  a torch switched on in hand, the player's way out, let all four crafts
+  through.
 * Container inputs (pots, jars) are kept unless the input says
   `mode:destroy` (vanilla pasta/rice recipes); outputs go through
   `Actions.addOrDropItem` and land on the floor when the inventory is full.
@@ -628,7 +642,10 @@ run 28 **25/0**, again with the finished machines' Status wording, run 29
 **28/0**, and Pause, Resume and Abort batch, run 30 19/5 (a harness setup
 error), run 31 20/4 and, after the fix, run 32 29/3 (presses the menu no
 longer offers) and run 33 **32/0**, and fermenters beside a campfire and
-a barbecue, run 34 35/4 and, after the fix, run 35 **39/0**. Most failures were
+a barbecue, run 34 35/4 and, after the fix, run 35 **39/0**, then the
+full mode on the release zip installed clean, run 36 90/4 with phase B
+14/0, on the repository's mod, run 37 90/4 and 14/0, and on the zip again,
+run 38 **94/0** and **14/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -644,7 +661,10 @@ run 27). Run 31's four were three: Abort batch discarded the partial
 result unlisted (4 L of ethanol in the drying column), and a spoiled batch
 could not be cleared from the menu (fixed, run 33). Run 34's four are
 one: a campfire the player builds was never noted, so its warmth was not
-credited while away (D-022; fixed, run 35).
+credited while away (D-022; fixed, run 35). Runs 36–37's four were the
+harness's, in both installs alike: crafting needs light, and the
+workbench measured 0.15 in run 38, where a torch in hand let every craft
+through.
 
 ## Tooling pitfalls found
 
@@ -652,6 +672,10 @@ credited while away (D-022; fixed, run 35).
   "Index 65022 out of bounds"); `tests/support/compile_check.lua` flags BOMs.
   Windows PowerShell 5.1 `Set-Content -Encoding utf8` writes a BOM.
 * The Windows `java` launcher glob-expands a `*` argument.
+* `Compress-Archive` in Windows PowerShell 5.1 (Archive module 1.0.1.0)
+  writes zip entry names with backslashes (`Contents\mods\...`; 91 of 92 in
+  the 0.1.0-dev zip of 2026-10-31); the ZIP format wants forward slashes.
+  `tools/package.ps1` writes the zip with `System.IO.Compression` instead.
 * .NET writes a UTF-8 BOM into a redirected process stdin; the server
   console then rejects the first command.
 

@@ -32,7 +32,11 @@ tools\setup-devenv.ps1                                   # deploy to the isolate
 tools\dev-server-controller.ps1                          # isolated dedicated server
 tools\run-sp-harness.ps1                                 # automated SP experiments (unlocked desktop, no input, ~12 min)
 tools\package.ps1                                        # build dist/ (never uploads)
+tools\rehearse-install.ps1                               # install the zip in a fresh cache and play it (~20 min)
 ```
+
+Players install from the zip as `docs/player-guide.md` describes; this
+README does not ship in the package.
 
 The game does not load mods from `<game>/mods`; never point a fresh cache dir
 at this folder (see `docs/environment.md`, incident 2026-10-30).

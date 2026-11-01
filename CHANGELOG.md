@@ -96,5 +96,9 @@
   any engine by the mod's start check until dried, then fit for flex
   engines.
 * Migrations with preserved future schemas.
+* Package: the zip now unpacks the same on every system (its folder
+  names used Windows backslashes), and the player guide says how to
+  install it. Installed from the zip into a fresh game folder, the mod
+  was played through a save and a reload (checked in game).
 
 Tested only on Project Zomboid 42.21.0 (4a0e9546ec).
