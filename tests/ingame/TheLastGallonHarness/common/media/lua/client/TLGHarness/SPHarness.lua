@@ -16,6 +16,8 @@
 --   sp-rtpot -> summer, grid on: a batch through the pot still (two runs),
 --             dried and checked against the engines' rules
 --   sp-rtc -> summer, grid on: Pause, Resume and Abort batch from the menu
+--   sp-rts -> summer, grid on: two stills and a drying column picked up
+--             mid-batch and put down, the reflux still where no Lua sees it
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -42,7 +44,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtof" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" then
+    or REQUEST == "sp-rts" or REQUEST == "sp-rtof" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -4609,19 +4611,20 @@ RT.pickupSteps = { RT.waitWorld, RT.setup, RT.pickSetup, RT.pickRun, RT.finish }
 RT.D = { names = { "fermenter", "pot still", "drying column" }, sugar = 12, water = 60, tol = 1e-6,
     sparks = { "engine_si_stock", "engine_si_flex", "generator_si_stock", "generator_si_flex" } }
 
--- The pot still and the heat its stages draw, from the definitions.
-function RT.D.def()
-    local m = TLG.Registry.need("machine", "pot_still")
+-- The still `mid` (the pot still by default) and the fuel its stages burn
+-- per hour, from the definitions.
+function RT.D.def(mid)
+    local m = TLG.Registry.need("machine", mid or "pot_still")
     local heat = TLG.Registry.need("recipe", "ethanol_distill").stages[1].heatKW
     return m, heat / (m.firebox.kwhPerKg * m.firebox.efficiency)
 end
 
 function RT.D.rec(i) return RT.D.items[i]:getModData().tlgProc or {} end
 
--- What a run of `wash` (ethanol, water) gives in a still at condition `cond`
--- (Process.converters.distill and completeBatch).
-function RT.D.expected(eth, water, cond)
-    local m, burn = RT.D.def()
+-- What a run of `wash` (ethanol, water) gives in still `mid` at condition
+-- `cond`, at Cooking 0 (Process.converters.distill and completeBatch).
+function RT.D.expected(eth, water, cond, mid)
+    local m, burn = RT.D.def(mid)
     local out = eth * m.recovery * (1 - 0.3 * (1 - cond))
     return { hours = 1 + math.max(1, (eth + water) / m.throughputLph), ethanol = out,
         water = out * (1 - m.purity) / m.purity, burn = burn }
@@ -5027,10 +5030,12 @@ function RT.C.click(i, key, label)
     return r, text
 end
 
--- The machine menu's entry names for machine i as offered now.
-function RT.C.offered(i)
+function RT.C.offered(i) return RT.menuOffered(RT.C.items[i]) end
+
+-- The machine menu's entry names for `item` as offered now.
+function RT.menuOffered(item)
     local context = ISContextMenu.get(0, 100, 100)
-    TLG.UI.MachineMenu.fill(0, context, { RT.C.items[i] })
+    TLG.UI.MachineMenu.fill(0, context, { item })
     local root = context:getOptionFromName(getText("ContextMenu_TLG_Machine"))
     local sub = root and root.subOption and context:getSubMenu(root.subOption)
     local out = {}
@@ -5350,6 +5355,520 @@ RT.controlRun = { name = "rtc_run", timeout = 120000, fn = function(ctx, ticks)
 end }
 
 RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.finish }
+
+------------------------------------------------------------------------------
+-- Stills and drying column picked up (request "sp-rts"): D-015 on the
+-- machines with a firebox and on the column (gate 6). Summer with the grid
+-- on, room tiles (RT.P.findSpots): two fermenters make two 33.3 L washes at
+-- full rate. The pot still is fed three logs and takes one wash, the drying
+-- column 4 L of ethanol and 1 L of water from a can, and an hour later the
+-- reflux still is fed two logs and takes the other wash: enough fuel that
+-- neither firebox runs out. Half an hour later, the pot still distilling
+-- 1.5 h in, the column 1.5 h in and the reflux still heating up 0.5 h in,
+-- the pot still is picked up with the world menu's Grab, the column with the
+-- loot window's Grab and the reflux still with the grab's own calls outside
+-- its Lua (RT.P.liftUnseen: a grab no Lua sees, as the server's Java item
+-- transaction is in multiplayer). Two game hours later the pot still is put
+-- down with the place action as the place cursor queues it (isPlaceItem),
+-- on the tile of a spent fermenter next to the character, and the other two
+-- with the inventory menu's Drop where the character stands. D-015: while
+-- carried nothing advances, no work, no fuel burned, no paused hours. So
+-- each batch must finish its stage hours after the put-down with exactly the
+-- definitions' fuel and spirit (Content/Production), the times taken from
+-- the records' own stamps (a move hook brings `t` to the moment of the move)
+-- and the reflux still's work credited up to the last time the mod found it
+-- placed (`seen`). Then the spirit is collected into cans.
+------------------------------------------------------------------------------
+RT.S = { names = { "F1", "F2", "pot_still", "reflux_still", "column" }, carryHours = 2, tol = 1e-6, near = 0.01 }
+
+-- What a carried batch keeps exactly (Machines.advance moves only `t` while
+-- it is carried), and what a put-down batch keeps from its pickup.
+RT.S.HELD = { "id", "machine", "startedAt", "state", "pause", "stage", "stageDone", "firebox", "cond", "pausedFor" }
+RT.S.KEPT = { "id", "machine", "startedAt", "stage", "stageDone", "firebox", "cond", "pausedFor" }
+
+function RT.S.rec(i) return RT.S.items[i]:getModData().tlgProc or {} end
+
+function RT.S.close(a, b, tol) return type(a) == "number" and type(b) == "number" and math.abs(a - b) <= (tol or RT.S.tol) end
+
+-- Machine i's record as it is now, kept once under ctx[key][i]: taken the
+-- first tick a move is seen, its `t` is the moment the move hook set.
+function RT.S.capture(ctx, key, i)
+    ctx[key] = ctx[key] or {}
+    if ctx[key][i] == nil then ctx[key][i] = TLG.Tables.deepCopy(RT.S.items[i]:getModData().tlgProc) end
+end
+
+RT.stillSetup = { name = "rts_sites", timeout = 3000, fn = function(ctx, ticks)
+    local S = RT.S
+    if not ctx.t0 and RT.skip("rts_sites") then return true end
+    if not ctx.t0 then
+        local here = player():getSquare()
+        local spots = RT.P.findSpots(here:getX(), here:getY())
+        if spots == nil then
+            RT.abort = "no free room tile with five free room neighbours nearby"
+            R:line("OBS  RTS.spots none found")
+            return true
+        end
+        S.spots, S.items = {}, {}
+        for i, s in ipairs(spots) do S.spots[i] = { x = s:getX(), y = s:getY() } end
+        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+            local it = instanceItem(t)
+            spots[i + 1]:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            S.items[i] = it
+        end
+        player():setPosition(S.spots[1].x + 0.5, S.spots[1].y + 0.5, 0)
+        -- At Cooking 0 the prepare stage is one game hour and a still's purity
+        -- its own (Process).
+        player():setPerkLevelDebug(Perks.Cooking, 0)
+        local power
+        pcall(function() power = getWorld():isHydroPowerOn() end)
+        local p = S.spots
+        R:line("OBS  RTS.spots character %d,%d; F1 %d,%d F2 %d,%d pot still %d,%d reflux still %d,%d column %d,%d; grid power=%s",
+            p[1].x, p[1].y, p[2].x, p[2].y, p[3].x, p[3].y, p[4].x, p[4].y, p[5].x, p[5].y, p[6].x, p[6].y, tostring(power))
+        R:check("RTS.grid_is_on", function() return power == true, "isHydroPowerOn=" .. tostring(power) end)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local seen = {}
+    for i = 1, 6 do seen[i] = tostring(TLG.Integration.Machines.siteOf(sq(S.spots[i].x, S.spots[i].y, 0)).room) end
+    R:check("RTS.all_in_a_room", function()
+        return table.concat(seen, ",") == "true,true,true,true,true,true", "in a room: " .. table.concat(seen, ",")
+    end)
+    return true
+end }
+
+RT.S.phases = {}
+
+function RT.S.phases.ferment(ctx)
+    local S = RT.S
+    for _, t in ipairs({ "Base.Sugar", "Base.Yeast", "Base.Log", "Base.Quicklime" }) do removeAll(t) end
+    for i = 1, 2 do
+        give("Base.Sugar", 6); give("Base.Yeast", 1)
+        for _ = 1, 3 do
+            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, 10)
+        end
+        local r = machineClick("RTS.load_mash_" .. S.names[i], S.items[i], "ContextMenu_TLG_LoadFerment")
+        R:check("RTS.mash_loaded_" .. S.names[i], function()
+            return r.ok == true and S.close(r.sugarKg, 6) and S.close(r.waterL, 30),
+                string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+        end)
+    end
+    closeDialogs()
+    ctx.h0 = hours()
+    ctx.phase = "fermenting"
+end
+
+function RT.S.phases.fermenting(ctx)
+    local S = RT.S
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.h0 < 97.05 then return end
+    RT.speed(1)
+    ctx.eth0 = 6 * TLG.Registry.need("recipe", "ethanol_ferment").params.ethanolYieldLPerKg
+    local ok = true
+    for i = 1, 2 do
+        local s = RT.statusOf(S.items[i])
+        local o = S.rec(i).outputs or {}
+        ok = ok and s.state == "OutputReady"
+        R:check("RTS.fermented_" .. S.names[i], function()
+            return s.state == "OutputReady" and S.close(o.ethanol, ctx.eth0) and S.close(o.water, 30) and (o.sugar_eq or 0) == 0,
+                string.format("state=%s outputs %s", tostring(s.state), brief(o))
+        end)
+    end
+    if not ok then
+        RT.abort = "a fermentation did not finish"
+        return true
+    end
+    ctx.fed, ctx.exp, ctx.pid = {}, {}, {}
+    ctx.phase = "loadPot"
+end
+
+-- Still i fed `logs` logs through its menu (all wood removed first), then
+-- loaded with a finished fermenter's wash; what its batch must give.
+function RT.S.loadStill(ctx, i, logs)
+    local S = RT.S
+    removeAll("Base.Log")
+    give("Base.Log", logs)
+    local fuel = machineClick("RTS.feed_" .. S.names[i], S.items[i], "ContextMenu_TLG_AddFirewood")
+    local w = machineClick("RTS.load_wash_" .. S.names[i], S.items[i], "ContextMenu_TLG_LoadWash")
+    closeDialogs()
+    local rec = S.rec(i)
+    local inputs = rec.inputs or {}
+    ctx.fed[i], ctx.pid[i] = fuel.addedKg or 0, rec.id
+    ctx.exp[i] = RT.D.expected(inputs.ethanol or 0, inputs.water or 0, rec.cond or 1, rec.machine)
+    local e = ctx.exp[i]
+    R:line("OBS  RTS.loaded %s at %.4f game h: %s, firebox %.4f kg; due %.6f stage hours at %.6f kg/h, ethanol %.6f water %.6f",
+        S.names[i], rec.startedAt or -1, brief(inputs), rec.firebox or -1, e.hours, e.burn, e.ethanol, e.water)
+    R:check("RTS.loaded_" .. S.names[i], function()
+        return fuel.ok == true and S.close(fuel.addedKg, 9 * logs) and w.ok == true and S.close(w.washL, ctx.eth0 + 30)
+            and (inputs.sugar_eq or 0) == 0 and rec.state == "Processing" and S.close(rec.firebox, ctx.fed[i])
+            and ctx.fed[i] > e.burn * e.hours, string.format("firebox %s kg for the %.4f kg the batch burns; wash %s L; %s",
+            tostring(fuel.addedKg), e.burn * e.hours, tostring(w.washL), tostring(rec.state))
+    end)
+end
+
+-- The drying column loaded from a can of 4 L of ethanol and 1 L of water
+-- with quicklime; its batch gives the ethanol and the water the lime leaves
+-- (Process.converters.dry).
+function RT.S.loadColumn(ctx)
+    local S = RT.S
+    give("Base.Quicklime", 4)
+    giveCan("Base.JerryCan", { { Fluid.Get("TLG_Ethanol"), 4 }, { Fluid.Get("TLG_FuelWater"), 1 } })
+    local d = machineClick("RTS.load_dry_column", S.items[5], "ContextMenu_TLG_LoadDry")
+    closeDialogs()
+    local rec = S.rec(5)
+    local inputs = rec.inputs or {}
+    local dry = TLG.Registry.need("recipe", "ethanol_dry")
+    local eth, water, p = inputs.ethanol or 0, inputs.water or 0, dry.params
+    local removed = math.max(0, math.min(water - eth * p.targetWater, (inputs.quicklime_kg or 0) * p.waterPerKgLime))
+    ctx.pid[5] = rec.id
+    ctx.exp[5] = { hours = dry.stages[1].hours, ethanol = eth, water = water - removed }
+    R:line("OBS  RTS.loaded column at %.4f game h: %s; due ethanol %.6f water %.6f", rec.startedAt or -1, brief(inputs),
+        ctx.exp[5].ethanol, ctx.exp[5].water)
+    R:check("RTS.loaded_column", function()
+        return d.ok == true and S.close(eth, 4, 0.01) and S.close(water, 1, 0.01) and (inputs.quicklime_kg or 0) > 0
+            and rec.state == "Processing", string.format("ethanol %s water %s lime %s; %s", tostring(d.ethanolL), tostring(d.waterL),
+            tostring(d.limeKg), tostring(rec.state))
+    end)
+end
+
+function RT.S.phases.loadPot(ctx)
+    RT.S.loadStill(ctx, 3, 3)
+    RT.S.loadColumn(ctx)
+    ctx.tPot = RT.S.rec(3).startedAt or hours()
+    ctx.phase = "toReflux"
+end
+
+function RT.S.phases.toReflux(ctx) RT.C.waitUntil(ctx, ctx.tPot + 1, "loadReflux") end
+
+function RT.S.phases.loadReflux(ctx)
+    RT.S.loadStill(ctx, 4, 2)
+    ctx.phase = "toPick"
+end
+
+function RT.S.phases.toPick(ctx) RT.C.waitUntil(ctx, ctx.tPot + 1.5, "grabPot") end
+
+-- Machine i lifted through `start` (seen once it lies on the ground no more):
+-- the record before it, and the record the pickup left.
+function RT.S.grab(ctx, ticks, i, key, start, nextPhase)
+    local S = RT.S
+    local idle = RT.P.action(ctx, ticks, key, function()
+        ctx.pre[i] = TLG.Tables.deepCopy(S.items[i]:getModData().tlgProc)
+        start(S.items[i])
+    end, function()
+        if S.items[i]:getWorldItem() ~= nil then return false end
+        S.capture(ctx, "pick", i)
+        return true
+    end)
+    if idle then ctx.phase = nextPhase end
+end
+
+function RT.S.phases.grabPot(ctx, ticks)
+    ctx.pre = ctx.pre or {}
+    RT.S.grab(ctx, ticks, 3, "grabPot", function(item) ISWorldObjectContextMenu.onGrabWItem(nil, item:getWorldItem(), 0) end,
+        "grabColumn")
+end
+
+function RT.S.phases.grabColumn(ctx, ticks)
+    RT.S.grab(ctx, ticks, 5, "grabColumn", function(item)
+        -- The loot window lists the floor items around the character
+        -- (ISInventoryPage.refreshBackpacks); its Grab takes them from there.
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        ctx.lootListed = item:getContainer() == ISInventoryPage.GetFloorContainer(0)
+        R:line("OBS  RTS.grab_column the loot window lists the column on the floor=%s", tostring(ctx.lootListed))
+        if ctx.lootListed then
+            ISInventoryPaneContextMenu.onGrabItems({ item }, 0)
+        else
+            ISWorldObjectContextMenu.onGrabWItem(nil, item:getWorldItem(), 0)
+        end
+    end, "grabReflux")
+end
+
+function RT.S.phases.grabReflux(ctx)
+    local item = RT.S.items[4]
+    ctx.pre[4] = TLG.Tables.deepCopy(item:getModData().tlgProc)
+    local ok, err = pcall(RT.P.liftUnseen, item)
+    ctx.tLift = hours()
+    R:line("OBS  RTS.grab_reflux_still lifted without the game's Lua at %.4f game h: ok=%s %s", ctx.tLift, tostring(ok),
+        tostring(err or ""))
+    ctx.phase = "carried"
+end
+
+function RT.S.phases.carried(ctx)
+    local S, P = RT.S, RT.P
+    local pot, reflux, column = S.items[3], S.items[4], S.items[5]
+    ctx.pick = ctx.pick or {}
+    R:check("RTS.picked_up_pot_still_world_menu_grab", function()
+        return P.carried(pot) and ctx.pick[3] ~= nil, "carried=" .. tostring(P.carried(pot))
+    end)
+    R:check("RTS.picked_up_column_loot_window_grab", function()
+        return P.carried(column) and ctx.pick[5] ~= nil and ctx.lootListed == true,
+            string.format("carried=%s listed in the loot window=%s", tostring(P.carried(column)), tostring(ctx.lootListed))
+    end)
+    R:check("RTS.picked_up_reflux_still_unseen", function() return P.carried(reflux), "carried=" .. tostring(P.carried(reflux)) end)
+    if not (P.carried(pot) and P.carried(column) and P.carried(reflux) and ctx.pick[3] and ctx.pick[5]) then
+        RT.abort = "a machine was not picked up"
+        return true
+    end
+    -- Seen pickups: the batch brought to the moment of the pickup, then
+    -- carried. Stills and column work at full rate: the work is the hours
+    -- placed.
+    ctx.keys = {}
+    for _, k in ipairs({ { 3, "grabPot" }, { 5, "grabColumn" } }) do
+        local i, p = k[1], ctx.pick[k[1]]
+        local done, placed = P.work(p), (p.t or 0) - (p.startedAt or 0)
+        ctx.keys[i] = { temps = P.maxKey(p.temps), fires = P.maxKey(p.fires) }
+        R:check("RTS.pickup_counts_the_placed_hours_" .. S.names[i], function()
+            local same, detail = P.sameBatch(ctx.pre[i], p, P.BATCH)
+            return same and p.state == "Paused" and p.pause == "not_placed" and math.abs(done - placed) <= S.tol
+                and math.abs((p.t or 0) - ctx[k[2]].at) <= S.near, string.format(
+                "%s; done %.6f h of %.6f h placed (picked up at %.6f, seen lifted at %.4f)", detail, done, placed, p.t or -1,
+                ctx[k[2]].at or -1)
+        end)
+    end
+    local p3, e3 = ctx.pick[3], ctx.exp[3]
+    R:check("RTS.pickup_pot_still_distilling_burned_its_placed_hours", function()
+        local want = ctx.fed[3] - e3.burn * P.work(p3)
+        return p3.stage == 2 and S.close(p3.firebox, want), string.format("stage %s; firebox %.6f kg, expected %.6f (%.6f kg/h for %.6f h)",
+            tostring(p3.stage), p3.firebox or -1, want, e3.burn, P.work(p3))
+    end)
+    -- The unseen pickup: nothing knows yet.
+    ctx.keys[4] = { temps = P.maxKey(ctx.pre[4].temps), fires = P.maxKey(ctx.pre[4].fires) }
+    R:check("RTS.unseen_pickup_changes_nothing_yet", function()
+        return P.sameBatch(ctx.pre[4], reflux:getModData().tlgProc, P.WHOLE)
+    end)
+    local sites = TLG.World.get().machineSites or {}
+    R:check("RTS.hourly_list_at_pickup", function()
+        return sites[ctx.pid[3]] == nil and sites[ctx.pid[5]] == nil and sites[ctx.pid[4]] ~= nil,
+            string.format("listed: pot still %s, reflux still %s, column %s", tostring(sites[ctx.pid[3]] ~= nil),
+                tostring(sites[ctx.pid[4]] ~= nil), tostring(sites[ctx.pid[5]] ~= nil))
+    end)
+    -- The menu on a carried machine: Status, and "Place it on the ground to
+    -- operate it" greyed; no firewood, wash, lime, collecting or controls.
+    local want = getText("ContextMenu_TLG_MachineStatus") .. " | " .. getText("ContextMenu_TLG_PlaceFirst") .. " (greyed)"
+    for _, i in ipairs({ 3, 5 }) do
+        local got = table.concat(RT.menuOffered(S.items[i]), " | ")
+        R:check("RTS.menu_while_carried_" .. S.names[i], function() return got == want, "offered: " .. got end)
+    end
+    local before = #H.dialogs.texts
+    local r = machineClick("RTS.status_pot_still_carried", pot, "ContextMenu_TLG_MachineStatus")
+    local text = H.dialogs.texts[before + 1]
+    closeDialogs()
+    R:check("RTS.carried_status_paused_pot_still", function()
+        return r.ok == true and r.state == "Paused" and r.pause == "not_placed" and has(text, getText("IGUI_TLG_Pause_not_placed")),
+            string.format("state=%s pause=%s dialog=%s", tostring(r.state), tostring(r.pause), tostring(text))
+    end)
+    ctx.held = { [3] = TLG.Tables.deepCopy(pot:getModData().tlgProc), [5] = TLG.Tables.deepCopy(column:getModData().tlgProc) }
+    ctx.phase = "carry"
+end
+
+function RT.S.phases.carry(ctx)
+    local S, P = RT.S, RT.P
+    RT.speed(RT.waitSpeed)
+    -- The first hourly reading after the lift finds the reflux still's tile empty.
+    if not ctx.listChecked and hours() >= math.floor(ctx.tLift) + 1.05 then
+        local sites = TLG.World.get().machineSites or {}
+        R:check("RTS.hourly_list_drops_unseen_machine", function()
+            return sites[ctx.pid[4]] == nil, "reflux still listed: " .. tostring(sites[ctx.pid[4]] ~= nil)
+        end)
+        ctx.listChecked = true
+    end
+    if hours() - ctx.tLift < S.carryHours then return end
+    RT.speed(1)
+    local ok, parts = true, {}
+    for _, i in ipairs({ 3, 5 }) do
+        local same, detail = P.sameBatch(ctx.held[i], S.rec(i), S.HELD)
+        ok = ok and same
+        parts[#parts + 1] = S.names[i] .. ": " .. detail
+    end
+    local same4, detail4 = P.sameBatch(ctx.pre[4], S.rec(4), P.WHOLE)
+    parts[#parts + 1] = "reflux_still: " .. detail4
+    R:check("RTS.nothing_advances_while_carried", function()
+        return ok and same4, string.format("%.4f game h carried; %s", hours() - ctx.tLift, table.concat(parts, " | "))
+    end)
+    R:check("RTS.nothing_filed_while_carried", function()
+        local n = 0
+        for _, i in ipairs({ 3, 4, 5 }) do
+            local rec = S.rec(i)
+            n = n + P.after(rec.temps, ctx.keys[i].temps) + P.after(rec.fires, ctx.keys[i].fires)
+        end
+        return n == 0, string.format("%d readings or notes since the pickups", n)
+    end)
+    ctx.phase = "dropPot"
+end
+
+-- Machine i put down through `start` (seen once it is found on a tile by its
+-- process id): the record before, and the record the put-down left.
+function RT.S.put(ctx, ticks, i, key, start, nextPhase)
+    local S = RT.S
+    local idle = RT.P.action(ctx, ticks, key, function()
+        ctx.before = ctx.before or {}
+        ctx.before[i] = TLG.Tables.deepCopy(S.items[i]:getModData().tlgProc)
+        start(S.items[i])
+    end, function()
+        local it = RT.P.placedById(ctx.pid[i])
+        if it == nil then return false end
+        S.items[i] = it
+        S.capture(ctx, "put", i)
+        return true
+    end)
+    if idle then ctx.phase = nextPhase end
+end
+
+function RT.S.phases.dropPot(ctx, ticks)
+    -- As the place cursor queues it (SRC BuildingObjects/ISPlace3DItemCursor.lua),
+    -- onto a tile next to the character: F1's, its wash taken by a still.
+    local f1 = RT.S.spots[2]
+    RT.S.put(ctx, ticks, 3, "dropPot", function(item)
+        local action = ISDropWorldItemAction:new(player(), item, sq(f1.x, f1.y, 0), 0.5, 0.5, 0, 0, false)
+        action.isPlaceItem = true
+        ISTimedActionQueue.add(action)
+    end, "dropColumn")
+end
+
+function RT.S.phases.dropColumn(ctx, ticks)
+    RT.S.put(ctx, ticks, 5, "dropColumn", function(item) ISInventoryPaneContextMenu.onDropItems({ item }, 0) end, "dropReflux")
+end
+
+function RT.S.phases.dropReflux(ctx, ticks)
+    RT.S.put(ctx, ticks, 4, "dropReflux", function(item) ISInventoryPaneContextMenu.onDropItems({ item }, 0) end, "dropped")
+end
+
+function RT.S.phases.dropped(ctx)
+    local S, P, M = RT.S, RT.P, TLG.Integration.Machines
+    local function at(s) return s and string.format("%d,%d", s:getX(), s:getY()) or "-" end
+    local tile = {}
+    for _, i in ipairs({ 3, 4, 5 }) do tile[i] = M.square(S.items[i]) end
+    ctx.put = ctx.put or {}
+    -- Down again, on another tile than the one it was picked up from.
+    local function moved(i)
+        local old = S.spots[i + 1]
+        return tile[i] ~= nil and ctx.put[i] ~= nil and (tile[i]:getX() ~= old.x or tile[i]:getY() ~= old.y)
+    end
+    R:line("OBS  RTS.put down pot still at %s, column at %s, reflux still at %s", at(tile[3]), at(tile[5]), at(tile[4]))
+    R:check("RTS.put_down_pot_still_place_action", function()
+        return moved(3) and tile[3]:getX() == S.spots[2].x and tile[3]:getY() == S.spots[2].y, "at " .. at(tile[3])
+    end)
+    R:check("RTS.put_down_column_inventory_drop", function() return moved(5), "at " .. at(tile[5]) end)
+    R:check("RTS.put_down_reflux_still_inventory_drop", function() return moved(4), "at " .. at(tile[4]) end)
+    if not (moved(3) and moved(4) and moved(5)) then
+        RT.abort = "a machine was not put down"
+        return true
+    end
+    local sites = TLG.World.get().machineSites or {}
+    local function listedAt(i)
+        local e = sites[ctx.pid[i]]
+        return e ~= nil and e.x == tile[i]:getX() and e.y == tile[i]:getY()
+    end
+    -- Seen moves: started again from the put-down with what the pickup left.
+    for _, k in ipairs({ { 3, "dropPot" }, { 5, "dropColumn" } }) do
+        local i, p = k[1], ctx.put[k[1]]
+        R:check("RTS.put_down_resumes_" .. S.names[i], function()
+            local same, detail = P.sameBatch(ctx.held[i], p, S.KEPT)
+            return same and p.state == "Processing" and p.pause == nil and math.abs((p.t or 0) - ctx[k[2]].at) <= S.near
+                and p.site ~= nil and p.site.x == tile[i]:getX() and p.site.y == tile[i]:getY() and listedAt(i),
+                string.format("%s; put down at %.6f (seen at %.4f); listed here %s", detail, p.t or -1, ctx[k[2]].at or -1,
+                    tostring(listedAt(i)))
+        end)
+    end
+    -- The unseen move, found at its put-down: credited up to the last time
+    -- the mod found it placed, still heating up, then from the put-down.
+    local p4, e4 = ctx.put[4], ctx.exp[4]
+    local seen = ctx.before[4] and ctx.before[4].seen
+    R:check("RTS.unseen_pickup_credited_up_to_last_seen", function()
+        local done, short = P.work(p4), ctx.tLift - (seen or -99)
+        local fuel = ctx.fed[4] - e4.burn * done
+        return seen ~= nil and short >= -S.tol and short <= P.seenBound + S.near and S.close(done, seen - (p4.startedAt or 0))
+            and S.close(p4.firebox, fuel) and p4.stage == 1 and S.close(p4.pausedFor, 0) and p4.state == "Processing"
+            and math.abs((p4.t or 0) - ctx.dropReflux.at) <= S.near and listedAt(4), string.format(
+            "last seen %s, %.4f h before the grab; done %.6f h (seen - load %.6f); stage %s; firebox %.6f kg, expected %.6f; %s; listed here %s",
+            tostring(seen), short, done, (seen or 0) - (p4.startedAt or 0), tostring(p4.stage), p4.firebox or -1, fuel,
+            tostring(p4.state), tostring(listedAt(4)))
+    end)
+    ctx.tDrop, ctx.doneDrop = {}, {}
+    for _, i in ipairs({ 3, 4, 5 }) do ctx.tDrop[i], ctx.doneDrop[i] = ctx.put[i].t, P.work(ctx.put[i]) end
+    ctx.next, ctx.ready = hours(), {}
+    ctx.phase = "finishing"
+end
+
+-- Status every quarter game hour until the three batches are done.
+function RT.S.phases.finishing(ctx)
+    local S = RT.S
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return end
+    ctx.next = hours() + 0.25
+    local all = true
+    for _, i in ipairs({ 3, 4, 5 }) do
+        if not ctx.ready[i] then
+            local s = RT.statusOf(S.items[i])
+            if s.state == "OutputReady" or s.state == "Faulted" then ctx.ready[i] = true else all = false end
+        end
+    end
+    if not all and hours() - ctx.tDrop[5] < 16 then return end
+    RT.speed(1)
+    ctx.phase = "finished"
+end
+
+-- Each batch: the stage hours left at the put-down done after it, every
+-- kilogram burned while placed, and the definitions' spirit.
+function RT.S.phases.finished(ctx)
+    local S = RT.S
+    for _, i in ipairs({ 3, 4, 5 }) do
+        local rec, e = S.rec(i), ctx.exp[i]
+        local o = rec.outputs or {}
+        local due = ctx.tDrop[i] + (e.hours - ctx.doneDrop[i])
+        R:line("OBS  RTS.%s done at %.6f game h, %.6f h after loading (%.4f stage hours); firebox %s kg; outputs %s", S.names[i],
+            rec.completedAt or -1, (rec.completedAt or 0) - (rec.startedAt or 0), e.hours, tostring(rec.firebox), brief(o))
+        R:check("RTS.finished_its_stage_hours_after_put_down_" .. S.names[i], function()
+            return rec.state == "OutputReady" and S.close(rec.completedAt, due) and S.close(rec.pausedFor, 0),
+                string.format("%s at %.6f, due %.6f (put down at %.6f with %.6f of %.4f h done); paused %.6f h", tostring(rec.state),
+                    rec.completedAt or -1, due, ctx.tDrop[i], ctx.doneDrop[i], e.hours, rec.pausedFor or -1)
+        end)
+        if e.burn then
+            R:check("RTS.firebox_burned_only_while_placed_" .. S.names[i], function()
+                local want = ctx.fed[i] - e.burn * e.hours
+                return S.close(rec.firebox, want), string.format("%.6f kg left of %.4f, expected %.6f (%.4f h at %.6f kg/h)",
+                    rec.firebox or -1, ctx.fed[i], want, e.hours, e.burn)
+            end)
+        end
+        R:check("RTS.spirit_" .. S.names[i], function()
+            return S.close(o.ethanol, e.ethanol) and S.close(o.water or 0, e.water),
+                string.format("ethanol %.6f (%.6f) water %.6f (%.6f)", o.ethanol or -1, e.ethanol, o.water or 0, e.water)
+        end)
+    end
+    ctx.phase = "collect"
+end
+
+-- Each machine's spirit into an empty can of its own (the menu fills an
+-- empty can first).
+function RT.S.phases.collect(ctx)
+    local S = RT.S
+    for _, i in ipairs({ 3, 4, 5 }) do
+        local o = TLG.Tables.deepCopy(S.rec(i).outputs or {})
+        giveCan("Base.JerryCan")
+        local before = ethanolCans()
+        machineClick("RTS.collect_" .. S.names[i], S.items[i], "ContextMenu_TLG_CollectEthanol")
+        closeDialogs()
+        local can, fresh = grownCan(before)
+        local v = can and tlgView("item", can)
+        R:check("RTS.collected_" .. S.names[i], function()
+            local q = v and v.q or {}
+            return v ~= nil and fresh == true and S.close(q.ethanol, o.ethanol, 1e-3) and S.close(q.water or 0, o.water or 0, 1e-3)
+                and S.rec(i).state == "Ready", string.format("%s; it held %s; machine %s", viewText(v, "can"), brief(o),
+                tostring(S.rec(i).state))
+        end)
+    end
+    return true
+end
+
+RT.stillRun = { name = "rts_run", timeout = 120000, fn = function(ctx, ticks)
+    if not ctx.phase and RT.skip("rts_run") then return true end
+    if ticks % 30 == 0 then RT.keepFit() end
+    return RT.S.phases[ctx.phase or "ferment"](ctx, ticks) == true
+end }
+
+RT.stillSteps = { RT.waitWorld, RT.setup, RT.stillSetup, RT.stillRun, RT.finish }
 
 ------------------------------------------------------------------------------
 -- Open fires (request "sp-rtof"): a fermenter beside a campfire and one
@@ -6801,7 +7320,8 @@ Events.OnMainMenuEnter.Add(function()
 end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
-    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
+    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtof"
+    or REQUEST == "sp-it" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -6831,7 +7351,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- (BC SandboxOptions.randomElectricityShut).
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
-            elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" then
+            elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" then
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
@@ -6859,6 +7379,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, machine controls")
                 TLGH.Steps.run(R, RT.controlSteps, H, nil)
+            elseif REQUEST == "sp-rts" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, stills and column picked up")
+                TLGH.Steps.run(R, RT.stillSteps, H, nil)
             elseif REQUEST == "sp-rtof" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, open fires")
                 TLGH.Steps.run(R, RT.openFireSteps, H, nil)
