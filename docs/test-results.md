@@ -9,7 +9,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
-| RT-SP: crafting the sampling kit, filter and stabilizer; distilling in the pot still; picking up a running still or drying column (fermenters: run 26); machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
+| RT-SP: crafting the sampling kit, filter and stabilizer; distilling in the pot still; picking up a running still or drying column (fermenters: runs 26–27); machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
@@ -699,5 +699,39 @@ cannot tell the hours placed from the hours carried: a Status while
 carried drops every hour since the last use, and without one every hour
 counts. With the grid on, the four readings compared were 22.0000 °C, and
 Status gave 71.6 °F (22 °C) as the day temperature at all three tiles, as
-the room formula says (its first check in game with power). Not run: a still or drying column picked up, a move in
-multiplayer, a carried machine across a save.
+the room formula says (its first check in game with power). Not run: a
+still or drying column picked up, a move in multiplayer, a carried machine
+across a save.
+
+## 2026-11-01 — RT-SP client harness, launch 27 (pickup after the fix)
+
+Command: `tools/run-sp-harness.ps1 -Mode pickup -TimeoutMinutes 30`, with
+the fix of D-015 (commit `d21dd15`): the adapter wraps the game's Grab,
+floor transfers and place action, and credits a move no Lua saw up to the
+last time it found the machine placed (`seen`). The mode now has a fourth
+fermenter, D, lifted with the calls `ISGrabItemAction`'s single-player
+branch makes but not through it: a grab no Lua sees, as the server's Java
+item transaction is in multiplayer. D's Status was not read while carried,
+and it went down with the inventory menu's Drop. The checks that run 26
+read as "not read until a Status" now expect the hourly reading to find
+the machines at their new tiles at once. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run27_pickup_fix.txt`.
+
+Result: **34 PASS / 0 FAIL** (the console showed "machine move hooks
+installed" and no move error).
+
+| Run 27 | Result |
+| --- | --- |
+| At pickup (A Grab, B loot window) | counted to the moment, then paused: A 3.0192 h for 3.0192 h placed, B 3.0332 h for 3.0333 h; off the hourly list at once; readings and notes kept |
+| A's Status while carried | Paused, "it was picked up"; no work added |
+| D, grabbed unseen | record untouched; still listed until the next hourly reading, then dropped |
+| Carried 3 h | nothing filed for A, B or D |
+| Put down (A place action, B and D Drop) | A and B Processing from the put-down with the work they had, site and hourly list at the new tile at once; D found moved: credited up to the last time it was found placed, 0.1017 h before the grab (2.9317 h), then Processing from the put-down |
+| No Status for 2 h after | readings filed at the new tiles (6 h, filed 22 = game 22.0000 °C) and fire notes (3 h each) |
+| Read 8.04 h after loading | C 8.0383 h; A 5.0225 h (3.0192 before the pickup + 2.0033 since the put-down); B 5.0351 h = its 5.0351 h placed; D 4.9321 h (2.9317 + 2.0003) |
+| Two hours on | A, B, C and D 2.0071 h each |
+
+The three checks run 26 failed (`RTP.D015_`) passed, as did a fourth for
+B at the pickup. Not run: a still or drying column picked up, a move in
+multiplayer itself (D only stands in for its grab), a carried machine
+across a save.

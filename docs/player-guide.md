@@ -108,9 +108,9 @@ one finished), and a January batch beside a house fireplace kept fed with
 logs (it finished; the fire was lit and fed by the test without its
 menu, and its warmth counted through the first 6 hours of a 12 hour
 absence, as long as its fuel lasted), and working fermenters picked up and
-put down again (paused while carried, working again once down; the hours
-around the move, miscounted in that check, are fixed and not yet checked
-again); a barbecue's warmth while you are away,
+put down again (paused while carried, working again once down, the hours
+they stood counted to the minute and the hours carried not at all); a
+barbecue's warmth while you are away,
 distilling in the pot still, Pause/Resume/Abort, picking up a working
 still or drying column, a fire or barbecue beside a machine, upper floors
 and stopped days adding up across separate cold spells are untested in

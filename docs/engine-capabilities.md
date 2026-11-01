@@ -434,7 +434,12 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `AddWorldInventoryItem`. In multiplayer the client asks the server for an
   item transaction instead (`createItemTransaction`); the server's Lua
   `TransactionProcessor` handles only moveables and `dropOnFloor`, so no
-  Lua sees a grab there (not run in MP).
+  Lua sees a grab there (not run in MP). TLG wraps
+  `ISGrabItemAction.transferItem`, `ISTransferAction.transferItem` and
+  `ISDropWorldItemAction.complete` (D-015); in run 27 the four
+  single-player paths reached the wraps, and an item lifted with
+  `ISGrabItemAction`'s own calls outside it reached none, as a multiplayer
+  grab would.
 * Fireplaces (BC 42.21 `IsoFireplace`): the map loader makes one from a
   tile whose `container` property is `fireplace`, `campfire`, `brazier` or
   `woodstove` (`CellLoader`); the only one vanilla Lua builds itself is the
@@ -571,7 +576,7 @@ fireplace, run 20 1/0 (the search found none near the start) and run 21
 **21/0**, the winter mode with the fire notes running, run 24
 **25/0**, the fireplace batch across a save, run 25 **8/0** before and
 **20/0** after it, and running fermenters picked up and put down, run 26
-25/3. Most failures were
+25/3 and, after the fix, run 27 **34/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -581,8 +586,9 @@ delta on an open-ended action). Run 15 passed and still showed a defect:
 every January day had the same temperature (the season curve, D-020).
 Runs 17–18 found two in the site readings: a warmed machine paused after
 midnight until the day's first reading, and the status then still showed
-the unheated value (a pruned reading). Run 26's three failures are one mod
-defect: the work around a machine pickup does not follow D-015.
+the unheated value (a pruned reading). Run 26's three failures were one
+mod defect: the work around a machine pickup did not follow D-015 (fixed,
+run 27).
 
 ## Tooling pitfalls found
 

@@ -171,7 +171,12 @@ listed with their replacement.
   and ten-minute note). A move no Lua sees (in multiplayer the server grabs
   in a Java item transaction) is found at the next access or put-down: the
   batch counts up to `seen`, at most ten minutes short while the area is
-  loaded, and not past it. Not yet run in game.
+  loaded, and not past it. Verified RT-SP run 27 (34/0): fermenters picked
+  up with the Grab and the loot window and put down with the place action
+  and Drop did the work of their placed hours exactly; one lifted with the
+  grab's own calls outside its Lua (standing in for multiplayer) was
+  credited up to 0.10 h before the grab. A move in multiplayer itself is
+  NOT RUN.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

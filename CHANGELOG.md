@@ -44,7 +44,10 @@
   hours never count. Before, a Status read while carrying it lost every
   hour since the machine was last used, and without one the carried hours
   counted (found in game). In multiplayer, where the game's grab is not
-  visible to mods, up to ten minutes before a pickup can be lost.
+  visible to mods, up to ten minutes before a pickup can be lost. Checked
+  in game with the world menu's Grab, the loot window, the place action and
+  Drop, and with a grab made outside the game's Lua (multiplayer itself not
+  checked).
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

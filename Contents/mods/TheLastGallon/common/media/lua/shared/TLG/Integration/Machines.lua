@@ -14,8 +14,9 @@
 -- in run 25 such a record, "no fire" notes included, came back unchanged
 -- from save, exit to menu and continue. In run 26 running fermenters were
 -- picked up and put down through the player's actions: the record travelled
--- unchanged, but the work around the move failed D-015, which the move hooks
--- below now account (not yet run in game).
+-- unchanged, but the work around the move failed D-015. With the move hooks
+-- below, run 27 counted the placed hours exactly and credited a grab no Lua
+-- saw up to the last time the machine was found placed.
 -- Distilling in the pot still, a still or drying column picked up while
 -- processing, a barbecue or open fire, upper floors and MP replication are
 -- NOT RUN.

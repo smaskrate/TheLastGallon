@@ -21,9 +21,10 @@
   beside it while tending the fire with logs. fireplace-reload: the same
   batch saved mid-way (the fire left to burn out first), exited to the
   menu and continued: the records must survive, then the batch runs on.
-  pickup: summer with the grid on; two of three running fermenters are
-  picked up (world menu Grab, loot window Grab), carried, put down again
-  (place action, inventory Drop) and read against the third.
+  pickup: summer with the grid on; three of four running fermenters are
+  picked up (world menu Grab, loot window Grab, and the grab's own calls
+  where no Lua sees them, as in multiplayer), carried, put down again
+  (place action, inventory Drop) and read against the fourth.
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup")][string]$Mode = "full")
