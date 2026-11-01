@@ -143,6 +143,9 @@ function C.writeSidecar(owner, kind, rec)
 end
 
 -- Endpoint for TLG-initiated transactions (moves native quantity too).
+-- `readStatus` is the last read's status ("initialized": fuel the mod had
+-- not recorded, given its baseline); `record` writes the record alone,
+-- never the native fluid (a look records what it finds, D-024).
 function C.endpoint(owner, kind, actor)
     local ep = { key = C.keyOf(owner, kind), owner = owner, kind = kind }
     function ep:canAccess(player)
@@ -159,12 +162,17 @@ function C.endpoint(owner, kind, actor)
         return false, "out_of_reach"
     end
     function ep:read()
-        local rec = C.read(owner, kind, true)
+        local rec, status = C.read(owner, kind, true)
+        self.readStatus = status
         return rec
     end
     function ep:write(rec)
         local ok, why = Native.writeComposition(C.fluidOf(owner, kind), rec.q)
         if not ok then return false, why end
+        C.writeSidecar(owner, kind, rec)
+        return true
+    end
+    function ep:record(rec)
         C.writeSidecar(owner, kind, rec)
         return true
     end

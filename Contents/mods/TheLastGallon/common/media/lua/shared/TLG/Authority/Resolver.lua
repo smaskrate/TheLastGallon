@@ -60,8 +60,13 @@ function Res.resolve(ref, ctx)
             if nearby(p, obj:getSquare(), 3.5) then return true end
             return false, "out_of_reach"
         end
-        function ep:read() return (S.read(obj, true)) end
+        function ep:read()
+            local rec, status = S.read(obj, true)
+            self.readStatus = status
+            return rec
+        end
         function ep:write(rec) S.write(obj, rec); return true end
+        function ep:record(rec) S.writeSidecar(obj, rec); return true end
         return ep
     elseif ref.kind == "generator" then
         local obj, why = objectAt(ref)
@@ -72,13 +77,18 @@ function Res.resolve(ref, ctx)
             if nearby(p, obj:getSquare(), 2.5) then return true end
             return false, "out_of_reach"
         end
-        function ep:read() return (G.read(obj, true)) end
+        function ep:read()
+            local rec, status = G.read(obj, true)
+            self.readStatus = status
+            return rec
+        end
         function ep:write(rec)
             obj:setFuel(TLG.Domain.Supply.total(rec))
             G.writeSidecar(obj, rec)
             obj:sync()
             return true
         end
+        function ep:record(rec) G.writeSidecar(obj, rec); return true end
         return ep
     end
     return nil, "unknown_kind"

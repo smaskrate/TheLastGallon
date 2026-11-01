@@ -90,18 +90,22 @@ end
 
 -- Writes sidecar and sets the native unit count (whole units; remainder kept).
 function S.write(obj, rec)
-    local md = obj:getModData()
     if not infinite() then
         local total = Supply.total(rec)
         local units = math.floor(total / S.LITRES_PER_UNIT + 1e-9)
         rec.frac = total - units * S.LITRES_PER_UNIT
         obj:setPipedFuelAmount(units)
     end
+    S.writeSidecar(obj, rec)
+end
+
+-- The reservoir's record alone, the pump's units untouched.
+function S.writeSidecar(obj, rec)
     local side = { v = C.SCHEMA, cap = rec.cap, frac = rec.frac or 0 }
     for _, f in ipairs({ "id", "rev", "deg", "stab", "mic", "t", "cond", "label", "prov", "q" }) do
         side[f] = Tables.deepCopy(rec[f])
     end
-    md.tlg = side
+    obj:getModData().tlg = side
     obj:transmitModData()
 end
 

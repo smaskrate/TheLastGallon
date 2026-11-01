@@ -111,10 +111,19 @@ function V.endpoint(vehicle)
         if part and player and vehicle:isInArea(part:getArea(), player) then return true end
         return false, "not_at_fuel_cap"
     end
-    function ep:read() return (V.read(vehicle, true)) end
+    function ep:read()
+        local rec, status = V.read(vehicle, true)
+        self.readStatus = status
+        return rec
+    end
     function ep:write(rec)
         local part = V.tank(vehicle)
         part:setContainerContentAmount(Supply.total(rec))
+        V.writeSidecar(vehicle, rec)
+        return true
+    end
+    -- The record alone, the tank untouched (C.endpoint).
+    function ep:record(rec)
         V.writeSidecar(vehicle, rec)
         return true
     end

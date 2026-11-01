@@ -78,7 +78,11 @@ local function consume(player, item)
     if isServer() and sendRemoveItemFromContainer then sendRemoveItemFromContainer(container, item) end
 end
 
--- Sampling never changes the fuel; the observation is stored per player.
+-- Sampling never changes the fuel; the observation is stored per player,
+-- under the id the fuel carries. Fuel the mod had not recorded is recorded
+-- as found, its baseline written without touching the fuel itself (D-024):
+-- before, the observation was filed under an id the fuel never got, and
+-- What I know about it stayed "unknown" (RT-SP runs 39-40).
 function H.sample(player, args)
     local state, err = openTarget(player, args)
     if not state then return err end
@@ -86,6 +90,7 @@ function H.sample(player, args)
     if method == "kit" and not findItem(player, "TLG.FuelSampleKit") then
         return { ok = false, reason = "needs_sample_kit" }
     end
+    if state.ep.readStatus == "initialized" and state.ep.record then state.ep:record(state.rec) end
     local skill = 0
     pcall(function() skill = player:getPerkLevel(Perks.Mechanics) / 10 end)
     local seed = Rng.hash(args.requestId .. ":" .. tostring(state.rec.id), World.get().seed or 1)

@@ -6287,7 +6287,10 @@ RT.openFireSteps = { RT.waitWorld, RT.setup, RT.openSites, RT.openLight, RT.open
 -- the policy's two ends (Aging.advance from the installation, and from the
 -- world's start less the pre-outbreak age), not by WorldInit.baseline. Look
 -- and smell on the untouched can comes first: the player guide says "What
--- I know about it" shows the last result. After 6 game days the can on the
+-- I know about it" shows the last result, and since D-024 the look records
+-- the can, so it is the first contact and a pour then keeps that record
+-- (runs 39-40, before D-024, found the look recording nothing). After 6
+-- game days the can on the
 -- ground is found. Phase C, after save, exit to the menu and continue: the
 -- world record and the fuel records stand as they were.
 ------------------------------------------------------------------------------
@@ -6401,8 +6404,12 @@ RT.X.look = { name = "rtx_look", timeout = 600, fn = function(ctx, ticks)
     R:check("RTX.carried_can_untracked_before", function()
         return a:getModData().tlg == nil, "record " .. brief(a:getModData().tlg)
     end)
+    local fc = a:getFluidContainerFromSelfOrWorldItem()
+    local spec = { storage = TLG.ContainerProfiles.forItem(a), cap = fc:getCapacity(),
+        q = TLG.Integration.Native.readComposition(fc) }
     local fill = function(c) TLG.UI.FuelMenu.fill(0, c, { a }) end
     local n = #H.dialogs.texts
+    local t = TLG.World.now()
     menuClick("RTX.look", fill, getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_Look"))
     local look = H.dialogs.texts[n + 1]
     closeDialogs()
@@ -6421,6 +6428,12 @@ RT.X.look = { name = "rtx_look", timeout = 600, fn = function(ctx, ticks)
             string.format("the can's record %s; its observation %s", brief(side),
                 side and brief(know[tostring(side.id)]) or "not found: the can carries no id")
     end)
+    -- A look that records the can is its first contact (D-024).
+    if side then
+        local want, aged, full, w = X.expected(TLG.World.get(), "item:" .. tostring(a:getID()), spec, t)
+        X.firstA = { side = TLG.Tables.deepCopy(side), t = t, want = want, aged = aged, full = full, w = w,
+            by = "Look and smell" }
+    end
     return true
 end }
 
@@ -6430,11 +6443,27 @@ RT.X.discover = { name = "rtx_discover", timeout = 3000, fn = function(ctx, tick
     local X = RT.X
     if not ctx.phase and RT.skip("rtx_discover") then return true end
     if not ctx.phase then
-        X.firstA = X.pourFirst(X.canA)
+        if X.firstA then
+            -- Recorded by the look: a pour keeps that record.
+            local fc = X.canA:getFluidContainerFromSelfOrWorldItem()
+            local into = player():getInventory():AddItem("Base.PetrolCan")
+            into:getFluidContainer():Empty()
+            FluidContainer.Transfer(fc, into:getFluidContainer(), 1.0)
+            local after = X.canA:getModData().tlg
+            R:check("RTX.pour_keeps_the_look_record", function()
+                return after ~= nil and after.id == X.firstA.side.id,
+                    "after the look " .. RT.X.sideKey(X.firstA.side) .. ", after a pour " .. RT.X.sideKey(after)
+            end)
+        else
+            X.firstA = X.pourFirst(X.canA)
+            X.firstA.by = "a pour"
+        end
+        X.lastA = TLG.Tables.deepCopy(X.canA:getModData().tlg)
         R:check("RTX.found_at_installation_is_fresh", function()
             local f = X.firstA
             local deg = f.side and f.side.deg and f.side.deg.gasoline
-            return deg ~= nil and math.abs(deg - f.want) <= X.tol and f.full > f.want + 1e-4, X.firstText(f)
+            return deg ~= nil and math.abs(deg - f.want) <= X.tol and f.full > f.want + 1e-4,
+                "first recorded by " .. tostring(f.by) .. ": " .. X.firstText(f)
         end)
         -- The pump with fuel nearest the start, approached from a free tile.
         local best
@@ -6533,12 +6562,11 @@ RT.X.late = { name = "rtx_late", timeout = 600, fn = function(ctx, ticks)
         return deg ~= nil and math.abs(deg - f.want) <= X.tol and f.want > f.aged + 1e-4 and f.want < f.full - 1e-4
             and f.w > 0.15, X.firstText(f)
     end)
-    -- The can recorded at installation keeps its record (aged from then).
+    -- The can recorded at installation keeps its record as last written.
     local side = X.canA:getModData().tlg
     R:check("RTX.found_at_installation_stays_recorded", function()
-        return side ~= nil and X.firstA.side ~= nil and side.id == X.firstA.side.id
-            and side.deg.gasoline == X.firstA.side.deg.gasoline,
-            "then " .. RT.X.sideKey(X.firstA.side) .. ", now " .. RT.X.sideKey(side)
+        return side ~= nil and RT.X.sideKey(side) == RT.X.sideKey(X.lastA),
+            "then " .. RT.X.sideKey(X.lastA) .. ", now " .. RT.X.sideKey(side)
     end)
     return true
 end }
