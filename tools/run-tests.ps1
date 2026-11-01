@@ -50,6 +50,8 @@ if ($Entry -like "*compile_check*") {
     # Also syntax-check the dev harness mod.
     $h = Join-Path $repo "tests\ingame\TheLastGallonHarness\common\media\lua"
     $roots += @("--root", (Join-Path $h "shared"), "--root", (Join-Path $h "server"), "--root", (Join-Path $h "client"))
+    # And the existing-save rehearsal's pre-install driver.
+    $roots += @("--root", (Join-Path $repo "tests\ingame\TheLastGallonPreInstall\common\media\lua\client"))
 }
 # PowerShell drops empty-string arguments to native programs and the Windows
 # java launcher glob-expands "*", so "all" is the no-filter placeholder.

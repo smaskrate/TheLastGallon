@@ -17,6 +17,9 @@
 --             dried and checked against the engines' rules
 --   sp-rtc -> summer, grid on: Pause, Resume and Abort batch from the menu
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
+--   ex-b  -> main menu continues a save played without the mod (the
+--            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
+--   ex-c  -> main menu continues that save again: phase C
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -38,7 +41,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtof" then
+    or REQUEST == "sp-rtof" or REQUEST == "ex-b" or REQUEST == "ex-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -6268,6 +6271,342 @@ end }
 RT.openFireSteps = { RT.waitWorld, RT.setup, RT.openSites, RT.openLight, RT.openFerment, RT.finish }
 
 ------------------------------------------------------------------------------
+-- An existing save gains the mod (requests "ex-b", then "ex-c"; release gate
+-- 7). tools/rehearse-install.ps1 -Scenario existing first plays a world
+-- without The Last Gallon (the TheLastGallonPreInstall driver, request
+-- "ex-a": a can of petrol carried, one on the ground, 10 game days on the
+-- clock), then adds the mod to the save's mods.txt as the load screen's
+-- Choose mods does and continues it. Phase B is the mod's first load on
+-- that world: the world record must be created then, as an existing save
+-- under the sandbox policy (default "transition", 30 days: fuel first
+-- recorded at installation is fresh, later finds converge on the world-age
+-- condition; docs/migrations.md), never as a new world. Fuel is recorded on
+-- the first contact that writes: a pour through FluidContainer.Transfer,
+-- which the container adapter wraps, and the mod's own transfer for the
+-- pump. The moment is noted and the condition expected then computed from
+-- the policy's two ends (Aging.advance from the installation, and from the
+-- world's start less the pre-outbreak age), not by WorldInit.baseline. Look
+-- and smell on the untouched can comes first: the player guide says "What
+-- I know about it" shows the last result. After 6 game days the can on the
+-- ground is found. Phase C, after save, exit to the menu and continue: the
+-- world record and the fuel records stand as they were.
+------------------------------------------------------------------------------
+RT.X = { lateDays = 6, tol = 1e-6 }
+
+-- The condition the transition policy gives petrol first recorded at `t`:
+-- aged since the installation, blended towards the world-age condition (aged
+-- since the world's start less Rng.unit(seed, key) x the pre-age limit) by
+-- the share of the transition elapsed. Returns that, both ends and the share.
+function RT.X.expected(world, key, spec, t)
+    local D, env = TLG.Domain, TLG.World.env()
+    local preAge = TLG.Rng.unit(world.seed, key) * (spec.preAgeMax or D.WorldInit.MAX_PRE_AGE)
+    local function from(t0)
+        local s = D.Supply.new({ storage = spec.storage, cap = spec.cap, q = spec.q, t = t0 })
+        return D.Aging.advance(s, t, env).deg.gasoline or 0
+    end
+    local aged, full = from(world.installedAt), from(world.epoch - preAge)
+    local w = math.max(0, math.min(1, (t - world.installedAt) / math.max(1, world.transitionHours)))
+    return aged + (full - aged) * w, aged, full, w
+end
+
+-- A record as one comparable string: id, petrol condition, litres.
+function RT.X.sideKey(side)
+    if side == nil then return "none" end
+    local total = 0
+    for _, q in pairs(side.q or {}) do total = total + q end
+    return string.format("%s|%.9f|%.4f", tostring(side.id), (side.deg or {}).gasoline or -1, total)
+end
+
+-- The item with id `id` lying on (x, y).
+function RT.X.groundItem(x, y, id)
+    local s = sq(x, y, 0)
+    local wobjs = s and s:getWorldObjects()
+    for i = 0, (wobjs and wobjs:size() or 0) - 1 do
+        local it = wobjs:get(i):getItem()
+        if it and tostring(it:getID()) == tostring(id) then return it end
+    end
+    return nil
+end
+
+-- A petrol can's first recording: a litre poured into an empty can, with
+-- the moment and the expected condition.
+function RT.X.pourFirst(item)
+    local fc = item:getFluidContainer()
+    local comp = TLG.Integration.Native.readComposition(fc)
+    local spec = { storage = TLG.ContainerProfiles.forItem(item), cap = fc:getCapacity(), q = comp }
+    local into = player():getInventory():AddItem("Base.PetrolCan")
+    into:getFluidContainer():Empty()
+    local t = TLG.World.now()
+    FluidContainer.Transfer(fc, into:getFluidContainer(), 1.0)
+    local want, aged, full, w = RT.X.expected(TLG.World.get(), "item:" .. tostring(item:getID()), spec, t)
+    return { side = item:getModData().tlg, t = t, want = want, aged = aged, full = full, w = w }
+end
+
+function RT.X.firstText(f)
+    local deg = f.side and f.side.deg and f.side.deg.gasoline
+    return string.format("recorded at world hour %.4f, %.2f h after installation: condition %s, the rule %.9f (aged since installation %.9f, world-age condition %.9f, share %.4f); record %s",
+        f.t, f.t - TLG.World.get().installedAt, deg and string.format("%.9f", deg) or "none", f.want, f.aged, f.full,
+        f.w, RT.X.sideKey(f.side))
+end
+
+RT.X.setup = { name = "rtx_setup", timeout = 600, fn = function(ctx, ticks)
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        pcall(function() p:setUnlimitedCarry(true) end)
+        captureDialogs(true)
+        ctx.t0 = ticks
+        return nil
+    end
+    return ticks - ctx.t0 >= 30 or nil
+end }
+
+RT.X.load = { name = "rtx_load", timeout = 600, fn = function(ctx, ticks)
+    local X, md = RT.X, TLG.World.get()
+    X.e = TLGH.readKeyValues("TLG_existing_expect.txt")
+    local e, world = X.e, tostring(getWorld():getWorld())
+    R:check("RTX.same_world_continued", function()
+        return e.world ~= nil and world == e.world and hours() >= (tonumber(e.hours) or math.huge) - 1e-6
+            and hours() >= (tonumber(e.ageDays) or 99) * 24,
+            string.format("world %s (launch 1: %s), world hour %.4f (saved at %s after %s days on the clock)", world,
+                tostring(e.world), hours(), tostring(e.hours), tostring(e.ageDays))
+    end)
+    R:check("RTX.record_created_as_existing_save", function()
+        return md.v == 1 and md.createdAsNewGame == false and md.policy == "transition" and md.transitionHours == 720
+            and type(md.installedAt) == "number" and math.abs(md.installedAt - X.loadHours) < 0.1,
+            string.format("v=%s createdAsNewGame=%s policy=%s transitionHours=%s installedAt=%s (the game started at %.4f) seed=%s epoch=%s modVersion=%s nextId=%s",
+                tostring(md.v), tostring(md.createdAsNewGame), tostring(md.policy), tostring(md.transitionHours),
+                tostring(md.installedAt), X.loadHours, tostring(md.seed), tostring(md.epoch), tostring(md.modVersion),
+                tostring(md.nextId))
+    end)
+    R:line("OBS  RTX.sandbox SandboxVars.TheLastGallon as this save has it: %s",
+        brief(SandboxVars and SandboxVars.TheLastGallon))
+    X.canA = player():getInventory():getItemWithIDRecursiv(tonumber(e.canA) or -1)
+    if X.canA == nil then
+        RT.abort = "the carried can of launch 1 is not in the inventory"
+        R:line("OBS  RTX.load %s", RT.abort)
+    end
+    return true
+end }
+
+-- Look and smell on the can the mod has never recorded, then What I know
+-- about it, both from the Fuel menu.
+RT.X.look = { name = "rtx_look", timeout = 600, fn = function(ctx, ticks)
+    local X = RT.X
+    if RT.skip("rtx_look") then return true end
+    local a = X.canA
+    R:check("RTX.carried_can_untracked_before", function()
+        return a:getModData().tlg == nil, "record " .. brief(a:getModData().tlg)
+    end)
+    local fill = function(c) TLG.UI.FuelMenu.fill(0, c, { a }) end
+    local n = #H.dialogs.texts
+    menuClick("RTX.look", fill, getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_Look"))
+    local look = H.dialogs.texts[n + 1]
+    closeDialogs()
+    n = #H.dialogs.texts
+    menuClick("RTX.what_i_know", fill, getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_ShowKnown"))
+    local shown = H.dialogs.texts[n + 1]
+    closeDialogs()
+    local side, know = a:getModData().tlg, player():getModData().tlgKnowledge or {}
+    R:line("OBS  RTX.look Look and smell: %s | What I know about it: %s | observations filed under %s",
+        tostring(look), tostring(shown), table.concat(TLG.Tables.sortedKeys(know), ","))
+    R:check("RTX.look_and_smell_answers", function()
+        return has(look, getText("IGUI_TLG_InspectionTitle")), tostring(look)
+    end)
+    R:check("RTX.what_i_know_after_a_look", function()
+        return side ~= nil and know[tostring(side.id)] ~= nil,
+            string.format("the can's record %s; its observation %s", brief(side),
+                side and brief(know[tostring(side.id)]) or "not found: the can carries no id")
+    end)
+    return true
+end }
+
+-- First recordings at installation: the carried can by a pour, a pump by
+-- the mod's transfer into an empty can.
+RT.X.discover = { name = "rtx_discover", timeout = 3000, fn = function(ctx, ticks)
+    local X = RT.X
+    if not ctx.phase and RT.skip("rtx_discover") then return true end
+    if not ctx.phase then
+        X.firstA = X.pourFirst(X.canA)
+        R:check("RTX.found_at_installation_is_fresh", function()
+            local f = X.firstA
+            local deg = f.side and f.side.deg and f.side.deg.gasoline
+            return deg ~= nil and math.abs(deg - f.want) <= X.tol and f.full > f.want + 1e-4, X.firstText(f)
+        end)
+        -- The pump with fuel nearest the start, approached from a free tile.
+        local best
+        for x = STATION.x0, STATION.x1 do
+            for y = STATION.y0, STATION.y1 do
+                local s = sq(x, y, 0)
+                local objs = s and s:getObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local o = objs:get(i)
+                    if o:getPipedFuelAmount() > 0 and TLG.Integration.Stations.isPump(o) then
+                        local d = (x - START.x) * (x - START.x) + (y - START.y) * (y - START.y)
+                        if best == nil or d < best.d then best = { obj = o, x = x, y = y, d = d } end
+                    end
+                end
+            end
+        end
+        if best == nil then
+            R:line("OBS  RTX.pump none with fuel in the station")
+            ctx.phase = "done"
+            return true
+        end
+        for _, off in ipairs({ { 0, 1 }, { 1, 0 }, { -1, 0 }, { 0, -1 } }) do
+            if not ctx.stand and RT.W.free(sq(best.x + off[1], best.y + off[2], 0)) then
+                ctx.stand = { x = best.x + off[1], y = best.y + off[2] }
+            end
+        end
+        ctx.stand = ctx.stand or { x = best.x, y = best.y + 1 }
+        player():setPosition(ctx.stand.x + 0.5, ctx.stand.y + 0.5, 0)
+        ctx.pump, ctx.phase, ctx.tick = best, "pump", ticks
+        return nil
+    end
+    if ticks - ctx.tick < 5 then return nil end
+    local S, WI = TLG.Integration.Stations, TLG.Domain.WorldInit
+    local pump = ctx.pump.obj
+    local _, before = S.read(pump, false)
+    local key, units = S.keyOf(pump), pump:getPipedFuelAmount()
+    local litres = units * S.LITRES_PER_UNIT
+    local c = WI.stationContamination(TLG.World.get(), key, litres)
+    local spec = { storage = "station_ust", cap = math.max(10000, litres), preAgeMax = WI.MAX_STATION_PRE_AGE,
+        q = { gasoline = litres - c.water - c.sediment, water = c.water, sediment = c.sediment } }
+    local can = player():getInventory():AddItem("Base.PetrolCan")
+    can:getFluidContainer():Empty()
+    local t = TLG.World.now()
+    local r = ask("RTX.pump_to_can", "transfer", { source = TLG.Authority.Resolver.refForObject(pump, "pump"),
+        destination = { kind = "item", id = can:getID() }, amount = 2 })
+    local want, aged, full, w = X.expected(TLG.World.get(), key, spec, t)
+    local rec, status = S.read(pump, false)
+    X.firstP = { side = pump:getModData().tlg, t = t, want = want, aged = aged, full = full, w = w }
+    R:check("RTX.pump_found_at_installation_is_fresh", function()
+        local deg = rec and rec.deg and rec.deg.gasoline
+        return before == "initialized" and r.ok == true and status == "ok" and deg ~= nil
+            and math.abs(deg - want) <= X.tol and full > want + 1e-4 and (rec.q.water or 0) > 0,
+            string.format("pump %d,%d (%d units) untouched before=%s; transfer ok=%s; %s; water %.4f L, sediment %.4f L",
+                ctx.pump.x, ctx.pump.y, units, tostring(before == "initialized"), tostring(r.ok), X.firstText(X.firstP),
+                rec and rec.q.water or -1, rec and rec.q.sediment or -1)
+    end)
+    player():setPosition(START.x + 1.5, START.y + 0.5, 0)
+    return true
+end }
+
+-- Days on the game clock beside the can on the ground, which nothing records.
+RT.X.wait = { name = "rtx_wait", timeout = 60000, fn = function(ctx, ticks)
+    if not ctx.until_ then
+        if RT.skip("rtx_wait") then return true end
+        ctx.until_ = hours() + RT.X.lateDays * 24
+        player():setPosition(START.x + 1.5, START.y + 0.5, 0)
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if hours() < ctx.until_ then
+        RT.speed(RT.waitSpeed)
+        return nil
+    end
+    RT.speed(1)
+    return true
+end }
+
+-- The can on the ground found 6 days after installation: partly aged.
+RT.X.late = { name = "rtx_late", timeout = 600, fn = function(ctx, ticks)
+    local X = RT.X
+    if RT.skip("rtx_late") then return true end
+    local e = X.e
+    local d = X.groundItem(tonumber(e["canD.x"]), tonumber(e["canD.y"]), e.canD)
+    if d == nil then
+        R:line("OBS  RTX.late the can on the ground of launch 1 is not on %s,%s", tostring(e["canD.x"]),
+            tostring(e["canD.y"]))
+        return true
+    end
+    R:check("RTX.ground_can_untracked_until_found", function()
+        return d:getModData().tlg == nil, "record " .. brief(d:getModData().tlg)
+    end)
+    X.canD = d
+    X.firstD = X.pourFirst(d)
+    R:check("RTX.found_later_is_partly_aged", function()
+        local f = X.firstD
+        local deg = f.side and f.side.deg and f.side.deg.gasoline
+        return deg ~= nil and math.abs(deg - f.want) <= X.tol and f.want > f.aged + 1e-4 and f.want < f.full - 1e-4
+            and f.w > 0.15, X.firstText(f)
+    end)
+    -- The can recorded at installation keeps its record (aged from then).
+    local side = X.canA:getModData().tlg
+    R:check("RTX.found_at_installation_stays_recorded", function()
+        return side ~= nil and X.firstA.side ~= nil and side.id == X.firstA.side.id
+            and side.deg.gasoline == X.firstA.side.deg.gasoline,
+            "then " .. RT.X.sideKey(X.firstA.side) .. ", now " .. RT.X.sideKey(side)
+    end)
+    return true
+end }
+
+RT.X.saveExit = { name = "rtx_save_and_exit", timeout = 1200, fn = function(ctx, ticks)
+    if not ctx.saved then
+        RT.speed(1)
+        local X, md = RT.X, TLG.World.get()
+        local e = X.e or {}
+        TLGH.writeFile("TLG_existing_expect2.txt", {
+            "seed=" .. tostring(md.seed),
+            string.format("installedAt=%.6f", md.installedAt or -1),
+            "policy=" .. tostring(md.policy),
+            "epoch=" .. tostring(md.epoch),
+            "canA=" .. tostring(X.canA and X.canA:getID()),
+            "canA.side=" .. RT.X.sideKey(X.canA and X.canA:getModData().tlg),
+            "canD=" .. tostring(e.canD),
+            "canD.x=" .. tostring(e["canD.x"]),
+            "canD.y=" .. tostring(e["canD.y"]),
+            "canD.side=" .. RT.X.sideKey(X.canD and X.canD:getModData().tlg),
+        })
+        R:finish(false)
+        TLGH.writeFile("TLG_harness_request.txt", { "ex-c" })
+        saveGame()
+        ctx.saved = true
+        return nil
+    end
+    if ticks == 180 then
+        R:line("EXIT phase B -> main menu")
+        getCore():exitToMenu()
+    end
+    return nil
+end }
+
+-- Phase C: the same records after save, exit to the menu and continue.
+RT.X.reload = { name = "rtx_reload", timeout = 3000, fn = function(ctx, ticks)
+    if not ctx.t0 then
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 120 then return nil end
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    captureDialogs(true)
+    local e2, md = TLGH.readKeyValues("TLG_existing_expect2.txt"), TLG.World.get()
+    R:check("RTX.record_kept_after_reload", function()
+        return tostring(md.seed) == e2.seed and string.format("%.6f", md.installedAt or -1) == e2.installedAt
+            and md.policy == e2.policy and tostring(md.epoch) == e2.epoch and md.createdAsNewGame == false,
+            string.format("seed %s (%s), installedAt %.6f (%s), policy %s (%s), epoch %s (%s), createdAsNewGame=%s",
+                tostring(md.seed), tostring(e2.seed), md.installedAt or -1, tostring(e2.installedAt), tostring(md.policy),
+                tostring(e2.policy), tostring(md.epoch), tostring(e2.epoch), tostring(md.createdAsNewGame))
+    end)
+    local a = p:getInventory():getItemWithIDRecursiv(tonumber(e2.canA) or -1)
+    R:check("RTX.carried_can_record_kept", function()
+        local now = RT.X.sideKey(a and a:getModData().tlg)
+        return a ~= nil and now == e2["canA.side"], string.format("%s (before the save %s)", now, tostring(e2["canA.side"]))
+    end)
+    local d = RT.X.groundItem(tonumber(e2["canD.x"]), tonumber(e2["canD.y"]), e2.canD)
+    R:check("RTX.ground_can_record_kept", function()
+        local now = RT.X.sideKey(d and d:getModData().tlg)
+        return d ~= nil and now == e2["canD.side"], string.format("%s (before the save %s)", now, tostring(e2["canD.side"]))
+    end)
+    return true
+end }
+
+RT.existingSteps = { RT.waitWorld, RT.X.setup, RT.X.load, RT.X.look, RT.X.discover, RT.X.wait, RT.X.late, RT.X.saveExit }
+RT.existingReloadSteps = { RT.X.reload, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -6350,7 +6689,7 @@ else
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", false)
 end
 
-if REQUEST == "sp-b" or REQUEST == "sp-rtfb" then
+if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "ex-b" or REQUEST == "ex-c" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -6359,7 +6698,14 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" then
         MainScreen.continueLatestSave(MainScreen.latestSaveGameMode, MainScreen.latestSaveWorld)
     end)
     Events.OnGameStart.Add(function()
-        if REQUEST == "sp-rtfb" then
+        if REQUEST == "ex-b" then
+            RT.X.loadHours = hours()
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, an existing save's first load with the mod", true)
+            TLGH.Steps.run(R, RT.existingSteps, H, nil)
+        elseif REQUEST == "ex-c" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, the existing save continued again", true)
+            TLGH.Steps.run(R, RT.existingReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtfb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, fireplace, after the reload", true)
             TLGH.Steps.run(R, RT.fireReloadSteps, H, nil)
         else

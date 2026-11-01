@@ -21,8 +21,13 @@
   Folder deployed as mods/TheLastGallon (default: this repository's
   Contents/mods/TheLastGallon; tools/rehearse-install.ps1 passes the one
   unpacked from the release zip).
+.PARAMETER ActiveMods
+  Mod ids written to mods/default.txt, the mods the client loads (default:
+  the mod and the harness; the existing-save rehearsal's first launch
+  activates only TheLastGallonPreInstall).
 #>
-param([string]$DevCache = "", [switch]$Force, [string]$ModSource = "")
+param([string]$DevCache = "", [switch]$Force, [string]$ModSource = "",
+    [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 if (-not $DevCache) { $DevCache = Join-Path $env:LOCALAPPDATA "TheLastGallon\devcache" }
@@ -54,6 +59,7 @@ function Sync-Mod([string]$source, [string]$target) {
 if (-not $ModSource) { $ModSource = Join-Path $repo "Contents\mods\TheLastGallon" }
 Sync-Mod $ModSource (Join-Path $mods "TheLastGallon")
 Sync-Mod (Join-Path $repo "tests\ingame\TheLastGallonHarness") (Join-Path $mods "TheLastGallonHarness")
+Sync-Mod (Join-Path $repo "tests\ingame\TheLastGallonPreInstall") (Join-Path $mods "TheLastGallonPreInstall")
 
 # The client empties mods/default.txt when reset-mods-42_00.txt is missing
 # (first launch of 2026-10-30: no mod loaded, the harness never ran) and the
@@ -64,13 +70,13 @@ if (-not (Test-Path $marker)) {
     Set-Content -Encoding ascii -NoNewline -Path $marker `
         -Value "If this file does not exist, default.txt will be reset to empty (no mods active)."
 }
+$modLines = ($ActiveMods | ForEach-Object { "    mod = $_," }) -join "`r`n"
 @"
 VERSION = 1,
 
 mods
 {
-    mod = TheLastGallon,
-    mod = TheLastGallonHarness,
+$modLines
 }
 
 maps

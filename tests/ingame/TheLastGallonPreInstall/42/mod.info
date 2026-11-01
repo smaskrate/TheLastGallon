@@ -1,0 +1,6 @@
+name=The Last Gallon - Pre-install world (dev, never publish)
+id=TheLastGallonPreInstall
+author=Manuel Alessio
+modversion=0.0.0-dev
+versionMin=42.21
+description=Development-only: plays a world without The Last Gallon so that the mod can then be added to an existing save (tools/rehearse-install.ps1 -Scenario existing). Not part of any release package.

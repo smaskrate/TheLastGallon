@@ -34,12 +34,18 @@
   fires: the January world; a campfire and a charcoal barbecue lit from
   their menus, the air around each checked against the heat formula, a
   fermenter beside each, and a 12 game hour trip away while they burn.
+  existing-a, existing-b: the two launches of the existing-save rehearsal
+  (tools/rehearse-install.ps1 -Scenario existing): a world played without
+  the mod, then that save continued with it.
 .PARAMETER ModSource
   Folder deployed as the mod (default: the repository's; see setup-devenv.ps1).
+.PARAMETER ActiveMods
+  Mods the client loads (default: the mod and the harness; see setup-devenv.ps1).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "fires")][string]$Mode = "full",
-    [string]$ModSource = "")
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "fires",
+        "existing-a", "existing-b")][string]$Mode = "full",
+    [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -51,7 +57,7 @@ $repo = Split-Path -Parent $PSScriptRoot
 if (-not $GameDir) { $GameDir = $env:PZ_GAME_DIR }
 if (-not $GameDir) { $GameDir = (Resolve-Path (Join-Path $repo "..\..")).Path }
 if (-not $DevCache) { $DevCache = Join-Path $env:LOCALAPPDATA "TheLastGallon\devcache" }
-& (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $DevCache -ModSource $ModSource | Out-Null
+& (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $DevCache -ModSource $ModSource -ActiveMods $ActiveMods | Out-Null
 
 # First-run prompts: copy the user's own already-answered values (read only).
 # The tutorial prompt and the Survival Guide window are switched off here
@@ -75,7 +81,7 @@ New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "fires" { "sp-rtof" } default { "sp-a" } }
+    "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
