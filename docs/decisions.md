@@ -448,8 +448,11 @@ listed with their replacement.
   as 1/97 of its ethanol. A batch whose recipe snapshot marks no stage
   (started before the change) still counts every stage. The recipes of the
   other pathways (biodiesel, biogas, the wood retort and ash pit) mark none
-  yet, and their making stages are to be marked with their machines. Pause,
-  Resume and Abort on running stills: RT-SP runs 49 and 50.
+  yet, and their making stages are to be marked with their machines.
+  Verified RT-SP run 50 (28/0): a reflux still aborted an hour into
+  distilling kept exactly the 1.10 L it had distilled. Run 51 (32/0)
+  repeated run 33's controls under the rule, a fermenter's preparing hour
+  making no ethanol.
 
 ## D-024 A first look records the fuel it looks at
 * Decision: Look and smell (and a sample with the kit) on fuel the mod

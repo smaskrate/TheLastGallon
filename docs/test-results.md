@@ -1331,3 +1331,24 @@ has two constraints:
    reinterpret an active batch"). A new stage flag in the definitions
    would not reach batches already running, so the rule may belong in
    `Process.abort` itself.
+
+## 2026-11-01 — RT-SP client harness, launches 50–51 (Abort after the fix)
+
+With the fix of commit `1cb67b7`, recipes mark the stages that make their
+result (`makes`: fermenting, distilling, drying), and Abort keeps the
+share done of those. Before, every stage counted, the heat-up and
+preparing hours included. The controls mode now expects a fermenter's
+wash at `(done − 1) / 96`. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run50_still_controls_fix.txt`,
+`docs/evidence/2026-11-01_rt-sp_harness_run51_controls_fix.txt`.
+
+Result: run 50 (`-Mode still-controls`) **28 PASS / 0 FAIL**; run 51
+(`-Mode controls`) **32 PASS / 0 FAIL**. Both consoles showed "machine
+move hooks installed" and no TLG or Lua error.
+
+| Runs 50–51 | Result |
+| --- | --- |
+| Reflux still aborted 2.003639 h in | kept 1.098036 L of ethanol and 0.070087 L of water: exactly what its 1.003639 h of distilling made (the old rule would have kept 1.611404 L). Thrown away: 2.11 L of ethanol, 10.88 of stillage, 19.15 of water, the whole 33.3 L wash accounted for; the kept spirit collected |
+| Pot still paused 3.000252 h while heating up | as in run 49: finished at its stage hours plus exactly the pause, 10.611111 kg of wood left, the defined spirit |
+| Fermenter F2 aborted 5 h in | kept 0.137513 L of ethanol (4 of its 96 fermenting hours), 5.749976 kg of sugar and 30 L of water, the preparing hour making none; the pot still took that wash |
+| The rest of run 33's checks | all passed again: Pause, Resume and Abort on F1, the drying column's ethanol kept and collected, the spoiled F3 emptied and loaded again |

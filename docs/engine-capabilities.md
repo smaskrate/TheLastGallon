@@ -692,8 +692,9 @@ column picked up mid-batch, run 45 **41/0**, and again with every command
 but Status refused on a carried machine, run 46 **46/0**, then the full
 mode on the rebuilt zip installed clean, run 47 **94/0** and **14/0**, and
 the stills and column carried across a save, run 48 **29/0** and **24/0**,
-and Pause, Resume and Abort batch on running stills, run 49 27/1 (a mod
-defect, open). Most failures were
+and Pause, Resume and Abort batch on running stills, run 49 27/1 and, after
+the fix, run 50 **28/0**, with run 33's controls again, run 51 **32/0**.
+Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -714,9 +715,9 @@ harness's, in both installs alike: crafting needs light, and the
 workbench measured 0.15 in run 38, where a torch in hand let every craft
 through. Run 40's one failure was a mod defect: Look and smell wrote no
 record onto fuel the mod had not recorded, so What I know about it stayed
-unknown (fixed by D-024, run 41). Run 49's one failure is a mod defect:
-Abort batch on a still keeps spirit for its heating-up hour, when nothing
-distils (open).
+unknown (fixed by D-024, run 41). Run 49's one failure was a mod defect:
+Abort batch on a still kept spirit for its heating-up hour, when nothing
+distils (fixed, runs 50–51).
 
 ## Tooling pitfalls found
 

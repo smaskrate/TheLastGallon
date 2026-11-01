@@ -129,6 +129,8 @@ fermenter still counts towards the 3 days that spoil it. **Abort batch**
 stops a batch and keeps what it made so far: a fermenter's weaker wash for
 a still, a still's spirit, a drying column's ethanol. The rest (a still's
 undistilled wash, spent lime) is thrown away, and the message lists both.
+A still makes no spirit while it heats up (its first hour), so a still
+aborted then keeps nothing and its wash is thrown away.
 Abort batch again to throw the kept part away too; a spoiled batch is
 emptied the same way.
 
@@ -148,15 +150,16 @@ and a 12 kg batch through the pot still in two loads (its firebox left to
 run out and fed again, the yeast starter coming with the last of the
 wash; the spirit was unfit for any engine until dried and then fit for
 flex engines, by the mod's start check, not an engine start), and Pause,
-Resume and Abort batch on fermenters and a drying column (as described
-above; a pot still took a stopped fermenter's wash, and a spoiled
-fermenter was emptied and loaded again), and January fermenters outdoors
-beside a campfire and beside a barbecue, both fires fed and lit from their
-menus; the warmth of both counted over a 12 hour absence for as long as
-their fuel lasted. Pause or Abort on a still,
-picking up a working still or drying column, a campfire built indoors, a
-propane barbecue, upper floors and stopped days adding up across separate
-cold spells are untested in game.)*
+Resume and Abort batch on fermenters, a drying column and running stills
+(as described above; a pot still took a stopped fermenter's wash, a
+spoiled fermenter was emptied and loaded again, a still paused for three
+hours burned no wood meanwhile, and a still aborted while distilling kept
+only the spirit it had made), and January fermenters outdoors beside a
+campfire and beside a barbecue, both fires fed and lit from their menus;
+the warmth of both counted over a 12 hour absence for as long as their
+fuel lasted. A campfire built indoors, a propane barbecue, upper floors
+and stopped days adding up across separate cold spells are untested in
+game.)*
 
 ## Converting an engine
 

@@ -78,6 +78,12 @@
   stay spoiled for good), Pause, Resume and Abort batch are offered only
   where they apply, and refusals read as sentences instead of codes.
   Checked in game, a pot still taking a stopped fermenter's wash included.
+  What a batch made now counts only the stages that make it. A still
+  aborted while it heats up keeps nothing (its wash is thrown away), and
+  one aborted while distilling keeps only the spirit distilled so far. It
+  used to count the heat-up hour too, and kept 1.61 L where 1.10 L had
+  distilled (found in game). A fermenter's hour of preparing likewise
+  makes no ethanol.
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record
