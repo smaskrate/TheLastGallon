@@ -44,6 +44,9 @@
   still-controls: summer with the grid on; a pot still paused from the
   menu while heating up, held three game hours and resumed, and a reflux
   still aborted an hour into distilling, what it kept collected.
+  late-find: a new world; a can of petrol recorded at the start, another
+  and the nearest pump left alone for 7 game days, then found: both must
+  hold the world-age condition, and the early can must have aged alike.
   fires: the January world; a campfire and a charcoal barbecue lit from
   their menus, the air around each checked against the heat formula, a
   fermenter beside each, and a 12 game hour trip away while they burn.
@@ -59,7 +62,7 @@
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
-        "still-save", "still-controls", "fires", "existing-a", "existing-b", "italian")][string]$Mode = "full",
+        "still-save", "still-controls", "late-find", "fires", "existing-a", "existing-b", "italian")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -111,7 +114,7 @@ if ($Mode -eq "italian") {
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
+    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

@@ -22,6 +22,8 @@
 --   sp-rtsb -> main menu continues that save, checks the carried records,
 --             then the put-downs and the rest of the run
 --   sp-rtsc -> summer, grid on: Pause, Resume and Abort batch on running stills
+--   sp-rtn -> a new world: fuel first found 7 days in, and a can found at the
+--             start read again
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -48,7 +50,8 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtof"
+    or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtof"
     or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" then
     unattended()
     Events.OnGameStart.Add(unattended)
@@ -7544,6 +7547,200 @@ RT.existingSteps = { RT.waitWorld, RT.X.setup, RT.X.load, RT.X.look, RT.X.discov
 RT.existingReloadSteps = { RT.X.reload, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Fuel first found late in a new world (request "sp-rtn"; release gate 7).
+-- A new world with the mod from the start: its world record must be a new
+-- game's, policy "new_world" (WorldInit: fuel the mod has no record of is
+-- aged from world hour 0, less a pre-outbreak age drawn per container). At
+-- the start two cans of petrol are set on the ground: one is recorded at
+-- once by a pour (found early), the other is left alone, and so is the pump
+-- nearest the start. After 7 game days the second can and the pump are
+-- found, each recorded by its first contact (a pour; the mod's own
+-- transfer). Each must hold the world-age condition for that moment,
+-- computed with Aging.advance over the whole span (RT.X.expected's world-age
+-- end), not by WorldInit.baseline. The can found early, read again, must
+-- have aged the same way: Aging is path-independent. Only day 0's
+-- temperature differs: when that can was found, two hours of the day had
+-- been recorded, and the rate follows temperature. So it is held to 1 %,
+-- and the difference is printed.
+------------------------------------------------------------------------------
+RT.N = { lateDays = 7, tol = 1e-6, pathTol = 1e-2 }
+
+-- The pump with fuel nearest the start: { obj, x, y } and a free tile beside
+-- it to stand on (RT.X.discover's search).
+function RT.N.nearestPump()
+    local best
+    for x = STATION.x0, STATION.x1 do
+        for y = STATION.y0, STATION.y1 do
+            local s = sq(x, y, 0)
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                if o:getPipedFuelAmount() > 0 and TLG.Integration.Stations.isPump(o) then
+                    local d = (x - START.x) * (x - START.x) + (y - START.y) * (y - START.y)
+                    if best == nil or d < best.d then best = { obj = o, x = x, y = y, d = d } end
+                end
+            end
+        end
+    end
+    if best == nil then return nil end
+    for _, off in ipairs({ { 0, 1 }, { 1, 0 }, { -1, 0 }, { 0, -1 } }) do
+        if not best.stand and RT.W.free(sq(best.x + off[1], best.y + off[2], 0)) then
+            best.stand = { x = best.x + off[1], y = best.y + off[2] }
+        end
+    end
+    best.stand = best.stand or { x = best.x, y = best.y + 1 }
+    return best
+end
+
+-- Whether a first record holds the world-age condition: the record's petrol
+-- against Aging.advance from world hour 0 less the container's pre-age.
+function RT.N.worldAgeText(f, from0)
+    local deg = f.side and f.side.deg and f.side.deg.gasoline
+    return string.format("recorded at world hour %.4f: condition %s; the world-age rule %.9f (aged from hour 0 without the pre-outbreak age %.9f); record %s",
+        f.t, deg and string.format("%.9f", deg) or "none", f.full, from0, RT.X.sideKey(f.side))
+end
+
+-- Aged from world hour 0 without any pre-outbreak age (the rule's floor).
+function RT.N.fromEpoch(spec, t)
+    local D = TLG.Domain
+    local s = D.Supply.new({ storage = spec.storage, cap = spec.cap, q = spec.q, t = TLG.World.get().epoch })
+    return D.Aging.advance(s, t, TLG.World.env()).deg.gasoline or 0
+end
+
+function RT.N.spec(item)
+    local fc = item:getFluidContainerFromSelfOrWorldItem()
+    return { storage = TLG.ContainerProfiles.forItem(item), cap = fc:getCapacity(),
+        q = TLG.Integration.Native.readComposition(fc) }
+end
+
+RT.N.start = { name = "rtn_start", timeout = 600, fn = function(ctx, ticks)
+    local N, md = RT.N, TLG.World.get()
+    if RT.skip("rtn_start") then return true end
+    R:check("RTN.world_record_of_a_new_game", function()
+        return md.v == 1 and md.createdAsNewGame == true and md.policy == "new_world" and md.epoch == 0,
+            string.format("v=%s createdAsNewGame=%s policy=%s epoch=%s installedAt=%s seed=%s (world hour now %.4f)",
+                tostring(md.v), tostring(md.createdAsNewGame), tostring(md.policy), tostring(md.epoch),
+                tostring(md.installedAt), tostring(md.seed), hours())
+    end)
+    -- Two cans of petrol on the ground beside the start (the existing-save
+    -- run's tile for its can on the ground, and the one next to it).
+    N.cans = {}
+    for i, dx in ipairs({ 3, 4 }) do
+        local s = sq(START.x + dx, START.y, 0)
+        local it = instanceItem("Base.PetrolCan")
+        local fc = it:getFluidContainer()
+        fc:Empty()
+        fc:addFluid(Fluid.Petrol, 10)
+        s:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+        N.cans[i] = { item = it, id = it:getID(), x = s:getX(), y = s:getY() }
+    end
+    N.pump = N.nearestPump()
+    local before
+    if N.pump then
+        local _, status = TLG.Integration.Stations.read(N.pump.obj, false)
+        before = status
+    end
+    R:check("RTN.untouched_at_the_start", function()
+        return N.cans[1].item:getModData().tlg == nil and N.cans[2].item:getModData().tlg == nil and N.pump ~= nil
+            and before == "initialized", string.format("cans recorded %s, %s; pump %s at %s,%s: %s",
+            brief(N.cans[1].item:getModData().tlg), brief(N.cans[2].item:getModData().tlg), tostring(N.pump ~= nil),
+            tostring(N.pump and N.pump.x), tostring(N.pump and N.pump.y), tostring(before))
+    end)
+    -- The first can found now.
+    local early = RT.X.pourFirst(N.cans[1].item)
+    N.early, N.earlySpec = early, RT.N.spec(N.cans[1].item)
+    R:check("RTN.found_at_the_start_holds_the_world_age_condition", function()
+        local deg = early.side and early.side.deg and early.side.deg.gasoline
+        return deg ~= nil and math.abs(deg - early.full) <= N.tol, RT.N.worldAgeText(early, N.fromEpoch(N.earlySpec, early.t))
+    end)
+    return true
+end }
+
+-- Days on the game clock; nothing touches the second can or the pump.
+RT.N.wait = { name = "rtn_wait", timeout = 60000, fn = function(ctx, ticks)
+    if not ctx.until_ then
+        if RT.skip("rtn_wait") then return true end
+        ctx.until_ = hours() + RT.N.lateDays * 24
+        player():setPosition(START.x + 1.5, START.y + 0.5, 0)
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if hours() < ctx.until_ then
+        RT.speed(RT.waitSpeed)
+        return nil
+    end
+    RT.speed(1)
+    return true
+end }
+
+-- The second can and the pump found 7 days in; the early can read again.
+RT.N.late = { name = "rtn_late", timeout = 3000, fn = function(ctx, ticks)
+    local N = RT.N
+    if not ctx.phase and RT.skip("rtn_late") then return true end
+    if not ctx.phase then
+        local c = N.cans[2]
+        local d = RT.X.groundItem(c.x, c.y, c.id)
+        R:check("RTN.second_can_untracked_until_found", function()
+            return d ~= nil and d:getModData().tlg == nil, "record " .. brief(d and d:getModData().tlg)
+        end)
+        if d then
+            local spec = N.spec(d)
+            local f = RT.X.pourFirst(d)
+            local floor = N.fromEpoch(spec, f.t)
+            R:check("RTN.found_late_holds_the_world_age_condition", function()
+                local deg = f.side and f.side.deg and f.side.deg.gasoline
+                return deg ~= nil and math.abs(deg - f.full) <= N.tol and f.full > floor + 1e-6 and f.t >= N.lateDays * 24,
+                    RT.N.worldAgeText(f, floor)
+            end)
+        end
+        -- The early can, its record brought to now.
+        local e = RT.X.groundItem(N.cans[1].x, N.cans[1].y, N.cans[1].id)
+        local v = e and tlgView("item", e)
+        local _, _, want = RT.X.expected(TLG.World.get(), "item:" .. tostring(N.cans[1].id), N.earlySpec, TLG.World.now())
+        R:check("RTN.found_early_aged_like_found_late", function()
+            local deg = v and v.deg and v.deg.gasoline
+            return deg ~= nil and math.abs(deg - want) <= N.pathTol * want,
+                string.format("recorded at world hour %.4f, read at %.4f: condition %s; aged from hour 0 less its pre-age in one span %.9f (difference %s)",
+                    N.early.t, TLG.World.now(), deg and string.format("%.9f", deg) or "none", want,
+                    deg and string.format("%.3e", deg - want) or "-")
+        end)
+        if N.pump == nil then return true end
+        player():setPosition(N.pump.stand.x + 0.5, N.pump.stand.y + 0.5, 0)
+        ctx.phase, ctx.tick = "pump", ticks
+        return nil
+    end
+    if ticks - ctx.tick < 5 then return nil end
+    local S, WI = TLG.Integration.Stations, TLG.Domain.WorldInit
+    local pump = N.pump.obj
+    local _, before = S.read(pump, false)
+    local key, units = S.keyOf(pump), pump:getPipedFuelAmount()
+    local litres = units * S.LITRES_PER_UNIT
+    local c = WI.stationContamination(TLG.World.get(), key, litres)
+    local spec = { storage = "station_ust", cap = math.max(10000, litres), preAgeMax = WI.MAX_STATION_PRE_AGE,
+        q = { gasoline = litres - c.water - c.sediment, water = c.water, sediment = c.sediment } }
+    local can = player():getInventory():AddItem("Base.PetrolCan")
+    can:getFluidContainer():Empty()
+    local t = TLG.World.now()
+    local r = ask("RTN.pump_to_can", "transfer", { source = TLG.Authority.Resolver.refForObject(pump, "pump"),
+        destination = { kind = "item", id = can:getID() }, amount = 2 })
+    local want, aged, full, w = RT.X.expected(TLG.World.get(), key, spec, t)
+    local rec, status = S.read(pump, false)
+    local f = { side = pump:getModData().tlg, t = t, want = want, aged = aged, full = full, w = w }
+    local floor = N.fromEpoch(spec, t)
+    R:check("RTN.pump_found_late_holds_the_world_age_condition", function()
+        local deg = rec and rec.deg and rec.deg.gasoline
+        return before == "initialized" and r.ok == true and status == "ok" and deg ~= nil and math.abs(deg - full) <= N.tol
+            and full > floor + 1e-6 and (rec.q.water or 0) > 0, string.format(
+            "pump %d,%d (%d units) untouched until now=%s; transfer ok=%s; %s; water %.4f L, sediment %.4f L",
+            N.pump.x, N.pump.y, units, tostring(before == "initialized"), tostring(r.ok), RT.N.worldAgeText(f, floor),
+            rec and rec.q.water or -1, rec and rec.q.sediment or -1)
+    end)
+    player():setPosition(START.x + 1.5, START.y + 0.5, 0)
+    return true
+end }
+
+RT.lateFindSteps = { RT.waitWorld, RT.X.setup, RT.N.start, RT.N.wait, RT.N.late, RT.finish }
+
+------------------------------------------------------------------------------
 -- Italian (request "sp-it", release gate 10): the client in Italian
 -- (options.ini language=IT). tools/run-sp-harness.ps1 -Mode italian writes
 -- every Italian string the mod ships to TLG_it_expect.txt, its letters past
@@ -7708,7 +7905,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
+    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -7739,7 +7936,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
             elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts"
-                or REQUEST == "sp-rtss" or REQUEST == "sp-rtsc" then
+                or REQUEST == "sp-rtss" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" then
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
@@ -7774,6 +7971,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 RT.S.saveAfter = 1
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, stills and column carried, before the save")
                 TLGH.Steps.run(R, RT.stillSaveSteps, H, nil)
+            elseif REQUEST == "sp-rtn" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, a new world: fuel first found late")
+                TLGH.Steps.run(R, RT.lateFindSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
