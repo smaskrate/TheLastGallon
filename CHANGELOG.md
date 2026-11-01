@@ -39,6 +39,12 @@
   of fuel covered half of a 12 hour absence, and the work done over it
   matched the credited temperatures exactly. A batch saved mid-way kept
   all of this through saving, quitting and continuing.
+* Moving a working machine: it counts the hours it stood, up to the moment
+  you pick it up, and starts again the moment you put it down; carried
+  hours never count. Before, a Status read while carrying it lost every
+  hour since the machine was last used, and without one the carried hours
+  counted (found in game). In multiplayer, where the game's grab is not
+  visible to mods, up to ten minutes before a pickup can be lost.
 * Crafting and menus, fixed in the client runs: nothing the mod adds could
   be crafted (the recipes lacked the tags the crafting window and the craft
   menu list by); the pot still and the jar recipes gave the pot and jars

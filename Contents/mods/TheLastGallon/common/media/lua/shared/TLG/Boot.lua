@@ -25,6 +25,13 @@ function Boot.addInstaller(name, fn)
 end
 
 Boot.addInstaller("containers", TLG.Integration.Containers.install)
+-- Machine pickup and put-down (D-015). Registered here: the domain tests load
+-- Machines.lua without the game's Events, so it cannot require Boot. It is
+-- loaded by the time the game starts, as the hourly readings below rely on
+-- (RT-SP runs 17-26).
+Boot.addInstaller("machines", function()
+    if TLG.Integration.Machines then TLG.Integration.Machines.install() end
+end)
 
 local installed = false
 function Boot.install()

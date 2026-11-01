@@ -153,15 +153,25 @@ listed with their replacement.
   save and reload (RT-SP 2026-10-31, runs 7 and 12); on the game clock a
   fermenter whose chunk was unloaded for 24 game hours caught up exactly on
   the next access (runs 13–14).
-* As built, this rule does not hold (RT-SP run 26, 3 FAIL). The adapter sees
-  a move only at the next access, so it cannot tell placed hours from
-  carried ones: an access while carried pauses the batch from the previous
-  access, dropping the hours it stood placed before the pickup; the first
-  access after it is put down starts it from that access, dropping the
-  hours since; with no access while carried, the carried hours count as if
-  it had stood at its new place. The record itself travels with the item
-  through both pickup paths and both put-down paths of the run. Open (gate
-  6).
+* As first built, this rule did not hold (RT-SP run 26, 3 FAIL). The
+  adapter saw a move only at the next access, so it could not tell placed
+  hours from carried ones: an access while carried paused the batch from
+  the previous access, dropping the hours it stood placed before the
+  pickup; the first access after it was put down started it from that
+  access, dropping the hours since; with no access while carried, the
+  carried hours counted as if it had stood at its new place. The record
+  itself travelled with the item through both pickup paths and both
+  put-down paths of the run.
+* Fix: the adapter wraps the moves the game's Lua makes (the world menu's
+  Grab, every transfer to or from the floor, the place action) and brings
+  the batch to the moment of the pickup at its site, then marks it carried;
+  putting it down starts it again from that moment and lists it for the
+  hourly reading at once. The site keeps its tile and the record the last
+  time the authority found it placed (`seen`, every access, hourly reading
+  and ten-minute note). A move no Lua sees (in multiplayer the server grabs
+  in a Java item transaction) is found at the next access or put-down: the
+  batch counts up to `seen`, at most ten minutes short while the area is
+  loaded, and not past it. Not yet run in game.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`
@@ -296,9 +306,9 @@ listed with their replacement.
   value (until D-022: a fire's noted fuel now counts while away). The day mean averages its hours, so a few warm hours lift the
   whole day (the batch has a day's thermal mass); the hour in progress
   takes the previous hour's reading, otherwise a warmed machine paused
-  after every midnight (run 17). A machine moved without being used in
-  between counts at its new place for that time, the hours carried
-  included (RT-SP run 26; see D-015). Within the current day
+  after every midnight (run 17). A moved machine counts where it stood up
+  to the pickup and at its new place from the put-down (D-015). Within the
+  current day
   the value moves as readings arrive (as in D-020).
 * Verified RT-SP 2026-10-31 runs 17–19: the room formula matched the
   game's own room value exactly over 94–96 hours per run; the readings

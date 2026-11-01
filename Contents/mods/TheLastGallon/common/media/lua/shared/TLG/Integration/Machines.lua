@@ -14,30 +14,32 @@
 -- in run 25 such a record, "no fire" notes included, came back unchanged
 -- from save, exit to menu and continue. In run 26 running fermenters were
 -- picked up and put down through the player's actions: the record travelled
--- unchanged, but the work around the move failed D-015 (see processing).
+-- unchanged, but the work around the move failed D-015, which the move hooks
+-- below now account (not yet run in game).
 -- Distilling in the pot still, a still or drying column picked up while
 -- processing, a barbecue or open fire, upper floors and MP replication are
 -- NOT RUN.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
---   processing         meant only while the item lies on the ground (D-015),
---                      but a move is seen only at the next access: one while
---                      carried pauses the batch from the previous access
---                      (the placed hours before the pickup are lost), the
---                      first one after it is put down starts it from then
---                      (the hours since are lost); RT-SP run 26
+--   processing         only while the item lies on the ground (D-015). The
+--                      moves the game's Lua makes (M.install: Grab, floor
+--                      transfers, the place action) bring the batch to the
+--                      moment it is picked up and start it again from the
+--                      moment it is put down. A move no Lua sees (in MP the
+--                      server grabs in a Java item transaction) is found at
+--                      the next access or put-down: the batch counts up to
+--                      the last time the authority found it placed (`seen`,
+--                      at most ten minutes off while its area is loaded)
 --   unloaded           lazy, event-exact catch-up on access (Process.advance)
 --   owner of           machine inputs, outputs, firebox fuel (all TLG-owned)
 --   temperature        where it stands (D-021): the site (in a room or not,
---                      floor) is recorded on every access; every game hour the
+--                      its tile) is recorded on every access; every game hour the
 --                      authority reads the game's air temperature at each
 --                      loaded, placed machine with a batch running (rooms, grid
 --                      power and lit fires, fireplaces and barbecues included,
 --                      BC 42.21 ClimateManager.getAirTemperatureForSquare)
 --                      into the record. Records only: the batch still advances
---                      on access. A machine moved without being used in
---                      between counts at its new place for that time, the
---                      hours carried included (run 26).
+--                      on access.
 --   fires              every ten game minutes the authority notes the fire
 --                      (fireplace, wood stove, campfire, brazier, barbecue)
 --                      that gives each such machine its air, with its fuel;
@@ -98,11 +100,11 @@ end
 
 -- Where a placed machine stands, as the game's air temperature sees it:
 -- IsoGridSquare.isInARoom() (map rooms and player-built rooms, BC) and the
--- floor.
+-- floor, with its tile (a move is told by it).
 function M.siteOf(sq)
     local room = false
     pcall(function() room = sq:isInARoom() == true end)
-    return { room = room, z = sq:getZ() }
+    return { room = room, z = sq:getZ(), x = sq:getX(), y = sq:getY() }
 end
 
 -- The game's air temperature at a tile now, what a character standing there
@@ -197,36 +199,100 @@ function M.trimTemps(rec, env)
     end
 end
 
-local function advanceFrom(item, rec, now, env)
-    if rec.state == "Processing" or rec.state == "Paused" then
-        if not M.isPlaced(item) then
-            local out = Tables.deepCopy(rec)
-            if out.state == "Processing" then
-                out.state, out.pause = "Paused", "not_placed"
-            end
-            out.t = now
-            return out
-        end
-        if rec.pause == "not_placed" then
-            local out = Tables.deepCopy(rec)
-            out.state, out.pause, out.t = "Processing", nil, now
-            return Process.advance(out, now, env)
-        end
-    end
-    return (Process.advance(rec, now, env))
+function M.running(rec)
+    return rec.state == "Processing" or rec.state == "Paused"
+end
+
+-- A machine item with a process record (the move hooks never create one).
+function M.tracked(item)
+    return item ~= nil and M.machineFor(item) ~= nil and item:getModData()[M.SIDECAR] ~= nil
+end
+
+-- Whether the record's site is another tile than `sq` (records from before
+-- the site kept its tile cannot tell: false).
+function M.movedFrom(rec, sq)
+    local s = rec.site
+    return s ~= nil and s.x ~= nil and (s.x ~= sq:getX() or s.y ~= sq:getY() or (s.z or 0) ~= sq:getZ())
+end
+
+-- Marks a running batch carried from `now`: nothing counts until it is put
+-- down. A carried record is never advanced: Process.advance would resume a
+-- Paused batch and count the time.
+local function carry(rec, now)
+    if M.running(rec) then rec.state, rec.pause = "Paused", "not_placed" end
+    rec.t = now
+end
+
+-- A move no Lua saw: the batch counts at its old site up to the last time
+-- the authority found it placed (`seen`, stamped on every access, hourly
+-- reading and ten-minute note), nothing after.
+local function creditUntilSeen(rec, now, env)
+    local out = (Process.advance(rec, math.min(now, math.max(rec.t, rec.seen or rec.t)), env))
+    out.t = now
+    return out
 end
 
 -- Brings a machine to `now`: processing only counts while placed, at the
--- temperature of where it stands.
+-- temperature of where it stands. The moves the game's Lua makes are
+-- accounted when they happen (M.pickedUp, M.putDown); one found here was
+-- not seen.
 function M.advance(item, rec, now, env)
     local sq = M.square(item)
-    if sq ~= nil then
-        rec = Tables.copy(rec)
-        rec.site = M.siteOf(sq)
+    local out
+    if not M.running(rec) then
+        out = (Process.advance(rec, now, env))
+    elseif rec.pause == "not_placed" then
+        -- Carried; put down where no Lua saw it: from now.
+        out = Tables.deepCopy(rec)
+        out.t = now
+        if sq ~= nil then out.state, out.pause = "Processing", nil end
+    elseif sq == nil then
+        out = creditUntilSeen(rec, now, env)
+        carry(out, now)
+    elseif M.movedFrom(rec, sq) then
+        out = creditUntilSeen(rec, now, env)
+    else
+        out = Tables.copy(rec)
+        out.site = M.siteOf(sq)
+        out = (Process.advance(out, now, env))
     end
-    local out = advanceFrom(item, rec, now, env)
+    if sq ~= nil then out.site, out.seen = M.siteOf(sq), now end
     M.trimTemps(out, env)
     return out
+end
+
+-- After the game's Lua lifted a machine off the ground: the batch counts up
+-- to this moment where it stood, then waits, carried, until it is put down.
+function M.pickedUp(item, now)
+    local rec = M.read(item, false)
+    if rec == nil then return end
+    local env = World.env()
+    if M.running(rec) and rec.pause ~= "not_placed" then
+        rec = (Process.advance(rec, now, env))
+        rec.seen = now
+        carry(rec, now)
+    end
+    M.trimTemps(rec, env)
+    M.index(item, rec)
+    M.write(item, rec)
+end
+
+-- After the game's Lua put a machine down: a carried batch starts again
+-- from this moment, here, and the hourly reading lists it at once. One
+-- lifted where no Lua saw it first counts up to the last time it was seen.
+function M.putDown(item, now)
+    local rec, sq = M.read(item, false), M.square(item)
+    if rec == nil or sq == nil then return end
+    local env = World.env()
+    if rec.pause == "not_placed" then
+        rec.state, rec.pause, rec.t = "Processing", nil, now
+    elseif M.running(rec) and M.movedFrom(rec, sq) then
+        rec = creditUntilSeen(rec, now, env)
+    end
+    rec.site, rec.seen = M.siteOf(sq), now
+    M.trimTemps(rec, env)
+    M.index(item, rec)
+    M.write(item, rec)
 end
 
 -- Today's temperature at a placed machine: with a batch running, the day
@@ -291,7 +357,7 @@ function M.sampleSites()
                 local rec = M.read(item, false)
                 local t = rec and (rec.state == "Processing" or rec.state == "Paused") and M.airAt(sq) or nil
                 if t ~= nil then
-                    rec.site = M.siteOf(sq)
+                    rec.site, rec.seen = M.siteOf(sq), now
                     rec.temps = rec.temps or {}
                     rec.temps[slot] = t
                     M.trimTemps(rec, env)
@@ -304,8 +370,10 @@ end
 
 -- Every ten game minutes on the authority: a note of the fire warming each
 -- loaded, placed machine with a batch running, under the hour it is taken in
--- (the hour's last note wins; false when no fire warms it, written once an
--- hour). Records only, kept on the authority: clients never read them.
+-- (the hour's last note wins; false when no fire warms it, noted once an
+-- hour), and the time it was found placed (`seen`, what a move no Lua saw is
+-- credited up to). Records only, kept on the authority: clients never read
+-- them.
 function M.observeFires()
     if not World.isAuthority() then return end
     local md = World.get()
@@ -325,10 +393,10 @@ function M.observeFires()
             if note or fires[hour] ~= false then
                 fires[hour] = note
                 rec.fires = fires
-                rec.site = M.siteOf(sq)
-                M.trimTemps(rec, env)
-                M.write(item, rec, true)
             end
+            rec.site, rec.seen = M.siteOf(sq), now
+            M.trimTemps(rec, env)
+            M.write(item, rec, true)
         end
     end
 end
@@ -385,6 +453,57 @@ function M.refFor(item)
     local sq = M.square(item)
     if sq then return { kind = "machine", id = item:getID(), x = sq:getX(), y = sq:getY(), z = sq:getZ() } end
     return { kind = "machine", id = item:getID() }
+end
+
+local function wrap(class, method, fn)
+    local orig = class and class[method]
+    if orig == nil then return false end
+    class[method] = function(self, ...) return fn(orig, self, ...) end
+    return true
+end
+
+-- A mod error must never break the game's move itself.
+local function account(fn, item)
+    local ok, err = pcall(fn, item, World.now())
+    if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
+end
+
+-- The moves the game's Lua makes (SRC 42.21), accounted on the authority:
+-- the world menu's Grab (ISGrabItemAction.transferItem, given the world
+-- object; single player only: in multiplayer the server grabs in a Java
+-- item transaction), every transfer to or from the floor
+-- (ISTransferAction.transferItem: the loot window's Grab, the inventory
+-- menu's Drop, the server's dropOnFloor transaction) and the place cursor's
+-- action (ISDropWorldItemAction.complete). Told apart by whether the item
+-- lies on the ground before and after, not by container types.
+function M.install()
+    wrap(ISGrabItemAction, "transferItem", function(orig, self, witem, ...)
+        local item = World.isAuthority() and witem and witem.getItem and witem:getItem() or nil
+        local r = orig(self, witem, ...)
+        if M.tracked(item) and not M.isPlaced(item) then account(M.pickedUp, item) end
+        return r
+    end)
+    wrap(ISTransferAction, "transferItem", function(orig, self, character, item, ...)
+        local tracked = World.isAuthority() and M.tracked(item)
+        local was = tracked and M.isPlaced(item)
+        local r = orig(self, character, item, ...)
+        if tracked then
+            local placed = M.isPlaced(item)
+            if was and not placed then
+                account(M.pickedUp, item)
+            elseif placed and not was then
+                account(M.putDown, item)
+            end
+        end
+        return r
+    end)
+    wrap(ISDropWorldItemAction, "complete", function(orig, self, ...)
+        local item = World.isAuthority() and M.tracked(self.item) and self.item or nil
+        local r = orig(self, ...)
+        if item and M.isPlaced(item) then account(M.putDown, item) end
+        return r
+    end)
+    TLG.Log.info("machine move hooks installed")
 end
 
 return M

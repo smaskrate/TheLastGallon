@@ -78,15 +78,57 @@ local function machine(sq, rec)
     function item:getModData() return md end
     function item:getWorldItem() return item.on and wi or nil end
     function item:getID() return 7 end
-    item.on = sq
+    item.on, item.wi = sq, wi
     if sq then sq.objs[#sq.objs + 1] = wi end
     return item
+end
+
+-- Moves as the game makes them: off the ground into a container, or onto a
+-- square (the same item, its world object on the square's list).
+local function lift(item)
+    local sq = item.on
+    for i = #(sq and sq.objs or {}), 1, -1 do
+        if sq.objs[i] == item.wi then table.remove(sq.objs, i) end
+    end
+    item.on = nil
+end
+
+local function place(item, sq)
+    lift(item)
+    item.on = sq
+    sq.objs[#sq.objs + 1] = item.wi
+end
+
+-- Stage hours done on the batch (ethanol_ferment: preparing 1 h, then 96 h).
+local function work(rec)
+    local done = 0
+    for i, st in ipairs(rec.recipe.params.stages) do
+        if i < rec.stage then done = done + st.hours elseif i == rec.stage then done = done + rec.stageDone end
+    end
+    return done
+end
+
+-- A warm day 0 (22 C outdoors, no readings needed): every placed hour is a
+-- full stage hour.
+local function warmDay(g)
+    g.outC = 22
+    World.get().climateLog = { [0] = { t = 22, rh = 0.7 } }
+    return World.env()
 end
 
 local function running(id, t)
     local f = Process.new({ id = id, machine = "fermenter_barrel", t = t })
     f = Process.load(f, "ethanol_ferment", { sugar_eq = 6, water = 30 }).proc
     return Process.start(f, t).proc
+end
+
+-- A batch started at 2 on `sq`, accessed once (site, seen, hourly list).
+local function startedOn(sq, id, env)
+    local item = machine(sq, running(id, 2))
+    local rec = Machines.advance(item, Machines.read(item, false), 2, env)
+    Machines.write(item, rec)
+    Machines.index(item, rec)
+    return item
 end
 
 T.case("integration: the hourly reading files the air at each loaded, placed, running machine", function()
@@ -174,21 +216,24 @@ T.case("integration: every ten minutes the fire warming a machine is noted with 
         Machines.observeFires()
         note = item:getModData().tlgProc.fires[11]
         T.eq(note.c, 25); T.eq(note.rad, 3); T.eq(note.f, 100); T.eq(note.r, false); T.eq(note.x, -2)
-        -- Nothing warms it: false, the hour's last note wins, written once an hour.
+        -- Nothing warms it: false, the hour's last note wins, noted once an
+        -- hour; the time it was found placed is kept every ten minutes.
         bbq.lit = false
         sq.air = t0
         g.now = 11.17
         Machines.observeFires()
         T.eq(item:getModData().tlgProc.fires[11], false)
-        local writes, write = 0, Machines.write
-        Machines.write = function(...)
-            writes = writes + 1
-            return write(...)
+        local writes, quiet, write = 0, nil, Machines.write
+        Machines.write = function(it, r, q)
+            writes, quiet = writes + 1, q
+            return write(it, r, q)
         end
         g.now = 11.33
         Machines.observeFires()
         Machines.write = write
-        T.eq(writes, 0, "an hour already noted cold is not written again")
+        T.eq(writes, 1); T.eq(quiet, true, "kept on the authority, not sent")
+        T.eq(item:getModData().tlgProc.fires[11], false, "the hour's note as it was")
+        T.eq(item:getModData().tlgProc.seen, 11.33, "found placed at 11.33")
         -- Warmer than the room by a heat source that is no fire it knows: false.
         sq.air = t0 + 5
         g.now = 12.0
@@ -218,6 +263,181 @@ T.case("integration: every ten minutes the fire warming a machine is noted with 
         Machines.trimTemps(out, env)
         T.ok(out.fires == nil and out.temps == nil)
     end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: a machine picked up counts up to that moment, waits while carried, starts again where put down", function()
+    local g = fakeGame(2)
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        local item = startedOn(a, "P5", env)
+        local rec = item:getModData().tlgProc
+        T.eq(rec.site.x, 1); T.eq(rec.site.y, 1); T.eq(rec.seen, 2)
+        lift(item)
+        Machines.pickedUp(item, 5)
+        rec = item:getModData().tlgProc
+        T.near(work(rec), 3, 1e-9, "the 3 h it stood there count")
+        T.eq(rec.state, "Paused"); T.eq(rec.pause, "not_placed"); T.eq(rec.t, 5); T.eq(rec.seen, 5)
+        T.ok(World.get().machineSites.P5 == nil, "off the hourly list at once")
+        local carried = Machines.advance(item, Machines.read(item, false), 7, env)
+        T.near(work(carried), 3, 1e-9, "nothing while carried"); T.eq(carried.pause, "not_placed"); T.eq(carried.t, 7)
+        Machines.write(item, carried)
+        place(item, b)
+        Machines.putDown(item, 8)
+        rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.ok(rec.pause == nil); T.eq(rec.t, 8); T.eq(rec.site.x, 4); T.eq(rec.seen, 8)
+        T.eq(World.get().machineSites.P5.x, 4, "listed at the new tile at once")
+        local later = Machines.advance(item, Machines.read(item, false), 10, env)
+        T.near(work(later), 5, 1e-9, "3 h before the pickup and 2 h since, none of the 3 h carried")
+        -- Picked up again, then a second pickup event while carried: no change.
+        lift(item)
+        Machines.write(item, later)
+        Machines.pickedUp(item, 11)
+        Machines.pickedUp(item, 12)
+        rec = item:getModData().tlgProc
+        T.near(work(rec), 6, 1e-9); T.eq(rec.t, 11, "the second pickup finds it carried")
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: a move no Lua saw counts only up to the last time the machine was found placed", function()
+    local g = fakeGame(2)
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        -- Found placed at 4.5 (the ten-minute note); lifted unseen; read while carried.
+        local c = startedOn(a, "P6", env)
+        g.now = 4.5
+        Machines.observeFires()
+        T.eq(c:getModData().tlgProc.seen, 4.5, "stamped by the note")
+        lift(c)
+        local r = Machines.advance(c, Machines.read(c, false), 6, env)
+        T.near(work(r), 2.5, 1e-9, "up to 4.5"); T.eq(r.state, "Paused"); T.eq(r.pause, "not_placed"); T.eq(r.t, 6)
+        -- Lifted unseen, put down where the game's Lua sees it (the multiplayer case).
+        local d = startedOn(a, "P7", env)
+        g.now = 4.5
+        Machines.observeFires()
+        lift(d); place(d, b)
+        Machines.putDown(d, 7)
+        r = d:getModData().tlgProc
+        T.near(work(r), 2.5, 1e-9); T.eq(r.state, "Processing"); T.eq(r.t, 7); T.eq(r.site.x, 4)
+        T.eq(World.get().machineSites.P7.x, 4)
+        -- Neither move seen: found on another tile at the next access.
+        local e = startedOn(a, "P8", env)
+        g.now = 4.5
+        Machines.sampleSites()
+        T.eq(e:getModData().tlgProc.seen, 4.5, "stamped by the hourly reading")
+        lift(e); place(e, b)
+        r = Machines.advance(e, Machines.read(e, false), 8, env)
+        T.near(work(r), 2.5, 1e-9, "nothing after 4.5"); T.eq(r.t, 8); T.eq(r.site.x, 4); T.eq(r.seen, 8)
+        -- Carried after a seen pickup, put down unseen: from the next access.
+        local f = startedOn(a, "P9", env)
+        lift(f)
+        Machines.pickedUp(f, 3)
+        place(f, b)
+        r = Machines.advance(f, Machines.read(f, false), 9, env)
+        T.near(work(r), 1, 1e-9); T.eq(r.state, "Processing"); T.eq(r.t, 9); T.eq(r.site.x, 4)
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: older records, finished batches and paused ones around a pickup", function()
+    local g = fakeGame(2)
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        -- No seen time: nothing beyond the last access (the old rule).
+        local old = machine(a, running("P10", 2))
+        lift(old)
+        local r = Machines.advance(old, Machines.read(old, false), 6, env)
+        T.near(work(r), 0, 1e-9); T.eq(r.pause, "not_placed")
+        -- A site without its tile cannot tell a move: counted as before.
+        local tileless = machine(b, running("P11", 2))
+        tileless:getModData().tlgProc.site = { room = false, z = 0 }
+        r = Machines.advance(tileless, Machines.read(tileless, false), 6, env)
+        T.near(work(r), 4, 1e-9); T.eq(r.site.x, 4)
+        -- A batch that finishes before the pickup is not marked carried.
+        local done = startedOn(a, "P12", env)
+        local rec = done:getModData().tlgProc
+        rec.stage, rec.stageDone = 2, 95.5
+        lift(done)
+        Machines.pickedUp(done, 3)
+        rec = done:getModData().tlgProc
+        T.eq(rec.state, "OutputReady"); T.ok(rec.pause == nil)
+        -- Paused by the player: still paused once put down again.
+        local held = startedOn(a, "P13", env)
+        rec = held:getModData().tlgProc
+        rec.state, rec.pause, rec.manualPause = "Paused", "paused_by_player", true
+        lift(held)
+        Machines.pickedUp(held, 4)
+        T.eq(held:getModData().tlgProc.pause, "not_placed")
+        place(held, b)
+        Machines.putDown(held, 5)
+        r = Machines.advance(held, Machines.read(held, false), 6, env)
+        T.eq(r.state, "Paused"); T.eq(r.pause, "paused_by_player"); T.near(work(r), 0, 1e-9)
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: the game's Grab, floor transfers and place action account a machine's moves", function()
+    local g = fakeGame(2)
+    local names = { "ISGrabItemAction", "ISTransferAction", "ISDropWorldItemAction" }
+    local saved = {}
+    for _, k in ipairs(names) do saved[k] = _G[k] end
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        -- What the vanilla methods do to the item (SRC 42.21), with their
+        -- signatures: Grab gets the world object, the transfer is called on
+        -- the class with the character, the place action keeps item and square.
+        ISGrabItemAction = { transferItem = function(self, witem) lift(witem:getItem()) end }
+        ISTransferAction = { transferItem = function(self, character, item, src, dest, dropSquare)
+            if dropSquare then place(item, dropSquare) else lift(item) end
+            return item
+        end }
+        ISDropWorldItemAction = { complete = function(self)
+            place(self.item, self.sq)
+            return true
+        end }
+        Machines.install()
+        local item = startedOn(a, "P14", env)
+        g.now = 4
+        local grab = setmetatable({}, { __index = ISGrabItemAction })
+        grab:transferItem(item:getWorldItem())
+        local rec = item:getModData().tlgProc
+        T.near(work(rec), 2, 1e-9, "Grab: counted to the pickup"); T.eq(rec.pause, "not_placed")
+        g.now = 6
+        local drop = setmetatable({ item = item, sq = b }, { __index = ISDropWorldItemAction })
+        T.eq(drop:complete(), true)
+        rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 6); T.eq(rec.site.x, 4)
+        g.now = 7
+        T.eq(ISTransferAction:transferItem({}, item, "floor", "inventory", nil), item)
+        rec = item:getModData().tlgProc
+        T.near(work(rec), 3, 1e-9, "floor -> inventory: counted to the pickup"); T.eq(rec.pause, "not_placed")
+        g.now = 9
+        ISTransferAction:transferItem({}, item, "inventory", "floor", a)
+        rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 9); T.eq(rec.site.x, 1)
+        T.eq(World.get().machineSites.P14.x, 1)
+        -- A machine without a record passes untouched.
+        local bare = machine(b, nil)
+        ISTransferAction:transferItem({}, bare, "floor", "inventory", nil)
+        T.ok(bare:getModData().tlgProc == nil, "no record created")
+        -- A failing account never breaks the move.
+        local pickedUp, log, logged = Machines.pickedUp, TLG.Log.error, nil
+        Machines.pickedUp = function() error("boom") end
+        TLG.Log.error = function(fmt, ...) logged = string.format(fmt, ...) end
+        ISTransferAction:transferItem({}, item, "floor", "inventory", nil)
+        Machines.pickedUp, TLG.Log.error = pickedUp, log
+        T.ok(item.on == nil, "moved anyway"); T.ok(logged ~= nil and string.find(logged, "boom", 1, true) ~= nil)
+    end)
+    for _, k in ipairs(names) do _G[k] = saved[k] end
     g.restore()
     if not ok then error(err, 0) end
 end)
