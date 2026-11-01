@@ -417,3 +417,26 @@ listed with their replacement.
   a stopped wash, a drying column's ethanol was collected after an abort,
   a spoiled fermenter was emptied and loaded again. Pause or Abort on a
   running still is covered by the domain tests only.
+
+## D-024 A first look records the fuel it looks at
+* Decision: Look and smell (and a sample with the kit) on fuel the mod
+  has not recorded yet writes the fuel's record: the baseline its policy
+  gives at that moment, with the id the observation is filed under. Only
+  the record is written (each endpoint's `record`), never the fuel
+  itself; the look still changes nothing about the fuel. A look at fuel
+  already recorded, or one refused (no kit), writes nothing.
+* Reason: runs 39–40 found that a look read the baseline and allocated
+  an id without writing it, so the observation was filed under an id the
+  fuel never got: What I know about it said "unknown" right after a look,
+  and every later look allocated another id. In a world the mod has just
+  joined, nearly all fuel is unrecorded.
+* Consequences: a look counts as the first contact for the existing-save
+  policy (docs/migrations.md), like a pour or refuel. Looking first fixes
+  the fuel's condition at that moment; the transition no longer applies
+  to it later. Verified RT-SP 2026-11-01 run 41 (17/0, an existing save
+  gaining the packaged mod): the look recorded a can that the mod had not
+  recorded, What I know about it found the observation under its id, the
+  can's condition was exactly the transition rule at the moment of the
+  look, and a later pour and a save with reload kept that record. A look
+  with the sample kit (the same path past the kit check) and looks at
+  vehicles, pumps or generators (no menu sends one) are not run in game.

@@ -1067,3 +1067,33 @@ in that state.
 Not run: the other two policies (no single-player screen sets them for an
 existing save), a server, removing and re-adding the mod, late
 exploration in a new world.
+
+## 2026-11-01 — RT-SP client harness, launch 41 (a first look records the fuel, D-024)
+
+Command: `tools/rehearse-install.ps1 -Scenario existing`, with the fix of
+commit `1cf2240`: Look and smell on fuel the mod has not recorded writes
+the fuel's record (its baseline, the record alone, never the fuel), so
+the observation stays filed under the id the fuel carries. The zip of
+that commit (82 files, SHA-256 `c5221a32…`) matched its manifest. The
+look is now can A's first contact, so the harness computes its expected
+condition from the moment of the look and checks that a later pour keeps
+that record. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run41_existing_launch1.txt` and
+`_launch2.txt`.
+
+Result: launch 1 **3/0**, phase B **11/0**, phase C **3/0**, run 40's
+failure among them.
+
+| Run 41 | Result |
+| --- | --- |
+| Look and smell, then What I know about it | the look recorded the can as `S1160167558-1`, and What I know about it found the observation under that id |
+| The can, first recorded by that look | condition 0.000010, exactly the transition rule at the look (world-age condition 0.241) |
+| A pour after the look | the same record and id; the condition advanced from the look to the pour (0.000009956 → 0.000010016), 10 → 9 L |
+| Pump, first recorded at installation | condition 0.000007, exactly the rule (world-age 0.209) |
+| Can on the ground, first recorded 144.02 h after installation | condition 0.090830, exactly the rule at share 0.2 (aged since installation 0.063, world-age 0.201) |
+| After save, exit and continue | world record and both cans' records unchanged |
+
+Not run: a look with the sample kit (the same command past the kit
+check; the unit tests cover only a refused one), a look at a vehicle,
+pump or generator (no menu sends one), and what runs 39–40 left
+untested.

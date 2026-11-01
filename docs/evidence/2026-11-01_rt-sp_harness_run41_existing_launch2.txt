@@ -1,0 +1,41 @@
+# TLG single-player harness, an existing save's first load with the mod
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=31457754492145253476 hours=242.0374 DayLength=4
+STEP rtx_setup begin
+STEP rtx_load begin
+PASS RTX.same_world_continued :: world 31457754492145253476 (launch 1: 31457754492145253476), world hour 242.0397 (saved at 242.013855 after 10 days on the clock)
+PASS RTX.record_created_as_existing_save :: v=1 createdAsNewGame=false policy=transition transitionHours=720 installedAt=242.02777099609375 (the game started at 242.0278) seed=1160167558 epoch=0 modVersion=0.1.0-dev nextId=1
+OBS  RTX.sandbox SandboxVars.TheLastGallon as this save has it: {CampaignSpeed=1,ExistingSavePolicy=1,ProtectIncompatiblePours=true,StationContamination=true,TransitionDays=30,VehicleStalls=true}
+STEP rtx_look begin
+PASS RTX.carried_can_untracked_before :: record nil
+OBS  RTX.look menu "Look and smell" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTX.what_i_know menu "What I know about it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  RTX.look Look and smell: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.8, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough) | What I know about it: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.8, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough) | observations filed under S1160167558-1
+PASS RTX.look_and_smell_answers :: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.8, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough)
+PASS RTX.what_i_know_after_a_look :: the can's record {cond=1,deg={gasoline=9.955855464783545E-6},dirty=0,id=S1160167558-1,mic=0,prov={},q={gasoline=9.999969297682878,water=3.070231712309912E-5},rev=0,sealed=true,stab=0,storage=gascan_plastic,t=242.03982543945312,v=1}; its observation {degError=1.1199999999999999,method=visual,observedDeg=0.7756602089694986,observedSediment=0,observedWater=0,phaseSeparated=false,precision=0.3,primary=gasoline,sampledAt=242.03982543945312,sampledRev=0,supplyId=S1160167558-1,waterDetected=false}
+STEP rtx_discover begin
+PASS RTX.pour_keeps_the_look_record :: after the look S1160167558-1|0.000009956|10.0000, after a pour S1160167558-1|0.000010016|9.0000
+PASS RTX.found_at_installation_is_fresh :: first recorded by Look and smell: recorded at world hour 242.0398, 0.01 h after installation: condition 0.000009956, the rule 0.000009956 (aged since installation 0.000005923, world-age condition 0.240876160, share 0.0000); record S1160167558-1|0.000009956|10.0000
+OBS  RTX.pump_to_can transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTX.pump_found_at_installation_is_fresh :: pump 10654,10630 (674 units) untouched before=true; transfer ok=true; recorded at world hour 242.0404, 0.01 h after installation: condition 0.000007118, the rule 0.000007118 (aged since installation 0.000003451, world-age condition 0.208725063, share 0.0000); record R1160167558-3|0.000007118|672.0000; water 0.7333 L, sediment 0.3215 L
+STEP rtx_wait begin
+STEP rtx_late begin
+PASS RTX.ground_can_untracked_until_found :: record nil
+PASS RTX.found_later_is_partly_aged :: recorded at world hour 386.0443, 144.02 h after installation: condition 0.090829838, the rule 0.090829838 (aged since installation 0.063344903, world-age condition 0.200753765, share 0.2000); record S1160167558-5|0.090829838|9.0000
+PASS RTX.found_at_installation_stays_recorded :: then S1160167558-1|0.000010016|9.0000, now S1160167558-1|0.000010016|9.0000
+STEP rtx_save_and_exit begin
+SUMMARY pass=11 fail=0
+EXIT phase B -> main menu
+# TLG single-player harness, the existing save continued again
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rtx_reload begin
+PASS RTX.record_kept_after_reload :: seed 1160167558 (1160167558), installedAt 242.027771 (242.027771), policy transition (transition), epoch 0 (0), createdAsNewGame=false
+PASS RTX.carried_can_record_kept :: S1160167558-1|0.000010016|9.0000 (before the save S1160167558-1|0.000010016|9.0000)
+PASS RTX.ground_can_record_kept :: S1160167558-5|0.090829838|9.0000 (before the save S1160167558-5|0.090829838|9.0000)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 386.07
+SUMMARY pass=3 fail=0
+DONE

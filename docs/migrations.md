@@ -38,9 +38,9 @@ The world record is created once by the authority on `OnInitGlobalModData`:
   reinstalling or changing sandbox options later never re-grants fresh
   reserves. Fuel discovered late is aged as of discovery (no fresh fuel for
   late exploration).
-* "Discovered" means the first contact that writes a record: a pour,
-  refuel or other transfer. A look (Look and smell) reads the baseline
-  but writes nothing (open item, release checklist).
+* "Discovered" means the first contact that writes a record: a look
+  (Look and smell or the sample kit, which writes the record alone,
+  D-024), a pour, a refuel or another transfer.
 * A single-player save that gains the mod (the load screen's Choose
   Mods..., which rewrites the save's `mods.txt`) takes the options'
   defaults: transition, 30 days. The load screen offers no sandbox

@@ -96,6 +96,10 @@
   any engine by the mod's start check until dried, then fit for flex
   engines.
 * Migrations with preserved future schemas.
+* What I know about it remembers a first Look and smell on fuel the mod
+  had not recorded yet; it used to say "unknown" right after the look.
+  That first look also fixes the fuel's starting condition on a save that
+  gains the mod (checked in game).
 * Package: the zip now unpacks the same on every system (its folder
   names used Windows backslashes), and the player guide says how to
   install it. Installed from the zip into a fresh game folder, the mod
