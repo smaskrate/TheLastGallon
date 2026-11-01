@@ -1,0 +1,21 @@
+# TLG single-player harness, a new world: fuel first found late
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=66347812029387355813 hours=2.0096 DayLength=4
+STEP rtx_setup begin
+STEP rtn_start begin
+PASS RTN.world_record_of_a_new_game :: v=1 createdAsNewGame=true policy=new_world epoch=0 installedAt=2 seed=1336752747 (world hour now 2.0120)
+PASS RTN.untouched_at_the_start :: cans recorded nil, nil; pump true at 10654,10630: initialized
+PASS RTN.found_at_the_start_holds_the_world_age_condition :: recorded at world hour 2.0120: condition 0.065620276; the world-age rule 0.065620276 (aged from hour 0 without the pre-outbreak age 0.000976469); record S1336752747-1|0.065620276|9.0000
+STEP rtn_wait begin
+STEP rtn_late begin
+PASS RTN.second_can_untracked_until_found :: record nil
+PASS RTN.found_late_holds_the_world_age_condition :: recorded at world hour 170.0168: condition 0.289550901; the world-age rule 0.289550901 (aged from hour 0 without the pre-outbreak age 0.071607830); record S1336752747-3|0.289550901|9.0000
+PASS RTN.found_early_aged_like_found_late :: recorded at world hour 2.0120, read at 170.0168: condition 0.138107973; aged from hour 0 less its pre-age in one span 0.136948851 (difference 1.159e-03)
+OBS  RTN.pump_to_can transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTN.pump_found_late_holds_the_world_age_condition :: pump 10654,10630 (9387 units) untouched until now=true; transfer ok=true; recorded at world hour 170.0173: condition 0.061899812; the world-age rule 0.061899812 (aged from hour 0 without the pre-outbreak age 0.046693617); record R1336752747-5|0.061899812|9385.0000; water 29.8073 L, sediment 6.4290 L
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 170.02
+SUMMARY pass=7 fail=0
+DONE

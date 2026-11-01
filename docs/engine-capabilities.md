@@ -695,7 +695,8 @@ the stills and column carried across a save, run 48 **29/0** and **24/0**,
 and Pause, Resume and Abort batch on running stills, run 49 27/1 and, after
 the fix, run 50 **28/0**, with run 33's controls again, run 51 **32/0**,
 then the full mode on the zip with that fix installed clean, run 52
-**94/0** and **14/0**. Most failures were
+**94/0** and **14/0**, and fuel first found late in a new world, run 53
+**7/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

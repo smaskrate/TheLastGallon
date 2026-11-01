@@ -1372,3 +1372,45 @@ Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42 and
   TLG error or warning. Its four Lua error dumps are the harness's own
   deliberate deep recursion (`LuaProbe.lua`); no stack frame names the
   mod.
+
+## 2026-11-01 — RT-SP client harness, launch 53 (fuel first found late in a new world, gate 7)
+
+Command: `tools/run-sp-harness.ps1 -Mode late-find -TimeoutMinutes 40`
+(new mode, request `sp-rtn`). This is a new world with the mod from the
+start. Under its world record's policy, fuel the mod has no record of is
+aged from world hour 0, plus a pre-outbreak age drawn per container (up
+to 30 days for cans, 75 for station tanks).
+* At the start, two 10 L cans of petrol were set on the ground. One was
+  recorded at once by a pour; the other, and the pump nearest the start,
+  were left alone.
+* 7 game days later the second can (a pour) and the pump (the mod's own
+  transfer) were found.
+* Each first record was compared with Aging.advance over the whole span
+  (the world-age end of run 40's `RT.X.expected`), not with
+  WorldInit.baseline.
+* The can found at the start was read again and compared with the same
+  one-span calculation.
+
+Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run53_late_find.txt`.
+
+Result: **7 PASS / 0 FAIL**. The console showed "world fuel history
+created: policy=new_world … newGame=true" and no TLG or Lua error.
+
+| Run 53 | Result |
+| --- | --- |
+| World record | a new game's: policy `new_world`, epoch 0, created at world hour 2 |
+| At the start | neither can nor the pump had a record. The can found then: condition 0.065620276, the world-age rule exactly (without its pre-outbreak age it would be 0.000976) |
+| Second can, found at world hour 170.0168 | no record until then. Condition 0.289550901, the world-age rule exactly (0.071608 from hour 0 alone) |
+| Pump, found at world hour 170.0173 | untouched until then. Condition 0.061899812, the world-age rule exactly for a station tank (0.046694 from hour 0 alone), with its station water 29.8073 L and sediment 6.4290 L |
+| Can found at the start, read again | 0.138107973; the one-span calculation gives 0.136948851, 0.85 % less (bound 1 %) |
+
+Found late or found early, fuel carries the age of the whole world, so
+waiting to find it gains nothing. The 0.85 % is the climate model's
+documented day rule (`Climate.lua`). The model's day 0 runs from the
+calendar midnight before world start. A record taken at hour 2 aged that
+day's hours, the pre-outbreak ones included, at the mean of the readings
+taken so far. The record is not redone after midnight, while the
+one-span calculation uses the day's final mean. The size depends on how
+far the early readings sat from the day's mean, which was not measured.
+Not run: the other two existing-save policies, a server, removing and
+re-adding the mod.
