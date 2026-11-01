@@ -16,6 +16,7 @@
 --   sp-rtpot -> summer, grid on: a batch through the pot still (two runs),
 --             dried and checked against the engines' rules
 --   sp-rtc -> summer, grid on: Pause, Resume and Abort batch from the menu
+--   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -36,7 +37,8 @@ local function unattended()
     pcall(function() getCore():setOptionShowSurvivalGuide(false) end)
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
-    or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" then
+    or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
+    or REQUEST == "sp-rtof" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -1126,7 +1128,8 @@ local function click(opt)
             if onReply then onReply(r) end
         end)
     end
-    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4, opt.param5,
+        opt.param6, opt.param7, opt.param8, opt.param9, opt.param10)
     TLG.Net.request = orig
     if not ok then R:line("OBS  menu entry %s raised %s", tostring(opt.name), tostring(err)) end
     return reply
@@ -5326,6 +5329,926 @@ end }
 RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Open fires (request "sp-rtof"): a fermenter beside a campfire and one
+-- beside a barbecue (D-021, D-022), outdoors in the January world with the
+-- grid off, the two sites 24 tiles apart so that neither fire reaches the
+-- other's tiles. In 42.21 a campfire is not an IsoFireplace: SCampfireSystem
+-- keeps it as a Lua global object over a plain IsoObject "Campfire" (fuel in
+-- minutes, `fuelAmt`, lowered by one on every EveryOneMinute event, loaded
+-- or not: SRC Camping/SCampfireSystem.lua lowerFuelAmount), and its warmth
+-- comes from the permanent IsoFire it adds while lit, a heat source of 35 C
+-- whose radius is the fire's light radius (BC IsoFire.update). The campfire
+-- sets that radius from its fuel (SCampfireGlobalObject:fireRadius,
+-- max(2, 10 x min(fuel, 360) / 360) outdoors, a number handed to
+-- setLightRadius(int)); how it is made whole is read off the IsoFire here.
+-- A barbecue is an IsoBarbecue: 25 C, radius 3 (BC updateHeatSource), its
+-- fuel burned by game time, also while unloaded (BC update; lastUpdateTime
+-- is saved). The campfire is built with the call its build action makes
+-- (SCampfireSystem.instance:addCampfire, SRC campingCampfire:create), the
+-- charcoal barbecue created as vanilla's own tests do (IsoBarbecue.new with
+-- appliances_cooking_01_35 and AddTileObject, SRC Tests/TimedActionsTests.lua)
+-- where a player would set one down. Each is fed a log and lit from its own
+-- menu (Add fuel, Light: a sheet of paper and matches), the actions walking
+-- the character there. The air on every tile around each fire is compared
+-- with the heat formula, the campfire's at four fuel levels, and a fermenter
+-- is loaded on a warmed tile beside each. Then the winter run's hourly
+-- readings, the harness's own ten-minute notes of the fire warming each
+-- machine, the fires tended with the calls the add-fuel actions' complete
+-- makes, a 12 game hour trip that unloads both sites, and on return the
+-- fuel burned away, the hours away the notes cover and the work over the
+-- trip. The day temperature with that credit is the harness's own (the
+-- D-022 rule with the radius each fire has in game), not Climate.siteDayMean.
+------------------------------------------------------------------------------
+RT.O = { names = { "campfire", "barbecue" }, tripAt = 30, tripHours = 12, afterHours = 12, tag = "RTO", warm = 1,
+    tol = 1e-3, heatC = { 35, 25 }, bbqRadius = 3, bbqSprite = "appliances_cooking_01_35", apart = 24,
+    campFuels = { 200, 100, 30 }, minutes = 0 }
+
+-- Free outdoor floor with nothing lying on it.
+function RT.O.outdoorFree(s)
+    if not RT.W.free(s) or RT.W.inRoom(s) then return false end
+    local ok, r = pcall(function() return s:isOutside() and s:getWorldObjects():size() == 0 end)
+    return ok and r == true
+end
+
+-- Room for a fire at (x, y): it and the eight tiles around it free outdoor
+-- floor, so a machine tile beside it has nothing in between.
+function RT.O.open(x, y)
+    for dx = -1, 1 do
+        for dy = -1, 1 do
+            if not RT.O.outdoorFree(sq(x + dx, y + dy, 0)) then return false end
+        end
+    end
+    return true
+end
+
+-- The open spot nearest (x0, y0) at least `away` tiles from `avoid`.
+function RT.O.findOpen(x0, y0, avoid, away)
+    for r = 0, 60 do
+        for dx = -r, r do
+            for dy = -r, r do
+                if math.max(math.abs(dx), math.abs(dy)) == r then
+                    local x, y = x0 + dx, y0 + dy
+                    local far = avoid == nil or (x - avoid.x) * (x - avoid.x) + (y - avoid.y) * (y - avoid.y) >= away * away
+                    if far and RT.O.open(x, y) then return { x = x, y = y } end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- The campfire as the server keeps it (SCampfireSystem: fuelAmt, isLit,
+-- exterior), loaded or not.
+function RT.O.campLua()
+    local p = RT.O.site[1]
+    local ok, o = pcall(function() return SCampfireSystem.instance:getLuaObjectAt(p.x, p.y, 0) end)
+    return ok and o or nil
+end
+
+-- The object of class `cls` on fire k's tile (the campfire's permanent
+-- IsoFire, the IsoBarbecue), found again on every call: references go stale
+-- when the tile reloads.
+function RT.O.object(k, cls)
+    local p = RT.O.site[k]
+    local s = sq(p.x, p.y, 0)
+    local objs = s and s:getObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        local o = objs:get(i)
+        if instanceof(o, cls) and (cls ~= "IsoFire" or o:isPermanent()) then return o end
+    end
+    return nil
+end
+
+-- Fire k as the game has it now (nil while its tile is not loaded): lit,
+-- fuel in minutes, heat radius.
+function RT.O.state(k)
+    local O, p = RT.O, RT.O.site[k]
+    if sq(p.x, p.y, 0) == nil then return nil end
+    if k == 1 then
+        local c, f = O.campLua(), O.object(1, "IsoFire")
+        if c == nil then return nil end
+        return { lit = c.isLit == true, fuel = c.fuelAmt or 0, radius = f and f:getLightRadius() or 0 }
+    end
+    local b = O.object(2, "IsoBarbecue")
+    if b == nil then return nil end
+    return { lit = b:isLit(), fuel = b:getFuelAmount(), radius = O.bbqRadius }
+end
+
+-- The air the game gives a tile whose air without heat sources is t, with a
+-- heat source of c at offset dx, dy and radius R in clear line of sight
+-- (BC IsoCell.getHeatSourceHighestTemperature; RT.F.warmed for any heat).
+function RT.O.warmed(t, dx, dy, radius, srcInRoom, c)
+    local dsq = dx * dx + dy * dy
+    if dsq >= radius * radius then return t end
+    local adj
+    if srcInRoom then adj = math.max(-7, math.min(7, t - 30)) else adj = math.max(-15, math.min(5, t - 30)) end
+    return math.max(t, t + (1 - math.sqrt(dsq) / radius) * (c + adj - t))
+end
+
+-- The campfire's radius at `fuel` minutes (SCampfireGlobalObject:fireRadius,
+-- outdoors), made whole as the run found the game does (O.law).
+function RT.O.campRadius(fuel)
+    local r = math.max(2, 10 * math.min(math.max(fuel, 0), 360) / 360)
+    if RT.O.law == "round" then return math.floor(r + 0.5) end
+    return math.floor(r)
+end
+
+-- How many (fuel, radius) pairs read off the campfire fit its radius made
+-- whole by truncation, and by rounding.
+function RT.O.lawCount()
+    local fl, rd = 0, 0
+    for _, p in ipairs(RT.O.pairs) do
+        local r = math.max(2, 10 * math.min(p.f, 360) / 360)
+        if math.floor(r) == p.r then fl = fl + 1 end
+        if math.floor(r + 0.5) == p.r then rd = rd + 1 end
+    end
+    return fl, rd
+end
+
+function RT.O.pairsText()
+    local parts = {}
+    for n, p in ipairs(RT.O.pairs) do
+        if n <= 12 then parts[#parts + 1] = string.format("%.1f->%d", p.f, p.r) end
+    end
+    return table.concat(parts, " ")
+end
+
+-- The air on every loaded floor tile within reach of fire k against the
+-- heat formula at its state now (as RT.F.snapshot): warm or cold as the
+-- formula says, blocked when in range but not warmed (no clear line of
+-- sight), mismatch otherwise.
+function RT.O.snapshot(k)
+    local O, c = RT.O, RT.F.climate()
+    local p, st = O.site[k], O.state(k)
+    local reach = k == 1 and 11 or O.bbqRadius + 1
+    local srcRoom = RT.W.inRoom(sq(p.x, p.y, 0))
+    local snap = { lit = st.lit, fuel = st.fuel, radius = st.radius, warm = 0, cold = 0, blocked = 0, mismatch = 0,
+        where = "none", tiles = {} }
+    for dx = -reach, reach do
+        for dy = -reach, reach do
+            local s = (dx ~= 0 or dy ~= 0) and sq(p.x + dx, p.y + dy, 0) or nil
+            if s and s:getFloor() then
+                local air = getClimateManager():getAirTemperatureForSquare(s)
+                local t0 = RT.F.unwarmed(s, c)
+                local want = st.lit and O.warmed(t0, dx, dy, st.radius, srcRoom, O.heatC[k]) or t0
+                local class
+                if math.abs(air - want) <= O.tol then
+                    class = (want > t0 + O.tol) and "warm" or "cold"
+                elseif want > t0 + O.tol and math.abs(air - t0) <= O.tol then
+                    class = "blocked"
+                else
+                    class = "mismatch"
+                    snap.where = string.format("%d,%d: game %.4f, formula %.4f, unwarmed %.4f", p.x + dx, p.y + dy,
+                        air, want, t0)
+                end
+                snap[class] = snap[class] + 1
+                snap.tiles[#snap.tiles + 1] = { x = p.x + dx, y = p.y + dy, class = class }
+            end
+        end
+    end
+    return snap
+end
+
+function RT.O.snapText(snap)
+    return string.format("lit=%s fuel %.1f min radius %s: warm %d, cold %d, blocked %d, mismatch %d (%s)",
+        tostring(snap.lit), snap.fuel, tostring(snap.radius), snap.warm, snap.cold, snap.blocked, snap.mismatch,
+        snap.where)
+end
+
+-- The first entry of a context menu, its submenus included, that `pred`
+-- accepts.
+function RT.O.findOption(menu, pred, seen)
+    seen = seen or {}
+    if menu == nil or seen[menu] then return nil end
+    seen[menu] = true
+    for j = 1, (menu.numOptions or 1) - 1 do
+        local o = menu.options[j]
+        if o and pred(o) then return o end
+        local found = o and o.subOption and RT.O.findOption(menu:getSubMenu(o.subOption), pred, seen)
+        if found then return found end
+    end
+    return nil
+end
+
+-- Builds fire k's menu as a right-click on its tile does and presses the
+-- entry `pred` picks, as ISContextMenu does: an actions entry, so the
+-- character walks there and works. False when the menu has no such entry
+-- or greys it out.
+function RT.O.press(k, label, pred)
+    local O, p = RT.O, RT.O.site[k]
+    local objs, list = sq(p.x, p.y, 0):getObjects(), {}
+    for i = 0, objs:size() - 1 do list[#list + 1] = objs:get(i) end
+    local context = ISContextMenu.get(0, 100, 100)
+    if k == 1 then
+        ISCampingMenu.doCampingMenu(0, context, list, false)
+    else
+        ISBBQMenu.OnFillWorldObjectContextMenu(0, context, list, false)
+    end
+    local opt = O.findOption(context, pred)
+    context:setVisible(false)
+    local why = (opt == nil and "no menu entry") or (opt.notAvailable and "entry greyed out") or nil
+    if why == nil then click(opt) end
+    R:line("OBS  RTO.menu %s %s: %s", O.names[k], label, why or ("pressed \"" .. tostring(opt.name) .. "\""))
+    return why == nil
+end
+
+-- Add fuel > Log > One (ISCampingMenu.doAddFuelOption, for the barbecue too).
+function RT.O.isAddLog(o)
+    return o.onSelect == ISTimedActionQueue.queueActions and o.param1 == ISCampingMenu.onAddFuel and o.param3 == "Base.Log"
+end
+
+-- Light > sheet of paper + matches (ISCampingMenu.doLightFireOption).
+function RT.O.isLightPaper(o)
+    return o.onSelect == ISTimedActionQueue.queueActions and o.param1 == ISCampingMenu.onLightFromLiterature
+        and o.param2 == "Base.SheetPaper2"
+end
+
+-- Tends fire k as a player can, with the calls the vanilla actions' complete
+-- makes (ISAddFuelAction, ISBBQAddFuel; lighting as ISLightFromLiterature,
+-- ISBBQLightFromLiterature): a log only once it fits under the cap the menu
+-- keeps to, lit again when out.
+function RT.O.tend(k)
+    local O, st = RT.O, RT.O.state(k)
+    if st == nil then return false end
+    local added = false
+    if st.fuel + O.perLog <= O.cap and takeAway("Base.Log") then
+        if k == 1 then
+            O.campLua():addFuel(O.perLog)
+        else
+            local b = O.object(2, "IsoBarbecue")
+            b:addFuel(O.perLog)
+            b:sendObjectChange(IsoObjectChange.STATE)
+        end
+        O.logs[k], added = O.logs[k] + 1, true
+    end
+    if k == 1 then
+        local c = O.campLua()
+        if not c.isLit and (c.fuelAmt or 0) > 0 then c:lightFire() end
+    else
+        local b = O.object(2, "IsoBarbecue")
+        if b:hasFuel() and not b:isLit() then
+            b:turnOn()
+            b:sendObjectChange(IsoObjectChange.STATE)
+        end
+    end
+    return added
+end
+
+-- Every game hour while the batches run: the game's air at each machine,
+-- filed by hour like the mod's readings, against the heat formula at its
+-- fire's state now (a campfire radius changed in the tick before may not
+-- have reached its heat source yet: counted apart), then the fires tended.
+function RT.O.onHour()
+    local O = RT.O
+    if not O.active then return end
+    local slot, c = math.floor(hours() - 0.5), RT.F.climate()
+    for i = 1, 2 do
+        local m = O.mach[i]
+        local s, st = sq(m.x, m.y, 0), O.state(i)
+        if s == nil or st == nil then
+            O.unloaded[slot] = true
+        else
+            local air = getClimateManager():getAirTemperatureForSquare(s)
+            O.readings[i][slot] = air
+            local t0 = RT.F.unwarmed(s, c)
+            local want = st.lit and O.warmed(t0, m.dx, m.dy, st.radius, O.srcRoom[i], O.heatC[i]) or t0
+            local h = O.hourly[i]
+            h.n = h.n + 1
+            if i == 1 and st.lit and math.abs(air - want) > O.tol
+                and math.abs(air - O.warmed(t0, m.dx, m.dy, O.campRadius(st.fuel + 1), O.srcRoom[i], O.heatC[i])) <= O.tol then
+                h.lagged = h.lagged + 1
+            elseif math.abs(air - want) >= h.worst then
+                h.worst = math.abs(air - want)
+                h.where = string.format("%s hour %d: lit=%s fuel %.1f radius %d: game %.4f, formula %.4f", RT.dayKey(),
+                    slot, tostring(st.lit), st.fuel, st.radius, air, want)
+            end
+            if st.lit then
+                h.lit = h.lit + 1
+                h.minGain, h.maxGain, h.minAir = math.min(h.minGain, air - t0), math.max(h.maxGain, air - t0),
+                    math.min(h.minAir, air)
+            end
+            if i == 1 and st.lit then O.pairs[#O.pairs + 1] = { f = st.fuel, r = st.radius } end
+        end
+    end
+    if O.tending then
+        for k = 1, 2 do O.tend(k) end
+    end
+end
+
+-- Every ten game minutes while the batches run: the harness's own note of
+-- the fire warming each machine, as Machines.observeFires takes it (the
+-- hour's last note wins; false when the fire does not give the air there).
+function RT.O.onTenMinutes()
+    local O = RT.O
+    if not O.active then return end
+    local c = RT.F.climate()
+    for i = 1, 2 do
+        local m = O.mach[i]
+        local s, st = sq(m.x, m.y, 0), O.state(i)
+        if s ~= nil and st ~= nil then
+            local air = getClimateManager():getAirTemperatureForSquare(s)
+            local t0 = RT.F.unwarmed(s, c)
+            local note = false
+            if st.lit and st.fuel > 0 and air > t0 + O.tol
+                and math.abs(O.warmed(t0, m.dx, m.dy, st.radius, O.srcRoom[i], O.heatC[i]) - air) <= O.tol then
+                note = { t = hours(), f = st.fuel, x = -m.dx, y = -m.dy, r = O.srcRoom[i], c = O.heatC[i],
+                    rad = i == 2 and O.bbqRadius or nil }
+            end
+            O.notes[i][math.floor(hours())] = note
+        end
+    end
+end
+
+-- The campfire burns a minute of fuel per EveryOneMinute event, which the
+-- game fires once per tick however many game minutes the tick spans (BC
+-- GameTime.update): counted here.
+function RT.O.onMinute()
+    RT.O.minutes = RT.O.minutes + 1
+end
+
+-- Machine i's day temperature by the D-022 rule on the harness's own
+-- readings and notes: an hour without a reading takes the note standing
+-- last before it, its warmth from the start of the noted hour while the
+-- noted fuel lasts, with the radius its fire has in game at the fuel left
+-- at the start of each hour (the campfire's by O.campRadius, the
+-- barbecue's 3); the site's unheated value (Climate:siteBase) elsewhere.
+function RT.O.dayMean(i, day, upto)
+    local O, env = RT.O, TLG.World.env()
+    local rec = O.items[i]:getModData().tlgProc or {}
+    local site = rec.site or { room = false, z = 0 }
+    local base = env:siteBase(day, { room = site.room, z = site.z })
+    local from = math.max(env:dayStart(day), rec.startedAt or -math.huge)
+    local to = math.min(env:dayStart(day + 1), upto)
+    local span = to - from
+    if span <= 1e-9 then return base end
+    local temps, notes = O.readings[i], O.notes[i]
+    local current = math.floor(to)
+    local carried = current < to and temps[current] == nil and temps[current - 1] or nil
+    local keys = TLG.Tables.sortedKeys(notes)
+    local ki, sum, covered = 0, 0, 0
+    for s = math.floor(from), math.ceil(to) - 1 do
+        local a, b = math.max(from, s), math.min(to, s + 1)
+        local v = temps[s]
+        if v == nil and s == current then v = carried end
+        if b > a and v ~= nil then
+            sum, covered = sum + (b - a) * v, covered + (b - a)
+        elseif b > a then
+            while ki < #keys and keys[ki + 1] <= s do ki = ki + 1 end
+            local note = ki > 0 and notes[keys[ki]] or nil
+            if type(note) == "table" then
+                local stop = math.min(b, note.t + note.f / 60)
+                if stop > a then
+                    local left = note.f - (a - note.t) * 60
+                    local radius = i == 1 and O.campRadius(left) or O.bbqRadius
+                    local w = O.warmed(base, note.x, note.y, radius, note.r, note.c)
+                    sum, covered = sum + (stop - a) * w, covered + (stop - a)
+                end
+            end
+        end
+    end
+    return (sum + (span - covered) * base) / span
+end
+
+-- The notes the mod took for machine i since the last comparison against
+-- the harness's: no fire where the harness saw none; where it saw the fire,
+-- the same time, fuel, offset, heat, room and fixed radius. Further fields
+-- of the mod's note are not compared.
+function RT.O.compareNotes(m, i, item)
+    local p, mine = item and item:getModData().tlgProc, RT.O.notes[i]
+    if not p then return end
+    for _, h in ipairs(TLG.Tables.sortedKeys(mine)) do
+        if h > m.notesCompared then
+            m.notesCompared = h
+            local a, b = mine[h], p.fires and p.fires[h]
+            local same
+            if a == false then
+                same = b == false
+            else
+                same = type(b) == "table" and b.f == a.f and b.x == a.x and b.y == a.y and b.r == a.r and b.c == a.c
+                    and b.rad == a.rad and math.abs(b.t - a.t) < 1e-6
+            end
+            m.notes.n = m.notes.n + 1
+            if a then m.notes.fire = m.notes.fire + 1 end
+            if not same then
+                m.notes.off = m.notes.off + 1
+                m.notes.where = m.notes.where or string.format("hour %d: harness %s, mod %s", h, brief(a), brief(b))
+            end
+        end
+    end
+end
+
+-- One status read of machine i with the character beside it: readings and
+-- notes compared, the reported day temperature against the harness's, the
+-- work against the stage rule fed by the reported one.
+function RT.O.read(ctx, i, env, now, day)
+    local O, m, item = RT.O, ctx.m[i], RT.O.items[i]
+    compareFiled(O, m, i, item)
+    O.compareNotes(m, i, item)
+    local s = RT.statusOf(item)
+    if s.ok ~= true then
+        m.refused = m.refused + 1
+        m.refusedWhy = m.refusedWhy or tostring(s.reason)
+    end
+    local done = RT.doneHours(item)
+    local p = m.prev
+    local dt, dd = now - p.h, done - p.done
+    local running = s.state == "Processing" or s.state == "Paused"
+    if running and type(s.siteC) == "number" then
+        local want = O.dayMean(i, day, now)
+        local tally = (ctx.trip and ctx.trip.checked) and m.meanAfter or m.meanBefore
+        tally.n = tally.n + 1
+        if math.abs(want - s.siteC) >= tally.worst then
+            tally.worst = math.abs(want - s.siteC)
+            tally.where = string.format("%s, %.1f h in: status %.4f, harness %.4f", RT.dayKey(), now - ctx.h0,
+                s.siteC, want)
+        end
+    end
+    if p.day == day and p.stage == "ferment" and s.stage == "ferment" and running and type(s.siteC) == "number" then
+        local rate = RT.fermentRate(s.siteC)
+        m.rule.n = m.rule.n + 1
+        if math.abs(dd - rate * dt) >= m.rule.worst then
+            m.rule.worst = math.abs(dd - rate * dt)
+            m.rule.where = string.format("%s, %.1f h in at %.2f C: did %.4f h, rule %.4f h", RT.dayKey(), now - ctx.h0,
+                s.siteC, dd, rate * dt)
+        end
+    end
+    local d = m.days[day]
+    if not d then
+        d = { label = RT.dayKey(), work = 0, paused = 0 }
+        m.days[day] = d
+    end
+    d.work = d.work + math.max(0, dd)
+    if s.state == "Paused" then d.paused = d.paused + dt end
+    if type(s.siteC) == "number" then d.siteC = s.siteC end
+    if running and s.stage == "ferment" and not m.dialog then
+        local before = #H.dialogs.texts
+        machineClick(O.tag .. ".status_" .. O.names[i], item, "ContextMenu_TLG_MachineStatus")
+        m.dialog = H.dialogs.texts[before + 1] or "none"
+        closeDialogs()
+    end
+    m.prev = { h = now, done = done, day = day, stage = s.stage }
+    m.last = s
+end
+
+-- Hours of the trip the last note at or before leaving covers (D-022: the
+-- noted fuel, a minute a minute), and that note.
+function RT.O.covered(notes, tr)
+    local last
+    for _, h in ipairs(TLG.Tables.sortedKeys(notes or {})) do
+        if h <= tr.from then last = h end
+    end
+    local note = last and notes[last]
+    if type(note) ~= "table" then return 0, note end
+    return math.max(0, math.min(tr.back, note.t + note.f / 60) - tr.from), note
+end
+
+-- Back from the trip, before any access: the hours away the mod's notes
+-- cover against the harness's.
+function RT.O.checkCredit(ctx, i)
+    local O, tr = RT.O, ctx.trip
+    local rec = O.items[i] and O.items[i]:getModData().tlgProc or {}
+    local want, mine = O.covered(O.notes[i], tr)
+    local got, theirs = O.covered(rec.fires, tr)
+    R:line("OBS  RTO.credit %s last note before leaving: harness %s, mod %s", O.names[i], brief(mine), brief(theirs))
+    R:check("RTO.away_hours_credited_" .. O.names[i], function()
+        return want >= 1 and math.abs(got - want) < 1e-6,
+            string.format("the mod's notes cover %.2f h of the %.2f h away, the harness's %.2f h", got,
+                tr.back - tr.from, want)
+    end)
+end
+
+-- The work done over the trip against the stage rule fed by each day's
+-- temperature by the harness's rule (the mod advances each day at its mean
+-- computed up to the read).
+function RT.O.checkWork(ctx, i, before, env, now)
+    local O, m = RT.O, ctx.m[i]
+    local want, t = 0, before.h
+    while t < now - 1e-9 do
+        local d = env:dayIndex(t)
+        local stop = math.min(now, env:dayStart(d + 1))
+        want = want + RT.fermentRate(O.dayMean(i, d, now)) * (stop - t)
+        t = stop
+    end
+    local did = RT.doneHours(O.items[i]) - before.done
+    R:check("RTO.work_over_the_trip_" .. O.names[i], function()
+        return before.stage == "ferment" and m.last.stage == "ferment" and math.abs(did - want) <= 0.01,
+            string.format("%.2f to %.2f h in: did %.4f h, rule with the credit %.4f h", before.h - ctx.h0, now - ctx.h0,
+                did, want)
+    end)
+end
+
+function RT.O.refind()
+    local O = RT.O
+    for i = 1, 2 do O.items[i] = fermenterOn(O.mach[i].x, O.mach[i].y) or O.items[i] end
+end
+
+function RT.O.onLeave(ctx)
+    local O = RT.O
+    ctx.trip.fires, ctx.trip.minutes = {}, O.minutes
+    for k = 1, 2 do
+        local st = O.state(k)
+        ctx.trip.fires[k] = { fuel = st and st.fuel or -1, lit = st ~= nil and st.lit }
+    end
+end
+
+-- Back from the trip: each fire as the reload left it (the campfire burned
+-- a minute per minute event, the barbecue by game time), the hours away
+-- credited, then the fires tended again.
+function RT.O.onReturn(ctx)
+    local O, tr = RT.O, ctx.trip
+    local awayMin, events = (tr.back - tr.from) * 60, O.minutes - tr.minutes
+    local parts = {}
+    for k = 1, 2 do
+        local st, before = O.state(k), tr.fires[k]
+        local want = math.max(0, before.fuel - (k == 1 and events or awayMin))
+        if tr.unloaded then
+            R:check("RTO.fire_burned_while_away_" .. O.names[k], function()
+                if st == nil then return false, "not found again" end
+                return before.lit and math.abs(st.fuel - want) <= (k == 1 and 2 or 15) and st.lit == (st.fuel > 0),
+                    string.format("left lit=%s with %.1f min; back after %.0f game min (%d minute events): lit=%s with %.1f min (burning on: %.1f)",
+                        tostring(before.lit), before.fuel, awayMin, events, tostring(st.lit), st.fuel, want)
+            end)
+        end
+        parts[#parts + 1] = st and string.format("%s back lit=%s with %.1f min", O.names[k], tostring(st.lit), st.fuel)
+            or (O.names[k] .. " not found again")
+    end
+    if tr.unloaded then
+        for i = 1, 2 do O.checkCredit(ctx, i) end
+    end
+    for k = 1, 2 do parts[#parts + 1] = string.format("%s log added=%s", O.names[k], tostring(O.tend(k))) end
+    return string.format("%d minute events in %.0f game min; %s", events, awayMin, table.concat(parts, "; "))
+end
+
+-- After fire k's snapshots: the checks on them, the machine's tile (free,
+-- outdoors, beside the fire, warmed in every snapshot) and a log on.
+function RT.O.settle(ctx, k)
+    local O, snaps = RT.O, ctx.snaps
+    local off = 0
+    for _, sn in ipairs(snaps) do off = off + sn.mismatch end
+    R:check("RTO.unlit_tiles_unwarmed_" .. O.names[k], function()
+        local u = ctx.unlit
+        return u.cold >= 20 and u.warm == 0 and u.blocked == 0 and u.mismatch == 0, O.snapText(u)
+    end)
+    R:check("RTO.tiles_follow_the_heat_formula_" .. O.names[k], function()
+        return off == 0 and snaps[1].warm >= 3, string.format("%d tiles off the formula in %d lit snapshots; %d warmed at %.1f min",
+            off, #snaps, snaps[1].warm, snaps[1].fuel)
+    end)
+    if k == 1 then
+        local fl, rd = O.lawCount()
+        O.law = (fl == #O.pairs and "floor") or (rd == #O.pairs and "round") or "neither"
+        R:check("RTO.campfire_radius_follows_fuel", function()
+            return #O.pairs >= 4 and O.law ~= "neither",
+                string.format("fuel->radius %s; truncation fits %d, rounding %d of %d: %s", O.pairsText(), fl, rd,
+                    #O.pairs, O.law)
+        end)
+    end
+    local spot
+    for _, d in ipairs({ { 1, 0 }, { 0, 1 }, { -1, 0 }, { 0, -1 } }) do
+        local x, y = O.site[k].x + d[1], O.site[k].y + d[2]
+        local warm = spot == nil and O.outdoorFree(sq(x, y, 0))
+        for _, sn in ipairs(snaps) do
+            if warm and RT.F.classOf(sn, x, y) ~= "warm" then warm = false end
+        end
+        if warm then spot = { x = x, y = y } end
+    end
+    if spot == nil then
+        RT.abort = "no warmed free tile beside the " .. O.names[k]
+        R:line("OBS  RTO.machine tile %s", RT.abort)
+        return
+    end
+    O.mach[k] = { x = spot.x, y = spot.y, dx = spot.x - O.site[k].x, dy = spot.y - O.site[k].y }
+    O.srcRoom[k] = RT.W.inRoom(sq(O.site[k].x, O.site[k].y, 0))
+    O.tend(k)
+    local st = O.state(k)
+    R:line("OBS  RTO.machine tile %s %d,%d beside the fire at %d,%d; fire lit=%s with %.1f min, radius %d; logs so far %d",
+        O.names[k], spot.x, spot.y, O.site[k].x, O.site[k].y, tostring(st.lit), st.fuel, st.radius, O.logs[k])
+end
+
+RT.openSites = { name = "rto_sites", timeout = 3000, fn = function(ctx, ticks)
+    local O = RT.O
+    if not ctx.t0 and RT.skip("rto_sites") then return true end
+    if not ctx.t0 then
+        local here = player():getSquare()
+        local camp = O.findOpen(here:getX(), here:getY())
+        local bbq = camp and O.findOpen(camp.x, camp.y + O.apart, camp, O.apart)
+        if bbq == nil then
+            RT.abort = "no two open outdoor spots 24 tiles apart"
+            R:line("OBS  RTO.sites %s (campfire spot %s)", RT.abort, brief(camp))
+            return true
+        end
+        O.site, O.mach, O.srcRoom, O.logs, O.pairs = { camp, bbq }, {}, {}, { 0, 0 }, {}
+        local okC, errC = pcall(function() SCampfireSystem.instance:addCampfire(sq(camp.x, camp.y, 0)) end)
+        local okB, errB = pcall(function()
+            local s = sq(bbq.x, bbq.y, 0)
+            s:AddTileObject(IsoBarbecue.new(getCell(), s, getSprite(O.bbqSprite)))
+        end)
+        O.perLog = math.floor(ISCampingMenu.getFuelDurationForItem(instanceItem("Base.Log")) + 1e-6)
+        O.paper = ISCampingMenu.getFuelDurationForItem(instanceItem("Base.SheetPaper2"))
+        local ok, cap = pcall(getCampingFuelMax)
+        O.cap = ok and cap or 480
+        removeAll("Base.Log")
+        give("Base.Log", 40); give("Base.SheetPaper2", 4); give("Base.Matches", 1)
+        if not O.hooked then
+            Events.EveryHours.Add(RT.O.onHour)
+            Events.EveryTenMinutes.Add(RT.O.onTenMinutes)
+            Events.EveryOneMinute.Add(RT.O.onMinute)
+            O.hooked = true
+        end
+        local power
+        pcall(function() power = getWorld():isHydroPowerOn() end)
+        local ax, ay = bbq.x - camp.x, bbq.y - camp.y
+        R:line("OBS  RTO.sites campfire %d,%d (built=%s %s), barbecue %d,%d (placed=%s %s), %.1f tiles apart; a log %d min, a sheet of paper %.2f min, cap %s min; grid power=%s",
+            camp.x, camp.y, tostring(okC), tostring(errC or ""), bbq.x, bbq.y, tostring(okB), tostring(errB or ""),
+            math.sqrt(ax * ax + ay * ay), O.perLog, O.paper, tostring(O.cap), tostring(power))
+        R:check("RTO.grid_is_off", function() return power == false, "isHydroPowerOn=" .. tostring(power) end)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local c, b, cl = O.campLua(), O.object(2, "IsoBarbecue"), nil
+    pcall(function() cl = CCampfireSystem.instance:getLuaObjectAt(O.site[1].x, O.site[1].y, 0) end)
+    R:check("RTO.fires_in_place", function()
+        return c ~= nil and cl ~= nil and c.exterior == true and not c.isLit and b ~= nil and not b:isPropaneBBQ()
+            and not b:isLit(), string.format("campfire server=%s client=%s exterior=%s lit=%s; barbecue=%s propane=%s lit=%s",
+            tostring(c ~= nil), tostring(cl ~= nil), tostring(c and c.exterior), tostring(c and c.isLit),
+            tostring(b ~= nil), tostring(b and b:isPropaneBBQ()), tostring(b and b:isLit()))
+    end)
+    if c == nil or b == nil then RT.abort = "a fire was not placed" end
+    return true
+end }
+
+-- Per fire: the character beside it, the air around it unlit, Add fuel and
+-- Light pressed from its menu (each waited out), the air around it lit (the
+-- campfire's at three more fuel levels, set as vanilla's setFuel command
+-- does, SRC SCampfireSystemCommands.lua), then the checks and the machine's
+-- tile (RT.O.settle).
+RT.openLight = { name = "rto_light", timeout = 30000, fn = function(ctx, ticks)
+    local O = RT.O
+    if not ctx.k and RT.skip("rto_light") then return true end
+    RT.speed(1)
+    if not ctx.k then ctx.k, ctx.phase = 1, "go" end
+    local k, p = ctx.k, O.site[ctx.k]
+    if ctx.phase == "go" then
+        player():setPosition(p.x - 1 + 0.5, p.y + 0.5, 0)
+        ctx.phase, ctx.tick = "fuel", ticks
+        return nil
+    end
+    if ctx.phase == "fuel" then
+        if ticks - ctx.tick < 60 then return nil end
+        ctx.unlit = O.snapshot(k)
+        R:line("OBS  RTO.snapshot %s unlit %s", O.names[k], O.snapText(ctx.unlit))
+        ctx.pressedFuel = O.press(k, "add fuel", O.isAddLog)
+        ctx.phase, ctx.tick = "fueling", ticks
+        return nil
+    end
+    if ctx.phase == "fueling" or ctx.phase == "lighting" then
+        if ticks - ctx.tick < 30 or (not TLGH.Steps.actionsIdle(player()) and ticks - ctx.tick < 3000) then return nil end
+        local st = O.state(k)
+        if ctx.phase == "fueling" then
+            ctx.fueled = st and st.fuel or -1
+            R:line("OBS  RTO.%s after Add fuel: lit=%s with %.1f min", O.names[k], tostring(st and st.lit), ctx.fueled)
+            ctx.pressedLight = O.press(k, "light", O.isLightPaper)
+            ctx.phase, ctx.tick = "lighting", ticks
+            return nil
+        end
+        R:check("RTO.lit_from_menu_" .. O.names[k], function()
+            return ctx.pressedFuel and ctx.pressedLight and st ~= nil and st.lit and ctx.fueled >= O.perLog - 1
+                and st.fuel >= O.perLog - 1, string.format("Add fuel pressed=%s (then %.1f min), Light pressed=%s; now lit=%s with %.1f min, radius %s",
+                tostring(ctx.pressedFuel), ctx.fueled, tostring(ctx.pressedLight), tostring(st and st.lit),
+                st and st.fuel or -1, tostring(st and st.radius))
+        end)
+        -- Not lit from the menu: the run goes on with the actions' own calls.
+        if not (st and st.lit) then O.tend(k) end
+        ctx.phase, ctx.snaps, ctx.tick = "snap", {}, ticks
+        return nil
+    end
+    if ticks - ctx.tick < 30 then return nil end
+    local snap = O.snapshot(k)
+    ctx.snaps[#ctx.snaps + 1] = snap
+    R:line("OBS  RTO.snapshot %s %s", O.names[k], O.snapText(snap))
+    if k == 1 then
+        O.pairs[#O.pairs + 1] = { f = snap.fuel, r = snap.radius }
+        local f = O.campFuels[#ctx.snaps]
+        if f then
+            O.campLua():setFuel(f)
+            ctx.tick = ticks
+            return nil
+        end
+    end
+    O.settle(ctx, k)
+    if RT.abort then return true end
+    ctx.k, ctx.phase = k + 1, "go"
+    return ctx.k > 2 or nil
+end }
+
+-- Places both fermenters on their tiles, then loads each from its menu with
+-- the character beside it (its square follows a few ticks after the move);
+-- true once both batches run.
+function RT.O.placeAndLoad(ctx, ticks)
+    local O = RT.O
+    if not ctx.t0 then
+        O.items, O.readings, O.notes, O.unloaded = {}, { {}, {} }, { {}, {} }, {}
+        for i = 1, 2 do
+            local it = instanceItem("TLG.FermenterVessel")
+            sq(O.mach[i].x, O.mach[i].y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            O.items[i] = it
+        end
+        O.home = O.mach[1]
+        removeAll("Base.Sugar"); removeAll("Base.Yeast")
+        ctx.t0, ctx.li = ticks, 0
+        return false
+    end
+    if ctx.at then
+        if ticks - ctx.at < 3 then return false end
+        local i = ctx.li
+        give("Base.Sugar", 6); give("Base.Yeast", 1)
+        for _ = 1, 3 do
+            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, 10)
+        end
+        local r = machineClick("RTO.load_" .. O.names[i], O.items[i], "ContextMenu_TLG_LoadFerment")
+        R:check("RTO.loaded_" .. O.names[i], function()
+            return r.ok == true and math.abs((r.sugarKg or 0) - 6) < 1e-6 and math.abs((r.waterL or 0) - 30) < 1e-6,
+                string.format("sugar=%s water=%s", tostring(r.sugarKg), tostring(r.waterL))
+        end)
+        ctx.at = nil
+        if i < 2 then return false end
+        player():setPosition(O.home.x + 0.5, O.home.y + 0.5, 0)
+        return true
+    end
+    if ticks - ctx.t0 < 60 then return false end
+    ctx.li = ctx.li + 1
+    local i = ctx.li
+    local site = TLG.Integration.Machines.siteOf(sq(O.mach[i].x, O.mach[i].y, 0))
+    R:check("RTO.site_seen_outdoors_" .. O.names[i], function()
+        return site.room == false and site.z == 0, string.format("room=%s z=%s", tostring(site.room), tostring(site.z))
+    end)
+    player():setPosition(O.mach[i].x + 0.5, O.mach[i].y + 0.5, 0)
+    ctx.at = ticks
+    return false
+end
+
+function RT.O.startAccounting(ctx)
+    local O, env = RT.O, TLG.World.env()
+    O.active, O.tending, O.hourly = true, true, {}
+    ctx.h0, ctx.next, ctx.m = hours(), hours() + 1, {}
+    for i = 1, 2 do
+        O.hourly[i] = { n = 0, worst = 0, where = "none", lit = 0, lagged = 0, minGain = math.huge,
+            maxGain = -math.huge, minAir = math.huge }
+        ctx.m[i] = { prev = { h = hours(), done = RT.doneHours(O.items[i]), day = env:dayIndex(hours()),
+            stage = "prepare" }, rule = { n = 0, worst = 0, where = "none" },
+            meanBefore = { n = 0, worst = 0, where = "none" }, meanAfter = { n = 0, worst = 0, where = "none" },
+            filed = { n = 0, worst = 0, where = "none" }, compared = -math.huge, afterTrip = 0, days = {},
+            notes = { n = 0, fire = 0, off = 0 }, notesCompared = -math.huge, refused = 0 }
+    end
+end
+
+-- One hourly round: the character is set beside each machine in turn (the
+-- authority answers within 2.5 tiles) and reads it, then goes back; the
+-- first round after the trip checks the work over it. True when it is over.
+function RT.O.round(ctx, ticks)
+    local O, r = RT.O, ctx.round
+    if r.i <= 2 then
+        if not r.at then
+            player():setPosition(O.mach[r.i].x + 0.5, O.mach[r.i].y + 0.5, 0)
+            r.at = ticks
+        elseif ticks - r.at >= 3 then
+            local env, now = TLG.World.env(), hours()
+            r.when[r.i] = now
+            O.read(ctx, r.i, env, now, env:dayIndex(now))
+            r.i, r.at = r.i + 1, nil
+        end
+        return false
+    end
+    player():setPosition(O.home.x + 0.5, O.home.y + 0.5, 0)
+    if r.before then
+        ctx.workChecked = true
+        local env = TLG.World.env()
+        for i = 1, 2 do O.checkWork(ctx, i, r.before[i], env, r.when[i]) end
+    end
+    return true
+end
+
+function RT.O.finish(ctx, env, now)
+    local O = RT.O
+    O.active, O.tending = false, false
+    local log = TLG.World.get().climateLog or {}
+    for i = 1, 2 do
+        local m, h = ctx.m[i], O.hourly[i]
+        for _, d in ipairs(TLG.Tables.sortedKeys(m.days)) do
+            local x, sum, n = m.days[d], 0, 0
+            for s, v in pairs(O.readings[i]) do
+                if env:dayIndex(s + 0.5) == d then sum, n = sum + v, n + 1 end
+            end
+            local rec = log[d] or {}
+            R:line("OBS  RTO.day %s %s: air read at the machine %s; recorded outdoor mean %s; day temperature %s C, work %.2f h, paused %.2f h",
+                O.names[i], x.label, n > 0 and string.format("%.1f (%d h)", sum / n, n) or "-",
+                rec.t and string.format("%.2f", rec.t) or "-", x.siteC and string.format("%.2f", x.siteC) or "-",
+                x.work, x.paused)
+        end
+        local st, rec = m.last or {}, O.items[i]:getModData().tlgProc or {}
+        R:line("OBS  RTO.end %s state=%s pause=%s pausedFor %.2f h after %.1f game h; logs on its fire %d; hours read %d, the fire lit at %d warming the machine %s to %s C (lowest air %s C), heat radius a minute behind at %d; refused reads %d (%s); status: %s",
+            O.names[i], tostring(st.state), tostring(st.pause), rec.pausedFor or -1, now - ctx.h0, O.logs[i], h.n,
+            h.lit, h.lit > 0 and string.format("%.2f", h.minGain) or "-",
+            h.lit > 0 and string.format("%.2f", h.maxGain) or "-", h.lit > 0 and string.format("%.2f", h.minAir) or "-",
+            h.lagged, m.refused, tostring(m.refusedWhy or "none"), tostring(m.dialog))
+    end
+    local fl, rd = O.lawCount()
+    R:line("OBS  RTO.campfire radius over the run: %d (fuel, radius) readings, truncation fits %d, rounding %d; %d minute events",
+        #O.pairs, fl, rd, O.minutes)
+    R:check("RTO.campfire_radius_law_holds", function()
+        return (O.law == "floor" and fl == #O.pairs) or (O.law == "round" and rd == #O.pairs),
+            string.format("%s: truncation fits %d, rounding %d of %d", tostring(O.law), fl, rd, #O.pairs)
+    end)
+    for i = 1, 2 do
+        local m, h, name = ctx.m[i], O.hourly[i], O.names[i]
+        R:check("RTO.reads_answered_" .. name, function()
+            return m.refused == 0, string.format("%d refused (%s)", m.refused, tostring(m.refusedWhy or "none"))
+        end)
+        R:check("RTO.machine_air_is_the_formula_" .. name, function()
+            return h.n >= 24 and h.lit >= 24 and h.worst <= O.tol,
+                string.format("%d hours (%d lit, %d with the radius of a minute before), worst %.5f C (%s)", h.n, h.lit,
+                    h.lagged, h.worst, h.where)
+        end)
+        R:check("RTO.readings_filed_" .. name, function()
+            return m.filed.n >= 24 and m.filed.worst <= 1e-6,
+                string.format("%d hours, worst %.6f (%s)", m.filed.n, m.filed.worst, m.filed.where)
+        end)
+        R:check("RTO.notes_filed_" .. name, function()
+            return m.notes.n >= 30 and m.notes.fire >= m.notes.n * 3 / 4 and m.notes.off == 0,
+                string.format("%d hours noted, %d with the fire, %d off (%s)", m.notes.n, m.notes.fire, m.notes.off,
+                    tostring(m.notes.where or "none"))
+        end)
+        R:check("RTO.day_temperature_before_the_trip_" .. name, function()
+            return m.meanBefore.n >= 20 and m.meanBefore.worst <= 1e-6,
+                string.format("%d reads, worst %.6f (%s)", m.meanBefore.n, m.meanBefore.worst, m.meanBefore.where)
+        end)
+        R:check("RTO.day_temperature_after_the_trip_" .. name, function()
+            return m.meanAfter.n >= 6 and m.meanAfter.worst <= 1e-6,
+                string.format("%d reads, worst %.6f (%s)", m.meanAfter.n, m.meanAfter.worst, m.meanAfter.where)
+        end)
+        R:check("RTO.progress_follows_site_temperature_" .. name, function()
+            return m.rule.n >= 24 and m.rule.worst <= 0.01,
+                string.format("%d hours, worst %.4f h (%s)", m.rule.n, m.rule.worst, m.rule.where)
+        end)
+        R:check("RTO.status_names_the_site_" .. name, function()
+            return has(m.dialog, getText("IGUI_TLG_Site_outdoors")), tostring(m.dialog)
+        end)
+    end
+    if ctx.trip and ctx.trip.unloaded then
+        R:check("RTO.readings_resume_after_return", function()
+            return ctx.m[1].afterTrip >= 6 and ctx.m[2].afterTrip >= 6,
+                string.format("%d and %d hours filed after the return", ctx.m[1].afterTrip, ctx.m[2].afterTrip)
+        end)
+    end
+end
+
+RT.openFerment = { name = "rto_ferment", timeout = 150000, fn = function(ctx, ticks)
+    local O = RT.O
+    if not ctx.h0 and not ctx.t0 and RT.skip("rto_ferment") then return true end
+    if not ctx.h0 then
+        if O.placeAndLoad(ctx, ticks) then O.startAccounting(ctx) end
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    -- A quarter hour before leaving each fire gets what a log can add, so a
+    -- ten-minute note sees the fuel it leaves with.
+    if not ctx.fed and hours() - ctx.h0 >= O.tripAt - 0.25 then
+        ctx.fed = {}
+        for k = 1, 2 do
+            local added, st = O.tend(k), O.state(k)
+            ctx.fed[k] = string.format("%s log added=%s, %.1f min", O.names[k], tostring(added), st and st.fuel or -1)
+        end
+        R:line("OBS  RTO.fed before leaving: %s", table.concat(ctx.fed, "; "))
+    end
+    if not ctx.round and tripStep(O, ctx, ticks) then return nil end
+    RT.speed(RT.waitSpeed)
+    if not ctx.round then
+        if hours() < ctx.next then return nil end
+        ctx.next = hours() + 1
+        ctx.round = { i = 1, when = {} }
+        if ctx.trip and ctx.trip.checked and not ctx.workChecked then
+            ctx.round.before = {}
+            for i = 1, 2 do
+                local p = ctx.m[i].prev
+                ctx.round.before[i] = { h = p.h, done = p.done, stage = p.stage }
+            end
+        end
+    end
+    if not O.round(ctx, ticks) then return nil end
+    ctx.round = nil
+    local now = hours()
+    local back = ctx.trip and ctx.trip.back
+    if (back == nil or now - back < O.afterHours) and now - ctx.h0 < 120 then return nil end
+    RT.speed(1)
+    O.finish(ctx, TLG.World.env(), now)
+    return true
+end }
+
+RT.openFireSteps = { RT.waitWorld, RT.setup, RT.openSites, RT.openLight, RT.openFerment, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -5337,7 +6260,7 @@ Events.OnMainMenuEnter.Add(function()
 end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
-    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" then
+    or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rtof" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -5354,7 +6277,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             SandboxVars.Zombies = 6
             SandboxVars.FuelStationGasEmptyChance = 0
             SandboxVars.FuelStationGasInfinite = false
-            if REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs" then
+            if REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs" or REQUEST == "sp-rtof" then
                 -- Mid-January, as vanilla scenarios set the date
                 -- (SRC DebugUIs/Scenarios/AiteronScenario.lua:16-18).
                 SandboxVars.StartMonth = 1
@@ -5395,6 +6318,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, machine controls")
                 TLGH.Steps.run(R, RT.controlSteps, H, nil)
+            elseif REQUEST == "sp-rtof" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, open fires")
+                TLGH.Steps.run(R, RT.openFireSteps, H, nil)
             else
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness phase A")
                 TLGH.Steps.run(R, stepsA, H, nil)

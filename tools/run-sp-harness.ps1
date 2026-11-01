@@ -31,9 +31,12 @@
   controls: summer with the grid on; Pause, Resume and Abort batch from the
   machine menu on three fermenters and a drying column, one left paused
   until it spoils.
+  fires: the January world; a campfire and a charcoal barbecue lit from
+  their menus, the air around each checked against the heat formula, a
+  fermenter beside each, and a 12 game hour trip away while they burn.
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls")][string]$Mode = "full")
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "fires")][string]$Mode = "full")
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     # A locked Windows session cannot present the OpenGL window; the client
@@ -68,7 +71,8 @@ $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" } default { "sp-a" } }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
+    "fires" { "sp-rtof" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

@@ -876,3 +876,57 @@ among them.
 Not run: Pause or Abort on a running still (the domain tests keep its
 spirit, list the rest of the wash and account for every litre), the
 Italian text.
+
+## 2026-11-01 — RT-SP client harness, launch 34 (a campfire and a barbecue beside fermenters)
+
+Command: `tools/run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60` (new
+mode, request `sp-rtof`): the January world with the grid off, outdoors
+at the Muldraugh Gas2Go. Two fires 24 tiles apart, so neither reaches the
+other's tiles:
+
+* a campfire built with the call its build action makes
+  (`SCampfireSystem.instance:addCampfire`);
+* a charcoal barbecue created as vanilla's own tests create one
+  (`IsoBarbecue.new` with `appliances_cooking_01_35`), where a player
+  would set one down.
+
+Each was fed a log and lit from its own menu: Add fuel → Log, then Light
+→ a sheet of paper with matches (the barbecue's entry used the lighter the
+character carried). The air on every tile around each fire was compared
+with the heat formula, the campfire's at four fuel levels. A fermenter was
+then loaded on the warmed tile one east of each fire. The run then took
+hourly readings and the harness's own ten-minute notes of the fire warming
+each machine. It tended the fires with the calls the add-fuel actions make
+(a log once it fits under the 8 h cap) and made a 12 game hour trip that
+unloaded both. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run34_fires.txt`.
+
+Result: **35 PASS / 4 FAIL**. The four failures are one defect, read from
+the sources before the run:
+
+* A campfire a player builds is not an `IsoFireplace`. It is a Lua global
+  object (`SCampfireSystem`) over a plain object named "Campfire", and its
+  warmth comes from a permanent `IsoFire`.
+* The mod's ten-minute notes (D-022) look for fireplaces and barbecues
+  only, so they never name the campfire.
+* The readings taken while you are near are right. The hours away get no
+  warmth, though the campfire burns on.
+
+| Run 34 | Campfire | Barbecue |
+| --- | --- | --- |
+| Lit from its menu | lit, 361.5 min, radius 10 | lit, 361.0 min |
+| Air around the fire = heat formula | 528 tiles at each of 4 fuel levels, 0 off; 282 warmed at radius 10 (22 out of line of sight); radius 5 at 199 min, 2 at 100 and at 30 | 80 tiles, 0 off; 24 warmed (radius 3) |
+| Radius at a fuel level | truncated, 46 of 46 readings (rounded would fit 18) | always 3 |
+| Machine air = formula, readings filed | 42 h, 0.00000 °C; exact | 42 h, 0.00000 °C; exact |
+| Warming one tile away | 10.9 to 29.8 °C above the outdoor air; lowest air 3.5 °C (at radius 2) | 7.7 to 15.4 °C; lowest air 2.3 °C |
+| Day temperature at the machine (outdoors −6.4, −8.5, −8.2 °C) | 14.51 and 13.32 °C before the trip, rate 0.4; 7.61 °C on 17 January (the fire out from before midnight until the return) | 4.64, 3.54 and 0.82 °C: paused too cold 53.1 of 54.1 hours |
+| Notes filed = harness's | **FAIL**: 44 hours, each "no fire" while the harness saw the campfire | 44 hours, all with the fire, 0 off |
+| Hours away credited | **FAIL**: 0.00 h of 12.01 (the harness's last note, 397 min, covers 6.48 h) | 6.02 h, as the harness's (369 min) |
+| Work over the trip = rule with the credit | **FAIL**: did 0.0000 h, the rule 3.0332 h: uncredited, 16 January fell below the 8 °C floor and the batch stopped | 0.0000 h, as the rule (too cold either way) |
+| Day temperature after the trip | **FAIL**: 1.81 °C below the harness's at the first read back | exact |
+| Burned while away | 388 → 0 min, one per minute event (721 in 721 game minutes) | 361 → 0 min, by game time |
+
+Logs added by the harness besides the first: 9 on the campfire, 8 on the
+barbecue. Neither fire was refed during the trip, so both were out on the
+return. Not run: a campfire built indoors (radius up to 18), a propane
+barbecue, a fire upstairs.
