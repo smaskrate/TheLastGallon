@@ -930,3 +930,31 @@ Logs added by the harness besides the first: 9 on the campfire, 8 on the
 barbecue. Neither fire was refed during the trip, so both were out on the
 return. Not run: a campfire built indoors (radius up to 18), a propane
 barbecue, a fire upstairs.
+
+## 2026-11-01 — RT-SP client harness, launch 35 (the campfire after the fix)
+
+Command: `tools/run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60`, with
+the fix of commit `7b4f31d`. The notes now recognise a lit campfire by its
+permanent `IsoFire` and the "Campfire" object on its tile, whose mod data
+holds the fuel. They note it with its largest radius, and the credit uses
+the campfire's radius law (truncated). The mode is unchanged; same sites
+and tiles as run 34, milder weather. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run35_fires_fix.txt`.
+
+Result: **39 PASS / 0 FAIL**, run 34's four failures among them.
+
+| Run 35 | Campfire | Barbecue |
+| --- | --- | --- |
+| Notes filed = harness's | 44 hours, all with the fire, 0 off | 44 hours, all with the fire, 0 off |
+| Last note before leaving | 397 min, `k = "campfire"`, largest radius 10, as the harness's | 369 min, radius 3, as the harness's |
+| Hours away credited | 6.48 h of 12.01, as the harness's | 6.02 h, as the harness's |
+| Work over the trip = rule with the credit | 3.0312 h, exact (run 34: 0 h of 3.0332) | 0.0000 h, exact (too cold either way) |
+| Day temperature before / after the trip | exact / exact | exact / exact |
+| Machine air = formula, readings filed | 42 h, 0.00000 °C; exact | 42 h, 0.00000 °C; exact |
+| Day temperature at the machine (outdoors 2.4, −1.5, −2.7 °C) | 16.32, 14.99 and 10.08 °C: working at rate 0.4 at the end | 7.51, 5.96 and 3.69 °C: paused too cold 53.1 of 54.1 hours |
+| Burned while away | 388 → 0 min, 720 minute events in 721 game minutes | 361 → 0 min, by game time |
+
+The air around both fires repeated run 34's figures (the campfire's 282 /
+68 / 8 / 8 warmed tiles at its four fuel levels, none off). Its radius was
+truncated in all 46 readings. Not run: a campfire built indoors, a
+propane barbecue, a fire upstairs, multiplayer.

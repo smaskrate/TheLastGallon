@@ -1,0 +1,86 @@
+# TLG single-player harness, real game clock, open fires
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=41236393808823949237 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rto_sites begin
+OBS  RTO.sites campfire 10641,10634 (built=true ), barbecue 10641,10658 (placed=true ), 24.0 tiles apart; a log 360 min, a sheet of paper 1.50 min, cap 480 min; grid power=false
+PASS RTO.grid_is_off :: isHydroPowerOn=false
+PASS RTO.fires_in_place :: campfire server=true client=true exterior=true lit=false; barbecue=true propane=false lit=false
+STEP rto_light begin
+OBS  RTO.snapshot campfire unlit lit=false fuel 0.0 min radius 0: warm 0, cold 528, blocked 0, mismatch 0 (none)
+OBS  RTO.menu campfire add fuel: pressed "Log"
+OBS  RTO.campfire after Add fuel: lit=false with 360.0 min
+OBS  RTO.menu campfire light: pressed "Sheet of Paper (4) + Matchbook"
+PASS RTO.lit_from_menu_campfire :: Add fuel pressed=true (then 360.0 min), Light pressed=true; now lit=true with 361.5 min, radius 10
+OBS  RTO.snapshot campfire lit=true fuel 361.5 min radius 10: warm 282, cold 224, blocked 22, mismatch 0 (none)
+OBS  RTO.snapshot campfire lit=true fuel 199.0 min radius 5: warm 68, cold 460, blocked 0, mismatch 0 (none)
+OBS  RTO.snapshot campfire lit=true fuel 100.0 min radius 2: warm 8, cold 520, blocked 0, mismatch 0 (none)
+OBS  RTO.snapshot campfire lit=true fuel 30.0 min radius 2: warm 8, cold 520, blocked 0, mismatch 0 (none)
+PASS RTO.unlit_tiles_unwarmed_campfire :: lit=false fuel 0.0 min radius 0: warm 0, cold 528, blocked 0, mismatch 0 (none)
+PASS RTO.tiles_follow_the_heat_formula_campfire :: 0 tiles off the formula in 4 lit snapshots; 282 warmed at 361.5 min
+PASS RTO.campfire_radius_follows_fuel :: fuel->radius 361.5->10 199.0->5 100.0->2 30.0->2; truncation fits 4, rounding 2 of 4: floor
+OBS  RTO.machine tile campfire 10642,10634 beside the fire at 10641,10634; fire lit=true with 390.0 min, radius 10; logs so far 1
+OBS  RTO.snapshot barbecue unlit lit=false fuel 0.0 min radius 3: warm 0, cold 80, blocked 0, mismatch 0 (none)
+OBS  RTO.menu barbecue add fuel: pressed "Log"
+OBS  RTO.barbecue after Add fuel: lit=false with 360.0 min
+OBS  RTO.menu barbecue light: pressed "Sheet of Paper (3) + Matchbook"
+PASS RTO.lit_from_menu_barbecue :: Add fuel pressed=true (then 360.0 min), Light pressed=true; now lit=true with 361.0 min, radius 3
+OBS  RTO.snapshot barbecue lit=true fuel 361.0 min radius 3: warm 24, cold 56, blocked 0, mismatch 0 (none)
+PASS RTO.unlit_tiles_unwarmed_barbecue :: lit=false fuel 0.0 min radius 3: warm 0, cold 80, blocked 0, mismatch 0 (none)
+PASS RTO.tiles_follow_the_heat_formula_barbecue :: 0 tiles off the formula in 1 lit snapshots; 24 warmed at 361.0 min
+OBS  RTO.machine tile barbecue 10642,10658 beside the fire at 10641,10658; fire lit=true with 361.0 min, radius 3; logs so far 0
+STEP rto_ferment begin
+PASS RTO.site_seen_outdoors_campfire :: room=false z=0
+OBS  RTO.load_campfire menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTO.loaded_campfire :: sugar=6 water=30
+PASS RTO.site_seen_outdoors_barbecue :: room=false z=0
+OBS  RTO.load_barbecue menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTO.loaded_barbecue :: sugar=6 water=30
+OBS  RTO.status_campfire menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTO.status_barbecue menu "Status" -> ok=true reason=nil state=Paused stage=ferment outputs={} consumed=nil
+OBS  RTO.fed before leaving: campfire log added=false, 403.0 min; barbecue log added=false, 375.0 min
+PASS RTO.fire_burned_while_away_campfire :: left lit=true with 388.0 min; back after 721 game min (720 minute events): lit=false with 0.0 min (burning on: 0.0)
+PASS RTO.fire_burned_while_away_barbecue :: left lit=true with 361.0 min; back after 721 game min (720 minute events): lit=false with 0.0 min (burning on: 0.0)
+OBS  RTO.credit campfire last note before leaving: harness {c=35,f=397,r=false,t=34.170127868652344,x=-1,y=0}, mod {c=35,f=397,k=campfire,r=false,rmax=10,t=34.170127868652344,x=-1,y=0}
+PASS RTO.away_hours_credited_campfire :: the mod's notes cover 6.48 h of the 12.01 h away, the harness's 6.48 h
+OBS  RTO.credit barbecue last note before leaving: harness {c=25,f=369,r=false,rad=3,t=34.170127868652344,x=-1,y=0}, mod {c=25,f=369,r=false,rad=3,t=34.170127868652344,x=-1,y=0}
+PASS RTO.away_hours_credited_barbecue :: the mod's notes cover 6.02 h of the 12.01 h away, the harness's 6.02 h
+OBS  RTO.trip away 12.01 game h, tiles unloaded=true, hours unread 12, filed for them 0, 720 minute events in 721 game min; campfire back lit=false with 0.0 min; barbecue back lit=false with 0.0 min; campfire log added=true; barbecue log added=true
+PASS RTO.nothing_filed_while_unloaded :: 12 hours unloaded, 0 filed
+PASS RTO.work_over_the_trip_campfire :: 29.12 to 42.04 h in: did 3.0312 h, rule with the credit 3.0312 h
+PASS RTO.work_over_the_trip_barbecue :: 29.15 to 42.07 h in: did 0.0000 h, rule with the credit 0.0000 h
+OBS  RTO.day campfire 01-15: air read at the machine 16.4 (13 h); recorded outdoor mean 2.35; day temperature 16.32 C, work 5.42 h, paused 0.00 h
+OBS  RTO.day campfire 01-16: air read at the machine 15.3 (17 h); recorded outdoor mean -1.45; day temperature 14.99 C, work 6.83 h, paused 0.00 h
+OBS  RTO.day campfire 01-17: air read at the machine 15.1 (12 h); recorded outdoor mean -2.65; day temperature 10.08 C, work 5.04 h, paused 19.96 h
+OBS  RTO.end campfire state=Processing pause=nil pausedFor 12.38 h after 54.1 game h; logs on its fire 9; hours read 42, the fire lit at 42 warming the machine 7.26 to 23.00 C (lowest air 7.33 C), heat radius a minute behind at 0; refused reads 0 (none); status: Working <LINE> Stage: fermenting <LINE> Temperature here today: 64.3 °F, outdoors
+OBS  RTO.day barbecue 01-15: air read at the machine 7.4 (13 h); recorded outdoor mean 2.35; day temperature 7.51 C, work 1.00 h, paused 12.07 h
+OBS  RTO.day barbecue 01-16: air read at the machine 6.0 (17 h); recorded outdoor mean -1.45; day temperature 5.96 C, work 0.00 h, paused 17.08 h
+OBS  RTO.day barbecue 01-17: air read at the machine 6.2 (12 h); recorded outdoor mean -2.65; day temperature 3.69 C, work 0.00 h, paused 24.98 h
+OBS  RTO.end barbecue state=Paused pause=too_cold pausedFor 53.13 h after 54.1 game h; logs on its fire 8; hours read 42, the fire lit at 42 warming the machine 2.90 to 10.80 C (lowest air 4.60 C), heat radius a minute behind at 0; refused reads 0 (none); status: Paused <LINE> Reason: too cold here <LINE> Stage: fermenting <LINE> Temperature here today: 44.8 °F, outdoors
+OBS  RTO.campfire radius over the run: 46 (fuel, radius) readings, truncation fits 46, rounding 18; 3251 minute events
+PASS RTO.campfire_radius_law_holds :: floor: truncation fits 46, rounding 18 of 46
+PASS RTO.reads_answered_campfire :: 0 refused (none)
+PASS RTO.machine_air_is_the_formula_campfire :: 42 hours (42 lit, 0 with the radius of a minute before), worst 0.00000 C (01-15 hour 4: lit=true fuel 347.0 radius 9: game 17.9218, formula 17.9218)
+PASS RTO.readings_filed_campfire :: 42 hours, worst 0.000000 (hour 57: filed 18.34340476989746, game 18.3434)
+PASS RTO.notes_filed_campfire :: 44 hours noted, 44 with the fire, 0 off (none)
+PASS RTO.day_temperature_before_the_trip_campfire :: 29 reads, worst 0.000000 (01-16, 29.1 h in: status 14.9884, harness 14.9884)
+PASS RTO.day_temperature_after_the_trip_campfire :: 13 reads, worst 0.000000 (01-17, 54.1 h in: status 10.0797, harness 10.0797)
+PASS RTO.progress_follows_site_temperature_campfire :: 39 hours, worst 0.0000 h (01-17, 53.1 h in at 9.30 C: did 0.4000 h, rule 0.4000 h)
+PASS RTO.status_names_the_site_campfire :: Working <LINE> Stage: fermenting <LINE> Temperature here today: 64.3 °F, outdoors
+PASS RTO.reads_answered_barbecue :: 0 refused (none)
+PASS RTO.machine_air_is_the_formula_barbecue :: 42 hours (42 lit, 0 with the radius of a minute before), worst 0.00000 C (01-17 hour 48: lit=true fuel 199.0 radius 3: game 5.1751, formula 5.1751)
+PASS RTO.readings_filed_barbecue :: 42 hours, worst 0.000000 (hour 57: filed 7.81135368347168, game 7.8114)
+PASS RTO.notes_filed_barbecue :: 44 hours noted, 44 with the fire, 0 off (none)
+PASS RTO.day_temperature_before_the_trip_barbecue :: 29 reads, worst 0.000000 (01-16, 29.1 h in: status 5.9573, harness 5.9573)
+PASS RTO.day_temperature_after_the_trip_barbecue :: 13 reads, worst 0.000000 (01-17, 54.1 h in: status 3.6890, harness 3.6890)
+PASS RTO.progress_follows_site_temperature_barbecue :: 39 hours, worst 0.0000 h (01-17, 54.1 h in at 3.69 C: did 0.0000 h, rule 0.0000 h)
+PASS RTO.status_names_the_site_barbecue :: Paused <LINE> Reason: too cold here <LINE> Stage: fermenting <LINE> Temperature here today: 44.8 °F, outdoors
+PASS RTO.readings_resume_after_return :: 12 and 12 hours filed after the return
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 58.44
+SUMMARY pass=39 fail=0
+DONE
