@@ -105,6 +105,12 @@ Picking up a working machine pauses it; put it down to continue. The hours
 it stood count, the hours you carry it do not (in multiplayer up to ten
 minutes before a pickup can be lost; multiplayer itself not checked).
 
+**Pause** holds a batch where it is and **Resume** carries on, but a paused
+fermenter still counts towards the 3 days that spoil it. **Abort batch**
+empties the machine and, for now, everything in it is lost without a word,
+even the ethanol in a drying column; and a spoiled batch cannot yet be
+cleared, so the fermenter stays spoiled (both to be fixed).
+
 *(Building the four machines and one batch through the fermenter, reflux
 still and drying column, using the menu entries named above, were checked
 in game, as were January batches outdoors, in a room and on a tile warmed
@@ -118,11 +124,12 @@ hours they stood counted to the minute and the hours carried not at all),
 and a 12 kg batch through the pot still in two loads (its firebox left to
 run out and fed again, the yeast starter coming with the last of the
 wash; the spirit was unfit for any engine until dried and then fit for
-flex engines, by the mod's start check, not an engine start); a
-barbecue's warmth while you are away, Pause/Resume/Abort, picking up a
-working still or drying column, a fire or barbecue beside a machine,
-upper floors and stopped days adding up across separate cold spells are
-untested in game.)*
+flex engines, by the mod's start check, not an engine start), and Pause,
+Resume and Abort batch on fermenters and a drying column (as described
+above); a barbecue's warmth while you are away, Pause or Abort on a still,
+picking up a working still or drying column, a fire or barbecue beside a
+machine, upper floors and stopped days adding up across separate cold
+spells are untested in game.)*
 
 ## Converting an engine
 
@@ -177,6 +184,7 @@ in game).
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
 | Fermenter says "Wash is left" | the still holds 60 L (pot) or 120 L (reflux) | Collect the still's ethanol, then Load wash again |
 | Machine paused "picked up" | it was carried | Place it on the ground |
+| Fermenter "Faulted", "the batch spoiled while stalled" | stopped for 3 days in all, hand pauses included | It cannot be cleared yet: build a new fermenter (to be fixed) |
 
 ## Existing saves
 

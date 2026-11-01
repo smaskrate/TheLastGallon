@@ -9,7 +9,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
-| RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); machine menu Pause/Resume/Abort; workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
+| RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
 | Performance baseline | Requires a measured client session |
@@ -796,3 +796,47 @@ later) and the three new ones.
 
 A paused batch still shows its stage ("Stage: distilling" with the firebox
 out), as it should. The Italian text is not checked in game.
+
+## 2026-11-01 — RT-SP client harness, launches 30–31 (Pause, Resume, Abort batch)
+
+Command: `tools/run-sp-harness.ps1 -Mode controls -TimeoutMinutes 30`
+(request `sp-rtc`; new). Summer with the grid on, room tiles: three
+fermenters and a drying column loaded in the same tick, every press from
+the machine menu. F1 was paused 5 h in, resumed 6 h later and read 4 h
+after; Pause, Resume and Abort were also pressed where they do not apply.
+F2 was aborted 5 h in and loaded again. The drying column, loaded from a
+can of 4 L ethanol and 1 L water with 4 kg quicklime, was aborted 6 h in.
+F3 was paused 5 h in and left; once spoiled, Abort and Load mash were tried
+on it. The four `RTC.design_` checks hold Abort to its handler's own
+description ("returns the partial result to the player ... discarded and
+listed") and to `Process.abort`'s ("an abort never loses material"), and a
+spoiled batch to a way out from the menu. The still was left out: it shares
+the abort handler, and the domain tests pin its firebox and litres.
+Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run31_controls.txt`.
+
+Run 30 (19 PASS / 5 FAIL) filled the column's can with vanilla water, which
+the mod does not track as water in fuel (that is its own fluid,
+`TLG_FuelWater`): the load saw only ethanol and refused it as already dry,
+so the column's four checks meant nothing. Run 31 used the mod's fuel
+water. Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run30_controls_setup.txt`.
+
+Result, run 31: **20 PASS / 4 FAIL**. The four failures are the design
+checks: three defects.
+
+| Run 31 | Result |
+| --- | --- |
+| Pause (F1) | "Paused", "Reason: paused by hand"; Status keeps "Stage: fermenting" |
+| Six hours paused | no work (5.004478 h before and after); the hours count as paused (6.003233 h) |
+| Resume | working again; 4 h later 9.004705 h done, exactly the hours it ran |
+| Pause, Resume, Abort where they do not apply | refused, the record unchanged; the dialogs read "Not possible right now (not_processing).", "(not_paused)." and "(nothing_to_abort)." |
+| The menu | Status, Load mash, Pause, Resume and Abort batch in every state (working, paused, spoiled), none greyed |
+| Abort (F2, 5 h in) | the reply holds the partial batch exactly as `Process.abort` gives it (ethanol 0.170255 L, water 30 L, sugar 5.690445 kg); the fermenter is empty and Ready and takes a new mash; no sugar comes back |
+| **FAIL** what F2's abort lost | the dialog says only "Ready" |
+| Abort (drying column, 6 h in) | the reply holds ethanol 3.999929 L and water 0.509433 L, the dry converter's result at 0.5006 done; the column is empty and Ready |
+| **FAIL** what the column's abort lost | the dialog says only "Ready" |
+| **FAIL** the column's ethanol | 4 L of ethanol, taken from the can at loading, is in no can and not in the column: gone |
+| Hand pause left (F3) | spoiled at exactly 72 paused hours: "Faulted", "Reason: the batch spoiled while stalled" (the guide's "stopped for 3 days in all" includes Pause) |
+| **FAIL** clearing the spoiled batch | Abort refused (nothing_to_abort), Load mash refused (busy): the fermenter stays spoiled; nothing in the menu reaches `Process.repair` |
+
+Not run: Abort on a still (shared handler; the domain pins its firebox and
+litres), Pause on a still, the Italian text.

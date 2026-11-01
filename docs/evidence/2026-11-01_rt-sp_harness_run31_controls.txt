@@ -1,0 +1,67 @@
+# TLG single-player harness, real game clock, machine controls
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=1145980119050330040 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rtc_sites begin
+OBS  RTC.spots character 10618,10628; F1 10617,10628 F2 10617,10629 F3 10618,10629 column 10619,10628; grid power=true
+PASS RTC.grid_is_on :: isHydroPowerOn=true
+STEP rtc_run begin
+OBS  RTC.load_mash_F1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_F1 :: sugar=6 water=30
+OBS  RTC.load_mash_F2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_F2 :: sugar=6 water=30
+OBS  RTC.load_mash_F3 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_F3 :: sugar=6 water=30
+OBS  RTC.load_dry_column menu "Dry ethanol with quicklime" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_column :: ethanol 3.999929319828782 water 1.000070680171218 lime 4; ethanol left in carried cans 0.0000 L
+OBS  RTC.menu while running: Status, Load mash and start fermenting, Pause, Resume, Abort batch
+OBS  RTC.pause_F1 menu "Pause" -> ok=true reason=nil state=Paused stage=nil outputs={} consumed=nil
+PASS RTC.pause_F1 :: state=Paused pause=paused_by_player dialog=Paused <LINE> Reason: paused by hand
+OBS  RTC.status_F1 menu "Status" -> ok=true reason=nil state=Paused stage=ferment outputs={} consumed=nil
+OBS  RTC.status of paused F1: Paused <LINE> Reason: paused by hand <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 °F, in a room
+OBS  RTC.menu while paused: Status, Load mash and start fermenting, Pause, Resume, Abort batch
+OBS  RTC.pause_again_F1 menu "Pause" -> ok=false reason=not_processing state=nil stage=nil outputs=nil consumed=nil
+OBS  RTC.pause_again_F1 refused: reason=not_processing dialog=Not possible right now (not_processing).
+PASS RTC.pause_again_refused_F1 :: reason not_processing (want not_processing); record unchanged
+OBS  RTC.abort_F2 menu "Abort batch" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTC.abort_F2 reply returned={ethanol=0.17025545257882974,sugar_eq=5.690444631674856,water=30}; dialog=Ready; sugar carried 0 -> 0
+PASS RTC.abort_returns_the_partial_batch_F2 :: returned {ethanol=0.17025545257882974,sugar_eq=5.690444631674856,water=30}; expected ethanol 0.170255 water 30 sugar 5.690445 (0.0516 of the batch done)
+PASS RTC.abort_clears_the_machine_F2 :: state=Ready inputs={} outputs={}
+FAIL RTC.design_abort_lists_what_is_lost_F2 :: dialog: Ready
+OBS  RTC.abort_again_F2 menu "Abort batch" -> ok=false reason=nothing_to_abort state=nil stage=nil outputs=nil consumed=nil
+OBS  RTC.abort_again_F2 refused: reason=nothing_to_abort dialog=Not possible right now (nothing_to_abort).
+PASS RTC.abort_again_refused_F2 :: reason nothing_to_abort (want nothing_to_abort); record unchanged
+OBS  RTC.load_mash_F2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loads_again_after_abort_F2 :: reason nil
+OBS  RTC.pause_F3 menu "Pause" -> ok=true reason=nil state=Paused stage=nil outputs={} consumed=nil
+PASS RTC.pause_F3 :: state Paused
+OBS  RTC.abort_column menu "Abort batch" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTC.abort_column reply returned={ethanol=3.999929319828782,water=0.5094326137118055}; dialog=Ready; ethanol carried 0.0000 L
+PASS RTC.abort_returns_the_partial_batch_column :: returned {ethanol=3.999929319828782,water=0.5094326137118055}; expected ethanol 3.999929 water 0.509433 (0.5006 done)
+PASS RTC.abort_clears_the_machine_column :: state=Ready outputs={}
+FAIL RTC.design_abort_lists_what_is_lost_column :: dialog: Ready
+FAIL RTC.design_abort_keeps_the_ethanol :: ethanol in carried cans 0.0000 L, in the column 0.0000 L, returned {ethanol=3.999929319828782,water=0.5094326137118055}
+PASS RTC.paused_hours_do_no_work_F1 :: done 5.004478 h (5.004478 at the pause); paused for 6.003233 h of 6.003233
+OBS  RTC.resume_F1 menu "Resume" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.resume_F1 :: state=Processing dialog=Working
+OBS  RTC.resume_again_F1 menu "Resume" -> ok=false reason=not_paused state=nil stage=nil outputs=nil consumed=nil
+OBS  RTC.resume_again_F1 refused: reason=not_paused dialog=Not possible right now (not_paused).
+PASS RTC.resume_again_refused_F1 :: reason not_paused (want not_paused); record unchanged
+PASS RTC.resume_continues_F1 :: done 9.004705 h (want 9.004705); paused 6.003233 h; state Processing
+PASS RTC.hand_pause_counts_towards_spoiling :: state=Faulted pause=batch_spoiled paused for 72.000000 h
+OBS  RTC.status_F3 menu "Status" -> ok=true reason=nil state=Faulted stage=nil outputs={} consumed=nil
+OBS  RTC.status of spoiled F3: Faulted <LINE> Reason: the batch spoiled while stalled <LINE> Temperature here now: 71.6 °F, in a room
+OBS  RTC.menu while spoiled: Status, Load mash and start fermenting, Pause, Resume, Abort batch
+OBS  RTC.abort_F3 menu "Abort batch" -> ok=false reason=nothing_to_abort state=nil stage=nil outputs=nil consumed=nil
+OBS  RTC.abort_spoiled reason=nothing_to_abort dialog=Not possible right now (nothing_to_abort).
+OBS  RTC.load_mash_F3 menu "Load mash and start fermenting" -> ok=false reason=machine_busy state=nil stage=nil outputs=nil consumed=nil
+OBS  RTC.load_spoiled reason=machine_busy dialog=It is busy with another batch.
+FAIL RTC.design_spoiled_batch_can_be_cleared :: after Abort (nothing_to_abort) and Load mash (machine_busy): state Faulted
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 81.74
+SUMMARY pass=20 fail=4
+DONE

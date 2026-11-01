@@ -3,7 +3,9 @@
 -- 2026-10-31 (run 12) on the fermenter, reflux still and drying column:
 -- Load mash, Feed the firebox, Load wash, Collect ethanol, Dry ethanol with
 -- quicklime, Status; on the pot still in run 28 (Feed the firebox, Load wash
--- twice, Collect ethanol, Status). Pause, Resume and Abort are NOT RUN.
+-- twice, Collect ethanol, Status); Pause, Resume and Abort batch on fermenters
+-- and the drying column in run 31, where Abort discarded the batch unlisted
+-- (open, docs/release-checklist.md).
 require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"
