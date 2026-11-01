@@ -21,6 +21,7 @@
 --   sp-rtss -> the same, saved and exited to the menu while carried ("sp-rtsb")
 --   sp-rtsb -> main menu continues that save, checks the carried records,
 --             then the put-downs and the rest of the run
+--   sp-rtsc -> summer, grid on: Pause, Resume and Abort batch on running stills
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -47,8 +48,8 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtof" or REQUEST == "ex-b"
-    or REQUEST == "ex-c" or REQUEST == "sp-it" then
+    or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtof"
+    or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -6039,6 +6040,222 @@ RT.stillSaveSteps = { RT.waitWorld, RT.setup, RT.stillSetup, RT.stillRun, RT.sav
 RT.stillReloadSteps = { RT.stillReload, RT.stillRun, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Controls on running stills (request "sp-rtsc"): Pause, Resume and Abort
+-- batch from the machine menu on a pot still and a reflux still distilling
+-- real wash (gate 1; run 33 pressed them on fermenters and a drying
+-- column). The still pickup run's sites and washes (RT.S): the pot still
+-- fed three logs, the reflux still two, both loaded in the same tick. The
+-- pot still is paused half an hour in, still heating up, held three game
+-- hours and resumed; it must finish its stage hours plus exactly the paused
+-- hours, burning wood only while it works. The reflux still is aborted two
+-- hours in, an hour into distilling, and what it kept is collected. The
+-- player guide says Abort keeps what the batch made so far, a still's
+-- spirit, and throws the rest of the wash away. The RTSC.design_ check
+-- holds the kept spirit to what the distilling stage has made (nothing
+-- distils while it heats up). The other checks hold what Process.abort
+-- reports to the wash, the wood and the dialog, whatever share it keeps.
+------------------------------------------------------------------------------
+RT.K = { pauseAt = 0.5, pauseHours = 3, abortAt = 2 }
+
+-- A menu entry of still i clicked, with the dialog the player reads.
+function RT.K.click(i, key, label)
+    local before = #H.dialogs.texts
+    local r = machineClick("RTSC." .. label .. "_" .. RT.S.names[i], RT.S.items[i], key)
+    local text = H.dialogs.texts[before + 1]
+    closeDialogs()
+    return r, text
+end
+
+-- Which of Pause, Resume and Abort batch the menu offers still i, as
+-- "pause,resume,abort" true/false.
+function RT.K.checkControls(i, label, want)
+    local names = RT.menuOffered(RT.S.items[i])
+    R:line("OBS  RTSC.menu %s %s: %s", RT.S.names[i], label, table.concat(names, ", "))
+    local set = {}
+    for _, n in ipairs(names) do set[n] = true end
+    local got = string.format("%s,%s,%s", tostring(set[getText("ContextMenu_TLG_Pause")] == true),
+        tostring(set[getText("ContextMenu_TLG_Resume")] == true), tostring(set[getText("ContextMenu_TLG_Abort")] == true))
+    R:check("RTSC.menu_" .. label .. "_" .. RT.S.names[i], function()
+        return got == want, string.format("pause,resume,abort offered %s (want %s)", got, want)
+    end)
+end
+
+-- A press the menu no longer offers there, sent as a request: refused for
+-- `reason`, the record unchanged, and the menu has a sentence for it.
+function RT.K.refused(i, command, label, reason)
+    local item = RT.S.items[i]
+    local before = RT.C.key(item:getModData().tlgProc or {})
+    local r = ask("RTSC." .. label .. "_" .. RT.S.names[i], command, { target = TLG.Integration.Machines.refFor(item) })
+    local after = RT.C.key(item:getModData().tlgProc or {})
+    local key = "IGUI_TLG_MachineFail_" .. tostring(r.reason)
+    R:check("RTSC." .. label .. "_refused_" .. RT.S.names[i], function()
+        return r.ok == false and r.reason == reason and before == after and getText(key) ~= key,
+            string.format("reason %s (want %s); record %s; the menu shows \"%s\"", tostring(r.reason), reason,
+                before == after and "unchanged" or ("changed: " .. before .. " -> " .. after), getText(key))
+    end)
+end
+
+-- Collects still i into an empty can of its own; whether the can holds
+-- exactly `want` and the still is empty.
+function RT.K.collect(i, want)
+    giveCan("Base.JerryCan")
+    local before = ethanolCans()
+    machineClick("RTSC.collect_" .. RT.S.names[i], RT.S.items[i], "ContextMenu_TLG_CollectEthanol")
+    closeDialogs()
+    local can, fresh = grownCan(before)
+    local v = can and tlgView("item", can)
+    local q = v and v.q or {}
+    local ok = v ~= nil and fresh == true and RT.S.close(q.ethanol, want.ethanol, 1e-3)
+        and RT.S.close(q.water or 0, want.water or 0, 1e-3) and RT.S.rec(i).state == "Ready"
+    return ok, string.format("%s; it held %s; still %s", viewText(v, "can"), brief(want), tostring(RT.S.rec(i).state))
+end
+
+RT.K.phases = { ferment = RT.S.phases.ferment, fermenting = RT.S.phases.fermenting }
+
+-- RT.S.phases.fermenting goes on to "loadPot": here both stills at once.
+function RT.K.phases.loadPot(ctx)
+    local S = RT.S
+    S.loadStill(ctx, 3, 3)
+    S.loadStill(ctx, 4, 2)
+    ctx.t0 = { [3] = S.rec(3).startedAt or hours(), [4] = S.rec(4).startedAt or hours() }
+    for _, i in ipairs({ 3, 4 }) do RT.K.checkControls(i, "running", "true,false,true") end
+    ctx.phase = "toPause"
+end
+
+function RT.K.phases.toPause(ctx) RT.C.waitUntil(ctx, ctx.t0[3] + RT.K.pauseAt, "pause") end
+
+function RT.K.phases.pause(ctx)
+    local S, K = RT.S, RT.K
+    local r, text = K.click(3, "ContextMenu_TLG_Pause", "pause")
+    local p, e = S.rec(3), ctx.exp[3]
+    local done = RT.P.work(p)
+    ctx.tPause, ctx.paused = p.t, TLG.Tables.deepCopy(p)
+    R:check("RTSC.pause_pot_still_heating_up", function()
+        return r.ok == true and p.state == "Paused" and p.pause == "paused_by_player" and has(text, getText("IGUI_TLG_Pause_paused_by_player"))
+            and p.stage == 1 and S.close(done, (p.t or 0) - (p.startedAt or 0)) and S.close(p.firebox, ctx.fed[3] - e.burn * done),
+            string.format("state=%s pause=%s stage %s; done %.6f h in %.6f h; firebox %.6f kg; dialog=%s", tostring(p.state),
+                tostring(p.pause), tostring(p.stage), done, (p.t or 0) - (p.startedAt or 0), p.firebox or -1, tostring(text))
+    end)
+    K.checkControls(3, "paused_by_hand", "false,true,true")
+    K.refused(3, "machine.pause", "pause_again", "not_processing")
+    ctx.phase = "toAbort"
+end
+
+function RT.K.phases.toAbort(ctx) RT.C.waitUntil(ctx, ctx.t0[4] + RT.K.abortAt, "abort") end
+
+function RT.K.phases.abort(ctx)
+    local S, K = RT.S, RT.K
+    local pre = TLG.Tables.deepCopy(S.rec(4))
+    local a, text = K.click(4, "ContextMenu_TLG_Abort", "abort")
+    local p, e = S.rec(4), ctx.exp[4]
+    local k, d = a.kept or {}, a.discarded or {}
+    -- Time from the record (the abort resets its stages): the still never
+    -- paused, so the hours done are the hours since loading.
+    local m, wash = TLG.Registry.need("machine", pre.machine), pre.inputs or {}
+    local heat, done = pre.recipe.params.stages[1].hours, (p.t or 0) - (pre.startedAt or 0)
+    local distilled = math.max(0, done - heat) / (e.hours - heat)
+    local promised = (wash.ethanol or 0) * distilled * m.recovery
+    local share = (wash.ethanol or 0) * (done / e.hours) * m.recovery
+    R:line("OBS  RTSC.abort reflux still %.6f h in (%.6f h heating up, %.6f of %.6f h distilling): kept %s, thrown away %s; dialog=%s",
+        done, math.min(done, heat), math.max(0, done - heat), e.hours - heat, brief(k), brief(d), tostring(text))
+    R:check("RTSC.design_abort_keeps_only_what_it_distilled", function()
+        return a.ok == true and S.close(k.ethanol, promised) and S.close(k.water, promised * (1 - m.purity) / m.purity),
+            string.format("kept ethanol %.6f L and water %.6f L; distilled so far %.6f L of ethanol (%.4f of the distilling stage); %.6f L is the share of all stage hours, heating up included",
+                k.ethanol or -1, k.water or -1, promised, distilled, share)
+    end)
+    R:check("RTSC.abort_accounts_for_the_whole_wash", function()
+        local sum, total = 0, (wash.ethanol or 0) + (wash.water or 0) + (wash.sugar_eq or 0)
+        for _, v in pairs(k) do sum = sum + v end
+        for _, v in pairs(d) do sum = sum + v end
+        return S.close(sum, total) and (d.ethanol or 0) > 0 and (d.water or 0) > 0 and (d.stillage or 0) > 0,
+            string.format("kept and thrown away %.6f L of the %.6f L wash; thrown away %s", sum, total, brief(d))
+    end)
+    R:check("RTSC.abort_keeps_the_wood_not_burned", function()
+        return p.state == "OutputReady" and p.stoppedEarly == true and S.close(p.firebox, ctx.fed[4] - e.burn * done)
+            and S.close((p.outputs or {}).ethanol, k.ethanol), string.format("%s stoppedEarly=%s; firebox %.6f kg, expected %.6f; holds %s",
+            tostring(p.state), tostring(p.stoppedEarly), p.firebox or -1, ctx.fed[4] - e.burn * done, brief(p.outputs))
+    end)
+    R:check("RTSC.abort_dialog_lists_both", function()
+        return has(text, getText("IGUI_TLG_Aborted")) and RT.C.lists(text, p.outputs) and RT.C.lists(text, d), "dialog: " .. tostring(text)
+    end)
+    K.checkControls(4, "stopped_early", "false,false,true")
+    local ok, detail = K.collect(4, k)
+    R:check("RTSC.collected_what_abort_kept", function() return ok, detail end)
+    ctx.phase = "toResume"
+end
+
+function RT.K.phases.toResume(ctx) RT.C.waitUntil(ctx, ctx.tPause + RT.K.pauseHours, "resume") end
+
+function RT.K.phases.resume(ctx)
+    local S, K = RT.S, RT.K
+    local s, stext = K.click(3, "ContextMenu_TLG_MachineStatus", "status_paused")
+    local p = S.rec(3)
+    R:check("RTSC.paused_hours_hold_work_and_wood", function()
+        return s.state == "Paused" and s.pause == "paused_by_player" and has(stext, getText("IGUI_TLG_Pause_paused_by_player"))
+            and S.close(RT.P.work(p), RT.P.work(ctx.paused)) and S.close(p.firebox, ctx.paused.firebox)
+            and S.close(p.pausedFor, (p.t or 0) - ctx.tPause), string.format(
+            "done %.6f h (%.6f at the pause); firebox %.6f kg (%.6f); paused %.6f h of %.6f; dialog=%s", RT.P.work(p),
+            RT.P.work(ctx.paused), p.firebox or -1, ctx.paused.firebox or -1, p.pausedFor or -1, (p.t or 0) - ctx.tPause, tostring(stext))
+    end)
+    local r, text = K.click(3, "ContextMenu_TLG_Resume", "resume")
+    local q = S.rec(3)
+    ctx.tResume = q.t
+    R:check("RTSC.resume_pot_still", function()
+        return r.ok == true and q.state == "Processing" and q.manualPause == nil,
+            string.format("state=%s manual=%s dialog=%s", tostring(q.state), tostring(q.manualPause), tostring(text))
+    end)
+    K.refused(3, "machine.resume", "resume_again", "not_paused")
+    K.checkControls(3, "resumed", "true,false,true")
+    ctx.next, ctx.phase = hours(), "finishing"
+end
+
+-- Status every quarter game hour until the pot still is done.
+function RT.K.phases.finishing(ctx)
+    RT.speed(RT.waitSpeed)
+    if hours() < ctx.next then return end
+    ctx.next = hours() + 0.25
+    local s = RT.statusOf(RT.S.items[3])
+    if s.state ~= "OutputReady" and s.state ~= "Faulted" and hours() - ctx.tResume < 12 then return end
+    RT.speed(1)
+    ctx.phase = "finished"
+end
+
+function RT.K.phases.finished(ctx)
+    local S = RT.S
+    local p, e = S.rec(3), ctx.exp[3]
+    local paused = ctx.tResume - ctx.tPause
+    local due = (p.startedAt or 0) + e.hours + paused
+    local o = p.outputs or {}
+    R:line("OBS  RTSC.pot still done at %.6f game h, %.6f h after loading (%.4f stage hours, %.6f h paused); firebox %s kg; outputs %s",
+        p.completedAt or -1, (p.completedAt or 0) - (p.startedAt or 0), e.hours, paused, tostring(p.firebox), brief(o))
+    R:check("RTSC.pot_still_finished_its_stage_hours_plus_the_pause", function()
+        return p.state == "OutputReady" and S.close(p.completedAt, due) and S.close(p.pausedFor, paused),
+            string.format("%s at %.6f, due %.6f; paused %.6f h, expected %.6f", tostring(p.state), p.completedAt or -1, due,
+                p.pausedFor or -1, paused)
+    end)
+    R:check("RTSC.pot_still_burned_wood_only_while_working", function()
+        local want = ctx.fed[3] - e.burn * e.hours
+        return S.close(p.firebox, want), string.format("%.6f kg left of %.4f, expected %.6f (%.4f h at %.6f kg/h)", p.firebox or -1,
+            ctx.fed[3], want, e.hours, e.burn)
+    end)
+    R:check("RTSC.pot_still_spirit", function()
+        return S.close(o.ethanol, e.ethanol) and S.close(o.water or 0, e.water),
+            string.format("ethanol %.6f (%.6f) water %.6f (%.6f)", o.ethanol or -1, e.ethanol, o.water or 0, e.water)
+    end)
+    local ok, detail = RT.K.collect(3, TLG.Tables.deepCopy(o))
+    R:check("RTSC.collected_pot_still", function() return ok, detail end)
+    return true
+end
+
+RT.stillControlRun = { name = "rtsc_run", timeout = 120000, fn = function(ctx, ticks)
+    if not ctx.phase and RT.skip("rtsc_run") then return true end
+    if ticks % 30 == 0 then RT.keepFit() end
+    return RT.K.phases[ctx.phase or "ferment"](ctx, ticks) == true
+end }
+
+RT.stillControlSteps = { RT.waitWorld, RT.setup, RT.stillSetup, RT.stillControlRun, RT.finish }
+
+------------------------------------------------------------------------------
 -- Open fires (request "sp-rtof"): a fermenter beside a campfire and one
 -- beside a barbecue (D-021, D-022), outdoors in the January world with the
 -- grid off, the two sites 24 tiles apart so that neither fire reaches the
@@ -7489,7 +7706,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
+    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtof" or REQUEST == "sp-it" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -7520,7 +7737,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
             elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts"
-                or REQUEST == "sp-rtss" then
+                or REQUEST == "sp-rtss" or REQUEST == "sp-rtsc" then
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
@@ -7555,6 +7772,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 RT.S.saveAfter = 1
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, stills and column carried, before the save")
                 TLGH.Steps.run(R, RT.stillSaveSteps, H, nil)
+            elseif REQUEST == "sp-rtsc" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
+                TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
             elseif REQUEST == "sp-rtof" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, open fires")
                 TLGH.Steps.run(R, RT.openFireSteps, H, nil)
