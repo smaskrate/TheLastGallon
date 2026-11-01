@@ -369,6 +369,15 @@ listed with their replacement.
   (BC `KahluaTableImpl.save`), and in run 25 a record saved with two "no
   fire" notes came back from save, exit and continue unchanged; the credit
   then worked as before (a 424 minute note covered 7.07 hours of a trip).
+* Gap found RT-SP 2026-11-01 run 34 (35/4): the campfire a player builds
+  is not an `IsoFireplace` but a Lua global object (`SCampfireSystem`)
+  whose warmth comes from a permanent `IsoFire`: 35 °C, radius the fire's
+  light radius, max(2, 10 × min(fuel, 360) / 360) truncated outdoors. The
+  notes never name it, so a fermenter one tile from one got no warmth for
+  the hours away: 0 of the 6.48 hours its fuel covered, and the batch
+  stopped for the rest of the day. The "campfire" in the list above is the
+  map's campfire tile (`camping_03_16`–`_21`). A charcoal barbecue was
+  noted in all 44 hours and credited exactly (6.02 hours). Open.
 
 ## D-023 Abort batch keeps what the batch made
 * Decision: aborting a running or paused batch keeps what it made so far in

@@ -496,6 +496,48 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   fuel for a 12 hour trip that unloaded its chunk, the fire was out with
   0 on the return: the reload burns the absence away, as the bytecode
   says. A log is 360 minutes and the cap 480 (sandbox default).
+* Campfires come in two kinds (SRC/BC 42.21). The map's campfire tiles
+  `camping_03_16`–`_21` carry `container=campfire` and load as
+  `IsoFireplace`. The campfire a player builds is a Lua global object of
+  `SCampfireSystem`. The build menu's Campfire entity
+  (`BuildRecipeCode.campfire.OnCreate`) and `campingCampfire:create`
+  (`SCampfireSystem.instance:addCampfire`) both make one. So do the map's
+  `camping_01_4`–`_6`, which `MOCampfire` replaces on load. Its parts:
+  * A plain `IsoObject` named "Campfire" with a container.
+  * Its fuel in minutes (`fuelAmt`), `isLit` and `exterior` (=
+    `square:isOutside()`), held in the global object and copied into the
+    object's mod data at every change (`saveData`).
+  * While lit, a permanent `IsoFire` on its tile. Its heat source is 35 °C
+    with the fire's light radius (`IsoFire.update`).
+  * `SCampfireGlobalObject:fireRadius()` = max(2, R × min(fuel, 360) /
+    360), with R = 10 outdoors and 18 inside, handed to
+    `setLightRadius(int)`, which truncates it (run 34: 46 of 46 readings).
+
+  Every `EveryOneMinute` event takes one minute off every lit campfire,
+  loaded or not (`SCampfireSystem:lowerFuelAmount`). `GameTime` fires that
+  event at most once per tick, so a tick that spans several game minutes
+  burns only one. Run 34 counted 721 events in 721 game minutes at ×100
+  (DayLength 4). Vanilla's campfire menu (`ISCampingMenu.doCampingMenu`)
+  works from the client's copy (`CCampfireSystem`); in single player the
+  copy was there 60 ticks after `addCampfire`. Add fuel offers a log as
+  one entry while two would not fit under the cap. `IsoFire` has no fuel
+  of its own; the campfire's fuel is only in that Lua object and its mod
+  data.
+* Run 34 (request `sp-rtof`, January, grid off, outdoors at the Muldraugh
+  Gas2Go): a campfire made with `addCampfire` and a charcoal barbecue
+  (`IsoBarbecue.new` with `appliances_cooking_01_35` and `AddTileObject`,
+  as SRC `client/Tests/TimedActionsTests.lua` does) were fed and lit from
+  their own menus. The heat formula above matched the game's air on every
+  floor tile around them:
+  * the campfire at four fuel levels: 528 tiles each, 282 warmed at radius
+    10 (22 out of line of sight), radius 5 at 199 minutes and 2 at 100 and
+    30;
+  * the barbecue: 24 tiles warmed at radius 3.
+
+  At a fermenter one tile from each, the formula matched all 42 hours
+  read. Both fires burned out during a 12 hour trip that unloaded them:
+  the campfire one minute per event, the barbecue by game time
+  (`lastUpdateTime` is saved, BC `IsoBarbecue.save`).
 * Grid power: `IsoWorld.hydroPowerOn` starts from
   `SandboxOptions.doesPowerGridExist()`, true while the world's age in days
   is at most `ElecShutModifier` (so −1: never);
@@ -580,7 +622,8 @@ fireplace, run 20 1/0 (the search found none near the start) and run 21
 run 28 **25/0**, again with the finished machines' Status wording, run 29
 **28/0**, and Pause, Resume and Abort batch, run 30 19/5 (a harness setup
 error), run 31 20/4 and, after the fix, run 32 29/3 (presses the menu no
-longer offers) and run 33 **32/0**. Most failures were
+longer offers) and run 33 **32/0**, and fermenters beside a campfire and
+a barbecue, run 34 35/4. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -594,7 +637,9 @@ the unheated value (a pruned reading). Run 26's three failures were one
 mod defect: the work around a machine pickup did not follow D-015 (fixed,
 run 27). Run 31's four were three: Abort batch discarded the partial
 result unlisted (4 L of ethanol in the drying column), and a spoiled batch
-could not be cleared from the menu (fixed, run 33).
+could not be cleared from the menu (fixed, run 33). Run 34's four are
+one: a campfire the player builds is never noted, so its warmth is not
+credited while away (D-022, open).
 
 ## Tooling pitfalls found
 
@@ -610,7 +655,8 @@ could not be cleared from the menu (fixed, run 33).
 1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
    a winter with mild days between cold spells
    (the code adds paused hours up across spells), flex-engine starts in the
-   cold, a machine beside a fire (`IsoFire`) or barbecue, upstairs or in a
+   cold, a campfire built indoors (radius up to 18), a propane barbecue,
+   upstairs or in a
    player-built room (with the grid on: runs 26–27), pouring from a can
    lying on the ground, Italian text in game, the crafting window itself, UI rendering
    checks beyond menu contents.

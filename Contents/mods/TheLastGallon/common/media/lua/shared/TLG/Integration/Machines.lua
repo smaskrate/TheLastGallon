@@ -18,9 +18,13 @@
 -- below, run 27 counted the placed hours exactly and credited a grab no Lua
 -- saw up to the last time the machine was found placed. In run 28 a pot
 -- still took a wash larger than it holds in two loads, ran out of fuel and
--- was fed again, and matched the definitions exactly.
--- A still or drying column picked up while processing, a barbecue or open
--- fire, upper floors and MP replication are NOT RUN.
+-- was fed again, and matched the definitions exactly. In run 34 a
+-- barbecue's warmth was read, noted and credited over a trip exactly; a
+-- campfire built by the player (a Lua campfire over a permanent IsoFire,
+-- not an IsoFireplace) was read but never noted, so its warmth is not
+-- credited while away (open, D-022).
+-- A still or drying column picked up while processing, upper floors and MP
+-- replication are NOT RUN.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
 --   processing         only while the item lies on the ground (D-015). The
