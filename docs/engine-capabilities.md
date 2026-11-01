@@ -517,7 +517,7 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   loaded or not (`SCampfireSystem:lowerFuelAmount`). `GameTime` fires that
   event at most once per tick, so a tick that spans several game minutes
   burns only one. Run 34 counted 721 events in 721 game minutes at ×100
-  (DayLength 4). Vanilla's campfire menu (`ISCampingMenu.doCampingMenu`)
+  (DayLength 4), run 35 720 in 721. Vanilla's campfire menu (`ISCampingMenu.doCampingMenu`)
   works from the client's copy (`CCampfireSystem`); in single player the
   copy was there 60 ticks after `addCampfire`. Add fuel offers a log as
   one entry while two would not fit under the cap. `IsoFire` has no fuel
@@ -628,7 +628,7 @@ run 28 **25/0**, again with the finished machines' Status wording, run 29
 **28/0**, and Pause, Resume and Abort batch, run 30 19/5 (a harness setup
 error), run 31 20/4 and, after the fix, run 32 29/3 (presses the menu no
 longer offers) and run 33 **32/0**, and fermenters beside a campfire and
-a barbecue, run 34 35/4. Most failures were
+a barbecue, run 34 35/4 and, after the fix, run 35 **39/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -643,8 +643,8 @@ mod defect: the work around a machine pickup did not follow D-015 (fixed,
 run 27). Run 31's four were three: Abort batch discarded the partial
 result unlisted (4 L of ethanol in the drying column), and a spoiled batch
 could not be cleared from the menu (fixed, run 33). Run 34's four are
-one: a campfire the player builds is never noted, so its warmth is not
-credited while away (D-022, open).
+one: a campfire the player builds was never noted, so its warmth was not
+credited while away (D-022; fixed, run 35).
 
 ## Tooling pitfalls found
 

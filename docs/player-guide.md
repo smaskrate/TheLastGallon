@@ -81,8 +81,9 @@ still is welded in hand.
    while you are away, and its warmth still counts for as long as its fuel
    lasts (at most 8 hours): feed it a few minutes before you go. Stay away
    longer and the batch cools, and the fire will be out when you return.
-   For now a campfire you built yourself is the exception: its warmth
-   counts only while you are near (known issue).
+   A campfire's reach shrinks as it burns down (5 tiles with 3 hours
+   left, 2 with under 1¾ hours), and that counts while you are away too:
+   feed it well before you go.
    **Status** shows the temperature at the machine.
 2. **Pot still** – a cooking pot, two metal pipes, a rubber hose
    (screwdriver). Place it within two tiles of a finished fermenter, **Load
@@ -137,8 +138,8 @@ Resume and Abort batch on fermenters and a drying column (as described
 above; a pot still took a stopped fermenter's wash, and a spoiled
 fermenter was emptied and loaded again), and January fermenters outdoors
 beside a campfire and beside a barbecue, both fires fed and lit from their
-menus. The barbecue's warmth counted over a 12 hour absence; the
-campfire's did not, the known issue above. Pause or Abort on a still,
+menus; the warmth of both counted over a 12 hour absence for as long as
+their fuel lasted. Pause or Abort on a still,
 picking up a working still or drying column, a campfire built indoors, a
 propane barbecue, upper floors and stopped days adding up across separate
 cold spells are untested in game.)*
@@ -192,7 +193,7 @@ in game).
 | --- | --- | --- |
 | "Condition unknown" | never sampled | Look/smell or use a sampling kit |
 | Engine will not start on fresh-looking fuel | too much ethanol for a stock engine, or water | Sample; drain water; use gasoline or convert the engine |
-| Fermenter paused "too cold" | below 8 °C at the machine today (see Status) | Move it into a room, or beside a lit fireplace, wood stove or campfire (a barbecue is too weak outdoors on a frosty day); away, a fire keeps it warm only while its fuel lasts, and a campfire you built not at all yet. After 3 days paused in all the batch spoils |
+| Fermenter paused "too cold" | below 8 °C at the machine today (see Status) | Move it into a room, or beside a lit fireplace, wood stove or campfire (a barbecue is too weak outdoors on a frosty day); away, a fire keeps it warm only while its fuel lasts. After 3 days paused in all the batch spoils |
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
 | Fermenter says "Wash is left" | the still holds 60 L (pot) or 120 L (reflux) | Collect the still's ethanol, then Load wash again |
 | Machine paused "picked up" | it was carried | Place it on the ground |

@@ -21,8 +21,8 @@
 -- was fed again, and matched the definitions exactly. In run 34 a
 -- barbecue's warmth was read, noted and credited over a trip exactly; a
 -- campfire built by the player (a Lua campfire over a permanent IsoFire,
--- not an IsoFireplace) was read but never noted, so its warmth is not
--- credited while away (open, D-022).
+-- not an IsoFireplace) was read but never noted. With M.fireOf, run 35
+-- noted it in every hour and credited its warmth over the trip exactly.
 -- A still or drying column picked up while processing, upper floors and MP
 -- replication are NOT RUN.
 --
@@ -47,7 +47,7 @@
 --                      into the record. Records only: the batch still advances
 --                      on access.
 --   fires              every ten game minutes the authority notes the fire
---                      (fireplace, wood stove, campfire, brazier, barbecue)
+--                      (fireplace, wood stove, brazier, barbecue, campfire)
 --                      that gives each such machine its air, with its fuel;
 --                      hours the area is not loaded keep that fire's warmth
 --                      while the fuel noted last would last (D-022).

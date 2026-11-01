@@ -330,21 +330,26 @@ listed with their replacement.
 ## D-022 A fire left burning keeps warming a machine while its fuel lasts
 * Decision: every ten game minutes the authority notes, for each loaded,
   placed machine with a batch running, the fire that gives its tile its
-  air: a lit fireplace (any `IsoFireplace`: fireplace, wood stove,
-  campfire, brazier, barrel oven) or barbecue (`IsoBarbecue`) on the same
-  floor within 8 tiles whose heat by the game's formula is the air read
-  there, with its fuel, its offset and whether its tile is in a room (the
-  one with most fuel if several match). Notes are kept per hour, the
-  hour's last one standing, "none" when no fire warms the machine. An hour
-  without a reading (its area was not loaded) takes the warmth of the fire
-  in the last note before it, from the start of the noted hour until that
-  fuel would have burned out at one minute a minute: the formula applied
-  to the site's unheated day value (D-021's value for unread hours), with
-  the radius at the fuel left at the start of each hour. After that the
-  unheated value.
+  air: a lit fireplace (any `IsoFireplace`: fireplace, wood stove, the
+  map's campfire tiles, brazier, barrel oven), barbecue (`IsoBarbecue`) or
+  campfire a player built (an `SCampfireSystem` campfire: the permanent
+  `IsoFire` it keeps lit, its fuel read from the "Campfire" object's mod
+  data) on the same floor within 18 tiles whose heat by the game's formula
+  is the air read there, with its fuel, its offset and whether its tile is
+  in a room (the one with most fuel if several match). Notes are kept per
+  hour, the hour's last one standing, "none" when no fire warms the
+  machine. An hour without a reading (its area was not loaded) takes the
+  warmth of the fire in the last note before it, from the start of the
+  noted hour until that fuel would have burned out at one minute a minute:
+  the formula applied to the site's unheated day value (D-021's value for
+  unread hours), with the radius at the fuel left at the start of each
+  hour (a campfire's max(2, R × min(fuel, 360) / 360) truncated, R 10
+  outdoors and 18 inside). After that the unheated value.
 * Reason: vanilla burns a fire's fuel while its area is not loaded: on
   reload `IsoFireplace.update` and `IsoBarbecue.update` use up every
-  minute since their saved `lastUpdateTime` in one step (BC 42.21). In run
+  minute since their saved `lastUpdateTime` in one step (BC 42.21), and
+  `SCampfireSystem` takes a minute off every lit campfire per minute
+  event, loaded or not (SRC 42.21). In run
   21 a fire left with 365 minutes was out on the return while the machine
   had been counted unheated for all 12 hours, and the batch lost about 17
   hours. Crediting the warmth for the minutes the game spends the fuel
@@ -354,10 +359,13 @@ listed with their replacement.
   it as before. Fuel added after the last note (at most ten minutes old) is
   not counted, so feed the fire a few minutes before you go. Only the fire
   that gave the air at the last note counts: a second fire within reach
-  that would outlast it does not take over. Open fires (`IsoFire`, no fuel)
-  and other mods' heat sources never count, and the unheated value is the
-  day's, not the hour's. Notes stay on the authority and are not sent to
-  clients.
+  that would outlast it does not take over. Other open fires (an `IsoFire`
+  without a campfire has no fuel) and other mods' heat sources never
+  count, and the unheated value is the day's, not the hour's. The game
+  fires the minute event at most once per tick, so where a tick spans
+  more than a game minute (fast speeds) a campfire outlasts its noted
+  minutes: the credit can then fall short of the warmth, never exceed it.
+  Notes stay on the authority and are not sent to clients.
 * Verified RT-SP 2026-11-01 run 23 (21/0), beside run 21's fireplace: the
   notes the mod took matched the harness's in all 99 hours, none was taken
   while the area was unloaded, the last note before a 12 hour trip (365
@@ -369,17 +377,20 @@ listed with their replacement.
   (BC `KahluaTableImpl.save`), and in run 25 a record saved with two "no
   fire" notes came back from save, exit and continue unchanged; the credit
   then worked as before (a 424 minute note covered 7.07 hours of a trip).
-* Gap found RT-SP 2026-11-01 run 34 (35/4): the campfire a player builds
-  is not an `IsoFireplace` but a Lua global object (`SCampfireSystem`)
-  whose warmth comes from a permanent `IsoFire`: 35 °C, radius the fire's
-  light radius, max(2, 10 × min(fuel, 360) / 360) truncated outdoors. The
-  notes never name it, so a fermenter one tile from one got no warmth for
-  the hours away: 0 of the 6.48 hours its fuel covered, and the batch
-  stopped for the rest of the day. The "campfire" in the list above is the
-  map's campfire tile (`camping_03_16`–`_21`). A charcoal barbecue was
-  noted in all 44 hours and credited exactly (6.02 hours). Open. On a
-  dedicated server a barbecue has no heat source at all (BC
-  `IsoBarbecue.update`), so there it warms nothing (not run).
+* Campfires (RT-SP 2026-11-01, runs 34–35). Run 34 (35/4) found the
+  campfire a player builds never noted. It is not an `IsoFireplace` but a
+  Lua global object (`SCampfireSystem`) whose warmth comes from a
+  permanent `IsoFire`: 35 °C, radius the fire's light radius,
+  max(2, 10 × min(fuel, 360) / 360) truncated outdoors. A fermenter one
+  tile from one got no warmth for the hours away: 0 of the 6.48 hours its
+  fuel covered, and the batch stopped for the rest of the day. Fixed as
+  described above (commit `7b4f31d`). In run 35 (39/0) its notes matched
+  the harness's in all 44 hours, the last before a 12 hour trip (397
+  minutes) covered 6.48 hours, and the work over the trip matched the
+  rule exactly (3.0312 hours). A charcoal barbecue was noted in all 44
+  hours and credited exactly (6.02 hours) in both runs. On a dedicated
+  server a barbecue has no heat source at all (BC `IsoBarbecue.update`),
+  so there it warms nothing (not run).
 
 ## D-023 Abort batch keeps what the batch made
 * Decision: aborting a running or paused batch keeps what it made so far in

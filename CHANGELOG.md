@@ -35,8 +35,9 @@
   two tiles from a house fireplace kept fed with logs (17 logs).
 * A fire left burning keeps a machine warm while you are away, for as long
   as its fuel lasts (up to 8 hours with default settings): the game burns
-  that fuel while you are gone anyway. Not yet for a campfire the player
-  builds (found in game, open). Checked in game: a fire's 6 hours
+  that fuel while you are gone anyway. This now includes a campfire you
+  build yourself, whose reach shrinks as it burns down (it had been left
+  out: the game keeps it as a different kind of fire; checked in game). Checked in game: a fire's 6 hours
   of fuel covered half of a 12 hour absence, and the work done over it
   matched the credited temperatures exactly. A batch saved mid-way kept
   all of this through saving, quitting and continuing.
