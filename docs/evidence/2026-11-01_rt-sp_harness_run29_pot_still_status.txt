@@ -1,0 +1,55 @@
+# TLG single-player harness, real game clock, pot still
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=93213257081230350597 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rtpot_sites begin
+OBS  RTPOT.spots character 10618,10628; fermenter 10617,10628 pot still 10617,10629 drying column 10618,10629; grid power=true
+PASS RTPOT.grid_is_on :: isHydroPowerOn=true
+PASS RTPOT.all_in_a_room :: in a room: true,true,true,true
+STEP rtpot_run begin
+OBS  RTPOT.load_mash menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTPOT.mash_loaded :: sugar=12 water=60
+PASS RTPOT.fermented_full_rate :: state=OutputReady done at 97.0000 h after loading; outputs {ethanol=6.6000000000000005,water=60}
+OBS  RTPOT.feed_one_log menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTPOT.firebox_one_log :: added kg 9
+OBS  RTPOT.load_wash_1 menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTPOT.first_load_fills_the_still :: wash 60.000000000000014 L; fermenter OutputReady/output_full keeps {ethanol=0.6540540540540531,water=5.945945945945937}
+PASS RTPOT.no_starter_before_the_last_wash :: 0 -> 0
+OBS  RTPOT.status_fermenter menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={ethanol=0.6540540540540531,water=5.945945945945937} consumed=nil
+PASS RTPOT.fermenter_status_with_wash_left :: Finished: the wash is ready for a still <LINE> Wash is left: load it again when the still is free <LINE> Temperature here now: 71.6 °F, in a room <LINE> Ethanol: 0.65 <LINE> Water: 5.95
+OBS  RTPOT.status_pot_still menu "Status" -> ok=true reason=nil state=Paused stage=distill outputs={} consumed=nil
+PASS RTPOT.firebox_runs_out_mid_run :: seen 2.9037 h after loading (fuel for 2.8350 h); dialog=Paused <LINE> Reason: the firebox is out of fuel <LINE> Stage: distilling <LINE> Temperature here today: 71.6 °F, in a room
+OBS  RTPOT.feed_four_logs menu "Feed the firebox" -> ok=true reason=nil state=Paused stage=nil outputs={} consumed=nil
+PASS RTPOT.firebox_takes_what_fits :: added kg 27, logs left 1
+PASS RTPOT.run1_paused_only_without_fuel :: paused 1.105826 h, out of fuel 1.105826 h
+PASS RTPOT.run1_hours :: done 9.605826 h after loading: 8.5000 h of stages + 1.105826 h paused
+PASS RTPOT.run1_firebox :: left 9.015873 kg, expected 9.015873 (3.1746 kg/h)
+PASS RTPOT.run1_spirit :: ethanol 5.232432 (5.232432) water 1.308108 (1.308108); condition 0.9800
+OBS  RTPOT.status_pot_still menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={ethanol=5.232432432432434,water=1.3081081081081083} consumed=nil
+PASS RTPOT.still_status_when_finished :: Finished: ethanol ready to collect <LINE> Temperature here now: 71.6 °F, in a room <LINE> Firebox: 9.0 kg of wood <LINE> Ethanol: 5.23 <LINE> Water: 1.31
+OBS  RTPOT.collect_1 menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTPOT.run1_bottled :: can id=S1204766915-3 rev=1 total=6.5405 q[ethanol=5.2324,water=1.3081] deg[ethanol=0.0000] mic=0 stab=0; still Ready
+OBS  RTPOT.load_wash_2 menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTPOT.second_load_takes_the_rest :: wash 6.59999999999999 L; fermenter Ready; yeast starters 0 -> 1
+PASS RTPOT.firebox_carries_over :: firebox 9.015873 kg (9.015873 before); condition 0.9800
+PASS RTPOT.run2_minimum_hour :: done 2.000000 h after loading (6.6000 L of wash at 8 L/h, at least 1 h), paused 0.000000
+PASS RTPOT.run2_spirit_after_wear :: ethanol 0.572114 (0.572114 at condition 0.98) water 0.143029 (0.143029); firebox 2.666667 kg; condition 0.9600
+OBS  RTPOT.collect_2 menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTPOT.both_runs_in_one_can :: can id=S1204766915-3 rev=2 total=7.2557 q[ethanol=5.8045,water=1.4511] deg[ethanol=0.0001] mic=0 stab=0; expected ethanol 5.804547 water 1.451137
+PASS RTPOT.pot_spirit_unfit_for_spark_engines :: engine_si_stock unfit (too_much_ethanol,water); engine_si_flex unfit (water); generator_si_stock unfit (too_much_ethanol,water); generator_si_flex unfit (water)
+OBS  RTPOT.load_dry menu "Dry ethanol with quicklime" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTPOT.dry_loaded :: lime 5 kg, ethanol 5.804546356189211 L, water 1.451136946690123 L
+PASS RTPOT.dried_in_12_hours :: state=OutputReady done 12.000000 h after loading
+OBS  RTPOT.status_drying_column menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={ethanol=5.804546356189211,water=0.029022731780946165} consumed=nil
+PASS RTPOT.dryer_status_when_finished :: Finished: dried ethanol ready to collect <LINE> Temperature here now: 71.6 °F, in a room <LINE> Ethanol: 5.80 <LINE> Water: 0.03
+OBS  RTPOT.collect_dry menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTPOT.dried_spirit :: can id=S1204766915-3 rev=4 total=5.8336 q[ethanol=5.8045,water=0.0290] deg[ethanol=0.0001] mic=0 stab=0; expected water 0.029023
+PASS RTPOT.dried_spirit_fits_flex_engines :: engine_si_stock unfit (too_much_ethanol); engine_si_flex fit (); generator_si_stock unfit (too_much_ethanol); generator_si_flex fit ()
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 125.10
+SUMMARY pass=28 fail=0
+DONE

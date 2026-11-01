@@ -768,8 +768,31 @@ Result: **25 PASS / 0 FAIL** (no TLG error or warning in the console).
 
 With wash left in it, the fermenter's Status read "Finished: output
 waiting", "Reason: output waiting, nowhere to put it", "Stage: fermenting":
-the batch is done and waits for the still, which those words do not say.
+the batch is done and waits for the still, which those words do not say
+(fixed, run 29).
 The engines' verdicts are the start gates' evaluation, not engine starts;
 the engines ran on dried reflux ethanol in runs 13–14. Not run: the pot
 still built from the crafting window in this run (spawned; building it was
 run 12), the reflux still with this wash, a pot-still batch aborted.
+
+## 2026-11-01 — RT-SP client harness, launch 29 (Status of finished machines)
+
+Command: `tools/run-sp-harness.ps1 -Mode pot-still -TimeoutMinutes 40`,
+with the fix of commit `958b958`: `Process.status` names a stage only while
+the batch runs, and the machine menu words a finished machine by its kind.
+Run 28's note on the fermenter's Status became a check, with one for the
+still after its first run and one for the drying column. Evidence:
+`docs/evidence/2026-11-01_rt-sp_harness_run29_pot_still_status.txt`.
+
+Result: **28 PASS / 0 FAIL**: run 28's 25 checks again (the same
+quantities; the hour without fuel was 1.105826 h, the refeed a few ticks
+later) and the three new ones.
+
+| Status read (EN) | Text |
+| --- | --- |
+| Fermenter with wash left | "Finished: the wash is ready for a still", "Wash is left: load it again when the still is free", the temperature, ethanol 0.65 and water 5.95; no stage |
+| Pot still after run 1 | "Finished: ethanol ready to collect", the temperature, "Firebox: 9.0 kg of wood", ethanol 5.23 and water 1.31; no stage |
+| Drying column, done | "Finished: dried ethanol ready to collect", the temperature, ethanol 5.80 and water 0.03; no stage |
+
+A paused batch still shows its stage ("Stage: distilling" with the firebox
+out), as it should. The Italian text is not checked in game.

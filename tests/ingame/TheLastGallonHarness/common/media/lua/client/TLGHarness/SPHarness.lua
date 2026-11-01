@@ -4623,6 +4623,12 @@ function RT.D.verdicts(can)
     return out, table.concat(parts, "; "), v
 end
 
+-- A finished machine's Status: its kind's own state line and no stage (run
+-- 28 showed "Stage: fermenting" on finished wash).
+function RT.D.finishedText(text, stateKey)
+    return has(text, getText(stateKey)) and not has(text, getText("IGUI_TLG_Stage", ""))
+end
+
 function RT.D.hasReason(e, code)
     for _, r in ipairs(e.reasons or {}) do
         if r == code then return true end
@@ -4745,7 +4751,10 @@ function RT.D.phases.load1(ctx)
         return countType("TLG.YeastStarter") == ctx.starters, string.format("%d -> %d", ctx.starters, countType("TLG.YeastStarter"))
     end)
     local _, text = D.statusText(1)
-    R:line("OBS  RTPOT.fermenter status with wash left: %s", tostring(text))
+    R:check("RTPOT.fermenter_status_with_wash_left", function()
+        return D.finishedText(text, "IGUI_TLG_MachineState_OutputReady_fermenter")
+            and has(text, getText("IGUI_TLG_Pause_output_full_fermenter")), tostring(text)
+    end)
     ctx.next, ctx.phase = hours() + 0.1, "run1"
 end
 
@@ -4809,6 +4818,10 @@ function RT.D.phases.run1(ctx)
         return rec.state == "OutputReady" and D.near(o.ethanol, e.ethanol) and D.near(o.water, e.water),
             string.format("ethanol %.6f (%.6f) water %.6f (%.6f); condition %.4f", o.ethanol or -1, e.ethanol, o.water or -1, e.water,
                 rec.cond or -1)
+    end)
+    local _, text = D.statusText(2)
+    R:check("RTPOT.still_status_when_finished", function()
+        return D.finishedText(text, "IGUI_TLG_MachineState_OutputReady_still"), tostring(text)
     end)
     ctx.run1 = e
     ctx.phase = "collect1"
@@ -4924,6 +4937,10 @@ function RT.D.phases.drying(ctx)
     R:check("RTPOT.dried_in_12_hours", function()
         return s.state == "OutputReady" and D.near(rec.completedAt, ctx.tDry + 12),
             string.format("state=%s done %.6f h after loading", tostring(s.state), (rec.completedAt or -1) - ctx.tDry)
+    end)
+    local _, text = D.statusText(3)
+    R:check("RTPOT.dryer_status_when_finished", function()
+        return D.finishedText(text, "IGUI_TLG_MachineState_OutputReady_dryer"), tostring(text)
     end)
     giveCan("Base.JerryCan")
     local before = ethanolCans()

@@ -61,7 +61,7 @@
   fermenter with wash left after a still was filled, "output waiting,
   nowhere to put it" (it now says the wash is ready for a still and that
   the rest goes in once the still is free; a still or drying column says
-  its ethanol is ready to collect).
+  its ethanol is ready to collect; checked in game).
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record

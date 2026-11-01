@@ -577,7 +577,8 @@ fireplace, run 20 1/0 (the search found none near the start) and run 21
 **25/0**, the fireplace batch across a save, run 25 **8/0** before and
 **20/0** after it, and running fermenters picked up and put down, run 26
 25/3 and, after the fix, run 27 **34/0**, and a batch through the pot still,
-run 28 **25/0**. Most failures were
+run 28 **25/0**, again with the finished machines' Status wording, run 29
+**28/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
