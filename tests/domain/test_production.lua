@@ -210,6 +210,47 @@ T.case("production: aborting a still keeps its spirit, throws the rest of the wa
     T.near(a.proc.firebox, s.firebox, 1e-12, "the firebox keeps its wood")
 end)
 
+T.case("production: an aborted still keeps only what it distilled, nothing while it heats up", function()
+    local env = F.env()
+    local s = Process.load(still(), "ethanol_distill", { ethanol = 3.3, water = 30 }).proc
+    s = Process.start(Process.addFirebox(s, 50).proc, 0).proc
+    local heating = Process.abort(Process.advance(s, 0.5, env))
+    T.ok(heating.ok)
+    T.ok(TLG.Tables.isEmpty(heating.kept), "nothing distilled, nothing kept")
+    T.eq(heating.proc.state, "Ready")
+    T.near(heating.discarded.ethanol, 3.3, 1e-12, "the whole wash thrown away")
+    T.near(heating.discarded.water, 30, 1e-12)
+    -- Two hours in: an hour of distilling 33.3 L at 12 L/h (RT-SP run 49 kept
+    -- the share of all 3.775 stage hours, 2 of them, heating up included).
+    local a = Process.abort(Process.advance(s, 2, env))
+    T.near(a.kept.ethanol, 3.3 * (1 / (33.3 / 12)) * 0.92, 1e-9, "the spirit of the hour distilled")
+    T.near(a.kept.water, a.kept.ethanol * 0.06 / 0.94, 1e-9)
+    local total = 0
+    for _, v in pairs(a.kept) do total = total + v end
+    for _, v in pairs(a.discarded) do total = total + v end
+    T.near(total, 33.3, 1e-9, "every litre accounted")
+end)
+
+T.case("production: a fermenter's preparing hour makes no ethanol on abort", function()
+    local env = F.env()
+    local f = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc
+    local prepared = Process.abort(Process.advance(f, 1, env))
+    T.ok(prepared.kept.ethanol == nil, "prepared, nothing fermented yet")
+    T.near(prepared.kept.sugar_eq, 10, 1e-12)
+    T.near(prepared.kept.water, 50, 1e-12)
+    local mid = Process.advance(f, 30, env)
+    T.near(Process.abort(mid).kept.ethanol, 10 * 0.55 * mid.stageDone / 96, 1e-9, "the fermenting stage's share")
+end)
+
+T.case("production: a batch whose snapshot marks no making stage aborts as before", function()
+    local env = F.env()
+    local s = Process.load(still(), "ethanol_distill", { ethanol = 3.3, water = 30 }).proc
+    s = Process.start(Process.addFirebox(s, 50).proc, 0).proc
+    for _, st in ipairs(s.recipe.params.stages) do st.makes = nil end
+    local a = Process.abort(Process.advance(s, 2, env))
+    T.near(a.kept.ethanol, 3.3 * (2 / (1 + 33.3 / 12)) * 0.92, 1e-9, "every stage counted, heating up included")
+end)
+
 T.case("production: a drying column keeps its ethanol on abort; a spoiled batch is refused a load and thrown away", function()
     local env = F.env()
     local d = Process.load(Process.new({ id = "D1", machine = "drying_column", t = 0 }), "ethanol_dry",

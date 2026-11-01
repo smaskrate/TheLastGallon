@@ -5023,9 +5023,8 @@ RT.potSteps = { RT.waitWorld, RT.setup, RT.potSetup, RT.potRun, RT.finish }
 -- stopped for 3 days in all spoils), then emptied with Abort and reloaded.
 -- The RTC.design_ checks hold Abort to keeping what the batch made and
 -- listing what it throws away (Process.abort), and a spoiled batch to a way
--- out from the menu; run 31 failed them before the fix. Abort on a running
--- still is left to the domain tests (its spirit kept, the rest of the wash
--- listed, every litre accounted).
+-- out from the menu; run 31 failed them before the fix. Pause and Abort on
+-- running stills: request "sp-rtsc".
 ------------------------------------------------------------------------------
 RT.C = { names = { "F1", "F2", "F3", "column", "still" }, tol = 1e-6 }
 
@@ -5198,9 +5197,12 @@ end
 
 function RT.C.phases.to5(ctx) RT.C.waitUntil(ctx, ctx.h0 + 5, "at5") end
 
--- The wash a fermenter has made `done` hours into the 6 kg batch.
+-- The wash a fermenter has made `done` hours into the 6 kg batch: the
+-- fermenting stage's share (its hour of preparing makes no ethanol; run 33
+-- expected done / 97, the rule before the fix of run 49's finding).
 function RT.C.wash(done)
-    local frac = done / 97
+    local st = TLG.Registry.need("recipe", "ethanol_ferment").stages
+    local frac = math.max(0, done - st[1].hours) / st[2].hours
     return { ethanol = 3.3 * frac, water = 30, sugar_eq = 6 * (1 - frac) }
 end
 

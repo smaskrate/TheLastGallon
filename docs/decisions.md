@@ -438,8 +438,18 @@ listed with their replacement.
   starter culture, and not the last finished batch's either (the record's
   byproducts are cleared). Verified RT-SP run 33 (32/0): a pot still took
   a stopped wash, a drying column's ethanol was collected after an abort,
-  a spoiled fermenter was emptied and loaded again. Pause or Abort on a
-  running still is covered by the domain tests only.
+  a spoiled fermenter was emptied and loaded again.
+* Amendment (2026-11-01): what a batch made is the share done of the
+  stages that make its result, marked `makes` in the recipes. Those are a
+  fermenter's fermenting, a still's distilling and a column's drying;
+  preparing and heating up make nothing. Every stage used to count, so a
+  still aborted an hour into distilling kept 1.61 L of spirit where 1.10 L
+  had distilled (RT-SP run 49), and a fermenter's hour of preparing counted
+  as 1/97 of its ethanol. A batch whose recipe snapshot marks no stage
+  (started before the change) still counts every stage. The recipes of the
+  other pathways (biodiesel, biogas, the wood retort and ash pit) mark none
+  yet, and their making stages are to be marked with their machines. Pause,
+  Resume and Abort on running stills: RT-SP runs 49 and 50.
 
 ## D-024 A first look records the fuel it looks at
 * Decision: Look and smell (and a sample with the kit) on fuel the mod

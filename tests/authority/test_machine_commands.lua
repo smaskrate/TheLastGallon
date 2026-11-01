@@ -194,6 +194,8 @@ T.case("authority: a placed machine takes the same commands", function()
         r = H.commands["machine.resume"](p, req(still))
         T.eq(r.ok, true)
         T.eq(r.state, "Processing")
+        -- An hour into distilling (the heat-up hour makes no spirit).
+        g.now = 4
         r = H.commands["machine.abort"](p, req(still))
         T.eq(r.ok, true)
         T.eq(still:getModData().tlgProc.state, "OutputReady", "the spirit made so far kept")

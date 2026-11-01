@@ -62,6 +62,7 @@ Registry.addValidator("recipe", function(def, problem)
         if not (Num.isFinite(st.hours) and st.hours > 0) and not st.hoursFrom then
             problem("stage " .. i .. " needs positive hours")
         end
+        if st.makes ~= nil and type(st.makes) ~= "boolean" then problem("stage " .. i .. " makes must be true or false") end
     end
     for id, b in pairs(def.inputs or {}) do
         if Registry.get("fuel", id) == nil then problem("unknown input " .. tostring(id)) end
@@ -382,11 +383,20 @@ function Process.abort(proc)
     else
         local params = out.recipe.params
         local m = Registry.need("machine", out.machine)
+        -- What the batch made: the share done of the stages that make its
+        -- result (`makes`); heating up or preparing makes nothing. Until
+        -- 2026-11-01 every stage counted, so a still kept spirit for its
+        -- heat-up hour (RT-SP run 49); a snapshot that marks no stage still
+        -- counts every stage.
+        local marked = false
+        for _, st in ipairs(params.stages) do marked = marked or st.makes == true end
         local done, total = 0, 0
         for i, st in ipairs(params.stages) do
-            local h = stageHours(out, st)
-            total = total + h
-            if i < out.stage then done = done + h elseif i == out.stage then done = done + out.stageDone end
+            if st.makes == true or not marked then
+                local h = stageHours(out, st)
+                total = total + h
+                if i < out.stage then done = done + h elseif i == out.stage then done = done + out.stageDone end
+            end
         end
         -- Loaded but not started: nothing done (frac 0).
         local frac = (out.state ~= "InputsReserved" and total > 0) and done / total or 0

@@ -94,7 +94,9 @@ R.define("machine", {
 })
 
 ------------------------------------------------------------------------------
--- Recipes
+-- Recipes. `makes` marks the stages that make the result: an aborted batch
+-- keeps the share of those done (Process.abort), so preparing and heating up
+-- make nothing.
 ------------------------------------------------------------------------------
 R.define("recipe", {
     id = "ethanol_ferment", version = 1, machines = { "fermenter_barrel" }, converter = "ferment",
@@ -103,7 +105,7 @@ R.define("recipe", {
     stages = {
         { id = "prepare", hours = 1, labor = true },
         { id = "ferment", hours = 96, tempMin = 8, tempMax = 38, slowBelow = 18, slowAbove = 32, slowRate = 0.4,
-            maxPauseHours = 72 },
+            maxPauseHours = 72, makes = true },
     },
     params = { ethanolYieldLPerKg = 0.55, starterMinSugarKg = 5 },
 })
@@ -112,14 +114,14 @@ R.define("recipe", {
     inputs = { ethanol = { min = 0, max = 30 }, water = { min = 1, max = 120 }, sugar_eq = { min = 0, max = 30 } },
     stages = {
         { id = "heat_up", hours = 1, heatKW = 6 },
-        { id = "distill", hoursFrom = "throughputLph", minHours = 1, heatKW = 6 },
+        { id = "distill", hoursFrom = "throughputLph", minHours = 1, heatKW = 6, makes = true },
     },
     params = { maxPurity = 0.96 },
 })
 R.define("recipe", {
     id = "ethanol_dry", version = 1, machines = { "drying_column" }, converter = "dry",
     inputs = { ethanol = { min = 1, max = 40 }, water = { min = 0, max = 10 }, quicklime_kg = { min = 0.2, max = 10 } },
-    stages = { { id = "dry", hours = 12 } },
+    stages = { { id = "dry", hours = 12, makes = true } },
     params = { waterPerKgLime = 0.3, targetWater = 0.005 },
 })
 
