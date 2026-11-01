@@ -15,7 +15,11 @@
 -- Machine sites (D-021): a placed machine's day temperature is the mean air
 -- temperature at its tile over the day's hours of the batch, the game's own
 -- hourly reading where one was taken there (rooms, grid power, fires) and the
--- day's unheated value for its site elsewhere.
+-- day's unheated value for its site elsewhere. A fire burns its fuel while
+-- its area is not loaded (BC IsoFireplace/IsoBarbecue.update use up the
+-- minutes since their saved lastUpdateTime on reload), so unread hours after
+-- a note of the fire warming the machine keep that warmth while its fuel
+-- lasts (D-022).
 require "TLG/Util/Num"
 require "TLG/Util/Tables"
 
@@ -37,6 +41,12 @@ Climate.DAYS_IN_MONTH = { 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31 }
 Climate.ROOM_TARGET = 22
 -- Lagged daylight (0..1) assumed for days recorded without room means.
 Climate.ROOM_DAYLIGHT = 0.5
+-- Fires (BC 42.21): a fireplace's heat source is 35 C with a radius that
+-- grows with its fuel up to 8 tiles; a barbecue's is 25 C, radius 3.
+Climate.FIREPLACE_C = 35
+Climate.FIRE_REACH = 8
+Climate.BARBECUE_C = 25
+Climate.BARBECUE_RADIUS = 3
 
 Climate.__index = Climate
 
@@ -122,6 +132,32 @@ function Climate.roomAir(outC, upper, dayLight, power)
     return outC - diff * 0.85 * k
 end
 
+-- Heat radius of a lit fireplace from its fuel in minutes (BC 42.21
+-- IsoFireplace.calcLightRadius: GameTime.Lerp(1, 8, min(fuel, 60) / 60),
+-- truncated): 8 tiles with an hour of fuel or more.
+function Climate.fireRadius(fuel)
+    return math.floor(1 + 7 * math.min(math.max(fuel, 0), 60) / 60)
+end
+
+-- The air the game gives a tile whose air without heat sources is t, with a
+-- heat source of srcC at offset dx, dy and radius R in clear line of sight
+-- (BC 42.21 IsoCell.getHeatSourceHighestTemperature): t + (1 - d/R) x
+-- (srcC + clamp(t - 30) - t), clamped to -7..7 for a source in a room and to
+-- -15..5 outdoors; never below t, nothing from R on.
+function Climate.warmed(t, dx, dy, radius, srcInRoom, srcC)
+    local dsq = dx * dx + dy * dy
+    if dsq >= radius * radius then return t end
+    local adj
+    if srcInRoom then adj = math.max(-7, math.min(7, t - 30)) else adj = math.max(-15, math.min(5, t - 30)) end
+    return math.max(t, t + (1 - math.sqrt(dsq) / radius) * (srcC + adj - t))
+end
+
+-- A note's heat radius when the fire has `fuel` minutes left: a barbecue's
+-- is fixed (note.rad), a fireplace's follows its fuel.
+function Climate.noteRadius(note, fuel)
+    return note.rad or Climate.fireRadius(fuel)
+end
+
 -- A site's day temperature without heat sources: outdoors the recorded mean;
 -- in a room the day's recorded room mean for its floor, or for days recorded
 -- without one the room formula on the day mean (daylight 0.5, no power).
@@ -143,25 +179,44 @@ end
 -- The hour in progress has no reading yet (it is filed when the hour ends):
 -- the previous hour's reading stands in for it, so a warmed machine read just
 -- after midnight does not drop to the unheated value (RT-SP run 17).
+-- Hours with neither (the area was not loaded) take the fire noted last
+-- before them (site.fires[h]: the last note taken in hour h, see
+-- Machines.observeFires; false when no fire warmed the machine). Its warmth
+-- counts from the start of the noted hour while its fuel lasts, computed with
+-- the game's formula from the site's unheated value and the radius at the
+-- fuel left at the start of each hour (D-022).
 function Climate:siteDayMean(day, site, upto)
     local base, rh = self:siteBase(day, site)
     local from = math.max(self:dayStart(day), site.from or -math.huge)
     local to = math.min(self:dayStart(day + 1), upto or math.huge)
     local span = to - from
-    local temps = site.temps
-    if temps == nil or span <= 1e-9 then return base, rh end
-    local sum, covered = 0, 0
-    for s = math.floor(from), math.ceil(to) - 1 do
-        local v = temps[s]
-        if v ~= nil then
-            local overlap = math.min(to, s + 1) - math.max(from, s)
-            if overlap > 0 then sum, covered = sum + overlap * v, covered + overlap end
-        end
-    end
+    local temps, fires = site.temps, site.fires
+    if (temps == nil and fires == nil) or span <= 1e-9 then return base, rh end
+    temps = temps or {}
     local current = math.floor(to)
-    if current < to and temps[current] == nil and temps[current - 1] ~= nil then
-        local tail = to - math.max(from, current)
-        if tail > 0 then sum, covered = sum + tail * temps[current - 1], covered + tail end
+    local carried = current < to and temps[current] == nil and temps[current - 1] or nil
+    local keys = fires and TLG.Tables.sortedKeys(fires) or {}
+    local ki, sum, covered = 0, 0, 0
+    for s = math.floor(from), math.ceil(to) - 1 do
+        local a, b = math.max(from, s), math.min(to, s + 1)
+        local v = temps[s]
+        if v == nil and s == current then v = carried end
+        if b > a then
+            if v ~= nil then
+                sum, covered = sum + (b - a) * v, covered + (b - a)
+            elseif fires ~= nil then
+                while ki < #keys and keys[ki + 1] <= s do ki = ki + 1 end
+                local note = ki > 0 and fires[keys[ki]] or nil
+                if type(note) == "table" then
+                    local stop = math.min(b, note.t + note.f / 60)
+                    if stop > a then
+                        local radius = Climate.noteRadius(note, note.f - (a - note.t) * 60)
+                        local w = Climate.warmed(base, note.x, note.y, radius, note.r, note.c)
+                        sum, covered = sum + (stop - a) * w, covered + (stop - a)
+                    end
+                end
+            end
+        end
     end
     return (sum + (span - covered) * base) / span, rh
 end
@@ -174,6 +229,22 @@ function Climate.pruneSlots(temps, before)
         if s < before then old[#old + 1] = s end
     end
     for _, s in ipairs(old) do temps[s] = nil end
+end
+
+-- Drops fire notes for hours before `before` except the latest of them,
+-- which still governs the unread hours from `before` on.
+function Climate.pruneNotes(notes, before)
+    if notes == nil then return end
+    local old, keep = {}, nil
+    for h in pairs(notes) do
+        if h < before then
+            old[#old + 1] = h
+            if keep == nil or h > keep then keep = h end
+        end
+    end
+    for _, h in ipairs(old) do
+        if h ~= keep then notes[h] = nil end
+    end
 end
 
 function Climate:profileAt(t)

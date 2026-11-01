@@ -121,3 +121,72 @@ T.case("sites: the batch start is kept, consumed readings can be dropped, room m
     Climate.record(log, 11, -2, 0.7, 450)
     T.ok(log[11].r0 == nil, "room means are optional")
 end)
+
+-- D-022: a fire noted warming the machine keeps doing so while it is away.
+local function fire(t, f, rad) return { t = t, f = f, x = 1, y = 2, r = true, c = rad and 25 or 35, rad = rad } end
+
+T.case("fires: a fireplace's radius follows its fuel, its warmth the game's formula", function()
+    T.eq(Climate.fireRadius(0), 1); T.eq(Climate.fireRadius(5), 1); T.eq(Climate.fireRadius(20), 3)
+    T.eq(Climate.fireRadius(40), 5); T.eq(Climate.fireRadius(59), 7); T.eq(Climate.fireRadius(60), 8)
+    T.eq(Climate.fireRadius(480), 8); T.eq(Climate.fireRadius(-3), 1)
+    T.near(Climate.warmed(8, 1, 0, 8, true, 35), 8 + 0.875 * 20, 1e-9, "a cold room: 35 - 7 at the source")
+    T.near(Climate.warmed(8, 0, 2, 8, false, 35), 8 + 0.75 * 12, 1e-9, "a source outdoors: 35 - 15")
+    T.near(Climate.warmed(8, 1, 2, 8, true, 35), 8 + (1 - math.sqrt(5) / 8) * 20, 1e-9)
+    T.eq(Climate.warmed(8, 8, 0, 8, true, 35), 8, "from the radius on: nothing")
+    T.near(Climate.warmed(8, 1, 0, 3, true, 25), 8 + (2 / 3) * 10, 1e-9, "a barbecue: 25 C, radius 3")
+    T.eq(Climate.warmed(45, 1, 0, 8, true, 35), 45, "never below the air")
+    T.eq(Climate.noteRadius(fire(0, 10, 3), 10), 3, "a barbecue's radius does not follow its fuel")
+    T.eq(Climate.noteRadius(fire(0, 10), 10), 2, "a fireplace's does: 1 + 7 x 10 / 60")
+end)
+
+T.case("fires: unread hours after a note keep the fire's warmth while its fuel lasts", function()
+    local e = env(coldLog(-3, 7.7))
+    local temps = {}
+    for s = 0, 9 do temps[s] = 22 end
+    local w8, w4 = Climate.warmed(7.7, 1, 2, 8, true, 35), Climate.warmed(7.7, 1, 2, 4, true, 35)
+    -- Left at 10.5 with 330 min: warm from the noted hour's start to 16.0.
+    local left = { room = true, z = 0, temps = temps, fires = { [9] = fire(9.5, 360), [10] = fire(10.5, 330) } }
+    T.near(e:siteDayMean(0, left, 24), (10 * 22 + 6 * w8 + 8 * 7.7) / 24, 1e-9)
+    -- 90 min at 10.0: hour 10 at radius 8; hour 11 starts with 30 min left, radius 4, for half an hour.
+    local low = { room = true, z = 0, temps = temps, fires = { [10] = fire(10, 90) } }
+    T.near(e:siteDayMean(0, low, 24), (10 * 22 + w8 + 0.5 * w4 + 12.5 * 7.7) / 24, 1e-9)
+    -- A later note without a fire ends the credit; a reading wins over it.
+    local out = { room = true, z = 0, temps = { [11] = 15 }, fires = { [10] = fire(10.2, 480), [12] = false } }
+    for s = 0, 9 do out.temps[s] = 22 end
+    T.near(e:siteDayMean(0, out, 24), (10 * 22 + w8 + 15 + 12 * 7.7) / 24, 1e-9)
+    local none = { room = true, z = 0, temps = temps }
+    T.near(e:siteDayMean(0, none, 24), (10 * 22 + 14 * 7.7) / 24, 1e-9, "no notes: the base")
+    local bbq = { room = true, z = 0, temps = temps, fires = { [10] = fire(10, 120, 3) } }
+    T.near(e:siteDayMean(0, bbq, 24), (10 * 22 + 2 * Climate.warmed(7.7, 1, 2, 3, true, 25) + 12 * 7.7) / 24, 1e-9)
+    local unread = { room = true, z = 0, fires = { [0] = fire(0, 120) } }
+    T.near(e:siteDayMean(0, unread, 24), (2 * w8 + 22 * 7.7) / 24, 1e-9, "left before the first reading was filed")
+end)
+
+T.case("fires: the credit runs across midnight; the hour in progress keeps its stand-in", function()
+    local e = env(coldLog(-3, 7.7))
+    local temps = {}
+    for s = 0, 21 do temps[s] = 22 end
+    local w8, w4 = Climate.warmed(7.7, 1, 2, 8, true, 35), Climate.warmed(7.7, 1, 2, 4, true, 35)
+    local site = { room = true, z = 0, temps = temps, fires = { [22] = fire(22.5, 240) } }
+    T.near(e:siteDayMean(0, site, 24), (22 * 22 + 2 * w8) / 24, 1e-9, "hours 22-23 warm")
+    T.near(e:siteDayMean(1, site, 48), (2 * w8 + 0.5 * w4 + 21.5 * 7.7) / 24, 1e-9, "until 26.5 next day")
+    local stand = { room = true, z = 0, temps = { [23] = 28 }, fires = { [24] = fire(24.1, 480) } }
+    T.near(e:siteDayMean(1, stand, 24.5), 28, 1e-9, "the hour just ended stands in for the hour in progress")
+    local notes = { [3] = fire(3, 60), [5] = false, [8] = fire(8, 60) }
+    Climate.pruneNotes(notes, 6)
+    T.ok(notes[3] == nil and notes[5] == false and notes[8] ~= nil, "the latest note before the cut stays")
+end)
+
+T.case("fires: the credit can carry a January batch at full rate through an absence", function()
+    local e = env(coldLog(-3, 7.7))
+    local temps = {}
+    for s = 0, 11 do temps[s] = 22 end
+    local warm = batch({ room = true, z = 0 }, temps)
+    warm.fires = { [12] = fire(12.5, 450) }
+    T.eq(Process.site(warm).fires[12].f, 450)
+    local w = Process.advance(warm, 24, e)
+    T.eq(w.state, "Processing")
+    T.near(w.stageDone, 23, 1e-9, "12 h read and 8 h credited at 22 C: full rate after the preparation")
+    local cold = Process.advance(batch({ room = true, z = 0 }, temps), 24, e)
+    T.near(cold.stageDone, 23 * 0.4, 1e-9, "without the note the day mean is 14.9 C")
+end)

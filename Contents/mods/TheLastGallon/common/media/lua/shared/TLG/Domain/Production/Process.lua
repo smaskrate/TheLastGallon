@@ -234,11 +234,13 @@ end
 
 -- Where the machine stands, for the climate model (D-021): nil until an
 -- adapter records proc.site = { room, z }; proc.temps = { [hour] = tempC }
--- are readings taken there. Without a site the definition's thermal
--- exposure applies.
+-- are readings taken there and proc.fires = { [hour] = note or false } the
+-- notes of the fire warming it (D-022, Climate.siteDayMean). Without a site
+-- the definition's thermal exposure applies.
 function Process.site(proc)
     if proc.site == nil then return nil end
-    return { room = proc.site.room == true, z = proc.site.z or 0, temps = proc.temps, from = proc.startedAt }
+    return { room = proc.site.room == true, z = proc.site.z or 0, temps = proc.temps, fires = proc.fires,
+        from = proc.startedAt }
 end
 
 -- ProductionService.advance(process, resources, interval).
