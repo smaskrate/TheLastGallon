@@ -936,7 +936,8 @@ moved out of the torso, run 95 **8/0**, the shipped carry, run 96
 **6/0**, the zip with it installed clean, run 97 **94/0** and **14/0**,
 and the carry from the package's item tree, run 98 **6/0**, then the
 vessel and a generator through a real loot and the vessel unequipped for
-a bat, run 99 **11/0**. Most failures were traced to the harness
+a bat, run 99 **11/0**, and the same on the guarded hook, run 100
+**11/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

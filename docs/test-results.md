@@ -2240,3 +2240,16 @@ Not checked: animations the game starts without a Lua action (doors,
 shoving, emotes), the mod's conversion work and the other Lua actions
 with an animation (they reach the same call), entering a vehicle,
 running, sneaking, multiplayer.
+
+## 2026-11-02 — RT-SP client harness, launch 100 (launch 99 on the guarded hook)
+
+After launch 99 the hook's look at the hands moved inside its error
+guard (`c3a1d25`; tests 194/194, compile 102/0). Command: the same,
+`tools/run-sp-harness.ps1 -Mode vessel-actions`.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run100_vessel_actions.txt`.
+
+Result: **11/0**, every check and observation as in launch 99: the
+vessel lay at the feet as "Loot" began, the generator stayed in both
+hands, and the bat put a second vessel down through the game's
+unequip. The console had no exception and no error from the hook. The
+camera stayed at zoom 0.25 this time.
