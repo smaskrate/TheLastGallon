@@ -1622,3 +1622,23 @@ accounted for exactly what moved: the pump's units went down one, and the
 can held 1 L with the station's water and sediment. The console had no
 TLG error and no Lua exception. Not run on this chassis: the flex
 conversion (`flex_pickup_truck`), save and reload, driving.
+
+## 2026-11-02 — RT-SP client harness, launch 63 (the zip with the truck documented, installed clean)
+
+Command: `tools/rehearse-install.ps1`, which rebuilt the package first
+(191/191 tests, compile check 101/0, translations OK): the zip of commit
+`1e7f7f6`, 82 files, SHA-256 `aa662e45…`, 206,800 bytes. It differs from
+run 60's zip (`3970ad6b…`) in two files: `Containers.lua` (the written
+record normalized) and the support matrix (the truck). The zip matched
+its manifest (82 files), was installed into a fresh isolated cache and
+ran the full harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run63_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
+47, 52, 56 and 60. The pump filled a can to the brim and the vehicle was
+siphoned into a can, each 10.00000 L with the mod's total equal to the
+fluids. The workbench was dark (light 0.15); with the torch in hand all
+four machines were crafted. After the save and continue every record came
+back. The console showed "machine move hooks installed" on both loads and
+no TLG error or warning; its one Lua error is the harness's deliberate
+deep recursion (`LuaProbe.lua`), and no stack frame names the mod.

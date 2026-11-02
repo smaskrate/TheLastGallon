@@ -1,0 +1,434 @@
+# TLG single-player harness phase A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP wait_world begin
+worldName=73991896196026734074 start=10660,10645 hours=2.0096 tlgNow=2.0096
+STEP lua_probe_client begin
+## Lua runtime (in-game environment)
+OBS  lua._VERSION :: Kahlua kahlua.major.kahlua.minor.kahlua.fix for Lua lua.version (J2SE)
+OBS  lua.type(next) :: nil
+OBS  lua.type(math.random) :: nil
+OBS  lua.type(table.unpack) :: nil
+OBS  lua.type(unpack) :: function
+OBS  lua.type(require) :: function
+OBS  lua.type(loadstring) :: function
+OBS  lua.type(getfenv) :: function
+OBS  lua.type(os) :: table
+OBS  lua.type(os.time) :: function
+OBS  lua.type(io) :: nil
+OBS  lua.-7 % 3 :: -1
+OBS  lua.error(table) type :: string
+OBS  lua.string.format('%s', nil) :: rejected
+OBS  lua.require returns module table :: true (table)
+OBS  lua.tostring(1e20) :: 1.0E20
+OBS  lua.deep recursion 3000 :: ERROR Stack overflow java.lang.RuntimeException
+OBS  classmetatables :: table
+STEP g01_client_translations begin
+PASS G01c.translation_IG_UI :: The Last Gallon
+PASS G01c.translation_Fluid :: Ethanol
+PASS G01c.translation_ContextMenu :: Fuel (The Last Gallon)
+PASS G01c.item_display_name :: Fuel Sampling Kit
+OBS  G13.icon_texture_GlassJar :: true
+OBS  G01c.adapters :: transferWrapped=true pumpWrapped=true
+STEP find_pumps begin
+OBS  G06.pump location_shop_gas2go_01_13 at 10636,10622 units=13164 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10636,10623 units=9128 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10636,10629 units=6170 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10636,10630 units=10117 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10654,10622 units=6052 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10654,10623 units=8706 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10654,10629 units=9393 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10654,10630 units=4189 isPump=true
+OBS  G06.pump_count 8 other_fuel_sprites=location_shop_gas2go_01_2@10636,10619;location_shop_gas2go_01_1@10636,10620;location_shop_gas2go_01_2@10636,10633;location_shop_gas2go_01_1@10636,10634;location_shop_gas2go_01_0@10637,10619;location_shop_gas2go_01_3@10637,10620;location_shop_gas2go_01_0@10637,10633;location_shop_gas2go_01_3@10637,10634;location_shop_gas2go_01_2@10654,10619;location_shop_gas2go_01_1@10654,10620;location_shop_gas2go_01_2@10654,10633;location_shop_gas2go_01_1@10654,10634;location_shop_gas2go_01_0@10655,10619;location_shop_gas2go_01_3@10655,10620;location_shop_gas2go_01_0@10655,10633;location_shop_gas2go_01_3@10655,10634;location_shop_gas2go_01_1@10666,10620;location_shop_gas2go_01_40@10666,10633;location_shop_gas2go_01_1@10667,10620;location_shop_gas2go_01_40@10667,10633;location_shop_gas2go_01_1@10668,10620;location_shop_gas2go_01_40@10668,10633;location_shop_gas2go_01_2@10669,10620;location_shop_gas2go_01_8@10669,10621;location_shop_gas2go_01_8@10669,10622;location_shop_gas2go_01_8@10669,10623;location_shop_gas2go_01_0@10669,10624;location_shop_gas2go_01_0@10669,10625;location_shop_gas2go_01_10@10669,10626;location_shop_gas2go_01_60@10669,10626;location_shop_gas2go_01_0@10669,10627;location_shop_gas2go_01_0@10669,10628;location_shop_gas2go_01_19@10669,10628;location_shop_gas2go_01_8@10669,10629;location_shop_gas2go_01_19@10669,10629;location_shop_gas2go_01_8@10669,10630;location_shop_gas2go_01_19@10669,10630;location_shop_gas2go_01_8@10669,10631;location_shop_gas2go_01_19@10669,10631;location_shop_gas2go_01_0@10669,10632;location_shop_gas2go_01_19@10669,10632;location_shop_gas2go_01_1@10669,10633;location_shop_gas2go_01_1@10670,10620;location_shop_gas2go_01_1@10670,10633;location_shop_gas2go_01_1@10671,10620;location_shop_gas2go_01_1@10671,10633;location_shop_gas2go_01_0@10672,10614;location_shop_gas2go_01_1@10672,10620;location_shop_gas2go_01_20@10672,10630;location_shop_gas2go_01_19@10672,10631;location_shop_gas2go_01_1@10672,10633;location_shop_gas2go_01_2@10673,10618;location_shop_gas2go_01_10@10673,10619;location_shop_gas2go_01_3@10673,10620;location_shop_gas2go_01_21@10673,10630;location_shop_gas2go_01_1@10673,10633;location_shop_gas2go_01_11@10674,10618;location_shop_gas2go_01_21@10674,10630;location_shop_gas2go_01_1@10674,10633;location_shop_gas2go_01_1@10675,10618;location_shop_gas2go_01_21@10675,10630;location_shop_gas2go_01_1@10675,10633;location_shop_gas2go_01_1@10676,10618;location_shop_gas2go_01_21@10676,10630;location_shop_gas2go_01_1@10676,10633;location_shop_gas2go_01_0@10677,10615;location_shop_gas2go_01_0@10677,10616;location_shop_gas2go_01_0@10677,10617;location_shop_gas2go_01_0@10677,10618;location_shop_gas2go_01_0@10677,10619;location_shop_gas2go_01_0@10677,10620;location_shop_gas2go_01_0@10677,10621;location_shop_gas2go_01_0@10677,10622;location_shop_gas2go_01_0@10677,10623;location_shop_gas2go_01_0@10677,10624;location_shop_gas2go_01_0@10677,10625;location_shop_gas2go_01_0@10677,10626;location_shop_gas2go_01_0@10677,10627;location_shop_gas2go_01_0@10677,10628;location_shop_gas2go_01_0@10677,10629;location_shop_gas2go_01_0@10677,10630;location_shop_gas2go_01_0@10677,10631;location_shop_gas2go_01_0@10677,10632;location_shop_gas2go_01_3@10677,10633
+OBS  G06.sandbox :: infinite=false contamination=true
+STEP vehicle_scripts begin
+OBS  G09.vehicle_script_count 241 chosen=Base.CarNormal
+STEP vehicles_spawn begin
+OBS  G03.vehicle1 id=245 script=Base.CarNormal at 10639.0,10625.0 tankCap=49 amount=0 side=no-sidecar
+OBS  G03.vehicle2 id=244 script=Base.CarNormal at 10644.0,10625.0 tankCap=39 amount=0 side=no-sidecar
+STEP generator_spawn begin
+PASS G05.IsoGenerator_new_wrappable :: calls=1
+OBS  G04.generator :: type=Base.Generator maxFuel=10 fuel=0 cond=100 index=1 md.generatorFullType=Base.Generator
+STEP chain_1_pump_to_can begin
+OBS  CHAIN.1_pump_to_can.before src initialized id=nil rev=0 total=13164.0000 q[gasoline=13142.6514,sediment=3.0944,water=18.2542] deg[gasoline=0.0716] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can litres src 13164.0000->13154.0000 dst 0.0000->10.0000
+OBS  CHAIN.1_pump_to_can.after src ok id=R761968486-1 rev=1 total=13154.0000 q[gasoline=13132.6676,sediment=3.0921,water=18.2403] deg[gasoline=0.0716] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can.after dst ok id=S761968486-2 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0716] mic=0 stab=0
+PASS CHAIN.1_pump_to_can.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.1_pump_to_can.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.1_pump_to_can.fuel_state_carried :: worst=1.63e-08 at deg:gasoline
+OBS  G06.pump_to_can units 13164->13154 (-10) canL +10.0000 litres_per_unit=1.0000 frac=1.8189894035458565E-12 fluids=total=10.0000 [Petrol=9.9838,TLG_FuelSediment=0.0024,TLG_FuelWater=0.0139]
+OBS  G03.vanilla_menus_accept_station_can :: true
+STEP chain_2_can_to_vehicle begin
+OBS  CHAIN.2_can_to_vehicle.before src ok id=S761968486-2 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0716] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  CHAIN.2_can_to_vehicle.after src reconciled id=S761968486-2 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle.after dst ok id=V761968486-3 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0716] mic=0 stab=0
+PASS CHAIN.2_can_to_vehicle.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.2_can_to_vehicle.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.2_can_to_vehicle.fuel_state_carried :: worst=1.90e-08 at deg:gasoline
+STEP chain_3_vehicle_to_can begin
+OBS  CHAIN.3_vehicle_to_can.before src ok id=V761968486-3 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0716] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  CHAIN.3_vehicle_to_can.after src ok id=V761968486-3 rev=2 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can.after dst ok id=S761968486-5 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0716] mic=0 stab=0
+PASS CHAIN.3_vehicle_to_can.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.3_vehicle_to_can.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.3_vehicle_to_can.fuel_state_carried :: worst=1.90e-08 at deg:gasoline
+STEP chain_4_can_to_generator begin
+OBS  CHAIN.4_can_to_generator.before src ok id=S761968486-5 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0716] mic=0 stab=0
+OBS  CHAIN.4_can_to_generator.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.4_can_to_generator litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  CHAIN.4_can_to_generator.after src reconciled id=S761968486-5 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.4_can_to_generator.after dst ok id=G761968486-6 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0717] mic=0 stab=0
+PASS CHAIN.4_can_to_generator.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.4_can_to_generator.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.4_can_to_generator.fuel_state_carried :: worst=2.12e-08 at deg:gasoline
+STEP chain_summary begin
+PASS CHAIN.end_to_end.litres :: drawn=10.00000 generator=10.00000 left_on_the_way=0.00000
+PASS CHAIN.end_to_end.fuel_state :: worst=3.89e-05 at deg:gasoline | station aged id=nil rev=0 total=13164.0000 q[gasoline=13142.6514,sediment=3.0944,water=18.2542] deg[gasoline=0.0716] mic=0 stab=0 | generator now id=G761968486-6 rev=1 total=10.0000 q[gasoline=9.9838,sediment=0.0024,water=0.0139] deg[gasoline=0.0717] mic=0 stab=0
+STEP g06_pump_to_vehicle begin
+OBS  G06.pump_to_vehicle in area after 1 placement(s) at 10637.62,10625.94
+OBS  G06.pump_to_vehicle.before src ok id=R761968486-1 rev=1 total=13154.0000 q[gasoline=13132.6676,sediment=3.0921,water=18.2404] deg[gasoline=0.0716] mic=0 stab=0
+OBS  G06.pump_to_vehicle.before dst - id=V761968486-3 rev=2 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  G06.pump_to_vehicle litres src 13154.0000->13105.0000 dst 0.0000->49.0000
+OBS  G06.pump_to_vehicle.after src ok id=R761968486-1 rev=2 total=13105.0000 q[gasoline=13083.7470,sediment=3.0805,water=18.1725] deg[gasoline=0.0717] mic=0 stab=0
+OBS  G06.pump_to_vehicle.after dst ok id=V761968486-3 rev=3 total=49.0000 q[gasoline=48.9205,sediment=0.0115,water=0.0679] deg[gasoline=0.0717] mic=0 stab=0
+PASS G06.pump_to_vehicle.litres_conserved :: out=49.00000 in=49.00000
+PASS G06.pump_to_vehicle.tlg_total_matches_native :: tlg=49.00000 native=49.00000 status=ok
+PASS G06.pump_to_vehicle.fuel_state_carried :: worst=3.52e-08 at deg:gasoline
+OBS  G06.pump_to_vehicle units 13154->13105 (-49) tankL +49.0000 litres_per_unit=1.0000
+STEP g03_blend_can_to_vehicle begin
+OBS  G03.blend_can_to_vehicle.before src initialized id=nil rev=0 total=8.0000 q[ethanol=2.0000,gasoline=5.9999,water=0.0002] deg[ethanol=0.0370,gasoline=0.2580] mic=0 stab=0
+OBS  G03.blend_can_to_vehicle.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  G03.blend_can_to_vehicle litres src 8.0000->0.0000 dst 0.0000->8.0000
+OBS  G03.blend_can_to_vehicle.after src initialized id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  G03.blend_can_to_vehicle.after dst ok id=V761968486-7 rev=1 total=8.0000 q[ethanol=2.0000,gasoline=5.9999,water=0.0002] deg[ethanol=0.0370,gasoline=0.2580] mic=0 stab=0
+PASS G03.blend_can_to_vehicle.litres_conserved :: out=8.00000 in=8.00000
+PASS G03.blend_can_to_vehicle.tlg_total_matches_native :: tlg=8.00000 native=8.00000 status=ok
+PASS G03.blend_can_to_vehicle.fuel_state_carried :: worst=2.02e-08 at deg:gasoline
+STEP g03_vehicle_idle begin
+OBS  G03.idle vehicle id=245 tank=49.0000
+OBS  G03.evaluation_before_start :: profile=engine_si_stock grade=good compatible=true startFactor=1 reasons=
+OBS  G03.idle 0.500 game h: tank 49.0000 -> 48.9850 (burn 0.0150 L) running=true
+OBS  G03.idle after reconciled id=V761968486-3 rev=3 total=48.9850 q[gasoline=48.9055,sediment=0.0115,water=0.0679] deg[gasoline=0.0721] mic=0 stab=0
+PASS G03.native_burn_reconciled_proportionally :: worst=2.22e-16 at fraction:gasoline status=reconciled tlg=48.9850 native=48.9850
+STEP g09_two_vehicles begin
+PASS G09.part_moddata_per_instance :: 123/nil
+PASS G09.engine_feature_per_instance :: a=3200 b=4000 (a before 4000)
+STEP g04_generator_burn begin
+OBS  G04.burn 0.500 game h: fuel 10.0000 -> 9.9850 activated=true powerUsing=0.015000000596046448 sandboxConsumption=0.1
+OBS  G04.burn after reconciled id=G761968486-6 rev=1 total=9.9850 q[gasoline=9.9688,sediment=0.0023,water=0.0138] deg[gasoline=0.0724] mic=0 stab=0
+PASS G04.native_burn_reconciled_proportionally :: worst=1.48e-04 at deg:gasoline status=reconciled
+STEP g05_pickup_1 begin
+OBS  G05.pickup_1 item=Base.Generator itemFuel=9.984999656677246 side=id=G761968486-6 rev=1 q[gasoline=9.9688,sediment=0.0023,water=0.0138] deg[gasoline=0.0724] t=3.45
+PASS G05.pickup_1.sidecar_on_item :: item=G761968486-6 object=G761968486-6 kind=generator
+PASS G05.pickup_1.fuel_state_kept :: worst=6.90e-06 at deg:gasoline sidecarL=9.9850 objectFuel=9.9850
+STEP g05_drop_action begin
+OBS  G05.drop_action object=true at 10632,10628 fuel=9.984999656677246 side=id=G761968486-6 rev=1 q[gasoline=9.9688,sediment=0.0023,water=0.0138] deg[gasoline=0.0724] t=3.45
+PASS G05.drop_action.sidecar_on_object :: object=G761968486-6 item=G761968486-6
+PASS G05.drop_action.fuel_kept :: object=9.984999656677246 item=9.984999656677246
+STEP g05_pickup_2 begin
+OBS  G05.pickup_2 item=Base.Generator itemFuel=9.984999656677246 side=id=G761968486-6 rev=1 q[gasoline=9.9688,sediment=0.0023,water=0.0138] deg[gasoline=0.0724] t=3.46
+PASS G05.pickup_2.sidecar_on_item :: item=G761968486-6 object=G761968486-6 kind=generator
+PASS G05.pickup_2.fuel_state_kept :: worst=5.45e-06 at deg:gasoline sidecarL=9.9850 objectFuel=9.9850
+STEP g05_take_second_while_carrying begin
+OBS  G05.heavy_item=true second=id=G761968486-10 rev=0 q[gasoline=3.9997,water=0.0003] deg[gasoline=0.5020] t=3.46 player=10633,10628 canReach=true index=1 valid=true
+OBS  G05.drop_heavy object=true at 10633,10628 fuel=9.984999656677246 side=id=G761968486-6 rev=1 q[gasoline=9.9688,sediment=0.0023,water=0.0138] deg[gasoline=0.0724] t=3.46
+PASS G05.drop_heavy.sidecar_on_object :: object=G761968486-6 item=G761968486-6
+PASS G05.drop_heavy.fuel_kept :: object=9.984999656677246 item=9.984999656677246
+PASS G05.take_second.sidecar_on_new_item :: item=G761968486-10 expected=G761968486-10 hand=Base.Generator
+STEP g05_drop_floor begin
+OBS  G05.drop_floor object=true at 10633,10628 fuel=4 side=id=G761968486-10 rev=0 q[gasoline=3.9997,water=0.0003] deg[gasoline=0.5020] t=3.47
+PASS G05.drop_floor.sidecar_on_object :: object=G761968486-10 item=G761968486-10
+PASS G05.drop_floor.fuel_kept :: object=4 item=4
+STEP tlg_pour_generator begin
+OBS  TLG.pour_into_generator.before src initialized id=nil rev=0 total=3.0000 q[gasoline=3.0000,water=0.0000] deg[gasoline=0.1535] mic=0 stab=0
+OBS  TLG.pour_into_generator.before dst - id=G761968486-10 rev=0 total=4.0000 q[gasoline=3.9997,water=0.0003] deg[gasoline=0.5020] mic=0 stab=0
+OBS  TLG.pour_into_generator reply ok=true reason=nil
+PASS TLG.pour_into_generator.reply_ok :: nil
+OBS  TLG.pour_into_generator litres src 3.0000->0.0000 dst 4.0000->7.0000
+OBS  TLG.pour_into_generator.after src ok id=S761968486-11 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  TLG.pour_into_generator.after dst ok id=G761968486-10 rev=1 total=7.0000 q[gasoline=6.9997,water=0.0003] deg[gasoline=0.3526] mic=0 stab=0
+PASS TLG.pour_into_generator.litres_conserved :: out=3.00000 in=3.00000
+PASS TLG.pour_into_generator.tlg_total_matches_native :: tlg=7.00000 native=7.00000 status=ok
+PASS TLG.pour_into_generator.revision_advanced :: 0 -> 1
+STEP tlg_pour_incompatible begin
+OBS  TLG.pour_e100_into_generator reply ok=false reason=incompatible
+PASS TLG.pour_e100.refused_without_confirmation_or_moved_exactly :: refused: dCan=0.00000 dGen=0.00000
+STEP G04.gate_petrol begin
+OBS  G04.gate_petrol fuel=7.0000 grade=good compatible=true startFactor=1 reasons=
+OBS  G04.gate_petrol activated=true refusal=nil
+PASS G04.gate_petrol.activated :: nil
+STEP tlg_pour_e100_confirmed_generator begin
+OBS  TLG.pour_e100_confirmed_generator.before src initialized id=nil rev=0 total=3.0000 q[ethanol=2.9999,water=0.0001] deg[ethanol=0.0148] mic=0 stab=0
+OBS  TLG.pour_e100_confirmed_generator.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+PASS TLG.pour_e100_confirmed_generator.reply_ok :: nil
+OBS  TLG.pour_e100_confirmed_generator litres src 3.0000->0.0000 dst 0.0000->3.0000
+OBS  TLG.pour_e100_confirmed_generator.after src ok id=S761968486-13 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  TLG.pour_e100_confirmed_generator.after dst ok id=G761968486-14 rev=1 total=3.0000 q[ethanol=2.9999,water=0.0001] deg[ethanol=0.0148] mic=0 stab=0
+PASS TLG.pour_e100_confirmed_generator.litres_conserved :: out=3.00000 in=3.00000
+PASS TLG.pour_e100_confirmed_generator.tlg_total_matches_native :: tlg=3.00000 native=3.00000 status=ok
+PASS TLG.pour_e100_confirmed_generator.fuel_state_carried :: worst=1.54e-09 at deg:ethanol
+STEP G04.gate_e100 begin
+OBS  G04.gate_e100 fuel=3.0000 grade=unsuitable compatible=false startFactor=0 reasons=too_much_ethanol
+OBS  G04.gate_e100 activated=false refusal=generator start refused: too_much_ethanol
+PASS G04.gate_e100.refused_by_tlg :: generator start refused: too_much_ethanol
+STEP TLG.pour_petrol_into_vehicle begin
+OBS  TLG.pour_petrol_into_vehicle inArea=true
+OBS  TLG.pour_petrol_into_vehicle.before src initialized id=nil rev=0 total=3.0000 q[gasoline=3.0000,water=0.0000] deg[gasoline=0.0062] mic=0 stab=0
+OBS  TLG.pour_petrol_into_vehicle.before dst - id=V761968486-7 rev=1 total=8.0000 q[ethanol=2.0000,gasoline=5.9999,water=0.0002] deg[ethanol=0.0370,gasoline=0.2586] mic=0 stab=0
+OBS  TLG.pour_petrol_into_vehicle reply ok=true reason=nil
+PASS TLG.pour_petrol_into_vehicle.reply_ok :: nil
+OBS  TLG.pour_petrol_into_vehicle litres src 3.0000->0.0000 dst 8.0000->11.0000
+OBS  TLG.pour_petrol_into_vehicle.after src ok id=S761968486-15 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  TLG.pour_petrol_into_vehicle.after dst ok id=V761968486-7 rev=2 total=11.0000 q[ethanol=2.0000,gasoline=8.9999,water=0.0002] deg[ethanol=0.0370,gasoline=0.1745] mic=0 stab=0
+PASS TLG.pour_petrol_into_vehicle.litres_conserved :: out=3.00000 in=3.00000
+PASS TLG.pour_petrol_into_vehicle.tlg_total_matches_native :: tlg=11.00000 native=11.00000 status=ok
+OBS  TLG.pour_petrol_into_vehicle tank now grade=good compatible=true startFactor=0.8727310991446895 reasons=marginal_ethanol
+STEP TLG.pour_e100_into_vehicle_unconfirmed begin
+OBS  TLG.pour_e100_into_vehicle_unconfirmed inArea=true
+OBS  TLG.pour_e100_into_vehicle_unconfirmed.before src initialized id=nil rev=0 total=3.0000 q[ethanol=2.9999,water=0.0001] deg[ethanol=0.0148] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_unconfirmed.before dst - id=V761968486-7 rev=2 total=11.0000 q[ethanol=2.0000,gasoline=8.9999,water=0.0002] deg[ethanol=0.0370,gasoline=0.1745] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_unconfirmed reply ok=false reason=incompatible
+PASS TLG.pour_e100_into_vehicle_unconfirmed.refused_nothing_moved :: reason=incompatible dCan=0.00000 dTank=0.00000
+OBS  TLG.pour_e100_into_vehicle_unconfirmed tank now grade=good compatible=true startFactor=0.8727310991446895 reasons=marginal_ethanol
+STEP TLG.pour_e100_into_vehicle_confirmed begin
+OBS  TLG.pour_e100_into_vehicle_confirmed inArea=true
+OBS  TLG.pour_e100_into_vehicle_confirmed.before src initialized id=nil rev=0 total=3.0000 q[ethanol=2.9999,water=0.0001] deg[ethanol=0.0126] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_confirmed.before dst - id=V761968486-7 rev=2 total=11.0000 q[ethanol=2.0000,gasoline=8.9999,water=0.0002] deg[ethanol=0.0370,gasoline=0.1745] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_confirmed reply ok=true reason=nil
+PASS TLG.pour_e100_into_vehicle_confirmed.reply_ok :: nil
+OBS  TLG.pour_e100_into_vehicle_confirmed litres src 3.0000->0.0000 dst 11.0000->14.0000
+OBS  TLG.pour_e100_into_vehicle_confirmed.after src ok id=S761968486-17 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_confirmed.after dst ok id=V761968486-7 rev=3 total=14.0000 q[ethanol=4.9999,gasoline=8.9999,water=0.0002] deg[ethanol=0.0224,gasoline=0.1745] mic=0 stab=0
+PASS TLG.pour_e100_into_vehicle_confirmed.litres_conserved :: out=3.00000 in=3.00000
+PASS TLG.pour_e100_into_vehicle_confirmed.tlg_total_matches_native :: tlg=14.00000 native=14.00000 status=ok
+OBS  TLG.pour_e100_into_vehicle_confirmed tank now grade=unsuitable compatible=false startFactor=0 reasons=too_much_ethanol
+STEP G03.gate_e36 begin
+OBS  G03.gate_e36 driver=true battery=0.92 engine=100 grade=unsuitable compatible=false startFactor=0 reasons=too_much_ethanol
+OBS  G03.gate_e36 state=Idle running=false attempts=1 refusal=vehicle start refused: too_much_ethanol
+PASS G03.gate_e36.refused_by_tlg :: vehicle start refused: too_much_ethanol
+STEP g03_stall_incompatible begin
+OBS  G03.stall after 0.014 game h state=Stalling
+PASS G03.stall_on_incompatible_fuel :: stopped=true after 0.8 game min
+STEP G03.gate_station_fuel begin
+OBS  G03.gate_station_fuel driver=true battery=1.00 engine=100 grade=good compatible=true startFactor=1 reasons=
+OBS  G03.gate_station_fuel state=Running running=true attempts=1 refusal=nil
+PASS G03.gate_station_fuel.not_refused_by_tlg :: state=Running running=true grade=good
+STEP loop_setup begin
+OBS  LOOP.setup generator=true car=238 mechanics=4 electricity=2 woodwork=2 cooking=0 load=20.4/12.0 full=false
+STEP loop_craft begin
+OBS  LOOP.craft_start load=20.9/12.0 full=false
+PASS LOOP.recipes_listed_for_crafting :: all 7 TLG recipes listed
+OBS  LOOP.craft_surface industry_01_23 at 10619,10630, standing at 10619,10629
+OBS  LOOP.craft too dark to craft (light 0.15 at 10.59 o'clock): a torch switched on in hand, dark now=false
+PASS LOOP.craft_TLG.FermenterVessel :: listed=true offered=true made=1 on floor=0 inputs left wrong=[] load=30.5/12.0 full=false
+PASS LOOP.craft_TLG.PotStill :: listed=true offered=true made=1 on floor=0 inputs left wrong=[] load=26.0/12.0 full=false
+PASS LOOP.craft_TLG.RefluxStill :: listed=true offered=true made=1 on floor=0 inputs left wrong=[] load=33.9/12.0 full=false
+PASS LOOP.craft_TLG.DryingColumn :: listed=true offered=true made=1 on floor=0 inputs left wrong=[] load=24.0/12.0 full=false
+OBS  LOOP.craft_leftovers removed ; load=42.9/12.0 full=false
+STEP loop_place begin
+PASS LOOP.machines_placed_with_the_drop_action :: TLG.FermenterVessel at 10641,10632 TLG.RefluxStill at 10642,10632 TLG.DryingColumn at 10643,10632
+STEP loop_production begin
+OBS  LOOP.production_materials load=79.3/12.0 full=true
+OBS  LOOP.ferment menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS LOOP.ferment_loaded_from_menu :: sugar=6 water=30 carried 32.00->2.00 sugarItems 6->0 yeast 1->0
+OBS  LOOP.fermenting machine.status -> ok=true reason=nil state=Processing pause=nil stage=ferment blocked=nil missing=nil outputs={}
+OBS  LOOP.fermenting machine.status -> ok=true reason=nil state=Processing pause=nil stage=ferment blocked=nil missing=nil outputs={}
+OBS  LOOP.fermenting machine.status -> ok=true reason=nil state=Processing pause=nil stage=ferment blocked=nil missing=nil outputs={}
+OBS  LOOP.fermenting machine.status -> ok=true reason=nil state=Processing pause=nil stage=ferment blocked=nil missing=nil outputs={}
+OBS  LOOP.fermenting machine.status -> ok=true reason=nil state=OutputReady pause=nil stage=nil blocked=nil missing=nil outputs={ethanol=3.3000000000000003,water=30}
+PASS LOOP.ferment_completed :: state=OutputReady after 120 h of mod time outputs={ethanol=3.3000000000000003,water=30}
+OBS  LOOP.firebox menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  LOOP.load_wash menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS LOOP.wash_loaded_yeast_starter_returned :: firebox ok=true kg=18 logs 2->0 wash ok=true L=33.3 starter=1
+OBS  LOOP.distilling machine.status -> ok=true reason=nil state=Processing pause=nil stage=distill blocked=nil missing=nil outputs={}
+OBS  LOOP.distilling machine.status -> ok=true reason=nil state=OutputReady pause=nil stage=nil blocked=nil missing=nil outputs={ethanol=3.0360000000000005,water=0.1937872340425534}
+PASS LOOP.distill_completed :: state=OutputReady after 4 h ethanol=3.0360 water=0.1938
+OBS  LOOP.collect_still menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS LOOP.hydrous_ethanol_bottled :: into Base.PetrolCan (no ethanol before=true) can id=S761968486-2 rev=2 total=3.2298 q[ethanol=3.0360,water=0.1938] deg[ethanol=0.0000] mic=0 stab=0 fluids=total=3.2298 [TLG_FuelWater=0.1938,TLG_Ethanol=3.0360]
+OBS  LOOP.load_dry menu "Dry ethanol with quicklime" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS LOOP.dry_loaded :: ethanol=3.0360000133514404 water=0.19378723204135895 lime=1 lime items 2->1 can left=0.0000
+OBS  LOOP.drying machine.status -> ok=true reason=nil state=Processing pause=nil stage=dry blocked=nil missing=nil outputs={}
+OBS  LOOP.drying machine.status -> ok=true reason=nil state=Processing pause=nil stage=dry blocked=nil missing=nil outputs={}
+OBS  LOOP.drying machine.status -> ok=true reason=nil state=OutputReady pause=nil stage=nil blocked=nil missing=nil outputs={ethanol=3.0360000133514404,water=0.01518000006675721}
+OBS  LOOP.collect_dry menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS LOOP.dried_ethanol_keeps_degradation :: after 12 h into Base.PetrolCan (no ethanol before=true): can id=S761968486-2 rev=4 total=3.0512 q[ethanol=3.0360,water=0.0152] deg[ethanol=0.8000] mic=0 stab=0
+OBS  LOOP.split load=42.5/12.0 full=false canTransfer=true
+PASS LOOP.split_keeps_state :: worst=0.00e+00 at mic a=1.5256 b=1.5256
+OBS  LOOP.status menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS LOOP.menu_dialogs_translated :: dialogs=7 untranslated=[] last=Ready <LINE> Temperature here now: 71.5 °F, outdoors
+STEP loop_convert_generator begin
+OBS  LOOP.conversion_materials load=47.5/12.0 full=false
+OBS  LOOP.gen_begin menu "Start: Flex-fuel generator conversion" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+OBS  LOOP.gen_deliver menu "Hand over parts" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed={Base.ElectricWire=1,Base.RubberHose=1,Base.Screws=4}
+OBS  LOOP.gen_late_report conversion.work -> ok=true reason=nil state=InProgress pause=nil stage=prepare blocked=nil missing=nil outputs=nil
+PASS LOOP.late_report_credits_at_most_the_timeout :: credited=1 expired=true released=true
+OBS  LOOP.gen_work_without_wrench menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  WORK.reply ok=false reason=missing_tool state=nil stage=nil released=nil expired=nil credited=nil done=nil/nil reports=0
+OBS  WORK.perform ended=true reports=0
+PASS LOOP.work_refused_without_the_tool :: dialog=A tool is missing: <LINE> - Wrench idle=true hours 1.0000->1.0000
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=nil expired=nil credited=nil done=1/7.5 reports=0
+OBS  LOOP.gen_work menu "Work on it" -> ok=true reason=nil state=InProgress stage=prepare outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=1.2503719329834553/7.5 reports=1
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503709793091389 done=1.5007429122925942/7.5 reports=2
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=1.7511148452760494/7.5 reports=3
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=2.0014867782595047/7.5 reports=4
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=2.25185871124296/7.5 reports=5
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=2.5022306442264153/7.5 reports=6
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=2.7526025772098706/7.5 reports=7
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.002974510193326/7.5 reports=8
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.253346443176781/7.5 reports=9
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.5037183761602364/7.5 reports=10
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.7540903091436917/7.5 reports=11
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=4.004462242127147/7.5 reports=12
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=4.254834175110602/7.5 reports=13
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=4.5052061080940575/7.5 reports=14
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=4.755578041077513/7.5 reports=15
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=5.005949974060968/7.5 reports=16
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=5.256321907044423/7.5 reports=17
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=5.506693840027879/7.5 reports=18
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=5.757065773011334/7.5 reports=19
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=6.007437705994789/7.5 reports=20
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=6.2578096389782445/7.5 reports=21
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=6.5081815719617/7.5 reports=22
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=6.758553504945155/7.5 reports=23
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.2503719329834553 done=7.00892543792861/7.5 reports=24
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.2503719329834553 done=7.259297370912066/7.5 reports=25
+OBS  WORK.reply ok=true reason=nil state=Commissioned stage=nil released=true expired=false credited=0.24070262908793438 done=nil/nil reports=26
+OBS  WORK.perform ended=true reports=26
+PASS LOOP.flex_generator_commissioned :: begin=true deliver=true consumed={Base.ElectricWire=1,Base.RubberHose=1,Base.Screws=4} reports=25 state=Commissioned credit=7.5000 profile=generator_si_flex dialog=Converted and commissioned
+STEP loop_convert_car begin
+OBS  LOOP.car_begin menu "Start: Flex-fuel conversion (standard car)" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+OBS  LOOP.car_deliver menu "Hand over parts" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed={Base.ElectricWire=2,Base.EngineParts=2,Base.RubberHose=2,Base.Screws=6}
+OBS  LOOP.car_work_1 menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=nil expired=nil credited=nil done=0/13 reports=0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.2503719329834553 done=0.2503719329834553/13 reports=1
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.2503719329834553 done=0.5007438659669106/13 reports=2
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.2503719329834553 done=0.7511157989503658/13 reports=3
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=1.0014877319338211/13 reports=4
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=1.2518596649172764/13 reports=5
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=1.5022315979007317/13 reports=6
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=1.752603530884187/13 reports=7
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=2.0029754638676422/13 reports=8
+OBS  WORK.stop valid=false joined=true ended=nil reports=8 at 10639.00,10625.00 load=43.8/12.0 full=false
+PASS LOOP.work_walks_to_the_engine :: in engine area when work began=true moved 3.51 tiles
+PASS LOOP.leaving_stops_the_work :: stopped=true ended=true idle=true hours at leave=2.0030 after 3 h away=2.0030
+OBS  LOOP.car_work_2 menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=nil expired=nil credited=nil done=2.0029754638676422/13 reports=0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=2.2533473968510975/13 reports=1
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=2.503719329834553/13 reports=2
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.2503719329834553 done=2.754091262818008/13 reports=3
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.0044631958014634/13 reports=4
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.2548351287849187/13 reports=5
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.505207061768374/13 reports=6
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=3.755578994751829/13 reports=7
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=4.0059509277352845/13 reports=8
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=4.25632286071874/13 reports=9
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=4.506694793702195/13 reports=10
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=4.75706672668565/13 reports=11
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=5.007438659669106/13 reports=12
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=5.257810592652561/13 reports=13
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=5.508182525636016/13 reports=14
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=5.7585544586194715/13 reports=15
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=6.008926391602927/13 reports=16
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=true expired=false credited=0 done=6.008926391602927/13 reports=17
+OBS  WORK.perform ended=true reports=17
+PASS LOOP.work_ends_on_a_block :: dialog=Conversion in progress <LINE> Stage: install parts <LINE> A tool is missing: <LINE> - Screwdriver hours at block=6.0089 when it ended=6.0089 an hour later=6.0089
+OBS  LOOP.car_work_3 menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=nil expired=nil credited=nil done=6.008926391602927/13 reports=0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=6.259298324586382/13 reports=1
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=6.509670257569837/13 reports=2
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=6.760042190553293/13 reports=3
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=7.010414123536748/13 reports=4
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=7.260786056520203/13 reports=5
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=7.511157989503658/13 reports=6
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=7.761529922487114/13 reports=7
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=8.011901855470569/13 reports=8
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=8.262273788454024/13 reports=9
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=8.51264572143748/13 reports=10
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.2503719329834553 done=8.763017654420935/13 reports=11
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=9.01338958740439/13 reports=12
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=9.263761520387845/13 reports=13
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=9.5141334533713/13 reports=14
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=9.764505386354756/13 reports=15
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=10.014877319338211/13 reports=16
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=10.265249252321667/13 reports=17
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=10.515621185305122/13 reports=18
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.2503719329834553 done=10.765993118288577/13 reports=19
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=11.016365051272032/13 reports=20
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=11.266736984255488/13 reports=21
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=11.517108917238943/13 reports=22
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=11.767480850222398/13 reports=23
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=12.017852783205853/13 reports=24
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503719329834553 done=12.268224716189309/13 reports=25
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.2503719329834553 done=12.518596649172764/13 reports=26
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.2503719329834553 done=12.76896858215622/13 reports=27
+OBS  WORK.reply ok=true reason=nil state=Commissioned stage=nil released=true expired=false credited=0.23103141784378067 done=nil/nil reports=28
+OBS  WORK.perform ended=true reports=28
+PASS LOOP.flex_car_commissioned :: begin=true deliver=true consumed={Base.ElectricWire=2,Base.EngineParts=2,Base.RubberHose=2,Base.Screws=6} state=Commissioned credit=13.0000 hours at rejoin=2.0029754638676422 profile=engine_si_flex dialog=Converted and commissioned
+STEP LOOP.flex_generator_pour begin
+OBS  LOOP.flex_generator_pour.before src ok id=S761968486-2 rev=5 total=1.5256 q[ethanol=1.5180,water=0.0076] deg[ethanol=0.8021] mic=0 stab=0
+OBS  LOOP.flex_generator_pour.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+PASS LOOP.flex_generator_pour.accepted_without_confirmation :: nil
+OBS  LOOP.flex_generator_pour litres src 1.5256->0.0000 dst 0.0000->1.5256
+OBS  LOOP.flex_generator_pour.after src ok id=S761968486-2 rev=6 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  LOOP.flex_generator_pour.after dst ok id=G761968486-28 rev=1 total=1.5256 q[ethanol=1.5180,water=0.0076] deg[ethanol=0.8021] mic=0 stab=0
+PASS LOOP.flex_generator_pour.litres_conserved :: out=1.52559 in=1.52559
+PASS LOOP.flex_generator_pour.tlg_total_matches_native :: tlg=1.52559 native=1.52559 status=ok
+PASS LOOP.flex_generator_pour.fuel_state_carried :: worst=3.04e-09 at deg:ethanol
+STEP LOOP.flex_generator_start begin
+OBS  LOOP.flex_generator_start fuel=1.5256 grade=good compatible=true startFactor=1 reasons=
+OBS  LOOP.flex_generator_start activated=true refusal=nil
+PASS LOOP.flex_generator_start.activated :: nil
+STEP LOOP.flex_car_pour begin
+OBS  LOOP.flex_car_pour inArea=true
+OBS  LOOP.flex_car_pour.before src ok id=S761968486-21 rev=1 total=1.5256 q[ethanol=1.5180,water=0.0076] deg[ethanol=0.8018] mic=0 stab=0
+OBS  LOOP.flex_car_pour.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  LOOP.flex_car_pour reply ok=true reason=nil
+PASS LOOP.flex_car_pour.reply_ok :: nil
+OBS  LOOP.flex_car_pour litres src 1.5256->0.0000 dst 0.0000->1.5256
+OBS  LOOP.flex_car_pour.after src ok id=S761968486-21 rev=2 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  LOOP.flex_car_pour.after dst ok id=V761968486-29 rev=1 total=1.5256 q[ethanol=1.5180,water=0.0076] deg[ethanol=0.8018] mic=0 stab=0
+PASS LOOP.flex_car_pour.litres_conserved :: out=1.52559 in=1.52559
+PASS LOOP.flex_car_pour.tlg_total_matches_native :: tlg=1.52559 native=1.52559 status=ok
+OBS  LOOP.flex_car_pour tank now grade=good compatible=true startFactor=1 reasons=
+STEP LOOP.flex_car_start begin
+OBS  LOOP.flex_car_start driver=true battery=1.00 engine=100 grade=good compatible=true startFactor=1 reasons=
+OBS  LOOP.flex_car_start state=Running running=true attempts=1 refusal=nil
+PASS LOOP.flex_car_start.running :: state=Running attempts=1 refusal=nil
+STEP tlg_ui begin
+PASS UI.fuel_context_menu_entry :: root=true suboptions=7
+PASS UI.sample_request_round_trip :: ok=true reason=nil
+STEP g02_world_container_and_expectations begin
+OBS  G08.expectations canA.x=10637 | canA.y=10620 | canA.fluids=total=15.7500 [Petrol=12.5000,TLG_Ethanol=3.2500] | canB.fluids=total=5.0000 [Petrol=4.0000,TLG_Ethanol=1.0000] | canT.fluids=total=5.0000 [Petrol=5.0000] | canT.id=S761968486-31 | machine.type=TLG.FermenterVessel | world=73991896196026734074 | hours=4.1820 | can1.side=id=S761968486-2 rev=6 q[] deg[] t=166.96 | veh.x=10639 | veh.y=10625 | veh.tank=48.9850 | veh.side=id=V761968486-3 rev=3 q[gasoline=48.9205,sediment=0.0115,water=0.0679] deg[gasoline=0.0717] t=2.41 | gen.x=10633 | gen.y=10628 | gen.fuel=7.0000 | gen.side=id=G761968486-10 rev=1 q[gasoline=6.9997,water=0.0003] deg[gasoline=0.3526] t=3.48 | pump.x=10636 | pump.y=10622 | pump.units=13105 | pump.side=id=R761968486-1 rev=2 q[gasoline=13083.7470,sediment=3.0805,water=18.1725] deg[gasoline=0.0717] t=2.41 | loop.gen.x=10646 | loop.gen.y=10632 | loop.car.x=10649 | loop.car.y=10625 | loop.mach.x=10641 | loop.mach.y=10632 | loop.mach.1=TLG.FermenterVessel:Ready:1 | loop.mach.2=TLG.RefluxStill:Ready:1 | loop.mach.3=TLG.DryingColumn:Ready:1
+STEP save_and_exit begin
+SUMMARY pass=94 fail=0
+EXIT phase A -> main menu
+# TLG single-player harness phase B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP wait_world_b begin
+phaseB worldName=73991896196026734074 expected=73991896196026734074 hours=4.2053
+STEP g08_reload_checks begin
+PASS G08.same_world :: 73991896196026734074
+PASS G08.world_item_fluids_and_moddata :: total=15.7500 [Petrol=12.5000,TLG_Ethanol=3.2500] deg=1.25 itemOwnContainer=false ownerIsWorldObject=true
+PASS G08.ground_can_tlg_record_found :: kind=item status=ok id=S761968486-31 fluids=total=5.0000 [Petrol=5.0000]
+PASS G08.mod_machine_world_item_moddata :: TLG.FermenterVessel
+PASS G08.inventory_item_fluids_and_moddata :: total=5.0000 [Petrol=4.0000,TLG_Ethanol=1.0000]
+PASS G08.inventory_can_sidecar :: id=S761968486-2 rev=6 q[] deg[] t=166.96
+PASS G08.vehicle_tank_sidecar_and_amount :: id=V761968486-3 rev=3 q[gasoline=48.9205,sediment=0.0115,water=0.0679] deg[gasoline=0.0717] t=2.41 tank=48.9850
+PASS G08.generator_sidecar_and_fuel :: id=G761968486-10 rev=1 q[gasoline=6.9997,water=0.0003] deg[gasoline=0.3526] t=3.48 fuel=7.0000
+PASS G08.pump_sidecar_and_units :: id=R761968486-1 rev=2 q[gasoline=13083.7470,sediment=3.0805,water=18.1725] deg[gasoline=0.0717] t=2.41 units=13105
+PASS G08.flex_generator_conversion_persists :: profile=generator_si_flex state=Commissioned fuel=1.5256
+PASS G08.flex_car_conversion_persists :: profile=engine_si_flex state=Commissioned
+PASS G08.machine_records_persist :: TLG.FermenterVessel:Ready:1 TLG.RefluxStill:Ready:1 TLG.DryingColumn:Ready:1
+PASS G08.global_moddata_sp :: phaseA
+PASS G08.tlg_world_record :: 1
+STEP quit begin
+SUMMARY pass=14 fail=0
+DONE

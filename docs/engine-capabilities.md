@@ -725,7 +725,8 @@ full mode on the zip with that fix installed clean, run 56 **94/0** and
 after the second fix, run 59 **8/0**, then the zip with that fix
 installed clean, run 60 **94/0** and **14/0**, and the removal scenario
 on it, run 61 **1/0**, **2/0** and **5/0**, then phase A's vehicle steps
-on a `Base.PickUpTruck`, run 62 **29/0**. Most failures were
+on a `Base.PickUpTruck`, run 62 **29/0**, and the zip with the truck
+documented installed clean, run 63 **94/0** and **14/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
