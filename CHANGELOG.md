@@ -132,18 +132,19 @@
   and a converted generator was stock again.
 * The fermentation vessel is carried in both hands, like the game's
   generators, anvils and ore: one at a time, and it goes down at your
-  feet when you get into a vehicle or take another heavy item. Take it
-  by double-clicking or dragging it in the loot window. The hours it is
+  feet when you get into a vehicle, take another heavy item or equip a
+  weapon. Take it by double-clicking or dragging it in the loot window. The hours it is
   carried still don't count (checked in game). The game leaves a heavy
   item standing where it was when taken that way in single player; the
   mod lifts its own vessel properly.
 * You see the fermentation vessel in your arms while you carry it: held
   in front of you in both arms, standing and walking (checked in game).
   The game draws no carried heavy item, so the mod has its own carry
-  pose, made from a Mixamo animation. During an action that plays its own
-  animation, the barrel shows where that animation holds an item until
-  the action ends (seen with the game's looting animation); putting the
-  vessel down plays none.
+  pose, made from a Mixamo animation. Starting anything that plays its
+  own animation (looting, eating, dressing, reading, the mod's conversion
+  work) first puts the vessel down at your feet. A generator, which is
+  never seen in your hands, stays there through such actions (both
+  checked in game, looting from a bag on the floor).
 * The four machines' inventory category reads "Tool"; it showed the raw
   key "IGUI_ItemCat_Tools" (found and checked in game).
 * Migrations with preserved future schemas.

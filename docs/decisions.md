@@ -587,9 +587,24 @@ listed with their replacement.
   the chest (run 95).
 * Consequences: verified RT-SP run 96 (6/0) with the shipped vessel,
   standing, from the side and walking. An action that plays its own
-  animation replaces the pose on that layer: during "Loot" the barrel
-  followed the action's prop bone and tilted up beside the head. Placing
-  the vessel plays none and keeps the pose. Running, sneaking and
-  multiplayer are not run. The clip ships with Mixamo's terms recorded
+  animation replaces the pose on that layer. A harness action that drew
+  the vessel as its hand model during "Loot" showed the barrel on the
+  action's prop bone, tilted up beside the head (see the amendment).
+  Placing the vessel plays no animation and keeps the pose. Running,
+  sneaking and multiplayer are not run. The clip ships with Mixamo's terms recorded
   (`art-src/carry/PROVENANCE.md`); the source FBX files, which hold
   Mixamo's character, stay out of the repository and the package.
+* Amendment (2026-11-02, run 99): an action that plays its own animation
+  first puts the vessel down at the character's feet. The user asked for
+  it to be dropped on the ground, as they expected of a generator. Every
+  Lua action plays its animation through `ISBaseTimedAction.setActionAnim`,
+  which the mod wraps. When the character carries a mod machine that is
+  a heavy item and the action is not about that item, `forceDropHeavyItems`
+  puts it down. From a multiplayer client, the server's `onDropHeavyItem`
+  command does it, as `ISEnterVehicle` asks. The move hooks account the
+  put-down. The game keeps a carried generator in both hands through
+  such actions, undrawn (run 99, and SRC), so here the vessel differs
+  from a generator. Left to the game: the vessel's own unequip (nothing
+  is drawn in the arms while it plays, run 99) and the transfers that
+  move it. Not covered: animations the game starts without a Lua action
+  (doors, shoving, emotes). Multiplayer not run.

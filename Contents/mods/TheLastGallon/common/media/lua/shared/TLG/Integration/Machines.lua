@@ -524,6 +524,26 @@ local function account(fn, item)
     if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
 end
 
+-- The machine carried in both arms (the fermentation vessel, drawn there
+-- by its own carry pose, D-025), or nil.
+function M.carriedInArms(character)
+    if character == nil then return nil end
+    local item = character:getPrimaryHandItem() or character:getSecondaryHandItem()
+    if item and M.machineFor(item) and item:isForceDropHeavyItem() then return item end
+    return nil
+end
+
+-- Puts the carried machine down at the character's feet as the vehicle
+-- entry does (SRC ISEnterVehicle.lua:55-61): forceDropHeavyItems, or from a
+-- multiplayer client the server's command for it.
+function M.putDownForAction(character)
+    if isClient() then
+        sendClientCommand(character, "player", "onDropHeavyItem", { id = character:getOnlineID() })
+    else
+        forceDropHeavyItems(character)
+    end
+end
+
 -- The moves the game's Lua makes (SRC 42.21), accounted on the authority:
 -- the world menu's Grab (ISGrabItemAction.transferItem, given the world
 -- object; single player only: in multiplayer the server grabs in a Java
@@ -540,6 +560,14 @@ end
 -- forceDropHeavyItems (SRC ISEquipWeaponAction.lua:75: when a vehicle is
 -- entered, an animal handled, a trap set). Told apart by whether the item
 -- lies on the ground before and after, not by container types.
+-- The mod adds one put-down: an action that plays its own animation
+-- (ISBaseTimedAction.setActionAnim: looting, dressing, eating, the mod's
+-- work action) replaces the vessel's carry pose on the arms' layer
+-- (RT-SP run 96), so the vessel goes down at the feet first (D-025
+-- amendment). The game keeps a carried generator in both hands through
+-- such actions, undrawn (run 99). Not for an action on the vessel itself:
+-- its unequip (which puts it down when it completes) and the transfers
+-- that move it.
 function M.install()
     wrap(ISGrabItemAction, "transferItem", function(orig, self, witem, ...)
         local item = World.isAuthority() and witem and witem.getItem and witem:getItem() or nil
@@ -614,6 +642,15 @@ function M.install()
             return r
         end
     end
+    -- Derived actions look the method up at call time.
+    wrap(ISBaseTimedAction, "setActionAnim", function(orig, self, ...)
+        local held = M.carriedInArms(self.character)
+        if held and self.item ~= held then
+            local ok, err = pcall(M.putDownForAction, self.character)
+            if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
+        end
+        return orig(self, ...)
+    end)
     TLG.Log.info("machine move hooks installed")
 end
 

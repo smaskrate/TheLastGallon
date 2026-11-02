@@ -75,7 +75,9 @@ still is welded in hand.
    hammer (Carpentry 2). It is carried in both hands, one at a time, like
    a generator, and you see it held in front of you: double-click or drag
    it in the loot window to pick it up, and it goes down at your feet when
-   you get into a vehicle or take another heavy item. Place it on the
+   you get into a vehicle, take another heavy item or equip a weapon, and
+   before anything with its own animation, such as looting, eating or
+   dressing. Place it on the
    ground, carry feedstock (sugar, corn, potatoes, sugar beets, pumpkins,
    watermelons, fruit), clean water
    and yeast, choose **Load mash and start fermenting**: it takes 5 L of

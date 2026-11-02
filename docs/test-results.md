@@ -2187,3 +2187,56 @@ the vessel was in both hands, and the animator's log shows the masking
 layer play `tlgcarryvessel` with `Bob_TLG_CarryVessel`. Front, side and
 walking show launch 96's carry, and during "Loot" the barrel tilts up
 beside the head as it did there. The console had no exception.
+
+## 2026-11-02 — RT-SP client harness, launch 99 (the vessel put down before an action's animation)
+
+Launches 96 and 98 showed the barrel on the "Loot" animation's prop bone
+during a harness action that drew the vessel as its hand model. The user
+asked for the vessel to be dropped on the ground instead, as they
+expected of a generator. The game's code drops a carried heavy item
+(the vessel and a generator alike) only for a vehicle, a weapon, another
+heavy item, a corpse, animals, traps, climbing and death (engine
+capabilities, G14), not when looting, eating or dressing. The mod now
+wraps `ISBaseTimedAction.setActionAnim`: when an action on another item
+starts its animation while a mod machine that is a heavy item is
+carried, `forceDropHeavyItems` puts it down at the feet (D-025
+amendment). Before the launch: tests 194/194 (a new case: the put-down,
+an action on the vessel itself, a multiplayer client's command, a
+generator and a pot still left alone, a failing put-down logged) and the
+compile check 102/0.
+
+Command: `tools/run-sp-harness.ps1 -Mode vessel-actions` (new; request
+`sp-rtmva`, no save). The shipped vessel is taken into both hands. A
+school bag is put on the character's tile with a box of nails in it, and
+vanilla's transfer action takes the nails into the inventory, as the
+loot window does. The action's time is set to 600 so the picture catches
+it. Then a `Base.Generator` goes through the same loot, and then a
+second vessel is put down by the menus' own unequip when a bat is
+equipped from the inventory menu (`equipWeapon`; the unequip's time set
+to 300).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run99_vessel_actions.txt`,
+`2026-11-02_run99_vessel_actions_sheet.jpg`,
+`2026-11-02_run99_unequip_close.png` and the animator log
+`2026-11-02_run99_animlog_vessel_loot.txt`.
+
+Result: **11/0**.
+- The vessel through the loot: 30 ticks in, "Loot" was playing, the hands
+  were empty and the vessel lay on the ground. Afterwards it was on the
+  character's tile and the nails were in the inventory. The animator's
+  log shows `RightHandMask` go from `tlgcarryvessel` to empty, then
+  `[layer][1]` change from `player/maskingright/tlgcarryvessel` to
+  `player/actions/LootLow`. The pictures show her bent over the bag with
+  the barrel at her feet, then standing with empty hands beside it.
+- The generator through the same loot stayed in both hands, not drawn,
+  and the nails were taken: the game keeps it.
+- The bat: the menus queued `ISUnequipAction` and `ISEquipWeaponAction`.
+  30 ticks into "UnequipItem" the vessel was still in the hands, but
+  nothing was drawn in the arms (close-up). Afterwards it lay at the
+  character's feet with the bat in the hand.
+- The console had no exception. The camera was at zoom 0.50 for the last
+  two pictures instead of 0.25 (not set by the harness).
+
+Not checked: animations the game starts without a Lua action (doors,
+shoving, emotes), the mod's conversion work and the other Lua actions
+with an animation (they reach the same call), entering a vehicle,
+running, sneaking, multiplayer.

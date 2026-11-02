@@ -58,6 +58,8 @@
 --             distances in front of the body
 --   sp-rtmv -> the shipped vessel carried in both arms: front, side,
 --             walking, and through an action playing "Loot"
+--   sp-rtmva -> real actions while carrying: the vessel and a generator
+--             through a loot, the vessel unequipped for a bat
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -87,7 +89,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8423,7 +8425,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
 RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv"
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module (StaticModel =
     -- WaterTank read back as Base.WaterTank, run 68). The vessel's hand
@@ -9056,7 +9058,7 @@ function RT.MP.use(item, model)
             local si = getScriptManager():getItem(item)
             si:DoParam("StaticModel = " .. model)
             R:line("OBS  RTMP.%s StaticModel=%s", item, tostring(si:getStaticModel()))
-            if REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" then
+            if REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" then
                 local m = AnimatorDebugMonitor.new(p)
                 m:setFilter(1, true)
                 m:setFilter(2, true)
@@ -9178,6 +9180,128 @@ if REQUEST == "sp-rtmv" then
         RT.MI.shot("rtmv_vessel_side", true), RT.MP.walkShot("rtmv_vessel_walking"), RT.MP.face("SE"),
         RT.MI.propAction("rtmv_action_loot", "TLG.FermenterVessel", nil, "Loot"),
         RT.MI.shot("rtmv_vessel_action_loot", true), RT.finish }
+end
+
+-- Real actions while an item is carried in both arms (request "sp-rtmva").
+RT.VA = {}
+
+-- What is in the hands, the action's animation and whether the carried item
+-- lies on the ground, as a log line.
+function RT.VA.hands(label, name, held)
+    local p = player()
+    local prim = p:getPrimaryHandItem()
+    R:line("OBS  RTVA.%s_%s animation=%s primary=%s; %s on the ground=%s", name, label,
+        tostring(p:getVariableString("PerformingAction")), tostring(prim and prim:getFullType()),
+        tostring(held and held:getFullType()), tostring(held ~= nil and held:getWorldItem() ~= nil))
+end
+
+-- A real loot: a school bag lies on the character's tile with a box of
+-- nails in it, and vanilla's transfer action takes the nails into the
+-- inventory as the loot window does (ISInventoryTransferAction: "Loot", low,
+-- as the bag lies on the ground). Its time is set to 600 so the picture,
+-- taken 60 ticks in, catches it. The carried item is checked once the
+-- action is over: the mod puts its vessel down at the feet when the
+-- animation starts (D-025); the game keeps a generator in both hands
+-- (`kept`).
+function RT.VA.loot(name, kept)
+    return { name = "rtva_loot_" .. name, timeout = 3000, fn = function(ctx, ticks)
+        local p = player()
+        if ticks == 1 then
+            ISTimedActionQueue.clear(p)
+            ctx.held, ctx.sq = p:getPrimaryHandItem(), p:getCurrentSquare()
+            local bag = ctx.sq:AddWorldInventoryItem("Base.Bag_Schoolbag", 0.8, 0.2, 0)
+            ctx.nails = bag:getItemContainer():AddItem("Base.Nails")
+            local a = ISInventoryTransferAction:new(p, ctx.nails, bag:getItemContainer(), p:getInventory())
+            a.maxTime = 600
+            ISUIHandler.setVisibleAllUI(false)
+            ISTimedActionQueue.add(a)
+            return nil
+        end
+        if ticks == 30 then RT.VA.hands("loot_30_ticks", name, ctx.held) end
+        if ticks == 60 then
+            local file = "tlg_rtva_" .. name .. "_loot.png"
+            local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+            R:line("OBS  RTVA.screenshot %s ok=%s action running=%s", file, tostring(ok),
+                tostring(not TLGH.Steps.actionsIdle(p)))
+        end
+        if ticks == 90 then ISUIHandler.setVisibleAllUI(true) end
+        if ticks < 120 or not TLGH.Steps.actionsIdle(p) then return nil end
+        local both = p:getPrimaryHandItem() == ctx.held and p:getSecondaryHandItem() == ctx.held
+        local wi = ctx.held and ctx.held:getWorldItem()
+        local wsq = wi and wi:getSquare()
+        local got = p:getInventory():contains(ctx.nails)
+        R:check("RTVA.loot_" .. name, function()
+            local atFeet = wsq ~= nil and wsq:getX() == ctx.sq:getX() and wsq:getY() == ctx.sq:getY()
+            local okay = got and ((kept and both and wi == nil) or (not kept and not both and atFeet))
+            return okay, string.format("%s in both hands=%s; on the ground=%s at %s (the character's tile %d,%d);"
+                .. " nails in the inventory=%s", tostring(ctx.held and ctx.held:getFullType()), tostring(both),
+                tostring(wi ~= nil), wsq and (wsq:getX() .. "," .. wsq:getY()) or "-", ctx.sq:getX(), ctx.sq:getY(),
+                tostring(got))
+        end)
+        return true
+    end }
+end
+
+-- The game's own put-down of a carried heavy item: a bat equipped from the
+-- inventory menu (ISInventoryPaneContextMenu.equipWeapon) queues
+-- ISUnequipAction for it first, which plays "UnequipItem" and puts it down
+-- at the feet when it completes; the mod leaves that action alone. Its time
+-- is set to 300 so the picture, taken 60 ticks in, catches it.
+function RT.VA.weapon(name)
+    return { name = "rtva_weapon_" .. name, timeout = 3000, fn = function(ctx, ticks)
+        local p = player()
+        if ticks == 1 then
+            ISTimedActionQueue.clear(p)
+            ctx.held, ctx.sq = p:getPrimaryHandItem(), p:getCurrentSquare()
+            ctx.bat = p:getInventory():AddItem("Base.BaseballBat")
+            ISUIHandler.setVisibleAllUI(false)
+            ISInventoryPaneContextMenu.equipWeapon(ctx.bat, true, false, 0)
+            local q, types = ISTimedActionQueue.getTimedActionQueue(p), {}
+            for _, a in ipairs(q and q.queue or {}) do
+                types[#types + 1] = tostring(a.Type)
+                if a.Type == "ISUnequipAction" then
+                    a.maxTime = 300
+                    if a.action then a.action:setTime(300) end
+                end
+            end
+            R:line("OBS  RTVA.%s_queued %s", name, table.concat(types, ","))
+            return nil
+        end
+        if ticks == 30 then RT.VA.hands("unequip_30_ticks", name, ctx.held) end
+        if ticks == 60 then
+            local file = "tlg_rtva_" .. name .. "_unequip.png"
+            local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+            R:line("OBS  RTVA.screenshot %s ok=%s action running=%s", file, tostring(ok),
+                tostring(not TLGH.Steps.actionsIdle(p)))
+        end
+        if ticks == 90 then ISUIHandler.setVisibleAllUI(true) end
+        if ticks < 120 or not TLGH.Steps.actionsIdle(p) then return nil end
+        local wi = ctx.held and ctx.held:getWorldItem()
+        local wsq = wi and wi:getSquare()
+        R:check("RTVA.weapon_" .. name, function()
+            local atFeet = wsq ~= nil and wsq:getX() == ctx.sq:getX() and wsq:getY() == ctx.sq:getY()
+            local armed = p:getPrimaryHandItem() == ctx.bat
+            return atFeet and armed, string.format("%s on the ground=%s at %s; bat in the hand=%s",
+                tostring(ctx.held and ctx.held:getFullType()), tostring(wi ~= nil),
+                wsq and (wsq:getX() .. "," .. wsq:getY()) or "-", tostring(armed))
+        end)
+        return true
+    end }
+end
+
+-- Request "sp-rtmva": the shipped vessel carried in both arms through a real
+-- loot (put down at the feet first), then a generator through the same loot
+-- (kept in both hands), then the vessel again, put down by the menus'
+-- unequip when a bat is equipped; photographed during each action and with
+-- the animator's log.
+if REQUEST == "sp-rtmva" then
+    RT.poseSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmp_go", "tests"), RT.MI.zoomTo("rtmp_zoom", 0.25),
+        RT.MP.use("TLG.FermenterVessel", "TLG.FermenterHeld"), RT.MI.heavy("va_vessel", "TLG.FermenterVessel"),
+        RT.MP.face("SE"), RT.MI.shot("rtva_vessel_carried", true), RT.VA.loot("vessel", false),
+        RT.MP.animLog("vessel_loot"), RT.MI.shot("rtva_vessel_after_loot", true),
+        RT.MI.heavy("va_generator", "Base.Generator"), RT.VA.loot("generator", true),
+        RT.MI.heavy("va_vessel_again", "TLG.FermenterVessel"), RT.VA.weapon("vessel"),
+        RT.MI.shot("rtva_vessel_after_unequip", true), RT.finish }
 end
 
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
@@ -9517,7 +9641,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -9610,7 +9734,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgu" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, generators put down by the menus' unequip")
                 TLGH.Steps.run(R, RT.genUnequipSteps, H, nil)
-            elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" then
+            elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, pose trial")
                 TLGH.Steps.run(R, RT.poseSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
@@ -9640,7 +9764,7 @@ end
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
 if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

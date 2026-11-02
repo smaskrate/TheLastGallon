@@ -601,3 +601,111 @@ T.case("integration: a machine carried in both hands is accounted when taken and
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+T.case("integration: a machine carried in both arms goes down at the feet when another action plays its animation", function()
+    local g = fakeGame(2)
+    local names = { "ISGrabItemAction", "ISTransferAction", "ISDropWorldItemAction", "ISEquipHeavyItem", "ISUnequipAction",
+        "forceDropHeavyItems", "ISBaseTimedAction", "sendClientCommand" }
+    local saved = {}
+    for _, k in ipairs(names) do saved[k] = _G[k] end
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        -- The vanilla calls as in the case above; every action that plays
+        -- an animation calls ISBaseTimedAction.setActionAnim, and a derived
+        -- action finds it through its class's metatable at call time.
+        local hands, carried, drops, sent = { square = b }, {}, 0, {}
+        local inventory = { contains = function(self, it) return carried[it] == true end }
+        local character = {
+            getPrimaryHandItem = function() return hands.primary end,
+            getSecondaryHandItem = function() return hands.secondary end,
+            getCurrentSquare = function() return hands.square end,
+            getInventory = function() return inventory end,
+            getOnlineID = function() return 3 end,
+        }
+        ISGrabItemAction, ISTransferAction, ISDropWorldItemAction, ISUnequipAction = {}, {}, {}, {}
+        ISEquipHeavyItem = { complete = function(self)
+            carried[self.item] = true
+            hands.primary, hands.secondary = self.item, self.item
+            return true
+        end }
+        forceDropHeavyItems = function(chr)
+            drops = drops + 1
+            local held = chr:getPrimaryHandItem()
+            if held then
+                place(held, chr:getCurrentSquare())
+                carried[held] = nil
+            end
+            hands.primary, hands.secondary = nil, nil
+        end
+        sendClientCommand = function(chr, module, command, args)
+            sent[#sent + 1] = { module = module, command = command, id = args.id }
+        end
+        ISBaseTimedAction = { setActionAnim = function(self, anim) self.played = anim end }
+        local Loot = setmetatable({}, { __index = ISBaseTimedAction })
+        Machines.install()
+        local function action(item)
+            return setmetatable({ character = character, item = item }, { __index = Loot })
+        end
+        local item = startedOn(a, "P16", env)
+        function item:isForceDropHeavyItem() return true end
+        g.now = 4
+        setmetatable({ item = item, character = character }, { __index = ISEquipHeavyItem }):complete()
+        T.eq(item:getModData().tlgProc.pause, "not_placed")
+        -- An action on another item (the loot window's transfer of a nail)
+        -- puts the vessel down at the feet before its animation plays.
+        g.now = 6
+        local loot = action({})
+        loot:setActionAnim("Loot")
+        T.eq(loot.played, "Loot", "the animation still plays")
+        T.eq(drops, 1); T.ok(hands.primary == nil and item.on == b, "at the character's feet")
+        local rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 6); T.eq(rec.site.x, 4, "resumed where it went down")
+        local later = Machines.advance(item, Machines.read(item, false), 8, env)
+        T.near(work(later), 4, 1e-9, "2 h before the pickup and 2 h since the drop, none of the 2 h carried")
+        -- Hands empty: nothing more to put down.
+        loot:setActionAnim("Loot")
+        T.eq(drops, 1)
+        -- An action on the vessel itself (its unequip) leaves it to that
+        -- action: in the arms until the unequip completes.
+        lift(item)
+        setmetatable({ item = item, character = character }, { __index = ISEquipHeavyItem }):complete()
+        local unequip = action(item)
+        unequip:setActionAnim("UnequipItem")
+        T.eq(unequip.played, "UnequipItem"); T.eq(drops, 1); T.ok(hands.primary == item, "still in the arms")
+        -- From a multiplayer client the server is asked to put it down, as
+        -- the vehicle entry asks.
+        isClient = function() return true end
+        local mp = action({})
+        mp:setActionAnim("Eat")
+        T.eq(mp.played, "Eat"); T.eq(drops, 1)
+        T.eq(#sent, 1); T.eq(sent[1].module, "player"); T.eq(sent[1].command, "onDropHeavyItem"); T.eq(sent[1].id, 3)
+        isClient = function() return false end
+        -- A heavy item that is not the mod's, and a mod machine carried in
+        -- one hand, are left to the game.
+        local gen = machine(nil, nil)
+        function gen:getFullType() return "Base.Generator" end
+        function gen:isForceDropHeavyItem() return true end
+        hands.primary, hands.secondary = gen, gen
+        action({}):setActionAnim("Loot")
+        T.eq(drops, 1); T.ok(hands.primary == gen, "the generator stays in both hands")
+        local still = machine(nil, nil)
+        function still:getFullType() return "TLG.PotStill" end
+        function still:isForceDropHeavyItem() return false end
+        hands.primary, hands.secondary = still, nil
+        action({}):setActionAnim("Loot")
+        T.eq(drops, 1); T.ok(hands.primary == still, "not carried in both arms")
+        -- A failing put-down is logged and the animation still plays.
+        hands.primary, hands.secondary = item, item
+        forceDropHeavyItems = function() error("boom") end
+        local log, logged = TLG.Log.error, nil
+        TLG.Log.error = function(fmt, ...) logged = string.format(fmt, ...) end
+        local failing = action({})
+        failing:setActionAnim("Loot")
+        TLG.Log.error = log
+        T.eq(failing.played, "Loot"); T.ok(logged ~= nil and string.find(logged, "boom", 1, true) ~= nil)
+    end)
+    for _, k in ipairs(names) do _G[k] = saved[k] end
+    g.restore()
+    if not ok then error(err, 0) end
+end)

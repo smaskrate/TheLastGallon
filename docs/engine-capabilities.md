@@ -664,6 +664,23 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `ISEquipHeavyItem`), and so does the generator adapter (run 85: a
   second generator taken from the world menu, a bat equipped from the
   inventory menu).
+  The game treats the vessel as it treats a generator on every path:
+  `InventoryItem.isForceDropHeavyItem` is true for a human corpse, an item
+  of type Generator and the `heavyitem` tag, and
+  `IsoGameCharacter.isHeavyItem` for that tag, corpses, animals and type
+  Generator (BC); `Base.Generator` is tagged `base:heavyitem` (42.21
+  scripts). The Lua drops (`forceDropHeavyItems`) come with a vehicle
+  entered, a weapon equipped, another heavy item or a generator taken, a
+  corpse grabbed, an animal picked up, petted or milked, and a trap set
+  (SRC). The Java side drops heavy items (`IsoGameCharacter.dropHeavyItems`,
+  BC) when the character climbs over a wall, through a window or window
+  frame, or up or down a sheet rope, and drops held items on death.
+  Nothing else drops one: the transfer action (looting) plays "Loot" and
+  sets its hand models to none (SRC `ISInventoryTransferAction.lua:193-195`),
+  and eating, drinking, dressing, reading and crafting call no drop, so a
+  carried generator stays in both hands through them, undrawn (run 99:
+  through a loot from a bag on the floor). The mod's vessel goes down at
+  the feet when one of them starts (D-025 amendment, run 99).
 
 ## G13: one original model imported (RT-SP runs 64–67, 2026-11-02)
 
@@ -801,9 +818,14 @@ The mod ships one: `Bob_TLG_CarryVessel` with
 shows the masking layer (`[layer][1]`) play it standing and walking (run
 96). Actions use the same layer (`player/actions/Loot` was
 `[layer][1]` in the same log), so an action with its own animation
-replaces the carry pose while it runs: the barrel then follows that
-animation's `Bip01_Prop1` (run 96, tilted up beside the head). Whether
-the game also reads FBX clips is untested.
+replaces the carry pose while it runs. A harness action that drew the
+vessel as its hand model showed it at that animation's `Bip01_Prop1`
+(run 96, tilted up beside the head). The game's loot sets its hand
+models to none, and its unequip of the vessel drew nothing in the arms
+(run 99). Since run 99 the mod puts the vessel down before any Lua
+action's animation (D-025 amendment): the log shows `RightHandMask`
+cleared, then `player/actions/LootLow` on `[layer][1]`. Whether the game
+also reads FBX clips is untested.
 
 ## Client harness status
 
@@ -912,7 +934,9 @@ retargeted onto the game's skeleton, runs 91 **8/0** and 92 **8/0**, a
 wider one and the two blended, runs 93 **7/0** and 94 **7/0**, the barrel
 moved out of the torso, run 95 **8/0**, the shipped carry, run 96
 **6/0**, the zip with it installed clean, run 97 **94/0** and **14/0**,
-and the carry from the package's item tree, run 98 **6/0**. Most failures were traced to the harness
+and the carry from the package's item tree, run 98 **6/0**, then the
+vessel and a generator through a real loot and the vessel unequipped for
+a bat, run 99 **11/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
