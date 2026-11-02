@@ -1837,3 +1837,23 @@ Not run: entering a vehicle itself (the harness called
 `ISEnterVehicle.lua:60`), dragging in the loot window (the same
 `equipHeavyItem`), multiplayer. Vanilla's own heavy items keep the 42.21
 behaviour of launch 78.
+
+## 2026-11-02 — RT-SP client harness, launch 80 (the zip with the two-handed vessel, installed clean)
+
+Command: `tools/rehearse-install.ps1`, which rebuilt the package first
+(192/192 tests, compile check 101/0, translations OK): the zip of commit
+`8520ea2`, 86 files, SHA-256 `e5ae9136…`, 849,901 bytes. It differs from
+run 72's zip (`1d150946…`, 86 files) in six files: the vessel's script
+lines (a heavy item, both hands), the machine move hooks
+(`Machines.lua`), the notice (the model's licence), the changelog, the
+player guide and the support matrix. The zip matched its manifest (86
+files), was installed into a fresh isolated cache and ran the full
+harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run80_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
+47, 52, 56, 60, 63, 70 and 72. Phase A crafted the vessel, now a heavy
+item, into the inventory (crafting does not put it in the hands) and put
+it down with the drop action, as before. The console had no error naming
+the mod; its one exception came from the harness's own deep-recursion
+probe, as in earlier launches.

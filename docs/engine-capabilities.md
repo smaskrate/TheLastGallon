@@ -837,8 +837,9 @@ the zip with it installed clean, run 72 **94/0** and **14/0**, then held
 items, runs 73 **9/0** and 74 **9/0**, heavy items, run 75 **8/0**, the
 vessel carried in both hands through the pickup scenario, run 76 35/1 and
 run 77 34/2, a vanilla heavy item taken off the floor, run 78 **8/0**,
-and after the fix run 79 **39/0**. Most failures were
-traced to the harness itself (placement, a nearly full target generator, a
+and after the fix run 79 **39/0**, and the zip with the carry installed
+clean, run 80 **94/0** and **14/0**. Most failures were traced to the
+harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
 ownership, G02), run 7's conversion refusals (tool counting), runs 10–11's
