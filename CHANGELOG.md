@@ -121,6 +121,12 @@
   starter coming with the last of the wash; its spirit (80 %) was unfit for
   any engine by the mod's start check until dried, then fit for flex
   engines.
+* The fermentation vessel stands on the floor as its own model: a wooden
+  barrel with a lid, an airlock and a tap, about 0.75 m tall. Its icon,
+  and the vessel held in the hand, are still the game's water bottle.
+  Checked in game: put down turned four ways, saved and continued.
+* The four machines' inventory category reads "Tool"; it showed the raw
+  key "IGUI_ItemCat_Tools" (found and checked in game).
 * Migrations with preserved future schemas.
 * What I know about it remembers a first Look and smell on fuel the mod
   had not recorded yet; it used to say "unknown" right after the look.

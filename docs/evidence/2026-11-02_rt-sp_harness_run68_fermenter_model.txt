@@ -1,0 +1,85 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 10660
+click-to-start clicks sent: 2
+finished=True exitCode=
+# TLG single-player harness, the fermenter's model, before the save
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=8570533901779920668 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=WaterTank icon texture=Item_WaterTank; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+FAIL RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=WaterTank; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: Item_WaterTank
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmi_place begin
+OBS  RTMI.placed from 10659,10646 to 10667,10638 (anchor 10660,10645); t0 square before free=true solid=false solidTrans=false, after free=true solid=false solidTrans=false
+PASS RTMI.all_placed :: 8 of 8 on their squares; turns t0=0 t90=90 t180=180 t270=270 small=0 column=0 pot=0 tank=0
+PASS RTMI.vessel_icon :: Item_WaterTank
+OBS  RTMI.status menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTMI.vessel_is_a_machine :: Ready <LINE> Temperature here now: 67.7 Â°F, outdoors
+STEP rtmf_go_vessels begin
+STEP rtmf_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmf_vessels begin
+OBS  RTMI.screenshot tlg_rtmf_vessels.png ok=true ; interface hidden; zoom 0.50; player 10660,10643; game hour 9.04
+STEP rtmf_zoom_in begin
+OBS  RTMI.zoom 0.50 -> 0.25 in 1 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmf_vessels_close begin
+OBS  RTMI.screenshot tlg_rtmf_vessels_close.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.05
+STEP rtmf_to_inventory begin
+STEP rtmf_zoom_ui begin
+OBS  RTMI.zoom 0.25 -> 0.25 in 12 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmf_inventory begin
+OBS  RTMI.screenshot tlg_rtmf_inventory.png ok=true ; interface shown; zoom 0.25; player 10660,10643; game hour 9.10
+STEP rtmi_before_save begin
+STEP rtmf_save_and_exit begin
+SUMMARY pass=7 fail=1
+EXIT phase 1 -> main menu
+# TLG single-player harness, the fermenter's model, after the reload
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rtmib_reload begin
+OBS  RTMIB.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=WaterTank icon texture=Item_WaterTank; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMIB.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+FAIL RTMIB.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=WaterTank; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMIB.icon_texture_found :: Item_WaterTank
+PASS RTMIB.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+OBS  RTMIB.found t0=true turn 0 (saved 0) proc P625290990-1 (saved P625290990-1); t90=true turn 90 (saved 90) proc nil (saved nil); t180=true turn 180 (saved 180) proc nil (saved nil); t270=true turn 270 (saved 270) proc nil (saved nil); small=true turn 0 (saved 0) proc nil (saved nil); column=true turn 0 (saved 0) proc nil (saved nil); pot=true turn 0 (saved 0) proc nil (saved nil); tank=true turn 0 (saved 0) proc nil (saved nil)
+PASS RTMIB.all_back_in_place :: 8 of 8
+PASS RTMIB.turns_kept :: 8 of 8
+PASS RTMIB.records_kept :: 8 of 8
+STEP rtmib_status begin
+OBS  RTMIB.status menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTMIB.vessel_is_a_machine :: Ready <LINE> Temperature here now: 68.0 Â°F, outdoors
+STEP rtmfb_go_vessels begin
+STEP rtmfb_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmf_reloaded_vessels begin
+OBS  RTMI.screenshot tlg_rtmf_reloaded_vessels.png ok=true ; interface hidden; zoom 0.50; player 10660,10643; game hour 9.15
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.16
+SUMMARY pass=7 fail=1
+DONE
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmf_inventory.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmf_reloaded_vessels.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmf_vessels.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmf_vessels_close.png
+console: LOG  : Lua          f:152> [TLGH] OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; 
+TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel 
+WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=WaterTank icon texture=Item_WaterTank; 
+TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+console: LOG  : Lua          f:152> [TLGH] PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter 
+texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+console: LOG  : Lua          f:152> [TLGH] FAIL RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter 
+StaticModel=Base.WaterTank Icon=WaterTank; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+console: LOG  : Lua          f:121> [TLGH] OBS  RTMIB.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; 
+TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel 
+WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=WaterTank icon texture=Item_WaterTank; 
+TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+console: LOG  : Lua          f:121> [TLGH] PASS RTMIB.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter 
+texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+console: LOG  : Lua          f:121> [TLGH] FAIL RTMIB.vessel_wired :: WorldStaticModel=TLG.Fermenter 
+StaticModel=Base.WaterTank Icon=WaterTank; kit WorldStaticModel=TLGHarness.FermenterTestTrue

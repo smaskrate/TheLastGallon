@@ -8,3 +8,4 @@
 *.java text eol=lf
 *.png binary
 *.jpg binary
+*.fbx binary

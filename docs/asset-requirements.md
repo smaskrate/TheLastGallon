@@ -15,10 +15,13 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 
 ## State on 2026-11-02
 
-* No original asset ships. `art-src/` is empty and the release zip holds
-  no `.png`, `.fbx`, `.x` or `.ogg`; the import test's model lives in the
-  dev-only harness mod.
-* Every shipped item and machine borrows a vanilla icon and model by name.
+* One original asset ships: the fermentation vessel's world model
+  (`TLG.Fermenter`, an FBX and its texture), supplied on 2026-11-02 and
+  generated with Tripo Studio (`art-src/fermenter/PROVENANCE.md`; its
+  redistribution terms are not recorded yet). The import test's model
+  lives in the dev-only harness mod.
+* Every other shipped item and machine borrows a vanilla icon and model by
+  name, and so do the vessel's icon and its model in the hand.
   The names exist in 42.21 (`models_items.txt`; `Item_*` entries in
   `UI.pack`/`UI2.pack`). How they render was first looked at on
   2026-11-02 (run 66, `engine-capabilities.md` G13): the drying column
@@ -87,8 +90,9 @@ take; the audit marks the rows that wait on them.
 | Sound | `.ogg` under `media/sound/` (the package allowlist has no `.wav`); world loops mono and seamless | `sound X { category = Object, clip { file = media/sound/…, distanceMax = N, } }` as vanilla `sounds_zombie_voice_tutorial.txt`; a `loop` field appears in 32 vanilla clips. No FMOD bank needed |
 | Workshop preview | `preview.png`, exactly 256×256, at most 1000 KB (`Translate/EN/UI.json:1004-1006`) | `package.ps1` copies `art-src/preview.png` |
 
-Verified in game for one original item model, a text `.x` mesh (RT-SP
-runs 64–67, `engine-capabilities.md` G13):
+Verified in game for two original item models, a text `.x` mesh (RT-SP
+runs 64–67) and the supplied fermenter's FBX (runs 68–69)
+(`engine-capabilities.md` G13):
 
 * Files inside the mod: the mesh in `media/models_X/<folder>/`, the
   texture in `media/textures/<folder>/` (the one the model script's
@@ -102,8 +106,11 @@ runs 64–67, `engine-capabilities.md` G13):
   Items cast no ground shadow.
 * At a turn of 0 the mesh's +X faces east and +Z north; turns run
   clockwise seen from above and survive a save.
-* Not verified: `.fbx` (its loader also passes a bone scale and rotation),
-  the look in the hand, multiplayer.
+* An FBX is drawn at its vertices times its model node's own scaling,
+  times `scale`, times 1.5; its `UnitScaleFactor` is ignored. A Blender
+  export in metres with no node scaling, 1.0 tall, stands 0.75 m tall at
+  `scale = 0.5`, and its UVs need no flip.
+* Not verified: the look in the hand, multiplayer.
 
 Sound playback and zombie attraction are separate (spec §22): a machine
 loop adds world noise only through code that decides to.
@@ -114,7 +121,7 @@ loop adds world noise only through code that decides to.
 
 | Audit | Code id | Now | Needed |
 | --- | --- | --- | --- |
-| A04 | `TLG.FermenterVessel` (`fermenter_barrel`, 160 L) | `WaterTank`, a water-cooler bottle | Barrel or vat with lid and airlock |
+| A04 | `TLG.FermenterVessel` (`fermenter_barrel`, 160 L) | its own model `TLG.Fermenter` since 2026-11-02 (supplied; in the hand still `WaterTank`) | done on the floor; a model or attachment for the hand |
 | A03 | `TLG.PotStill` (`pot_still`, 60 L, firebox) | `CookingPotGround`, in hand `CookingPot` | Pot, lyne arm, worm condenser, firebox |
 | A03 | `TLG.RefluxStill` (`reflux_still`, 120 L, firebox) | the same cooking pot | Boiler, packed column, reflux condenser, firebox; must read differently from the pot still |
 | I04 | `TLG.DryingColumn` (`drying_column`, 40 L) | `SmallGasTank`, a car fuel tank | Pipe column of quicklime with a receiver |
@@ -183,7 +190,7 @@ Icons, 32×32:
 | I06 | `TLG.DryingColumn` | `AirFilters` | same as the fuel filter |
 | I07 | `TLG.PotStill` | `Pot` | same as the reflux still |
 | I08 | `TLG.RefluxStill` | `Pot` | same as the pot still |
-| I09 | `TLG.FermenterVessel` | `WaterTank` | |
+| I09 | `TLG.FermenterVessel` | `WaterTank` | no longer matches its world model |
 | I01 | `TLG.FuelStabilizer` | `Bleach` | |
 | I03 | `TLG.ManualFuelSystems` | `MagazineBlacksmith1` (smithing magazine) | also needs a cover texture for its model |
 

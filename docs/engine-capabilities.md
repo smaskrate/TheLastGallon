@@ -31,7 +31,7 @@ alternative), **NOT RUN**.
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
 | G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14; the check passed in run 14). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
-| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; one original item model **PASS (SP)** | `asset-audit.csv`. An original static model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67, screenshots; "G13: one original model imported" below). NOT RUN: a held item drawn in the hand, animation, multiplayer rendering, sounds; vehicle parts are G11 |
+| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. An original static test model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67); the supplied fermenter model (FBX) ships and was drawn, turned and reloaded (runs 68–69). See "G13: one original model imported" below. NOT RUN: a held item drawn in the hand, animation, multiplayer rendering, sounds; vehicle parts are G11 |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
 ## Lua runtime
@@ -708,6 +708,27 @@ drifted outward after the equip (0.25 to 0.75; cause not found); run 66
 asked the menu in the same tick as the teleport after the reload and was
 refused.
 
+### The supplied fermenter, an FBX (runs 68–69)
+
+The fermentation vessel's own model, supplied on 2026-11-02
+(`art-src/fermenter/PROVENANCE.md`), ships as `TLG.Fermenter`
+(`TLG_models.txt`): a Blender-exported binary FBX 7400, Y up, metres
+(`UnitScaleFactor` 100), 949 triangles, 1.0 tall with its base at the
+origin, and a 512×512 texture saved as PNG. `run-sp-harness.ps1 -Mode
+fermenter-model` puts it down turned four ways beside the `undoCoreScale`
+test barrel, saves, continues and photographs it again.
+
+How the game sizes an FBX: its vertices times the model node's own
+scaling, times the script's `scale`, times 1.5; the file's
+`UnitScaleFactor` is not applied. Vanilla's 3ds Max exports carry the
+unit in the node (`WaterTank` 1/12 with `scale` 0.14: 0.51 m tall;
+`CookingPot` 1/36 with 0.4: 0.36 m wide; both as measured in run 66). The
+supplied FBX has no node scaling, so `scale = 0.5` stands it about 0.75 m
+tall; beside the 0.56 m test barrel it measured about 15 % wider, as its
+proportions give (run 68). Its texture drew the right way up: Blender's
+FBX UVs need no flip. Its turns and its place came back after the save.
+The icon and the model in the hand are still vanilla's `WaterTank`.
+
 ## Client harness status
 
 `tools/run-sp-harness.ps1` starts the client with
@@ -796,7 +817,8 @@ on it, run 61 **1/0**, **2/0** and **5/0**, then phase A's vehicle steps
 on a `Base.PickUpTruck`, run 62 **29/0**, and the zip with the truck
 documented installed clean, run 63 **94/0** and **14/0**, then one original
 model imported (G13), run 64 12/2, run 65 **15/0**, run 66 15/1 and run 67
-**16/0**. Most failures were
+**16/0**, then the fermenter's own model and the machines' category, run
+68 14/2 and run 69 **16/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

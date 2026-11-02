@@ -1,0 +1,20 @@
+module TLG
+{
+    /* The mod's own models (docs/asset-audit.csv, art-src/).
+
+       Fermenter: the fermentation vessel on the floor. Mesh
+       media/models_X/TLG/Fermenter.fbx and texture
+       media/textures/TLG/Fermenter.png, supplied 2026-11-02 (provenance in
+       art-src/fermenter/PROVENANCE.md). The FBX is Y up with its base at
+       the origin and 1.0 tall. The game draws an FBX at its vertices times
+       the node's own scaling times scale times 1.5 (vanilla WaterTank and
+       CookingPot measured against a character, run 66; the 1.5 is what
+       undoCoreScale takes back, docs/engine-capabilities.md G13), so 0.5
+       stands it about 0.75 m tall: a 160 L vessel. */
+    model Fermenter
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.5,
+    }
+}

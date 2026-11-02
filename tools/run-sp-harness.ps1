@@ -61,6 +61,10 @@
   use photographed; saved, exited to the menu and continued, then both
   groups photographed again. The screenshots taken are listed at the end,
   with the console lines naming the model.
+  fermenter-model: the same placing with the fermenter's shipped model
+  (TLG_models.txt), the test barrel at true size beside it, photographed,
+  saved, continued and photographed again; the machines' inventory
+  categories must have a text.
   removal-a, removal-b, removal-c: the three launches of the removal
   rehearsal (tools/rehearse-install.ps1 -Scenario removal): a world played
   with the mod, continued without it (the driver), then with it again.
@@ -79,8 +83,8 @@
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
-        "still-save", "still-controls", "late-find", "can-water", "chassis", "model-import", "fires", "existing-a", "existing-b",
-        "removal-a", "removal-b", "removal-c", "italian")][string]$Mode = "full",
+        "still-save", "still-controls", "late-find", "can-water", "chassis", "model-import", "fermenter-model", "fires",
+        "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "italian")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -132,7 +136,7 @@ if ($Mode -eq "italian") {
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "model-import" { "sp-rtmi" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
+    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
@@ -204,8 +208,8 @@ $shots = Join-Path $DevCache "Screenshots"
 if (Test-Path $shots) {
     Get-ChildItem $shots -File | Where-Object { $_.LastWriteTime -ge $started } | ForEach-Object { Write-Host "screenshot: $($_.FullName)" }
 }
-if ($Mode -eq "model-import") {
-    Select-String -Path $console -Pattern "FermenterTest|TLGHarness/" | ForEach-Object { Write-Host "console: $($_.Line)" }
+if ($Mode -eq "model-import" -or $Mode -eq "fermenter-model") {
+    Select-String -Path $console -Pattern "FermenterTest|TLGHarness/|TLG/Fermenter|Fermenter\.fbx" | ForEach-Object { Write-Host "console: $($_.Line)" }
 }
 # Explicit status: otherwise robocopy's "files copied" code 1 from setup leaks out.
 if ($finished) { exit 0 } else { exit 1 }

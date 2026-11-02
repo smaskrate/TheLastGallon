@@ -1698,3 +1698,38 @@ one Lua error during loading came from an `OnRenderTick` handler run on
 the wrong thread; neither the mod nor the harness registers that event.
 Not run: multiplayer rendering, `.fbx` and `.glb` meshes, animation, the
 machine menu from other sides, a vehicle part (G11).
+
+## 2026-11-02 — RT-SP client harness, launches 68–69 (the fermenter's own model; the machines' category)
+
+The fermentation vessel's own model was supplied on 2026-11-02: a binary
+FBX exported by Blender 5.0.1 from a Tripo Studio model, and a 512×512
+JPEG texture (`art-src/fermenter/PROVENANCE.md`). It ships as
+`TLG.Fermenter` (`TLG_models.txt`, mesh `models_X/TLG/Fermenter.fbx`
+unchanged, texture saved as `textures/TLG/Fermenter.png`) at `scale =
+0.5`; the vessel's `WorldStaticModel` names it. Its icon and its model in
+the hand stay vanilla's `WaterTank`. The same change sets the four
+machines' `DisplayCategory` to vanilla's `Tool`.
+
+Command: `tools/run-sp-harness.ps1 -Mode fermenter-model` (new; requests
+`sp-rtmf`, then `sp-rtmfb`): the model-import placing with the shipped
+scripts, four vessels turned 0–270 degrees beside the `undoCoreScale`
+test barrel, saved, continued and photographed again.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run68_fermenter_model.txt`,
+`..._run69_fermenter_model.txt` and `2026-11-02_run69_fermenters*.jpg`.
+
+| Launch | Result | |
+| --- | --- | --- |
+| 68 | 14/2 | both failures the harness's expectation: the game reads `StaticModel = WaterTank` back as `Base.WaterTank`. Its close-up at zoom 0.25 framed only the character, and its shot with the interface shown had the inventory list collapsed; both were dropped, and the zoom's direction is now read at either end of the range |
+| 69 | **16/0** | |
+
+Both launches: `TLG.Fermenter` loaded with its mesh and texture; the
+vessel's world model was it; every machine's category read "Tool" through
+the inventory's own text lookup; the eight items came back after the save
+with their turns and the vessel's machine record id; from 1.4 tiles the
+machine menu answered "Ready". The screenshots show the wooden barrel
+with its hoops, planked lid, airlock and tap, the texture the right way
+up, the tap going round with each turn, each vessel about hip-high to the
+character and about 15 % wider than the 0.56 m test barrel, as its
+proportions give at 0.75 m tall. The console had no error naming the
+model or its texture. Run 68 had fog; run 69's pictures are clearer. Not
+run: the vessel in the hand, multiplayer, the model's look up close.

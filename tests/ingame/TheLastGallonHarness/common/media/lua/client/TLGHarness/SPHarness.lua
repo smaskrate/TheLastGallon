@@ -33,6 +33,9 @@
 --   sp-rtmi -> an original test model wired to the fermenter: placed, turned,
 --             held and photographed, saved and exited to the menu ("sp-rtmib")
 --   sp-rtmib -> main menu continues that save: back in place, photographed
+--   sp-rtmf -> the same with the fermenter's shipped model, beside the test
+--             barrel at true size; saved and exited to the menu ("sp-rtmfb")
+--   sp-rtmfb -> main menu continues that save: back in place, photographed
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -61,7 +64,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
-    or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8182,13 +8185,30 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
     -- The square a group is photographed from: one tile behind its middle.
     views = { tests = 1, placeholders = 6 } }
 
+-- The shipped fermenter model (requests "sp-rtmf", then "sp-rtmfb"): the
+-- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
+-- undoCoreScale test barrel stands beside it for size; nothing is held.
+RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb"
+if RT.MI.shipped then
+    -- The game keeps a resolved model name with its module: StaticModel =
+    -- WaterTank reads back as Base.WaterTank (run 68).
+    RT.MI.model, RT.MI.hand, RT.MI.icon = "TLG.Fermenter", "Base.WaterTank", "WaterTank"
+end
+
+-- The mesh (and texture) each model script must name.
+function RT.MI.meshOf(name)
+    return name == "TLG.Fermenter" and "TLG/Fermenter" or "TLGHarness/FermenterTest"
+end
+
 function RT.MI.wire()
     local sm = getScriptManager()
     local si, kit = sm:getItem(RT.MI.item), sm:getItem(RT.MI.kit)
     if si == nil or kit == nil then return false end
-    si:DoParam("WorldStaticModel = " .. RT.MI.model)
-    si:DoParam("StaticModel = " .. RT.MI.hand)
-    si:DoParam("Icon = " .. RT.MI.icon)
+    if not RT.MI.shipped then
+        si:DoParam("WorldStaticModel = " .. RT.MI.model)
+        si:DoParam("StaticModel = " .. RT.MI.hand)
+        si:DoParam("Icon = " .. RT.MI.icon)
+    end
     kit:DoParam("WorldStaticModel = " .. RT.MI.small)
     return true
 end
@@ -8201,12 +8221,12 @@ function RT.MI.checkWiring(prefix)
     local s = { world = si and si:getWorldStaticModel(), hand = si and si:getStaticModel(), icon = si and si:getIcon(),
         tex = tex and tex:getName() or "nil", kit = kit and kit:getWorldStaticModel() }
     local meshes = {}
-    for _, name in ipairs({ RT.MI.model, RT.MI.hand, RT.MI.small }) do
+    for _, name in ipairs(RT.MI.shipped and { RT.MI.model, RT.MI.small } or { RT.MI.model, RT.MI.hand, RT.MI.small }) do
         local ms = sm:getModelScript(name)
         meshes[#meshes + 1] = string.format("%s mesh=%s texture=%s", name, tostring(ms and ms:getMeshName()),
             tostring(ms and ms:getTextureName()))
-        s.ok = (s.ok ~= false) and ms ~= nil and ms:getMeshName() == "TLGHarness/FermenterTest"
-            and ms:getTextureName() == "TLGHarness/FermenterTest"
+        s.ok = (s.ok ~= false) and ms ~= nil and ms:getMeshName() == RT.MI.meshOf(name)
+            and ms:getTextureName() == RT.MI.meshOf(name)
     end
     R:line("OBS  %s.scripts %s; %s WorldStaticModel=%s StaticModel=%s Icon=%s icon texture=%s; %s WorldStaticModel=%s",
         prefix, table.concat(meshes, "; "), RT.MI.item, tostring(s.world), tostring(s.hand), tostring(s.icon), s.tex,
@@ -8218,8 +8238,18 @@ function RT.MI.checkWiring(prefix)
                 tostring(s.hand), tostring(s.icon), tostring(s.kit))
     end)
     R:check(prefix .. ".icon_texture_found", function()
-        return has(s.tex, "Item_TLGHarness_FermenterTest") and not has(s.tex, "Question_On"), s.tex
+        return has(s.tex, "Item_" .. RT.MI.icon) and not has(s.tex, "Question_On"), s.tex
     end)
+    -- The inventory shows getText("IGUI_ItemCat_" .. category)
+    -- (ISInventoryPane.lua:2547): every machine's category needs a text.
+    local cats, bad = {}, 0
+    for _, t in ipairs({ "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn" }) do
+        local c = tostring(sm:getItem(t):getDisplayCategory())
+        local text = getText("IGUI_ItemCat_" .. c)
+        if text == "IGUI_ItemCat_" .. c then bad = bad + 1 end
+        cats[#cats + 1] = string.format("%s=%s (\"%s\")", t, c, tostring(text))
+    end
+    R:check(prefix .. ".machine_categories_named", function() return bad == 0, table.concat(cats, "; ") end)
     return s
 end
 
@@ -8295,7 +8325,9 @@ function RT.MI.zoomTo(name, target)
         local z = c:getZoom(0)
         if not ctx.from then
             ctx.from, ctx.last, ctx.still, ctx.scrolls = z, z, 0, 0
-            ctx.inward = (c:getNextZoom(0, -1) < z) and -1 or 1
+            -- At either end of the zoom one direction does nothing: read
+            -- both (run 68 started at the minimum and scrolled the wrong way).
+            ctx.inward = (c:getNextZoom(0, -1) < z or c:getNextZoom(0, 1) > z) and -1 or 1
             return nil
         end
         if math.abs(z - ctx.last) > 1e-4 then
@@ -8407,7 +8439,7 @@ RT.MI.place = { name = "rtmi_place", timeout = 600, fn = function(ctx, ticks)
     end)
     R:check("RTMI.vessel_icon", function()
         local tex = M.spots.t0.item:getTex()
-        return tex ~= nil and has(tex:getName(), "Item_TLGHarness_FermenterTest"), tostring(tex and tex:getName())
+        return tex ~= nil and has(tex:getName(), "Item_" .. M.icon), tostring(tex and tex:getName())
     end)
     local n = #H.dialogs.texts
     local r = machineClick("RTMI.status", M.spots.t0.item, "ContextMenu_TLG_MachineStatus")
@@ -8503,6 +8535,15 @@ RT.modelReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmib_go_t
     RT.MI.zoomTo("rtmib_zoom_tests", 0.5),
     RT.MI.shot("rtmi_reloaded_tests", true), RT.MI.goTo("rtmib_go_placeholders", "placeholders"),
     RT.MI.zoomTo("rtmib_zoom_placeholders", 0.5), RT.MI.shot("rtmi_reloaded_placeholders", true), RT.finish }
+
+-- Run 68 also took a shot at zoom 0.25 (the row fell below the frame) and
+-- one with the interface shown (the inventory list stayed collapsed); the
+-- category is checked by its text instead (machine_categories_named).
+RT.fermenterSteps = { RT.waitWorld, RT.MI.setup, RT.MI.place, RT.MI.goTo("rtmf_go_vessels", "tests"),
+    RT.MI.zoomTo("rtmf_zoom", 0.5), RT.MI.shot("rtmf_vessels", true), RT.MI.beforeSave,
+    RT.saveAndExitAs("rtmf_save_and_exit", "sp-rtmfb") }
+RT.fermenterReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmfb_go_vessels", "tests"),
+    RT.MI.zoomTo("rtmfb_zoom", 0.5), RT.MI.shot("rtmf_reloaded_vessels", true), RT.finish }
 
 ------------------------------------------------------------------------------
 -- Italian (request "sp-it", release gate 10): the client in Italian
@@ -8670,7 +8711,7 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
-    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" then
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -8751,6 +8792,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtmi" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, model import, before the save")
                 TLGH.Steps.run(R, RT.modelSteps, H, nil)
+            elseif REQUEST == "sp-rtmf" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the fermenter's model, before the save")
+                TLGH.Steps.run(R, RT.fermenterSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
@@ -8777,14 +8821,14 @@ end
 
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
-if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" then
+if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)
 end
 
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" then
+    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -8812,6 +8856,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "sp-rtmib" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, model import, after the reload", true)
             TLGH.Steps.run(R, RT.modelReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtmfb" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, the fermenter's model, after the reload", true)
+            TLGH.Steps.run(R, RT.fermenterReloadSteps, H, nil)
         else
             R = TLGH.Report.new(RESULTS, "TLG single-player harness phase B", true)
             TLGH.Steps.run(R, stepsB, H, nil)
