@@ -21,7 +21,7 @@ require "TLG/Boot"
 
 TLG.Integration.Stations = TLG.Integration.Stations or {}
 local S = TLG.Integration.Stations
-local C, V, Native, World = TLG.Integration.Containers, TLG.Integration.Vehicles, TLG.Integration.Native, TLG.World
+local C, V, World = TLG.Integration.Containers, TLG.Integration.Vehicles, TLG.World
 local Supply, Mixing, Aging, WorldInit = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging, TLG.Domain.WorldInit
 local Tables = TLG.Tables
 
@@ -136,7 +136,6 @@ local function installTakeFuel()
         if World.isAuthority() and o and fuelStation and petrolCan and petrolCan:getFluidContainer() then
             pcall(function()
                 o.tlgPumpBefore = S.read(fuelStation, true)
-                o.tlgCanCompBefore = Native.readComposition(petrolCan:getFluidContainer())
                 o.tlgCanBefore = C.read(petrolCan, "item", true)
                 o.tlgCanStart = petrolCan:getFluidContainer():getAmount()
             end)
@@ -151,16 +150,15 @@ local function installTakeFuel()
             local delivered = fc:getAmount() - self.tlgCanStart
             if delivered <= 1e-6 then return end
             local parcel = draw(self.fuelStation, self.tlgPumpBefore, delivered)
-            local comp = Tables.copy(self.tlgCanCompBefore)
-            for id, q in pairs(parcel.q) do comp[id] = (comp[id] or 0) + q end
-            Native.writeComposition(fc, comp)
             local can = Aging.advance(self.tlgCanBefore, World.now(), World.env())
             local merged = Mixing.previewBlend({ { supply = can, amount = Supply.total(can) },
                 { supply = parcel, amount = Supply.total(parcel) } }, can.storage, can.cap)
             merged.id, merged.rev, merged.cap, merged.sealed, merged.cond = can.id, (can.rev or 0) + 1, can.cap,
                 can.sealed, can.cond
             Supply.addProvenance(merged, { k = "pump", from = parcel.id, t = World.now(), n = delivered })
-            C.writeSidecar(self.petrolCan, "item", merged)
+            -- The can's fluids become the record's: the station's water and
+            -- sediment with its petrol, and the water the can's fuel took up.
+            C.commit(self.petrolCan, "item", merged)
         end)
         if not ok then TLG.Log.error("pump->can settle: %s", tostring(err)) end
     end

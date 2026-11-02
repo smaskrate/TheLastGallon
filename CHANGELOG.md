@@ -90,6 +90,14 @@
   moment it is found. It used to be aged again over all the time since the
   container was last recorded: a can topped up while the mod was away for
   a game day read 11.5 % more degraded (found in game).
+* The water stored fuel takes up while it ages (faster in an opened
+  container, and in ethanol most of all) now stays in the can: it is kept
+  in the can's fluids and goes with the fuel when poured. It used to be
+  lost whenever the can was poured from or into with the game's own
+  pouring, filled by siphoning or at a pump, or first looked at. A full
+  can now takes it too: the game refuses a new fluid in a container
+  within 0.001 L of full, which could also drop a clean station's last
+  trace of water from a can filled to the brim.
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record

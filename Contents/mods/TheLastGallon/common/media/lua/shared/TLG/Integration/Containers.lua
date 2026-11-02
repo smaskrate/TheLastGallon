@@ -5,7 +5,8 @@
 --   consumption owner  native (any vanilla use of the fluid)
 --   sidecar            owner modData "tlg": id, rev, deg, stab, mic, t,
 --                      storage, sealed, cond, dirty, label, prov and the last
---                      reconciled composition q
+--                      reconciled composition q; every record write sets the
+--                      native fluids to q where they differ (C.commit)
 --   replication        item: syncItemFields (MP NOT RUN); object: transmitModData
 --   reconciliation     on every read: native decreases leave proportionally,
 --                      unknown increases mix in at the world baseline when
@@ -29,6 +30,12 @@ local Tables = TLG.Tables
 C.SIDECAR = "tlg"
 C.SCHEMA = 1
 C.FLOAT_TOLERANCE = 1e-4
+-- A record write sets the fluids to the record's composition when any
+-- component differs by more than this (litres). Below C.FLOAT_TOLERANCE,
+-- since the next read adopts smaller differences from the fluids and drops
+-- them; above the precision of native amounts (Java floats, about 2e-6 L at
+-- 20 L), since a change too small to store would make the total creep.
+C.COMMIT_TOLERANCE = 1e-5
 
 local SIDECAR_FIELDS = { "id", "rev", "deg", "stab", "mic", "t", "storage", "sealed", "cond", "dirty", "label", "prov", "q" }
 
@@ -66,6 +73,14 @@ local function storageFor(owner, kind)
     return TLG.ContainerProfiles.forObject(owner)
 end
 
+-- Largest difference between two compositions in any component (litres).
+local function maxDifference(a, b)
+    local d = 0
+    for id, q in pairs(a) do d = math.max(d, math.abs(q - (b[id] or 0))) end
+    for id, q in pairs(b) do d = math.max(d, math.abs(q - (a[id] or 0))) end
+    return d
+end
+
 -- Builds the committed record for a container; nil when it does not hold
 -- TLG-tracked fuel. `persist` allows assigning ids/baselines (authority).
 -- A record with untracked inflow comes back advanced to now, any other at
@@ -100,10 +115,7 @@ function C.read(owner, kind, persist)
     rec.prov = Tables.deepCopy(side.prov or {})
     -- Native amounts are Java floats (RT-DS drift ~2.5e-7 L per transfer):
     -- differences within C.FLOAT_TOLERANCE are adopted silently.
-    local maxDiff = 0
-    for id, q in pairs(comp) do maxDiff = math.max(maxDiff, math.abs(q - (rec.q[id] or 0))) end
-    for id, q in pairs(rec.q) do maxDiff = math.max(maxDiff, math.abs(q - (comp[id] or 0))) end
-    if maxDiff <= C.FLOAT_TOLERANCE then
+    if maxDifference(comp, rec.q) <= C.FLOAT_TOLERANCE then
         rec.q = Tables.copy(comp)
         Supply.normalize(rec)
         rec.cap = cap
@@ -152,10 +164,33 @@ function C.writeSidecar(owner, kind, rec)
     end
 end
 
+-- Writes the record and sets the container's fluids to its composition
+-- where they differ, or `always` (a write that moves litres). D-007: the
+-- fluids carry the composition through every native transfer. Aging turns
+-- fuel into water; written to the record alone, that water was dropped by
+-- the next read, which takes the fluids as they are. Both get what the
+-- container can hold (Native.holdable), so they agree; the litres stay the
+-- same, as aging keeps a liquid's total. Returns false, why when the fluids
+-- could not be set, the record left as it was.
+function C.commit(owner, kind, rec, always)
+    local held = Supply.copy(rec)
+    held.q = Native.holdable(rec.q)
+    local fc = C.fluidOf(owner, kind)
+    if fc and (always or maxDifference(Native.readComposition(fc), held.q) > C.COMMIT_TOLERANCE) then
+        local ok, why = Native.writeComposition(fc, held.q)
+        if not ok then
+            TLG.Log.error("container %s: fluids not set to its record: %s", C.keyOf(owner, kind), tostring(why))
+            return false, why
+        end
+    end
+    C.writeSidecar(owner, kind, held)
+    return true
+end
+
 -- Endpoint for TLG-initiated transactions (moves native quantity too).
 -- `readStatus` is the last read's status ("initialized": fuel the mod had
--- not recorded, given its baseline); `record` writes the record alone,
--- never the native fluid (a look records what it finds, D-024).
+-- not recorded, given its baseline); `record` writes the record and its
+-- composition, never moving litres (a look records what it finds, D-024).
 function C.endpoint(owner, kind, actor)
     local ep = { key = C.keyOf(owner, kind), owner = owner, kind = kind }
     function ep:canAccess(player)
@@ -177,14 +212,10 @@ function C.endpoint(owner, kind, actor)
         return rec
     end
     function ep:write(rec)
-        local ok, why = Native.writeComposition(C.fluidOf(owner, kind), rec.q)
-        if not ok then return false, why end
-        C.writeSidecar(owner, kind, rec)
-        return true
+        return C.commit(owner, kind, rec, true)
     end
     function ep:record(rec)
-        C.writeSidecar(owner, kind, rec)
-        return true
+        return C.commit(owner, kind, rec)
     end
     return ep
 end
@@ -225,8 +256,8 @@ function C.followNativeTransfer(srcOwner, srcKind, srcRec, dstOwner, dstKind, ds
     end
     Supply.normalize(newSrc)
     newSrc.rev = (src.rev or 0) + 1
-    C.writeSidecar(srcOwner, srcKind, newSrc)
-    C.writeSidecar(dstOwner, dstKind, merged)
+    C.commit(srcOwner, srcKind, newSrc)
+    C.commit(dstOwner, dstKind, merged)
     return newSrc, merged
 end
 

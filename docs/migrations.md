@@ -81,7 +81,9 @@ back):
   `TLG.*` items are items of the same kind; not tried.
 * A can of `TLG_Ethanol` was empty: the game dropped the fluid without a
   word. The other `TLG_*` fluids (diesel, biodiesel, the water and sediment
-  of contaminated fuel, methanol, glycerin, plant oil) not tried.
+  of contaminated fuel, methanol, glycerin, plant oil) not tried. Aged fuel
+  in a can also holds some `TLG_FuelWater`: the water it took up (D-007
+  amendment).
 * Vanilla Petrol keeps working. TLG sidecars in item modData and the world
   record in global ModData persist and are inert.
 * With the mod back, the world record is the same one, never created again

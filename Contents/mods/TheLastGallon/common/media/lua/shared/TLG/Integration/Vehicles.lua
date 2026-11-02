@@ -21,7 +21,7 @@ require "TLG/Boot"
 
 TLG.Integration.Vehicles = TLG.Integration.Vehicles or {}
 local V = TLG.Integration.Vehicles
-local C, Native, World = TLG.Integration.Containers, TLG.Integration.Native, TLG.World
+local C, World = TLG.Integration.Containers, TLG.World
 local Supply, Mixing, Aging, Tx, Consumers = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging,
     TLG.Authority.Transactions, TLG.Domain.Consumers
 local Tables = TLG.Tables
@@ -200,7 +200,6 @@ local function installTakeGasoline()
             pcall(function()
                 o.tlgVehicle = part:getVehicle()
                 o.tlgTankBefore = V.read(o.tlgVehicle, true)
-                o.tlgCanCompBefore = Native.readComposition(item:getFluidContainer())
                 o.tlgCanBefore = C.read(item, "item", true)
                 o.tlgTankStart = part:getContainerContentAmount()
             end)
@@ -218,11 +217,6 @@ local function installTakeGasoline()
             local remaining, parcel = Mixing.removeProportional(tank, moved)
             remaining.rev = (tank.rev or 0) + 1
             V.writeSidecar(self.tlgVehicle, remaining)
-            -- Correct native can contents: previous contents + real parcel.
-            local fc = self.item:getFluidContainer()
-            local comp = Tables.copy(self.tlgCanCompBefore)
-            for id, q in pairs(parcel) do comp[id] = (comp[id] or 0) + q end
-            Native.writeComposition(fc, comp)
             local can = Aging.advance(self.tlgCanBefore, now, env)
             local p = Supply.copy(tank)
             p.q = parcel
@@ -230,7 +224,9 @@ local function installTakeGasoline()
                 { supply = p, amount = moved } }, can.storage, can.cap)
             merged.id, merged.rev, merged.cap = can.id, (can.rev or 0) + 1, can.cap
             merged.sealed, merged.cond = can.sealed, can.cond
-            C.writeSidecar(self.item, "item", merged)
+            -- The can's fluids become the record's: the real parcel in place
+            -- of vanilla's Petrol, and the water its own fuel took up.
+            C.commit(self.item, "item", merged)
         end)
         if not ok then TLG.Log.error("siphon settle: %s", tostring(err)) end
     end

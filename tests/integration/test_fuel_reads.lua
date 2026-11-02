@@ -11,17 +11,18 @@ require "TLG/Integration/Stations"
 Events = savedEvents
 local I, D, World = TLG.Integration, TLG.Domain, TLG.World
 
--- Stand-ins for the game calls the fuel reads make: global ModData and the
--- clock (World.now, World.env), and the native fluids of a can, petrol only.
--- The untracked baseline is fixed, since what matters here is when the
--- inflow mixes in. Installed for one case and removed again.
+-- Stand-ins for the game calls the fuel reads and writes make: global
+-- ModData and the clock (World.now, World.env), and a can's native fluids
+-- (each fake container's `fluids`; writes counted in g.writes). The
+-- untracked baseline is fixed, since what matters here is when the inflow
+-- mixes in. Installed for one case and removed again.
 local GLOBALS = { "ModData", "getGameTime" }
 local BASE = 0.07
 
 local function fakeGame(now)
     local saved = {}
     for _, k in ipairs(GLOBALS) do saved[k] = _G[k] end
-    local g = { now = now, store = {} }
+    local g = { now = now, store = {}, writes = 0 }
     ModData = { getOrCreate = function(k)
         g.store[k] = g.store[k] or {}
         return g.store[k]
@@ -31,12 +32,19 @@ local function fakeGame(now)
     getGameTime = function() return clock end
     local md = World.get()
     md.v, md.calendar, md.climateLog = 1, { dayOfYear = 190, hourOfDay = 9 }, {}
-    local untracked, readComposition = I.Containers.untrackedDeg, I.Native.readComposition
+    local untracked, readComposition, writeComposition = I.Containers.untrackedDeg, I.Native.readComposition,
+        I.Native.writeComposition
     I.Containers.untrackedDeg = function() return BASE end
-    I.Native.readComposition = function(fc) return { gasoline = fc.owner.litres }, 0, {} end
+    I.Native.readComposition = function(fc) return fc:fluids(), 0, {} end
+    I.Native.writeComposition = function(fc, comp)
+        g.writes = g.writes + 1
+        fc.comp = TLG.Tables.copy(comp)
+        return true
+    end
     function g.restore()
         for _, k in ipairs(GLOBALS) do _G[k] = saved[k] end
-        I.Containers.untrackedDeg, I.Native.readComposition = untracked, readComposition
+        I.Containers.untrackedDeg, I.Native.readComposition, I.Native.writeComposition = untracked, readComposition,
+            writeComposition
     end
     return g
 end
@@ -50,8 +58,9 @@ end
 -- One stand-in per adapter; `x.litres` is what the native owner holds.
 local function can()
     local x = { md = { tlg = sidecar() }, litres = 4 }
-    local fc = { owner = x }
+    local fc = {}
     function fc:getCapacity() return 10 end
+    function fc:fluids() return { gasoline = x.litres } end
     function x:getModData() return self.md end
     function x:getFluidContainerFromSelfOrWorldItem() return fc end
     function x:getFullType() return "Base.PetrolCan" end
@@ -119,3 +128,110 @@ for _, r in ipairs(READS) do
         if not ok then error(err, 0) end
     end)
 end
+
+-- An opened jerry can of the mod's ethanol recorded at world hour 100, or
+-- an empty one never recorded; its fluids are a table the stand-ins read
+-- and write.
+local function ethanolCan(id, litres)
+    local x = { id = id, md = {} }
+    if litres > 0 then
+        x.md.tlg = { v = 1, id = "S" .. id, rev = 1, t = 100, q = { ethanol = litres }, deg = { ethanol = 0.1 }, stab = 0,
+            mic = 0, cond = 1, sealed = false, storage = "jerrycan_steel", prov = {} }
+    end
+    local fc = { comp = litres > 0 and { ethanol = litres } or {} }
+    function fc:getCapacity() return 20 end
+    function fc:fluids() return TLG.Tables.copy(self.comp) end
+    function x:getModData() return self.md end
+    function x:getFluidContainerFromSelfOrWorldItem() return fc end
+    function x:getFullType() return "Base.JerryCan" end
+    function x:getID() return self.id end
+    x.fc = fc
+    return x
+end
+
+-- The can's fluids hold what its record says, component by component.
+local function fluidsMatchRecord(x, label)
+    local q, comp = x.md.tlg.q, x.fc.comp
+    for id, v in pairs(q) do T.near(comp[id] or 0, v, 1e-9, label .. ": " .. id) end
+    for id, v in pairs(comp) do T.near(q[id] or 0, v, 1e-9, label .. ": " .. id) end
+end
+
+-- Water an opened can takes up while it ages: written to the record alone,
+-- the next read took the fluids as they were and dropped it (2026-11-02).
+local LATER = 100 + 24 * 60
+
+T.case("integration: a pour the mod follows leaves the water an opened can took up in its fluids", function()
+    local g = fakeGame(100)
+    local ok, err = pcall(function()
+        local src, dst = ethanolCan(1, 4), ethanolCan(2, 0)
+        g.now = LATER
+        local a, b = I.Containers.read(src, "item", false), I.Containers.read(dst, "item", false)
+        -- The game moves 1 L of ethanol, the only fluid it knows the can holds.
+        src.fc.comp.ethanol, dst.fc.comp.ethanol = 3, 1
+        I.Containers.followNativeTransfer(src, "item", a, dst, "item", b, { ethanol = 1 })
+        local water = src.md.tlg.q.water or 0
+        T.ok(water > 1e-3, string.format("the can took up %.6f L of water in 60 days", water))
+        fluidsMatchRecord(src, "source")
+        fluidsMatchRecord(dst, "destination")
+        T.near(D.Supply.total(src.md.tlg), 3, 1e-9, "the litres the game left")
+        T.eq(g.writes, 1, "only the source's fluids differed from its record")
+        local again, status = I.Containers.read(src, "item", false)
+        T.eq(status, "ok")
+        T.near(again.q.water or 0, water, 1e-12, "the next read keeps the water")
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: a look's record sets the can's fluids to it, the litres unchanged", function()
+    local g = fakeGame(100)
+    local ok, err = pcall(function()
+        local can = ethanolCan(3, 4)
+        g.now = LATER
+        local rec = D.Aging.advance((I.Containers.read(can, "item", false)), g.now, World.env())
+        I.Containers.endpoint(can, "item"):record(rec)
+        local water = can.md.tlg.q.water or 0
+        T.ok(water > 1e-3, string.format("%.6f L of water", water))
+        fluidsMatchRecord(can, "looked at")
+        T.near(D.Supply.total(can.md.tlg), 4, 1e-9, "no litres moved")
+        local again, status = I.Containers.read(can, "item", false)
+        T.eq(status, "ok")
+        T.near(again.q.water or 0, water, 1e-12, "the next read keeps the water")
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: water too little for the game to hold stays fuel in the record and the fluids", function()
+    local g = fakeGame(100)
+    local ok, err = pcall(function()
+        local can = ethanolCan(5, 4)
+        g.now = LATER
+        local rec = D.Aging.advance((I.Containers.read(can, "item", false)), g.now, World.env())
+        rec.q.ethanol, rec.q.water = 4 - 1.5e-4, 1.5e-4
+        I.Containers.endpoint(can, "item"):record(rec)
+        T.ok(can.md.tlg.q.water == nil, "no water under the game's minimum in the record")
+        fluidsMatchRecord(can, "too little")
+        T.near(D.Supply.total(can.md.tlg), 4, 1e-12, "the litres kept")
+        T.near(rec.q.water, 1.5e-4, 0, "the caller's record left as it was")
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: a record write leaves the fluids alone below the commit tolerance", function()
+    local g = fakeGame(100)
+    local ok, err = pcall(function()
+        local can = ethanolCan(4, 4)
+        g.now = 100.25
+        local rec = D.Aging.advance((I.Containers.read(can, "item", false)), g.now, World.env())
+        local water = rec.q.water or 0
+        T.ok(water > 0 and water < I.Containers.COMMIT_TOLERANCE,
+            string.format("%.3e L of water in a quarter of an hour", water))
+        I.Containers.endpoint(can, "item"):record(rec)
+        T.eq(g.writes, 0, "the fluids not touched")
+        T.eq(can.md.tlg.t, g.now, "the record written")
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)

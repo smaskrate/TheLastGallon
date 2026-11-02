@@ -78,6 +78,33 @@ listed with their replacement.
   contamination needs its own fuel-category fluid.
 * Consequence: vanilla refuel menus only accept containers that contain
   `Petrol`; TLG adds its own menu entries for other fuels (G03).
+* Amendment (2026-11-02): every write of a native container's record sets
+  its fluids to the record's composition where any component differs by
+  more than 1e-5 L, the litres unchanged (`Containers.commit`). That covers
+  a pour the mod follows (both cans), a first look (D-024), siphoning and
+  pump-to-can, as the mod's own transfers, treatments and machines already
+  did. Aging turns fuel into water. Written to the record alone, that water
+  was dropped by the next read, which takes the fluids as they are, so an
+  opened can never kept what it took up past its next vanilla pour (an
+  opened can of ethanol lost 0.0075 L over 60 days in a test with a faked
+  game). The tolerance sits below the read's 1e-4 L, which would drop what
+  it skips, and above the float precision of native amounts.
+* Writing the fluids (BC 42.21 `FluidContainer`): the game drops a fluid
+  under 1e-4 L, and within 0.001 L of capacity a container reads as full
+  and `addFluid` refuses a new fluid (`adjustSpecificFluidAmount` has no
+  such check). `Native.writeComposition` therefore holds the largest fluid
+  already there low while new ones go in, smallest first, then sets it.
+  A component under 2e-4 L goes to the largest, in the record and in the
+  fluids alike (`Native.holdable`), so the litres are kept. RT-SP run 57
+  found the refusal: a full 10 L petrol can, its petrol lowered by
+  1.1e-4 L for a look's water, refused the water and lost those litres
+  (run 58 measured it). The same trap was there for a can filled to the
+  brim at a clean station, whose last trace of water could be refused.
+  Verified RT-SP run 59 (8/0, 300 days on the mod clock). An opened can
+  of ethanol kept 0.080075 L of water through a vanilla pour and the
+  next read, and a further pour carried water in proportion. A look put
+  4.726e-4 L of water into a full petrol can, its 10 L unchanged. A full
+  can took a new fluid.
 
 ## D-008 Degradation as a mixable concentration with closed-form aging
 * Decision: each fuel component carries `deg`, a degradation-product index
@@ -488,3 +515,10 @@ listed with their replacement.
   look, and a later pour and a save with reload kept that record. A look
   with the sample kit (the same path past the kit check) and looks at
   vehicles, pumps or generators (no menu sends one) are not run in game.
+* Amendment (2026-11-02): in a can or other native container, the record
+  a look writes also sets the fluids to its composition where they
+  differ (D-007 amendment); the litres stay the same, so the look still
+  moves and creates no fuel. The baseline can hold water the fuel took up
+  before it was found, and written to the record alone that water was
+  dropped by the next read. Vehicle tanks, pumps and generators keep their
+  composition in the record only (D-006) and are unchanged.

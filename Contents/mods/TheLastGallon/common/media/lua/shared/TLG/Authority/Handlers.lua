@@ -78,11 +78,12 @@ local function consume(player, item)
     if isServer() and sendRemoveItemFromContainer then sendRemoveItemFromContainer(container, item) end
 end
 
--- Sampling never changes the fuel; the observation is stored per player,
--- under the id the fuel carries. Fuel the mod had not recorded is recorded
--- as found, its baseline written without touching the fuel itself (D-024):
--- before, the observation was filed under an id the fuel never got, and
--- What I know about it stayed "unknown" (RT-SP runs 39-40).
+-- Sampling never moves fuel; the observation is stored per player, under
+-- the id the fuel carries. Fuel the mod had not recorded is recorded as
+-- found (D-024): before, the observation was filed under an id the fuel
+-- never got, and What I know about it stayed "unknown" (RT-SP runs 39-40).
+-- A can's fluids are set to that record's composition, the litres the same
+-- (D-024 amendment: the water it took up before it was found).
 function H.sample(player, args)
     local state, err = openTarget(player, args)
     if not state then return err end

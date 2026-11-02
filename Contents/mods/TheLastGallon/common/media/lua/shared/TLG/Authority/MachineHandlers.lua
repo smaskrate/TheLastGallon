@@ -7,7 +7,7 @@ require "TLG/Content/Feedstocks"
 
 local H = TLG.Authority.Handlers
 local Machines, Process, World = TLG.Integration.Machines, TLG.Domain.Process, TLG.World
-local C, Native = TLG.Integration.Containers, TLG.Integration.Native
+local C = TLG.Integration.Containers
 local Supply, Mixing, Aging, Tables = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging, TLG.Tables
 local Feed = TLG.Feedstocks
 
@@ -248,10 +248,9 @@ function H.machineLoadDry(player, args)
     local plan = Process.plan("ethanol_dry", inputs, st.rec)
     if not plan.ok then return fail(plan.reason) end
     takeFeedstock(player, "lime", limeNeed, limeMax)
-    local ok, why = Native.writeComposition(can:getFluidContainer(), remaining.q)
-    if not ok then return fail("commit_failed", { detail = why }) end
     remaining.rev = (src.rev or 0) + 1
-    C.writeSidecar(can, "item", remaining)
+    local ok, why = C.commit(can, "item", remaining, true)
+    if not ok then return fail("commit_failed", { detail = why }) end
     local loaded = Process.load(st.rec, "ethanol_dry", inputs, player:getPerkLevel(Perks.Cooking))
     if not loaded.ok then
         TLG.Log.error("dry load failed after validation: %s", tostring(loaded.reason))
@@ -305,9 +304,8 @@ function H.machineCollect(player, args)
     merged.id, merged.rev, merged.cap, merged.sealed, merged.cond = dst.id, (dst.rev or 0) + 1, dst.cap, dst.sealed,
         dst.cond
     Supply.addProvenance(merged, { k = "made", from = st.rec.id, t = now, n = Supply.total(parcel) })
-    local ok, why = Native.writeComposition(can:getFluidContainer(), merged.q)
+    local ok, why = C.commit(can, "item", merged, true)
     if not ok then return fail("commit_failed", { detail = why }) end
-    C.writeSidecar(can, "item", merged)
     return commit(player, args, st, collected.proc, { collected = collected.parcel,
         discarded = collected.byproducts })
 end

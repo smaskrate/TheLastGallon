@@ -60,30 +60,77 @@ function Native.isFuelContainer(fc)
     return not Tables.isEmpty(comp)
 end
 
--- Sets the container's fluids to exactly `comp` (litres per component).
--- Used only when TLG itself moved or corrected quantities (decision D-006).
--- Returns false when a component has no native fluid.
-function Native.writeComposition(fc, comp)
-    local current = Native.readComposition(fc)
+-- What a container can hold (BC 42.21 FluidContainer):
+-- * a fluid under 1e-4 L is dropped as empty (removeFluidInstanceIfEmpty);
+-- * within 0.001 L of capacity the amount reads as the capacity
+--   (recalculateCaches), so isFull() holds and addFluid refuses a new fluid,
+--   while adjustSpecificFluidAmount sets one already there without that check.
+-- RT-SP run 57: a full petrol can, its petrol lowered for 1.1e-4 L of water,
+-- refused the water and lost those litres.
+Native.MIN_FLUID = 2e-4 -- a component under this goes to the largest (twice the game's 1e-4)
+Native.ROOM = 0.005 -- room kept while new fluids go in (the game's 0.001, with margin)
+
+-- The composition a container can hold: a component under Native.MIN_FLUID
+-- goes to the largest, so the litres are kept.
+function Native.holdable(comp)
+    local out, largest = {}, nil
     for _, id in ipairs(Tables.sortedKeys(comp)) do
-        if Native.fluidForComponent(id) == nil and comp[id] > 1e-9 then return false, "no_native_fluid_" .. id end
+        if comp[id] > 1e-9 then
+            out[id] = comp[id]
+            if largest == nil or comp[id] > comp[largest] then largest = id end
+        end
+    end
+    for _, id in ipairs(Tables.sortedKeys(out)) do
+        if id ~= largest and out[id] < Native.MIN_FLUID then
+            out[largest] = out[largest] + out[id]
+            out[id] = nil
+        end
+    end
+    return out
+end
+
+-- Sets the container's fluids to `comp` (litres per component). Used only
+-- when TLG itself moved or corrected quantities (decision D-006) or wrote a
+-- record (Containers.commit, which passes Native.holdable compositions).
+-- New fluids go in smallest first while the largest one already there is
+-- held low, so a full container takes them. Returns false when a component
+-- has no native fluid.
+function Native.writeComposition(fc, comp)
+    local target = {}
+    for _, id in ipairs(Tables.sortedKeys(comp)) do
+        if comp[id] > 1e-9 then
+            if Native.fluidForComponent(id) == nil then return false, "no_native_fluid_" .. id end
+            target[id] = comp[id]
+        end
+    end
+    local current = Native.readComposition(fc)
+    local adds, total, kept = {}, 0, nil
+    for _, id in ipairs(Tables.sortedKeys(target)) do
+        total = total + target[id]
+        if (current[id] or 0) > 0 then
+            if kept == nil or target[id] > target[kept] then kept = id end
+        else
+            adds[#adds + 1] = id
+        end
+    end
+    local low
+    if kept and #adds > 0 then
+        local need = total - (fc:getCapacity() - Native.ROOM)
+        if need > 0 and target[kept] - need >= 10 * Native.MIN_FLUID then low = target[kept] - need end
     end
     for _, id in ipairs(Tables.sortedKeys(current)) do
-        if (comp[id] or 0) <= 1e-9 then
-            fc:adjustSpecificFluidAmount(Native.fluidForComponent(id), 0)
+        local fluid = Native.fluidForComponent(id)
+        if target[id] == nil then
+            fc:adjustSpecificFluidAmount(fluid, 0)
+        elseif id == kept and low then
+            fc:adjustSpecificFluidAmount(fluid, low)
+        else
+            fc:adjustSpecificFluidAmount(fluid, target[id])
         end
     end
-    for _, id in ipairs(Tables.sortedKeys(comp)) do
-        local want = comp[id]
-        if want > 1e-9 then
-            local fluid = Native.fluidForComponent(id)
-            if (current[id] or 0) > 0 then
-                fc:adjustSpecificFluidAmount(fluid, want)
-            else
-                fc:addFluid(fluid, want)
-            end
-        end
-    end
+    adds = Tables.sort(adds, function(a, b) return target[a] < target[b] end)
+    for _, id in ipairs(adds) do fc:addFluid(Native.fluidForComponent(id), target[id]) end
+    if low then fc:adjustSpecificFluidAmount(Native.fluidForComponent(kept), target[kept]) end
     return true
 end
 
