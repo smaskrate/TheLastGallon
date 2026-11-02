@@ -1547,4 +1547,49 @@ Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run57_can_water.txt`,
 
 Run 59's console had no TLG error and no Lua exception. Not run in game
 by this mode: siphoning and pump-to-can, whose settles now go through
-the same write (the full harness covers both).
+the same write (the full harness covers both; run 60).
+
+## 2026-11-02 — RT-SP client harness, launch 60 (the zip with the water fix installed clean)
+
+Command: `tools/rehearse-install.ps1`, which rebuilt the package first
+(191/191 tests, compile check 101/0): the zip of commit `0bac424`, 82
+files, SHA-256 `3970ad6b…`, 206,632 bytes, with the water fix (D-007 and
+D-024 amendments). The zip matched its manifest (82 files), was installed
+into a fresh isolated cache and ran the full harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run60_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
+47, 52 and 56.
+* The settles the fix rewrote ran in the chain. The pump filled a 10 L
+  can to the brim with station fuel (its water and sediment included),
+  and the vehicle was siphoned into a can. Each moved 10.00000 L with the
+  mod's total equal to the fluids, and fuel state carried to within
+  1.78e-8 and 2.07e-8.
+* The workbench was dark (light 0.15 at 10.54 game time); with the torch
+  in hand all four machines were crafted from the menu.
+* After the save and continue, every record came back.
+* The console showed "machine move hooks installed" on both loads and no
+  TLG error or warning. Its one Lua error, a stack overflow, is the
+  harness's own deliberate deep recursion (`LuaProbe.lua`); no stack frame
+  names the mod.
+
+## 2026-11-02 — RT-SP client harness, launch 61 (the mod removed and added back, on the zip with the water fix)
+
+Command: `tools/rehearse-install.ps1 -NoBuild -Scenario removal`, on run
+60's zip (`3970ad6b…`). The fix changes what a record write puts in a
+can's fluids, so run 55's scenario was run again.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run61_removal_launch1.txt`,
+`…_launch2.txt`, `…_launch2_console.txt`, `…_launch3.txt`.
+
+Result: launch 1 **1/0**, launch 2 **2/0**, launch 3 **5/0**, as in run 55.
+World seed 956347149. Without the mod, the ethanol can was empty and the
+fermenter was gone (the same two console lines); P and Q kept their
+petrol and records, and were poured to 7 L each. With the mod back:
+* the records were exactly as launch 1 left them, and the world record
+  was the same one;
+* P's condition was its record aged to now, 0.347291372, exactly;
+* Q's was D-006's rule, 0.381088945, exactly (the old order gives
+  0.387104564).
+
+Launch 2's two exceptions are the driver's own guarded lookup
+(`Driver.lua:182`); launches 1 and 3 had no TLG error or Lua exception.

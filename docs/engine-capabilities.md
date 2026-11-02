@@ -722,7 +722,9 @@ then the full mode on the zip with that fix installed clean, run 52
 and 4/1 and, after the fix, run 55 **1/0**, **2/0** and **5/0**, then the
 full mode on the zip with that fix installed clean, run 56 **94/0** and
 **14/0**, then the water a can takes up, run 57 5/2, run 58 3/4 and,
-after the second fix, run 59 **8/0**. Most failures were
+after the second fix, run 59 **8/0**, then the zip with that fix
+installed clean, run 60 **94/0** and **14/0**, and the removal scenario
+on it, run 61 **1/0**, **2/0** and **5/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
