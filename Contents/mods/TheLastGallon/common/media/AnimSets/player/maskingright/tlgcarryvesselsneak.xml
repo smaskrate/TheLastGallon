@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The Last Gallon: the fermentation vessel carried in both arms while
+     crouched and moving. With the vessel's RightHandMask and sneaking true
+     it has one condition more than tlgcarryvessel.xml, so the game plays it
+     instead whenever the character sneaks (BC AnimState.getAnimNodes plays
+     the matching nodes with the most conditions); tlgcarryvesselsneakidle.xml
+     takes over when she stops. A player's arms hang from Bip01_Spine1 and the
+     vessel's bone from the right hand (BC IsoPlayer.onAnimPlayerCreated), so
+     the standing clip tips the vessel with the crouched chest (run 108). This
+     clip, Bob_TLG_CarryVesselSneak (media/anims_X/Bob), holds the same arms
+     keyed for the first frame of the game's Bob_WalkSneak by
+     tools/blender/pz_arms.py, in their standing directions, with the vessel
+     upright 0.17 file units in front of the hands and 0.12 down
+     (art-src/carry/PROVENANCE.md). Checked in game: docs/test-results.md. -->
+<animNode>
+	<m_Name>tlgcarryvesselsneak</m_Name>
+	<m_Priority>10</m_Priority>
+	<m_AnimName>Bob_TLG_CarryVesselSneak</m_AnimName>
+	<m_BlendTime>0.30</m_BlendTime>
+	<m_SpeedScale>1.00</m_SpeedScale>
+	<m_Conditions x_name="9aedf03c-6cfb-41b5-a640-085233c0177d">
+		<m_Name>RightHandMask</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>tlgcarryvessel</m_Value>
+	</m_Conditions>
+	<m_Conditions x_name="79eb5001-9ed3-4c8d-9079-36d0e117ff0d">
+		<m_Name>sneaking</m_Name>
+		<m_Type>BOOL</m_Type>
+		<m_Value>true</m_Value>
+	</m_Conditions>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01</boneName>
+		<weight>0.00</weight>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

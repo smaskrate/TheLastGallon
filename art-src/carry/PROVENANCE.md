@@ -31,6 +31,28 @@ Mixamo bone, mesh or texture is in it. It plays through
 model `TLG.FermenterHeld` (`media/scripts/TLG_models.txt`). In-game
 checks: `docs/test-results.md`, launches 91–96.
 
+Shipped for the crouch (2026-11-03), written from the same two files, in
+the same folder:
+
+| File | Bytes | SHA-256 | Body pose (`--body`) |
+| --- | --- | --- | --- |
+| `Bob_TLG_CarryVesselSneak.x` | 248,250 | `658AC930FE4F9DECDC7DCB2C532034708EE32A6BE83D69A8F0DCBAD1606967C6` | `Bob_WalkSneak.x` |
+| `Bob_TLG_CarryVesselSneakIdle.x` | 307,579 | `FCBB621A5996DF47168BF7671DD7FD0CEE86C3969B3EAF3FA7C5B3498CC2A975` | `Bob_IdleSneak.x` |
+
+```
+blender -b --factory-startup --python tools/blender/pz_arms.py -- Carrying.fbx Bob_TLG_CarryVesselSneak.x Bob_TLG_CarryVesselSneak 2 0.17 0.12 CarryingBiggerArmSpace.fbx 0.5 --body <game>/media/anims_X/Bob/Bob_WalkSneak.x --arms world
+blender -b --factory-startup --python tools/blender/pz_arms.py -- Carrying.fbx Bob_TLG_CarryVesselSneakIdle.x Bob_TLG_CarryVesselSneakIdle 2 0.17 0.12 CarryingBiggerArmSpace.fbx 0.5 --body <game>/media/anims_X/Bob/Bob_IdleSneak.x --arms world
+```
+
+Each holds the same arms in their standing directions, laid from the
+shoulders of the game's crouch walk or crouch idle, and the held item
+upright, 0.17 file units in front of the hands and 0.12 down. Their other
+bones hold the first frame of the game's own clip named as the body
+pose. No Mixamo bone, mesh or texture is in them. They play through
+`tlgcarryvesselsneak.xml` and `tlgcarryvesselsneakidle.xml` in the same
+`maskingright` folder. In-game checks: `docs/test-results.md`, launches
+109–113.
+
 Licence, recorded 2026-11-02:
 
 * Adobe's Mixamo FAQ (helpx.adobe.com/creative-cloud/faq/mixamo-faq.html,

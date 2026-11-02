@@ -62,6 +62,8 @@
 --             through a loot, the vessel unequipped for a bat
 --   sp-rtmvg -> the vessel carried walking, running, sprinting, sneaking
 --             and running crouched, then crouched and still
+--   sp-rtmpk -> crouched carry trials: candidate clips keyed for the
+--             game's crouch, crouched still, walking and running
 --   sp-rtman -> the field manual: its loot lists, manuals rolled from them,
 --             one read through the inventory menu (sp-rtmanit: in Italian)
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
@@ -93,7 +95,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8429,7 +8431,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
 RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit"
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module (StaticModel =
     -- WaterTank read back as Base.WaterTank, run 68). The vessel's hand
@@ -9062,7 +9064,7 @@ function RT.MP.use(item, model)
             local si = getScriptManager():getItem(item)
             si:DoParam("StaticModel = " .. model)
             R:line("OBS  RTMP.%s StaticModel=%s", item, tostring(si:getStaticModel()))
-            if REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" then
+            if REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" then
                 local m = AnimatorDebugMonitor.new(p)
                 m:setFilter(1, true)
                 m:setFilter(2, true)
@@ -9319,19 +9321,26 @@ end
 -- "Toggle to Sprint" on; CharacterInputComponent.updateToggleToRun), so a
 -- running leg turns "Toggle to Run" on for its length (run 107 ran without
 -- it and walked). Sneaking is set as the crouch key sets it
--- (IsoPlayer.updateSneakKey: setSneaking). The carry pose is one
--- node with no gait of its own (tlgcarryvessel.xml), where vanilla's bag has
--- a node for each (runbagright.xml, walksneakbagright.xml and others), and
--- the clip keys the vessel's bone from Bip01 while the hands hang from the
--- spine (tools/blender/pz_arms.py): a gait that bends the spine moves the
--- hands and not the vessel.
-RT.VG = { at = { 0.35, 0.5, 0.65 } }
+-- (IsoPlayer.updateSneakKey: setSneaking). A player's arms hang from
+-- Bip01_Spine1 and the vessel's bone from the right hand
+-- (IsoPlayer.onAnimPlayerCreated reparents them, BC), and the game's
+-- crouch clips turn Spine1 60-73 degrees from standing, so the standing
+-- clip tips the vessel with the crouched chest (run 108). Crouched, the
+-- vessel has nodes and clips of its own, as vanilla's bag has one per gait
+-- (walksneakbagright.xml and others).
+RT.VG = { at = { 0.35, 0.5, 0.65 },
+    -- The item's mask while held, and the carry node a leg standing, a leg
+    -- crouched and a crouched character standing still should show (the
+    -- crouch trials set their own).
+    expect = { mask = "tlgcarryvessel", stand = "tlgcarryvessel", crouched = "tlgcarryvesselsneak",
+        still = "tlgcarryvesselsneakidle" } }
 
 -- A leg's animator log as lines, with the states each layer went to, the
--- clips that started, and whether the carry pose stopped during it.
+-- clips that started, and the nodes active at the time, replayed from the
+-- log's activations and deactivations on every layer.
 function RT.VG.readLog(m)
     local text = tostring(m:getLogString()):gsub("<LINE>", "\n"):gsub("<[^>]*>", "")
-    local lines, states, clips, off = {}, {}, {}, false
+    local lines, states, clips, active, nodes = {}, {}, {}, {}, {}
     local function add(list, v)
         for _, x in ipairs(list) do if x == v then return end end
         list[#list + 1] = v
@@ -9343,11 +9352,27 @@ function RT.VG.readLog(m)
         if layer and state then add(states, layer .. ":" .. state) end
         local clip = l:match("%[anim_tracks%] : activated %-> '([^']*)'")
         if clip then add(clips, clip) end
-        if l:find("deactivated -> 'tlgcarryvessel'", 1, true) or l:find("deactivated -> 'Bob_TLG_CarryVessel'", 1, true) then
-            off = true
-        end
+        local verb, node = l:match("%[active_nodes%] : (%a+) %-> '([^']*)'")
+        if layer and node then active[layer .. ":" .. node] = verb == "activated" or nil end
     end
-    return lines, states, clips, off
+    for key in pairs(active) do nodes[(key:gsub("^%d+:", ""))] = true end
+    return lines, states, clips, nodes
+end
+
+-- Sets which mask and carry nodes the following legs should show.
+function RT.VG.expecting(mask, stand, crouched, still)
+    return { name = "rtvg_expect_" .. mask, timeout = 30, fn = function()
+        RT.VG.expect = { mask = mask, stand = stand, crouched = crouched, still = still }
+        return true
+    end }
+end
+
+-- A fresh animator monitor on the player.
+function RT.VG.monitor(p)
+    local m = AnimatorDebugMonitor.new(p)
+    for f = 1, 3 do m:setFilter(f, true) end
+    p:setDebugMonitor(m)
+    return m
 end
 
 -- One leg to view square k at a gait (`run`, `sprint`, `sneak`), timed and
@@ -9359,12 +9384,13 @@ function RT.VG.leg(gait, k, opts)
         if ticks == 1 then
             ISTimedActionQueue.clear(p)
             ctx.held = p:getPrimaryHandItem()
+            ctx.mask, ctx.node = RT.VG.expect.mask, opts.sneak and RT.VG.expect.crouched or RT.VG.expect.stand
+            -- A leg ends standing still, crouched or not.
+            ctx.still = opts.sneak and RT.VG.expect.still or RT.VG.expect.stand
             p:setSneaking(opts.sneak == true)
             ctx.toggle = getCore():isToggleToRun()
             if opts.run then getCore():setToggleToRun(true) end
-            ctx.monitor = AnimatorDebugMonitor.new(p)
-            for f = 1, 3 do ctx.monitor:setFilter(f, true) end
-            p:setDebugMonitor(ctx.monitor)
+            ctx.monitor = RT.VG.monitor(p)
             local x, y = RT.MI.behind(RT.MI.cx, RT.MI.cy, k)
             ctx.x0, ctx.y0, ctx.x1, ctx.y1 = p:getX(), p:getY(), x + 0.5, y + 0.5
             ctx.total = math.sqrt((ctx.x1 - ctx.x0) ^ 2 + (ctx.y1 - ctx.y0) ^ 2)
@@ -9380,13 +9406,15 @@ function RT.VG.leg(gait, k, opts)
         if RT.VG.at[n] and done >= RT.VG.at[n] then
             local file = string.format("tlg_rtvg_%s_%d.png", gait, n)
             local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+            local _, _, _, nodes = RT.VG.readLog(ctx.monitor)
             local s = { run = p:isRunning(), sprint = p:isSprinting(), sneak = p:isSneaking(),
-                mask = p:getVariableString("RightHandMask"),
+                mask = p:getVariableString("RightHandMask"), node = nodes[ctx.node] == true,
                 both = p:getPrimaryHandItem() == ctx.held and p:getSecondaryHandItem() == ctx.held }
             ctx.seen[n] = s
             R:line("OBS  RTVG.%s screenshot %s ok=%s at %d%% of %.1f tiles (tick %d): running=%s sprinting=%s"
-                .. " sneaking=%s RightHandMask=%s in both hands=%s", gait, file, tostring(ok), math.floor(done * 100),
-                ctx.total, ticks, tostring(s.run), tostring(s.sprint), tostring(s.sneak), tostring(s.mask), tostring(s.both))
+                .. " sneaking=%s RightHandMask=%s %s active=%s in both hands=%s", gait, file, tostring(ok),
+                math.floor(done * 100), ctx.total, ticks, tostring(s.run), tostring(s.sprint), tostring(s.sneak),
+                tostring(s.mask), ctx.node, tostring(s.node), tostring(s.both))
         end
         if ticks < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
         local secs = (getTimestampMs() - ctx.ms) / 1000
@@ -9394,7 +9422,7 @@ function RT.VG.leg(gait, k, opts)
         R:line("OBS  RTVG.%s Toggle to Run was %s, %s during the leg", gait, tostring(ctx.toggle),
             tostring(getCore():isToggleToRun()))
         getCore():setToggleToRun(ctx.toggle)
-        local lines, states, clips, off = RT.VG.readLog(ctx.monitor)
+        local lines, states, clips, nodes = RT.VG.readLog(ctx.monitor)
         TLGH.writeFile("TLG_animlog_" .. gait .. ".txt", lines)
         local left = math.sqrt((p:getX() - ctx.x1) ^ 2 + (p:getY() - ctx.y1) ^ 2)
         R:line("OBS  RTVG.%s %.1f tiles in %.2f s (%.2f tiles a second), %d ticks; %.2f tiles short of the end;"
@@ -9413,13 +9441,14 @@ function RT.VG.leg(gait, k, opts)
                 table.concat(got, "; "))
         end)
         R:check("RTVG." .. gait .. "_pose_kept", function()
-            local okay, masks = not off and #ctx.seen == 3, {}
+            local ended = nodes[ctx.node] == true or nodes[ctx.still] == true
+            local okay, at = #ctx.seen == 3 and ended, {}
             for _, s in ipairs(ctx.seen) do
-                okay = okay and s.mask == "tlgcarryvessel"
-                masks[#masks + 1] = tostring(s.mask)
+                okay = okay and s.mask == ctx.mask and s.node
+                at[#at + 1] = string.format("%s/%s", tostring(s.mask), tostring(s.node))
             end
-            return okay, string.format("RightHandMask at the shots: %s; carry pose stopped in the log=%s",
-                table.concat(masks, ", "), tostring(off))
+            return okay, string.format("RightHandMask/%s active at the shots: %s; %s or %s active at the end: %s",
+                ctx.node, table.concat(at, ", "), ctx.node, ctx.still, tostring(ended))
         end)
         R:check("RTVG." .. gait .. "_carried", function()
             local both = p:getPrimaryHandItem() == ctx.held and p:getSecondaryHandItem() == ctx.held
@@ -9432,25 +9461,34 @@ function RT.VG.leg(gait, k, opts)
     end }
 end
 
--- Crouched (`on`) or standing up, as the crouch key toggles it, and still.
+-- Crouched (`on`) or standing up, as the crouch key toggles it, and still;
+-- the carry node for that stance must be active once it has settled.
 function RT.VG.crouch(on)
     return { name = "rtvg_crouch_" .. tostring(on), timeout = 300, fn = function(ctx, ticks)
         local p = player()
         if ticks == 1 then
             p:setForceRun(false)
             p:setForceSprint(false)
+            ctx.monitor = RT.VG.monitor(p)
             p:setSneaking(on)
         end
         if ticks < 60 then return nil end
-        R:line("OBS  RTVG.crouch sneaking=%s (asked %s); RightHandMask=%s", tostring(p:isSneaking()), tostring(on),
-            tostring(p:getVariableString("RightHandMask")))
+        local node = on and RT.VG.expect.still or RT.VG.expect.stand
+        local _, states, clips, nodes = RT.VG.readLog(ctx.monitor)
+        R:line("OBS  RTVG.crouch sneaking=%s (asked %s); RightHandMask=%s; states %s; clips started %s",
+            tostring(p:isSneaking()), tostring(on), tostring(p:getVariableString("RightHandMask")),
+            table.concat(states, ", "), table.concat(clips, ", "))
+        R:check("RTVG.crouch_" .. tostring(on) .. "_node", function()
+            return p:isSneaking() == on and nodes[node] == true, string.format("sneaking=%s; %s active=%s",
+                tostring(p:isSneaking()), node, tostring(nodes[node] == true))
+        end)
         return true
     end }
 end
 
 -- Request "sp-rtmvg": the shipped vessel carried in both arms walking,
 -- running, sprinting, sneaking and running crouched along the views row,
--- then crouched and still from the front and the side.
+-- then crouched and still from the front and the side, and standing again.
 if REQUEST == "sp-rtmvg" then
     RT.poseSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmp_go", "tests"), RT.MI.zoomTo("rtmp_zoom", 0.25),
         RT.MP.use("TLG.FermenterVessel", "TLG.FermenterHeld"), RT.MI.heavy("vg_vessel", "TLG.FermenterVessel"),
@@ -9458,6 +9496,26 @@ if REQUEST == "sp-rtmvg" then
         RT.VG.leg("sneak_walk", -1, { sneak = true }), RT.VG.leg("sneak_run", 7, { sneak = true, run = true }),
         RT.VG.crouch(true), RT.MP.face("SE"), RT.MI.shot("rtvg_crouched_front", true), RT.MP.face("NE"),
         RT.MI.shot("rtvg_crouched_side", true), RT.VG.crouch(false), RT.finish }
+end
+
+-- Request "sp-rtmpk": crouched carry trials. Each trial item's own mask
+-- plays a candidate clip keyed for the game's crouch walk, and crouched and
+-- still one keyed for its crouch idle (TLGHarness_pose.txt,
+-- tlgcrouch*.xml), with the shipped hand model; crouched and still from the
+-- front and the side, then crouched walking and running along the views row.
+if REQUEST == "sp-rtmpk" then
+    RT.poseSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmp_go", "tests"), RT.MI.zoomTo("rtmp_zoom", 0.25) }
+    for _, n in ipairs({ "1712", "1716", "2012" }) do
+        local item, mask = "TLGHarness.PoseCrouch" .. n, "tlgcrouch" .. n
+        for _, s in ipairs({ RT.MP.use(item, "TLG.FermenterHeld"), RT.MI.heavy("pk_" .. mask, item),
+            RT.VG.expecting(mask, mask, mask, mask .. "idle"), RT.VG.crouch(true), RT.MP.face("SE"),
+            RT.MI.shot("rtpk_" .. mask .. "_front", true), RT.MP.face("NE"), RT.MI.shot("rtpk_" .. mask .. "_side", true),
+            RT.VG.leg(mask .. "_sneak_walk", 7, { sneak = true }),
+            RT.VG.leg(mask .. "_sneak_run", -1, { sneak = true, run = true }), RT.VG.crouch(false) }) do
+            RT.poseSteps[#RT.poseSteps + 1] = s
+        end
+    end
+    RT.poseSteps[#RT.poseSteps + 1] = RT.finish
 end
 
 -- The fuel systems field manual (requests "sp-rtman", and "sp-rtmanit" in a
@@ -9953,7 +10011,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -10046,7 +10104,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgu" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, generators put down by the menus' unequip")
                 TLGH.Steps.run(R, RT.genUnequipSteps, H, nil)
-            elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" then
+            elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, pose trial")
                 TLGH.Steps.run(R, RT.poseSteps, H, nil)
             elseif REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
@@ -10079,7 +10137,7 @@ end
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
 if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

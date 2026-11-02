@@ -122,13 +122,14 @@ runs 64–67) and the supplied fermenter's FBX (runs 68–69)
   whatever its scale (runs 86–87). The game's poses are one-armed; a
   two-armed carry needs a clip of its own, retargeted onto the game's
   skeleton by `tools/blender/pz_arms.py` (runs 88–96).
-* One carry clip serves every gait: walking, running, sprinting and
-  sneaking keep the pose on (run 108). The held item's bone hangs off the
-  root bone, which the game's clips turn from the standing pose (11°
-  walking, 15° running, 21–28° crouched), so crouched the vessel tips
-  forward and the torso sinks into it. A crouched look needs a clip of
-  its own, keyed against a crouch clip, as the game's held bag has one
-  per gait (A30).
+* A player's held item hangs from the right hand and the arms from the
+  chest (`IsoPlayer.onAnimPlayerCreated` reparents them), so a carried
+  item turns with the chest. The standing clip keeps the pose on walking,
+  running, sprinting and sneaking (run 108), but crouched the vessel
+  tipped into the torso. Two crouched clips keyed for the game's crouch
+  walk and crouch idle keep it upright (A30, runs 110–113). A clip keyed
+  for another body pose must hold that pose in its other bones too
+  (`pz_arms.py --body`).
 * Not verified: multiplayer.
 
 Sound playback and zombie attraction are separate (spec §22): a machine

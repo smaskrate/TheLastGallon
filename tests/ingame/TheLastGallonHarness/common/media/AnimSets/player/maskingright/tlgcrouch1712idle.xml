@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Crouched carry trial (request sp-rtmpk): Bob_TLGCrouch1712Idle, the halfway blend of the
+     user's two Mixamo clips keyed for the first frame of the game's Bob_IdleSneak by
+     tools/blender/pz_arms.py with its body option, the arms in their standing
+     directions and the item upright, 0.17 forward of the hands and 0.12 down.
+     Selected when an item's primaryAnimMask is tlgcrouch1712 and the character is crouched and still. Harness mod only, never packaged. -->
+<animNode>
+	<m_Name>tlgcrouch1712idle</m_Name>
+	<m_Priority>10</m_Priority>
+	<m_AnimName>Bob_TLGCrouch1712Idle</m_AnimName>
+	<m_BlendTime>0.30</m_BlendTime>
+	<m_SpeedScale>1.00</m_SpeedScale>
+	<m_Conditions x_name="3675c16e-e89e-4d88-b071-2c215c712972">
+		<m_Name>RightHandMask</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>tlgcrouch1712</m_Value>
+	</m_Conditions>
+	<m_Conditions x_name="630ced72-335b-4dc8-b8e5-cd7314161ce4">
+		<m_Name>sneaking</m_Name>
+		<m_Type>BOOL</m_Type>
+		<m_Value>true</m_Value>
+	</m_Conditions>
+	<m_Conditions x_name="e5693509-6164-43b9-9899-ee7094ef4e94">
+		<m_Name>isMoving</m_Name>
+		<m_Type>BOOL</m_Type>
+		<m_Value>false</m_Value>
+	</m_Conditions>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01</boneName>
+		<weight>0.00</weight>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

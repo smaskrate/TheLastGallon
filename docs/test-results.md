@@ -2332,10 +2332,9 @@ and `…_run106_manual_italian_packaged.txt`.
 ## 2026-11-02 — RT-SP client harness, launches 107–108 (the vessel carried running and sneaking)
 
 The carry pose is one node, `tlgcarryvessel`, with no gait of its own;
-the game's held bag has a node for each. The barrel's bone
-(`Bip01_Prop1`) hangs off the root bone `Bip01`, the arms off the spine,
-and the clip was keyed against the standing pose. None of the game's
-heavy-item drops is tied to a gait (engine capabilities, G14).
+the game's held bag has a node for each. The clip was keyed against the
+standing pose. None of the game's heavy-item drops is tied to a gait
+(engine capabilities, G14).
 
 Command: `tools/run-sp-harness.ps1 -Mode vessel-gaits` (new; request
 `sp-rtmvg`, no save). The shipped vessel is taken into both hands. The
@@ -2381,14 +2380,15 @@ Launch 108: **21/0**.
   walking or running, it tips forward, its lid turned out and its bottom
   swung back between her knees, and her hips and belly sink into its
   back. Her hands stay on its sides throughout.
-- Why: the barrel's bone turns with the root bone, which the game's clips
-  turn away from the standing pose. At their first frames that is 10.8°
-  in `Bob_Walk`, 15.0° in `Bob_Run` and `Bob_Sprint`, and 20.6°, 22.5°
-  and 28.4° in `Bob_WalkSneak`, `Bob_IdleSneak` and `Bob_RunSneak`, the
-  root up to 0.06 file units lower. The arms follow the spine, which
-  crouched bends further over the barrel. The game's held bag has a clip
-  for each gait instead (`walksneakbagright.xml`, `idlesneakbagright.xml`
-  and others).
+- Why (corrected after launch 110): the game reparents a player's
+  `Bip01_Prop1` under the right hand and the clavicles under
+  `Bip01_Spine1` (BC `IsoPlayer.onAnimPlayerCreated`), so the barrel turns
+  with the chest. Crouched, the chest bends far forward. This entry first
+  gave the root bone's turn as the cause (10.8° walking, 15.0° running,
+  20.6–28.4° crouched, at the clips' first frames). Those angles are
+  right, but `Bip01_Prop1` does not hang from that bone at runtime. The
+  game's held bag has a clip for each gait instead
+  (`walksneakbagright.xml`, `idlesneakbagright.xml` and others).
 - The console had no exception.
 
 Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run107_vessel_gaits.txt`,
@@ -2397,5 +2397,84 @@ and the five legs' animator logs, `2026-11-02_run108_animlogs_gaits.txt`.
 
 Not checked: multiplayer; the keys pressed on a keyboard (the harness sets
 the flags the keys set); what the vessel's weight does to a normal
-character's speed; animations the game starts without a Lua action. No
-crouched clip was made.
+character's speed; animations the game starts without a Lua action. The
+crouched clips came next (launches 109–113).
+
+## 2026-11-02/03 — RT-SP client harness, launches 109–113 (a crouched carry pose)
+
+After launch 108 the user asked for a crouched version of the carry. A
+state plays the nodes that match with the most conditions (BC
+`AnimState.getAnimNodes`). So a node with the vessel's mask and
+`sneaking` true plays instead of the standing node whenever the
+character crouches. The retarget tool gained a body option
+(`tools/blender/pz_arms.py --body <clip.x>`). It keys the arms for the
+first frame of another game clip and keeps the held item upright, and
+with `--arms world` the arms keep their standing directions. Its
+default output is unchanged: the shipped standing clip rebuilds byte for
+byte (SHA-256 `ECC4C413…`).
+
+Command: `tools/run-sp-harness.ps1 -Mode pose-crouch` (new; request
+`sp-rtmpk`, no save). Each candidate is a harness item whose own pose
+files play it, with the shipped hand model. It is taken into both hands,
+and the character crouches and is photographed still from the front and
+the side. Then she walks and runs crouched along the row, as in the gait
+mode. Each leg checks that the candidate's node is active at its shots,
+replaying the animator's log up to each one.
+
+| Launch | Candidates | Result | What the game did |
+| --- | --- | --- | --- |
+| 109 | three, keyed for `Bob_WalkSneak` | 20/12 | none played: each pose file failed to parse (`--` inside its XML comment), which the game reports only in the console |
+| 110 | the same, comments fixed | **32/0** | they played, but one arm swung wide and the barrel still tipped |
+| 111 | arms in their standing directions, the barrel 0.17, 0.13 or 0.10 forward and 0.06 down; beside each, a still clip keyed for `Bob_IdleSneak` | **32/0** | barrel upright, hands on its sides; the lid at her chin in all three |
+| 112 | 0.17 forward and 0.12 down, 0.17 and 0.16, 0.20 and 0.12 | **32/0** | 0.17/0.12: the lid below her chin, the hands on its upper sides. 0.16 down: the hands at the rim. 0.20 forward: her face back at the lid |
+| 113 | the shipped pose, 0.17 and 0.12 | **23/0** | the gait mode, below |
+
+Launch 110's arms showed the cause. A player's animation player
+reparents bones when it is made (BC `IsoPlayer.onAnimPlayerCreated`):
+- both clavicles under `Bip01_Spine1`;
+- `Bip01_Prop1` under the right hand and `Bip01_Prop2` under the left;
+- the thighs under `Bip01`.
+
+A reparented bone keeps the offset to its new parent that the playing
+clip's own pose gives it. Launch 110's clips held the standing body in
+their other bones while their arms were keyed for the crouch. The tool
+now writes the body pose into those bones. This also corrects launch
+108's explanation: the barrel follows the right hand, and so the chest,
+not the root bone.
+
+Shipped (D-025, second amendment):
+- `Bob_TLG_CarryVesselSneak.x`, keyed for `Bob_WalkSneak`, plays through
+  `tlgcarryvesselsneak.xml` (the vessel's mask and `sneaking`).
+- `Bob_TLG_CarryVesselSneakIdle.x`, keyed for `Bob_IdleSneak`, plays
+  through `tlgcarryvesselsneakidle.xml` (also `isMoving` false).
+
+The two crouch clips' chests stand 17° apart. Both clips hold the arms in
+their standing directions and the vessel upright, 0.17 file units in
+front of the hands and 0.12 down. Provenance is in
+`art-src/carry/PROVENANCE.md`. `tools/package.ps1` and
+`tools/run-sp-harness.ps1` now refuse XML that does not parse.
+
+Launch 113, `-Mode vessel-gaits` with the shipped files: **23/0**.
+- Walking (1.90 tiles a second), running (3.01) and sprinting (3.24)
+  played the standing node, as in launch 108.
+- Sneaking (1.59) and running crouched (2.45) played
+  `tlgcarryvesselsneak` at every shot. Crouching still switched to
+  `tlgcarryvesselsneakidle`, and standing up switched back to
+  `tlgcarryvessel`.
+- The pictures: crouched, still or moving, the barrel stands upright in
+  front of her, her hands on its upper sides and the lid below her chin.
+  Walking, running and sprinting look as in launch 108; sprinting still
+  tilts the barrel with her lean.
+- The vessel stayed in both hands through every leg. The console had no
+  exception.
+
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run109_crouch_trials.txt`,
+`…_run110_crouch_trials.txt`, `2026-11-03_rt-sp_harness_run111_crouch_trials.txt`,
+`…_run112_crouch_trials.txt`, `…_run113_vessel_gaits.txt`; the sheets
+`2026-11-02_run110_crouch_trials_sheet.jpg`,
+`2026-11-03_run111_crouch_trials_sheet.jpg`, `…_run112_crouch_trials_sheet.jpg`
+and `…_run113_vessel_gaits_sheet.jpg`; and the five legs' animator logs,
+`2026-11-03_run113_animlogs_gaits.txt`.
+
+Not checked: multiplayer; a sprint pose of its own (not made); the
+crouch through the keyboard's own key.

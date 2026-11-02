@@ -801,9 +801,17 @@ a writer needs:
   Z.
 - The skeleton faces −Z with its left on +X and Y up, mirrored against
   Blender's (left × up points backward).
-- The clavicles hang off `Bip01_Neck`; `Bip01_Prop1` and `Bip01_Prop2`,
-  the held items' bones, hang off `Bip01`, so a clip places a held item
-  itself.
+- In the files the clavicles hang off `Bip01_Neck`, and `Bip01_Prop1`
+  and `Bip01_Prop2`, the held items' bones, hang off `Bip01`, so a clip
+  places a held item itself.
+- A player's animation player reparents bones when it is made (BC
+  `IsoPlayer.onAnimPlayerCreated`): both clavicles under `Bip01_Spine1`,
+  `Bip01_Prop1` under `Bip01_R_Hand`, `Bip01_Prop2` under `Bip01_L_Hand`
+  and both thighs under `Bip01`. A reparented bone keeps the offset to
+  its new parent that the playing clip's own pose gives it. In run 110,
+  arms keyed for a crouch, in a clip whose other bones stood upright,
+  swung wide. So a player's arms follow the chest, not the neck, and a
+  held item stays where the right hand takes it.
 
 `tools/blender/pz_arms.py` writes a clip from a Mixamo clip's arms on
 those terms. It can also blend in a second clip of the same animation
@@ -827,19 +835,33 @@ action's animation (D-025 amendment): the log shows `RightHandMask`
 cleared, then `player/actions/LootLow` on `[layer][1]`. Whether the game
 also reads FBX clips is untested.
 
-The same node plays at every gait (runs 107–108): walking, running,
+That node plays at every gait (runs 107–108): walking, running,
 sprinting, sneaking and running crouched. The game's turn animations take
 `[layer][1]` and the pose moves to `[layer][2]` while they play. The
-vessel's bone turns with `Bip01`, which the game's clips turn away from
-the standing pose: 10.8° in `Bob_Walk`'s first frame, 15.0° in `Bob_Run`
-and `Bob_Sprint`, and 20.6°, 22.5° and 28.4° in `Bob_WalkSneak`,
-`Bob_IdleSneak` and `Bob_RunSneak`, the root up to 0.06 file units lower.
-Walking and running, the barrel stays upright between the hands. Crouched,
-it tips forward and the torso, which bends further over it, sinks into
-it (run 108's pictures). The game's held bag has a node and a clip for
-each gait instead (`maskingright/runbagright.xml`, `walksneakbagright.xml`,
-`idlesneakbagright.xml` and others), so a crouched carry needs a clip of
-its own keyed against a crouch clip.
+vessel turns with the right hand, and so with the chest. Walking and
+running, the barrel stays upright between the hands, and sprinting it
+tilts with the lean. Crouched, it tips forward and the torso sinks into
+it (run 108's pictures). At their first frames the crouch clips bend
+`Bip01_Spine1`'s direction 55–71° from `Bob_Idle`'s, against 41–45° for
+the run and sprint clips and 14° walking. The game's held bag has a node
+and a clip for each gait instead (`maskingright/runbagright.xml`,
+`walksneakbagright.xml`, `idlesneakbagright.xml` and others).
+
+Since run 113 the mod has two crouched nodes as well. A state plays the
+nodes that match with the most conditions (BC `AnimState.getAnimNodes`,
+nodes kept sorted by `AnimNode.compareSelectionConditions`). So
+`tlgcarryvesselsneak.xml` (the vessel's `RightHandMask` and `sneaking`)
+plays instead of the standing node while crouched, and
+`tlgcarryvesselsneakidle.xml` (also `isMoving` false) when crouched and
+still. Their clips are keyed by `pz_arms.py --body` for the first frames
+of `Bob_WalkSneak` and `Bob_IdleSneak`, whose chests stand 17° apart. Each
+clip's other bones hold that crouch frame, as reparenting requires. The
+arms keep their standing directions from the crouched shoulders, and the
+vessel stands upright 0.17 file units in front of the hands and 0.12 down
+(D-025 amendment). A pose file the game cannot parse is skipped with
+only a console line, and its node never plays (run 109: `--` inside an
+XML comment). `tools/package.ps1` and `tools/run-sp-harness.ps1` now
+reject such XML.
 
 The run and sprint toggles set the character's forced-run and
 forced-sprint flags, which Lua can set too (`setForceRun`,
@@ -1005,7 +1027,10 @@ a bat, run 99 **11/0**, and the same on the guarded hook, run 100
 clean, run 104 **94/0** and **14/0**, and from its item tree the
 put-down, run 105 **11/0**, and the manual in Italian, run 106 **10/0**,
 then the vessel carried at each gait, runs 107 19/2 (its running legs
-walked, "Toggle to Run" off) and 108 **21/0**. Most failures were traced to the harness
+walked, "Toggle to Run" off) and 108 **21/0**, then a crouched carry
+pose: candidates in runs 109 20/12 (their pose files did not parse), 110
+**32/0** (arms keyed for a crouch swung wide), 111 and 112 **32/0**, and
+the shipped pose through the gait mode, run 113 **23/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

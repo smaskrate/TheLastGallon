@@ -9,8 +9,9 @@
      writes workshop.txt (visibility=private) and a SHA-256 manifest, and zips it
      (forward-slash entry names, sorted, stamped with the commit time).
      tools/rehearse-install.ps1 installs that zip into a fresh cache and plays it.
-  3. Rejects files outside the allowed runtime extensions and any test/harness
-     content. Publication is a separate, manual step (docs/release-checklist.md).
+  3. Rejects files outside the allowed runtime extensions, any test/harness
+     content and XML that does not parse. Publication is a separate, manual
+     step (docs/release-checklist.md).
 .PARAMETER SkipTests
   Skip the domain test run (compile and translation checks still run).
 #>
@@ -56,6 +57,12 @@ $bad = Get-ChildItem -Recurse -File $modOut | Where-Object {
     ($allowed -notcontains $_.Extension.ToLower()) -or ($_.FullName -match 'TLGHarness|\\tests\\|\\tools\\')
 }
 if ($bad) { $bad | ForEach-Object { Write-Host "REJECTED $($_.FullName)" }; throw "package contains disallowed files" }
+# The game skips a pose file it cannot parse, with only a console line, so
+# its node never plays (run 109: "--" inside a comment).
+$badXml = @(Get-ChildItem -Recurse -File -Filter *.xml $modOut | Where-Object {
+    try { [void]([xml](Get-Content -Raw -LiteralPath $_.FullName)); $false } catch { $true }
+})
+if ($badXml.Count -gt 0) { $badXml | ForEach-Object { Write-Host "XML ERROR $($_.FullName)" }; throw "package contains XML that does not parse" }
 
 @"
 version=1

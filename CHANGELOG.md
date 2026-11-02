@@ -138,9 +138,10 @@
   item standing where it was when taken that way in single player; the
   mod lifts its own vessel properly.
 * You see the fermentation vessel in your arms while you carry it: held
-  in front of you in both arms, standing and walking (checked in game).
-  The game draws no carried heavy item, so the mod has its own carry
-  pose, made from a Mixamo animation. Starting anything that plays its
+  in front of you in both arms, standing, walking, running and
+  sprinting, and still upright in your arms when you crouch, still or
+  moving (all checked in game). The game draws no carried heavy item, so
+  the mod has its own carry pose, made from a Mixamo animation. Starting anything that plays its
   own animation (looting, eating, dressing, reading, the mod's conversion
   work) first puts the vessel down at your feet. A generator, which is
   never seen in your hands, stays there through such actions (both

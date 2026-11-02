@@ -14,17 +14,32 @@ X, an elbow bends about the forearm's and upper arm's Y (cross(upper arm,
 forearm) is +Y), a hand's palm faces its Z; rotation keys are the
 transposed quaternion of the column-convention local rotation, w x y z.
 Bones keep the game's lengths. Bip01_Prop1, the held item's bone, is a
-child of Bip01: it is placed between the hands, turned as Bob_Idle_Bag.x
-turns it relative to Bip01, so an item's hand model needs its usual
-Bip01_Prop1 attachment only.
+child of Bip01 in the file: it is placed between the hands, turned as
+Bob_Idle_Bag.x turns it relative to Bip01, so an item's hand model needs
+its usual Bip01_Prop1 attachment only. A player's animation player
+reparents bones (BC IsoPlayer.onAnimPlayerCreated): the clavicles under
+Bip01_Spine1, Bip01_Prop1 under Bip01_R_Hand, Bip01_Prop2 under
+Bip01_L_Hand. Such a bone keeps the offset to its new parent that the
+clip's own pose gives it (run 110), so the clip's other bones must hold
+the body pose the arms were keyed for, and the held item stays where the
+right hand takes it.
 
-  blender -b --factory-startup --python tools/blender/pz_arms.py -- <clip.fbx> <out.x> <ClipName> [step] [forward] [down] [clip2.fbx] [blend]
+  blender -b --factory-startup --python tools/blender/pz_arms.py -- <clip.fbx> <out.x> <ClipName> [step] [forward] [down] [clip2.fbx] [blend] [--body <clip.x>] [--arms chest|world]
 
 writes every step-th frame (default 2) at 4800 ticks per second, 160 per
-frame of 30 fps; the other bones hold the first frame of Bob_Idle.x.
-forward and down move the held item from between the hands (file units,
-defaults PROP_FORWARD and 0). clip2.fbx, the same clip exported with
-another arm spacing, is blended in by blend (default 0.5).
+frame of 30 fps; the other bones hold the first frame of Bob_Idle.x (of
+the --body clip with --body). forward and down move the held item from
+between the hands (file units, defaults PROP_FORWARD and 0). clip2.fbx,
+the same clip exported with another arm spacing, is blended in by blend
+(default 0.5).
+
+--body keys the clip for another body pose, the first frame of a game
+clip such as Bob_IdleSneak.x, whose chest a crouch turns 60-73 degrees
+from standing. The item keeps its standing turn and its offsets run along
+the standing body's axes, so it stays upright. --arms chest (the default)
+reads the arm directions in that pose's chest, so the arms bend with it;
+--arms world reads them in the standing chest, so they keep their
+standing directions from wherever the shoulders are.
 """
 import os
 import re
@@ -104,16 +119,27 @@ def _import(path):
     return arm, prefix
 
 
-def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, fbx2=None, blend=0.5):
+def _chest(world):
+    p = {n: world[n].translation for n in world}
+    return _frame(p["Bip01_L_UpperArm"] - p["Bip01_R_UpperArm"], p["Bip01_Neck"] - p["Bip01_Spine1"], -1.0)
+
+
+def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, fbx2=None, blend=0.5, body=None,
+             arms="chest"):
     """With fbx2 (the same clip with another arm spacing, frame for frame),
-    each direction is blended: (1 - blend) of fbx's, blend of fbx2's."""
+    each direction is blended: (1 - blend) of fbx's, blend of fbx2's. With
+    body (a game clip), the clip is keyed for that clip's first frame
+    (module docstring)."""
     ref = pz_x.parse_frames(REFERENCE)
     parent = {n: p for n, p, _ in ref}
     local_ref = {n: pz_x.local_matrix(rows) for n, _, rows in ref}
     world_ref = pz_x.world_matrices(ref)
+    world_body = pz_x.world_matrices(pz_x.parse_frames(body)) if body else world_ref
+    world_arms = world_ref if arms == "world" else world_body
     prop_local = {n: pz_x.local_matrix(rows) for n, _, rows in pz_x.parse_frames(PROP_REFERENCE)}["Bip01_Prop1"]
     p = {n: world_ref[n].translation for n in world_ref}
-    left_p, up_p, fwd_p = _frame(p["Bip01_L_UpperArm"] - p["Bip01_R_UpperArm"], p["Bip01_Neck"] - p["Bip01_Spine1"], -1.0)
+    left_p, up_p, fwd_p = _chest(world_ref)
+    left_a, up_a, fwd_a = _chest(world_arms)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     arm, prefix = _import(fbx)
@@ -129,23 +155,23 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
     report = []
     for f in range(first, last + 1, step):
         bpy.context.scene.frame_set(f)
-        vec = _vectors(_mixamo_positions(arm, prefix), left_p, up_p, fwd_p)
+        vec = _vectors(_mixamo_positions(arm, prefix), left_a, up_a, fwd_a)
         if second:
-            vec2 = _vectors(_mixamo_positions(*second), left_p, up_p, fwd_p)
+            vec2 = _vectors(_mixamo_positions(*second), left_a, up_a, fwd_a)
             vec = {s: {k: (v * (1.0 - blend) + vec2[s][k] * blend).normalized() for k, v in d.items()}
                    for s, d in vec.items()}
 
-        world = {"Bip01_Neck": world_ref["Bip01_Neck"]}
+        world = {"Bip01_Neck": world_body["Bip01_Neck"]}
         hands = {}
         for s, mx in SIDES:
             d_clav, d_up, d_fore = vec[s]["clav"], vec[s]["up"], vec[s]["fore"]
             d_hand, palm = vec[s]["hand"], vec[s]["palm"]
             hinge = d_up.cross(d_fore)
-            clav_ref = world_ref["Bip01_%s_Clavicle" % s].to_3x3()
+            clav_ref = world_arms["Bip01_%s_Clavicle" % s].to_3x3()
             targets = [clav_ref.col[0].normalized().rotation_difference(d_clav).to_matrix() @ clav_ref,
                        None, None, _rotation(d_hand, z=palm)]
             if hinge.length < 0.17:
-                hinge = world_ref["Bip01_%s_Forearm" % s].to_3x3().col[1]
+                hinge = world_arms["Bip01_%s_Forearm" % s].to_3x3().col[1]
             targets[1] = _rotation(d_up, y=hinge)
             targets[2] = _rotation(d_fore, y=hinge)
             for bone, rot in zip(chains[s], targets):
@@ -159,14 +185,15 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
                 keys[bone].append((f, local_ref[bone].to_3x3()))
             hands[s] = world["Bip01_%s_Hand" % s].translation
         # The held item: between the hands and a little forward, turned as
-        # the bag pose turns it, then a quarter about the body's up.
+        # the bag pose turns it, then a quarter about the body's up. These
+        # are the standing body's axes, so with --body it stays upright.
         mid = (hands["L"] + hands["R"]) * 0.5 + fwd_p * forward - up_p * down
         prop_world = world_ref["Bip01"] @ prop_local
         if PROP_TURN_LEFT_TO_FORWARD:
             turn = left_p.rotation_difference(fwd_p).to_matrix()
             prop_world = (turn @ prop_world.to_3x3()).to_4x4()
         prop_world.translation = mid
-        prop = world_ref["Bip01"].inverted() @ prop_world
+        prop = world_body["Bip01"].inverted() @ prop_world
         keys["Bip01_Prop1"].append((f, prop.to_3x3(), prop.translation.copy()))
         if f == first:
             chest = p["Bip01_Spine1"].dot(fwd_p)
@@ -175,7 +202,18 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
                               tuple(round(v, 3) for v in hands["L"]), tuple(round(v, 3) for v in hands["R"]),
                               (hands["L"] - hands["R"]).length, mid.dot(up_p) - p["Bip01_Pelvis"].dot(up_p),
                               (hands["L"] + hands["R"]).dot(fwd_p) * 0.5 - chest, mid.dot(fwd_p) - chest))
-    _write(out_path, clip_name, keys, first, last)
+            if body:
+                # Standing axes: up, and forward of each body part.
+                b = {n: world_body[n].translation for n in ("Bip01_Pelvis", "Bip01_Spine1", "Bip01_Neck",
+                                                            "Bip01_L_Calf", "Bip01_R_Calf", "Bip01_L_Foot")}
+                knee = (b["Bip01_L_Calf"] + b["Bip01_R_Calf"]) * 0.5
+                report.append("PZA body %s (arms %s), up/forward of the left foot: pelvis %.3f/%.3f, chest %.3f/%.3f,"
+                              " neck %.3f/%.3f, knees %.3f/%.3f, hands %.3f/%.3f, item %.3f/%.3f" % tuple(
+                                  [os.path.basename(body), arms] + [v for pt in (
+                                      b["Bip01_Pelvis"], b["Bip01_Spine1"], b["Bip01_Neck"], knee,
+                                      (hands["L"] + hands["R"]) * 0.5, mid)
+                                      for v in ((pt - b["Bip01_L_Foot"]).dot(up_p), (pt - b["Bip01_L_Foot"]).dot(fwd_p))]))
+    _write(out_path, clip_name, keys, first, last, body or REFERENCE)
     for r in report:
         print(r)
     print("PZA wrote %s: %d frames of %s, %d bones keyed" % (out_path, len(keys["Bip01_Prop1"]), clip_name, len(keys)))
@@ -197,11 +235,13 @@ def _key_lines(kind, keys):
     return out
 
 
-def _write(out_path, clip_name, keys, first, last):
-    with open(REFERENCE, "r", encoding="latin-1") as f:
+def _write(out_path, clip_name, keys, first, last, body=REFERENCE):
+    """The keyed bones' keys; every other bone, and the file's frames, hold
+    the first frame of body."""
+    with open(body, "r", encoding="latin-1") as f:
         text = f.read()
     header = text[:re.search(r"^AnimationSet\s", text, re.M).start()]
-    _, _, template = pz_x.parse_animation(REFERENCE)
+    _, _, template = pz_x.parse_animation(body)
     end = (last - first) * TICKS_PER_FRAME
     lines = ["AnimationSet %s {" % clip_name]
     for bone, tkeys in template.items():
@@ -230,6 +270,13 @@ def _write(out_path, clip_name, keys, first, last):
 
 if __name__ == "__main__":
     args = sys.argv[sys.argv.index("--") + 1:]
+    named = {}
+    for flag in ("--body", "--arms"):
+        if flag in args:
+            i = args.index(flag)
+            named[flag[2:]] = args[i + 1]
+            del args[i:i + 2]
     retarget(args[0], args[1], args[2], int(args[3]) if len(args) > 3 else 2,
              float(args[4]) if len(args) > 4 else PROP_FORWARD, float(args[5]) if len(args) > 5 else 0.0,
-             args[6] if len(args) > 6 else None, float(args[7]) if len(args) > 7 else 0.5)
+             args[6] if len(args) > 6 else None, float(args[7]) if len(args) > 7 else 0.5,
+             named.get("body"), named.get("arms", "chest"))

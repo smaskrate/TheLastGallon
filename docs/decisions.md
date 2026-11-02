@@ -592,9 +592,8 @@ listed with their replacement.
   action's prop bone, tilted up beside the head (see the amendment).
   Placing the vessel plays no animation and keeps the pose. Running,
   sprinting and sneaking keep it too (run 108), but crouched the barrel
-  tips forward and the torso sinks into it: the clip has no crouched
-  variant, and the barrel's bone turns with the root bone, which the
-  game's crouch clips turn 21–28°. Multiplayer is not run. The clip ships with Mixamo's terms recorded
+  tipped forward and the torso sank into it (see the second amendment).
+  Multiplayer is not run. The clip ships with Mixamo's terms recorded
   (`art-src/carry/PROVENANCE.md`); the source FBX files, which hold
   Mixamo's character, stay out of the repository and the package.
 * Amendment (2026-11-02, run 99): an action that plays its own animation
@@ -611,6 +610,22 @@ listed with their replacement.
   is drawn in the arms while it plays, run 99) and the transfers that
   move it. Not covered: animations the game starts without a Lua action
   (doors, shoving, emotes). Multiplayer not run.
+* Second amendment (2026-11-03, runs 108–113): crouched, the vessel has
+  a pose of its own. The user asked for it after run 108 showed the
+  barrel tipping into the crouched torso. Run 110 found why. A player's
+  arms hang from `Bip01_Spine1` and the item's bone from the right hand
+  (BC `IsoPlayer.onAnimPlayerCreated`), so the vessel turns with the
+  chest, which a crouch bends far forward. Two more pose files, with one
+  and two conditions more than the standing node, play while crouched
+  (`tlgcarryvesselsneak.xml`) and crouched and still
+  (`tlgcarryvesselsneakidle.xml`). Their clips are made the same way,
+  keyed for the game's `Bob_WalkSneak` and `Bob_IdleSneak`
+  (`pz_arms.py --body`). The arms keep their standing directions and the
+  vessel stands upright, 0.17 file units in front of the hands and 0.12
+  down. Chosen in game from six candidates (runs 111–112): 0.06 down put
+  the lid at her chin, 0.16 down put her hands at the rim, and 0.20
+  forward brought her face back to the lid. Verified with the gait mode
+  (run 113).
 
 ## D-026 The field manual is print media found in loot
 * Decision: `TLG.ManualFuelSystems` is read as the game reads its

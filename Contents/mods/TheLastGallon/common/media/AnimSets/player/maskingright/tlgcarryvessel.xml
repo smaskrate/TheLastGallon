@@ -7,7 +7,9 @@
      right arm. The clip is the arms of two Mixamo "Carrying" clips blended
      halfway and retargeted by tools/blender/pz_arms.py (provenance:
      art-src/carry/PROVENANCE.md); it also places Bip01_Prop1, the vessel's
-     bone, in front of the chest. Checked in game: docs/test-results.md. -->
+     bone, in front of the chest. Crouched, tlgcarryvesselsneak.xml and
+     tlgcarryvesselsneakidle.xml play instead. Checked in game:
+     docs/test-results.md. -->
 <animNode>
 	<m_Name>tlgcarryvessel</m_Name>
 	<m_Priority>10</m_Priority>

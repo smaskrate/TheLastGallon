@@ -153,4 +153,49 @@ module TLGHarness
         RequiresEquippedBothHands = true,
         Tags = base:heavyitem,
     }
+
+    /* Crouched carry trials (request sp-rtmpk): the halfway blend with the
+       arms in their standing directions and the item upright, forward of
+       the hands and down by 0.17 and 0.12, 0.17 and 0.16, or 0.20 and 0.12;
+       keyed for the first frame of the game's Bob_WalkSneak, and of
+       Bob_IdleSneak when crouched and still (tlgcrouch1712/1716/2012.xml and
+       their idle files, Bob_TLGCrouch*.x). */
+    item PoseCrouch1712
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcrouch1712,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseCrouch1716
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcrouch1716,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseCrouch2012
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcrouch2012,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
 }

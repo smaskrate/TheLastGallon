@@ -1,0 +1,130 @@
+# TLG single-player harness, pose trial
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=20209478406608287227 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmp_go begin
+STEP rtmp_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.25 in 3 scrolls (enabled=true, min 0.25)
+STEP rtmp_use_TLGHarness.PoseCrouch17_TLG.FermenterHeld begin
+OBS  RTMP.TLGHarness.PoseCrouch17 StaticModel=TLG.FermenterHeld
+STEP pk_tlgcrouch17 begin
+PASS RTMH.heavy_pk_tlgcrouch17 :: TLGHarness.PoseCrouch17 heavy=true both hands=true
+STEP rtvg_expect_tlgcrouch17 begin
+STEP rtvg_crouch_true begin
+OBS  RTVG.crouch sneaking=true (asked true); RightHandMask=tlgcrouch17; states 0:player/idle/Idle, 1:player/maskingright/tlgcrouch17, 1:player/maskingright/tlgcrouch17idle, 0:player/idle/sneakidle; clips started Bob_Idle, Bob_Idle_HeavyBreathing, Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch17, Bob_TLGCrouch17Idle
+PASS RTVG.crouch_true_node :: sneaking=true; tlgcrouch17idle active=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgcrouch17 LeftHandMask=
+STEP rtmi_shot_rtpk_tlgcrouch17_front begin
+OBS  RTMI.screenshot tlg_rtpk_tlgcrouch17_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.06
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgcrouch17 LeftHandMask=
+STEP rtmi_shot_rtpk_tlgcrouch17_side begin
+OBS  RTMI.screenshot tlg_rtpk_tlgcrouch17_side.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.07
+STEP rtvg_tlgcrouch17_sneak_walk begin
+OBS  RTVG.tlgcrouch17_sneak_walk screenshot tlg_rtvg_tlgcrouch17_sneak_walk_1.png ok=true at 35% of 8.5 tiles (tick 113): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch17 tlgcrouch17 active=true in both hands=true
+OBS  RTVG.tlgcrouch17_sneak_walk screenshot tlg_rtvg_tlgcrouch17_sneak_walk_2.png ok=true at 50% of 8.5 tiles (tick 152): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch17 tlgcrouch17 active=true in both hands=true
+OBS  RTVG.tlgcrouch17_sneak_walk screenshot tlg_rtvg_tlgcrouch17_sneak_walk_3.png ok=true at 65% of 8.5 tiles (tick 191): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch17 tlgcrouch17 active=true in both hands=true
+OBS  RTVG.tlgcrouch17_sneak_walk Toggle to Run was false, false during the leg
+OBS  RTVG.tlgcrouch17_sneak_walk 8.5 tiles in 5.28 s (1.61 tiles a second), 304 ticks; 0.00 tiles short of the end; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch17idle, 0:player/movement/sneakWalk, 1:player/maskingright/tlgcrouch17; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch17Idle, Bob_WalkSneak_Slow, Bob_WalkSneak, Bob_TLGCrouch17, Bob_WalkLowSneak_Slow, Bob_WalkLowSneak; animator log 129 lines
+PASS RTVG.tlgcrouch17_sneak_walk_gait :: asked run=false sprint=false sneak=true; at the three shots: run=false sprint=false sneak=true; run=false sprint=false sneak=true; run=false sprint=false sneak=true
+PASS RTVG.tlgcrouch17_sneak_walk_pose_kept :: RightHandMask/tlgcrouch17 active at the shots: tlgcrouch17/true, tlgcrouch17/true, tlgcrouch17/true; tlgcrouch17 or tlgcrouch17idle active at the end: true
+PASS RTVG.tlgcrouch17_sneak_walk_carried :: TLGHarness.PoseCrouch17 in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_tlgcrouch17_sneak_run begin
+OBS  RTVG.tlgcrouch17_sneak_run screenshot tlg_rtvg_tlgcrouch17_sneak_run_1.png ok=true at 35% of 11.3 tiles (tick 104): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch17 tlgcrouch17 active=true in both hands=true
+OBS  RTVG.tlgcrouch17_sneak_run screenshot tlg_rtvg_tlgcrouch17_sneak_run_2.png ok=true at 50% of 11.3 tiles (tick 131): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch17 tlgcrouch17 active=true in both hands=true
+OBS  RTVG.tlgcrouch17_sneak_run screenshot tlg_rtvg_tlgcrouch17_sneak_run_3.png ok=true at 65% of 11.3 tiles (tick 157): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch17 tlgcrouch17 active=true in both hands=true
+OBS  RTVG.tlgcrouch17_sneak_run Toggle to Run was false, true during the leg
+OBS  RTVG.tlgcrouch17_sneak_run 11.3 tiles in 4.64 s (2.44 tiles a second), 268 ticks; 0.00 tiles short of the end; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch17idle, 0:player/run/sneakRun, 1:player/turningMovement180/turn_idleToRun_sneak_180R, 2:player/maskingright/tlgcrouch17idle, 0:player/run, 2:player/maskingright/tlgcrouch17, 1:player, 1:player/maskingright/tlgcrouch17; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch17Idle, Bob_RunSneak_Slow, Bob_RunSneak, Bob_WalkSneak_Slow, Bob_SneakToSneakRun, Bob_TLGCrouch17, Bob_SneakToSneakRun_Turn180R, Bob_RunSneakToStop; animator log 129 lines
+PASS RTVG.tlgcrouch17_sneak_run_gait :: asked run=true sprint=false sneak=true; at the three shots: run=true sprint=false sneak=true; run=true sprint=false sneak=true; run=true sprint=false sneak=true
+PASS RTVG.tlgcrouch17_sneak_run_pose_kept :: RightHandMask/tlgcrouch17 active at the shots: tlgcrouch17/true, tlgcrouch17/true, tlgcrouch17/true; tlgcrouch17 or tlgcrouch17idle active at the end: true
+PASS RTVG.tlgcrouch17_sneak_run_carried :: TLGHarness.PoseCrouch17 in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_crouch_false begin
+OBS  RTVG.crouch sneaking=false (asked false); RightHandMask=tlgcrouch17; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch17idle, 0:player/idle/Idle, 1:player/maskingright/tlgcrouch17; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_RunSneakToStop, Bob_Idle, Bob_Idle_HeavyBreathing, Bob_TLGCrouch17Idle, Bob_TLGCrouch17
+PASS RTVG.crouch_false_node :: sneaking=false; tlgcrouch17 active=true
+STEP rtmp_use_TLGHarness.PoseCrouch13_TLG.FermenterHeld begin
+OBS  RTMP.TLGHarness.PoseCrouch13 StaticModel=TLG.FermenterHeld
+STEP pk_tlgcrouch13 begin
+PASS RTMH.heavy_pk_tlgcrouch13 :: TLGHarness.PoseCrouch13 heavy=true both hands=true
+STEP rtvg_expect_tlgcrouch13 begin
+STEP rtvg_crouch_true begin
+OBS  RTVG.crouch sneaking=true (asked true); RightHandMask=tlgcrouch13; states 0:player/idle/Idle, 1:player/maskingright/tlgcrouch13, 1:player/maskingright/tlgcrouch13idle, 0:player/idle/sneakidle; clips started Bob_Idle, Bob_Idle_HeavyBreathing, Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch13, Bob_TLGCrouch13Idle
+PASS RTVG.crouch_true_node :: sneaking=true; tlgcrouch13idle active=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgcrouch13 LeftHandMask=
+STEP rtmi_shot_rtpk_tlgcrouch13_front begin
+OBS  RTMI.screenshot tlg_rtpk_tlgcrouch13_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.16
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgcrouch13 LeftHandMask=
+STEP rtmi_shot_rtpk_tlgcrouch13_side begin
+OBS  RTMI.screenshot tlg_rtpk_tlgcrouch13_side.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.17
+STEP rtvg_tlgcrouch13_sneak_walk begin
+OBS  RTVG.tlgcrouch13_sneak_walk screenshot tlg_rtvg_tlgcrouch13_sneak_walk_1.png ok=true at 35% of 8.5 tiles (tick 113): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch13 tlgcrouch13 active=true in both hands=true
+OBS  RTVG.tlgcrouch13_sneak_walk screenshot tlg_rtvg_tlgcrouch13_sneak_walk_2.png ok=true at 50% of 8.5 tiles (tick 152): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch13 tlgcrouch13 active=true in both hands=true
+OBS  RTVG.tlgcrouch13_sneak_walk screenshot tlg_rtvg_tlgcrouch13_sneak_walk_3.png ok=true at 65% of 8.5 tiles (tick 190): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch13 tlgcrouch13 active=true in both hands=true
+OBS  RTVG.tlgcrouch13_sneak_walk Toggle to Run was false, false during the leg
+OBS  RTVG.tlgcrouch13_sneak_walk 8.5 tiles in 5.26 s (1.62 tiles a second), 303 ticks; 0.00 tiles short of the end; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch13idle, 0:player/movement/sneakWalk, 1:player/maskingright/tlgcrouch13; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch13Idle, Bob_WalkSneak_Slow, Bob_WalkSneak, Bob_TLGCrouch13, Bob_WalkLowSneak_Slow, Bob_WalkLowSneak; animator log 129 lines
+PASS RTVG.tlgcrouch13_sneak_walk_gait :: asked run=false sprint=false sneak=true; at the three shots: run=false sprint=false sneak=true; run=false sprint=false sneak=true; run=false sprint=false sneak=true
+PASS RTVG.tlgcrouch13_sneak_walk_pose_kept :: RightHandMask/tlgcrouch13 active at the shots: tlgcrouch13/true, tlgcrouch13/true, tlgcrouch13/true; tlgcrouch13 or tlgcrouch13idle active at the end: true
+PASS RTVG.tlgcrouch13_sneak_walk_carried :: TLGHarness.PoseCrouch13 in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_tlgcrouch13_sneak_run begin
+OBS  RTVG.tlgcrouch13_sneak_run screenshot tlg_rtvg_tlgcrouch13_sneak_run_1.png ok=true at 35% of 11.3 tiles (tick 104): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch13 tlgcrouch13 active=true in both hands=true
+OBS  RTVG.tlgcrouch13_sneak_run screenshot tlg_rtvg_tlgcrouch13_sneak_run_2.png ok=true at 50% of 11.3 tiles (tick 130): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch13 tlgcrouch13 active=true in both hands=true
+OBS  RTVG.tlgcrouch13_sneak_run screenshot tlg_rtvg_tlgcrouch13_sneak_run_3.png ok=true at 65% of 11.3 tiles (tick 157): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch13 tlgcrouch13 active=true in both hands=true
+OBS  RTVG.tlgcrouch13_sneak_run Toggle to Run was false, true during the leg
+OBS  RTVG.tlgcrouch13_sneak_run 11.3 tiles in 4.65 s (2.44 tiles a second), 266 ticks; 0.00 tiles short of the end; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch13idle, 0:player/run/sneakRun, 1:player/turningMovement180/turn_idleToRun_sneak_180R, 2:player/maskingright/tlgcrouch13idle, 0:player/run, 2:player/maskingright/tlgcrouch13, 1:player, 1:player/maskingright/tlgcrouch13; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch13Idle, Bob_RunSneak_Slow, Bob_RunSneak, Bob_WalkSneak_Slow, Bob_SneakToSneakRun, Bob_TLGCrouch13, Bob_SneakToSneakRun_Turn180R, Bob_RunSneakToStop; animator log 129 lines
+PASS RTVG.tlgcrouch13_sneak_run_gait :: asked run=true sprint=false sneak=true; at the three shots: run=true sprint=false sneak=true; run=true sprint=false sneak=true; run=true sprint=false sneak=true
+PASS RTVG.tlgcrouch13_sneak_run_pose_kept :: RightHandMask/tlgcrouch13 active at the shots: tlgcrouch13/true, tlgcrouch13/true, tlgcrouch13/true; tlgcrouch13 or tlgcrouch13idle active at the end: true
+PASS RTVG.tlgcrouch13_sneak_run_carried :: TLGHarness.PoseCrouch13 in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_crouch_false begin
+OBS  RTVG.crouch sneaking=false (asked false); RightHandMask=tlgcrouch13; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch13idle, 0:player/idle/Idle, 1:player/maskingright/tlgcrouch13; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_RunSneakToStop, Bob_Idle, Bob_Idle_HeavyBreathing, Bob_TLGCrouch13Idle, Bob_TLGCrouch13
+PASS RTVG.crouch_false_node :: sneaking=false; tlgcrouch13 active=true
+STEP rtmp_use_TLGHarness.PoseCrouch10_TLG.FermenterHeld begin
+OBS  RTMP.TLGHarness.PoseCrouch10 StaticModel=TLG.FermenterHeld
+STEP pk_tlgcrouch10 begin
+PASS RTMH.heavy_pk_tlgcrouch10 :: TLGHarness.PoseCrouch10 heavy=true both hands=true
+STEP rtvg_expect_tlgcrouch10 begin
+STEP rtvg_crouch_true begin
+OBS  RTVG.crouch sneaking=true (asked true); RightHandMask=tlgcrouch10; states 0:player/idle/Idle, 1:player/maskingright/tlgcrouch10, 1:player/maskingright/tlgcrouch10idle, 0:player/idle/sneakidle; clips started Bob_Idle, Bob_Idle_HeavyBreathing, Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch10, Bob_TLGCrouch10Idle
+PASS RTVG.crouch_true_node :: sneaking=true; tlgcrouch10idle active=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgcrouch10 LeftHandMask=
+STEP rtmi_shot_rtpk_tlgcrouch10_front begin
+OBS  RTMI.screenshot tlg_rtpk_tlgcrouch10_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.25
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgcrouch10 LeftHandMask=
+STEP rtmi_shot_rtpk_tlgcrouch10_side begin
+OBS  RTMI.screenshot tlg_rtpk_tlgcrouch10_side.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.27
+STEP rtvg_tlgcrouch10_sneak_walk begin
+OBS  RTVG.tlgcrouch10_sneak_walk screenshot tlg_rtvg_tlgcrouch10_sneak_walk_1.png ok=true at 35% of 8.5 tiles (tick 113): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch10 tlgcrouch10 active=true in both hands=true
+OBS  RTVG.tlgcrouch10_sneak_walk screenshot tlg_rtvg_tlgcrouch10_sneak_walk_2.png ok=true at 50% of 8.5 tiles (tick 152): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch10 tlgcrouch10 active=true in both hands=true
+OBS  RTVG.tlgcrouch10_sneak_walk screenshot tlg_rtvg_tlgcrouch10_sneak_walk_3.png ok=true at 65% of 8.5 tiles (tick 190): running=false sprinting=false sneaking=true RightHandMask=tlgcrouch10 tlgcrouch10 active=true in both hands=true
+OBS  RTVG.tlgcrouch10_sneak_walk Toggle to Run was false, false during the leg
+OBS  RTVG.tlgcrouch10_sneak_walk 8.5 tiles in 5.25 s (1.62 tiles a second), 304 ticks; 0.00 tiles short of the end; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch10idle, 0:player/movement/sneakWalk, 1:player/maskingright/tlgcrouch10; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch10Idle, Bob_WalkSneak_Slow, Bob_WalkSneak, Bob_TLGCrouch10, Bob_WalkLowSneak_Slow, Bob_WalkLowSneak; animator log 129 lines
+PASS RTVG.tlgcrouch10_sneak_walk_gait :: asked run=false sprint=false sneak=true; at the three shots: run=false sprint=false sneak=true; run=false sprint=false sneak=true; run=false sprint=false sneak=true
+PASS RTVG.tlgcrouch10_sneak_walk_pose_kept :: RightHandMask/tlgcrouch10 active at the shots: tlgcrouch10/true, tlgcrouch10/true, tlgcrouch10/true; tlgcrouch10 or tlgcrouch10idle active at the end: true
+PASS RTVG.tlgcrouch10_sneak_walk_carried :: TLGHarness.PoseCrouch10 in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_tlgcrouch10_sneak_run begin
+OBS  RTVG.tlgcrouch10_sneak_run screenshot tlg_rtvg_tlgcrouch10_sneak_run_1.png ok=true at 35% of 11.3 tiles (tick 104): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch10 tlgcrouch10 active=true in both hands=true
+OBS  RTVG.tlgcrouch10_sneak_run screenshot tlg_rtvg_tlgcrouch10_sneak_run_2.png ok=true at 50% of 11.3 tiles (tick 130): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch10 tlgcrouch10 active=true in both hands=true
+OBS  RTVG.tlgcrouch10_sneak_run screenshot tlg_rtvg_tlgcrouch10_sneak_run_3.png ok=true at 65% of 11.3 tiles (tick 157): running=true sprinting=false sneaking=true RightHandMask=tlgcrouch10 tlgcrouch10 active=true in both hands=true
+OBS  RTVG.tlgcrouch10_sneak_run Toggle to Run was false, true during the leg
+OBS  RTVG.tlgcrouch10_sneak_run 11.3 tiles in 4.63 s (2.44 tiles a second), 266 ticks; 0.00 tiles short of the end; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch10idle, 0:player/run/sneakRun, 1:player/turningMovement180/turn_idleToRun_sneak_180R, 2:player/maskingright/tlgcrouch10idle, 0:player/run, 2:player/maskingright/tlgcrouch10, 1:player, 1:player/maskingright/tlgcrouch10; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLGCrouch10Idle, Bob_RunSneak_Slow, Bob_RunSneak, Bob_WalkSneak_Slow, Bob_SneakToSneakRun, Bob_TLGCrouch10, Bob_SneakToSneakRun_Turn180R, Bob_RunSneakToStop; animator log 129 lines
+PASS RTVG.tlgcrouch10_sneak_run_gait :: asked run=true sprint=false sneak=true; at the three shots: run=true sprint=false sneak=true; run=true sprint=false sneak=true; run=true sprint=false sneak=true
+PASS RTVG.tlgcrouch10_sneak_run_pose_kept :: RightHandMask/tlgcrouch10 active at the shots: tlgcrouch10/true, tlgcrouch10/true, tlgcrouch10/true; tlgcrouch10 or tlgcrouch10idle active at the end: true
+PASS RTVG.tlgcrouch10_sneak_run_carried :: TLGHarness.PoseCrouch10 in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_crouch_false begin
+OBS  RTVG.crouch sneaking=false (asked false); RightHandMask=tlgcrouch10; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcrouch10idle, 0:player/idle/Idle, 1:player/maskingright/tlgcrouch10; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_RunSneakToStop, Bob_Idle, Bob_Idle_HeavyBreathing, Bob_TLGCrouch10Idle, Bob_TLGCrouch10
+PASS RTVG.crouch_false_node :: sneaking=false; tlgcrouch10 active=true
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.32
+SUMMARY pass=32 fail=0
+DONE
