@@ -208,9 +208,10 @@ T.case("integration: water too little for the game to hold stays fuel in the rec
         local can = ethanolCan(5, 4)
         g.now = LATER
         local rec = D.Aging.advance((I.Containers.read(can, "item", false)), g.now, World.env())
-        rec.q.ethanol, rec.q.water = 4 - 1.5e-4, 1.5e-4
+        rec.q.ethanol, rec.q.water, rec.q.gasoline, rec.deg.gasoline = 4 - 2.5e-4, 1.5e-4, 1e-4, 0.5
         I.Containers.endpoint(can, "item"):record(rec)
-        T.ok(can.md.tlg.q.water == nil, "no water under the game's minimum in the record")
+        T.ok(can.md.tlg.q.water == nil and can.md.tlg.q.gasoline == nil, "nothing under the game's minimum in the record")
+        T.ok(can.md.tlg.deg.gasoline == nil, "no condition left for a fuel folded away")
         fluidsMatchRecord(can, "too little")
         T.near(D.Supply.total(can.md.tlg), 4, 1e-12, "the litres kept")
         T.near(rec.q.water, 1.5e-4, 0, "the caller's record left as it was")

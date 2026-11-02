@@ -95,7 +95,8 @@ listed with their replacement.
   such check). `Native.writeComposition` therefore holds the largest fluid
   already there low while new ones go in, smallest first, then sets it.
   A component under 2e-4 L goes to the largest, in the record and in the
-  fluids alike (`Native.holdable`), so the litres are kept. RT-SP run 57
+  fluids alike (`Native.holdable`), so the litres are kept; the record
+  keeps no condition for a fuel folded away (normalized). RT-SP run 57
   found the refusal: a full 10 L petrol can, its petrol lowered by
   1.1e-4 L for a look's water, refused the water and lost those litres
   (run 58 measured it). The same trap was there for a can filled to the

@@ -175,6 +175,7 @@ end
 function C.commit(owner, kind, rec, always)
     local held = Supply.copy(rec)
     held.q = Native.holdable(rec.q)
+    Supply.normalize(held)
     local fc = C.fluidOf(owner, kind)
     if fc and (always or maxDifference(Native.readComposition(fc), held.q) > C.COMMIT_TOLERANCE) then
         local ok, why = Native.writeComposition(fc, held.q)
