@@ -2171,8 +2171,9 @@ pose is run in launch 98.
 
 After launch 97 the changelog's carry entry was corrected (`4aca0b0`: it
 names only the action that was seen) and the package rebuilt: 88 files,
-SHA-256 `6ed15990…`, 921,325 bytes, which differs from launch 97's zip
-only in that entry. Command: `tools/run-sp-harness.ps1 -Mode
+SHA-256 `6ed15990…`, 921,325 bytes. Its files differ from launch 97's
+only in that entry; the zip's entries carry the newer commit's time.
+Command: `tools/run-sp-harness.ps1 -Mode
 vessel-carry -ModSource <repo>\dist\TheLastGallon\Contents\mods\TheLastGallon`:
 launch 96's steps with the mod deployed from the package's item tree,
 the folder the zip is made from, instead of the repository. The deployed
