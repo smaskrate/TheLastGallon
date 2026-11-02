@@ -2478,3 +2478,28 @@ and `…_run113_vessel_gaits_sheet.jpg`; and the five legs' animator logs,
 
 Not checked: multiplayer; a sprint pose of its own (not made); the
 crouch through the keyboard's own key.
+
+## 2026-11-03 — RT-SP client harness, launches 114–115 (the zip with the crouched pose)
+
+Launch 114. Command: `tools/rehearse-install.ps1`, which rebuilt the
+package first (197/197 tests, compile check 105/0, translations OK, every
+shipped XML file parsing): the zip of commit `3b3ed77`, 94 files,
+SHA-256 `5ab59e10…`, 1,057,082 bytes. It is byte-identical to the build
+made just before. It differs from launch 104's zip (`abcc355a…`, 90
+files) in the crouched carry pose. There are four new files: two clips
+and two pose files. `tlgcarryvessel.xml` gained a comment, and the
+changelog and the support matrix changed. The zip matched its manifest,
+was installed into a fresh isolated cache and ran the full harness.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run114_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as launch 104. The
+console's one exception came from the harness's own deep-recursion
+probe.
+
+Launch 115, `-Mode vessel-gaits` with the mod deployed from the package's
+item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`):
+**23/0**, as launch 113. The deployed clips carried the shipped hashes.
+The crouched legs played `tlgcarryvesselsneak` at every shot. Crouching
+still switched to `tlgcarryvesselsneakidle`, and standing up switched
+back to `tlgcarryvessel`. The console had no exception.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run115_vessel_gaits_packaged.txt`.

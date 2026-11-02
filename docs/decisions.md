@@ -625,7 +625,8 @@ listed with their replacement.
   down. Chosen in game from six candidates (runs 111–112): 0.06 down put
   the lid at her chin, 0.16 down put her hands at the rim, and 0.20
   forward brought her face back to the lid. Verified with the gait mode
-  (run 113).
+  (run 113), and again from the package's item tree after the zip of
+  `3b3ed77` installed clean (runs 114–115).
 
 ## D-026 The field manual is print media found in loot
 * Decision: `TLG.ManualFuelSystems` is read as the game reads its

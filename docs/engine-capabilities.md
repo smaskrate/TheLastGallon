@@ -1030,7 +1030,9 @@ then the vessel carried at each gait, runs 107 19/2 (its running legs
 walked, "Toggle to Run" off) and 108 **21/0**, then a crouched carry
 pose: candidates in runs 109 20/12 (their pose files did not parse), 110
 **32/0** (arms keyed for a crouch swung wide), 111 and 112 **32/0**, and
-the shipped pose through the gait mode, run 113 **23/0**. Most failures were traced to the harness
+the shipped pose through the gait mode, run 113 **23/0**, then the zip
+with it installed clean, run 114 **94/0** and **14/0**, and the gait mode
+from its item tree, run 115 **23/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

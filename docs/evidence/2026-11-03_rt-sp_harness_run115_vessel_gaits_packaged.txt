@@ -1,0 +1,82 @@
+# TLG single-player harness, pose trial
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=7469419461490548169 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmp_go begin
+STEP rtmp_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.25 in 3 scrolls (enabled=true, min 0.25)
+STEP rtmp_use_TLG.FermenterVessel_TLG.FermenterHeld begin
+OBS  RTMP.TLG.FermenterVessel StaticModel=TLG.FermenterHeld
+STEP vg_vessel begin
+PASS RTMH.heavy_vg_vessel :: TLG.FermenterVessel heavy=true both hands=true
+STEP rtvg_walk begin
+OBS  RTVG.walk screenshot tlg_rtvg_walk_1.png ok=true at 35% of 8.5 tiles (tick 95): running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.walk screenshot tlg_rtvg_walk_2.png ok=true at 50% of 8.5 tiles (tick 126): running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.walk screenshot tlg_rtvg_walk_3.png ok=true at 65% of 8.5 tiles (tick 157): running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.walk Toggle to Run was false, false during the leg
+OBS  RTVG.walk 8.5 tiles in 4.46 s (1.91 tiles a second), 254 ticks; 0.00 tiles short of the end; states 0:player/idle/Idle, 1:player/maskingright/tlgcarryvessel, 0:player/movement/defaultWalk; clips started Bob_Idle, Bob_Idle_HeavyBreathing, Bob_TLG_CarryVessel, Bob_WalkLightLimpR, Bob_WalkLightLimpL, Bob_WalkHeavyLimpR, Bob_WalkHeavyLimpL, Bob_Walk, Bob_WalkSlow; animator log 129 lines
+PASS RTVG.walk_gait :: asked run=false sprint=false sneak=false; at the three shots: run=false sprint=false sneak=false; run=false sprint=false sneak=false; run=false sprint=false sneak=false
+PASS RTVG.walk_pose_kept :: RightHandMask/tlgcarryvessel active at the shots: tlgcarryvessel/true, tlgcarryvessel/true, tlgcarryvessel/true; tlgcarryvessel or tlgcarryvessel active at the end: true
+PASS RTVG.walk_carried :: TLG.FermenterVessel in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_run begin
+OBS  RTVG.run screenshot tlg_rtvg_run_1.png ok=true at 35% of 11.3 tiles (tick 77): running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.run screenshot tlg_rtvg_run_2.png ok=true at 50% of 11.3 tiles (tick 98): running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.run screenshot tlg_rtvg_run_3.png ok=true at 65% of 11.3 tiles (tick 118): running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.run Toggle to Run was false, true during the leg
+OBS  RTVG.run 11.3 tiles in 3.78 s (3.00 tiles a second), 215 ticks; 0.00 tiles short of the end; states 0:player/idle/Idle, 1:player/maskingright/tlgcarryvessel, 0:player/run/defaultRun, 1:player/turningMovement180/turn_idleToRun_180R, 2:player/maskingright/tlgcarryvessel, 0:player/run, 1:player; clips started Bob_Idle, Bob_Idle_HeavyBreathing, Bob_TLG_CarryVessel, Bob_Walk, Bob_WalkLightLimpR, Bob_WalkLightLimpL, Bob_Run, Bob_RunLightLimpR, Bob_RunLightLimpL, Bob_WalkHeavyLimpR, Bob_WalkHeavyLimpL, Bob_IdleToRun, Bob_IdleToRun180R, Bob_RunToStop; animator log 129 lines
+PASS RTVG.run_gait :: asked run=true sprint=false sneak=false; at the three shots: run=true sprint=false sneak=false; run=true sprint=false sneak=false; run=true sprint=false sneak=false
+PASS RTVG.run_pose_kept :: RightHandMask/tlgcarryvessel active at the shots: tlgcarryvessel/true, tlgcarryvessel/true, tlgcarryvessel/true; tlgcarryvessel or tlgcarryvessel active at the end: true
+PASS RTVG.run_carried :: TLG.FermenterVessel in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_sprint begin
+OBS  RTVG.sprint screenshot tlg_rtvg_sprint_1.png ok=true at 35% of 11.3 tiles (tick 65): running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.sprint screenshot tlg_rtvg_sprint_2.png ok=true at 50% of 11.3 tiles (tick 81): running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.sprint screenshot tlg_rtvg_sprint_3.png ok=true at 65% of 11.3 tiles (tick 97): running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel tlgcarryvessel active=true in both hands=true
+OBS  RTVG.sprint Toggle to Run was false, false during the leg
+OBS  RTVG.sprint 11.3 tiles in 3.48 s (3.25 tiles a second), 198 ticks; 0.00 tiles short of the end; states 0:player/idle/Idle, 1:player/maskingright/tlgcarryvessel, 0:player/run/defaultRun, 0:player/sprint/defaultSprint; clips started Bob_Idle, Bob_Idle_HeavyBreathing, Bob_RunToStop, Bob_TLG_CarryVessel, Bob_Walk, Bob_WalkLightLimpR, Bob_WalkLightLimpL, Bob_Run, Bob_RunLightLimpR, Bob_RunLightLimpL, Bob_WalkHeavyLimpR, Bob_WalkHeavyLimpL, Bob_IdleToRun, Bob_Sprint, Bob_SprintToStop; animator log 129 lines
+PASS RTVG.sprint_gait :: asked run=false sprint=true sneak=false; at the three shots: run=false sprint=true sneak=false; run=false sprint=true sneak=false; run=false sprint=true sneak=false
+PASS RTVG.sprint_pose_kept :: RightHandMask/tlgcarryvessel active at the shots: tlgcarryvessel/true, tlgcarryvessel/true, tlgcarryvessel/true; tlgcarryvessel or tlgcarryvessel active at the end: true
+PASS RTVG.sprint_carried :: TLG.FermenterVessel in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_sneak_walk begin
+OBS  RTVG.sneak_walk screenshot tlg_rtvg_sneak_walk_1.png ok=true at 35% of 11.3 tiles (tick 164): running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel tlgcarryvesselsneak active=true in both hands=true
+OBS  RTVG.sneak_walk screenshot tlg_rtvg_sneak_walk_2.png ok=true at 50% of 11.3 tiles (tick 217): running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel tlgcarryvesselsneak active=true in both hands=true
+OBS  RTVG.sneak_walk screenshot tlg_rtvg_sneak_walk_3.png ok=true at 65% of 11.3 tiles (tick 270): running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel tlgcarryvesselsneak active=true in both hands=true
+OBS  RTVG.sneak_walk Toggle to Run was false, false during the leg
+OBS  RTVG.sneak_walk 11.3 tiles in 7.10 s (1.59 tiles a second), 415 ticks; 0.00 tiles short of the end; states 0:player/idle/Idle, 1:player/maskingright/tlgcarryvessel, 0:player/movement/sneakWalk, 1:player/turningMovement180/turn_idleToWalk_sneak_180L, 2:player/maskingright/tlgcarryvessel, 0:player/movement, 2:player/maskingright/tlgcarryvesselsneak, 1:player, 1:player/maskingright/tlgcarryvesselsneak, 0:player/idle/sneakidle, 1:player/maskingright/tlgcarryvesselsneakidle; clips started Bob_Idle, Bob_Idle_HeavyBreathing, Bob_SprintToStop, Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLG_CarryVessel, Bob_TLG_CarryVesselSneakIdle, Bob_WalkSneak_Slow, Bob_WalkSneak, Bob_TLG_CarryVesselSneak, Bob_SneakToSneakWalk_Turn180L; animator log 129 lines
+PASS RTVG.sneak_walk_gait :: asked run=false sprint=false sneak=true; at the three shots: run=false sprint=false sneak=true; run=false sprint=false sneak=true; run=false sprint=false sneak=true
+PASS RTVG.sneak_walk_pose_kept :: RightHandMask/tlgcarryvesselsneak active at the shots: tlgcarryvessel/true, tlgcarryvessel/true, tlgcarryvessel/true; tlgcarryvesselsneak or tlgcarryvesselsneakidle active at the end: true
+PASS RTVG.sneak_walk_carried :: TLG.FermenterVessel in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_sneak_run begin
+OBS  RTVG.sneak_run screenshot tlg_rtvg_sneak_run_1.png ok=true at 35% of 11.3 tiles (tick 103): running=true sprinting=false sneaking=true RightHandMask=tlgcarryvessel tlgcarryvesselsneak active=true in both hands=true
+OBS  RTVG.sneak_run screenshot tlg_rtvg_sneak_run_2.png ok=true at 50% of 11.3 tiles (tick 129): running=true sprinting=false sneaking=true RightHandMask=tlgcarryvessel tlgcarryvesselsneak active=true in both hands=true
+OBS  RTVG.sneak_run screenshot tlg_rtvg_sneak_run_3.png ok=true at 65% of 11.3 tiles (tick 156): running=true sprinting=false sneaking=true RightHandMask=tlgcarryvessel tlgcarryvesselsneak active=true in both hands=true
+OBS  RTVG.sneak_run Toggle to Run was false, true during the leg
+OBS  RTVG.sneak_run 11.3 tiles in 4.61 s (2.46 tiles a second), 265 ticks; 0.00 tiles short of the end; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcarryvesselsneakidle, 0:player/run/sneakRun, 1:player/turningMovement180/turn_idleToRun_sneak_180L, 2:player/maskingright/tlgcarryvesselsneakidle, 0:player/run, 2:player/maskingright/tlgcarryvesselsneak, 1:player, 1:player/maskingright/tlgcarryvesselsneak; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_TLG_CarryVesselSneakIdle, Bob_RunSneak_Slow, Bob_RunSneak, Bob_WalkSneak_Slow, Bob_SneakToSneakRun, Bob_TLG_CarryVesselSneak, Bob_SneakToSneakRun_Turn180L, Bob_RunSneakToStop; animator log 129 lines
+PASS RTVG.sneak_run_gait :: asked run=true sprint=false sneak=true; at the three shots: run=true sprint=false sneak=true; run=true sprint=false sneak=true; run=true sprint=false sneak=true
+PASS RTVG.sneak_run_pose_kept :: RightHandMask/tlgcarryvesselsneak active at the shots: tlgcarryvessel/true, tlgcarryvessel/true, tlgcarryvessel/true; tlgcarryvesselsneak or tlgcarryvesselsneakidle active at the end: true
+PASS RTVG.sneak_run_carried :: TLG.FermenterVessel in both hands=true; on the ground=false; 0.00 tiles short of the end
+STEP rtvg_crouch_true begin
+OBS  RTVG.crouch sneaking=true (asked true); RightHandMask=tlgcarryvessel; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcarryvesselsneakidle; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_RunSneakToStop, Bob_TLG_CarryVesselSneakIdle
+PASS RTVG.crouch_true_node :: sneaking=true; tlgcarryvesselsneakidle active=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgcarryvessel LeftHandMask=
+STEP rtmi_shot_rtvg_crouched_front begin
+OBS  RTMI.screenshot tlg_rtvg_crouched_front.png ok=true ; interface hidden; zoom 0.25; player 10666,10637; game hour 9.16
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgcarryvessel LeftHandMask=
+STEP rtmi_shot_rtvg_crouched_side begin
+OBS  RTMI.screenshot tlg_rtvg_crouched_side.png ok=true ; interface hidden; zoom 0.25; player 10666,10637; game hour 9.18
+STEP rtvg_crouch_false begin
+OBS  RTVG.crouch sneaking=false (asked false); RightHandMask=tlgcarryvessel; states 0:player/idle/sneakidle, 1:player/maskingright/tlgcarryvesselsneakidle, 1:player/maskingright/tlgcarryvessel, 0:player/idle/Idle; clips started Bob_IdleSneak, Bob_IdleSneak_HBreathing, Bob_Idle, Bob_Idle_HeavyBreathing, Bob_TLG_CarryVesselSneakIdle, Bob_TLG_CarryVessel
+PASS RTVG.crouch_false_node :: sneaking=false; tlgcarryvessel active=true
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.19
+SUMMARY pass=23 fail=0
+DONE
