@@ -85,9 +85,9 @@ function G.read(gen, persist)
     end
     local rec = fromSidecar(side, cap)
     if math.abs(fuel - Supply.total(rec)) <= 1e-4 then return rec, "ok" end
-    local base = { deg = 0, mic = 0 }
-    if fuel > Supply.total(rec) then base.deg = C.untrackedDeg() end
-    local out = Tx.reconcile(rec, { total = fuel }, base, Supply.primary(rec) or "gasoline")
+    local base, at = { deg = 0, mic = 0 }, nil
+    if fuel > Supply.total(rec) then base, at = C.inflowAt() end
+    local out = Tx.reconcile(rec, { total = fuel }, base, Supply.primary(rec) or "gasoline", at)
     out.cap = cap
     return out, "reconciled"
 end

@@ -84,6 +84,12 @@
   used to count the heat-up hour too, and kept 1.61 L where 1.10 L had
   distilled (found in game). A fermenter's hour of preparing likewise
   makes no ethanol.
+* Fuel that got into a can, tank, generator or pump without the mod seeing
+  it (another mod, an action the mod does not follow, or while the mod was
+  removed) now joins at the condition of fuel of unknown origin at the
+  moment it is found. It used to be aged again over all the time since the
+  container was last recorded: a can topped up while the mod was away for
+  a game day read 11.5 % more degraded (found in game).
 * Fixes found in the client runs: the per-minute vehicle effects, the
   "pour into vehicle" menu entry and the workshop menu no longer fail on
   42.21 (the cell's vehicle list is a set); generators keep their fuel record

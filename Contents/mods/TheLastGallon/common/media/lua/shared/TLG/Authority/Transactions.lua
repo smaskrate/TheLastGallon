@@ -145,17 +145,21 @@ end
 -- Reconciles a record with a native observation the adapter made
 -- (D-006). observed = { total = number, comp = optional { id = qty } }.
 -- baseline = { deg = number, mic = number } for unknown inflow.
-function Tx.reconcile(rec, observed, baseline, primary)
+-- Changes are measured against `rec` as written, never against an advanced
+-- record (aging moves fuel to water, which native fluids never show), and
+-- decreases leave from it. at = { now = hour, env = Climate } (optional):
+-- the record is advanced to `at.now` before the inflow mixes in, so fuel
+-- found then carries the baseline of that moment and is not aged again over
+-- the time it went unseen (RT-SP run 54). Without `at` it mixes in at rec.t.
+function Tx.reconcile(rec, observed, baseline, primary, at)
     local out = Supply.copy(rec)
     local info = { removed = 0, added = 0 }
+    local inflow = {}
     if observed.comp then
         for _, id in ipairs(TLG.Tables.sortedKeys(observed.comp)) do
             local want = observed.comp[id]
             local have = out.q[id] or 0
-            if want > have + 1e-6 then
-                out = Mixing.addUntracked(out, id, want - have, baseline)
-                info.added = info.added + (want - have)
-            end
+            if want > have + 1e-6 then inflow[#inflow + 1] = { id = id, n = want - have } end
         end
         for _, id in ipairs(TLG.Tables.sortedKeys(out.q)) do
             local want = observed.comp[id] or 0
@@ -165,15 +169,19 @@ function Tx.reconcile(rec, observed, baseline, primary)
             end
         end
         Supply.normalize(out)
-        return out, info
+    else
+        local have = Supply.total(out)
+        if observed.total < have - 1e-6 then
+            out = Mixing.removeProportional(out, have - observed.total)
+            info.removed = have - observed.total
+        elseif observed.total > have + 1e-6 then
+            inflow[1] = { id = primary or Supply.primary(out) or "gasoline", n = observed.total - have }
+        end
     end
-    local have = Supply.total(out)
-    if observed.total < have - 1e-6 then
-        out = Mixing.removeProportional(out, have - observed.total)
-        info.removed = have - observed.total
-    elseif observed.total > have + 1e-6 then
-        out = Mixing.addUntracked(out, primary or Supply.primary(out) or "gasoline", observed.total - have, baseline)
-        info.added = observed.total - have
+    if at and #inflow > 0 then out = Aging.advance(out, at.now, at.env) end
+    for _, p in ipairs(inflow) do
+        out = Mixing.addUntracked(out, p.id, p.n, baseline)
+        info.added = info.added + p.n
     end
     return out, info
 end

@@ -55,6 +55,16 @@ listed with their replacement.
   pessimistic world-baseline condition (never fresh). Diagnostics are logged.
 * Reason: spec §8 (one consumption owner, reconciliation, no fresh fuel from
   unknown changes).
+* Amendment (2026-11-02): untracked inflow mixes in when it is found. The
+  changes are measured against the record as last written, never against
+  the record aged since: aging turns fuel into water that native fluids
+  never show, which would read as inflow. What left goes first, from the
+  record as written. The record is then advanced to the read and the
+  inflow mixes in there, at that moment's baseline (`Tx.reconcile`'s `at`,
+  in all four adapters). It used to mix in at the last write, and the
+  caller's advance then aged it a second time over the time it went
+  unseen. A can topped up with 3 L while the mod was away for a game day
+  read 0.049706 instead of 0.044565, 11.5 % more degraded (RT-SP run 54).
 
 ## D-007 Native fluids for alternative fuels and contaminants
 * Decision: script fluids `TLG_Ethanol`, `TLG_Diesel`, `TLG_Biodiesel` (and,

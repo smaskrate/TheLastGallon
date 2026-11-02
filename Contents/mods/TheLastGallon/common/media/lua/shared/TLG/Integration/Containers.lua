@@ -8,7 +8,8 @@
 --                      reconciled composition q
 --   replication        item: syncItemFields (MP NOT RUN); object: transmitModData
 --   reconciliation     on every read: native decreases leave proportionally,
---                      unknown increases mix in at the world baseline (D-006)
+--                      unknown increases mix in at the world baseline when
+--                      found, into the record advanced to then (D-006)
 --
 -- Lua-initiated pours go through FluidContainer.Transfer, which this adapter
 -- wraps (wrappability verified RT-DS, G02) so the destination receives the
@@ -67,6 +68,8 @@ end
 
 -- Builds the committed record for a container; nil when it does not hold
 -- TLG-tracked fuel. `persist` allows assigning ids/baselines (authority).
+-- A record with untracked inflow comes back advanced to now, any other at
+-- its last write; callers advance it to now either way.
 function C.read(owner, kind, persist)
     local fc = C.fluidOf(owner, kind)
     if fc == nil then return nil, "no_fluid_container" end
@@ -106,11 +109,11 @@ function C.read(owner, kind, persist)
         rec.cap = cap
         return rec, "ok"
     end
-    local base = { deg = 0, mic = 0 }
+    local base, at = { deg = 0, mic = 0 }, nil
     for id, q in pairs(comp) do
-        if q > (rec.q[id] or 0) + 1e-6 then base.deg = C.untrackedDeg(); break end
+        if q > (rec.q[id] or 0) + 1e-6 then base, at = C.inflowAt(); break end
     end
-    local reconciled, info = Tx.reconcile(rec, { comp = comp }, base)
+    local reconciled, info = Tx.reconcile(rec, { comp = comp }, base, nil, at)
     reconciled.cap = cap
     if info.added > 1e-6 then
         TLG.Log.debug("container %s: %.4f L of untracked inflow reconciled", C.keyOf(owner, kind), info.added)
@@ -129,6 +132,13 @@ function C.untrackedDeg()
         untrackedCache.day, untrackedCache.deg = day, b.deg.gasoline or 0
     end
     return untrackedCache.deg
+end
+
+-- Untracked inflow mixes in when it is found: the baseline above, into the
+-- record advanced to now (Tx.reconcile's `at`), so it is not aged again
+-- over the time it went unseen. Returns Tx.reconcile's baseline and `at`.
+function C.inflowAt()
+    return { deg = C.untrackedDeg(), mic = 0 }, { now = World.now(), env = World.env() }
 end
 
 function C.writeSidecar(owner, kind, rec)

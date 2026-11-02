@@ -168,3 +168,45 @@ T.case("authority: reconciliation never creates fresh fuel from unknown changes"
     T.near(items.q.gasoline, 20, 1e-9); T.near(items.q.ethanol, 5, 1e-9)
     T.near(items.deg.ethanol, (3 * 0.1 + 2 * 3) / 5, 1e-9)
 end)
+
+T.case("authority: inflow found late mixes in at the baseline of the moment it is found", function()
+    local Aging, Mixing, env = TLG.Domain.Aging, TLG.Domain.Mixing, F.env()
+    local rec = F.supply({ id = "V", storage = "vehicle_tank", cap = 50, t = 100, q = { gasoline = 30 },
+        deg = { gasoline = 0.4 } })
+    local base, at = { deg = 2.5, mic = 0 }, { now = 100 + 24 * 30, env = env }
+    local up, info = Tx.reconcile(rec, { total = 40 }, base, "gasoline", at)
+    T.near(info.added, 10, 1e-9)
+    T.eq(up.t, at.now)
+    -- D-006: its own fuel aged to now, then the inflow at the baseline.
+    F.assertSupplyClose(up, Mixing.addUntracked(Aging.advance(rec, at.now, env), "gasoline", 10, base), 1e-12,
+        "found a month later")
+    -- Mixed in at the last write and then aged, the inflow aged twice (RT-SP run 54).
+    local twice = Aging.advance(Mixing.addUntracked(rec, "gasoline", 10, base), at.now, env)
+    T.ok(twice.deg.gasoline > up.deg.gasoline + 1e-3,
+        string.format("aged twice %.6f, once %.6f", twice.deg.gasoline, up.deg.gasoline))
+    -- Callers advance what they read to now; that changes nothing more.
+    F.assertSupplyClose(Aging.advance(up, at.now, env), up, 0, "advanced again")
+    -- A loss alone leaves from the record as written, clock or not.
+    local down = Tx.reconcile(rec, { total = 22 }, base, "gasoline", at)
+    T.eq(down.t, rec.t, "a loss alone is not advanced")
+    F.assertSupplyClose(down, Tx.reconcile(rec, { total = 22 }, base, "gasoline"), 0, "the same without the clock")
+end)
+
+T.case("authority: changes are measured against the record as written, losses before the inflow", function()
+    local Aging, Mixing, env = TLG.Domain.Aging, TLG.Domain.Mixing, F.env()
+    local rec = F.supply({ id = "C", storage = "gascan_plastic", cap = 10, t = 100, sealed = false,
+        q = { gasoline = 4, ethanol = 2 }, deg = { gasoline = 0.3, ethanol = 0.1 } })
+    local base, at = { deg = 2.5, mic = 0 }, { now = 100 + 24 * 30, env = env }
+    -- Unsealed, the can breathes: aging turns fuel into water that native
+    -- fluids never show, which must not read as inflow or a loss.
+    T.ok((Aging.advance(rec, at.now, env).q.water or 0) > 1e-4, "the can takes up water")
+    -- 3 L of petrol came in and 1 L of ethanol left while unseen.
+    local out, info = Tx.reconcile(rec, { comp = { gasoline = 7, ethanol = 1 } }, base, nil, at)
+    T.near(info.added, 3, 1e-12, "the petrol alone is inflow")
+    T.near(info.removed, 1, 1e-12, "the ethanol alone left")
+    local lost = Supply.copy(rec)
+    lost.q.ethanol = 1
+    F.assertSupplyClose(out, Mixing.addUntracked(Aging.advance(lost, at.now, env), "gasoline", 3, base), 1e-12,
+        "the loss, the aging, then the inflow")
+    T.ok((out.q.water or 0) > 1e-4, "the water taken up stays")
+end)

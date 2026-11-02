@@ -6,7 +6,8 @@
 --   replication        vehicle:transmitPartModData(part)
 --   reconciliation     native decrease (driving, idling, siphoning by code TLG
 --                      did not see) leaves proportionally; unknown increase is
---                      untracked inflow at the pessimistic baseline (D-006)
+--                      untracked inflow at the pessimistic baseline, mixed in
+--                      when found (D-006, Containers.inflowAt)
 --   effects            start/stall/power from ConsumerService; applied through
 --                      per-instance engine controls only (G09 verified RT-SP)
 --   runtime status     refuel, siphon, idle-burn reconciliation, start gate
@@ -84,11 +85,11 @@ function V.read(vehicle, persist)
     for id, d in pairs(side.deg or {}) do rec.deg[id] = d end
     rec.prov = Tables.deepCopy(side.prov or {})
     local primary = Supply.primary(rec) or "gasoline"
-    local base = { deg = 0, mic = 0 }
-    if amount > Supply.total(rec) + 1e-4 then base.deg = C.untrackedDeg() end
+    local base, at = { deg = 0, mic = 0 }, nil
+    if amount > Supply.total(rec) + 1e-4 then base, at = C.inflowAt() end
     -- Native stores floats; tolerate float precision before calling it a change.
     if math.abs(amount - Supply.total(rec)) <= 1e-4 then return rec, "ok" end
-    local out, info = Tx.reconcile(rec, { total = amount }, base, primary)
+    local out, info = Tx.reconcile(rec, { total = amount }, base, primary, at)
     out.cap = cap
     return out, "reconciled", info
 end

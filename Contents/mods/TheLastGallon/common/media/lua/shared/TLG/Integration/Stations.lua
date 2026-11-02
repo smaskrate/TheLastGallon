@@ -81,9 +81,9 @@ function S.read(obj, persist)
     rec.prov = Tables.deepCopy(side.prov or {})
     if infinite() then return rec, "infinite" end
     if math.abs(litres - Supply.total(rec)) <= 1e-4 then return rec, "ok" end
-    local base = { deg = 0, mic = 0 }
-    if litres > Supply.total(rec) then base.deg = C.untrackedDeg() end
-    local out = TLG.Authority.Transactions.reconcile(rec, { total = litres }, base, "gasoline")
+    local base, at = { deg = 0, mic = 0 }, nil
+    if litres > Supply.total(rec) then base, at = C.inflowAt() end
+    local out = TLG.Authority.Transactions.reconcile(rec, { total = litres }, base, "gasoline", at)
     out.frac = rec.frac
     return out, "reconciled"
 end

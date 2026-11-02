@@ -7759,12 +7759,12 @@ RT.lateFindSteps = { RT.waitWorld, RT.X.setup, RT.N.start, RT.N.wait, RT.N.late,
 -- again: reinstalling grants no fresh fuel). P must keep its condition with
 -- the litres it holds now (D-006: a decrease leaves proportionally). The
 -- RTM.design_ check holds Q to D-006's words, the inflow "mixed in … with
--- the pessimistic world-baseline condition": its own fuel aged to now, then
--- the 3 L at the untracked baseline, by the mod's own mixing. The code
--- reconciles at the record's last write and ages the mixture afterwards,
--- which ages the inflow over the time away as well. What the game did with
--- the ethanol and the fermenter while the mod was away is observed, not
--- judged.
+-- the pessimistic world-baseline condition" when found: its own fuel aged
+-- to now, then the 3 L at the untracked baseline, by the mod's own mixing.
+-- Run 54 found the inflow mixed in at the record's last write and then aged
+-- over the time away as well (fixed: Tx.reconcile's `at`). What the game
+-- did with the ethanol and the fermenter while the mod was away is
+-- observed, not judged.
 ------------------------------------------------------------------------------
 RT.M = { expect = "TLG_removal_expect.txt", launch2 = "TLG_removal_launch2.txt", tol = 1e-6 }
 
