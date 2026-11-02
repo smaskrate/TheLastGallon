@@ -503,6 +503,21 @@ local function wrap(class, method, fn)
     return true
 end
 
+-- Takes a machine's world object off its square as the game's floor
+-- transfer does (SRC ISTransferAction.lua:131-158).
+function M.liftFromGround(item)
+    local wi = item:getWorldItem()
+    local sq = wi and wi:getSquare()
+    if sq == nil then return false end
+    if DesignationZoneAnimal and DesignationZoneAnimal.removeItemFromGround then
+        DesignationZoneAnimal.removeItemFromGround(wi)
+    end
+    sq:transmitRemoveItemFromSquare(wi)
+    sq:removeWorldObject(wi)
+    item:setWorldItem(nil)
+    return true
+end
+
 -- A mod error must never break the game's move itself.
 local function account(fn, item)
     local ok, err = pcall(fn, item, World.now())
@@ -515,8 +530,14 @@ end
 -- item transaction), every transfer to or from the floor
 -- (ISTransferAction.transferItem: the loot window's Grab, the inventory
 -- menu's Drop, the server's dropOnFloor transaction) and the place cursor's
--- action (ISDropWorldItemAction.complete). Told apart by whether the item
--- lies on the ground before and after, not by container types.
+-- action (ISDropWorldItemAction.complete). A machine carried in both hands
+-- (the fermentation vessel: Tags base:heavyitem) is also taken into both
+-- hands by ISEquipHeavyItem.complete (the loot and inventory windows' take,
+-- from the floor too) and put down at the character's feet by
+-- forceDropHeavyItems (SRC ISEquipWeaponAction.lua:75: when another heavy
+-- item is taken, a vehicle entered, an animal handled, a trap set). Told
+-- apart by whether the item lies on the ground before and after, not by
+-- container types.
 function M.install()
     wrap(ISGrabItemAction, "transferItem", function(orig, self, witem, ...)
         local item = World.isAuthority() and witem and witem.getItem and witem:getItem() or nil
@@ -544,6 +565,45 @@ function M.install()
         if item and M.isPlaced(item) then account(M.putDown, item) end
         return r
     end)
+    wrap(ISEquipHeavyItem, "complete", function(orig, self, ...)
+        local item = World.isAuthority() and self.item and M.machineFor(self.item) and self.item or nil
+        local was = item and M.isPlaced(item)
+        local r = orig(self, ...)
+        if was then
+            -- 42.21 takes the item off the loot window's floor container and
+            -- into both hands but leaves its world object on the square
+            -- (sendRemoveItemFromContainer acts only in multiplayer, BC):
+            -- vanilla's meteorite stays behind the same way (RT-SP runs
+            -- 77-78). A machine is taken off the ground as the floor
+            -- transfer takes an item, whether or not it has a record yet.
+            local inv = self.character and self.character:getInventory()
+            if M.isPlaced(item) and inv and inv:contains(item) then
+                local ok, err = pcall(M.liftFromGround, item)
+                if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
+            end
+            if M.tracked(item) and not M.isPlaced(item) then account(M.pickedUp, item) end
+        end
+        return r
+    end)
+    -- Wrapped like the generators' (Generators.lua); the two compose.
+    if forceDropHeavyItems then
+        local origDrop = forceDropHeavyItems
+        forceDropHeavyItems = function(character, ...)
+            local held = {}
+            if character and World.isAuthority() then
+                local primary, secondary = character:getPrimaryHandItem(), character:getSecondaryHandItem()
+                if M.tracked(primary) and not M.isPlaced(primary) then held[#held + 1] = primary end
+                if secondary ~= primary and M.tracked(secondary) and not M.isPlaced(secondary) then
+                    held[#held + 1] = secondary
+                end
+            end
+            local r = origDrop(character, ...)
+            for _, it in ipairs(held) do
+                if M.isPlaced(it) then account(M.putDown, it) end
+            end
+            return r
+        end
+    end
     TLG.Log.info("machine move hooks installed")
 end
 

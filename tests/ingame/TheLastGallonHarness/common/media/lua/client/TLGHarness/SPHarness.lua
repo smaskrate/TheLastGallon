@@ -38,6 +38,8 @@
 --   sp-rtmfb -> main menu continues that save: back in place, photographed
 --   sp-rtmh -> held items photographed close up: a bat, a water bottle, the
 --             fermentation vessel in one hand and in both
+--   sp-rtmhh -> heavy items carried in both hands: a meteorite, an anvil,
+--             the vessel scripted as a heavy item
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -66,7 +68,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
-    or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -4033,7 +4035,14 @@ RT.fireReloadSteps = { RT.fireReload, RT.fireFerment, RT.finish }
 -- the work up to the last time the mod found it placed (at most ten
 -- minutes before the grab) and from its put-down. Two game hours later,
 -- with no Status in between, the readings at the new tiles are compared;
--- then all four are read, and two hours later read again.
+-- then all four are read, and two hours later read again. The vessel is
+-- carried in both hands (a heavy item), yet B's Grab stays a plain transfer
+-- into the inventory: the loot window's Grab button calls onGrabItems,
+-- which vanilla does not check for heavy items (SRC ISInventoryPane.lua:137,
+-- ISInventoryPaneContextMenu.lua:3893). C is finally taken as a double-click
+-- in the loot window takes a heavy item (equipHeavyItem: ISEquipHeavyItem,
+-- into both hands, ISInventoryPane.lua:1184), carried an hour and put down
+-- by forceDropHeavyItems.
 ------------------------------------------------------------------------------
 RT.P = { names = { "A", "B", "C", "D" }, carryAt = 3, carryHours = 3, settleHours = 2, afterHours = 2, tol = 0.01,
     seenBound = 1 / 6 }
@@ -4607,6 +4616,102 @@ function RT.P.phases.after(ctx)
     R:check("RTP.progress_like_the_control_after_the_move", function()
         return math.abs(d[1] - d[3]) <= 1e-6 and math.abs(d[2] - d[3]) <= 1e-6 and math.abs(d[4] - d[3]) <= 1e-6,
             string.format("in %.4f game h: A %.4f B %.4f C %.4f D %.4f h", hours() - ctx.tEnd, d[1], d[2], d[3], d[4])
+    end)
+    ctx.phase = "takeC"
+end
+
+-- The vessel is carried in both hands (Tags base:heavyitem). C, the
+-- control, is taken as a double-click in the loot window takes a heavy item
+-- (equipHeavyItem: ISEquipHeavyItem, into both hands; run 76 called the
+-- Grab button's onGrabItems instead, a plain transfer), carried an hour and
+-- put down by forceDropHeavyItems, which vanilla calls when the character
+-- enters a vehicle or takes another heavy item. Its carried hour must not
+-- count (D-015).
+function RT.P.phases.takeC(ctx, ticks)
+    local P, C = RT.P, RT.P.items[3]
+    local idle = P.action(ctx, ticks, "takeC", function()
+        ctx.squareC = TLG.Integration.Machines.square(C)
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        ctx.listedC = C:getContainer() == ISInventoryPage.GetFloorContainer(0)
+        ISInventoryPaneContextMenu.equipHeavyItem(player(), C)
+    end, function() return C:getWorldItem() == nil end)
+    if not idle then return end
+    local p, pl = C:getModData().tlgProc or {}, player()
+    ctx.tPickC = ctx.takeC.at
+    local left = false
+    local objs = ctx.squareC and ctx.squareC:getWorldObjects()
+    for j = 0, (objs and objs:size() or 0) - 1 do
+        if objs:get(j):getItem() == C then left = true end
+    end
+    R:line("OBS  RTP.take_C listed in the loot window=%s; at %s game h; heavy=%s", tostring(ctx.listedC), tostring(ctx.tPickC),
+        tostring(C:isForceDropHeavyItem()))
+    R:check("RTP.heavy_C_taken_into_both_hands", function()
+        return ctx.tPickC ~= nil and pl:getPrimaryHandItem() == C and pl:getSecondaryHandItem() == C and not left,
+            string.format("primary=%s secondary=%s; still on its tile=%s", tostring(pl:getPrimaryHandItem() == C),
+                tostring(pl:getSecondaryHandItem() == C), tostring(left))
+    end)
+    R:check("RTP.heavy_C_pickup_pauses", function()
+        local want = (ctx.tPickC or 0) - ctx.h0
+        return p.state == "Paused" and p.pause == "not_placed" and math.abs((p.t or 0) - (ctx.tPickC or -9)) <= P.tol
+            and math.abs(P.work(p) - want) <= P.tol, string.format("state=%s pause=%s t=%s; done %.4f h, placed %.4f h",
+                tostring(p.state), tostring(p.pause), tostring(p.t), P.work(p), want)
+    end)
+    if ctx.tPickC == nil or pl:getPrimaryHandItem() ~= C then
+        RT.abort = "the vessel was not taken into both hands"
+        return true
+    end
+    ctx.phase = "carryC"
+end
+
+function RT.P.phases.carryC(ctx)
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.tPickC < 1 then return end
+    RT.speed(1)
+    ctx.phase = "dropC"
+end
+
+function RT.P.phases.dropC(ctx)
+    local P, M = RT.P, TLG.Integration.Machines
+    ctx.tDropC = hours()
+    local ok, err = pcall(forceDropHeavyItems, player())
+    local it = P.placedById(ctx.pid[3])
+    if it then P.items[3] = it end
+    local s = it and M.square(it)
+    local p = it and it:getModData().tlgProc or {}
+    local e = (TLG.World.get().machineSites or {})[ctx.pid[3]]
+    R:line("OBS  RTP.drop_C forceDropHeavyItems ok=%s %s at %.4f game h; on %s", tostring(ok), ok and "" or tostring(err),
+        ctx.tDropC, s and (s:getX() .. "," .. s:getY()) or "-")
+    R:check("RTP.heavy_C_dropped_at_the_feet", function()
+        local here = player():getCurrentSquare()
+        return ok and s ~= nil and s == here and player():getPrimaryHandItem() ~= it,
+            string.format("on %s, the character on %s", s and (s:getX() .. "," .. s:getY()) or "-",
+                here and (here:getX() .. "," .. here:getY()) or "-")
+    end)
+    R:check("RTP.heavy_C_put_down_resumes", function()
+        return s ~= nil and p.state == "Processing" and p.pause == nil and math.abs((p.t or 0) - ctx.tDropC) <= P.tol
+            and p.site and p.site.x == s:getX() and p.site.y == s:getY() and e ~= nil and e.x == s:getX() and e.y == s:getY(),
+            string.format("state=%s t=%s site %s,%s listed %s", tostring(p.state), tostring(p.t), tostring(p.site and p.site.x),
+                tostring(p.site and p.site.y), e and (e.x .. "," .. e.y) or "-")
+    end)
+    if not s then
+        RT.abort = "the vessel was not dropped"
+        return true
+    end
+    ctx.phase = "settleC"
+end
+
+function RT.P.phases.settleC(ctx)
+    local P = RT.P
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.tDropC < 1 then return end
+    RT.speed(1)
+    local C = P.items[3]
+    RT.statusOf(C)
+    local now, done = hours(), RT.doneHours(C)
+    R:check("RTP.D015_C_two_handed_carry_hours_do_not_count", function()
+        local placed = (ctx.tPickC - ctx.h0) + (now - ctx.tDropC)
+        return math.abs(done - placed) <= P.tol, string.format("done %.4f h, placed %.4f h, carried %.4f h", done, placed,
+            ctx.tDropC - ctx.tPickC)
     end)
     return true
 end
@@ -8190,7 +8295,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- The shipped fermenter model (requests "sp-rtmf", then "sp-rtmfb"): the
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
-RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
+RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module: StaticModel =
     -- WaterTank reads back as Base.WaterTank (run 68).
@@ -8460,6 +8565,81 @@ function RT.MI.propAction(name, fullType, model)
         return true
     end }
 end
+
+-- An item carried in both hands as vanilla's heavy items are
+-- (ISEquipHeavyItem: into the inventory, then both hands; it drops whatever
+-- heavy item was held before), photographed idle after vanilla's
+-- hand-model reset.
+function RT.MI.heavy(name, fullType)
+    return { name = name, timeout = 900, fn = function(ctx, ticks)
+        local p = player()
+        if not ctx.item then
+            ISTimedActionQueue.clear(p)
+            ctx.item = p:getInventory():AddItem(fullType)
+            ISTimedActionQueue.add(ISEquipHeavyItem:new(p, ctx.item))
+            return nil
+        end
+        if ticks < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
+        if not ctx.reset then
+            p:resetEquippedHandsModels()
+            ctx.reset = ticks
+            return nil
+        end
+        if ticks - ctx.reset < 60 then return nil end
+        R:check("RTMH.heavy_" .. name, function()
+            local both = p:getPrimaryHandItem() == ctx.item and p:getSecondaryHandItem() == ctx.item
+            return both, string.format("%s heavy=%s both hands=%s", fullType, tostring(ctx.item:isForceDropHeavyItem()),
+                tostring(both))
+        end)
+        return true
+    end }
+end
+
+-- A vanilla heavy item taken off the floor as a double-click in the loot
+-- window takes it (equipHeavyItem; SRC ISInventoryPane.lua:1184). Run 77
+-- found the vessel in both hands and still on its tile after it:
+-- ISEquipHeavyItem.complete removes the item from the loot window's floor
+-- container but not from the square (sendRemoveItemFromContainer acts only
+-- in multiplayer, BC), where ISTransferAction removes the world object
+-- itself (SRC ISTransferAction.lua:131). Does vanilla's own heavy item fare
+-- the same?
+RT.MI.heavyFromFloor = { name = "rtmhh_from_floor", timeout = 900, fn = function(ctx, ticks)
+    local p = player()
+    if ticks == 1 then
+        ISTimedActionQueue.clear(p)
+        forceDropHeavyItems(p)
+        ctx.sq = p:getCurrentSquare()
+        ctx.item = ctx.sq:AddWorldInventoryItem("Base.LargeMeteorite", 0.5, 0.5, 0)
+        return nil
+    end
+    if ticks == 30 then
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        ctx.listed = ctx.item:getContainer() == ISInventoryPage.GetFloorContainer(0)
+        ISInventoryPaneContextMenu.equipHeavyItem(p, ctx.item)
+        return nil
+    end
+    if ticks < 90 or not TLGH.Steps.actionsIdle(p) then return nil end
+    local left = false
+    local objs = ctx.sq:getWorldObjects()
+    for j = 0, objs:size() - 1 do
+        if objs:get(j):getItem() == ctx.item then left = true end
+    end
+    local held = p:getPrimaryHandItem() == ctx.item and p:getSecondaryHandItem() == ctx.item
+    R:line("OBS  RTMHH.from_floor Base.LargeMeteorite listed in the loot window=%s; in both hands=%s; in the inventory=%s;"
+        .. " its world object still on the square=%s; item:getWorldItem()=%s", tostring(ctx.listed), tostring(held),
+        tostring(p:getInventory():contains(ctx.item)), tostring(left), tostring(ctx.item:getWorldItem() ~= nil))
+    return true
+end }
+
+-- Heavy items (request "sp-rtmhh"): vanilla's meteorite and anvil carried
+-- in both hands, then the vessel (scripted as a heavy item since
+-- 2026-11-02; runs 75 and 78 set the flags from here), each photographed
+-- idle close up; then a meteorite taken off the floor.
+RT.heavySteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmhh_go", "tests"), RT.MI.zoomTo("rtmhh_zoom", 0.25),
+    RT.MI.heavy("meteorite", "Base.LargeMeteorite"), RT.MI.shot("rtmhh_meteorite", true),
+    RT.MI.heavy("anvil", "Base.BlacksmithAnvil"), RT.MI.shot("rtmhh_anvil", true),
+    RT.MI.heavy("vessel", "TLG.FermenterVessel"), RT.MI.shot("rtmhh_vessel", true),
+    RT.MI.heavyFromFloor, RT.MI.shot("rtmhh_from_floor", true), RT.finish }
 
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
 -- character's hand, not even vanilla's water bottle. Run 73 showed why: a
@@ -8797,7 +8977,8 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
-    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh" then
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
+    or REQUEST == "sp-rtmhh" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -8884,6 +9065,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtmh" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, held items")
                 TLGH.Steps.run(R, RT.heldSteps, H, nil)
+            elseif REQUEST == "sp-rtmhh" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, heavy items")
+                TLGH.Steps.run(R, RT.heavySteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
@@ -8910,7 +9094,8 @@ end
 
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
-if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" then
+if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
+    or REQUEST == "sp-rtmhh" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

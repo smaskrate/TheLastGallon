@@ -9,7 +9,15 @@ module TLG
        (docs/asset-audit.csv A03/A04/I04/I09). DisplayCategory must be a
        vanilla category: the inventory shows getText("IGUI_ItemCat_" ..
        category) (ISInventoryPane.lua:2547), and "Tools" has no text
-       (runs 65-66 showed the raw key). Recipes use item ids verified in the
+       (runs 65-66 showed the raw key). The fermenter is carried in both
+       hands, scripted as vanilla's heavy items are (LargeMeteorite, the
+       anvils: Tags base:heavyitem, RequiresEquippedBothHands; BC
+       InventoryItem.isForceDropHeavyItem): vanilla takes it into both
+       hands and drops it when the character enters a vehicle or takes
+       another heavy item (forceDropHeavyItems; Machines.install follows
+       both). An idle character draws no carried item but a weapon, so its
+       hand model shows only during actions (RT-SP runs 73-75). Recipes use
+       item ids verified in the
        42.21 item scripts; craftRecipe grammar mirrors vanilla
        generated/entities/*/craftRecipes. Tags decide where a recipe is
        offered: the crafting window and the inventory "craft" menu list only
@@ -34,6 +42,8 @@ module TLG
         Icon = TLG_Fermenter,
         StaticModel = WaterTank,
         WorldStaticModel = TLG.Fermenter,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
     }
 
     item PotStill

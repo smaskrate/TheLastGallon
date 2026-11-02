@@ -54,6 +54,12 @@ local function square(g, x, y, z, room, air)
     function list:size() return #sq.objs end
     function list:get(i) return sq.objs[i + 1] end
     function sq:getWorldObjects() return list end
+    function sq:transmitRemoveItemFromSquare(o) self.transmitted = (self.transmitted or 0) + 1 end
+    function sq:removeWorldObject(o)
+        for i = #self.objs, 1, -1 do
+            if self.objs[i] == o then table.remove(self.objs, i) end
+        end
+    end
     function others:size() return #sq.fires end
     function others:get(i) return sq.fires[i + 1] end
     function sq:getObjects() return others end
@@ -92,6 +98,7 @@ local function machine(sq, rec)
     function item:getFullType() return "TLG.FermenterVessel" end
     function item:getModData() return md end
     function item:getWorldItem() return item.on and wi or nil end
+    function item:setWorldItem(w) if w == nil then item.on = nil end end
     function item:getID() return 7 end
     item.on, item.wi = sq, wi
     if sq then sq.objs[#sq.objs + 1] = wi end
@@ -484,6 +491,81 @@ T.case("integration: the game's Grab, floor transfers and place action account a
         ISTransferAction:transferItem({}, item, "floor", "inventory", nil)
         Machines.pickedUp, TLG.Log.error = pickedUp, log
         T.ok(item.on == nil, "moved anyway"); T.ok(logged ~= nil and string.find(logged, "boom", 1, true) ~= nil)
+    end)
+    for _, k in ipairs(names) do _G[k] = saved[k] end
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: a machine carried in both hands is accounted when taken and when dropped", function()
+    local g = fakeGame(2)
+    local names = { "ISGrabItemAction", "ISTransferAction", "ISDropWorldItemAction", "ISEquipHeavyItem", "forceDropHeavyItems" }
+    local saved = {}
+    for _, k in ipairs(names) do saved[k] = _G[k] end
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        -- What the vanilla functions do (42.21): ISEquipHeavyItem takes the
+        -- item into the inventory and both hands but, off the floor, leaves
+        -- its world object on the square (RT-SP runs 77-78);
+        -- forceDropHeavyItems puts a heavy hand item at the character's feet.
+        local hands, carried = { square = b }, {}
+        local inventory = { contains = function(self, it) return carried[it] == true end }
+        local character = {
+            getPrimaryHandItem = function() return hands.primary end,
+            getSecondaryHandItem = function() return hands.secondary end,
+            getCurrentSquare = function() return hands.square end,
+            getInventory = function() return inventory end,
+        }
+        ISGrabItemAction, ISTransferAction, ISDropWorldItemAction = {}, {}, {}
+        ISEquipHeavyItem = { complete = function(self)
+            carried[self.item] = true
+            hands.primary, hands.secondary = self.item, self.item
+            return true
+        end }
+        forceDropHeavyItems = function(chr)
+            local held = chr:getPrimaryHandItem()
+            if held then
+                place(held, chr:getCurrentSquare())
+                carried[held] = nil
+            end
+            hands.primary, hands.secondary = nil, nil
+        end
+        Machines.install()
+        local item = startedOn(a, "P15", env)
+        g.now = 4
+        local take = setmetatable({ item = item, character = character }, { __index = ISEquipHeavyItem })
+        T.eq(take:complete(), true)
+        T.ok(item:getWorldItem() == nil and #a.objs == 0 and a.transmitted == 1,
+            "the world object vanilla left on the square is taken off as the floor transfer does")
+        local rec = item:getModData().tlgProc
+        T.near(work(rec), 2, 1e-9, "taken into both hands: counted to the pickup"); T.eq(rec.pause, "not_placed")
+        g.now = 6
+        forceDropHeavyItems(character)
+        rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 6); T.eq(rec.site.x, 4, "dropped at the character's feet")
+        T.eq(World.get().machineSites.P15.x, 4, "listed at the new tile at once")
+        local later = Machines.advance(item, Machines.read(item, false), 8, env)
+        T.near(work(later), 4, 1e-9, "2 h before the pickup and 2 h since the drop, none of the 2 h carried")
+        -- Nothing in hand: the drop changes nothing.
+        g.now = 9
+        forceDropHeavyItems(character)
+        T.eq(item:getModData().tlgProc.t, 6)
+        -- Taken from the inventory (the machine was not standing): no pickup.
+        lift(item)
+        Machines.pickedUp(item, 9)
+        g.now = 10
+        setmetatable({ item = item, character = character }, { __index = ISEquipHeavyItem }):complete()
+        T.eq(item:getModData().tlgProc.t, 9, "already carried")
+        -- A machine without a record yet is taken off the ground too, and no
+        -- record is created; a vanilla heavy item is left as vanilla leaves it.
+        local bare = machine(b, nil)
+        setmetatable({ item = bare, character = character }, { __index = ISEquipHeavyItem }):complete()
+        T.ok(bare:getWorldItem() == nil, "lifted"); T.ok(bare:getModData().tlgProc == nil, "no record created")
+        local rock = machine(b, nil)
+        function rock:getFullType() return "Base.LargeMeteorite" end
+        setmetatable({ item = rock, character = character }, { __index = ISEquipHeavyItem }):complete()
+        T.ok(rock:getWorldItem() ~= nil, "not the mod's item: untouched")
     end)
     for _, k in ipairs(names) do _G[k] = saved[k] end
     g.restore()

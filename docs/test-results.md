@@ -1812,3 +1812,28 @@ were the game's own behaviour: an idle character draws no held non-weapon
 item, vanilla's included. The supplied model has no attachment block, so
 as a hand model it would need its offset and rotation tuned; the shipped
 vessel keeps vanilla's `WaterTank` in the hand.
+
+## 2026-11-02 — RT-SP client harness, launches 75–79 (the fermentation vessel carried in both hands)
+
+The user asked for the vessel to be carried in both hands. Vanilla's way
+is the heavy item (`Tags = base:heavyitem`, `RequiresEquippedBothHands =
+true`, as `Base.LargeMeteorite` and the anvils carry): taken into both
+hands by `ISEquipHeavyItem`, dropped at the feet by `forceDropHeavyItems`.
+`TLG_machines.txt` now scripts the vessel so, and `Machines.install`
+follows both moves (D-015 amendment).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run75_heavy.txt` to
+`..._run79_pickup_heavy.txt`.
+
+| Launch | Command | Result | |
+| --- | --- | --- | --- |
+| 75 | `-Mode heavy` (new) | **8/0** | vanilla's meteorite and anvil, then the vessel scripted heavy, carried in both hands: none drawn in the idle character's hands; each heavy take dropped the previous item at the feet |
+| 76 | `-Mode pickup` | 35/1 | the vessel heavy, the scenario otherwise unchanged: every D-015 check passed. Its last phase called the loot window's Grab button (`onGrabItems`), which vanilla does not check for heavy items: a plain transfer, not a take into both hands |
+| 77 | `-Mode pickup` | 34/2 | the last phase took C as a double-click does (`equipHeavyItem`): in both hands, yet its world object stayed on the square, so the mod saw no pickup |
+| 78 | `-Mode heavy` | **8/0** | vanilla's meteorite taken off the floor the same way: in both hands and the inventory, its world object still on the square. `ISEquipHeavyItem.complete` removes the item from the loot window's floor container only (`sendRemoveItemFromContainer` acts only in multiplayer, BC) |
+| 79 | `-Mode pickup` | **39/0** | after the fix (the mod takes its own machine's world object off as the floor transfer does): C in both hands and off its tile, counted 10.0485 h for 10.0486 h placed, carried an hour, dropped by `forceDropHeavyItems` at the character's feet, resumed there at once; 11.0487 h done for 11.0487 h placed |
+
+Not run: entering a vehicle itself (the harness called
+`forceDropHeavyItems`, which vanilla's vehicle entry calls, SRC
+`ISEnterVehicle.lua:60`), dragging in the loot window (the same
+`equipHeavyItem`), multiplayer. Vanilla's own heavy items keep the 42.21
+behaviour of launch 78.

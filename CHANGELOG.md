@@ -123,9 +123,15 @@
   engines.
 * The fermentation vessel stands on the floor as its own model: a wooden
   barrel with a lid, an airlock and a tap, about 0.75 m tall, and has an
-  icon to match. Held in the hand it is still the game's water bottle.
-  Checked in game: put down turned four ways, saved and continued; the
-  icon shows in the equipped-item button.
+  icon to match. Checked in game: put down turned four ways, saved and
+  continued; the icon shows in the equipped-item button.
+* The fermentation vessel is carried in both hands, like the game's
+  generators, anvils and ore: one at a time, and it goes down at your
+  feet when you get into a vehicle or take another heavy item. Take it
+  by double-clicking or dragging it in the loot window. The hours it is
+  carried still don't count (checked in game). The game leaves a heavy
+  item standing where it was when taken that way in single player; the
+  mod lifts its own vessel properly.
 * The four machines' inventory category reads "Tool"; it showed the raw
   key "IGUI_ItemCat_Tools" (found and checked in game).
 * Migrations with preserved future schemas.

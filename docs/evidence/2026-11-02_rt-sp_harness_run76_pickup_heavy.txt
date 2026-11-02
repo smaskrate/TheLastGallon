@@ -1,0 +1,71 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 39172
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, real game clock, pickup
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=5298438437453413124 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2220 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2220 game h in 300 ticks
+STEP rtp_sites begin
+OBS  RTP.spots character 10618,10628; A 10617,10628 B 10617,10629 C 10618,10629 D 10619,10628; A goes back down at 10619,10629; grid power=true
+PASS RTP.grid_is_on :: isHydroPowerOn=true
+PASS RTP.all_in_a_room :: in a room: true,true,true,true,true,true
+STEP rtp_run begin
+OBS  RTP.load_A menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_A :: sugar=6 water=30
+OBS  RTP.load_B menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_B :: sugar=6 water=30
+OBS  RTP.load_C menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_C :: sugar=6 water=30
+OBS  RTP.load_D menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_D :: sugar=6 water=30
+OBS  RTP.loaded at 4.2387 game h: process ids P1072235624-1 P1072235624-2 P1072235624-3 P1072235624-4; skill in the record 0
+OBS  RTP.grab_B the loot window lists B on the floor=true
+OBS  RTP.grab_D lifted without the game's Lua: ok=true 
+OBS  RTP.picked up A at 7.2575578689575195, B at 7.2716169357299805, D at 7.27169132232666 game h (load 4.2387)
+PASS RTP.picked_up_A_world_menu_grab :: carried=true
+PASS RTP.picked_up_B_loot_window_grab :: carried=true listed in the loot window=true
+PASS RTP.picked_up_D_unseen :: carried=true
+PASS RTP.pickup_pauses_A :: id=P1072235624-1 state=Paused pause=not_placed done=3.0188 t=7.2575, 7 readings and notes kept; picked up at 7.2576
+PASS RTP.pickup_pauses_B :: id=P1072235624-2 state=Paused pause=not_placed done=3.0328 t=7.2715, 7 readings and notes kept; picked up at 7.2716
+PASS RTP.D015_B_placed_hours_before_pickup_count :: done 3.0328 h at the pickup, placed 3.0329 h
+PASS RTP.unseen_pickup_changes_nothing_yet :: id=P1072235624-4 state=Processing pause=nil done=0.0000 t=4.2387, 7 readings and notes kept
+PASS RTP.hourly_list_at_pickup :: listed: A false, B false, C true, D true
+PASS RTP.menu_while_carried :: status offered=true place first greyed=true load mash gone=true
+OBS  RTP.status_A_carried menu "Status" -> ok=true reason=nil state=Paused stage=ferment outputs={} consumed=nil
+PASS RTP.carried_status_paused :: state=Paused pause=not_placed dialog=Paused <LINE> Reason: it was picked up; place it to continue <LINE> Stage: fermenting
+PASS RTP.D015_A_placed_hours_before_pickup_count :: done 3.0188 h after the carried status, placed 3.0188 h
+PASS RTP.hourly_list_drops_unseen_machine :: listed: A false, B false, C true, D false
+PASS RTP.nothing_filed_while_carried :: 0 readings or notes after the pickups, 3.00 game h carried
+OBS  RTP.put down A at 10619,10629 (10.27337646484375 game h), B at 10618,10628 (10.274864196777344), D at 10618,10628 (10.276351928710938)
+PASS RTP.put_down_A_place_action :: at 10619,10629
+PASS RTP.put_down_B_inventory_drop :: at 10618,10628
+PASS RTP.put_down_D_inventory_drop :: at 10618,10628
+PASS RTP.put_down_resumes_A :: id=P1072235624-1 state=Processing pause=nil done=3.0188 t=10.2733, 7 readings and notes kept; site 10619,10629; listed 10619,10629
+PASS RTP.put_down_resumes_B :: id=P1072235624-2 state=Processing pause=nil done=3.0328 t=10.2748, 7 readings and notes kept; site 10618,10628; listed 10618,10628
+PASS RTP.unseen_pickup_credited_up_to_last_seen :: last seen 7.170022964477539, 0.1017 h before the grab; done 2.9313 h, seen - load 2.9313 h; state=Processing t=10.2763 listed 10618,10628
+PASS RTP.read_hourly_after_put_down :: 6 hours, worst 0.000000 (D hour 11: filed 22, game 22.0000)
+PASS RTP.fire_notes_after_put_down :: hours noted since the put-down: A 3, B 3, D 3
+OBS  RTP.status_A menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.status_B menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.status_C menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.status_D menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.read at 12.2767 game h, 8.0380 h after the load: done A 5.0222 B 5.0347 C 8.0380 D 4.9317 h; carried A 3.0158 B 3.0032 D 3.0047 h
+PASS RTP.control_C_full_rate :: done 8.0380 h in 8.0380 game h
+PASS RTP.D015_A_placed_hours_after_put_down_count :: done 2.0034 h since the carried status, placed 2.0033 h since put down
+PASS RTP.D015_B_carried_hours_do_not_count :: done 5.0347 h, placed 5.0347 h, carried 3.0032 h
+PASS RTP.unseen_move_carried_hours_do_not_count :: done 4.9317 h: 2.9313 h up to the last seen and 2.0003 h since put down
+PASS RTP.processing_after_put_down :: A Processing B Processing C Processing D Processing
+OBS  RTP.status A: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 Â°F, in a room | B: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 Â°F, in a room | C: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 Â°F, in a room | D: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 Â°F, in a room
+PASS RTP.progress_like_the_control_after_the_move :: in 2.0071 game h: A 2.0071 B 2.0071 C 2.0071 D 2.0071 h
+OBS  RTP.take_C listed in the loot window=true; at 14.297893524169922 game h; heavy=true
+FAIL RTP.heavy_C_taken_into_both_hands :: primary=false secondary=false; still on its tile=false
+PASS RTP.heavy_C_pickup_pauses :: state=Paused pause=not_placed t=14.297819137573242; done 10.0591 h, placed 10.0592 h
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 14.30
+SUMMARY pass=35 fail=1
+DONE

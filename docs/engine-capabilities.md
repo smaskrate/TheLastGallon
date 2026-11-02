@@ -639,6 +639,16 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 * G14: anything that moves fluid in Java, or Lua code that writes fluid
   containers without `FluidContainer.Transfer`, bypasses the container
   adapter; reconciliation handles the result (D-006).
+* G14, heavy items (RT-SP runs 77–78): an item tagged `base:heavyitem`
+  taken off the floor the loot window's double-click way
+  (`ISInventoryPaneContextMenu.equipHeavyItem` → `ISEquipHeavyItem`)
+  ends up in both hands and in the inventory with its world object still
+  on the square, in single player: `ISEquipHeavyItem.complete` removes it
+  from the loot window's floor container only, and
+  `sendRemoveItemFromContainer` acts only in multiplayer (BC), where
+  `ISTransferAction` removes a floor item's world object itself. Vanilla's
+  `Base.LargeMeteorite` stays behind the same way. The mod takes its own
+  machines off the ground after that take (D-015); multiplayer NOT RUN.
 
 ## G13: one original model imported (RT-SP runs 64–67, 2026-11-02)
 
@@ -688,7 +698,7 @@ At runtime (RT-SP; screenshots in `docs/evidence/2026-11-02_run6*`):
 | Footprint, interaction side | a world item on one square. The machine menu answered from 1.4 tiles ("Ready") and refused from 2.8 ("You cannot reach it": the mod's 2.5-tile reach); tried from one side only |
 | Collision, placement | none added: the square stayed free and not solid (`isFree`, `isSolid`, `isSolidTrans` unchanged); put down at the square's centre |
 | Rotation | turns of 0, 90, 180 and 270 degrees drew as turned and came back after a save, exit and continue |
-| In-hand attachment | An idle character draws a held weapon (a baseball bat) but no non-weapon item: not vanilla's water bottles, not the vessel, in one hand or both (runs 65–67, 73; the hide flags false, the hand bones where they belong). Vanilla shows such an item only during an action, through the action's `setOverrideHandModels` (`ISAddCompost`, `ISDrinkFluidAction`): a do-nothing action holding the vessel drew its `StaticModel` (vanilla's `WaterTank`) at the hand with that model's tuned grip, and the supplied `TLG.Fermenter` named instead hung on its side at the hand bone, with no attachment block (run 74) |
+| In-hand attachment | An idle character draws a held weapon (a baseball bat) but no non-weapon item: not vanilla's water bottles, not the vessel, in one hand or both (runs 65–67, 73; the hide flags false, the hand bones where they belong), and not vanilla's heavy items carried in both hands (a meteorite, an anvil; run 75). Vanilla shows such an item only during an action, through the action's `setOverrideHandModels` (`ISAddCompost`, `ISDrinkFluidAction`): a do-nothing action holding the vessel drew its `StaticModel` (vanilla's `WaterTank`) at the hand with that model's tuned grip, and the supplied `TLG.Fermenter` named instead hung on its side at the hand bone, with no attachment block (run 74) |
 | Animation | not applicable to a static item model; NOT RUN |
 | Shadows, transparency | fully transparent texels are cut out: the window is a hole, and the far wall's inside shows through it, so back faces are drawn. 40 % alpha drew translucent (the lid's line shows through the airlock). No shadow on the ground under the barrel or the vanilla bottle; the character's shows |
 | Save/load | the model, the wiring, every item's square and turn, and the vessel's machine record (its id) came back |
@@ -824,7 +834,10 @@ model imported (G13), run 64 12/2, run 65 **15/0**, run 66 15/1 and run 67
 68 14/2 and run 69 **16/0**, and the zip with them installed clean, run 70
 **94/0** and **14/0**, then the fermenter's own icon, run 71 **17/0**, and
 the zip with it installed clean, run 72 **94/0** and **14/0**, then held
-items, runs 73 **9/0** and 74 **9/0**. Most failures were
+items, runs 73 **9/0** and 74 **9/0**, heavy items, run 75 **8/0**, the
+vessel carried in both hands through the pickup scenario, run 76 35/1 and
+run 77 34/2, a vanilla heavy item taken off the floor, run 78 **8/0**,
+and after the fix run 79 **39/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

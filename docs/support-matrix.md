@@ -147,6 +147,14 @@ jars included) and kept tools still there. The crafting window itself was
 not opened. With a full inventory vanilla drops the output on the floor
 (`Actions.addOrDropItem`).
 
+## Moving machines (D-015)
+
+| Move | Paths | Evidence |
+| --- | --- | --- |
+| Pick up | world menu Grab, the loot window's Grab button; a grab no Lua sees (multiplayer's) is credited up to the last time the machine was found placed | **Verified RT-SP** (runs 27, 45, 79) |
+| Put down | place action, inventory Drop | **Verified RT-SP** (runs 27, 45, 79) |
+| The fermentation vessel in both hands (a heavy item) | loot window double-click or drag (`ISEquipHeavyItem`; the mod lifts the world object 42.21 leaves on the square), dropped by `forceDropHeavyItems` (another heavy item taken, a vehicle entered) | **Verified RT-SP** (run 79: taken, carried an hour, dropped by `forceDropHeavyItems` called directly; entering a vehicle itself NOT RUN) |
+
 ## Pathway machines
 
 Biodiesel, wood gas, biogas, propane and electricity are implemented as

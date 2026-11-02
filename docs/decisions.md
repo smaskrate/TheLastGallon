@@ -240,6 +240,29 @@ listed with their replacement.
   from the inventory exactly as saved, still marked carried, or for the
   unseen one, unchanged. After another carried hour and the put-downs,
   each finished at its due time with exactly its wood and spirit.
+* Amended 2026-11-02, the fermentation vessel is carried in both hands
+  (the user's request). It is scripted as vanilla's heavy items are
+  (`Tags = base:heavyitem`, `RequiresEquippedBothHands = true`, as
+  `Base.LargeMeteorite` and the anvils; BC
+  `InventoryItem.isForceDropHeavyItem`): a double-click or drag in the
+  loot window takes it into both hands (`ISEquipHeavyItem`), one heavy
+  item at a time, and `forceDropHeavyItems` puts it down at the
+  character's feet when another heavy item is taken, a vehicle entered,
+  an animal handled or a trap set. `Machines.install` follows both, as it
+  follows Grab, transfers and the place action. 42.21 leaves a heavy
+  item's world object on the square when `ISEquipHeavyItem` takes it off
+  the floor in single player (vanilla's meteorite too, RT-SP run 78:
+  `sendRemoveItemFromContainer` acts only in multiplayer), so the item
+  would be carried and still standing. For the mod's machines the hook
+  then takes the world object off as the floor transfer does
+  (`ISTransferAction.lua:131-158`); vanilla's own heavy items are left as
+  vanilla leaves them. The loot window's Grab button stays a plain
+  transfer into the inventory: vanilla does not check it for heavy items.
+  An idle character draws no carried item but a weapon, vanilla's heavy
+  items included (runs 73–75), so the carry has no pose. Verified by
+  `tests/integration/test_machine_sites.lua` and RT-SP run 79 (39/0): a
+  running vessel taken the double-click way, carried an hour and dropped
+  by `forceDropHeavyItems`, its carried hour not counted.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

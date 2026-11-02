@@ -1,0 +1,39 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 48476
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, heavy items
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=96623322642656569874 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmhh_go begin
+STEP rtmhh_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.25 in 3 scrolls (enabled=true, min 0.25)
+STEP meteorite begin
+PASS RTMH.heavy_meteorite :: Base.LargeMeteorite heavy=true both hands=true
+STEP rtmi_shot_rtmhh_meteorite begin
+OBS  RTMI.screenshot tlg_rtmhh_meteorite.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.05
+STEP anvil begin
+PASS RTMH.heavy_anvil :: Base.BlacksmithAnvil heavy=true both hands=true
+STEP rtmi_shot_rtmhh_anvil begin
+OBS  RTMI.screenshot tlg_rtmhh_anvil.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.07
+STEP rtmhh_make_heavy begin
+STEP vessel begin
+PASS RTMH.heavy_vessel :: TLG.FermenterVessel heavy=true both hands=true
+STEP rtmi_shot_rtmhh_vessel begin
+OBS  RTMI.screenshot tlg_rtmhh_vessel.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.10
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.11
+SUMMARY pass=8 fail=0
+DONE
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmhh_anvil.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmhh_meteorite.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmhh_vessel.png
