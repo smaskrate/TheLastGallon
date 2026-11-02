@@ -8192,7 +8192,7 @@ RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module: StaticModel =
     -- WaterTank reads back as Base.WaterTank (run 68).
-    RT.MI.model, RT.MI.hand, RT.MI.icon = "TLG.Fermenter", "Base.WaterTank", "WaterTank"
+    RT.MI.model, RT.MI.hand, RT.MI.icon = "TLG.Fermenter", "Base.WaterTank", "TLG_Fermenter"
 end
 
 -- The mesh (and texture) each model script must name.
@@ -8538,10 +8538,12 @@ RT.modelReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmib_go_t
 
 -- Run 68 also took a shot at zoom 0.25 (the row fell below the frame) and
 -- one with the interface shown (the inventory list stayed collapsed); the
--- category is checked by its text instead (machine_categories_named).
+-- category is checked by its text instead (machine_categories_named). The
+-- vessel's icon shows in the equipped-item button once one is equipped
+-- (runs 64-66), so the last shot equips one.
 RT.fermenterSteps = { RT.waitWorld, RT.MI.setup, RT.MI.place, RT.MI.goTo("rtmf_go_vessels", "tests"),
-    RT.MI.zoomTo("rtmf_zoom", 0.5), RT.MI.shot("rtmf_vessels", true), RT.MI.beforeSave,
-    RT.saveAndExitAs("rtmf_save_and_exit", "sp-rtmfb") }
+    RT.MI.zoomTo("rtmf_zoom", 0.5), RT.MI.shot("rtmf_vessels", true), RT.MI.hold("vessel", "TLG.FermenterVessel"),
+    RT.MI.shot("rtmf_icon", false), RT.MI.beforeSave, RT.saveAndExitAs("rtmf_save_and_exit", "sp-rtmfb") }
 RT.fermenterReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmfb_go_vessels", "tests"),
     RT.MI.zoomTo("rtmfb_zoom", 0.5), RT.MI.shot("rtmf_reloaded_vessels", true), RT.finish }
 

@@ -20,7 +20,7 @@ decision and is **not** authorised by any task in this repository.
 | 10 | English/Italian text and player docs complete | PARTIAL | All shipped keys EN/IT (`check-translations.ps1`); EN resolves in the client (RT-SP). In a client set to Italian (run 44, 5/0) all 237 Italian strings came back exactly as shipped: menu, interface, fluid and sandbox texts and every item name, none unresolved, no accent garbled. Placeholders were filled, and the Fuel menu, Look and smell, the machine menu and Status read Italian. How the fonts draw the accents was not looked at. Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | OPEN | No client baseline recorded |
 | 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | Manual install from the zip rehearsed on the current package (`tools/rehearse-install.ps1`, run 70; runs 63, 60, 56, 52, 47, 42 and 38 on earlier builds). Run 70 used the zip of commit `e18a7ec` (85 files, SHA-256 `15229e13…`, 847,550 bytes), which differs from run 63's in the fermenter's own model (FBX, texture and model script), the machines' category, the notice and the changelog. It matched its manifest, was installed into a fresh isolated cache and passed the full harness: phase A 94/0, save, exit, continue, phase B 14/0. Earlier builds did the same in runs 63 (`aa662e45…`), 60 (`3970ad6b…`; also through the removal scenario, run 61), 56 (`196912cf…`), 52 (`75873ed3…`), 47 (`b608f4c5…`) and 42 (`d1a6f5e1…`). The zip has forward-slash entry names (it had backslashes) and two builds of one commit are byte-identical. Install through the Steam Workshop (staged or subscribed) NOT RUN: the game scans those folders only in Steam mode (BC). Upgrade: no previous supported version, 0.1.0 is the first; due with the next release |
-| 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel has its own model on the floor (runs 68–69); its icon and in-hand model, the stills and the drying column still use vanilla placeholders (functional, documented). Seen in run 66, the drying column reads as a car fuel tank and the pot still as a cooking pot |
+| 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel has its own model on the floor (runs 68–69) and its own icon (run 71); its in-hand model, the stills and the drying column still use vanilla placeholders (functional, documented). Seen in run 66, the drying column reads as a car fuel tank and the pot still as a cooking pot |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
 ## Open implementation items
@@ -37,8 +37,7 @@ decision and is **not** authorised by any task in this repository.
 * Mark the making stages (`makes`) of the biodiesel, biogas, wood retort
   and ash pit recipes with their machines; until then Abort counts every
   stage of them (D-023).
-* The fermentation vessel: an icon matching its own model (the water
-  bottle's no longer does), a model in the hand (the harness cannot show
+* The fermentation vessel: a model in the hand (the harness cannot show
   held items, G13), and the redistribution terms of the supplied model
   (Tripo Studio; `art-src/fermenter/PROVENANCE.md`).
 

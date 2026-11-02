@@ -122,9 +122,10 @@
   any engine by the mod's start check until dried, then fit for flex
   engines.
 * The fermentation vessel stands on the floor as its own model: a wooden
-  barrel with a lid, an airlock and a tap, about 0.75 m tall. Its icon,
-  and the vessel held in the hand, are still the game's water bottle.
-  Checked in game: put down turned four ways, saved and continued.
+  barrel with a lid, an airlock and a tap, about 0.75 m tall, and has an
+  icon to match. Held in the hand it is still the game's water bottle.
+  Checked in game: put down turned four ways, saved and continued; the
+  icon shows in the equipped-item button.
 * The four machines' inventory category reads "Tool"; it showed the raw
   key "IGUI_ItemCat_Tools" (found and checked in game).
 * Migrations with preserved future schemas.

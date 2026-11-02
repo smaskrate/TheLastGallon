@@ -3,9 +3,10 @@ module TLG
     /* Machines are placeable items: process state lives in item modData
        ("tlgProc", TLG.Integration.Machines) and travels with pickup.
        The fermenter stands on the floor as the mod's own model
-       (TLG_models.txt); the other models, the in-hand models and the icons
-       are verified vanilla references used as placeholders
-       (docs/asset-audit.csv A03/A04/I04). DisplayCategory must be a
+       (TLG_models.txt) and has its own icon (Item_TLG_Fermenter.png, drawn
+       by tools/make-icons.ps1); the other models, the in-hand models and
+       the other icons are verified vanilla references used as placeholders
+       (docs/asset-audit.csv A03/A04/I04/I09). DisplayCategory must be a
        vanilla category: the inventory shows getText("IGUI_ItemCat_" ..
        category) (ISInventoryPane.lua:2547), and "Tools" has no text
        (runs 65-66 showed the raw key). Recipes use item ids verified in the
@@ -30,7 +31,7 @@ module TLG
         DisplayCategory = Tool,
         ItemType = base:normal,
         Weight = 8.0,
-        Icon = WaterTank,
+        Icon = TLG_Fermenter,
         StaticModel = WaterTank,
         WorldStaticModel = TLG.Fermenter,
     }

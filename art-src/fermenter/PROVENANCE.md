@@ -27,7 +27,9 @@ byte) and `media/textures/TLG/Fermenter.png` (the JPEG saved as PNG,
 `TLG.Fermenter` in `media/scripts/TLG_models.txt`.
 
 Not supplied: editable sources (a `.blend` file or the Tripo project) and
-an inventory icon.
+an inventory icon. The icon, `media/textures/Item_TLG_Fermenter.png`, was
+drawn for the mod afterwards by `tools/make-icons.ps1` (pixel by pixel,
+in colours picked from this texture); it contains none of these files.
 
 Redistribution rights: not recorded. They follow from the terms that
 applied to the Tripo account that generated the model, and must be

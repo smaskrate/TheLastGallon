@@ -727,7 +727,10 @@ supplied FBX has no node scaling, so `scale = 0.5` stands it about 0.75 m
 tall; beside the 0.56 m test barrel it measured about 15 % wider, as its
 proportions give (run 68). Its texture drew the right way up: Blender's
 FBX UVs need no flip. Its turns and its place came back after the save.
-The icon and the model in the hand are still vanilla's `WaterTank`.
+The model in the hand is still vanilla's `WaterTank`. The icon is the
+mod's own since run 71: `Item_TLG_Fermenter.png`, drawn by
+`tools/make-icons.ps1`, loaded from the mod's `media/textures` and seen
+in the equipped-item button.
 
 ## Client harness status
 
@@ -819,7 +822,8 @@ documented installed clean, run 63 **94/0** and **14/0**, then one original
 model imported (G13), run 64 12/2, run 65 **15/0**, run 66 15/1 and run 67
 **16/0**, then the fermenter's own model and the machines' category, run
 68 14/2 and run 69 **16/0**, and the zip with them installed clean, run 70
-**94/0** and **14/0**. Most failures were
+**94/0** and **14/0**, then the fermenter's own icon, run 71 **17/0**. Most
+failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

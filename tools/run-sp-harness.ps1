@@ -63,8 +63,9 @@
   with the console lines naming the model.
   fermenter-model: the same placing with the fermenter's shipped model
   (TLG_models.txt), the test barrel at true size beside it, photographed,
-  saved, continued and photographed again; the machines' inventory
-  categories must have a text.
+  a vessel equipped and photographed with the interface (its icon in the
+  equipped-item button), saved, continued and photographed again; the
+  machines' inventory categories must have a text.
   removal-a, removal-b, removal-c: the three launches of the removal
   rehearsal (tools/rehearse-install.ps1 -Scenario removal): a world played
   with the mod, continued without it (the driver), then with it again.

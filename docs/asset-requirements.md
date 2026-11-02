@@ -21,7 +21,8 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
   redistribution terms are not recorded yet). The import test's model
   lives in the dev-only harness mod.
 * Every other shipped item and machine borrows a vanilla icon and model by
-  name, and so do the vessel's icon and its model in the hand.
+  name, and so does the vessel's model in the hand. The vessel's icon is
+  the mod's own, drawn by `tools/make-icons.ps1` to match its model.
   The names exist in 42.21 (`models_items.txt`; `Item_*` entries in
   `UI.pack`/`UI2.pack`). How they render was first looked at on
   2026-11-02 (run 66, `engine-capabilities.md` G13): the drying column
@@ -190,7 +191,7 @@ Icons, 32×32:
 | I06 | `TLG.DryingColumn` | `AirFilters` | same as the fuel filter |
 | I07 | `TLG.PotStill` | `Pot` | same as the reflux still |
 | I08 | `TLG.RefluxStill` | `Pot` | same as the pot still |
-| I09 | `TLG.FermenterVessel` | `WaterTank` | no longer matches its world model |
+| I09 | `TLG.FermenterVessel` | its own `TLG_Fermenter` since 2026-11-02 (`tools/make-icons.ps1`) | done |
 | I01 | `TLG.FuelStabilizer` | `Bleach` | |
 | I03 | `TLG.ManualFuelSystems` | `MagazineBlacksmith1` (smithing magazine) | also needs a cover texture for its model |
 
@@ -290,7 +291,7 @@ the first to cut.
 
 | Tier | New 3D models | Icons | UI symbols | Original sounds | Release art |
 | --- | --- | --- | --- | --- | --- |
-| A | 4 (the fermenter's supplied 2026-11-02, so 3 to make), plus 5 vanilla meshes (own textures optional) | 9 | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster, icon, banner, screenshots |
+| A | 4 (the fermenter's supplied 2026-11-02, so 3 to make), plus 5 vanilla meshes (own textures optional) | 9 (the fermenter's drawn, so 8 to make) | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster, icon, banner, screenshots |
 | B | 15 (2 blocked on G11, 1 optional) | 15 | 2 badges | about 10 | — |
 | C | 13 (1 blocked on G11, 1 optional) | 9 | about 5 | about 9 | — |
 

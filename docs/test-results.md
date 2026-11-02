@@ -1750,3 +1750,22 @@ Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run70_install_rehearsal.txt`.
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60 and 63. The console had no error naming the mod or the
 model.
+
+## 2026-11-02 — RT-SP client harness, launch 71 (the fermenter's own icon)
+
+The vessel's icon is now the mod's own: `Item_TLG_Fermenter.png`, 32×32
+pixel art drawn by `tools/make-icons.ps1` (new) in colours picked from
+the supplied model's texture: a hooped wooden barrel with a lid, a white
+airlock and a brass tap. `TLG_machines.txt` sets `Icon = TLG_Fermenter`.
+
+Command: `tools/run-sp-harness.ps1 -Mode fermenter-model`, which now also
+equips a vessel through vanilla's equip action and takes a screenshot
+with the interface shown.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run71_fermenter_icon.txt`
+and `2026-11-02_run71_icon_in_equipped_button_x4.png`.
+
+Result: **17/0**. The icon's texture was the mod's file, in both phases
+and on the placed vessels; the equipped-item button showed it (the
+inventory list was collapsed again, as in run 68). Everything run 69
+checked passed again. The console had no error naming the model or the
+icon.
