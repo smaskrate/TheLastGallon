@@ -1442,15 +1442,16 @@ Result: launch 1 **1/0**, launch 2 **2/0**, launch 3 **4/1**.
 | Launch 3, the mod back | the cans' records were exactly as launch 1 had left them. The world record was the same one (seed, start, policy, epoch, next id), and the console showed no second "world fuel history created". P's condition 0.083816353 was its record aged to now, exactly, with the 7 L it holds now. E's record reconciled to empty. F stayed gone |
 | **Design: Q's inflow** | **FAIL**: condition 0.049706059. D-006's words (its own fuel aged to now, the 3 L mixed in at the untracked baseline 0.070983207) give 0.044564895. The code mixes the inflow in at the record's last write (world hour 2.0120) and then ages the whole can, which gives exactly 0.049706059. So the inflow was aged a second time, over the day the mod was away |
 
-Run 54's failure is a mod defect, still open. `Containers.read` reconciles
-an untracked change at the record's last write (`side.t`). The caller
-then ages the result to now, so fuel that came in unseen carries the
-baseline condition of the moment it is found and also the aging of the
-whole time since the record was written. After a day away the can read
+Run 54's failure was a mod defect (fixed since: D-006 amendment, run 55
+below). `Containers.read` reconciled an untracked change at the record's
+last write (`side.t`). The caller then aged the result to now, so fuel
+that came in unseen carried the baseline condition of the moment it was
+found and also the aging of the whole time since the record was written.
+After a day away the can read
 11.5 % more degraded than D-006's rule gives. The added fuel itself
 came out at about 0.083, some 17 % above the baseline of 0.071. The
-excess grows with the time since the last read; in ordinary play, reads
-come often and the gap is small.
+excess grew with the time since the last read; in ordinary play, reads
+come often and the gap was small.
 
 Found for players: removing the mod loses its machines (with their
 batches) and its ethanol in containers. The game skips the unknown items
@@ -1465,3 +1466,35 @@ missing mods.
 
 Launch 2's 16 Lua error lines are the driver's own: a guarded lookup of
 the empty can's fluid name. Launches 1 and 3 had none.
+
+## 2026-11-02 — RT-SP client harness, launch 55 (the mod removed and added back after the inflow fix, gate 7)
+
+Command: `tools/rehearse-install.ps1 -Scenario removal`. It rebuilt the
+package first (183/183 tests, compile check 100/0, translations OK): the
+zip of commit `49cf55a` (82 files, SHA-256 `196912cf…`, 205,134 bytes),
+with the fix for run 54's failure (D-006 amendment) and the removal docs.
+The zip matched its manifest and was installed into a fresh isolated
+cache. The three launches were run 54's.
+
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run55_removal_launch1.txt`,
+`…_launch2.txt`, `…_launch2_console.txt`, `…_launch3.txt`.
+
+Result: launch 1 **1/0**, launch 2 **2/0**, launch 3 **5/0**.
+
+| Run 55 | Result |
+| --- | --- |
+| Launch 1 | P 9 L, Q 4 L, E 4 L of ethanol, each recorded; F working since world hour 2.0143. World record: seed 986530352, `new_world`, created at hour 2, next id 8 |
+| Launch 2, the mod away | as in run 54: P and Q kept their petrol and their records, E was empty, F was gone (the same two console lines), the world record was still there. Poured: P 7 L, Q 7 L; saved at world hour 26.0410 |
+| Launch 3, the mod back | the cans' records exactly as launch 1 left them, the same world record, no second "world fuel history created". P's condition 0.360180440, its record aged to now, exactly. E's record reconciled to empty; F stayed gone |
+| **Design: Q's inflow** | **PASS**: condition 0.313571525, exactly D-006's words: its own fuel aged to now, the 3 L mixed in at the untracked baseline 0.532766158. The old order (mixed in at world hour 2.0121, then aged) would have given 0.319523279 |
+
+The fix holds in game: fuel that came in while the mod was away joins at
+the baseline of the moment it is found and is aged once. This world's
+seed drew older fuel than run 54's (an untracked baseline of 0.533
+against 0.071), so here the second aging would have added 1.9 % to the
+can, where run 54 measured 11.5 %. The check holds the code to the rule
+to 1e-6 either way. Launch 2's two exceptions are the driver's own, as in
+run 54 (`Driver.lua:182`, inside `pcall`). Launches 1 and 3 had no Lua or
+TLG error; the ERROR lines in their consoles are the game's own (fonts,
+map zones). Not run, as in run 54: a save that still lists the mod after
+it was uninstalled, a server, the mod's other fluids and items.

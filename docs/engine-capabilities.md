@@ -491,7 +491,7 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   continue, exactly (run 48: every field and number as saved). In that
   run the harness's first step after the continue read world hour
   103.8495, 0.0232 h after the hour the save was taken at (103.8263).
-* A save continued without the mod (run 54): the game skips items whose
+* A save continued without the mod (runs 54 and 55, alike): the game skips items whose
   type no longer exists when it loads them ("InventoryItemFactory.CreateItem()
   cannot create item … TLG.FermenterVessel", "InventoryItem.loadItem() item
   == null, skipped bytes"), and they are gone when the mod comes back. A
@@ -707,7 +707,8 @@ the fix, run 50 **28/0**, with run 33's controls again, run 51 **32/0**,
 then the full mode on the zip with that fix installed clean, run 52
 **94/0** and **14/0**, and fuel first found late in a new world, run 53
 **7/0**, then the mod removed from a save and added back, run 54 1/0, 2/0
-and 4/1 (a mod defect, open). Most failures were
+and 4/1 and, after the fix, run 55 **1/0**, **2/0** and **5/0**. Most
+failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -730,9 +731,9 @@ through. Run 40's one failure was a mod defect: Look and smell wrote no
 record onto fuel the mod had not recorded, so What I know about it stayed
 unknown (fixed by D-024, run 41). Run 49's one failure was a mod defect:
 Abort batch on a still kept spirit for its heating-up hour, when nothing
-distils (fixed, runs 50–51). Run 54's one failure is a mod defect: fuel
-that came in while the mod was away is aged a second time over the time
-away (open).
+distils (fixed, runs 50–51). Run 54's one failure was a mod defect: fuel
+that came in while the mod was away was aged a second time over the time
+away (fixed, D-006 amendment, run 55).
 
 ## Tooling pitfalls found
 

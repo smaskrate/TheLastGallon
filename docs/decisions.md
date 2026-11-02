@@ -65,6 +65,8 @@ listed with their replacement.
   caller's advance then aged it a second time over the time it went
   unseen. A can topped up with 3 L while the mod was away for a game day
   read 0.049706 instead of 0.044565, 11.5 % more degraded (RT-SP run 54).
+  Verified RT-SP run 55 (5/0 on return): the same scenario read the rule
+  exactly, 0.313571525, where the old order gives 0.319523279.
 
 ## D-007 Native fluids for alternative fuels and contaminants
 * Decision: script fluids `TLG_Ethanol`, `TLG_Diesel`, `TLG_Biodiesel` (and,
