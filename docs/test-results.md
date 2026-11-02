@@ -2253,3 +2253,43 @@ vessel lay at the feet as "Loot" began, the generator stayed in both
 hands, and the bat put a second vessel down through the game's
 unequip. The console had no exception and no error from the hook. The
 camera stayed at zoom 0.25 this time.
+
+## 2026-11-02 — RT-SP client harness, launches 101–103 (the field manual found in loot and read)
+
+The asset review found `TLG.ManualFuelSystems` could not be obtained and
+did nothing when read: nothing spawned or read it. It is now print media
+(D-026). Its `OnCreate` gives each new manual the game's print media
+fields, so the inventory menu offers Inspect and the read shows a page
+of start-up, compatibility and troubleshooting in the game's print
+media window (EN and IT). It is added to 11 vanilla loot lists on
+`OnPreDistributionMerge`. Before the launches: tests 197/197 (three new
+cases: the fields, the lists added to once, the weights), the compile
+check 105/0 and the translations check (240 EN keys, IT parity).
+
+Command: `tools/run-sp-harness.ps1 -Mode manual` (new; request
+`sp-rtman`, no save), and `-Mode manual-italian` (`sp-rtmanit`, the client
+in Italian). The steps:
+- The 11 lists are read back after the merge.
+- Each of seven of them is rolled 500 times into an empty container, as
+  the game fills one (`ItemPickerJava.getItemContainer` and `doRollItem`,
+  the calls vanilla's loot stress test makes).
+- The page is built in the game's window, as the debug menu builds it,
+  to measure each text element, and its text panel is opened.
+- The first rolled manual is put in the inventory. Its menu is built as
+  a right-click builds it (`createMenu`), and Inspect is chosen.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run101_manual.txt`,
+`…_run102_manual_italian.txt`, `…_run103_manual.txt`,
+`2026-11-02_runs102-103_manual_pages_sheet.jpg` and
+`2026-11-02_run103_manual_text_panel.png`.
+
+| Launch | Language, page | Result | Notes |
+| --- | --- | --- | --- |
+| 101 | EN, 1100×560, body text at 0.30 | **10/0** | every list held the manual at its weight. 137 manuals in 3500 fills (9 to 33 per list), the first already print media with its page resolving. Inspect offered (not Read); the read ended with the manual recorded read (print media and literature). The page showed with its text 168–192 px tall, ending at y 326 of 560: legible but small, half the page empty |
+| 102 | IT, 1100×500, body text at 0.36 | **10/0** | as 101: 154 manuals, "Ispeziona" offered. The longest column ends at y 426 of 500. Accents and `°C` draw correctly |
+| 103 | EN, the same layout | **10/0** | as 101: 147 manuals; the longest column ends at y 383 of 500 |
+
+The console had no exception in any of them. The rolls used a density
+of 1 with the harness world's loot settings, so they show that the
+lists produce the manual, not how often a player meets one. Not checked:
+a manual found in a real building's container, multiplayer, and the
+Italian text panel (the English one shows the full text, scrollable).

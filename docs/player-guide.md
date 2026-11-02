@@ -65,6 +65,18 @@ engine; very bad fuel will not run at all. *(Checked in game: refused starts
 and stalls on unsuitable fuel, and a converted car and generator running on
 home-made ethanol. The effects while driving are untested in game.)*
 
+## The field manual
+
+The *Field Manual: Fuel Systems* turns up in gas station storage, garage
+and mechanic shelves, farms, generator crates, bookstores, tool stores and
+libraries. Choose **Inspect** to read it: one page sums up how to start
+making ethanol, which engines take which fuel, and what to do when a
+machine or engine stops. The notebook button at the bottom of its window
+shows the same text in larger print. It teaches no recipe; everything on
+it is also in this guide. *(Checked in game, in English and Italian:
+manuals rolled from the loot lists as the game fills containers, and one
+read through Inspect.)*
+
 ## Your first sustainable fuel: ethanol
 
 Build the machines from the crafting menu. The fermentation vessel, pot

@@ -827,6 +827,41 @@ action's animation (D-025 amendment): the log shows `RightHandMask`
 cleared, then `player/actions/LootLow` on `[layer][1]`. Whether the game
 also reads FBX clips is untested.
 
+## Print media and loot lists (RT-SP runs 101–103, 2026-11-02)
+
+A mod item can be read as the game's print media. An item script's
+`OnCreate` names a Lua function. `InventoryItem.initialiseItem` looks it
+up (`LuaManager.getFunctionObject`, dotted paths allowed) and calls it
+with each new item, loot spawns included (BC). The game's own fliers and
+newspapers get `modData.printMedia = { id, title, info, text }` and
+`literatureTitle` there (BC `RecipeCodeHelper.setPrintMediaInfo`). An
+item carrying them is offered Inspect in the inventory menu instead of
+Read (SRC `ISInventoryPaneContextMenu.doPrintMediaMenu`).
+`ISReadABook.perform` then opens `PZAPI.UI.PrintMedia`, with
+`getText(info)` as the page and `getText(text)` behind its notebook
+button, and `complete` calls `addReadPrintMedia(id)` (SRC). A pageless
+literature item reads in 5 pages' worth of minutes (10 game minutes by
+default).
+
+The page markup is `<type:parent|texture|text, key:value, ...>`
+elements. A texture element without `texture` draws a coloured
+rectangle. Text breaks lines at `^` and wraps at `autoWidth`, in
+unscaled units, so the width on the page is `autoWidth × scaleX`. Text
+must not contain `<` or `>`. Map buttons appear only for ids in
+`PrintMediaDefinitions.MiscDetails`. The window shrinks a page taller
+than 80 % of the screen and zooms with the mouse wheel. Accented
+letters and `°` draw in the `SdfOld*` fonts (runs 101–102).
+
+The world fires `OnPreDistributionMerge`, `OnDistributionMerge`,
+`OnPostDistributionMerge`, then `ItemPickerJava.Parse` (BC
+`IsoWorld.init`). A mod adds to `ProceduralDistributions.list[name].items`
+(name/weight pairs; mod items with their module) on the first event.
+Lua can roll a parsed list as vanilla's loot stress test does:
+`ItemPickerJava.getItemContainer(room, container, list, false)`, then
+`doRollItem(dist, ItemContainer.new(...), density, player, true, nil)`.
+The runs rolled the manual from 7 of its 11 lists, 500 fills each
+(D-026).
+
 ## Client harness status
 
 `tools/run-sp-harness.ps1` starts the client with
@@ -937,7 +972,8 @@ moved out of the torso, run 95 **8/0**, the shipped carry, run 96
 and the carry from the package's item tree, run 98 **6/0**, then the
 vessel and a generator through a real loot and the vessel unequipped for
 a bat, run 99 **11/0**, and the same on the guarded hook, run 100
-**11/0**. Most failures were traced to the harness
+**11/0**, then the field manual found in loot and read, runs 101 **10/0**,
+102 **10/0** (Italian) and 103 **10/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

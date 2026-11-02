@@ -32,13 +32,17 @@ module TLG
         Icon = AirFilters,
     }
 
-    /* Manual: teaches operation of stills, fermenters and conversions. */
+    /* Manual: read like the game's print media, it shows a page on
+       start-up, fuel compatibility and troubleshooting of the ethanol loop
+       (Integration/Manual.lua). It teaches no recipe. Found in garage, gas
+       station, farm, generator crate, bookstore and library loot. */
     item ManualFuelSystems
     {
         DisplayCategory = SkillBook,
         ItemType = base:literature,
         Weight = 0.5,
         Icon = MagazineBlacksmith1,
+        OnCreate = TLG.Integration.Manual.onCreate,
     }
 
     /* Saved from a finished ferment (>= 5 kg sugar): replaces bought yeast,

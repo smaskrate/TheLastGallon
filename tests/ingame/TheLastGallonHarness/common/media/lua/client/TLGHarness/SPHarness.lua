@@ -60,6 +60,8 @@
 --             walking, and through an action playing "Loot"
 --   sp-rtmva -> real actions while carrying: the vessel and a generator
 --             through a loot, the vessel unequipped for a bat
+--   sp-rtman -> the field manual: its loot lists, manuals rolled from them,
+--             one read through the inventory menu (sp-rtmanit: in Italian)
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -89,7 +91,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8425,7 +8427,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
 RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva"
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module (StaticModel =
     -- WaterTank read back as Base.WaterTank, run 68). The vessel's hand
@@ -9304,6 +9306,162 @@ if REQUEST == "sp-rtmva" then
         RT.MI.shot("rtva_vessel_after_unequip", true), RT.finish }
 end
 
+-- The fuel systems field manual (requests "sp-rtman", and "sp-rtmanit" in a
+-- client set to Italian): its place in the loot lists, manuals rolled from
+-- the parsed lists as the game fills a container, and one of them read
+-- through the inventory menu, as the game reads its print media.
+RT.MN = { id = "TLG.ManualFuelSystems", media = "TLG_ManualFuelSystems", fills = 500 }
+-- A room and container using each list (42.21 Distributions.lua); a pair
+-- the game does not know is logged and skipped.
+RT.MN.rolled = {
+    { "gasstorage", "other", "GasStorageMechanics" },
+    { "garagestorage", "crate", "CrateMechanics" },
+    { "mechanic", "metal_shelves", "MechanicShelfBooks" },
+    { "barn", "crate", "CrateFarming" },
+    { "toolstore", "shelves", "ToolStoreBooks" },
+    { "bookstore", "shelves", "BookstoreBlueCollar" },
+    { "library", "shelves", "LibraryMagazines" },
+}
+
+-- Every list the mod names holds the manual at its weight once the game has
+-- merged the lists.
+RT.MN.lists = { name = "rtmn_lists", timeout = 120, fn = function(ctx, ticks)
+    local found, missing = {}, {}
+    for name, weight in pairs(TLG.Integration.Manual.LOOT) do
+        local list = ProceduralDistributions.list[name]
+        local items, w = list and list.items or {}, nil
+        for i = 1, #items, 2 do
+            if items[i] == RT.MN.id then w = items[i + 1] end
+        end
+        if w == weight then found[#found + 1] = name .. "=" .. tostring(w) else missing[#missing + 1] = name end
+    end
+    table.sort(found)
+    table.sort(missing)
+    R:check("RTMN.loot_lists", function()
+        return #found > 0 and #missing == 0, string.format("in %d lists: %s; missing: %s", #found,
+            table.concat(found, " "), #missing > 0 and table.concat(missing, " ") or "none")
+    end)
+    return true
+end }
+
+-- Fills a container from each parsed list as the game does
+-- (ItemPickerJava.doRollItem, as vanilla's loot stress test calls it), many
+-- times over, and counts the manuals; the first one rolled is kept.
+RT.MN.roll = { name = "rtmn_roll", timeout = 1200, fn = function(ctx, ticks)
+    local p = player()
+    local total, fills, parts = 0, 0, {}
+    for _, t in ipairs(RT.MN.rolled) do
+        local dist = ItemPickerJava.getItemContainer(t[1], t[2], t[3], false)
+        if dist == nil then
+            parts[#parts + 1] = string.format("%s=unknown(%s/%s)", t[3], t[1], t[2])
+        else
+            local n, cont = 0, ItemContainer.new("crate", p:getCurrentSquare(), p)
+            for _ = 1, RT.MN.fills do
+                cont:removeAllItems()
+                ItemPickerJava.doRollItem(dist, cont, 1, p, true, nil)
+                local got = cont:getItemsFromFullType(RT.MN.id)
+                if got and got:size() > 0 then
+                    n = n + got:size()
+                    RT.MN.spawned = RT.MN.spawned or got:get(0)
+                end
+            end
+            cont:removeAllItems()
+            total, fills = total + n, fills + RT.MN.fills
+            parts[#parts + 1] = string.format("%s=%d", t[3], n)
+        end
+    end
+    R:line("OBS  RTMN.rolls manuals per %d fills: %s", RT.MN.fills, table.concat(parts, " "))
+    R:check("RTMN.spawned_from_loot", function()
+        return total > 0, string.format("%d manuals in %d fills", total, fills)
+    end)
+    local pm = RT.MN.spawned and RT.MN.spawned:getModData().printMedia
+    R:check("RTMN.rolled_manual_is_print_media", function()
+        return pm ~= nil and pm.id == RT.MN.media and getText(pm.info) ~= pm.info,
+            string.format("printMedia id=%s title=%s page resolves=%s", tostring(pm and pm.id),
+                tostring(pm and getText(pm.title)), tostring(pm ~= nil and getText(pm.info) ~= pm.info))
+    end)
+    return true
+end }
+
+-- The page and its text panel in the game's own print media window, built
+-- as the debug menu builds it: each text element's top and height (to fit
+-- the page), then the text panel opened and photographed.
+RT.MN.measure = { name = "rtmn_measure", timeout = 600, fn = function(ctx, ticks)
+    if ticks == 1 then
+        local win = PZAPI.UI.PrintMedia{ x = 10, y = 10 }
+        win.media_id = RT.MN.media
+        win.data = getText("IGUI_TLG_Manual_Page")
+        win.children.bar.children.name.text = getText("IGUI_TLG_Manual_Title")
+        win.textTitle = getText("IGUI_TLG_Manual_Title")
+        win.textData = string.gsub(getText("IGUI_TLG_Manual_Text"), "\\n", "\n")
+        win:instantiate()
+        win:centerOnScreen(0)
+        ctx.win = win
+        return nil
+    end
+    if ticks == 20 then
+        local page, lines = ctx.win.children.body.children.printMedia, {}
+        for k, c in pairs(page.children) do
+            if c.text ~= nil and c.javaObj then
+                local h = c.javaObj:getTextHeight() * (c.scaleY or 1)
+                lines[#lines + 1] = string.format("%s x=%s y=%s h=%.0f bottom=%.0f", k, tostring(c.x), tostring(c.y), h,
+                    (c.y or 0) + h)
+            end
+        end
+        table.sort(lines)
+        R:line("OBS  RTMN.page %sx%s shown at scale %.2f; %s", tostring(page.width), tostring(page.height),
+            page.scaleX or 1, table.concat(lines, "; "))
+        ctx.win.children.bottomButtons.children.readNewspaper:onLeftClick()
+    end
+    if ticks == 80 then
+        local file = "tlg_rtmn_text_panel.png"
+        local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+        R:line("OBS  RTMN.screenshot %s ok=%s", file, tostring(ok))
+    end
+    if ticks < 110 then return nil end
+    UIManager.RemoveElement(ctx.win.javaObj)
+    return true
+end }
+
+-- The rolled manual in the inventory: its menu offers the game's Inspect
+-- (print media), and choosing it reads the manual; when the read ends the
+-- game shows the page and records it read.
+RT.MN.read = { name = "rtmn_read", timeout = 9000, fn = function(ctx, ticks)
+    local p = player()
+    if ticks == 1 then
+        ISTimedActionQueue.clear(p)
+        local item = RT.MN.spawned or p:getInventory():AddItem(RT.MN.id)
+        if item:getContainer() ~= p:getInventory() then p:getInventory():AddItem(item) end
+        ctx.item = item
+        local context = ISInventoryPaneContextMenu.createMenu(0, true, { item }, 100, 100)
+        local inspect = context and context:getOptionFromName(getText("ContextMenu_Inspect"))
+        local read = context and context:getOptionFromName(getText("ContextMenu_Read"))
+        if context then context:setVisible(false) end
+        R:check("RTMN.menu_offers_inspect", function()
+            return inspect ~= nil, string.format("%s=%s %s=%s", getText("ContextMenu_Inspect"), tostring(inspect ~= nil),
+                getText("ContextMenu_Read"), tostring(read ~= nil))
+        end)
+        if inspect then inspect.onSelect(inspect.target, inspect.param1, inspect.param2) end
+        return nil
+    end
+    if ticks == 30 then
+        local q = ISTimedActionQueue.getTimedActionQueue(p)
+        local cur = q and q.queue and q.queue[1]
+        R:line("OBS  RTMN.reading action=%s", tostring(cur and cur.Type))
+    end
+    if ticks < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+    R:check("RTMN.read_recorded", function()
+        return p:isPrintMediaRead(RT.MN.media), string.format("isPrintMediaRead(%s)=%s literature read=%s", RT.MN.media,
+            tostring(p:isPrintMediaRead(RT.MN.media)), tostring(p:isLiteratureRead("IGUI_TLG_Manual_Title")))
+    end)
+    return true
+end }
+
+if REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
+    RT.manualSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmn_go", "tests"), RT.MN.lists, RT.MN.roll, RT.MN.measure,
+        RT.MN.read, RT.MI.shot("rtmn_page", false), RT.finish }
+end
+
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
 -- character's hand, not even vanilla's water bottle. Run 73 showed why: a
 -- baseball bat (a weapon) is drawn in the idle character's hand, a water
@@ -9641,7 +9799,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -9737,6 +9895,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, pose trial")
                 TLGH.Steps.run(R, RT.poseSteps, H, nil)
+            elseif REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, field manual")
+                TLGH.Steps.run(R, RT.manualSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
@@ -9764,7 +9925,7 @@ end
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
 if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

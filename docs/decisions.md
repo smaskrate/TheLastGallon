@@ -608,3 +608,33 @@ listed with their replacement.
   is drawn in the arms while it plays, run 99) and the transfers that
   move it. Not covered: animations the game starts without a Lua action
   (doors, shoving, emotes). Multiplayer not run.
+
+## D-026 The field manual is print media found in loot
+* Decision: `TLG.ManualFuelSystems` is read as the game reads its
+  newspapers and fliers. The item script's `OnCreate`
+  (`TLG.Integration.Manual.onCreate`) gives every new manual the mod data
+  the game gives its own print media (`printMedia` with id, title, page
+  and text keys, and `literatureTitle`). The inventory menu then offers
+  Inspect, and reading it shows one page in the game's print media
+  window: start-up, fuel compatibility and troubleshooting of the
+  ethanol loop, in three columns, EN and IT. The window's notebook button
+  shows the same text in larger print. The manual is added on
+  `OnPreDistributionMerge` to 11 vanilla procedural lists that hold the
+  game's mechanics, farming or generator magazines (gas station storage,
+  garage and mechanic shelves, farms and homesteads, generator crates,
+  blue-collar bookstores, tool stores, libraries). Each takes that
+  magazine's weight there; in generator crates it is a third of it.
+* Reason: the manual could not be obtained and did nothing when read
+  (asset review, 2026-11-02). The spec asks for manuals that explain
+  start-up, compatibility and troubleshooting in game, for more than one
+  way to learn, and for an attainable way to learn inherited equipment.
+  The print media window is the game's own way to show a document (SRC
+  `ISReadABook`, BC `RecipeCodeHelper.setPrintMediaInfo`), so the mod adds
+  no window of its own. The manual teaches no recipe and gates nothing:
+  everything on its page is also in the player guide and the menus.
+* Consequences: verified RT-SP runs 101–103. The lists held it after the
+  merge. The game's loot roller filled containers with it from seven of
+  the lists (137, 154 and 147 manuals in 3500 fills), each one already
+  print media. Inspect read it and the game recorded it read, in EN and IT. A
+  manual made before this change has no page (none could be obtained).
+  Its icon and cover are still vanilla placeholders (A29, I03).

@@ -140,7 +140,7 @@ loop adds world noise only through code that decides to.
 | A29 | `TLG.FuelSampleKit` | no world model | vanilla `JarGlass_Ground` (as `Base.EmptyJar`) now; own texture later |
 | A29 | `TLG.FuelStabilizer` | no world model | vanilla `BleachBottle` now; own label later |
 | A29 | `TLG.FuelFilter` | no world model | vanilla `RespiratorFilters` (`models_clothes.txt`) now; cartridge model later |
-| A29 | `TLG.ManualFuelSystems` | no world model | vanilla `Magazine` / `MagazineGround` with an own cover texture |
+| A29 | `TLG.ManualFuelSystems` | no world model | vanilla `Magazine` / `MagazineGround` with an own cover texture; it spawns in loot since 2026-11-02 (runs 101–103, D-026), so a player can drop it on a floor |
 | A29 | `TLG.YeastStarter` | no world model | vanilla `JarGlass_Ground` now; own texture later |
 
 A machine's in-hand model can reuse its floor mesh through a second `model`
@@ -204,7 +204,7 @@ Icons, 32×32:
 | I08 | `TLG.RefluxStill` | `Pot` | same as the pot still |
 | I09 | `TLG.FermenterVessel` | its own `TLG_Fermenter` since 2026-11-02 (`tools/make-icons.ps1`) | done |
 | I01 | `TLG.FuelStabilizer` | `Bleach` | |
-| I03 | `TLG.ManualFuelSystems` | `MagazineBlacksmith1` (smithing magazine) | also needs a cover texture for its model |
+| I03 | `TLG.ManualFuelSystems` | `MagazineBlacksmith1` (smithing magazine) | also needs a cover texture for its model; seen in play since the manual spawns in loot (runs 101–103) |
 
 UI symbols (A02). Spec §16 asks for text and symbols, not colour alone.
 The UI today is text in context menus and rich-text dialogs, so showing

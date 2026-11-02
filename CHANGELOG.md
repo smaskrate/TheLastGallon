@@ -145,6 +145,12 @@
   work) first puts the vessel down at your feet. A generator, which is
   never seen in your hands, stays there through such actions (both
   checked in game, looting from a bag on the floor).
+* The *Field Manual: Fuel Systems* can now be found and read. It turns up
+  in gas station storage, garages, farms, generator crates, bookstores,
+  tool stores and libraries. **Inspect** shows a page on starting the
+  ethanol loop, fuel compatibility and troubleshooting, in English and
+  Italian (checked in game). Before, nothing spawned it and reading it did
+  nothing. It teaches no recipe.
 * The four machines' inventory category reads "Tool"; it showed the raw
   key "IGUI_ItemCat_Tools" (found and checked in game).
 * Migrations with preserved future schemas.
