@@ -27,8 +27,9 @@
 --   rm-a  -> a new world: cans and a fermenter recorded, saved, quit ("rm-a-done")
 --   rm-c  -> main menu continues that save after the driver's "rm-b" played it
 --            without the mod: the mod back
---   sp-rtcw -> a new world: an opened can of ethanol poured 60 days on (mod
---             clock), and a petrol can looked at then
+--   sp-rtcw -> a new world: an opened can of ethanol poured 300 days on (mod
+--             clock), and a full petrol can looked at then
+--   sp-rtv -> phase A's vehicle steps on another chassis (Base.PickUpTruck)
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -56,7 +57,7 @@ end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
-    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw"
+    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv"
     or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
@@ -8101,6 +8102,48 @@ end }
 RT.canWaterSteps = { RT.waitWorld, RT.X.setup, RT.CW.run, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Another chassis (request "sp-rtv"; release gate 8): phase A's vehicle
+-- steps on Base.PickUpTruck (SRC media/scripts/generated/vehicles/
+-- vehicle_pickuptruck.txt) instead of Base.CarNormal. A can is filled at the
+-- pump and poured into the truck, the truck is siphoned into a can and
+-- filled at the pump; a second truck takes an ethanol blend and idles, then
+-- the mod's own pours; the start gate refuses the blend, which stalls a
+-- truck started past the gate; the gate lets station fuel through. The
+-- generator, crafting and conversion steps are left out.
+------------------------------------------------------------------------------
+RT.V = { script = "Base.PickUpTruck" }
+
+-- Phase A's steps by name, in the order given.
+function RT.V.phaseA(names)
+    local byName, out = {}, {}
+    for _, s in ipairs(stepsA) do byName[s.name] = s end
+    for _, n in ipairs(names) do
+        if byName[n] == nil then error("no phase A step " .. n) end
+        out[#out + 1] = byName[n]
+    end
+    return out
+end
+
+RT.V.choose = { name = "rtv_choose", fn = function()
+    local all, found = getScriptManager():getAllVehicleScripts(), false
+    for i = 0, all:size() - 1 do
+        if all:get(i):getFullName() == RT.V.script then found = true end
+    end
+    H.vehicleScript = found and RT.V.script or "missing"
+    R:check("RTV.chassis_script_present", function() return found, RT.V.script end)
+    return true
+end }
+
+RT.chassisSteps = {}
+for _, group in ipairs({ RT.V.phaseA({ "wait_world", "find_pumps" }), { RT.V.choose }, RT.V.phaseA({ "vehicles_spawn",
+    "chain_1_pump_to_can", "chain_2_can_to_vehicle", "chain_3_vehicle_to_can", "g06_pump_to_vehicle",
+    "g03_blend_can_to_vehicle", "g03_vehicle_idle", "g09_two_vehicles", "TLG.pour_petrol_into_vehicle",
+    "TLG.pour_e100_into_vehicle_unconfirmed", "TLG.pour_e100_into_vehicle_confirmed", "G03.gate_e36",
+    "g03_stall_incompatible", "G03.gate_station_fuel" }), { RT.finish } }) do
+    for _, s in ipairs(group) do RT.chassisSteps[#RT.chassisSteps + 1] = s end
+end
+
+------------------------------------------------------------------------------
 -- Italian (request "sp-it", release gate 10): the client in Italian
 -- (options.ini language=IT). tools/run-sp-harness.ps1 -Mode italian writes
 -- every Italian string the mod ships to TLG_it_expect.txt, its letters past
@@ -8266,7 +8309,7 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
-    or REQUEST == "sp-rtcw" then
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -8341,6 +8384,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtcw" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the water a can takes up")
                 TLGH.Steps.run(R, RT.canWaterSteps, H, nil)
+            elseif REQUEST == "sp-rtv" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, vehicle steps on " .. RT.V.script)
+                TLGH.Steps.run(R, RT.chassisSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)

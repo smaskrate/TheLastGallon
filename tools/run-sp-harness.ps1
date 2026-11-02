@@ -51,6 +51,9 @@
   60 days on (the mod's clock), and a petrol can looked at then: the water
   aging gave each must be in its fluids, kept by the next read, and carried
   by a further pour in proportion.
+  chassis: phase A's vehicle steps on Base.PickUpTruck instead of the
+  standard car: pump, can and siphon hops, pump to tank, a blend idled,
+  the mod's own pours, the start gate and the stall.
   removal-a, removal-b, removal-c: the three launches of the removal
   rehearsal (tools/rehearse-install.ps1 -Scenario removal): a world played
   with the mod, continued without it (the driver), then with it again.
@@ -69,8 +72,8 @@
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
-        "still-save", "still-controls", "late-find", "can-water", "fires", "existing-a", "existing-b", "removal-a", "removal-b",
-        "removal-c", "italian")][string]$Mode = "full",
+        "still-save", "still-controls", "late-find", "can-water", "chassis", "fires", "existing-a", "existing-b", "removal-a",
+        "removal-b", "removal-c", "italian")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -122,7 +125,7 @@ if ($Mode -eq "italian") {
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
+    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

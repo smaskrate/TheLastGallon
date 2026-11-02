@@ -41,8 +41,13 @@ player's inventory only.
 
 | Chassis | Stock profile | Conversion | Evidence |
 | --- | --- | --- | --- |
-| Base.CarNormal | engine_si_stock (59 L tank) | — | **RT-SP**: refuel, siphon, idle burn reconciled, tank record survives reload |
+| Base.CarNormal | engine_si_stock (59 L tank in run 5, 37 L in run 60) | — | **RT-SP**: refuel, siphon, idle burn reconciled, tank record survives reload |
+| Base.PickUpTruck | engine_si_stock (75 L tank in run 62) | — | **RT-SP** (run 62): refuel from a can and at a pump, siphon, idle burn reconciled, the mod's own pours, start gate and stall |
 | Other vanilla cars | engine_si_stock (assumed: every vanilla tank is "Gasoline") | — | SRC (content type), NOT RUN |
+
+A tank's capacity varies with the condition of the tank fitted
+(`conditionAffectsCapacity`, SRC `template_gastank.txt`); the mod reads it
+from the part each time.
 | Base.CarNormal, converted | engine_si_flex | flex_car_normal | **RT-SP** (run 8): commissioned, ran on home-made ethanol (started first try), conversion survives reload |
 | Other conversion chassis | see `TLG/Content/Conversions.lua` | flex / others | domain only, NOT RUN |
 
@@ -50,7 +55,8 @@ Per-instance part modData and `setEngineFeature` act on one vehicle only
 (G09, RT-SP with two `Base.CarNormal`). Start gate (`ISStartVehicleEngine`,
 RT-SP run 6): a 36 % ethanol blend is refused and the engine stays off;
 station fuel starts. Stall: the per-minute effect handler stalled an engine
-running on that blend within a game minute.
+running on that blend within a game minute. Run 62 repeated all of these
+on two `Base.PickUpTruck`.
 
 Station fuel and stock engines (D-017): about 9 in 10 stations start with
 0–0.15 % water, inside every engine's tolerance; about 1 in 10 start at

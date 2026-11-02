@@ -1,0 +1,125 @@
+# TLG single-player harness, vehicle steps on Base.PickUpTruck
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP wait_world begin
+worldName=66452835392257116877 start=10660,10645 hours=2.0095 tlgNow=2.0095
+STEP find_pumps begin
+OBS  G06.pump location_shop_gas2go_01_13 at 10636,10622 units=14967 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10636,10623 units=14440 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10636,10629 units=14746 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10636,10630 units=1650 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10654,10622 units=6858 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10654,10623 units=11422 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10654,10629 units=7196 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10654,10630 units=6482 isPump=true
+OBS  G06.pump_count 8 other_fuel_sprites=location_shop_gas2go_01_2@10636,10619;location_shop_gas2go_01_1@10636,10620;location_shop_gas2go_01_2@10636,10633;location_shop_gas2go_01_1@10636,10634;location_shop_gas2go_01_0@10637,10619;location_shop_gas2go_01_3@10637,10620;location_shop_gas2go_01_0@10637,10633;location_shop_gas2go_01_3@10637,10634;location_shop_gas2go_01_2@10654,10619;location_shop_gas2go_01_1@10654,10620;location_shop_gas2go_01_2@10654,10633;location_shop_gas2go_01_1@10654,10634;location_shop_gas2go_01_0@10655,10619;location_shop_gas2go_01_3@10655,10620;location_shop_gas2go_01_0@10655,10633;location_shop_gas2go_01_3@10655,10634;location_shop_gas2go_01_1@10666,10620;location_shop_gas2go_01_40@10666,10633;location_shop_gas2go_01_1@10667,10620;location_shop_gas2go_01_40@10667,10633;location_shop_gas2go_01_1@10668,10620;location_shop_gas2go_01_40@10668,10633;location_shop_gas2go_01_2@10669,10620;location_shop_gas2go_01_8@10669,10621;location_shop_gas2go_01_8@10669,10622;location_shop_gas2go_01_8@10669,10623;location_shop_gas2go_01_0@10669,10624;location_shop_gas2go_01_0@10669,10625;location_shop_gas2go_01_10@10669,10626;location_shop_gas2go_01_60@10669,10626;location_shop_gas2go_01_0@10669,10627;location_shop_gas2go_01_0@10669,10628;location_shop_gas2go_01_19@10669,10628;location_shop_gas2go_01_8@10669,10629;location_shop_gas2go_01_19@10669,10629;location_shop_gas2go_01_8@10669,10630;location_shop_gas2go_01_19@10669,10630;location_shop_gas2go_01_8@10669,10631;location_shop_gas2go_01_19@10669,10631;location_shop_gas2go_01_0@10669,10632;location_shop_gas2go_01_19@10669,10632;location_shop_gas2go_01_1@10669,10633;location_shop_gas2go_01_1@10670,10620;location_shop_gas2go_01_1@10670,10633;location_shop_gas2go_01_1@10671,10620;location_shop_gas2go_01_1@10671,10633;location_shop_gas2go_01_0@10672,10614;location_shop_gas2go_01_1@10672,10620;location_shop_gas2go_01_20@10672,10630;location_shop_gas2go_01_19@10672,10631;location_shop_gas2go_01_1@10672,10633;location_shop_gas2go_01_2@10673,10618;location_shop_gas2go_01_10@10673,10619;location_shop_gas2go_01_3@10673,10620;location_shop_gas2go_01_21@10673,10630;location_shop_gas2go_01_1@10673,10633;location_shop_gas2go_01_11@10674,10618;location_shop_gas2go_01_21@10674,10630;location_shop_gas2go_01_1@10674,10633;location_shop_gas2go_01_1@10675,10618;location_shop_gas2go_01_21@10675,10630;location_shop_gas2go_01_1@10675,10633;location_shop_gas2go_01_1@10676,10618;location_shop_gas2go_01_21@10676,10630;location_shop_gas2go_01_1@10676,10633;location_shop_gas2go_01_0@10677,10615;location_shop_gas2go_01_0@10677,10616;location_shop_gas2go_01_0@10677,10617;location_shop_gas2go_01_0@10677,10618;location_shop_gas2go_01_0@10677,10619;location_shop_gas2go_01_0@10677,10620;location_shop_gas2go_01_0@10677,10621;location_shop_gas2go_01_0@10677,10622;location_shop_gas2go_01_0@10677,10623;location_shop_gas2go_01_0@10677,10624;location_shop_gas2go_01_0@10677,10625;location_shop_gas2go_01_0@10677,10626;location_shop_gas2go_01_0@10677,10627;location_shop_gas2go_01_0@10677,10628;location_shop_gas2go_01_0@10677,10629;location_shop_gas2go_01_0@10677,10630;location_shop_gas2go_01_0@10677,10631;location_shop_gas2go_01_0@10677,10632;location_shop_gas2go_01_3@10677,10633
+OBS  G06.sandbox :: infinite=false contamination=true
+STEP rtv_choose begin
+PASS RTV.chassis_script_present :: Base.PickUpTruck
+STEP vehicles_spawn begin
+OBS  G03.vehicle1 id=241 script=Base.PickUpTruck at 10639.0,10625.0 tankCap=75 amount=65 side=no-sidecar
+OBS  G03.vehicle2 id=240 script=Base.PickUpTruck at 10644.0,10625.0 tankCap=75 amount=13 side=no-sidecar
+STEP chain_1_pump_to_can begin
+OBS  CHAIN.1_pump_to_can.before src initialized id=nil rev=0 total=14967.0000 q[gasoline=14938.5291,sediment=12.7166,water=15.7543] deg[gasoline=0.2934] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can litres src 14967.0000->14966.0000 dst 0.0000->1.0000
+OBS  CHAIN.1_pump_to_can.after src ok id=R935288346-1 rev=1 total=14966.0000 q[gasoline=14937.5310,sediment=12.7158,water=15.7532] deg[gasoline=0.2934] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can.after dst ok id=S935288346-2 rev=1 total=1.0000 q[gasoline=0.9981,sediment=0.0008,water=0.0011] deg[gasoline=0.2934] mic=0 stab=0
+PASS CHAIN.1_pump_to_can.litres_conserved :: out=1.00000 in=1.00000
+PASS CHAIN.1_pump_to_can.tlg_total_matches_native :: tlg=1.00000 native=1.00000 status=ok
+PASS CHAIN.1_pump_to_can.fuel_state_carried :: worst=1.75e-08 at deg:gasoline
+OBS  G06.pump_to_can units 14967->14966 (-1) canL +1.0000 litres_per_unit=1.0000 frac=0 fluids=total=1.0000 [Petrol=0.9981,TLG_FuelSediment=0.0008,TLG_FuelWater=0.0011]
+OBS  G03.vanilla_menus_accept_station_can :: true
+STEP chain_2_can_to_vehicle begin
+OBS  CHAIN.2_can_to_vehicle.before src ok id=S935288346-2 rev=1 total=1.0000 q[gasoline=0.9981,sediment=0.0008,water=0.0011] deg[gasoline=0.2934] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle litres src 1.0000->0.0000 dst 0.0000->1.0000
+OBS  CHAIN.2_can_to_vehicle.after src reconciled id=S935288346-2 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle.after dst ok id=V935288346-3 rev=1 total=1.0000 q[gasoline=0.9981,sediment=0.0008,water=0.0011] deg[gasoline=0.2934] mic=0 stab=0
+PASS CHAIN.2_can_to_vehicle.litres_conserved :: out=1.00000 in=1.00000
+PASS CHAIN.2_can_to_vehicle.tlg_total_matches_native :: tlg=1.00000 native=1.00000 status=ok
+PASS CHAIN.2_can_to_vehicle.fuel_state_carried :: worst=2.04e-08 at deg:gasoline
+STEP chain_3_vehicle_to_can begin
+OBS  CHAIN.3_vehicle_to_can.before src ok id=V935288346-3 rev=1 total=1.0000 q[gasoline=0.9981,sediment=0.0008,water=0.0011] deg[gasoline=0.2934] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can litres src 1.0000->0.0000 dst 0.0000->1.0000
+OBS  CHAIN.3_vehicle_to_can.after src ok id=V935288346-3 rev=2 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can.after dst ok id=S935288346-5 rev=1 total=1.0000 q[gasoline=0.9981,sediment=0.0008,water=0.0011] deg[gasoline=0.2934] mic=0 stab=0
+PASS CHAIN.3_vehicle_to_can.litres_conserved :: out=1.00000 in=1.00000
+PASS CHAIN.3_vehicle_to_can.tlg_total_matches_native :: tlg=1.00000 native=1.00000 status=ok
+PASS CHAIN.3_vehicle_to_can.fuel_state_carried :: worst=2.04e-08 at deg:gasoline
+STEP g06_pump_to_vehicle begin
+OBS  G06.pump_to_vehicle in area after 1 placement(s) at 10637.96,10626.24
+OBS  G06.pump_to_vehicle.before src ok id=R935288346-1 rev=1 total=14966.0000 q[gasoline=14937.5310,sediment=12.7158,water=15.7532] deg[gasoline=0.2934] mic=0 stab=0
+OBS  G06.pump_to_vehicle.before dst - id=V935288346-3 rev=2 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  G06.pump_to_vehicle litres src 14966.0000->14949.0000 dst 0.0000->17.0000
+OBS  G06.pump_to_vehicle.after src ok id=R935288346-1 rev=2 total=14949.0000 q[gasoline=14920.5633,sediment=12.7013,water=15.7354] deg[gasoline=0.2934] mic=0 stab=0
+OBS  G06.pump_to_vehicle.after dst ok id=V935288346-3 rev=3 total=17.0000 q[gasoline=16.9677,sediment=0.0144,water=0.0179] deg[gasoline=0.2934] mic=0 stab=0
+PASS G06.pump_to_vehicle.litres_conserved :: out=17.00000 in=17.00000
+PASS G06.pump_to_vehicle.tlg_total_matches_native :: tlg=17.00000 native=17.00000 status=ok
+PASS G06.pump_to_vehicle.fuel_state_carried :: worst=3.79e-08 at deg:gasoline
+OBS  G06.pump_to_vehicle units 14966->14949 (-17) tankL +17.0000 litres_per_unit=1.0000
+STEP g03_blend_can_to_vehicle begin
+OBS  G03.blend_can_to_vehicle.before src initialized id=nil rev=0 total=8.0000 q[ethanol=2.0000,gasoline=5.9999,water=0.0002] deg[ethanol=0.0456,gasoline=0.3208] mic=0 stab=0
+OBS  G03.blend_can_to_vehicle.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  G03.blend_can_to_vehicle litres src 8.0000->0.0000 dst 0.0000->8.0000
+OBS  G03.blend_can_to_vehicle.after src initialized id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  G03.blend_can_to_vehicle.after dst ok id=V935288346-6 rev=1 total=8.0000 q[ethanol=2.0000,gasoline=5.9999,water=0.0002] deg[ethanol=0.0456,gasoline=0.3208] mic=0 stab=0
+PASS G03.blend_can_to_vehicle.litres_conserved :: out=8.00000 in=8.00000
+PASS G03.blend_can_to_vehicle.tlg_total_matches_native :: tlg=8.00000 native=8.00000 status=ok
+PASS G03.blend_can_to_vehicle.fuel_state_carried :: worst=2.06e-08 at deg:gasoline
+STEP g03_vehicle_idle begin
+OBS  G03.idle vehicle id=241 tank=17.0000
+OBS  G03.evaluation_before_start :: profile=engine_si_stock grade=good compatible=true startFactor=1 reasons=
+OBS  G03.idle 0.500 game h: tank 17.0000 -> 16.9852 (burn 0.0148 L) running=true
+OBS  G03.idle after reconciled id=V935288346-3 rev=3 total=16.9852 q[gasoline=16.9529,sediment=0.0144,water=0.0179] deg[gasoline=0.2938] mic=0 stab=0
+PASS G03.native_burn_reconciled_proportionally :: worst=3.33e-16 at deg:gasoline status=reconciled tlg=16.9852 native=16.9852
+STEP g09_two_vehicles begin
+PASS G09.part_moddata_per_instance :: 123/nil
+PASS G09.engine_feature_per_instance :: a=3200 b=4000 (a before 4000)
+STEP TLG.pour_petrol_into_vehicle begin
+OBS  TLG.pour_petrol_into_vehicle inArea=true
+OBS  TLG.pour_petrol_into_vehicle.before src initialized id=nil rev=0 total=3.0000 q[gasoline=3.0000,water=0.0000] deg[gasoline=0.3061] mic=0 stab=0
+OBS  TLG.pour_petrol_into_vehicle.before dst - id=V935288346-6 rev=1 total=8.0000 q[ethanol=2.0000,gasoline=5.9999,water=0.0002] deg[ethanol=0.0456,gasoline=0.3212] mic=0 stab=0
+OBS  TLG.pour_petrol_into_vehicle reply ok=true reason=nil
+PASS TLG.pour_petrol_into_vehicle.reply_ok :: nil
+OBS  TLG.pour_petrol_into_vehicle litres src 3.0000->0.0000 dst 8.0000->11.0000
+OBS  TLG.pour_petrol_into_vehicle.after src ok id=S935288346-9 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  TLG.pour_petrol_into_vehicle.after dst ok id=V935288346-6 rev=2 total=11.0000 q[ethanol=2.0000,gasoline=8.9998,water=0.0002] deg[ethanol=0.0456,gasoline=0.3162] mic=0 stab=0
+PASS TLG.pour_petrol_into_vehicle.litres_conserved :: out=3.00000 in=3.00000
+PASS TLG.pour_petrol_into_vehicle.tlg_total_matches_native :: tlg=11.00000 native=11.00000 status=ok
+OBS  TLG.pour_petrol_into_vehicle tank now grade=good compatible=true startFactor=0.8727312468760838 reasons=marginal_ethanol
+STEP TLG.pour_e100_into_vehicle_unconfirmed begin
+OBS  TLG.pour_e100_into_vehicle_unconfirmed inArea=true
+OBS  TLG.pour_e100_into_vehicle_unconfirmed.before src initialized id=nil rev=0 total=3.0000 q[ethanol=3.0000,water=0.0000] deg[ethanol=0.0063] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_unconfirmed.before dst - id=V935288346-6 rev=2 total=11.0000 q[ethanol=2.0000,gasoline=8.9998,water=0.0002] deg[ethanol=0.0456,gasoline=0.3162] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_unconfirmed reply ok=false reason=incompatible
+PASS TLG.pour_e100_into_vehicle_unconfirmed.refused_nothing_moved :: reason=incompatible dCan=0.00000 dTank=0.00000
+OBS  TLG.pour_e100_into_vehicle_unconfirmed tank now grade=good compatible=true startFactor=0.8727312468760838 reasons=marginal_ethanol
+STEP TLG.pour_e100_into_vehicle_confirmed begin
+OBS  TLG.pour_e100_into_vehicle_confirmed inArea=true
+OBS  TLG.pour_e100_into_vehicle_confirmed.before src initialized id=nil rev=0 total=3.0000 q[ethanol=3.0000,water=0.0000] deg[ethanol=0.0047] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_confirmed.before dst - id=V935288346-6 rev=2 total=11.0000 q[ethanol=2.0000,gasoline=8.9998,water=0.0002] deg[ethanol=0.0456,gasoline=0.3162] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_confirmed reply ok=true reason=nil
+PASS TLG.pour_e100_into_vehicle_confirmed.reply_ok :: nil
+OBS  TLG.pour_e100_into_vehicle_confirmed litres src 3.0000->0.0000 dst 11.0000->14.0000
+OBS  TLG.pour_e100_into_vehicle_confirmed.after src ok id=S935288346-11 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  TLG.pour_e100_into_vehicle_confirmed.after dst ok id=V935288346-6 rev=3 total=14.0000 q[ethanol=4.9999,gasoline=8.9998,water=0.0002] deg[ethanol=0.0210,gasoline=0.3162] mic=0 stab=0
+PASS TLG.pour_e100_into_vehicle_confirmed.litres_conserved :: out=3.00000 in=3.00000
+PASS TLG.pour_e100_into_vehicle_confirmed.tlg_total_matches_native :: tlg=14.00000 native=14.00000 status=ok
+OBS  TLG.pour_e100_into_vehicle_confirmed tank now grade=unsuitable compatible=false startFactor=0 reasons=too_much_ethanol
+STEP G03.gate_e36 begin
+OBS  G03.gate_e36 driver=true battery=0.88 engine=87 grade=unsuitable compatible=false startFactor=0 reasons=too_much_ethanol
+OBS  G03.gate_e36 state=Idle running=false attempts=1 refusal=vehicle start refused: too_much_ethanol
+PASS G03.gate_e36.refused_by_tlg :: vehicle start refused: too_much_ethanol
+STEP g03_stall_incompatible begin
+OBS  G03.stall after 0.002 game h state=Stalling
+PASS G03.stall_on_incompatible_fuel :: stopped=true after 0.1 game min
+STEP G03.gate_station_fuel begin
+OBS  G03.gate_station_fuel driver=true battery=0.90 engine=100 grade=good compatible=true startFactor=1 reasons=
+OBS  G03.gate_station_fuel state=Running running=true attempts=1 refusal=nil
+PASS G03.gate_station_fuel.not_refused_by_tlg :: state=Running running=true grade=good
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.72
+SUMMARY pass=29 fail=0
+DONE

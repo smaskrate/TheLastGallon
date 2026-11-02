@@ -1593,3 +1593,32 @@ petrol and records, and were poured to 7 L each. With the mod back:
 
 Launch 2's two exceptions are the driver's own guarded lookup
 (`Driver.lua:182`); launches 1 and 3 had no TLG error or Lua exception.
+
+## 2026-11-02 — RT-SP client harness, launch 62 (another chassis: Base.PickUpTruck, gate 8)
+
+Command: `tools/run-sp-harness.ps1 -Mode chassis` (new; request
+`sp-rtv`), on the repository's code in the dev cache. It runs phase A's
+vehicle steps unchanged, on two `Base.PickUpTruck` instead of
+`Base.CarNormal`. It first checks that the game has the script (SRC
+`media/scripts/generated/vehicles/vehicle_pickuptruck.txt`).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run62_chassis_pickup.txt`.
+
+Result: **29/0**. The trucks had 75 L tanks; the run emptied them first.
+
+| Step | Result |
+| --- | --- |
+| Pump → can → truck → can | each hop kept its litres, the mod's total equal to the native amount, fuel state carried to 2.04e-8 |
+| Pump → truck | 17 units out, 17.00000 L in (the pump corrected to 1 L per unit), fuel state carried to 3.79e-8 |
+| E25 blend, can → second truck | 8.00000 L, state carried |
+| Idle on station fuel | 0.0148 L burned in 0.5 game h, reconciled proportionally (worst 3.3e-16, status `reconciled`) |
+| Per-instance part data and engine power | one truck only |
+| The mod's own pours | petrol 3 L in; E100 refused unconfirmed with nothing moved; confirmed, 3 L in |
+| Start gate | the 36 % blend refused (`too_much_ethanol`), the engine stayed `Idle`; station fuel started at the first try |
+| Stall | a truck started past the gate on the blend stalled within 0.1 game minutes |
+
+The first hop moved 1 L, where the car runs moved 10 L: the game's pump
+action ended after one unit, and the run did not record why. The mod
+accounted for exactly what moved: the pump's units went down one, and the
+can held 1 L with the station's water and sediment. The console had no
+TLG error and no Lua exception. Not run on this chassis: the flex
+conversion (`flex_pickup_truck`), save and reload, driving.
