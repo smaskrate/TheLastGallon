@@ -111,7 +111,12 @@ runs 64–67) and the supplied fermenter's FBX (runs 68–69)
   times `scale`, times 1.5; its `UnitScaleFactor` is ignored. A Blender
   export in metres with no node scaling, 1.0 tall, stands 0.75 m tall at
   `scale = 0.5`, and its UVs need no flip.
-* Not verified: the look in the hand, multiplayer.
+* In the hand: an idle character draws a held weapon but no other item;
+  during an action the item's `StaticModel` is drawn at the hand bone
+  (`Bip01_Prop1`) with that model script's attachment block. Without one,
+  the supplied fermenter hangs on its side there (run 74): a hand model
+  needs its `attachment Bip01_Prop1` offset and rotation tuned.
+* Not verified: multiplayer.
 
 Sound playback and zombie attraction are separate (spec §22): a machine
 loop adds world noise only through code that decides to.

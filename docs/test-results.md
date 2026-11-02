@@ -1783,3 +1783,32 @@ Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run72_install_rehearsal.txt`.
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60, 63 and 70. The console had no error naming the mod.
+
+## 2026-11-02 — RT-SP client harness, launches 73–74 (the fermentation vessel in the hand)
+
+Command: `tools/run-sp-harness.ps1 -Mode held` (new; request `sp-rtmh`, no
+save): items equipped in turn through vanilla's equip action and
+photographed at zoom 0.25 with the interface hidden. Launch 74 adds a
+do-nothing timed action that holds the vessel as vanilla's actions hold
+an item (`setOverrideHandModels`), with its own hand model and then with
+the supplied `TLG.Fermenter` named instead.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run73_held.txt`,
+`..._run74_held.txt` and `2026-11-02_run73_*.jpg`, `2026-11-02_run74_*.jpg`.
+
+Result: **9/0** both launches (every equip landed: the primary hand, and
+both hands for the two-handed one).
+
+| Held | Drawn in the hand |
+| --- | --- |
+| `Base.BaseballBat`, idle | yes |
+| `Base.WaterBottle`, idle | no |
+| the vessel, idle, one hand or both | no |
+| the vessel during an action, its own hand model (`Base.WaterTank`) | yes: vanilla's water-cooler bottle at a natural grip |
+| the vessel during an action, `TLG.Fermenter` named | yes: the barrel on its side at the hand bone, in front of the legs |
+
+The hide flags were false throughout, and the hand-bone debug view drew
+both hands' axes where they belong. So the empty hands of launches 65–71
+were the game's own behaviour: an idle character draws no held non-weapon
+item, vanilla's included. The supplied model has no attachment block, so
+as a hand model it would need its offset and rotation tuned; the shipped
+vessel keeps vanilla's `WaterTank` in the hand.

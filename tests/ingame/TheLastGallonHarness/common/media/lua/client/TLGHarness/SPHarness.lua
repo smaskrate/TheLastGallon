@@ -36,6 +36,8 @@
 --   sp-rtmf -> the same with the fermenter's shipped model, beside the test
 --             barrel at true size; saved and exited to the menu ("sp-rtmfb")
 --   sp-rtmfb -> main menu continues that save: back in place, photographed
+--   sp-rtmh -> held items photographed close up: a bat, a water bottle, the
+--             fermentation vessel in one hand and in both
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -64,7 +66,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
-    or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8188,7 +8190,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- The shipped fermenter model (requests "sp-rtmf", then "sp-rtmfb"): the
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
-RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb"
+RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module: StaticModel =
     -- WaterTank reads back as Base.WaterTank (run 68).
@@ -8363,14 +8365,15 @@ function RT.MI.shot(name, hideUI)
     end }
 end
 
--- An item equipped as a player does it (vanilla ISEquipWeaponAction).
-function RT.MI.hold(name, fullType)
+-- An item equipped as a player does it (vanilla ISEquipWeaponAction), in
+-- one hand or in both.
+function RT.MI.hold(name, fullType, twoHands)
     return { name = name, timeout = 900, fn = function(ctx, ticks)
         if RT.skip(name) then return true end
         local p = player()
         if not ctx.item then
             ctx.item = p:getInventory():AddItem(fullType)
-            ISTimedActionQueue.add(ISEquipWeaponAction:new(p, ctx.item, 50, true, false))
+            ISTimedActionQueue.add(ISEquipWeaponAction:new(p, ctx.item, 50, true, twoHands == true))
             return nil
         end
         if ticks < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
@@ -8387,12 +8390,93 @@ function RT.MI.hold(name, fullType)
         end
         if ticks - ctx.reset < 60 then return nil end
         R:check("RTMI.held_" .. name, function()
-            return p:getPrimaryHandItem() == ctx.item, string.format("%s in the primary hand: %s", fullType,
-                tostring(p:getPrimaryHandItem() and p:getPrimaryHandItem():getFullType()))
+            local both = p:getSecondaryHandItem() == ctx.item
+            return p:getPrimaryHandItem() == ctx.item and (both or twoHands ~= true),
+                string.format("%s in the primary hand: %s; in both: %s", fullType,
+                    tostring(p:getPrimaryHandItem() and p:getPrimaryHandItem():getFullType()), tostring(both))
         end)
         return true
     end }
 end
+
+-- The character's hand bones drawn on screen (debug option
+-- Character.Debug.Render.HandBones.Primary/Secondary, BC), to see where a
+-- held model would attach.
+RT.MI.handBones = { name = "rtmh_hand_bones", timeout = 300, fn = function(ctx, ticks)
+    if ticks == 1 then
+        for _, o in ipairs({ "Character.Debug.Render.HandBones.Primary", "Character.Debug.Render.HandBones.Secondary" }) do
+            local ok = pcall(function() getDebugOptions():setBoolean(o, true) end)
+            local on = false
+            pcall(function() on = getDebugOptions():getBoolean(o) end)
+            R:line("OBS  RTMH.debug %s set=%s now=%s", o, tostring(ok), tostring(on))
+        end
+    end
+    return ticks >= 30 or nil
+end }
+
+RT.MI.handBonesOff = { name = "rtmh_hand_bones_off", timeout = 300, fn = function(ctx, ticks)
+    if ticks == 1 then
+        for _, o in ipairs({ "Character.Debug.Render.HandBones.Primary", "Character.Debug.Render.HandBones.Secondary" }) do
+            pcall(function() getDebugOptions():setBoolean(o, false) end)
+        end
+    end
+    return ticks >= 30 or nil
+end }
+
+-- A do-nothing timed action that holds an item in the hand as vanilla's
+-- actions do (ISAddCompost, ISDrinkFluidAction: setOverrideHandModels in
+-- start; BC ModelManager draws an action's hand model at Bip01_Prop1), with
+-- the item's own hand model or a model named instead.
+TLGHPropAction = ISBaseTimedAction:derive("TLGHPropAction")
+function TLGHPropAction:isValid() return true end
+function TLGHPropAction:update() end
+function TLGHPropAction:start()
+    if self.model then self:setOverrideHandModelsString(self.model, nil) else self:setOverrideHandModels(self.item, nil) end
+end
+function TLGHPropAction:stop() ISBaseTimedAction.stop(self) end
+function TLGHPropAction:perform() ISBaseTimedAction.perform(self) end
+function TLGHPropAction:new(character, item, model, time)
+    local o = ISBaseTimedAction.new(self, character)
+    o.item, o.model, o.maxTime, o.stopOnWalk, o.stopOnRun = item, model, time, false, false
+    return o
+end
+
+-- Starts that action (after clearing the queue) and lets it run 120 ticks;
+-- it is still running through the screenshot that follows.
+function RT.MI.propAction(name, fullType, model)
+    return { name = name, timeout = 600, fn = function(ctx, ticks)
+        local p = player()
+        if ticks == 1 then
+            ISTimedActionQueue.clear(p)
+            local it = p:getInventory():getFirstTypeRecurse(fullType) or p:getInventory():AddItem(fullType)
+            ISTimedActionQueue.add(TLGHPropAction:new(p, it, model, 1200))
+            return nil
+        end
+        if ticks < 120 then return nil end
+        local q = ISTimedActionQueue.getTimedActionQueue(p)
+        local cur = q and q.queue and q.queue[1]
+        R:line("OBS  RTMH.%s action running=%s hand model=%s", name, tostring(cur ~= nil and cur.Type == "TLGHPropAction"),
+            tostring(model or (cur and cur.item and cur.item:getStaticModel())))
+        return true
+    end }
+end
+
+-- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
+-- character's hand, not even vanilla's water bottle. Run 73 showed why: a
+-- baseball bat (a weapon) is drawn in the idle character's hand, a water
+-- bottle and the vessel (one hand or both) are not, and the hand bones are
+-- where they belong. Vanilla shows a non-weapon item in the hand only
+-- during an action, so the vessel is then held in one: with its own hand
+-- model (StaticModel), then with its world model TLG.Fermenter instead.
+RT.heldSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmh_go", "tests"), RT.MI.zoomTo("rtmh_zoom", 0.25),
+    RT.MI.hold("bat", "Base.BaseballBat"), RT.MI.shot("rtmh_bat", true),
+    RT.MI.hold("bottle", "Base.WaterBottle"), RT.MI.shot("rtmh_bottle", true),
+    RT.MI.hold("vessel", "TLG.FermenterVessel"), RT.MI.shot("rtmh_vessel", true),
+    RT.MI.hold("vessel_both", "TLG.FermenterVessel", true), RT.MI.shot("rtmh_vessel_both", true),
+    RT.MI.handBones, RT.MI.shot("rtmh_vessel_bones", true), RT.MI.handBonesOff,
+    RT.MI.propAction("action_vessel", "TLG.FermenterVessel", nil), RT.MI.shot("rtmh_action_vessel", true),
+    RT.MI.propAction("action_fermenter_model", "TLG.FermenterVessel", "TLG.Fermenter"),
+    RT.MI.shot("rtmh_action_fermenter_model", true), RT.finish }
 
 RT.MI.place = { name = "rtmi_place", timeout = 600, fn = function(ctx, ticks)
     local M = RT.MI
@@ -8713,7 +8797,7 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
-    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" then
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -8797,6 +8881,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtmf" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the fermenter's model, before the save")
                 TLGH.Steps.run(R, RT.fermenterSteps, H, nil)
+            elseif REQUEST == "sp-rtmh" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, held items")
+                TLGH.Steps.run(R, RT.heldSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
@@ -8823,7 +8910,7 @@ end
 
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
-if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" then
+if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

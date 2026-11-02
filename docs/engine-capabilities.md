@@ -31,7 +31,7 @@ alternative), **NOT RUN**.
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
 | G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14; the check passed in run 14). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
-| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. An original static test model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67); the supplied fermenter model (FBX) ships and was drawn, turned and reloaded (runs 68–69). See "G13: one original model imported" below. NOT RUN: a held item drawn in the hand, animation, multiplayer rendering, sounds; vehicle parts are G11 |
+| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. An original static test model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67); the supplied fermenter model (FBX) ships and was drawn, turned and reloaded (runs 68–69). Held items: drawn only during actions for non-weapons, as in vanilla (runs 73–74). See "G13: one original model imported" below. NOT RUN: animation, multiplayer rendering, sounds; vehicle parts are G11 |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
 ## Lua runtime
@@ -688,7 +688,7 @@ At runtime (RT-SP; screenshots in `docs/evidence/2026-11-02_run6*`):
 | Footprint, interaction side | a world item on one square. The machine menu answered from 1.4 tiles ("Ready") and refused from 2.8 ("You cannot reach it": the mod's 2.5-tile reach); tried from one side only |
 | Collision, placement | none added: the square stayed free and not solid (`isFree`, `isSolid`, `isSolidTrans` unchanged); put down at the square's centre |
 | Rotation | turns of 0, 90, 180 and 270 degrees drew as turned and came back after a save, exit and continue |
-| In-hand attachment | NOT RUN: the harness character drew nothing in its hand (runs 65–67), not even vanilla's water bottle, whose model has a `Bip01_Prop1` attachment (runs 66–67); run 67 logged the hide flags false and called vanilla's hand-model reset first. Needs a look in a normal game |
+| In-hand attachment | An idle character draws a held weapon (a baseball bat) but no non-weapon item: not vanilla's water bottles, not the vessel, in one hand or both (runs 65–67, 73; the hide flags false, the hand bones where they belong). Vanilla shows such an item only during an action, through the action's `setOverrideHandModels` (`ISAddCompost`, `ISDrinkFluidAction`): a do-nothing action holding the vessel drew its `StaticModel` (vanilla's `WaterTank`) at the hand with that model's tuned grip, and the supplied `TLG.Fermenter` named instead hung on its side at the hand bone, with no attachment block (run 74) |
 | Animation | not applicable to a static item model; NOT RUN |
 | Shadows, transparency | fully transparent texels are cut out: the window is a hole, and the far wall's inside shows through it, so back faces are drawn. 40 % alpha drew translucent (the lid's line shows through the airlock). No shadow on the ground under the barrel or the vanilla bottle; the character's shows |
 | Save/load | the model, the wiring, every item's square and turn, and the vessel's machine record (its id) came back |
@@ -823,8 +823,8 @@ model imported (G13), run 64 12/2, run 65 **15/0**, run 66 15/1 and run 67
 **16/0**, then the fermenter's own model and the machines' category, run
 68 14/2 and run 69 **16/0**, and the zip with them installed clean, run 70
 **94/0** and **14/0**, then the fermenter's own icon, run 71 **17/0**, and
-the zip with it installed clean, run 72 **94/0** and **14/0**. Most
-failures were
+the zip with it installed clean, run 72 **94/0** and **14/0**, then held
+items, runs 73 **9/0** and 74 **9/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
