@@ -905,7 +905,14 @@ clean, run 80 **94/0** and **14/0**, then the vessel put down by the
 menus' unequip, run 81 **43/0**, and the zip with that installed clean,
 run 82 **94/0** and **14/0**, then generators put down the same way, run
 83 5/3 (before the fix; its first take never ran), run 84 1/1 (the same
-take) and run 85 **8/0**. Most failures were traced to the harness
+take) and run 85 **8/0**, then the vessel held with vanilla's held-bag
+pose, runs 86 **11/0** and 87 **10/0**, both arms through a mod's own pose
+file, runs 88 **8/0**, 89 **9/0** and 90 **6/0**, a Mixamo carry clip
+retargeted onto the game's skeleton, runs 91 **8/0** and 92 **8/0**, a
+wider one and the two blended, runs 93 **7/0** and 94 **7/0**, the barrel
+moved out of the torso, run 95 **8/0**, the shipped carry, run 96
+**6/0**, the zip with it installed clean, run 97 **94/0** and **14/0**,
+and the carry from the package's item tree, run 98 **6/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

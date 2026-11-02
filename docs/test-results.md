@@ -2145,3 +2145,44 @@ console had no exception.
 
 Not checked: running, sneaking, the vessel through real actions (placing
 it plays no animation and keeps the pose), multiplayer.
+
+## 2026-11-02 — RT-SP client harness, launch 97 (the zip with the carry pose, installed clean)
+
+Command: `tools/rehearse-install.ps1`, which rebuilt the package first
+(193/193 tests, compile check 102/0, translations OK): the zip of commit
+`ef1734a`, 88 files, SHA-256 `7169c16c…`, 921,305 bytes. It differs from
+run 82's zip (`2a762bad…`, 86 files) in the generator move hook for the
+menus' unequip (`Generators.lua`), the vessel's carry (the pose file and
+its clip, two new files, and the held model and the vessel's lines in
+`TLG_models.txt` and `TLG_machines.txt`), the notice, the changelog, the
+player guide and the support matrix. The zip matched its manifest (88
+files), was installed into a fresh isolated cache and ran the full
+harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run97_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
+47, 52, 56, 60, 63, 70, 72, 80 and 82. The console had no error naming
+the mod; its one exception came from the harness's own deep-recursion
+probe. Phase A crafts the vessel into the inventory and puts it down
+with the drop action, so it never takes it into the hands: the carry
+pose is run in launch 98.
+
+## 2026-11-02 — RT-SP client harness, launch 98 (the carry from the package's item tree)
+
+After launch 97 the changelog's carry entry was corrected (`4aca0b0`: it
+names only the action that was seen) and the package rebuilt: 88 files,
+SHA-256 `6ed15990…`, 921,325 bytes, which differs from launch 97's zip
+only in that entry. Command: `tools/run-sp-harness.ps1 -Mode
+vessel-carry -ModSource <repo>\dist\TheLastGallon\Contents\mods\TheLastGallon`:
+launch 96's steps with the mod deployed from the package's item tree,
+the folder the zip is made from, instead of the repository. The deployed
+clip `Bob_TLG_CarryVessel.x` has the repository's SHA-256 (`ecc4c413…`).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run98_vessel_carry_packaged.txt`,
+`2026-11-02_run98_vessel_carry_packaged_sheet.jpg` and the animator log
+`2026-11-02_run98_animlog_vessel.txt`.
+
+Result: **6/0**, as launch 96. The vessel's script read back as shipped,
+the vessel was in both hands, and the animator's log shows the masking
+layer play `tlgcarryvessel` with `Bob_TLG_CarryVessel`. Front, side and
+walking show launch 96's carry, and during "Loot" the barrel tilts up
+beside the head as it did there. The console had no exception.
