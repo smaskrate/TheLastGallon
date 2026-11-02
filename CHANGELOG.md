@@ -127,8 +127,9 @@
   continued; the icon shows in the equipped-item button.
 * A generator you carry keeps its fuel's record and its conversion when
   the game puts it down for you, as it does when you take another
-  generator or equip a weapon from the menus (checked in game). Before,
-  the fuel lost its history and a converted generator was stock again.
+  generator or equip a weapon from the menus (the record checked in
+  game, the conversion by the tests). Before, the fuel lost its history
+  and a converted generator was stock again.
 * The fermentation vessel is carried in both hands, like the game's
   generators, anvils and ore: one at a time, and it goes down at your
   feet when you get into a vehicle or take another heavy item. Take it
