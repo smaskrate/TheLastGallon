@@ -2080,3 +2080,32 @@ pose-carry-wide` (request `sp-rtmpw`) and `-Mode pose-carry-mid`
 (`sp-rtmpm`), both new, no save. Not checked, as for launches 91–92:
 actions, running, sneaking and multiplayer. The mod ships none of this
 yet.
+
+## 2026-11-02 — RT-SP client harness, launch 95 (the full-size barrel moved out of the torso)
+
+The user saw launch 94's full-size barrel go halfway through the body.
+`pz_arms.py` now reports the distances in front of `Bip01_Spine1`.
+Launch 94's item stood 0.18 file units in front of it, about the barrel's
+own radius (0.65 m across is about 0.17 file units at about 1.9 m per
+unit, from the game's shoulder joints 0.195 apart). Its back was
+therefore near the spine. The halfway blend was written three more times
+with the item 0.13, 0.17 and 0.21 in front of the hands (0.23, 0.27 and
+0.31 in front of `Bip01_Spine1`; the hands at 0.10, 0.06 down)
+as `Bob_TLGCarryMid13/17/21` (pose files `tlgcarrymid13/17/21.xml`,
+items `TLGHarness.PoseCarryMid13/17/21`). Each was photographed with the
+full-size barrel.
+Command: `tools/run-sp-harness.ps1 -Mode pose-carry-offsets` (new; request
+`sp-rtmpo`, no save).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run95_pose_carry_offsets.txt`,
+`2026-11-02_run95_carry_offsets_sheet.jpg`,
+`2026-11-02_run95_carry_offsets_side_zoom.jpg` and the animator log
+`2026-11-02_run95_animlog_carry_mid17.txt`.
+
+Result: **8/0**; the animator log shows each node playing. From the side:
+- 0.13: the barrel's back still presses into the belly.
+- 0.17: its back stands just in front of the chest, and the hands rest on
+  its sides at the band, standing and walking.
+- 0.21: a gap opens, and the hands only reach its back edge.
+
+0.17 is the fit. Not checked, as before: actions, running, sneaking and
+multiplayer. The mod ships none of this yet.

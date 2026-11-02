@@ -169,9 +169,12 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
         prop = world_ref["Bip01"].inverted() @ prop_world
         keys["Bip01_Prop1"].append((f, prop.to_3x3(), prop.translation.copy()))
         if f == first:
-            report.append("PZA hands L %s R %s apart %.3f; hand height over pelvis %.3f" % (
-                tuple(round(v, 3) for v in hands["L"]), tuple(round(v, 3) for v in hands["R"]),
-                (hands["L"] - hands["R"]).length, mid.dot(up_p) - p["Bip01_Pelvis"].dot(up_p)))
+            chest = p["Bip01_Spine1"].dot(fwd_p)
+            report.append("PZA hands L %s R %s apart %.3f; item height over pelvis %.3f; forward of Bip01_Spine1: "
+                          "hands %.3f, item %.3f" % (
+                              tuple(round(v, 3) for v in hands["L"]), tuple(round(v, 3) for v in hands["R"]),
+                              (hands["L"] - hands["R"]).length, mid.dot(up_p) - p["Bip01_Pelvis"].dot(up_p),
+                              (hands["L"] + hands["R"]).dot(fwd_p) * 0.5 - chest, mid.dot(fwd_p) - chest))
     _write(out_path, clip_name, keys, first, last)
     for r in report:
         print(r)

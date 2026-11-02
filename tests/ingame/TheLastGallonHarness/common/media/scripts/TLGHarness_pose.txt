@@ -98,6 +98,49 @@ module TLGHarness
         Tags = base:heavyitem,
     }
 
+    /* The halfway blend with the item further forward, out of the torso
+       (request sp-rtmpo): 0.13, 0.17 and 0.21 file units in front of the
+       hands' midpoint instead of 0.08 (tlgcarrymid13/17/21.xml,
+       Bob_TLGCarryMid13/17/21.x). */
+    item PoseCarryMid13
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcarrymid13,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseCarryMid17
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcarrymid17,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseCarryMid21
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcarrymid21,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
     item PoseShrug
     {
         DisplayCategory = Tool,
