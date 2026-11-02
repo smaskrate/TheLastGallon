@@ -822,7 +822,8 @@ documented installed clean, run 63 **94/0** and **14/0**, then one original
 model imported (G13), run 64 12/2, run 65 **15/0**, run 66 15/1 and run 67
 **16/0**, then the fermenter's own model and the machines' category, run
 68 14/2 and run 69 **16/0**, and the zip with them installed clean, run 70
-**94/0** and **14/0**, then the fermenter's own icon, run 71 **17/0**. Most
+**94/0** and **14/0**, then the fermenter's own icon, run 71 **17/0**, and
+the zip with it installed clean, run 72 **94/0** and **14/0**. Most
 failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)

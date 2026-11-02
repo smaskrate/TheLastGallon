@@ -1769,3 +1769,17 @@ and on the placed vessels; the equipped-item button showed it (the
 inventory list was collapsed again, as in run 68). Everything run 69
 checked passed again. The console had no error naming the model or the
 icon.
+
+## 2026-11-02 — RT-SP client harness, launch 72 (the zip with the fermenter's icon, installed clean)
+
+Command: `tools/rehearse-install.ps1`, which rebuilt the package first
+(191/191 tests, compile check 101/0, translations OK): the zip of commit
+`30bc5bf`, 86 files, SHA-256 `1d150946…`, 848,368 bytes. It differs from
+run 70's zip (`15229e13…`, 85 files) in the fermenter's own icon
+(`textures/Item_TLG_Fermenter.png`, 475 bytes), the vessel's `Icon` line,
+the notice and the changelog. The zip matched its manifest (86 files),
+was installed into a fresh isolated cache and ran the full harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run72_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
+47, 52, 56, 60, 63 and 70. The console had no error naming the mod.
