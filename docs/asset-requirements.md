@@ -15,12 +15,15 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 
 ## State on 2026-11-02
 
-* No original asset exists. `art-src/` is empty and the release zip holds
-  no `.png`, `.fbx`, `.x` or `.ogg`.
+* No original asset ships. `art-src/` is empty and the release zip holds
+  no `.png`, `.fbx`, `.x` or `.ogg`; the import test's model lives in the
+  dev-only harness mod.
 * Every shipped item and machine borrows a vanilla icon and model by name.
   The names exist in 42.21 (`models_items.txt`; `Item_*` entries in
-  `UI.pack`/`UI2.pack`); how they render was never looked at
-  (`engine-capabilities.md` G13: NOT RUN).
+  `UI.pack`/`UI2.pack`). How they render was first looked at on
+  2026-11-02 (run 66, `engine-capabilities.md` G13): the drying column
+  reads as a car fuel tank, the pot still as a cooking pot, and the
+  vessel's `WaterTank` is a water-cooler bottle.
 * Several placeholders collide or mislead. The sampling kit and yeast
   starter share the jar icon; the fuel filter and drying column share the
   respirator-filter icon (`AirFilters` is vanilla's `RespiratorFilters`
@@ -83,6 +86,24 @@ take; the audit marks the rows that wait on them.
 | Model | `.fbx` or `.x` mesh and a PNG texture (`tools/package.ps1` allows `.fbx`, `.x`, `.png`) | `model X { mesh = WorldItems/…, texture = …, scale = … }` (vanilla `WaterTank` 0.14, `CookingPotGround` 0.4); item `WorldStaticModel` (floor) and `StaticModel` (in hand) |
 | Sound | `.ogg` under `media/sound/` (the package allowlist has no `.wav`); world loops mono and seamless | `sound X { category = Object, clip { file = media/sound/…, distanceMax = N, } }` as vanilla `sounds_zombie_voice_tutorial.txt`; a `loop` field appears in 32 vanilla clips. No FMOD bank needed |
 | Workshop preview | `preview.png`, exactly 256×256, at most 1000 KB (`Translate/EN/UI.json:1004-1006`) | `package.ps1` copies `art-src/preview.png` |
+
+Verified in game for one original item model, a text `.x` mesh (RT-SP
+runs 64–67, `engine-capabilities.md` G13):
+
+* Files inside the mod: the mesh in `media/models_X/<folder>/`, the
+  texture in `media/textures/<folder>/` (the one the model script's
+  `texture` names; the mesh file's own texture name is not used), the
+  icon as `media/textures/Item_<Name>.png`.
+* Author in metres, Y up, the origin at the centre of the base, and set
+  `undoCoreScale = true` for true size beside a character: at scale 1.0
+  the model drew 1.5 times larger.
+* The texture's V runs down (row 0 at the top). Fully transparent texels
+  are cut out and back faces are drawn; partial alpha draws translucent.
+  Items cast no ground shadow.
+* At a turn of 0 the mesh's +X faces east and +Z north; turns run
+  clockwise seen from above and survive a save.
+* Not verified: `.fbx` (its loader also passes a bone scale and rotation),
+  the look in the hand, multiplayer.
 
 Sound playback and zombie attraction are separate (spec §22): a machine
 loop adds world noise only through code that decides to.

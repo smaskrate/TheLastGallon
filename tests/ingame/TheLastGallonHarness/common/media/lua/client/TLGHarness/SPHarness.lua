@@ -30,6 +30,9 @@
 --   sp-rtcw -> a new world: an opened can of ethanol poured 300 days on (mod
 --             clock), and a full petrol can looked at then
 --   sp-rtv -> phase A's vehicle steps on another chassis (Base.PickUpTruck)
+--   sp-rtmi -> an original test model wired to the fermenter: placed, turned,
+--             held and photographed, saved and exited to the menu ("sp-rtmib")
+--   sp-rtmib -> main menu continues that save: back in place, photographed
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -57,7 +60,7 @@ end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
-    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv"
+    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
@@ -8144,6 +8147,364 @@ for _, group in ipairs({ RT.V.phaseA({ "wait_world", "find_pumps" }), { RT.V.cho
 end
 
 ------------------------------------------------------------------------------
+-- Model import (requests "sp-rtmi", then "sp-rtmib"; spec section 21, G13):
+-- an original test model drawn by tools/make-test-model.ps1 (model scripts
+-- in TLGHarness_models.txt) is wired to TLG.FermenterVessel through the item
+-- script's own parser (BC Item.DoParam), before any vessel exists and in
+-- these requests only: FermenterTest on the floor, FermenterTestHand (the
+-- same mesh with a Bip01_Prop1 attachment block) in the hand. The same mesh
+-- with undoCoreScale (BC: scale x 2/3) goes on TLG.FuelSampleKit, so both
+-- sizes stand side by side.
+-- Phase 1 checks the scripts, the wiring and the icon and finds clear
+-- ground. Before anything is put down, vanilla's water bottle (the WaterTank
+-- model the vessel has today, with its Bip01_Prop1 attachment) and then a
+-- test vessel are equipped through vanilla's equip action and photographed
+-- (the vessel also with the interface shown). Then four vessels turned 0,
+-- 90, 180 and 270 degrees and the smaller copy go in one group, the
+-- placeholders the machines use today (drying column, pot still, water
+-- bottle) in another; each group is photographed at zoom 0.5 from one tile
+-- behind its middle, with the interface hidden. It saves and exits to the
+-- menu. Phase 2 continues the save: everything must be back where it was
+-- and as it was turned, the vessel still a machine; both groups are
+-- photographed again. Screenshots go to <cachedir>/Screenshots
+-- (Core.TakeFullScreenshot, BC); the harness cannot see them, they are
+-- looked at afterwards. Run 64 put the row two tiles in front of the
+-- character (below the frame at zoom 0.25, out of the machine menu's reach
+-- of 2.5 tiles); run 65 fitted two of the four vessels in its frame.
+------------------------------------------------------------------------------
+RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHand", icon = "TLGHarness_FermenterTest",
+    small = "TLGHarness.FermenterTestTrue", item = "TLG.FermenterVessel", kit = "TLG.FuelSampleKit",
+    keys = { "t0", "t90", "t180", "t270", "small", "column", "pot", "tank" },
+    across = { t0 = -1, t90 = 0, t180 = 1, t270 = 2, small = 3, column = 5, pot = 6, tank = 7 },
+    types = { small = "TLG.FuelSampleKit", column = "TLG.DryingColumn", pot = "TLG.PotStill",
+        tank = "Base.WaterDispenserBottle" },
+    turns = { t0 = 0, t90 = 90, t180 = 180, t270 = 270 },
+    -- The square a group is photographed from: one tile behind its middle.
+    views = { tests = 1, placeholders = 6 } }
+
+function RT.MI.wire()
+    local sm = getScriptManager()
+    local si, kit = sm:getItem(RT.MI.item), sm:getItem(RT.MI.kit)
+    if si == nil or kit == nil then return false end
+    si:DoParam("WorldStaticModel = " .. RT.MI.model)
+    si:DoParam("StaticModel = " .. RT.MI.hand)
+    si:DoParam("Icon = " .. RT.MI.icon)
+    kit:DoParam("WorldStaticModel = " .. RT.MI.small)
+    return true
+end
+
+-- The model scripts, the vessel's wiring and its icon as the game holds them.
+function RT.MI.checkWiring(prefix)
+    local sm = getScriptManager()
+    local si, kit = sm:getItem(RT.MI.item), sm:getItem(RT.MI.kit)
+    local tex = si and si:getNormalTexture()
+    local s = { world = si and si:getWorldStaticModel(), hand = si and si:getStaticModel(), icon = si and si:getIcon(),
+        tex = tex and tex:getName() or "nil", kit = kit and kit:getWorldStaticModel() }
+    local meshes = {}
+    for _, name in ipairs({ RT.MI.model, RT.MI.hand, RT.MI.small }) do
+        local ms = sm:getModelScript(name)
+        meshes[#meshes + 1] = string.format("%s mesh=%s texture=%s", name, tostring(ms and ms:getMeshName()),
+            tostring(ms and ms:getTextureName()))
+        s.ok = (s.ok ~= false) and ms ~= nil and ms:getMeshName() == "TLGHarness/FermenterTest"
+            and ms:getTextureName() == "TLGHarness/FermenterTest"
+    end
+    R:line("OBS  %s.scripts %s; %s WorldStaticModel=%s StaticModel=%s Icon=%s icon texture=%s; %s WorldStaticModel=%s",
+        prefix, table.concat(meshes, "; "), RT.MI.item, tostring(s.world), tostring(s.hand), tostring(s.icon), s.tex,
+        RT.MI.kit, tostring(s.kit))
+    R:check(prefix .. ".model_scripts_loaded", function() return s.ok == true, table.concat(meshes, "; ") end)
+    R:check(prefix .. ".vessel_wired", function()
+        return s.world == RT.MI.model and s.hand == RT.MI.hand and s.icon == RT.MI.icon and s.kit == RT.MI.small,
+            string.format("WorldStaticModel=%s StaticModel=%s Icon=%s; kit WorldStaticModel=%s", tostring(s.world),
+                tostring(s.hand), tostring(s.icon), tostring(s.kit))
+    end)
+    R:check(prefix .. ".icon_texture_found", function()
+        return has(s.tex, "Item_TLGHarness_FermenterTest") and not has(s.tex, "Question_On"), s.tex
+    end)
+    return s
+end
+
+-- Items stand on the row x + y = cx + cy: one step of k is one tile across
+-- the screen. The views are on the row behind it (x + y two less).
+function RT.MI.spot(cx, cy, k) return cx + k, cy - k end
+function RT.MI.behind(cx, cy, k) return cx + k - 1, cy - k - 1 end
+
+function RT.MI.clear(x, y)
+    local s = sq(x, y, 0)
+    local objs = s and s:getWorldObjects()
+    return s ~= nil and s:isFree(false) and s:isOutside() and (objs == nil or objs:size() == 0)
+end
+
+RT.MI.setup = { name = "rtmi_setup", timeout = 1200, fn = function(ctx, ticks)
+    local M = RT.MI
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        pcall(function() p:setUnlimitedCarry(true) end)
+        captureDialogs(true)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 30 then return nil end
+    M.checkWiring("RTMI")
+    local px, py = math.floor(player():getX()), math.floor(player():getY())
+    for r = 0, 12 do
+        for dx = -r, r do
+            for dy = -r, r do
+                if not M.cx and math.max(math.abs(dx), math.abs(dy)) == r then
+                    local cx, cy, ok = px + dx, py + dy, true
+                    for k = -1, 7 do
+                        local x, y = M.spot(cx, cy, k)
+                        local bx, by = M.behind(cx, cy, k)
+                        ok = ok and M.clear(x, y) and M.clear(bx, by)
+                    end
+                    if ok then M.cx, M.cy = cx, cy end
+                end
+            end
+        end
+    end
+    R:check("RTMI.clear_ground_found", function()
+        return M.cx ~= nil, string.format("from %d,%d: %s,%s", px, py, tostring(M.cx), tostring(M.cy))
+    end)
+    if M.cx == nil then
+        RT.abort = "no clear outdoor ground near the start"
+        return true
+    end
+    return true
+end }
+
+-- Teleports to the view of a group (or any square) and lets the camera and
+-- the chunk settle.
+function RT.MI.goTo(name, where)
+    return { name = name, timeout = 600, fn = function(ctx, ticks)
+        local M = RT.MI
+        if RT.skip(name) then return true end
+        if ticks == 1 then
+            local x, y = M.behind(M.cx, M.cy, M.views[where])
+            player():teleportTo(x + 0.5, y + 0.5, 0)
+        end
+        return ticks >= 90 or nil
+    end }
+end
+
+-- Scrolls the zoom to `target` (a smaller zoom shows more; which way a
+-- scroll goes is read from Core.getNextZoom), one level at a time once the
+-- view has settled for 30 ticks.
+function RT.MI.zoomTo(name, target)
+    return { name = name, timeout = 1800, fn = function(ctx, ticks)
+        local c = getCore()
+        local z = c:getZoom(0)
+        if not ctx.from then
+            ctx.from, ctx.last, ctx.still, ctx.scrolls = z, z, 0, 0
+            ctx.inward = (c:getNextZoom(0, -1) < z) and -1 or 1
+            return nil
+        end
+        if math.abs(z - ctx.last) > 1e-4 then
+            ctx.last, ctx.still = z, 0
+            return nil
+        end
+        ctx.still = ctx.still + 1
+        if ctx.still < 30 then return nil end
+        if math.abs(z - target) > 0.01 and ctx.scrolls < 12 then
+            c:doZoomScroll(0, z > target and ctx.inward or -ctx.inward)
+            ctx.scrolls, ctx.still = ctx.scrolls + 1, 0
+            return nil
+        end
+        R:line("OBS  RTMI.zoom %.2f -> %.2f in %d scrolls (enabled=%s, min %.2f)", ctx.from, z, ctx.scrolls,
+            tostring(c:isZoomEnabled()), c:getMinZoom())
+        return true
+    end }
+end
+
+-- A screenshot with the interface hidden (vanilla ISUIHandler) or shown.
+function RT.MI.shot(name, hideUI)
+    return { name = "rtmi_shot_" .. name, timeout = 600, fn = function(ctx, ticks)
+        if ticks == 1 and hideUI then ISUIHandler.setVisibleAllUI(false) end
+        if ticks == 60 then
+            local file = "tlg_" .. name .. ".png"
+            local ok, err = pcall(function() getCore():TakeFullScreenshot(file) end)
+            R:line("OBS  RTMI.screenshot %s ok=%s %s; interface %s; zoom %.2f; player %d,%d; game hour %.2f", file,
+                tostring(ok), ok and "" or tostring(err), hideUI and "hidden" or "shown", getCore():getZoom(0),
+                math.floor(player():getX()), math.floor(player():getY()), getGameTime():getTimeOfDay())
+        end
+        if ticks == 120 and hideUI then ISUIHandler.setVisibleAllUI(true) end
+        return ticks >= 150 or nil
+    end }
+end
+
+-- An item equipped as a player does it (vanilla ISEquipWeaponAction).
+function RT.MI.hold(name, fullType)
+    return { name = name, timeout = 900, fn = function(ctx, ticks)
+        if RT.skip(name) then return true end
+        local p = player()
+        if not ctx.item then
+            ctx.item = p:getInventory():AddItem(fullType)
+            ISTimedActionQueue.add(ISEquipWeaponAction:new(p, ctx.item, 50, true, false))
+            return nil
+        end
+        if ticks < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
+        if not ctx.reset then
+            -- Run 66 drew neither vanilla's water bottle nor the vessel in the
+            -- hand: the flags the game checks before drawing a held model
+            -- (BC ModelManager.DoCharacterModelEquipped), then vanilla's own
+            -- refresh (FishingRod.lua calls it after changing a held item).
+            R:line("OBS  RTMI.held_%s flags hideWeaponModel=%s hideEquippedHandL=%s hideEquippedHandR=%s", name,
+                tostring(p:isHideWeaponModel()), tostring(p:isHideEquippedHandL()), tostring(p:isHideEquippedHandR()))
+            p:resetEquippedHandsModels()
+            ctx.reset = ticks
+            return nil
+        end
+        if ticks - ctx.reset < 60 then return nil end
+        R:check("RTMI.held_" .. name, function()
+            return p:getPrimaryHandItem() == ctx.item, string.format("%s in the primary hand: %s", fullType,
+                tostring(p:getPrimaryHandItem() and p:getPrimaryHandItem():getFullType()))
+        end)
+        return true
+    end }
+end
+
+RT.MI.place = { name = "rtmi_place", timeout = 600, fn = function(ctx, ticks)
+    local M = RT.MI
+    if RT.skip("rtmi_place") then return true end
+    if ticks == 1 then
+        player():setPrimaryHandItem(nil)
+        M.spots = {}
+        for _, key in ipairs(M.keys) do
+            local x, y = M.spot(M.cx, M.cy, M.across[key])
+            M.spots[key] = { x = x, y = y, type = M.types[key] or M.item, turn = M.turns[key] or 0 }
+        end
+        local s0 = sq(M.spots.t0.x, M.spots.t0.y, 0)
+        ctx.before = string.format("free=%s solid=%s solidTrans=%s", tostring(s0:isFree(false)), tostring(s0:isSolid()),
+            tostring(s0:isSolidTrans()))
+        for _, key in ipairs(M.keys) do
+            local sp = M.spots[key]
+            local it = instanceItem(sp.type)
+            -- Set before the item is put down: AddWorldInventoryItem keeps it (BC).
+            it:setWorldZRotation(sp.turn)
+            it:getModData().tlghMark = key
+            sq(sp.x, sp.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            sp.item = it
+        end
+        -- Within the machine menu's reach (2.5 tiles) of the 0-degree vessel.
+        local bx, by = M.behind(M.cx, M.cy, M.across.t0)
+        player():teleportTo(bx + 0.5, by + 0.5, 0)
+        return nil
+    end
+    if ticks < 60 then return nil end
+    local s0 = sq(M.spots.t0.x, M.spots.t0.y, 0)
+    R:line("OBS  RTMI.placed from %d,%d to %d,%d (anchor %d,%d); t0 square before %s, after free=%s solid=%s solidTrans=%s",
+        M.spots.t0.x, M.spots.t0.y, M.spots.tank.x, M.spots.tank.y, M.cx, M.cy, ctx.before, tostring(s0:isFree(false)),
+        tostring(s0:isSolid()), tostring(s0:isSolidTrans()))
+    R:check("RTMI.all_placed", function()
+        local n, turns = 0, {}
+        for _, key in ipairs(M.keys) do
+            local it = M.spots[key].item
+            if it and it:getWorldItem() and it:getWorldItem():getSquare() == sq(M.spots[key].x, M.spots[key].y, 0) then
+                n = n + 1
+            end
+            turns[#turns + 1] = string.format("%s=%s", key, tostring(it and it:getWorldZRotation()))
+        end
+        return n == #M.keys, string.format("%d of %d on their squares; turns %s", n, #M.keys, table.concat(turns, " "))
+    end)
+    R:check("RTMI.vessel_icon", function()
+        local tex = M.spots.t0.item:getTex()
+        return tex ~= nil and has(tex:getName(), "Item_TLGHarness_FermenterTest"), tostring(tex and tex:getName())
+    end)
+    local n = #H.dialogs.texts
+    local r = machineClick("RTMI.status", M.spots.t0.item, "ContextMenu_TLG_MachineStatus")
+    local status = H.dialogs.texts[n + 1]
+    closeDialogs()
+    R:check("RTMI.vessel_is_a_machine", function()
+        return r.ok == true and has(status, getText("IGUI_TLG_MachineState_Ready")), tostring(status)
+    end)
+    return true
+end }
+
+RT.MI.beforeSave = { name = "rtmi_before_save", timeout = 600, fn = function(ctx, ticks)
+    local M = RT.MI
+    if RT.skip("rtmi_before_save") then return true end
+    local lines = { "rtmi.anchor=" .. M.cx .. "," .. M.cy }
+    for _, key in ipairs(M.keys) do
+        local sp = M.spots[key]
+        local rec = sp.item:getModData().tlgProc
+        lines[#lines + 1] = string.format("rtmi.%s=%d,%d,%s,%s,%s", key, sp.x, sp.y, sp.type,
+            tostring(sp.item:getWorldZRotation()), tostring(rec and rec.id))
+    end
+    TLGH.writeFile(EXPECT, lines)
+    return true
+end }
+
+RT.MI.reload = { name = "rtmib_reload", timeout = 3000, fn = function(ctx, ticks)
+    local M = RT.MI
+    if not (player() and ticks > 120) then return nil end
+    local e = TLGH.readKeyValues(EXPECT)
+    if e["rtmi.t0"] == nil then
+        RT.abort = "no expectations from phase 1"
+        R:line("OBS  RTMIB.%s", RT.abort)
+        return true
+    end
+    player():setGodMod(true)
+    captureDialogs(true)
+    M.checkWiring("RTMIB")
+    local ax, ay = string.match(e["rtmi.anchor"], "^(%-?%d+),(%-?%d+)$")
+    M.cx, M.cy = tonumber(ax), tonumber(ay)
+    M.spots = {}
+    local back, turned, recs, notes = 0, 0, 0, {}
+    for _, key in ipairs(M.keys) do
+        local x, y, t, turn, id = string.match(e["rtmi." .. key] or "", "^(%-?%d+),(%-?%d+),([^,]+),([^,]+),(.*)$")
+        local s = sq(tonumber(x), tonumber(y), 0)
+        local objs, found = s and s:getWorldObjects(), nil
+        for j = 0, (objs and objs:size() or 0) - 1 do
+            local it = objs:get(j):getItem()
+            if it and it:getFullType() == t and it:getModData().tlghMark == key then found = it end
+        end
+        M.spots[key] = { x = tonumber(x), y = tonumber(y), type = t, item = found }
+        local rec = found and found:getModData().tlgProc
+        if found then back = back + 1 end
+        if found and math.abs(found:getWorldZRotation() - tonumber(turn)) < 0.01 then turned = turned + 1 end
+        if found and tostring(rec and rec.id) == id then recs = recs + 1 end
+        notes[#notes + 1] = string.format("%s=%s turn %s (saved %s) proc %s (saved %s)", key, tostring(found ~= nil),
+            tostring(found and found:getWorldZRotation()), tostring(turn), tostring(rec and rec.id), tostring(id))
+    end
+    R:line("OBS  RTMIB.found %s", table.concat(notes, "; "))
+    R:check("RTMIB.all_back_in_place", function() return back == #M.keys, string.format("%d of %d", back, #M.keys) end)
+    R:check("RTMIB.turns_kept", function() return turned == #M.keys, string.format("%d of %d", turned, #M.keys) end)
+    R:check("RTMIB.records_kept", function() return recs == #M.keys, string.format("%d of %d", recs, #M.keys) end)
+    -- Within the machine menu's reach of the 0-degree vessel; the menu is
+    -- used a step later, once the teleport has landed (run 66 asked in the
+    -- same tick and was refused as out of reach).
+    local bx, by = M.behind(M.cx, M.cy, M.across.t0)
+    player():teleportTo(bx + 0.5, by + 0.5, 0)
+    return true
+end }
+
+RT.MI.reloadStatus = { name = "rtmib_status", timeout = 600, fn = function(ctx, ticks)
+    local M = RT.MI
+    if RT.skip("rtmib_status") then return true end
+    if ticks < 60 then return nil end
+    if M.spots.t0.item then
+        local n = #H.dialogs.texts
+        local r = machineClick("RTMIB.status", M.spots.t0.item, "ContextMenu_TLG_MachineStatus")
+        local status = H.dialogs.texts[n + 1]
+        closeDialogs()
+        R:check("RTMIB.vessel_is_a_machine", function()
+            return r.ok == true and has(status, getText("IGUI_TLG_MachineState_Ready")), tostring(status)
+        end)
+    end
+    return true
+end }
+
+RT.modelSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmi_go_hold", "tests"), RT.MI.zoomTo("rtmi_zoom", 0.5),
+    RT.MI.hold("vanilla_bottle", "Base.WaterDispenserBottle"), RT.MI.shot("rtmi_held_vanilla", true),
+    RT.MI.hold("vessel", "TLG.FermenterVessel"), RT.MI.shot("rtmi_held_vessel", true), RT.MI.shot("rtmi_held_vessel_ui", false),
+    RT.MI.place, RT.MI.goTo("rtmi_go_tests", "tests"), RT.MI.zoomTo("rtmi_zoom_tests", 0.5), RT.MI.shot("rtmi_tests", true),
+    RT.MI.goTo("rtmi_go_placeholders", "placeholders"), RT.MI.zoomTo("rtmi_zoom_placeholders", 0.5),
+    RT.MI.shot("rtmi_placeholders", true), RT.MI.beforeSave, RT.saveAndExitAs("rtmi_save_and_exit", "sp-rtmib") }
+RT.modelReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmib_go_tests", "tests"),
+    RT.MI.zoomTo("rtmib_zoom_tests", 0.5),
+    RT.MI.shot("rtmi_reloaded_tests", true), RT.MI.goTo("rtmib_go_placeholders", "placeholders"),
+    RT.MI.zoomTo("rtmib_zoom_placeholders", 0.5), RT.MI.shot("rtmi_reloaded_placeholders", true), RT.finish }
+
+------------------------------------------------------------------------------
 -- Italian (request "sp-it", release gate 10): the client in Italian
 -- (options.ini language=IT). tools/run-sp-harness.ps1 -Mode italian writes
 -- every Italian string the mod ships to TLG_it_expect.txt, its letters past
@@ -8309,7 +8670,7 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
-    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" then
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -8387,6 +8748,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtv" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, vehicle steps on " .. RT.V.script)
                 TLGH.Steps.run(R, RT.chassisSteps, H, nil)
+            elseif REQUEST == "sp-rtmi" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, model import, before the save")
+                TLGH.Steps.run(R, RT.modelSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
@@ -8411,8 +8775,16 @@ if REQUEST == "rm-a-done" then
     Events.OnMainMenuEnter.Add(function() getCore():quitToDesktop() end)
 end
 
+-- The test model on the fermenter before any vessel is created or loaded,
+-- and again at boot in case the scripts are read after this file.
+if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" then
+    local ok, wired = pcall(RT.MI.wire)
+    print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
+    Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)
+end
+
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" then
+    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -8437,6 +8809,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "sp-rtfb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, fireplace, after the reload", true)
             TLGH.Steps.run(R, RT.fireReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtmib" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, model import, after the reload", true)
+            TLGH.Steps.run(R, RT.modelReloadSteps, H, nil)
         else
             R = TLGH.Report.new(RESULTS, "TLG single-player harness phase B", true)
             TLGH.Steps.run(R, stepsB, H, nil)

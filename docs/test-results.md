@@ -1642,3 +1642,57 @@ four machines were crafted. After the save and continue every record came
 back. The console showed "machine move hooks installed" on both loads and
 no TLG error or warning; its one Lua error is the harness's deliberate
 deep recursion (`LuaProbe.lua`), and no stack frame names the mod.
+
+## 2026-11-02 — RT-SP client harness, launches 64–67 (one original model imported, G13)
+
+Command: `tools/make-test-model.ps1`, then `tools/run-sp-harness.ps1 -Mode
+model-import` (new; requests `sp-rtmi`, then `sp-rtmib`), on the
+repository's code in the dev cache. The model is original and lives in
+the dev-only harness mod only: a barrel drawn by the script (a text `.x`
+mesh in metres, a 256×256 texture marked to show orientation, texture
+direction and transparency, a 32×32 icon). The harness wires it to
+`TLG.FermenterVessel` through the item script's own parser
+(`Item.DoParam`) before any vessel exists. Each launch places the vessels
+turned 0, 90, 180 and 270 degrees, takes screenshots, saves, exits to the
+menu, continues the save, checks every item and takes screenshots again.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run64_model_import.txt`
+to `run67`, the screenshots `docs/evidence/2026-11-02_run65_*` and
+`2026-11-02_run66_*`. What the screenshots show was read from them by the
+agent; nobody else has looked yet.
+
+| Launch | Result | What changed |
+| --- | --- | --- |
+| 64 | 12/2 | the row stood two tiles in front of the character: below the frame at zoom 0.25, and out of the machine menu's reach (2.8 tiles; it allows 2.5) |
+| 65 | **15/0** | the row level with the character, zoom 0.5, the interface hidden for the shots: two of the four vessels in the frame |
+| 66 | 15/1 | two groups, each photographed from behind its middle; a copy with `undoCoreScale`; vanilla's water bottle held as a control. After the reload the menu was asked in the same tick as the teleport (refused) |
+| 67 | **16/0** | the menu asked a step after the teleport; the hide flags logged and vanilla's hand-model reset called before the held shots |
+
+Every launch: the three model scripts loaded with their mesh and texture;
+the vessel's world model, hand model and icon were the test model's, its
+icon texture the harness mod's file; every item stood on its square with
+its turn, and came back after the save with its turn and, for the vessel,
+its machine record id. The square stayed free and not solid. From 1.4
+tiles the machine menu answered "Ready".
+
+The screenshots show (G13 in `engine-capabilities.md` has the details):
+the barrel drawn textured, staves and hoops, the lid's cross and notch,
+the red stripe and tap on its +X side; turned as set, clockwise seen from
+above, with +X east and +Z north at 0 degrees; "TOP" upright, so the
+texture's V runs down; the transparent window cut out and the
+semi-transparent airlock translucent; no ground shadow under any item.
+At scale 1.0 the barrel drew 1.5 times the size of its `undoCoreScale`
+copy, which measured about true size against the character. The icon
+showed in the inventory list and the equipped-item button. Neither the
+vessel nor vanilla's water bottle was drawn in the character's hand, with
+the hide flags false (launches 65–67), so the in-hand look is NOT RUN.
+The placeholders were seen for the first time: the drying column reads as
+a car fuel tank and the pot still as a cooking pot. The inventory showed
+the vessel's category as the raw key `IGUI_ItemCat_Tools` (the machines'
+`DisplayCategory = Tools`; vanilla's is `Tool`), a defect in the shipped
+scripts.
+
+The console had no error naming the model, its texture or the mod. Its
+one Lua error during loading came from an `OnRenderTick` handler run on
+the wrong thread; neither the mod nor the harness registers that event.
+Not run: multiplayer rendering, `.fbx` and `.glb` meshes, animation, the
+machine menu from other sides, a vehicle part (G11).

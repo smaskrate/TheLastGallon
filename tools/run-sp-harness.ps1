@@ -54,6 +54,13 @@
   chassis: phase A's vehicle steps on Base.PickUpTruck instead of the
   standard car: pump, can and siphon hops, pump to tank, a blend idled,
   the mod's own pours, the start gate and the stall.
+  model-import: the original test model of tools/make-test-model.ps1 wired
+  to the fermenter (harness mod only): vanilla's water bottle and then a
+  vessel equipped and photographed; four vessels turned 0-270 degrees and
+  a copy with undoCoreScale photographed, the placeholders the machines
+  use photographed; saved, exited to the menu and continued, then both
+  groups photographed again. The screenshots taken are listed at the end,
+  with the console lines naming the model.
   removal-a, removal-b, removal-c: the three launches of the removal
   rehearsal (tools/rehearse-install.ps1 -Scenario removal): a world played
   with the mod, continued without it (the driver), then with it again.
@@ -72,8 +79,8 @@
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
-        "still-save", "still-controls", "late-find", "can-water", "chassis", "fires", "existing-a", "existing-b", "removal-a",
-        "removal-b", "removal-c", "italian")][string]$Mode = "full",
+        "still-save", "still-controls", "late-find", "can-water", "chassis", "model-import", "fires", "existing-a", "existing-b",
+        "removal-a", "removal-b", "removal-c", "italian")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -125,7 +132,7 @@ if ($Mode -eq "italian") {
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
+    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "model-import" { "sp-rtmi" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
@@ -134,6 +141,7 @@ $clientArgs = $vm + @("-cp", ($json.classpath -join ";"), ($json.mainClass -repl
     "-debug", "-nosteam", "-nosound", "-cachedir=$DevCache")
 $out = Join-Path $DevCache "client-stdout.txt"
 $err = Join-Path $DevCache "client-stderr.txt"
+$started = Get-Date
 $p = Start-Process -FilePath (Join-Path $GameDir "jre64\bin\java.exe") -ArgumentList $clientArgs -WorkingDirectory $GameDir `
     -RedirectStandardOutput $out -RedirectStandardError $err -PassThru
 Write-Host "client started, pid $($p.Id)"
@@ -191,6 +199,14 @@ if (-not $p.HasExited) {
 }
 Write-Host "finished=$finished exitCode=$(if ($p.HasExited) { $p.ExitCode } else { 'killed' })"
 if (Test-Path $results) { Get-Content $results } else { Write-Host "no results file"; Get-Content $out -Tail 40 }
+# Screenshots the run took (Core.TakeFullScreenshot writes <cachedir>/Screenshots).
+$shots = Join-Path $DevCache "Screenshots"
+if (Test-Path $shots) {
+    Get-ChildItem $shots -File | Where-Object { $_.LastWriteTime -ge $started } | ForEach-Object { Write-Host "screenshot: $($_.FullName)" }
+}
+if ($Mode -eq "model-import") {
+    Select-String -Path $console -Pattern "FermenterTest|TLGHarness/" | ForEach-Object { Write-Host "console: $($_.Line)" }
+}
 # Explicit status: otherwise robocopy's "files copied" code 1 from setup leaks out.
 if ($finished) { exit 0 } else { exit 1 }
 

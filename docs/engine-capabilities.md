@@ -31,7 +31,7 @@ alternative), **NOT RUN**.
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
 | G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14; the check passed in run 14). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
-| G13 Assets | Which props/sounds exist? | PARTIAL (catalogue from scripts) | See `asset-audit.csv`; runtime spawn/texture checks NOT RUN |
+| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; one original item model **PASS (SP)** | `asset-audit.csv`. An original static model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67, screenshots; "G13: one original model imported" below). NOT RUN: a held item drawn in the hand, animation, multiplayer rendering, sounds; vehicle parts are G11 |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
 ## Lua runtime
@@ -640,6 +640,74 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   containers without `FluidContainer.Transfer`, bypasses the container
   adapter; reconciliation handles the result (D-006).
 
+## G13: one original model imported (RT-SP runs 64–67, 2026-11-02)
+
+Spec §21 asks for one representative machine to be imported before the
+full set is authored. The test model is original:
+`tools/make-test-model.ps1` draws a barrel with lid, airlock and tap
+(151 vertices; a 256×256 texture whose marks show orientation, texture
+direction and transparency; a 32×32 icon) into the dev-only harness mod,
+which is never packaged. Its model scripts are `TLGHarness.FermenterTest`
+(the floor), `FermenterTestHand` (the same mesh with a `Bip01_Prop1`
+attachment block) and `FermenterTestTrue` (with `undoCoreScale`). The
+harness wires them to `TLG.FermenterVessel`, and the smaller copy to
+`TLG.FuelSampleKit`, with `Item.DoParam` before any vessel exists, and
+only in the model-import requests (`run-sp-harness.ps1 -Mode
+model-import`).
+
+From the bytecode (BC):
+
+* `mesh = A/B` is looked up as `media/models_X/A/B` with `.fbx`, `.glb`,
+  `.x`, then `.txt`, each through `ZomboidFileSystem.getString`, which maps
+  the path to the active mods' files (`FileTask_AbstractLoadModel`). `.x`,
+  `.fbx` and `.glb` go through Assimp (jassimp), `.x` with
+  `MAKE_LEFT_HANDED`, `TRIANGULATE` and `JOIN_IDENTICAL_VERTICES` among
+  others. The `.fbx` path also passes a 0.01 scale and a −90° rotation for
+  animation bones (`ProcessedAiSceneParams`); whether they touch a static
+  mesh was not checked.
+* Model script keys: `mesh`, `texture`, `scale` (default 1.0), `static`,
+  `shader`, `invertX`, `cullFace`, `postProcess`, `undoCoreScale` (`scale`
+  times 2/3), `boneWeight`, `animationsMesh`, `attachment`.
+* A model name without a module is looked for in the item's own module
+  first, then in every module (`ScriptManager.resolveModelScript`).
+* `Icon = X` loads the texture `Item_X` (`Texture.trygetTexture`), else
+  `media/inventory/Question_On.png`.
+* `Item.DoParam("key = value")` splits at `=` and runs the per-key handler
+  that loading a script uses.
+* `Core.TakeFullScreenshot(name)` writes the frame to
+  `<cachedir>/Screenshots/<name>`; no extension is added.
+
+At runtime (RT-SP; screenshots in `docs/evidence/2026-11-02_run6*`):
+
+| §21 check | Result |
+| --- | --- |
+| Runtime format | the text `.x` mesh, its PNG texture and the `Item_` icon loaded from the harness mod's own `media` folders (the icon's texture is the mod's file); the icon showed in the inventory list and the equipped-item button |
+| Orientation | Y up. At `worldZRotation` 0 the mesh's +X faced east (+x, the screen's lower right) and +Z north (−y, the upper right); 90 turned +X to the south (lower left): degrees run clockwise seen from above |
+| Scale | at scale 1.0 a mesh in metres drew 1.5 times the size of the same mesh with `undoCoreScale` (150 against 100 px wide, run 66). With `undoCoreScale` the 0.56 m barrel measured about 0.53 m against the character's shoulders: about true size, as far as a screenshot can measure. Vanilla's water bottle drew close to life size |
+| Texture conventions | V runs down the image, as in DirectX: row 0 at the top of the barrel (the window 48–68 % down the body, where rows 90–127 put it; "TOP" upright with its arrow up). The texture is the one the model script names; the `.x` file's `TextureFilename` is not used (vanilla `CubePuzzle.x` names `Cube.png`) |
+| Footprint, interaction side | a world item on one square. The machine menu answered from 1.4 tiles ("Ready") and refused from 2.8 ("You cannot reach it": the mod's 2.5-tile reach); tried from one side only |
+| Collision, placement | none added: the square stayed free and not solid (`isFree`, `isSolid`, `isSolidTrans` unchanged); put down at the square's centre |
+| Rotation | turns of 0, 90, 180 and 270 degrees drew as turned and came back after a save, exit and continue |
+| In-hand attachment | NOT RUN: the harness character drew nothing in its hand, not even vanilla's water bottle (whose model has a `Bip01_Prop1` attachment), with the hide flags false and after vanilla's hand-model reset (runs 65–67). Needs a look in a normal game |
+| Animation | not applicable to a static item model; NOT RUN |
+| Shadows, transparency | fully transparent texels are cut out: the window is a hole, and the far wall's inside shows through it, so back faces are drawn. 40 % alpha drew translucent (the lid's line shows through the airlock). No shadow on the ground under the barrel or the vanilla bottle; the character's shows |
+| Save/load | the model, the wiring, every item's square and turn, and the vessel's machine record (its id) came back |
+| Multiplayer rendering | NOT RUN |
+
+The placeholders were seen drawn for the first time (run 66): the drying
+column as a car fuel tank and the pot still as a cooking pot, both small
+beside vanilla's water bottle, which has the vessel's `WaterTank` model.
+The same screenshots show the machines' inventory category as the raw key
+`IGUI_ItemCat_Tools`: the four machine scripts say `DisplayCategory =
+Tools`, and vanilla's category is `Tool` (`Translate/EN/IG_UI.json:293`).
+
+Harness errors on the way: run 64 put the row two tiles in front of the
+character, below the frame at zoom 0.25 and out of the machine menu's
+reach; run 65 fitted two of the four vessels in its frame, and its zoom
+drifted outward after the equip (0.25 to 0.75; cause not found); run 66
+asked the menu in the same tick as the teleport after the reload and was
+refused.
+
 ## Client harness status
 
 `tools/run-sp-harness.ps1` starts the client with
@@ -726,7 +794,9 @@ after the second fix, run 59 **8/0**, then the zip with that fix
 installed clean, run 60 **94/0** and **14/0**, and the removal scenario
 on it, run 61 **1/0**, **2/0** and **5/0**, then phase A's vehicle steps
 on a `Base.PickUpTruck`, run 62 **29/0**, and the zip with the truck
-documented installed clean, run 63 **94/0** and **14/0**. Most failures were
+documented installed clean, run 63 **94/0** and **14/0**, then one original
+model imported (G13), run 64 12/2, run 65 **15/0**, run 66 15/1 and run 67
+**16/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

@@ -1,0 +1,39 @@
+module TLGHarness
+{
+    /* Model-import test (spec section 21, G13). An original stand-in for
+       the fermentation vessel, drawn by tools/make-test-model.ps1: mesh
+       media/models_X/TLGHarness/FermenterTest.x (metres, Y up, origin at
+       the centre of the base), texture media/textures/TLGHarness/
+       FermenterTest.png, icon media/textures/Item_TLGHarness_FermenterTest.png.
+       No scale: the default is 1.0 (BC ModelScript). The harness wires
+       these to TLG.FermenterVessel and TLG.FuelSampleKit only for the
+       model-import requests (SPHarness.lua); the harness mod is never
+       packaged. */
+    model FermenterTest
+    {
+        mesh = TLGHarness/FermenterTest,
+        texture = TLGHarness/FermenterTest,
+    }
+
+    /* The same mesh in the hand, with the attachment block vanilla's
+       WaterTank has (models_items.txt), at the bone's origin. */
+    model FermenterTestHand
+    {
+        mesh = TLGHarness/FermenterTest,
+        texture = TLGHarness/FermenterTest,
+
+        attachment Bip01_Prop1
+        {
+            offset = 0.0000 0.0000 0.0000,
+            rotate = 0.0000 0.0000 0.0000,
+        }
+    }
+
+    /* The same mesh with undoCoreScale (BC ModelScript.Load: scale x 2/3). */
+    model FermenterTestTrue
+    {
+        mesh = TLGHarness/FermenterTest,
+        texture = TLGHarness/FermenterTest,
+        undoCoreScale = true,
+    }
+}

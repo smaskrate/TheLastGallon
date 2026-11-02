@@ -1,0 +1,120 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 56664
+click-to-start clicks sent: 2
+finished=True exitCode=
+# TLG single-player harness, model import, before the save
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=94567117983344624350 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLGHarness.FermenterTest mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLGHarness.FermenterTest StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLGHarness.FermenterTest mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLGHarness.FermenterTest StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmi_go_hold begin
+STEP rtmi_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP vanilla_bottle begin
+OBS  RTMI.held_vanilla_bottle flags hideWeaponModel=false hideEquippedHandL=false hideEquippedHandR=false
+PASS RTMI.held_vanilla_bottle :: Base.WaterDispenserBottle in the primary hand: Base.WaterDispenserBottle
+STEP rtmi_shot_rtmi_held_vanilla begin
+OBS  RTMI.screenshot tlg_rtmi_held_vanilla.png ok=true ; interface hidden; zoom 0.50; player 10660,10643; game hour 9.04
+STEP vessel begin
+OBS  RTMI.held_vessel flags hideWeaponModel=false hideEquippedHandL=false hideEquippedHandR=false
+PASS RTMI.held_vessel :: TLG.FermenterVessel in the primary hand: TLG.FermenterVessel
+STEP rtmi_shot_rtmi_held_vessel begin
+OBS  RTMI.screenshot tlg_rtmi_held_vessel.png ok=true ; interface hidden; zoom 0.50; player 10660,10643; game hour 9.06
+STEP rtmi_shot_rtmi_held_vessel_ui begin
+OBS  RTMI.screenshot tlg_rtmi_held_vessel_ui.png ok=true ; interface shown; zoom 0.50; player 10660,10643; game hour 9.07
+STEP rtmi_place begin
+OBS  RTMI.placed from 10659,10646 to 10667,10638 (anchor 10660,10645); t0 square before free=true solid=false solidTrans=false, after free=true solid=false solidTrans=false
+PASS RTMI.all_placed :: 8 of 8 on their squares; turns t0=0 t90=90 t180=180 t270=270 small=0 column=0 pot=0 tank=0
+PASS RTMI.vessel_icon :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png
+OBS  RTMI.status menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTMI.vessel_is_a_machine :: Ready <LINE> Temperature here now: 73.1 Â°F, outdoors
+STEP rtmi_go_tests begin
+STEP rtmi_zoom_tests begin
+OBS  RTMI.zoom 0.50 -> 0.50 in 0 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmi_tests begin
+OBS  RTMI.screenshot tlg_rtmi_tests.png ok=true ; interface hidden; zoom 0.50; player 10660,10643; game hour 9.10
+STEP rtmi_go_placeholders begin
+STEP rtmi_zoom_placeholders begin
+OBS  RTMI.zoom 0.50 -> 0.50 in 0 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmi_placeholders begin
+OBS  RTMI.screenshot tlg_rtmi_placeholders.png ok=true ; interface hidden; zoom 0.50; player 10665,10638; game hour 9.12
+STEP rtmi_before_save begin
+STEP rtmi_save_and_exit begin
+SUMMARY pass=9 fail=0
+EXIT phase 1 -> main menu
+# TLG single-player harness, model import, after the reload
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rtmib_reload begin
+OBS  RTMIB.scripts TLGHarness.FermenterTest mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLGHarness.FermenterTest StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMIB.model_scripts_loaded :: TLGHarness.FermenterTest mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMIB.vessel_wired :: WorldStaticModel=TLGHarness.FermenterTest StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMIB.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png
+OBS  RTMIB.found t0=true turn 0 (saved 0) proc P1526864773-1 (saved P1526864773-1); t90=true turn 90 (saved 90) proc nil (saved nil); t180=true turn 180 (saved 180) proc nil (saved nil); t270=true turn 270 (saved 270) proc nil (saved nil); small=true turn 0 (saved 0) proc nil (saved nil); column=true turn 0 (saved 0) proc nil (saved nil); pot=true turn 0 (saved 0) proc nil (saved nil); tank=true turn 0 (saved 0) proc nil (saved nil)
+PASS RTMIB.all_back_in_place :: 8 of 8
+PASS RTMIB.turns_kept :: 8 of 8
+PASS RTMIB.records_kept :: 8 of 8
+STEP rtmib_status begin
+OBS  RTMIB.status menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTMIB.vessel_is_a_machine :: Ready <LINE> Temperature here now: 73.3 Â°F, outdoors
+STEP rtmib_go_tests begin
+STEP rtmib_zoom_tests begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmi_reloaded_tests begin
+OBS  RTMI.screenshot tlg_rtmi_reloaded_tests.png ok=true ; interface hidden; zoom 0.50; player 10660,10643; game hour 9.17
+STEP rtmib_go_placeholders begin
+STEP rtmib_zoom_placeholders begin
+OBS  RTMI.zoom 0.50 -> 0.50 in 0 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmi_reloaded_placeholders begin
+OBS  RTMI.screenshot tlg_rtmi_reloaded_placeholders.png ok=true ; interface hidden; zoom 0.50; player 10665,10638; game hour 9.19
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.20
+SUMMARY pass=7 fail=0
+DONE
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmi_held_vanilla.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmi_held_vessel.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmi_held_vessel_ui.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmi_placeholders.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmi_reloaded_placeholders.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmi_reloaded_tests.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmi_tests.png
+console: LOG  : Lua          f:152> [TLGH] OBS  RTMI.scripts TLGHarness.FermenterTest mesh=TLGHarness/FermenterTest 
+texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand mesh=TLGHarness/FermenterTest 
+texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest 
+texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLGHarness.FermenterTest 
+StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest icon texture=C:\Users\Manuel\AppData\Local\TheLa
+stGallon\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png; TLG.FuelSampleKit 
+WorldStaticModel=TLGHarness.FermenterTestTrue
+console: LOG  : Lua          f:152> [TLGH] PASS RTMI.model_scripts_loaded :: TLGHarness.FermenterTest 
+mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand 
+mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue 
+mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+console: LOG  : Lua          f:152> [TLGH] PASS RTMI.vessel_wired :: WorldStaticModel=TLGHarness.FermenterTest 
+StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest; kit 
+WorldStaticModel=TLGHarness.FermenterTestTrue
+console: LOG  : Lua          f:152> [TLGH] PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\
+devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png
+console: LOG  : Lua          f:1113> [TLGH] PASS RTMI.vessel_icon :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcac
+he\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png
+console: LOG  : Lua          f:121> [TLGH] OBS  RTMIB.scripts TLGHarness.FermenterTest mesh=TLGHarness/FermenterTest 
+texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand mesh=TLGHarness/FermenterTest 
+texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest 
+texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLGHarness.FermenterTest 
+StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest icon texture=C:\Users\Manuel\AppData\Local\TheLa
+stGallon\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png; TLG.FuelSampleKit 
+WorldStaticModel=TLGHarness.FermenterTestTrue
+console: LOG  : Lua          f:121> [TLGH] PASS RTMIB.model_scripts_loaded :: TLGHarness.FermenterTest 
+mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestHand 
+mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLGHarness.FermenterTestTrue 
+mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+console: LOG  : Lua          f:121> [TLGH] PASS RTMIB.vessel_wired :: WorldStaticModel=TLGHarness.FermenterTest 
+StaticModel=TLGHarness.FermenterTestHand Icon=TLGHarness_FermenterTest; kit 
+WorldStaticModel=TLGHarness.FermenterTestTrue
+console: LOG  : Lua          f:121> [TLGH] PASS RTMIB.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon
+\devcache\mods\TheLastGallonHarness\common\media\textures\Item_TLGHarness_FermenterTest.png
