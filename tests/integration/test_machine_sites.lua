@@ -702,8 +702,15 @@ T.case("integration: a machine carried in both arms goes down at the feet when a
         TLG.Log.error = function(fmt, ...) logged = string.format(fmt, ...) end
         local failing = action({})
         failing:setActionAnim("Loot")
-        TLG.Log.error = log
         T.eq(failing.played, "Loot"); T.ok(logged ~= nil and string.find(logged, "boom", 1, true) ~= nil)
+        -- So is a failing look at the hands (Kahlua reports this error
+        -- without its message).
+        logged = nil
+        local blind = setmetatable({ character = { getPrimaryHandItem = function() error("no hands") end }, item = {} },
+            { __index = Loot })
+        blind:setActionAnim("Loot")
+        TLG.Log.error = log
+        T.eq(blind.played, "Loot"); T.ok(logged ~= nil and string.find(logged, "machine move:", 1, true) == 1)
     end)
     for _, k in ipairs(names) do _G[k] = saved[k] end
     g.restore()

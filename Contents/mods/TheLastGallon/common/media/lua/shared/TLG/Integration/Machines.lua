@@ -644,11 +644,11 @@ function M.install()
     end
     -- Derived actions look the method up at call time.
     wrap(ISBaseTimedAction, "setActionAnim", function(orig, self, ...)
-        local held = M.carriedInArms(self.character)
-        if held and self.item ~= held then
-            local ok, err = pcall(M.putDownForAction, self.character)
-            if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
-        end
+        local ok, err = pcall(function()
+            local held = M.carriedInArms(self.character)
+            if held and self.item ~= held then M.putDownForAction(self.character) end
+        end)
+        if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
         return orig(self, ...)
     end)
     TLG.Log.info("machine move hooks installed")
