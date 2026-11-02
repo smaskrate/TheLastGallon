@@ -2055,3 +2055,28 @@ Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run91_pose_carry.txt`,
 Not checked: the vessel during actions (placing it, pouring), where the
 action draws the hand model; running and sneaking; multiplayer. The mod
 ships none of this yet.
+
+## 2026-11-02 — RT-SP client harness, launches 93–94 (a wider Mixamo clip, and the two blended)
+
+The user supplied the same clip with wider arms,
+`createdAssets/CarryingBiggerArmSpace.fbx` (2,482,848 bytes, SHA-256
+`9edc2c3c…`; not in the repository): 301 frames like the first, with the
+hands about 0.95 m apart in Mixamo's scale instead of 0.45 m, at chest
+height. `tools/blender/pz_arms.py` now takes the held item's offsets
+(forward, down) and a second clip of the same animation to blend
+direction by direction. Run on the first clip alone, the reworked script
+gave the same hands as before.
+
+| Launch | Clip (hands apart, file units) | Result | |
+| --- | --- | --- | --- |
+| 93 | `Bob_TLGCarryWide` (0.52), prop 0.08 forward, 0.02 down | **7/0** | the masking layer played `tlgcarrywide`. Her hands are about 1 m apart, while the 0.75 m barrel is about 0.65 m wide, so her hands hang in the air beside it, and the lid comes up to her chin |
+| 94 | `Bob_TLGCarryMid`, the two blended halfway (0.40), prop 0.08 forward, 0.06 down | **7/0** | the masking layer played `tlgcarrymid`. At 0.75 m (true size) her hands rest on the barrel's sides near the top band and the lid is at chest height, standing, from behind and walking; at 0.6 m the hands float slightly outside it |
+
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run93_pose_carry_wide.txt`,
+`..._run94_pose_carry_mid.txt`, `2026-11-02_run93_carry_wide_sheet.jpg`,
+`2026-11-02_run94_carry_mid_sheet.jpg` and the animator log
+`2026-11-02_run94_animlog_carry_mid.txt`. Commands: `-Mode
+pose-carry-wide` (request `sp-rtmpw`) and `-Mode pose-carry-mid`
+(`sp-rtmpm`), both new, no save. Not checked, as for launches 91–92:
+actions, running, sneaking and multiplayer. The mod ships none of this
+yet.

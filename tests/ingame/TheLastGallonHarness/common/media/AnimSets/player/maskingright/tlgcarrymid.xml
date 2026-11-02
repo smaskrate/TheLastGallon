@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carry trial (request sp-rtmpm): Bob_TLGCarryMid, the arms of the user's
+     two Mixamo clips ("Carrying", "CarryingBiggerArmSpace") blended halfway by
+     tools/blender/pz_arms.py (anims_X/Bob/Bob_TLGCarryMid.x), on both arms
+     and the prop bones, built like tlgcarry.xml. Selected when an item's
+     primaryAnimMask is tlgcarrymid. Harness mod only, never packaged. -->
+<animNode>
+	<m_Name>tlgcarrymid</m_Name>
+	<m_Priority>10</m_Priority>
+	<m_AnimName>Bob_TLGCarryMid</m_AnimName>
+	<m_BlendTime>0.20</m_BlendTime>
+	<m_SpeedScale>1.00</m_SpeedScale>
+	<m_Conditions x_name="e95c2a34-6f8d-4b2a-9d30-7c4e9f1b2a53">
+		<m_Name>RightHandMask</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>tlgcarrymid</m_Value>
+	</m_Conditions>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01</boneName>
+		<weight>0.00</weight>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

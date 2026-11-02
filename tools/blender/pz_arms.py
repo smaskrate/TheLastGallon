@@ -18,10 +18,13 @@ child of Bip01: it is placed between the hands, turned as Bob_Idle_Bag.x
 turns it relative to Bip01, so an item's hand model needs its usual
 Bip01_Prop1 attachment only.
 
-  blender -b --factory-startup --python tools/blender/pz_arms.py -- <clip.fbx> <out.x> <ClipName> [step]
+  blender -b --factory-startup --python tools/blender/pz_arms.py -- <clip.fbx> <out.x> <ClipName> [step] [forward] [down] [clip2.fbx] [blend]
 
 writes every step-th frame (default 2) at 4800 ticks per second, 160 per
 frame of 30 fps; the other bones hold the first frame of Bob_Idle.x.
+forward and down move the held item from between the hands (file units,
+defaults PROP_FORWARD and 0). clip2.fbx, the same clip exported with
+another arm spacing, is blended in by blend (default 0.5).
 """
 import os
 import re
@@ -75,7 +78,35 @@ def _rotation(x, y=None, z=None):
     return Matrix((x, y, z)).transposed()
 
 
-def retarget(fbx, out_path, clip_name, step=2):
+def _vectors(m, left_p, up_p, fwd_p):
+    """One frame's arm segments, palms included, as unit directions on the
+    game's skeleton: each read in the Mixamo chest's frame (left, up,
+    forward) and laid in the game chest's."""
+    left_m, up_m, fwd_m = _frame(m["LeftArm"] - m["RightArm"], m["Neck"] - m["Spine2"], 1.0)
+
+    def to_game(v):
+        return (left_p * v.dot(left_m) + up_p * v.dot(up_m) + fwd_p * v.dot(fwd_m)).normalized()
+
+    out = {}
+    for s, mx in SIDES:
+        a, b = m[mx + "HandMiddle1"] - m[mx + "Hand"], m[mx + "HandIndex1"] - m[mx + "HandPinky1"]
+        out[s] = {"clav": to_game(m[mx + "Arm"] - m[mx + "Shoulder"]), "up": to_game(m[mx + "ForeArm"] - m[mx + "Arm"]),
+                  "fore": to_game(m[mx + "Hand"] - m[mx + "ForeArm"]), "hand": to_game(a),
+                  "palm": to_game(a.cross(b) if s == "L" else b.cross(a))}
+    return out
+
+
+def _import(path):
+    before = set(bpy.data.objects)
+    bpy.ops.import_scene.fbx(filepath=path)
+    arm = next(o for o in bpy.data.objects if o.type == "ARMATURE" and o not in before)
+    prefix = arm.data.bones[0].name.split(":")[0] + ":" if ":" in arm.data.bones[0].name else ""
+    return arm, prefix
+
+
+def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, fbx2=None, blend=0.5):
+    """With fbx2 (the same clip with another arm spacing, frame for frame),
+    each direction is blended: (1 - blend) of fbx's, blend of fbx2's."""
     ref = pz_x.parse_frames(REFERENCE)
     parent = {n: p for n, p, _ in ref}
     local_ref = {n: pz_x.local_matrix(rows) for n, _, rows in ref}
@@ -85,9 +116,8 @@ def retarget(fbx, out_path, clip_name, step=2):
     left_p, up_p, fwd_p = _frame(p["Bip01_L_UpperArm"] - p["Bip01_R_UpperArm"], p["Bip01_Neck"] - p["Bip01_Spine1"], -1.0)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    bpy.ops.import_scene.fbx(filepath=fbx)
-    arm = next(o for o in bpy.data.objects if o.type == "ARMATURE")
-    prefix = arm.data.bones[0].name.split(":")[0] + ":" if ":" in arm.data.bones[0].name else ""
+    arm, prefix = _import(fbx)
+    second = _import(fbx2) if fbx2 else None
     first, last = (int(v) for v in arm.animation_data.action.frame_range)
 
     chains = {s: ["Bip01_%s_Clavicle" % s, "Bip01_%s_UpperArm" % s, "Bip01_%s_Forearm" % s, "Bip01_%s_Hand" % s]
@@ -99,26 +129,22 @@ def retarget(fbx, out_path, clip_name, step=2):
     report = []
     for f in range(first, last + 1, step):
         bpy.context.scene.frame_set(f)
-        m = _mixamo_positions(arm, prefix)
-        left_m, up_m, fwd_m = _frame(m["LeftArm"] - m["RightArm"], m["Neck"] - m["Spine2"], 1.0)
-
-        def to_game(v):
-            return left_p * v.dot(left_m) + up_p * v.dot(up_m) + fwd_p * v.dot(fwd_m)
+        vec = _vectors(_mixamo_positions(arm, prefix), left_p, up_p, fwd_p)
+        if second:
+            vec2 = _vectors(_mixamo_positions(*second), left_p, up_p, fwd_p)
+            vec = {s: {k: (v * (1.0 - blend) + vec2[s][k] * blend).normalized() for k, v in d.items()}
+                   for s, d in vec.items()}
 
         world = {"Bip01_Neck": world_ref["Bip01_Neck"]}
         hands = {}
         for s, mx in SIDES:
-            d_clav = to_game(m[mx + "Arm"] - m[mx + "Shoulder"])
-            d_up = to_game(m[mx + "ForeArm"] - m[mx + "Arm"])
-            d_fore = to_game(m[mx + "Hand"] - m[mx + "ForeArm"])
-            a, b = m[mx + "HandMiddle1"] - m[mx + "Hand"], m[mx + "HandIndex1"] - m[mx + "HandPinky1"]
-            palm = to_game(a.cross(b) if s == "L" else b.cross(a))
-            d_hand = to_game(a)
+            d_clav, d_up, d_fore = vec[s]["clav"], vec[s]["up"], vec[s]["fore"]
+            d_hand, palm = vec[s]["hand"], vec[s]["palm"]
             hinge = d_up.cross(d_fore)
             clav_ref = world_ref["Bip01_%s_Clavicle" % s].to_3x3()
-            targets = [clav_ref.col[0].normalized().rotation_difference(d_clav.normalized()).to_matrix() @ clav_ref,
+            targets = [clav_ref.col[0].normalized().rotation_difference(d_clav).to_matrix() @ clav_ref,
                        None, None, _rotation(d_hand, z=palm)]
-            if hinge.length < 0.17 * d_up.length * d_fore.length:
+            if hinge.length < 0.17:
                 hinge = world_ref["Bip01_%s_Forearm" % s].to_3x3().col[1]
             targets[1] = _rotation(d_up, y=hinge)
             targets[2] = _rotation(d_fore, y=hinge)
@@ -134,7 +160,7 @@ def retarget(fbx, out_path, clip_name, step=2):
             hands[s] = world["Bip01_%s_Hand" % s].translation
         # The held item: between the hands and a little forward, turned as
         # the bag pose turns it, then a quarter about the body's up.
-        mid = (hands["L"] + hands["R"]) * 0.5 + fwd_p * PROP_FORWARD
+        mid = (hands["L"] + hands["R"]) * 0.5 + fwd_p * forward - up_p * down
         prop_world = world_ref["Bip01"] @ prop_local
         if PROP_TURN_LEFT_TO_FORWARD:
             turn = left_p.rotation_difference(fwd_p).to_matrix()
@@ -201,4 +227,6 @@ def _write(out_path, clip_name, keys, first, last):
 
 if __name__ == "__main__":
     args = sys.argv[sys.argv.index("--") + 1:]
-    retarget(args[0], args[1], args[2], int(args[3]) if len(args) > 3 else 2)
+    retarget(args[0], args[1], args[2], int(args[3]) if len(args) > 3 else 2,
+             float(args[4]) if len(args) > 4 else PROP_FORWARD, float(args[5]) if len(args) > 5 else 0.0,
+             args[6] if len(args) > 6 else None, float(args[7]) if len(args) > 7 else 0.5)

@@ -1,0 +1,67 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 44912
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, pose trial
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=16206713543487742853 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmp_go begin
+STEP rtmp_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.25 in 3 scrolls (enabled=true, min 0.25)
+STEP rtmp_use_TLGHarness.PoseCarryWide_TLGHarness.FermenterHeldC50 begin
+OBS  RTMP.TLGHarness.PoseCarryWide StaticModel=TLGHarness.FermenterHeldC50
+STEP pose_PoseCarryWide_FermenterHeldC50 begin
+PASS RTMH.heavy_pose_PoseCarryWide_FermenterHeldC50 :: TLGHarness.PoseCarryWide heavy=true both hands=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgcarrywide LeftHandMask=
+STEP rtmp_animlog_1_PoseCarryWide_FermenterHeldC50 begin
+OBS  RTMP.1_PoseCarryWide_FermenterHeldC50 animator log mentions: tlgcarry,Bob_TLGCarry,maskingright (129 lines)
+STEP rtmi_shot_rtmpw_1_PoseCarryWide_FermenterHeldC50_front begin
+OBS  RTMI.screenshot tlg_rtmpw_1_PoseCarryWide_FermenterHeldC50_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.05
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgcarrywide LeftHandMask=
+STEP rtmi_shot_rtmpw_1_PoseCarryWide_FermenterHeldC50_back_right begin
+OBS  RTMI.screenshot tlg_rtmpw_1_PoseCarryWide_FermenterHeldC50_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.07
+STEP rtmp_walk_rtmpw_1_PoseCarryWide_FermenterHeldC50_walking begin
+OBS  RTMP.screenshot tlg_rtmpw_1_PoseCarryWide_FermenterHeldC50_walking.png ok=true walking=true; RightHandMask=tlgcarrywide
+STEP rtmp_use_TLGHarness.PoseCarryWide_TLGHarness.FermenterHeldC40 begin
+OBS  RTMP.TLGHarness.PoseCarryWide StaticModel=TLGHarness.FermenterHeldC40
+STEP pose_PoseCarryWide_FermenterHeldC40 begin
+PASS RTMH.heavy_pose_PoseCarryWide_FermenterHeldC40 :: TLGHarness.PoseCarryWide heavy=true both hands=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgcarrywide LeftHandMask=
+STEP rtmp_animlog_2_PoseCarryWide_FermenterHeldC40 begin
+OBS  RTMP.2_PoseCarryWide_FermenterHeldC40 animator log mentions: tlgcarry,Bob_TLGCarry,maskingright (129 lines)
+STEP rtmi_shot_rtmpw_2_PoseCarryWide_FermenterHeldC40_front begin
+OBS  RTMI.screenshot tlg_rtmpw_2_PoseCarryWide_FermenterHeldC40_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.11
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgcarrywide LeftHandMask=
+STEP rtmi_shot_rtmpw_2_PoseCarryWide_FermenterHeldC40_back_right begin
+OBS  RTMI.screenshot tlg_rtmpw_2_PoseCarryWide_FermenterHeldC40_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.12
+STEP rtmp_walk_rtmpw_2_PoseCarryWide_FermenterHeldC40_walking begin
+OBS  RTMP.screenshot tlg_rtmpw_2_PoseCarryWide_FermenterHeldC40_walking.png ok=true walking=true; RightHandMask=tlgcarrywide
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.14
+SUMMARY pass=7 fail=0
+DONE
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmpw_1_PoseCarryWide_FermenterHeldC50
+_back_right.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmpw_1_PoseCarryWide_FermenterHeldC50_front.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmpw_1_PoseCarryWide_FermenterHeldC50_walking.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmpw_2_PoseCarryWide_FermenterHeldC40
+_back_right.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmpw_2_PoseCarryWide_FermenterHeldC40_front.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmpw_2_PoseCarryWide_FermenterHeldC40_walking.png

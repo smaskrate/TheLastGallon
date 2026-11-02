@@ -68,6 +68,36 @@ module TLGHarness
         Tags = base:heavyitem,
     }
 
+    /* The same with the user's wider clip (request sp-rtmpw;
+       maskingright/tlgcarrywide.xml, anims_X/Bob/Bob_TLGCarryWide.x). */
+    item PoseCarryWide
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcarrywide,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    /* The two clips blended halfway (request sp-rtmpm;
+       maskingright/tlgcarrymid.xml, anims_X/Bob/Bob_TLGCarryMid.x). */
+    item PoseCarryMid
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcarrymid,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
     item PoseShrug
     {
         DisplayCategory = Tool,
