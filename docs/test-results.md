@@ -1857,3 +1857,40 @@ item, into the inventory (crafting does not put it in the hands) and put
 it down with the drop action, as before. The console had no error naming
 the mod; its one exception came from the harness's own deep-recursion
 probe, as in earlier launches.
+
+## 2026-11-02 — RT-SP client harness, launch 81 (the vessel put down by the menus' unequip)
+
+Runs 75–79 put the carried vessel down with `forceDropHeavyItems`, called
+directly. Reading the menus afterwards showed another way down: before
+taking a heavy item, `ISInventoryPaneContextMenu.equipHeavyItem` (the loot
+window's double-click and drag) queues an `ISUnequipAction` for whatever
+is in the hands (SRC `ISInventoryPaneContextMenu.lua:4157-4173`), and
+`ISUnequipAction.complete` drops a heavy item at the feet itself unless it
+is unequipped to be dropped or placed (`ISUnequipAction.lua:134`). The
+take's own `forceDropHeavyItems` then finds the hands empty. The world
+menu's Take generator, the corpse grab and the inventory menu's weapon
+equip unequip the hands the same way. The mod did not follow that drop: a
+running vessel put down so stayed paused until its menu was next opened
+(a carried machine leaves the hourly reading's list, so no reading finds
+it), however long that took. `Machines.install` now wraps
+`ISUnequipAction.complete` too, for its machines only (192/192 tests;
+the new test case fails without the wrap).
+
+Command: `tools/run-sp-harness.ps1 -Mode pickup`. After run 79's phases
+the scenario takes C again the double-click way, carries it half an hour,
+then puts a `Base.LargeMeteorite` on the character's tile and takes it the
+same way.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run81_pickup_unequip.txt`.
+
+Result: **43/0**. Run 79's 39 checks passed again. The menus queued
+`ISUnequipAction,ISEquipHeavyItem`; C went down on the character's tile
+and the meteorite into both hands. C's record, read in the first tick it
+stood again, was `Processing` from 16.8134 game h, the tick of the
+put-down, at its new tile and listed there. An hour later it had done
+12.0656 h for 12.0656 h placed: neither its carried hour nor its carried
+0.5108 h counted. The console had no exception.
+
+The generator adapter has the same gap and is not changed here: a carried
+generator put down by the menus' unequip would lose what the adapter
+carries over (release checklist, open items). The harness's own second
+generator is taken with `ISTakeGenerator` directly.

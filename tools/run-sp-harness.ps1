@@ -27,7 +27,8 @@
   (place action, inventory Drop) and read against the fourth. The fourth
   is then taken into both hands as a double-click in the loot window takes
   a heavy item (the vessel is one), carried an hour and dropped by
-  forceDropHeavyItems.
+  forceDropHeavyItems; taken again, carried half an hour and put down by
+  taking a meteorite the same way (the menus unequip the hands first).
   pot-still: summer with the grid on; a 66.6 L wash through the 60 L pot
   still in two runs (the firebox left to run out once), collected into one
   can, dried with quicklime and evaluated against the engine profiles.

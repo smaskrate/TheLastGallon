@@ -4042,7 +4042,10 @@ RT.fireReloadSteps = { RT.fireReload, RT.fireFerment, RT.finish }
 -- ISInventoryPaneContextMenu.lua:3893). C is finally taken as a double-click
 -- in the loot window takes a heavy item (equipHeavyItem: ISEquipHeavyItem,
 -- into both hands, ISInventoryPane.lua:1184), carried an hour and put down
--- by forceDropHeavyItems.
+-- by forceDropHeavyItems; then taken the same way again, carried half an
+-- hour and put down as the menus put it down when another heavy item is
+-- taken: equipHeavyItem on a meteorite unequips the hands first
+-- (ISUnequipAction, which drops a heavy item at the feet).
 ------------------------------------------------------------------------------
 RT.P = { names = { "A", "B", "C", "D" }, carryAt = 3, carryHours = 3, settleHours = 2, afterHours = 2, tol = 0.01,
     seenBound = 1 / 6 }
@@ -4712,6 +4715,111 @@ function RT.P.phases.settleC(ctx)
         local placed = (ctx.tPickC - ctx.h0) + (now - ctx.tDropC)
         return math.abs(done - placed) <= P.tol, string.format("done %.4f h, placed %.4f h, carried %.4f h", done, placed,
             ctx.tDropC - ctx.tPickC)
+    end)
+    ctx.phase = "takeC2"
+end
+
+-- C again, taken the double-click way. Run 79 put it down through
+-- forceDropHeavyItems; the menus' way when another heavy item is taken
+-- unequips the hands first (ISInventoryPaneContextMenu.equipHeavyItem,
+-- SRC ISInventoryPaneContextMenu.lua:4157-4173), and ISUnequipAction drops
+-- a heavy item at the feet itself (ISUnequipAction.lua:134), before
+-- forceDropHeavyItems runs with the hands empty.
+function RT.P.phases.takeC2(ctx, ticks)
+    local P, C = RT.P, RT.P.items[3]
+    local idle = P.action(ctx, ticks, "takeC2", function()
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        ISInventoryPaneContextMenu.equipHeavyItem(player(), C)
+    end, function() return C:getWorldItem() == nil end)
+    if not idle then return end
+    local p, pl = C:getModData().tlgProc or {}, player()
+    ctx.tPickC2 = ctx.takeC2.at
+    R:check("RTP.heavy_C_taken_again_pauses", function()
+        return ctx.tPickC2 ~= nil and pl:getPrimaryHandItem() == C and pl:getSecondaryHandItem() == C
+            and p.state == "Paused" and p.pause == "not_placed" and math.abs((p.t or 0) - ctx.tPickC2) <= P.tol,
+            string.format("primary=%s secondary=%s; state=%s pause=%s t=%s", tostring(pl:getPrimaryHandItem() == C),
+                tostring(pl:getSecondaryHandItem() == C), tostring(p.state), tostring(p.pause), tostring(p.t))
+    end)
+    if ctx.tPickC2 == nil or pl:getPrimaryHandItem() ~= C then
+        RT.abort = "the vessel was not taken again"
+        return true
+    end
+    ctx.phase = "carryC2"
+end
+
+function RT.P.phases.carryC2(ctx)
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.tPickC2 < 0.5 then return end
+    RT.speed(1)
+    ctx.phase = "dropC2"
+end
+
+-- A meteorite on the character's tile, listed in the loot window, then
+-- taken as a double-click takes it while C is in both hands.
+function RT.P.phases.dropC2(ctx, ticks)
+    local P, M = RT.P, TLG.Integration.Machines
+    if not ctx.rock then
+        ctx.rock = player():getCurrentSquare():AddWorldInventoryItem("Base.LargeMeteorite", 0.5, 0.5, 0)
+        ctx.rockTick = ticks
+        return
+    end
+    if ticks - ctx.rockTick < 30 then return end
+    local idle = P.action(ctx, ticks, "dropC2", function()
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        ctx.rockListed = ctx.rock:getContainer() == ISInventoryPage.GetFloorContainer(0)
+        ISInventoryPaneContextMenu.equipHeavyItem(player(), ctx.rock)
+        local q, types = ISTimedActionQueue.getTimedActionQueue(player()), {}
+        for _, a in ipairs(q and q.queue or {}) do types[#types + 1] = tostring(a.Type) end
+        ctx.queuedC2 = table.concat(types, ",")
+    end, function()
+        local it = P.placedById(ctx.pid[3])
+        -- The record as the put-down left it, before any reading.
+        if it then ctx.recC2 = TLG.Tables.deepCopy(it:getModData().tlgProc) end
+        return it ~= nil
+    end)
+    if not idle then return end
+    ctx.tDropC2 = ctx.dropC2.at
+    local pl = player()
+    local it = P.placedById(ctx.pid[3])
+    if it then P.items[3] = it end
+    local s = it and M.square(it)
+    local p = ctx.recC2 or {}
+    local e = (TLG.World.get().machineSites or {})[ctx.pid[3]]
+    R:line("OBS  RTP.drop_C2 the meteorite listed in the loot window=%s; queued %s; C on %s at %s game h", tostring(ctx.rockListed),
+        tostring(ctx.queuedC2), s and (s:getX() .. "," .. s:getY()) or "-", tostring(ctx.tDropC2))
+    R:check("RTP.heavy_C_unequipped_at_the_feet", function()
+        local here = pl:getCurrentSquare()
+        return s ~= nil and s == here and pl:getPrimaryHandItem() == ctx.rock and pl:getSecondaryHandItem() == ctx.rock,
+            string.format("C on %s, the character on %s; the meteorite in both hands=%s", s and (s:getX() .. "," .. s:getY()) or "-",
+                here and (here:getX() .. "," .. here:getY()) or "-",
+                tostring(pl:getPrimaryHandItem() == ctx.rock and pl:getSecondaryHandItem() == ctx.rock))
+    end)
+    R:check("RTP.heavy_C_unequip_put_down_resumes", function()
+        return s ~= nil and ctx.tDropC2 ~= nil and p.state == "Processing" and p.pause == nil
+            and math.abs((p.t or 0) - ctx.tDropC2) <= P.tol and p.site and p.site.x == s:getX() and p.site.y == s:getY()
+            and e ~= nil and e.x == s:getX() and e.y == s:getY(),
+            string.format("state=%s pause=%s t=%s site %s,%s listed %s", tostring(p.state), tostring(p.pause), tostring(p.t),
+                tostring(p.site and p.site.x), tostring(p.site and p.site.y), e and (e.x .. "," .. e.y) or "-")
+    end)
+    if not s then
+        RT.abort = "the vessel was not put down"
+        return true
+    end
+    ctx.phase = "settleC2"
+end
+
+function RT.P.phases.settleC2(ctx)
+    local P = RT.P
+    RT.speed(RT.waitSpeed)
+    if hours() - ctx.tDropC2 < 1 then return end
+    RT.speed(1)
+    local C = P.items[3]
+    RT.statusOf(C)
+    local now, done = hours(), RT.doneHours(C)
+    R:check("RTP.D015_C_unequip_drop_carried_hours_do_not_count", function()
+        local placed = (ctx.tPickC - ctx.h0) + (ctx.tPickC2 - ctx.tDropC) + (now - ctx.tDropC2)
+        return math.abs(done - placed) <= P.tol, string.format("done %.4f h, placed %.4f h, carried %.4f h and %.4f h", done,
+            placed, ctx.tDropC - ctx.tPickC, ctx.tDropC2 - ctx.tPickC2)
     end)
     return true
 end

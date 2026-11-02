@@ -499,7 +499,8 @@ end)
 
 T.case("integration: a machine carried in both hands is accounted when taken and when dropped", function()
     local g = fakeGame(2)
-    local names = { "ISGrabItemAction", "ISTransferAction", "ISDropWorldItemAction", "ISEquipHeavyItem", "forceDropHeavyItems" }
+    local names = { "ISGrabItemAction", "ISTransferAction", "ISDropWorldItemAction", "ISEquipHeavyItem", "ISUnequipAction",
+        "forceDropHeavyItems" }
     local saved = {}
     for _, k in ipairs(names) do saved[k] = _G[k] end
     local ok, err = pcall(function()
@@ -507,8 +508,10 @@ T.case("integration: a machine carried in both hands is accounted when taken and
         local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
         -- What the vanilla functions do (42.21): ISEquipHeavyItem takes the
         -- item into the inventory and both hands but, off the floor, leaves
-        -- its world object on the square (RT-SP runs 77-78);
-        -- forceDropHeavyItems puts a heavy hand item at the character's feet.
+        -- its world object on the square (RT-SP runs 77-78); ISUnequipAction
+        -- puts a heavy hand item at the character's feet unless it is
+        -- unequipped to be dropped or placed; forceDropHeavyItems puts a
+        -- heavy hand item at the character's feet.
         local hands, carried = { square = b }, {}
         local inventory = { contains = function(self, it) return carried[it] == true end }
         local character = {
@@ -521,6 +524,14 @@ T.case("integration: a machine carried in both hands is accounted when taken and
         ISEquipHeavyItem = { complete = function(self)
             carried[self.item] = true
             hands.primary, hands.secondary = self.item, self.item
+            return true
+        end }
+        ISUnequipAction = { complete = function(self)
+            hands.primary, hands.secondary = nil, nil
+            if self.reason ~= "drop" and self.reason ~= "place" then
+                place(self.item, self.character:getCurrentSquare())
+                carried[self.item] = nil
+            end
             return true
         end }
         forceDropHeavyItems = function(chr)
@@ -557,11 +568,30 @@ T.case("integration: a machine carried in both hands is accounted when taken and
         g.now = 10
         setmetatable({ item = item, character = character }, { __index = ISEquipHeavyItem }):complete()
         T.eq(item:getModData().tlgProc.t, 9, "already carried")
+        -- Unequipped to be dropped, it stays in the inventory (the floor
+        -- transfer that follows puts it down): nothing yet.
+        g.now = 11
+        setmetatable({ item = item, character = character, reason = "drop" }, { __index = ISUnequipAction }):complete()
+        T.eq(item:getModData().tlgProc.pause, "not_placed", "not put down by the drop's unequip")
+        -- Unequipped for anything else (the menus unequip the hands before
+        -- another heavy item is taken or a weapon equipped): at the
+        -- character's feet, resumed from then.
+        setmetatable({ item = item, character = character }, { __index = ISEquipHeavyItem }):complete()
+        hands.square = a
+        g.now = 12
+        setmetatable({ item = item, character = character }, { __index = ISUnequipAction }):complete()
+        rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 12); T.eq(rec.site.x, 1, "unequipped at the character's feet")
+        T.eq(World.get().machineSites.P15.x, 1, "listed at the new tile at once")
+        later = Machines.advance(item, Machines.read(item, false), 14, env)
+        T.near(work(later), 7, 1e-9, "5 h placed before the pickup at 9 and 2 h since the drop, none of the 3 h carried")
         -- A machine without a record yet is taken off the ground too, and no
         -- record is created; a vanilla heavy item is left as vanilla leaves it.
         local bare = machine(b, nil)
         setmetatable({ item = bare, character = character }, { __index = ISEquipHeavyItem }):complete()
         T.ok(bare:getWorldItem() == nil, "lifted"); T.ok(bare:getModData().tlgProc == nil, "no record created")
+        setmetatable({ item = bare, character = character }, { __index = ISUnequipAction }):complete()
+        T.ok(bare:getWorldItem() ~= nil and bare:getModData().tlgProc == nil, "unequipped at the feet, still no record")
         local rock = machine(b, nil)
         function rock:getFullType() return "Base.LargeMeteorite" end
         setmetatable({ item = rock, character = character }, { __index = ISEquipHeavyItem }):complete()

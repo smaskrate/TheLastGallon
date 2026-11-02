@@ -246,23 +246,31 @@ listed with their replacement.
   `Base.LargeMeteorite` and the anvils; BC
   `InventoryItem.isForceDropHeavyItem`): a double-click or drag in the
   loot window takes it into both hands (`ISEquipHeavyItem`), one heavy
-  item at a time, and `forceDropHeavyItems` puts it down at the
-  character's feet when another heavy item is taken, a vehicle entered,
-  an animal handled or a trap set. `Machines.install` follows both, as it
-  follows Grab, transfers and the place action. 42.21 leaves a heavy
-  item's world object on the square when `ISEquipHeavyItem` takes it off
-  the floor in single player (vanilla's meteorite too, RT-SP run 78:
-  `sendRemoveItemFromContainer` acts only in multiplayer), so the item
-  would be carried and still standing. For the mod's machines the hook
-  then takes the world object off as the floor transfer does
-  (`ISTransferAction.lua:131-158`); vanilla's own heavy items are left as
-  vanilla leaves them. The loot window's Grab button stays a plain
-  transfer into the inventory: vanilla does not check it for heavy items.
-  An idle character draws no carried item but a weapon, vanilla's heavy
-  items included (runs 73–75), so the carry has no pose. Verified by
-  `tests/integration/test_machine_sites.lua` and RT-SP run 79 (39/0): a
-  running vessel taken the double-click way, carried an hour and dropped
-  by `forceDropHeavyItems`, its carried hour not counted.
+  item at a time. It goes down at the character's feet when another heavy
+  item is taken or a weapon equipped from the menus, which unequip the
+  hands first (`ISUnequipAction` drops a heavy item itself, SRC
+  `ISUnequipAction.lua:134`), and when a vehicle is entered, an animal
+  handled or a trap set (`forceDropHeavyItems`). `Machines.install`
+  follows all three, as it follows Grab, transfers and the place action.
+  42.21 leaves a heavy item's world object on the square when
+  `ISEquipHeavyItem` takes it off the floor in single player (vanilla's
+  meteorite too, RT-SP run 78: `sendRemoveItemFromContainer` acts only in
+  multiplayer), so the item would be carried and still standing. For the
+  mod's machines the hook then takes the world object off as the floor
+  transfer does (`ISTransferAction.lua:131-158`); vanilla's own heavy
+  items are left as vanilla leaves them. The loot window's Grab button
+  stays a plain transfer into the inventory: vanilla does not check it
+  for heavy items. An idle character draws no carried item but a weapon,
+  vanilla's heavy items included (runs 73–75), so the carry has no pose.
+  Verified by `tests/integration/test_machine_sites.lua` and RT-SP runs
+  79 (39/0: a running vessel taken the double-click way, carried an hour
+  and dropped by `forceDropHeavyItems`, its carried hour not counted) and
+  81 (43/0: taken again, carried half an hour and put down by taking a
+  meteorite the double-click way, which unequipped it at the feet; it
+  resumed at once and its carried half hour did not count). Until run 81
+  the mod followed only `forceDropHeavyItems`, which the menus' take
+  reaches with the hands already empty (found by reading
+  `equipHeavyItem`).
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

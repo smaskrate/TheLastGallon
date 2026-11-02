@@ -534,10 +534,12 @@ end
 -- (the fermentation vessel: Tags base:heavyitem) is also taken into both
 -- hands by ISEquipHeavyItem.complete (the loot and inventory windows' take,
 -- from the floor too) and put down at the character's feet by
--- forceDropHeavyItems (SRC ISEquipWeaponAction.lua:75: when another heavy
--- item is taken, a vehicle entered, an animal handled, a trap set). Told
--- apart by whether the item lies on the ground before and after, not by
--- container types.
+-- ISUnequipAction.complete, for any reason but drop or place (SRC
+-- ISUnequipAction.lua:134: the menus unequip the hands first when another
+-- heavy item or a generator is taken or a weapon equipped), and by
+-- forceDropHeavyItems (SRC ISEquipWeaponAction.lua:75: when a vehicle is
+-- entered, an animal handled, a trap set). Told apart by whether the item
+-- lies on the ground before and after, not by container types.
 function M.install()
     wrap(ISGrabItemAction, "transferItem", function(orig, self, witem, ...)
         local item = World.isAuthority() and witem and witem.getItem and witem:getItem() or nil
@@ -583,6 +585,14 @@ function M.install()
             end
             if M.tracked(item) and not M.isPlaced(item) then account(M.pickedUp, item) end
         end
+        return r
+    end)
+    -- Called on every unequip, clothing too: the record is checked first.
+    wrap(ISUnequipAction, "complete", function(orig, self, ...)
+        local item = World.isAuthority() and M.tracked(self.item) and self.item or nil
+        local was = item and M.isPlaced(item)
+        local r = orig(self, ...)
+        if item and not was and M.isPlaced(item) then account(M.putDown, item) end
         return r
     end)
     -- Wrapped like the generators' (Generators.lua); the two compose.

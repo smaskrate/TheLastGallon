@@ -13,9 +13,11 @@ module TLG
        hands, scripted as vanilla's heavy items are (LargeMeteorite, the
        anvils: Tags base:heavyitem, RequiresEquippedBothHands; BC
        InventoryItem.isForceDropHeavyItem): vanilla takes it into both
-       hands and drops it when the character enters a vehicle or takes
-       another heavy item (forceDropHeavyItems; Machines.install follows
-       both). An idle character draws no carried item but a weapon, so its
+       hands (ISEquipHeavyItem) and drops it at the character's feet when
+       another heavy item is taken or a weapon equipped from the menus
+       (ISUnequipAction) or a vehicle entered (forceDropHeavyItems);
+       Machines.install follows each. An idle character draws no carried
+       item but a weapon, so its
        hand model shows only during actions (RT-SP runs 73-75). Recipes use
        item ids verified in the
        42.21 item scripts; craftRecipe grammar mirrors vanilla

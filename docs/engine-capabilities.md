@@ -247,10 +247,11 @@ Source evidence:
   itself when a generator item is dropped, bypassing Lua's `IsoGenerator.new`.
 * Implemented (D-013): the adapter carries the TLG sidecar, device identity
   and conversion project by wrapping `ISTakeGenerator.complete` (object →
-  item), every Lua drop path (`ISDropWorldItemAction.complete`,
-  `forceDropHeavyItems`, `ISTransferAction:transferItem` to the floor) and
-  `IsoGenerator.new` (wrapping verified RT-SP). Drops done by Java alone are
-  not seen.
+  item), the Lua drop paths `ISDropWorldItemAction.complete`,
+  `forceDropHeavyItems` and `ISTransferAction:transferItem` to the floor,
+  and `IsoGenerator.new` (wrapping verified RT-SP). Drops done by Java alone
+  are not seen, nor yet the drop `ISUnequipAction.complete` makes when the
+  menus unequip a carried generator (G14; not run, not fixed).
 
 ## G06 Stations — PASS (SP)
 
@@ -649,6 +650,15 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `ISTransferAction` removes a floor item's world object itself. Vanilla's
   `Base.LargeMeteorite` stays behind the same way. The mod takes its own
   machines off the ground after that take (D-015); multiplayer NOT RUN.
+  A heavy hand item also goes down at the feet through
+  `ISUnequipAction.complete` (SRC `ISUnequipAction.lua:134`) whenever it
+  is unequipped for any reason but drop or place, and the menus unequip
+  the hands before another heavy item or a generator is taken, a corpse
+  grabbed or a weapon equipped (`equipHeavyItem`, `onTakeGenerator`,
+  `onGrabCorpseItem`, `equipWeapon`): `forceDropHeavyItems`, which the
+  take calls afterwards, then finds the hands empty. The mod follows that
+  drop for its machines (run 81: the menus queued `ISUnequipAction` then
+  `ISEquipHeavyItem`); the generator adapter does not yet (G05).
 
 ## G13: one original model imported (RT-SP runs 64–67, 2026-11-02)
 
@@ -838,7 +848,8 @@ items, runs 73 **9/0** and 74 **9/0**, heavy items, run 75 **8/0**, the
 vessel carried in both hands through the pickup scenario, run 76 35/1 and
 run 77 34/2, a vanilla heavy item taken off the floor, run 78 **8/0**,
 and after the fix run 79 **39/0**, and the zip with the carry installed
-clean, run 80 **94/0** and **14/0**. Most failures were traced to the
+clean, run 80 **94/0** and **14/0**, then the vessel put down by the
+menus' unequip, run 81 **43/0**. Most failures were traced to the
 harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
