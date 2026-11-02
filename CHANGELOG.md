@@ -140,9 +140,10 @@
 * You see the fermentation vessel in your arms while you carry it: held
   in front of you in both arms, standing and walking (checked in game).
   The game draws no carried heavy item, so the mod has its own carry
-  pose, made from a Mixamo animation. During an action with its own
-  movement, such as taking things from a container, the barrel briefly
-  shows at the action's hand position.
+  pose, made from a Mixamo animation. During an action that plays its own
+  animation, the barrel shows where that animation holds an item until
+  the action ends (seen with the game's looting animation); putting the
+  vessel down plays none.
 * The four machines' inventory category reads "Tool"; it showed the raw
   key "IGUI_ItemCat_Tools" (found and checked in game).
 * Migrations with preserved future schemas.
