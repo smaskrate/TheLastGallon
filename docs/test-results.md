@@ -1894,3 +1894,20 @@ The generator adapter has the same gap and is not changed here: a carried
 generator put down by the menus' unequip would lose what the adapter
 carries over (release checklist, open items). The harness's own second
 generator is taken with `ISTakeGenerator` directly.
+
+## 2026-11-02 — RT-SP client harness, launch 82 (the zip with the unequip fix, installed clean)
+
+Command: `tools/rehearse-install.ps1`, which rebuilt the package first
+(192/192 tests, compile check 101/0, translations OK): the zip of commit
+`ba4886d`, 86 files, SHA-256 `2a762bad…`, 850,258 bytes. It differs from
+run 80's zip (`e5ae9136…`, 86 files) in three files: the machine move
+hook for the menus' unequip (`Machines.lua`), a comment in
+`TLG_machines.txt` and the support matrix. The zip matched its manifest
+(86 files), was installed into a fresh isolated cache and ran the full
+harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run82_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
+47, 52, 56, 60, 63, 70, 72 and 80; the vessel was crafted and put down as
+in run 80. The console had no error naming the mod; its one exception
+came from the harness's own deep-recursion probe.
