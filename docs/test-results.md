@@ -2293,3 +2293,38 @@ of 1 with the harness world's loot settings, so they show that the
 lists produce the manual, not how often a player meets one. Not checked:
 a manual found in a real building's container, multiplayer, and the
 Italian text panel (the English one shows the full text, scrollable).
+
+## 2026-11-02 — RT-SP client harness, launches 104–106 (the zip with the put-down and the manual)
+
+Launch 104. Command: `tools/rehearse-install.ps1`, which rebuilt the
+package first (197/197 tests, compile check 105/0, translations OK): the
+zip of commit `1a341ee`, 90 files, SHA-256 `abcc355a…`, 927,534 bytes.
+It differs from launch 97's zip (`7169c16c…`, 88 files) in the vessel's
+put-down before an action's animation (`Machines.lua`) and the field
+manual: two new files (`Manual.lua`, `Loot.lua`), its item script line
+and its EN/IT page (`IG_UI.json`). The changelog, the player guide and
+the support matrix changed too. The zip matched its manifest (90 files),
+was installed into a fresh isolated cache and ran the full harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run104_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
+47, 52, 56, 60, 63, 70, 72, 80, 82 and 97. The console logged the manual
+joining its 11 loot lists before each of the two loot parses (the first
+game and the continued one). Its one exception came from the harness's
+own deep-recursion probe.
+
+The full harness exercises none of the carry, the put-down or the
+manual, so the next two launches deployed the mod from the package's
+item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`),
+the folder the zip is made from:
+- Launch 105, `-Mode vessel-actions`: **11/0**, as launches 99–100. The
+  vessel lay at the feet as "Loot" began, a generator stayed in both
+  hands through the same loot, and a bat put a second vessel down
+  through the game's unequip. Its archived debug log had no exception
+  and no error from the hook.
+- Launch 106, `-Mode manual-italian`: **10/0**, as launch 102. All 11
+  lists held the manual, and 133 of 3500 fills rolled it, each already
+  print media. "Ispeziona" read it and the game recorded it read; the
+  page measured as in launch 102. The console had no exception.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run105_vessel_actions_packaged.txt`
+and `…_run106_manual_italian_packaged.txt`.

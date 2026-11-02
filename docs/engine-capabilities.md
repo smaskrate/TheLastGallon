@@ -973,7 +973,9 @@ and the carry from the package's item tree, run 98 **6/0**, then the
 vessel and a generator through a real loot and the vessel unequipped for
 a bat, run 99 **11/0**, and the same on the guarded hook, run 100
 **11/0**, then the field manual found in loot and read, runs 101 **10/0**,
-102 **10/0** (Italian) and 103 **10/0**. Most failures were traced to the harness
+102 **10/0** (Italian) and 103 **10/0**, then the zip with both installed
+clean, run 104 **94/0** and **14/0**, and from its item tree the
+put-down, run 105 **11/0**, and the manual in Italian, run 106 **10/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
