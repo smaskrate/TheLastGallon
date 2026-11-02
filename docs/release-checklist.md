@@ -37,6 +37,10 @@ decision and is **not** authorised by any task in this repository.
 * Mark the making stages (`makes`) of the biodiesel, biogas, wood retort
   and ash pit recipes with their machines; until then Abort counts every
   stage of them (D-023).
+* `Containers.commit`: normalize the record it writes. A trace of a fuel
+  folded into the largest component (`Native.holdable`) leaves its `deg`
+  entry without a quantity; harmless, as every read drops it. To go with
+  the next shipped change, not a rebuild of its own.
 
 ## Commands for the remaining runtime gates
 
