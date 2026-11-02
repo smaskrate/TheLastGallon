@@ -1,0 +1,20 @@
+# TLG single-player harness, the water a can takes up
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=8305999071929211075 hours=2.0096 DayLength=4
+STEP rtx_setup begin
+STEP rtcw_run begin
+OBS  RTCW.open treat -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTCW.opened_can_recorded :: record true, opened ok=true sealed=false
+PASS RTCW.pour_leaves_the_water_in_the_can :: 60 days opened: the record's water 0.016774 L; after the pour the fluids hold 0.016774 L of water in 7.9999 L, the record 0.016774 L (largest gap 2.27e-07)
+PASS RTCW.next_read_keeps_the_water :: read ok: water 0.016774 L
+PASS RTCW.water_travels_with_a_pour :: 1 L poured at 0.2097 % water: 0.002097 L of water arrived (0.002097 L expected); the destination's fluids and record differ by 1.19e-07
+OBS  RTCW.look sample -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+FAIL RTCW.look_sets_the_fluids_to_its_record :: unseen until the look=true, look ok=true; the record's water 1.243e-04 L, the fluids' 0.000e+00 L of 9.9999 L (largest gap 1.24e-04)
+FAIL RTCW.look_then_read_keeps_the_water :: read reconciled: water -1.000e+00 L (the record 1.243e-04 L)
+PASS RTCW.petrol_can_still_offered_to_vanilla_refuel :: contains(Fluid.Petrol) true
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.01
+SUMMARY pass=5 fail=2
+DONE

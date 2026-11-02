@@ -27,6 +27,8 @@
 --   rm-a  -> a new world: cans and a fermenter recorded, saved, quit ("rm-a-done")
 --   rm-c  -> main menu continues that save after the driver's "rm-b" played it
 --            without the mod: the mod back
+--   sp-rtcw -> a new world: an opened can of ethanol poured 60 days on (mod
+--             clock), and a petrol can looked at then
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -54,7 +56,7 @@ end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
-    or REQUEST == "sp-rtof"
+    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw"
     or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
@@ -7965,6 +7967,140 @@ end }
 RT.removalBackSteps = { RT.M.back, RT.finish }
 
 ------------------------------------------------------------------------------
+-- The water a can takes up while it ages (request "sp-rtcw"; D-007, D-024).
+-- A jerry can of the mod's ethanol is recorded by a first pour and opened
+-- (the Fuel menu's treatment), and the mod clock moves on 300 days. A pour
+-- through the game's FluidContainer.Transfer (wrapped by the mod) must
+-- leave the water aging gave it in the can's fluids as well as its record,
+-- less what water already in the fluids left with the litre poured, and
+-- the next read must keep it; a second pour then carries water across in
+-- proportion. A full petrol can the mod has not seen, looked at then, must
+-- hold its record's water in its fluids too, with the same litres, and
+-- still be offered to vanilla refuelling. Run 57 (60 days): the pours kept
+-- the water; the look's could not go into the full can (Native.lua), and
+-- the can lost those litres. 300 days put even a sealed petrol can's water
+-- well above what the game can hold (Native.MIN_FLUID).
+------------------------------------------------------------------------------
+RT.CW = { days = 300, tol = 1e-6 }
+
+-- The largest difference between a container's fluids and its record.
+function RT.CW.gap(item)
+    local comp = TLG.Integration.Native.readComposition(item:getFluidContainer())
+    local q, d = (item:getModData().tlg or {}).q or {}, 0
+    for id, v in pairs(comp) do d = math.max(d, math.abs(v - (q[id] or 0))) end
+    for id, v in pairs(q) do d = math.max(d, math.abs(v - (comp[id] or 0))) end
+    return d, comp, q
+end
+
+RT.CW.run = { name = "rtcw_run", timeout = 600, fn = function(ctx, ticks)
+    local CW, C, D = RT.CW, TLG.Integration.Containers, TLG.Domain
+    if not ctx.phase then
+        if RT.skip("rtcw_run") then return true end
+        installClockOffset()
+        local inv = player():getInventory()
+        -- E: 10 L of the mod's ethanol, recorded by a first pour, then opened.
+        CW.e = giveCan("Base.JerryCan", { { Fluid.Get("TLG_Ethanol"), 10 } })
+        CW.out = inv:AddItem("Base.PetrolCan")
+        CW.out:getFluidContainer():Empty()
+        FluidContainer.Transfer(CW.e:getFluidContainer(), CW.out:getFluidContainer(), 1.0)
+        local r = ask("RTCW.open", "treat", { target = { kind = "item", id = CW.e:getID() }, op = "unseal" })
+        local side = CW.e:getModData().tlg
+        R:check("RTCW.opened_can_recorded", function()
+            return side ~= nil and r.ok == true and side.sealed == false,
+                string.format("record %s, opened ok=%s sealed=%s", tostring(side ~= nil), tostring(r.ok),
+                    tostring(side and side.sealed))
+        end)
+        -- P: 10 L of petrol the mod has not seen.
+        CW.p = giveCan("Base.PetrolCan", { { Fluid.Petrol, 10 } })
+        H.clockOffset = H.clockOffset + CW.days * 24
+        ctx.phase, ctx.tick = "aged", ticks
+        return nil
+    end
+    if ticks - ctx.tick < 5 then return nil end
+    local Native = TLG.Integration.Native
+    local now, env = TLG.World.now(), TLG.World.env()
+    local e, out = CW.e, CW.out
+    -- The water the record says E took up, as the mod reads it before the
+    -- pour, less what the litre poured takes of the water the fluids already
+    -- hold (its first record's, from before the outbreak, if any).
+    local before, status0 = C.read(e, "item", false)
+    local w = D.Aging.advance(before, now, env).q.water or 0
+    local held, heldTotal = Native.readComposition(e:getFluidContainer()), 0
+    for _, x in pairs(held) do heldTotal = heldTotal + x end
+    local want = w - (held.water or 0) / heldTotal
+    FluidContainer.Transfer(e:getFluidContainer(), out:getFluidContainer(), 1.0)
+    local gap, comp, q = CW.gap(e)
+    local total = 0
+    for _, v in pairs(comp) do total = total + v end
+    R:check("RTCW.pour_leaves_the_water_in_the_can", function()
+        return status0 == "ok" and w > 1e-3 and math.abs((q.water or 0) - want) <= CW.tol and gap <= CW.tol
+            and math.abs(total - 8) <= 1e-4, string.format(
+            "%d days opened: the record's water %.6f L, %.6f L of it already in the fluids; after the pour the record holds %.6f L (%.6f L expected), the fluids %.6f L of water in %.4f L (largest gap %.2e)",
+            CW.days, w, held.water or 0, q.water or 0, want, comp.water or 0, total, gap)
+    end)
+    local v, status = C.read(e, "item", false)
+    R:check("RTCW.next_read_keeps_the_water", function()
+        return status == "ok" and v ~= nil and math.abs((v.q.water or 0) - (q.water or 0)) <= CW.tol,
+            string.format("read %s: water %.6f L (the record %.6f L)", tostring(status), v and v.q.water or -1,
+                q.water or 0)
+    end)
+    -- A second pour: the water goes with the ethanol, in proportion.
+    local share = (comp.water or 0) / total
+    local had = TLG.Integration.Native.readComposition(out:getFluidContainer()).water or 0
+    FluidContainer.Transfer(e:getFluidContainer(), out:getFluidContainer(), 1.0)
+    local gapOut, compOut = CW.gap(out)
+    R:check("RTCW.water_travels_with_a_pour", function()
+        local got = (compOut.water or 0) - had
+        return share > 0 and math.abs(got - share) <= CW.tol and gapOut <= CW.tol, string.format(
+            "1 L poured at %.4f %% water: %.6f L of water arrived (%.6f L expected); the destination's fluids and record differ by %.2e",
+            share * 100, got, share, gapOut)
+    end)
+    -- P looked at: its first record, and its fluids set to it.
+    local p = CW.p
+    local unseen = p:getModData().tlg == nil
+    local r = ask("RTCW.look", "sample", { target = { kind = "item", id = p:getID() }, method = "visual" })
+    local gapP, compP, qP = CW.gap(p)
+    local totalP = 0
+    for _, x in pairs(compP) do totalP = totalP + x end
+    R:check("RTCW.look_sets_the_fluids_to_its_record", function()
+        local wq = qP.water or 0
+        return unseen and r.ok == true and p:getModData().tlg ~= nil and math.abs(totalP - 10) <= 1e-4
+            and wq > Native.MIN_FLUID and gapP <= CW.tol, string.format(
+            "unseen until the look=%s, look ok=%s; the record's water %.3e L, the fluids' %.3e L of %.4f L (largest gap %.2e)",
+            tostring(unseen), tostring(r.ok), wq, compP.water or 0, totalP, gapP)
+    end)
+    local vp, statusP = C.read(p, "item", false)
+    R:check("RTCW.look_then_read_keeps_the_water", function()
+        return statusP == "ok" and vp ~= nil and math.abs((vp.q.water or 0) - (qP.water or 0)) <= CW.tol,
+            string.format("read %s: water %.3e L (the record %.3e L)", tostring(statusP), vp and vp.q.water or -1,
+                qP.water or 0)
+    end)
+    R:check("RTCW.petrol_can_still_offered_to_vanilla_refuel", function()
+        local fc = p:getFluidContainer()
+        return fc:contains(Fluid.Petrol) == true, "contains(Fluid.Petrol) " .. tostring(fc:contains(Fluid.Petrol))
+    end)
+    -- A full can takes a new fluid (run 57: the game read it as full once
+    -- its petrol was lowered by less than 0.001 L, and refused the water).
+    local water = Fluid.Get("TLG_FuelWater")
+    local function fluidsText(fc)
+        return string.format("amount %.7f of %.1f, full=%s, Petrol %.7f, TLG_FuelWater %.7f",
+            fc:getAmount(), fc:getCapacity(), tostring(fc:isFull()), fc:getSpecificFluidAmount(Fluid.Petrol),
+            fc:getSpecificFluidAmount(water))
+    end
+    R:line("OBS  RTCW.P after the look: %s", fluidsText(p:getFluidContainer()))
+    local _, full = giveCan("Base.PetrolCan", { { Fluid.Petrol, 10 } })
+    local okFull = Native.writeComposition(full, { gasoline = 10 - 5e-4, water = 5e-4 })
+    R:check("RTCW.full_can_takes_a_new_fluid", function()
+        return okFull == true and math.abs(full:getSpecificFluidAmount(water) - 5e-4) <= CW.tol
+            and math.abs(full:getSpecificFluidAmount(Fluid.Petrol) - (10 - 5e-4)) <= CW.tol,
+            "a full 10 L can set to 5e-4 L of water: " .. fluidsText(full)
+    end)
+    return true
+end }
+
+RT.canWaterSteps = { RT.waitWorld, RT.X.setup, RT.CW.run, RT.finish }
+
+------------------------------------------------------------------------------
 -- Italian (request "sp-it", release gate 10): the client in Italian
 -- (options.ini language=IT). tools/run-sp-harness.ps1 -Mode italian writes
 -- every Italian string the mod ships to TLG_it_expect.txt, its letters past
@@ -8129,7 +8265,8 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" then
+    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
+    or REQUEST == "sp-rtcw" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -8201,6 +8338,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtn" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, a new world: fuel first found late")
                 TLGH.Steps.run(R, RT.lateFindSteps, H, nil)
+            elseif REQUEST == "sp-rtcw" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the water a can takes up")
+                TLGH.Steps.run(R, RT.canWaterSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)

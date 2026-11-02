@@ -1520,3 +1520,31 @@ and 52.
   TLG error or warning. Its one Lua error, a stack overflow, is the
   harness's own deliberate deep recursion (`LuaProbe.lua`); no stack frame
   names the mod.
+
+## 2026-11-02 — RT-SP client harness, launches 57–59 (the water a can takes up)
+
+A test with a faked game found that the water aging gives a can's fuel was
+written to the mod's record alone after a vanilla pour or a first look,
+and dropped by the next read, which takes the can's fluids as they are.
+The fix (D-007 amendment, `Containers.commit`) writes it into the fluids
+too. New mode `tools/run-sp-harness.ps1 -Mode can-water` (request
+`sp-rtcw`), on the repository's code in the dev cache. A jerry can of the
+mod's ethanol is recorded by a first pour and opened with the Fuel menu's
+treatment, and the mod clock moves on. Then:
+* a pour through the game's `FluidContainer.Transfer` (wrapped by the
+  mod), and a read;
+* a second pour;
+* a Look and smell on a full 10 L petrol can the mod had not seen.
+
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run57_can_water.txt`,
+`…_run58_can_water_probe.txt`, `…_run59_can_water.txt`.
+
+| Run | Result |
+| --- | --- |
+| 57, 60 days | **5/2**. The pours kept the water: 0.016774 L in the opened can's fluids and record alike, kept by the next read, and 0.002097 L carried by the second pour at 0.2097 %, exactly. The look's 1.243e-4 L of water never reached the full petrol can's fluids, which held 9.9999 L afterwards, and the next read dropped it from the record |
+| 58, 60 days, with observations | **3/4**. The look failed the same way. After it the can read `amount 10.0000000`, `full=true`, with 9.9998884 L of Petrol and no water; the same write gave a 5 L can its water. The game reads a container within 0.001 L of capacity as full, and `addFluid` refuses a new fluid there (engine notes). The petrol had already been lowered, so the can lost those litres. The two pour failures were the harness's: the can's fluids and record agreed to 5.8e-8 L, but the expected figure ignored the water this world's first record had already put in the fluids, part of which (0.000045 L) left with the litre poured |
+| 59, 300 days, after the second fix | **8/0**. `Native.writeComposition` now holds the largest fluid low while a new one goes in, and a component too small for the game is folded into the largest. The pour left 0.080075 L of water in the fluids and the record (gap 7.9e-8 L), and the next read kept it. The second pour carried 0.010009 L at 1.0009 %, exactly. The look put 4.726e-4 L of water into the full petrol can with its 10.0000 L unchanged, and the next read kept it. A full can took 5e-4 L of a new fluid, and the petrol can is still offered to vanilla refuelling (`contains(Fluid.Petrol)`) |
+
+Run 59's console had no TLG error and no Lua exception. Not run in game
+by this mode: siphoning and pump-to-can, whose settles now go through
+the same write (the full harness covers both).

@@ -127,6 +127,18 @@ RT-DS results (`TLG_harness_server.txt`):
   * `TLG_FuelWater` and `TLG_FuelSediment` (category Fuel) share a container
     with Petrol natively; `Native.writeComposition` round-trips
     gasoline/ethanol/water/sediment exactly.
+* Small amounts and full containers (BC 42.21 `FluidContainer`, read with
+  `javap`; RT-SP run 58). `getAmount()` reads as the capacity when the
+  fluids are within 0.001 L of it (`recalculateCaches`), and `isFull()` is
+  the amount within 1e-4 L of capacity (`PZMath.equal`, strict). `addFluid`
+  does nothing on a full container and clips to the room left;
+  `adjustSpecificFluidAmount` returns on an empty container, clamps to
+  [0, capacity] and has no fullness check. A fluid holding less than
+  1e-4 L is removed as empty (`removeFluidInstanceIfEmpty`, called after
+  an adjust). Reading has no threshold (`createFluidSample` copies every
+  fluid). Run 58: a full 10 L petrol can lowered to 9.9998884 L of Petrol
+  read `amount 10.0000000`, `full=true`, and refused 1.117e-4 L of
+  `TLG_FuelWater`; a 5 L can took the same water.
   * Through the wrapped `FluidContainer.Transfer`, 4 L from a can with
     deg 1.2/0.3 and stabilizer 0.5 arrived with the same deg, stabilizer and
     proportional composition; source revision 5 → 6, destination 0 → 1,
@@ -709,7 +721,8 @@ then the full mode on the zip with that fix installed clean, run 52
 **7/0**, then the mod removed from a save and added back, run 54 1/0, 2/0
 and 4/1 and, after the fix, run 55 **1/0**, **2/0** and **5/0**, then the
 full mode on the zip with that fix installed clean, run 56 **94/0** and
-**14/0**. Most failures were
+**14/0**, then the water a can takes up, run 57 5/2, run 58 3/4 and,
+after the second fix, run 59 **8/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
@@ -734,7 +747,11 @@ unknown (fixed by D-024, run 41). Run 49's one failure was a mod defect:
 Abort batch on a still kept spirit for its heating-up hour, when nothing
 distils (fixed, runs 50–51). Run 54's one failure was a mod defect: fuel
 that came in while the mod was away was aged a second time over the time
-away (fixed, D-006 amendment, run 55).
+away (fixed, D-006 amendment, run 55). Runs 57–58's look failures were a
+mod defect: the fluids were written without regard for the game's full
+container, which refused the look's water after the can's petrol had been
+lowered (fixed, D-007 amendment, run 59). Run 58's two pour failures were
+the harness's expected figure.
 
 ## Tooling pitfalls found
 
