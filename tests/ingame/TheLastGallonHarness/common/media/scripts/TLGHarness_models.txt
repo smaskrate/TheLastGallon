@@ -36,4 +36,61 @@ module TLGHarness
         texture = TLGHarness/FermenterTest,
         undoCoreScale = true,
     }
+
+    /* Pose trial (request sp-rtmp): the shipped barrel as a hand model,
+       held with vanilla's held-bag pose (TLGHarness_pose.txt). Run 86: the
+       hurricane lantern's Bip01_Prop1 turn (models_items.txt
+       Lantern_Hurricane_HandleUp) stands the barrel upright under the
+       hand, and the offset moves it 1.5 m per unit whatever the model's
+       scale (0.5 lowered the 0.75 m barrel by its height, its top rim to
+       the hand). The hand hangs about 0.75 m up, so the barrel at true size
+       reaches the floor; S*: smaller barrels (scale 0.4, 0.33, 0.27: 0.6,
+       0.5, 0.4 m) with the top rim at the hand. */
+    model FermenterHeldL50
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.5,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.5,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
+
+    model FermenterHeldS40
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.4,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.4,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
+
+    model FermenterHeldS33
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.33,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.33,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
+
+    model FermenterHeldS27
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.27,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.27,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
 }

@@ -1944,3 +1944,37 @@ Why the first take of launches 83–84 never ran was not found: the two
 tiles reached each other (`canReachTo`, checked before the take), and
 every take after a walk went through. Not run: a generator put down by
 taking a heavy item from the loot window, or by grabbing a corpse.
+
+## 2026-11-02 — RT-SP client harness, launches 86–87 (the vessel held with vanilla's held-bag pose, a trial)
+
+A standing character draws a carried non-weapon only through a hand pose
+mask (BC; engine-capabilities, the in-hand row). The hurricane lanterns
+use vanilla's held-bag pose (`primaryAnimMask = holdingbagright`), and
+the game builds the pose when the item script loads (BC `Item.Load`).
+Launch 86 therefore set it in the working copy of `TLG_machines.txt` (not
+committed, reverted). Launch 87 used a harness stand-in instead,
+`TLGHarness.PoseBag` (`TLGHarness_pose.txt`: the vessel's script plus the
+pose). The harness switched the hand model between placements
+(`StaticModel`, read when the item is drawn; `TLGHarness_models.txt`)
+and photographed each one carried in both hands (`ISEquipHeavyItem`):
+from the front, from behind on the right and, in launch 87, walking.
+Command: `tools/run-sp-harness.ps1 -Mode pose` (new; request `sp-rtmp`,
+no save).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run86_pose.txt`,
+`..._run87_pose.txt` and `2026-11-02_run87_pose_trial_sheet.jpg`.
+
+Result: **11/0** and **10/0** (every hold landed, and the right hand's
+mask variable read `holdingbagright`).
+
+| Hand model | Drawn |
+| --- | --- |
+| vanilla's `WaterTank` (the vessel's hand model today) | the water-cooler bottle hanging from the right hand at her side |
+| the barrel with the lantern's `Bip01_Prop1` turn | upright under the hand; the offset moved it 1.5 m per unit whatever the model's scale (0.5 lowered it by its 0.75 m) |
+| quarter turns about one axis (launch 86) | X upright, its base at the hand; Z on its side |
+| the barrel at true size (0.75 m), its top rim at the hand | its base on the floor: she seems to stand beside it, not carry it |
+| 0.6 m | just clear of the floor |
+| 0.5 m | hanging clear at her side, standing and walking |
+
+Each barrel is held in the right hand only (the pose is one-armed; the
+left arm hangs free), and its tap points into her leg. The mod ships none
+of this: the vessel is still drawn only during actions.

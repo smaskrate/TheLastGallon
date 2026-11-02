@@ -42,6 +42,8 @@
 --             the vessel scripted as a heavy item
 --   sp-rtgu -> generators put down by the menus' unequip: one taken while
 --             carrying another, then a bat equipped while carrying one
+--   sp-rtmp -> pose trial: the vessel held with the held-bag pose, its hand
+--             model switched between placements and photographed
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -71,7 +73,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8407,6 +8409,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
 RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
+    or REQUEST == "sp-rtmp"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module: StaticModel =
     -- WaterTank reads back as Base.WaterTank (run 68).
@@ -8943,6 +8946,90 @@ end)
 
 RT.genUnequipSteps = { RT.waitWorld, RT.GU.setup, RT.GU.takeA, RT.GU.takeB, RT.GU.equipBat, RT.finish }
 
+------------------------------------------------------------------------------
+-- Pose trial (request "sp-rtmp"). An idle character draws a held
+-- non-weapon only through its hand's pose mask (BC
+-- ModelManager.addEquippedModelInstance), and the mask is read from the item
+-- script when it loads (BC Item.Load builds replacePrimaryHand from
+-- primaryAnimMask), so the trial holds TLGHarness.PoseBag, a stand-in for
+-- the vessel with vanilla's held-bag pose (TLGHarness_pose.txt). Its hand
+-- model is switched here per variant (StaticModel is read when the item is
+-- drawn): vanilla's WaterTank, then the barrel placements of
+-- TLGHarness_models.txt. Each stand-in is taken into both hands
+-- (ISEquipHeavyItem) and photographed from the front, from behind on its
+-- right and walking.
+------------------------------------------------------------------------------
+RT.MP = { item = "TLGHarness.PoseBag", variants = { "Base.WaterTank", "TLGHarness.FermenterHeldL50",
+    "TLGHarness.FermenterHeldS40", "TLGHarness.FermenterHeldS33", "TLGHarness.FermenterHeldS27" } }
+
+-- The stand-in's hand model set to `model`; the ones held before are gone,
+-- and the character is back where the trial started.
+function RT.MP.use(model)
+    return { name = "rtmp_use_" .. model, timeout = 300, fn = function(ctx, ticks)
+        if RT.skip("rtmp_use") then return true end
+        local p = player()
+        if ticks == 1 then
+            ISTimedActionQueue.clear(p)
+            p:setPrimaryHandItem(nil)
+            p:setSecondaryHandItem(nil)
+            local inv, old = p:getInventory(), {}
+            local items = inv:getItems()
+            for i = 0, items:size() - 1 do
+                if items:get(i):getFullType() == RT.MP.item then old[#old + 1] = items:get(i) end
+            end
+            for _, it in ipairs(old) do inv:Remove(it) end
+            RT.MP.x, RT.MP.y = RT.MP.x or p:getX(), RT.MP.y or p:getY()
+            p:teleportTo(RT.MP.x, RT.MP.y, 0)
+            local si = getScriptManager():getItem(RT.MP.item)
+            si:DoParam("StaticModel = " .. model)
+            R:line("OBS  RTMP.%s StaticModel=%s", model, tostring(si:getStaticModel()))
+            return nil
+        end
+        return ticks >= 30 or nil
+    end }
+end
+
+function RT.MP.face(dir)
+    return { name = "rtmp_face_" .. dir, timeout = 300, fn = function(ctx, ticks)
+        if ticks == 1 then player():setDir(IsoDirections[dir]) end
+        if ticks == 30 then
+            R:line("OBS  RTMP.facing %s (asked %s); RightHandMask=%s LeftHandMask=%s", tostring(player():getDir()), dir,
+                tostring(player():getVariableString("RightHandMask")), tostring(player():getVariableString("LeftHandMask")))
+        end
+        return ticks >= 40 or nil
+    end }
+end
+
+-- Walks three tiles east, photographed with the interface hidden on the way.
+function RT.MP.walkShot(name)
+    return { name = "rtmp_walk_" .. name, timeout = 900, fn = function(ctx, ticks)
+        local p = player()
+        if ticks == 1 then
+            ISUIHandler.setVisibleAllUI(false)
+            ISTimedActionQueue.add(ISWalkToTimedAction:new(p, sq(math.floor(RT.MP.x) + 3, math.floor(RT.MP.y), 0)))
+            return nil
+        end
+        if ticks == 50 then
+            local file = "tlg_" .. name .. ".png"
+            local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+            R:line("OBS  RTMP.screenshot %s ok=%s walking=%s; RightHandMask=%s", file, tostring(ok),
+                tostring(not TLGH.Steps.actionsIdle(p)), tostring(p:getVariableString("RightHandMask")))
+        end
+        if ticks == 80 then ISUIHandler.setVisibleAllUI(true) end
+        return (ticks > 80 and TLGH.Steps.actionsIdle(p)) or nil
+    end }
+end
+
+RT.poseSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmp_go", "tests"), RT.MI.zoomTo("rtmp_zoom", 0.25) }
+for i, model in ipairs(RT.MP.variants) do
+    local tag = model:gsub("^.*%.", "")
+    local steps = { RT.MP.use(model), RT.MI.heavy("pose_" .. tag, RT.MP.item), RT.MP.face("SE"),
+        RT.MI.shot("rtmp_" .. i .. "_" .. tag .. "_front", true), RT.MP.face("NE"),
+        RT.MI.shot("rtmp_" .. i .. "_" .. tag .. "_back_right", true), RT.MP.walkShot("rtmp_" .. i .. "_" .. tag .. "_walking") }
+    for _, s in ipairs(steps) do RT.poseSteps[#RT.poseSteps + 1] = s end
+end
+RT.poseSteps[#RT.poseSteps + 1] = RT.finish
+
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
 -- character's hand, not even vanilla's water bottle. Run 73 showed why: a
 -- baseball bat (a weapon) is drawn in the idle character's hand, a water
@@ -9280,7 +9367,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -9373,6 +9460,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgu" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, generators put down by the menus' unequip")
                 TLGH.Steps.run(R, RT.genUnequipSteps, H, nil)
+            elseif REQUEST == "sp-rtmp" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, pose trial")
+                TLGH.Steps.run(R, RT.poseSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
@@ -9400,7 +9490,7 @@ end
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
 if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

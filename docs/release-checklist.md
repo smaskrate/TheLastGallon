@@ -38,9 +38,12 @@ decision and is **not** authorised by any task in this repository.
   and ash pit recipes with their machines; until then Abort counts every
   stage of them (D-023).
 * The fermentation vessel: a model in the hand (during actions it shows
-  vanilla's water bottle; the supplied model needs an attachment tuned
-  first, run 74), and the supplied model's editable sources (a `.blend`
-  file or the Tripo project; `art-src/fermenter/PROVENANCE.md`).
+  vanilla's water bottle; carried, it is not drawn at all). Runs 86–87
+  tried vanilla's held-bag pose, which shows a carried item, with the
+  supplied barrel placed at the right hand: true size reaches the floor,
+  0.5 m hangs clear (`TLGHarness_models.txt`). Not adopted yet. Also the
+  supplied model's editable sources (a `.blend` file or the Tripo
+  project; `art-src/fermenter/PROVENANCE.md`).
 
 ## Commands for the remaining runtime gates
 
@@ -65,6 +68,7 @@ tools\run-sp-harness.ps1 -Mode fermenter-model                  # the fermenter'
 tools\run-sp-harness.ps1 -Mode held                             # held items close up: a bat, a bottle, the vessel idle and during an action
 tools\run-sp-harness.ps1 -Mode heavy                            # heavy items in both hands; a meteorite taken off the floor
 tools\run-sp-harness.ps1 -Mode generator-unequip                # generators put down by the menus' unequip keep their records
+tools\run-sp-harness.ps1 -Mode pose                             # a vessel stand-in held with the held-bag pose, hand models compared
 tools\run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60      # a campfire and a barbecue lit from their menus, a fermenter beside each, a trip away
 tools\run-sp-harness.ps1 -Mode italian -TimeoutMinutes 20    # the client in Italian: every Italian string, the Fuel and machine menus
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361

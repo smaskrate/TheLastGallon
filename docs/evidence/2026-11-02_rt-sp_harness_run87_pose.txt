@@ -1,0 +1,108 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 25580
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, pose trial
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=17822436322632719116 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmp_go begin
+STEP rtmp_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.25 in 3 scrolls (enabled=true, min 0.25)
+STEP rtmp_use_Base.WaterTank begin
+OBS  RTMP.Base.WaterTank StaticModel=Base.WaterTank
+STEP pose_WaterTank begin
+PASS RTMH.heavy_pose_WaterTank :: TLGHarness.PoseBag heavy=true both hands=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_1_WaterTank_front begin
+OBS  RTMI.screenshot tlg_rtmp_1_WaterTank_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.05
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_1_WaterTank_back_right begin
+OBS  RTMI.screenshot tlg_rtmp_1_WaterTank_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.07
+STEP rtmp_walk_rtmp_1_WaterTank_walking begin
+OBS  RTMP.screenshot tlg_rtmp_1_WaterTank_walking.png ok=true walking=true; RightHandMask=holdingbagright
+STEP rtmp_use_TLGHarness.FermenterHeldL50 begin
+OBS  RTMP.TLGHarness.FermenterHeldL50 StaticModel=TLGHarness.FermenterHeldL50
+STEP pose_FermenterHeldL50 begin
+PASS RTMH.heavy_pose_FermenterHeldL50 :: TLGHarness.PoseBag heavy=true both hands=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_2_FermenterHeldL50_front begin
+OBS  RTMI.screenshot tlg_rtmp_2_FermenterHeldL50_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.11
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_2_FermenterHeldL50_back_right begin
+OBS  RTMI.screenshot tlg_rtmp_2_FermenterHeldL50_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.12
+STEP rtmp_walk_rtmp_2_FermenterHeldL50_walking begin
+OBS  RTMP.screenshot tlg_rtmp_2_FermenterHeldL50_walking.png ok=true walking=true; RightHandMask=holdingbagright
+STEP rtmp_use_TLGHarness.FermenterHeldS40 begin
+OBS  RTMP.TLGHarness.FermenterHeldS40 StaticModel=TLGHarness.FermenterHeldS40
+STEP pose_FermenterHeldS40 begin
+PASS RTMH.heavy_pose_FermenterHeldS40 :: TLGHarness.PoseBag heavy=true both hands=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_3_FermenterHeldS40_front begin
+OBS  RTMI.screenshot tlg_rtmp_3_FermenterHeldS40_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.16
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_3_FermenterHeldS40_back_right begin
+OBS  RTMI.screenshot tlg_rtmp_3_FermenterHeldS40_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.18
+STEP rtmp_walk_rtmp_3_FermenterHeldS40_walking begin
+OBS  RTMP.screenshot tlg_rtmp_3_FermenterHeldS40_walking.png ok=true walking=true; RightHandMask=holdingbagright
+STEP rtmp_use_TLGHarness.FermenterHeldS33 begin
+OBS  RTMP.TLGHarness.FermenterHeldS33 StaticModel=TLGHarness.FermenterHeldS33
+STEP pose_FermenterHeldS33 begin
+PASS RTMH.heavy_pose_FermenterHeldS33 :: TLGHarness.PoseBag heavy=true both hands=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_4_FermenterHeldS33_front begin
+OBS  RTMI.screenshot tlg_rtmp_4_FermenterHeldS33_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.22
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_4_FermenterHeldS33_back_right begin
+OBS  RTMI.screenshot tlg_rtmp_4_FermenterHeldS33_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.23
+STEP rtmp_walk_rtmp_4_FermenterHeldS33_walking begin
+OBS  RTMP.screenshot tlg_rtmp_4_FermenterHeldS33_walking.png ok=true walking=true; RightHandMask=holdingbagright
+STEP rtmp_use_TLGHarness.FermenterHeldS27 begin
+OBS  RTMP.TLGHarness.FermenterHeldS27 StaticModel=TLGHarness.FermenterHeldS27
+STEP pose_FermenterHeldS27 begin
+PASS RTMH.heavy_pose_FermenterHeldS27 :: TLGHarness.PoseBag heavy=true both hands=true
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_5_FermenterHeldS27_front begin
+OBS  RTMI.screenshot tlg_rtmp_5_FermenterHeldS27_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.27
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=holdingbagright LeftHandMask=
+STEP rtmi_shot_rtmp_5_FermenterHeldS27_back_right begin
+OBS  RTMI.screenshot tlg_rtmp_5_FermenterHeldS27_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.29
+STEP rtmp_walk_rtmp_5_FermenterHeldS27_walking begin
+OBS  RTMP.screenshot tlg_rtmp_5_FermenterHeldS27_walking.png ok=true walking=true; RightHandMask=holdingbagright
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.30
+SUMMARY pass=10 fail=0
+DONE
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_1_WaterTank_back_right.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_1_WaterTank_front.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_1_WaterTank_walking.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_2_FermenterHeldL50_back_right.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_2_FermenterHeldL50_front.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_2_FermenterHeldL50_walking.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_3_FermenterHeldS40_back_right.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_3_FermenterHeldS40_front.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_3_FermenterHeldS40_walking.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_4_FermenterHeldS33_back_right.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_4_FermenterHeldS33_front.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_4_FermenterHeldS33_walking.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_5_FermenterHeldS27_back_right.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_5_FermenterHeldS27_front.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmp_5_FermenterHeldS27_walking.png

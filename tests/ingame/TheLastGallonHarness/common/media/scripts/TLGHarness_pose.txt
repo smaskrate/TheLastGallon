@@ -1,0 +1,22 @@
+module TLGHarness
+{
+    /* Pose trial (request sp-rtmp): a stand-in for the fermentation
+       vessel, scripted as it is (a heavy item in both hands) plus vanilla's
+       held-bag pose for the right hand, as the hurricane lanterns have it
+       (generated/items/drainable.txt). The pose is read when the script
+       loads (BC Item.Load builds replacePrimaryHand from primaryAnimMask),
+       so it is set here; the hand model is switched by the harness. The
+       harness mod is never packaged. */
+    item PoseBag
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = holdingbagright,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+}
