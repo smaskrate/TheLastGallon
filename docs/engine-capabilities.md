@@ -757,6 +757,22 @@ mod's own since run 71: `Item_TLG_Fermenter.png`, drawn by
 `tools/make-icons.ps1`, loaded from the mod's `media/textures` and seen
 in the equipped-item button.
 
+## Animation tooling (2026-11-02)
+
+For a two-armed carry clip (runs 88–90 showed the game plays a mod's own
+pose, but has no such clip), Blender 4.5.15 LTS is installed portable in
+`%LOCALAPPDATA%\Programs\Blender`. It came from the official ZIP
+(download.blender.org, SHA-256 checked against the published file), and
+nothing went to Program Files or the registry. Blender has no .x
+importer, so `tools/blender/pz_x.py` reads the game's text .x frames
+itself and builds an armature, each bone keeping its frame's rest
+matrix. On `media/models_X/Skinned/MaleBody.x` it read 36 frames
+(`Dummy01` turns the Biped's Z up into Y up, `Bip01` to `Bip01_Prop2`,
+`Translation_Data`, `Body`). In the file's units the pelvis and the
+hands stand at about 0.49 and the head at 0.81. Writing a clip back as
+the game's .x keys is not written yet; whether the game also reads FBX
+clips is untested.
+
 ## Client harness status
 
 `tools/run-sp-harness.ps1` starts the client with
