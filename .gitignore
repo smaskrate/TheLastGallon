@@ -1,5 +1,6 @@
 # Local build output and isolated test environments
 tools/kahlua-runner/build/
+__pycache__/
 .devcache/
 dist/
 tests/out/

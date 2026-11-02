@@ -769,9 +769,29 @@ itself and builds an armature, each bone keeping its frame's rest
 matrix. On `media/models_X/Skinned/MaleBody.x` it read 36 frames
 (`Dummy01` turns the Biped's Z up into Y up, `Bip01` to `Bip01_Prop2`,
 `Translation_Data`, `Body`). In the file's units the pelvis and the
-hands stand at about 0.49 and the head at 0.81. Writing a clip back as
-the game's .x keys is not written yet; whether the game also reads FBX
-clips is untested.
+hands stand at about 0.49 and the head at 0.81.
+
+The game's clips, read with `pz_x.parse_animation`, give the conventions
+a writer needs:
+- Each bone is one `Animation` block, with `AnimationKey S` (1),
+  `R` (0, w x y z) and `T` (2) keys at 4800 ticks per second.
+- A clip's stored frame matrices are its first frame. On `Bob_Idle.x`
+  and `Bob_Idle_Bag.x` all 45 bones' first rotation keys are the
+  transposed rotations of those frames, and the T keys their offsets.
+- Bones point along X. An elbow bends about the forearm's and upper
+  arm's Y (cross(upper arm, forearm) is +Y), and a hand's palm faces its
+  Z.
+- The skeleton faces −Z with its left on +X and Y up, mirrored against
+  Blender's (left × up points backward).
+- The clavicles hang off `Bip01_Neck`; `Bip01_Prop1` and `Bip01_Prop2`,
+  the held items' bones, hang off `Bip01`, so a clip places a held item
+  itself.
+
+`tools/blender/pz_arms.py` writes a clip from a Mixamo clip's arms on
+those terms. The game loaded one from the harness mod's `anims_X/Bob`
+and played it through the harness's pose file (runs 91–92, the
+animator's log naming the track). Whether the game also reads FBX clips
+is untested.
 
 ## Client harness status
 

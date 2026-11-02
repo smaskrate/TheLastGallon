@@ -2012,3 +2012,46 @@ Its own pose file is loaded, one pose drives both arms, a clip can be
 held still, and the item is drawn at the right hand. What is missing is a
 clip of both arms carrying something in front: none of the game's own
 clips tried is one. The mod ships none of this.
+
+## 2026-11-02 — RT-SP client harness, launches 91–92 (a Mixamo carry clip retargeted onto the game's skeleton, a trial)
+
+The user supplied a Mixamo clip, `createdAssets/Carrying.fbx` (2,484,432
+bytes, SHA-256 `dbfd9540…`): Mixamo's 65-bone skeleton and its "Beta"
+character, a 10 s idle at 30 fps with both forearms level in front at
+elbow height. It is not in the repository. Blender 4.5.15 LTS (portable)
+and two scripts made a game clip of its arms:
+- `tools/blender/pz_x.py` reads the game's text .x files: frames, and
+  now the clips' S/R/T keys. Checked on `Bob_Idle.x` and
+  `Bob_Idle_Bag.x`: all 45 bones' first rotation keys equal their stored
+  frame rotations transposed.
+- `tools/blender/pz_arms.py` reads each Mixamo arm segment as a direction
+  in the chest's frame (left, up, forward) and lays it on the game's
+  skeleton in its own chest's frame, from the first frame of
+  `Bob_Idle.x`. The game's coordinates are mirrored against Blender's, so
+  the mapping goes by those named axes. Elbows turn about the forearm's
+  and upper arm's Y, palms face the hand's Z, and bones keep the game's
+  lengths.
+
+It wrote `Bob_TLGCarry` (151 keys over 10 s, every second frame) in
+`anims_X/Bob/` of the harness mod. All 45 bones are animated; the arms
+and fingers come from the clip and the rest holds the first frame of
+`Bob_Idle.x`. The clip also places `Bip01_Prop1`, the held item's bone,
+which hangs off `Bip01`: between the hands, turned as `Bob_Idle_Bag.x`
+turns it. The pose file `maskingright/tlgcarry.xml` (both clavicles and
+both prop bones) plays it for `TLGHarness.PoseCarry`. The barrel hand
+models are centred on the prop (`FermenterHeldC*`, the lantern's turn).
+Command: `tools/run-sp-harness.ps1 -Mode pose-carry` (new; request
+`sp-rtmpc`, no save).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run91_pose_carry.txt`,
+`..._run92_pose_carry.txt`, `2026-11-02_run91_carry_sheet.jpg`,
+`2026-11-02_run92_carry_sheet.jpg` and the animator log
+`2026-11-02_run92_animlog_carry.txt`.
+
+| Launch | Result | |
+| --- | --- | --- |
+| 91 | **8/0** | the animator log shows the masking layer playing `tlgcarry` with track `Bob_TLGCarry`: the game loads a clip from a mod's `anims_X/Bob`. Both forearms come forward with open hands and the item between them, standing and walking. The 0.75 m barrel is wider than the arms and swallows the torso; at 0.5 m it reads as carried in both arms, but its back sinks into the belly and its tap points into the left arm |
+| 92 | **8/0** | the clip rewritten with the prop 0.05 file units further forward and turned a quarter about the body's up (`PROP_FORWARD`, `PROP_TURN_LEFT_TO_FORWARD`): at 0.6 m and at 0.5 m the barrel sits in front of the body with the tap forward and the hands at its sides, standing and walking |
+
+Not checked: the vessel during actions (placing it, pouring), where the
+action draws the hand model; running and sneaking; multiplayer. The mod
+ships none of this yet.

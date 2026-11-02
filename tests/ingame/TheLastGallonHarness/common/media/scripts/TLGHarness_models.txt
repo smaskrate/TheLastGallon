@@ -108,6 +108,18 @@ module TLGHarness
         }
     }
 
+    model FermenterHeldC40
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.4,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.2,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
+
     model FermenterHeldC33
     {
         mesh = TLG/Fermenter,

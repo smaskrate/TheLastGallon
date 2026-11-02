@@ -48,6 +48,8 @@
 --             shrug, its unused holding clip and its box-packing clip
 --   sp-rtmpf -> five of the game's both-hands clips held still on their
 --             first frame, the 0.5 m barrel in hand
+--   sp-rtmpc -> the carry clip retargeted from a Mixamo clip, with the
+--             water bottle and the barrel at 0.75 m and 0.5 m
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -77,7 +79,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8413,7 +8415,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
 RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf"
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module: StaticModel =
     -- WaterTank reads back as Base.WaterTank (run 68).
@@ -8983,6 +8985,16 @@ if REQUEST == "sp-rtmph" then
         { item = "TLGHarness.PosePack", model = "Base.WaterTank" },
         { item = "TLGHarness.PosePack", model = "TLGHarness.FermenterHeldC33" } }
 end
+-- Request "sp-rtmpc": the carry clip retargeted from the user's Mixamo
+-- "Carrying" (tools/blender/pz_arms.py: anims_X/Bob/Bob_TLGCarry.x, pose
+-- file tlgcarry.xml). The clip puts Bip01_Prop1 between the hands, so the
+-- barrel models are centred on it (FermenterHeldC*).
+if REQUEST == "sp-rtmpc" then
+    RT.MP.prefix = "rtmpc"
+    RT.MP.trials = { { item = "TLGHarness.PoseCarry", model = "Base.WaterTank" },
+        { item = "TLGHarness.PoseCarry", model = "TLGHarness.FermenterHeldC40" },
+        { item = "TLGHarness.PoseCarry", model = "TLGHarness.FermenterHeldC33" } }
+end
 
 -- The trial's item gets hand model `model`; the stand-ins held before are
 -- gone, the character is back where the trial started and a fresh animator
@@ -9006,7 +9018,7 @@ function RT.MP.use(item, model)
             local si = getScriptManager():getItem(item)
             si:DoParam("StaticModel = " .. model)
             R:line("OBS  RTMP.%s StaticModel=%s", item, tostring(si:getStaticModel()))
-            if REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
+            if REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" then
                 local m = AnimatorDebugMonitor.new(p)
                 m:setFilter(1, true)
                 m:setFilter(2, true)
@@ -9028,8 +9040,8 @@ function RT.MP.animLog(label)
         if not m then return true end
         local text = tostring(m:getLogString()):gsub("<LINE>", "\n"):gsub("<[^>]*>", "")
         local hits = {}
-        for _, key in ipairs({ "tlgholding", "tlgpackbox", "tlgshrug", "Bob_IdleHolding", "Bob_IdlePackBox",
-            "Bob_EmoteShrug2H", "maskingright", "holdingbagright" }) do
+        for _, key in ipairs({ "tlgholding", "tlgpackbox", "tlgshrug", "tlgcarry", "Bob_IdleHolding", "Bob_IdlePackBox",
+            "Bob_EmoteShrug2H", "Bob_TLGCarry", "maskingright", "holdingbagright" }) do
             if text:find(key, 1, true) then hits[#hits + 1] = key end
         end
         local lines = {}
@@ -9452,7 +9464,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -9545,7 +9557,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgu" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, generators put down by the menus' unequip")
                 TLGH.Steps.run(R, RT.genUnequipSteps, H, nil)
-            elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
+            elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, pose trial")
                 TLGH.Steps.run(R, RT.poseSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
@@ -9575,7 +9587,7 @@ end
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
 if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

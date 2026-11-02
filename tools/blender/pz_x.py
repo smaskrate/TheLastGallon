@@ -69,6 +69,48 @@ def parse_frames(path):
     return [tuple(fr) for fr in frames if fr[2] is not None]
 
 
+def parse_animation(path):
+    """The first AnimationSet of a text .x file: (name, ticks per second,
+    {bone: {"S"|"R"|"T": [(time, (values...))]}}). Keys are typed by their
+    keyType (1 scale, 0 rotation w x y z, 2 position), as the game's
+    clips write them (AnimationKey S/R/T)."""
+    with open(path, "r", encoding="latin-1") as f:
+        text = f.read()
+    tps = re.search(r"AnimTicksPerSecond\s*\{\s*(\d+)\s*;", text)
+    m = re.search(r"AnimationSet\s+([A-Za-z0-9_\-.]+)\s*\{", text)
+    if m is None:
+        raise ValueError("%s has no AnimationSet" % path)
+    tokens = _TOKEN.findall(text[m.end():])
+    bones, i, depth = {}, 0, 1
+    while i < len(tokens) and depth > 0:
+        t = tokens[i]
+        if t == "Animation":
+            j = i + 1 if tokens[i + 1] == "{" else i + 2
+            j, d, bone, keys = j + 1, 1, None, {}
+            while d > 0:
+                tk = tokens[j]
+                if tk == "{" and bone is None and tokens[j + 2] == "}":
+                    bone, j = tokens[j + 1], j + 3
+                elif tk == "AnimationKey":
+                    k = (j + 1 if tokens[j + 1] == "{" else j + 2) + 1
+                    kind, n, k, out = int(tokens[k]), int(tokens[k + 1]), k + 2, []
+                    for _ in range(n):
+                        cnt = int(tokens[k + 1])
+                        out.append((int(float(tokens[k])), tuple(float(v) for v in tokens[k + 2:k + 2 + cnt])))
+                        k += 2 + cnt
+                    keys[{0: "R", 1: "S", 2: "T", 4: "M"}.get(kind, str(kind))] = out
+                    j = k + 1
+                else:
+                    d += 1 if tk == "{" else -1 if tk == "}" else 0
+                    j += 1
+            bones[bone] = keys
+            i = j
+        else:
+            depth += 1 if t == "{" else -1 if t == "}" else 0
+            i += 1
+    return m.group(1), int(tps.group(1)) if tps else 4800, bones
+
+
 def _index(frames, name):
     for k in range(len(frames) - 1, -1, -1):
         if frames[k][0] == name:

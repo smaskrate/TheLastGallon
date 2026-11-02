@@ -52,6 +52,22 @@ module TLGHarness
         Tags = base:heavyitem,
     }
 
+    /* The carry trial (request sp-rtmpc): the Mixamo clip's arms
+       retargeted onto the game's skeleton (maskingright/tlgcarry.xml,
+       anims_X/Bob/Bob_TLGCarry.x). */
+    item PoseCarry
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcarry,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
     item PoseShrug
     {
         DisplayCategory = Tool,
