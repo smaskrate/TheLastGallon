@@ -591,7 +591,10 @@ listed with their replacement.
   the vessel as its hand model during "Loot" showed the barrel on the
   action's prop bone, tilted up beside the head (see the amendment).
   Placing the vessel plays no animation and keeps the pose. Running,
-  sneaking and multiplayer are not run. The clip ships with Mixamo's terms recorded
+  sprinting and sneaking keep it too (run 108), but crouched the barrel
+  tips forward and the torso sinks into it: the clip has no crouched
+  variant, and the barrel's bone turns with the root bone, which the
+  game's crouch clips turn 21–28°. Multiplayer is not run. The clip ships with Mixamo's terms recorded
   (`art-src/carry/PROVENANCE.md`); the source FBX files, which hold
   Mixamo's character, stay out of the repository and the package.
 * Amendment (2026-11-02, run 99): an action that plays its own animation

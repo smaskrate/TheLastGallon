@@ -827,6 +827,34 @@ action's animation (D-025 amendment): the log shows `RightHandMask`
 cleared, then `player/actions/LootLow` on `[layer][1]`. Whether the game
 also reads FBX clips is untested.
 
+The same node plays at every gait (runs 107–108): walking, running,
+sprinting, sneaking and running crouched. The game's turn animations take
+`[layer][1]` and the pose moves to `[layer][2]` while they play. The
+vessel's bone turns with `Bip01`, which the game's clips turn away from
+the standing pose: 10.8° in `Bob_Walk`'s first frame, 15.0° in `Bob_Run`
+and `Bob_Sprint`, and 20.6°, 22.5° and 28.4° in `Bob_WalkSneak`,
+`Bob_IdleSneak` and `Bob_RunSneak`, the root up to 0.06 file units lower.
+Walking and running, the barrel stays upright between the hands. Crouched,
+it tips forward and the torso, which bends further over it, sinks into
+it (run 108's pictures). The game's held bag has a node and a clip for
+each gait instead (`maskingright/runbagright.xml`, `walksneakbagright.xml`,
+`idlesneakbagright.xml` and others), so a crouched carry needs a clip of
+its own keyed against a crouch clip.
+
+The run and sprint toggles set the character's forced-run and
+forced-sprint flags, which Lua can set too (`setForceRun`,
+`setForceSprint`). The game clears each flag every frame while its option
+is off ("Toggle to Run" is off by default, "Toggle to Sprint" on;
+`CharacterInputComponent.updateToggleToRun`, BC).
+`IsoPlayer.updateInternal2` also clears both, after reading them, on any
+frame without a movement key. Set again every tick, they make a character
+walking a path (`ISWalkToTimedAction`) run or sprint: run 107's running
+legs walked with "Toggle to Run" off, and run 108's ran with it on. The
+run and sprint input (`IsoPlayer.UpdateInputState`,
+`CharacterInputComponent`) checks no held item (BC), and run 108 ran and
+sprinted with the vessel, in the harness's god mode with unlimited carry:
+what its weight does to a normal character is not measured.
+
 ## Print media and loot lists (RT-SP runs 101–103, 2026-11-02)
 
 A mod item can be read as the game's print media. An item script's
@@ -975,7 +1003,9 @@ a bat, run 99 **11/0**, and the same on the guarded hook, run 100
 **11/0**, then the field manual found in loot and read, runs 101 **10/0**,
 102 **10/0** (Italian) and 103 **10/0**, then the zip with both installed
 clean, run 104 **94/0** and **14/0**, and from its item tree the
-put-down, run 105 **11/0**, and the manual in Italian, run 106 **10/0**. Most failures were traced to the harness
+put-down, run 105 **11/0**, and the manual in Italian, run 106 **10/0**,
+then the vessel carried at each gait, runs 107 19/2 (its running legs
+walked, "Toggle to Run" off) and 108 **21/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

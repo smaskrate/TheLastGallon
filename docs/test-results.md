@@ -2328,3 +2328,74 @@ the folder the zip is made from:
   page measured as in launch 102. The console had no exception.
 Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run105_vessel_actions_packaged.txt`
 and `…_run106_manual_italian_packaged.txt`.
+
+## 2026-11-02 — RT-SP client harness, launches 107–108 (the vessel carried running and sneaking)
+
+The carry pose is one node, `tlgcarryvessel`, with no gait of its own;
+the game's held bag has a node for each. The barrel's bone
+(`Bip01_Prop1`) hangs off the root bone `Bip01`, the arms off the spine,
+and the clip was keyed against the standing pose. None of the game's
+heavy-item drops is tied to a gait (engine capabilities, G14).
+
+Command: `tools/run-sp-harness.ps1 -Mode vessel-gaits` (new; request
+`sp-rtmvg`, no save). The shipped vessel is taken into both hands. The
+character then walks the row the setup found clear, end to end, once per
+gait: walking, running, sprinting, sneaking and running crouched, along a
+path as `ISWalkToTimedAction` walks one. Running and sprinting are the
+forced-run and forced-sprint flags the game's toggle keys set, set again
+every tick. Sneaking is set as the crouch key sets it (`setSneaking`).
+Each leg is timed, photographed at 35, 50 and 65 percent of the way with
+the interface hidden, and logged by a fresh animator monitor. Then she
+crouches and is photographed still, from the front and the side. The
+harness character has god mode and unlimited carry, as in every model
+run.
+
+Launch 107: **19/2**. Both running legs walked: `isRunning` stayed false
+and they took as long as the walking ones (1.94 tiles a second against
+1.91, and 1.60 crouched as when sneaking). The game clears the forced-run
+flag every frame while "Toggle to Run" is off, its default (BC
+`CharacterInputComponent.updateToggleToRun`). "Toggle to Sprint" is on by
+default, and the sprinting leg sprinted. The harness now turns "Toggle to
+Run" on for a running leg and back to what it was after it.
+
+Launch 108: **21/0**.
+
+| Leg | Speed (tiles/s) | The body's state, `[layer][0]` | Carry pose at the three shots |
+| --- | --- | --- | --- |
+| walking | 1.92 | `player/movement/defaultWalk` | on |
+| running | 3.00 | `player/run/defaultRun` | on |
+| sprinting | 3.27 | `player/run/defaultRun`, then `player/sprint/defaultSprint` | on |
+| sneaking | 1.59 | `player/movement/sneakWalk` | on |
+| running crouched | 2.46 | `player/run/sneakRun` | on |
+
+- In every leg `RightHandMask` read `tlgcarryvessel` at the three shots,
+  and the leg's animator log never shows the carry node stop. During a
+  180° turn the game's turn animation took `[layer][1]` and the carry
+  played on `[layer][2]`. The monitor returns its newest 128 lines; each
+  leg's log still begins inside the variable list printed when the
+  monitor was created, so it holds the whole leg.
+- The vessel stayed in both hands and off the ground through every leg
+  and the crouch: no gait puts it down.
+- The pictures: walking and running, the barrel stands upright between
+  her hands. Sprinting, it tilts forward with her lean. Crouched, still,
+  walking or running, it tips forward, its lid turned out and its bottom
+  swung back between her knees, and her hips and belly sink into its
+  back. Her hands stay on its sides throughout.
+- Why: the barrel's bone turns with the root bone, which the game's clips
+  turn away from the standing pose. At their first frames that is 10.8°
+  in `Bob_Walk`, 15.0° in `Bob_Run` and `Bob_Sprint`, and 20.6°, 22.5°
+  and 28.4° in `Bob_WalkSneak`, `Bob_IdleSneak` and `Bob_RunSneak`, the
+  root up to 0.06 file units lower. The arms follow the spine, which
+  crouched bends further over the barrel. The game's held bag has a clip
+  for each gait instead (`walksneakbagright.xml`, `idlesneakbagright.xml`
+  and others).
+- The console had no exception.
+
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run107_vessel_gaits.txt`,
+`…_run108_vessel_gaits.txt`, `2026-11-02_run108_vessel_gaits_sheet.jpg`
+and the five legs' animator logs, `2026-11-02_run108_animlogs_gaits.txt`.
+
+Not checked: multiplayer; the keys pressed on a keyboard (the harness sets
+the flags the keys set); what the vessel's weight does to a normal
+character's speed; animations the game starts without a Lua action. No
+crouched clip was made.
