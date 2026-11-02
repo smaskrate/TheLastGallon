@@ -70,13 +70,33 @@ contact (baseline condition); nothing is scanned eagerly.
 
 ## Removing the mod
 
-Not supported while TLG fluids exist in the world. If the mod is removed:
-items holding `TLG_*` fluids reference fluid types the game no longer knows
-(engine behaviour NOT RUN); vanilla Petrol keeps working; TLG sidecars in
-modData are inert. Before removal, players should consume or discard
-ethanol, diesel, biodiesel and contaminated fuel, and dismantle TLG machines
-(empty machines carry no fluids). A guided "prepare removal" admin command is
-a release-checklist item, not yet implemented.
+Not supported while the mod's items or fluids exist in the world. What
+happens, from RT-SP run 54 (the mod taken off with the load screen's Choose
+mods, which rewrites the save's `mods.txt`; a game day played; the mod put
+back):
+* The save loads without a dialog. The game skips the items it cannot
+  create (console: `InventoryItemFactory.CreateItem() cannot create item`
+  for `TLG.FermenterVessel`, then `InventoryItem.loadItem() item == null,
+  skipped bytes`): a fermenter with a batch running was gone. The other
+  `TLG.*` items are items of the same kind; not tried.
+* A can of `TLG_Ethanol` was empty: the game dropped the fluid without a
+  word. The other `TLG_*` fluids (diesel, biodiesel, the water and sediment
+  of contaminated fuel, methanol, glycerin, plant oil) not tried.
+* Vanilla Petrol keeps working. TLG sidecars in item modData and the world
+  record in global ModData persist and are inert.
+* With the mod back, the world record is the same one, never created again
+  (re-adding grants no fresh fuel), and the sidecars read as they were
+  saved. Changes made meanwhile are reconciled like any change TLG did not
+  see (D-006): a decrease leaves proportionally, so the rest keeps its
+  condition; an increase is untracked inflow at the baseline of the moment
+  it is found.
+
+Not run: a save that still lists the mod after it was uninstalled (the
+game's missing-mods prompt), a server, converted engines and generators.
+Before removal, players should use up or discard ethanol, diesel, biodiesel
+and contaminated fuel; the machines cannot be kept (there is no dismantling
+recipe). A guided "prepare removal" admin command is a release-checklist
+item, not yet implemented.
 
 ## Crash consistency
 

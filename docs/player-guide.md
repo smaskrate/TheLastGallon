@@ -236,5 +236,21 @@ The other two settings and servers are untested in game.)*
 
 ## Removing the mod
 
-Use up or discard ethanol, diesel, biodiesel and contaminated fuel first and
-empty TLG machines. See `docs/migrations.md`.
+The mod's machines and fuels do not survive its removal. When the game
+loads a save without the mod it drops, without a word, what it no longer
+knows: the mod's items (the machines with their batches, empty or not) and
+the mod's fluids in any container. Before you remove it, use up what you
+want to keep: ethanol, diesel, biodiesel, and contaminated fuel (its water
+and sediment are the mod's fluids too). The machines cannot be kept.
+
+Petrol stays, and so does what the mod recorded about it. Put the mod back
+later and it finds that record as it was; the world's fuel history does
+not start again, so nothing comes back fresh. Petrol poured out of a can
+meanwhile leaves the rest as it was. Petrol added meanwhile counts as fuel
+of unknown origin, found the next time the mod sees the can. *(Checked in
+game: the mod taken off a save with the load screen's Choose mods, a day
+played, the mod put back. A fermenter with a batch running and a can of
+ethanol were gone; a petrol can poured from and one topped up read as
+described. The mod's other fluids and items, converted engines, and a save
+whose mod was uninstalled, where the game asks about missing mods, were
+not tried.)* See `docs/migrations.md`.
