@@ -17,8 +17,8 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 
 * One original asset ships: the fermentation vessel's world model
   (`TLG.Fermenter`, an FBX and its texture), supplied on 2026-11-02 and
-  generated with Tripo Studio (`art-src/fermenter/PROVENANCE.md`; its
-  redistribution terms are not recorded yet). The import test's model
+  generated with Tripo Studio under a commercial Tripo licence the user
+  holds (`art-src/fermenter/PROVENANCE.md`). The import test's model
   lives in the dev-only harness mod.
 * Every other shipped item and machine borrows a vanilla icon and model by
   name, and so does the vessel's model in the hand. The vessel's icon is

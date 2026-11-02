@@ -31,6 +31,19 @@ an inventory icon. The icon, `media/textures/Item_TLG_Fermenter.png`, was
 drawn for the mod afterwards by `tools/make-icons.ps1` (pixel by pixel,
 in colours picked from this texture); it contains none of these files.
 
-Redistribution rights: not recorded. They follow from the terms that
-applied to the Tripo account that generated the model, and must be
-confirmed before any public release (release gate 9).
+Redistribution rights, recorded 2026-11-02:
+
+* The user stated, in the asset-requirements session on 2026-11-02: "I
+  have a commercial license for tripo". The model was generated that same
+  day (the date in its texture path).
+* Basis: Tripo's help pages "Can I use models commercially" and "How to
+  use Tripo models commercially" (tripo3d.ai/help/privacy-policy/...), as
+  a web search summarised them: on a paid plan the user has full rights
+  to use, modify, distribute and commercially exploit the models they
+  generate (Terms §5.2.2), and Tripo takes no responsibility for the
+  copyright status of outputs.
+* Not read: the Terms of Service text itself (tripo3d.ai refuses automated
+  fetches with HTTP 403), nor the plan or licence document.
+
+Any further Tripo model needs the same record, generated while the paid
+plan was active.
