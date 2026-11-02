@@ -1667,12 +1667,13 @@ agent; nobody else has looked yet.
 | 66 | 15/1 | two groups, each photographed from behind its middle; a copy with `undoCoreScale`; vanilla's water bottle held as a control. After the reload the menu was asked in the same tick as the teleport (refused) |
 | 67 | **16/0** | the menu asked a step after the teleport; the hide flags logged and vanilla's hand-model reset called before the held shots |
 
-Every launch: the three model scripts loaded with their mesh and texture;
-the vessel's world model, hand model and icon were the test model's, its
-icon texture the harness mod's file; every item stood on its square with
-its turn, and came back after the save with its turn and, for the vessel,
-its machine record id. The square stayed free and not solid. From 1.4
-tiles the machine menu answered "Ready".
+Every launch: the model scripts loaded with their mesh and texture (one
+in launches 64–65, three from 66); the vessel's world model, hand model
+and icon were the test model's, its icon texture the harness mod's file;
+every item stood on its square with its turn and came back after the save
+with it. From launch 65 the vessel's machine record id came back too
+(launch 64's menu was refused, so it had none). The square stayed free
+and not solid. From 1.4 tiles the machine menu answered "Ready".
 
 The screenshots show (G13 in `engine-capabilities.md` has the details):
 the barrel drawn textured, staves and hoops, the lid's cross and notch,
@@ -1683,8 +1684,9 @@ semi-transparent airlock translucent; no ground shadow under any item.
 At scale 1.0 the barrel drew 1.5 times the size of its `undoCoreScale`
 copy, which measured about true size against the character. The icon
 showed in the inventory list and the equipped-item button. Neither the
-vessel nor vanilla's water bottle was drawn in the character's hand, with
-the hide flags false (launches 65–67), so the in-hand look is NOT RUN.
+vessel (launches 65–67) nor vanilla's water bottle (66–67) was drawn in
+the character's hand; launch 67 logged the hide flags false and called
+vanilla's hand-model reset first. The in-hand look is NOT RUN.
 The placeholders were seen for the first time: the drying column reads as
 a car fuel tank and the pot still as a cooking pot. The inventory showed
 the vessel's category as the raw key `IGUI_ItemCat_Tools` (the machines'

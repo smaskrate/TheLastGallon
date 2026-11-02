@@ -688,7 +688,7 @@ At runtime (RT-SP; screenshots in `docs/evidence/2026-11-02_run6*`):
 | Footprint, interaction side | a world item on one square. The machine menu answered from 1.4 tiles ("Ready") and refused from 2.8 ("You cannot reach it": the mod's 2.5-tile reach); tried from one side only |
 | Collision, placement | none added: the square stayed free and not solid (`isFree`, `isSolid`, `isSolidTrans` unchanged); put down at the square's centre |
 | Rotation | turns of 0, 90, 180 and 270 degrees drew as turned and came back after a save, exit and continue |
-| In-hand attachment | NOT RUN: the harness character drew nothing in its hand, not even vanilla's water bottle (whose model has a `Bip01_Prop1` attachment), with the hide flags false and after vanilla's hand-model reset (runs 65–67). Needs a look in a normal game |
+| In-hand attachment | NOT RUN: the harness character drew nothing in its hand (runs 65–67), not even vanilla's water bottle, whose model has a `Bip01_Prop1` attachment (runs 66–67); run 67 logged the hide flags false and called vanilla's hand-model reset first. Needs a look in a normal game |
 | Animation | not applicable to a static item model; NOT RUN |
 | Shadows, transparency | fully transparent texels are cut out: the window is a hole, and the far wall's inside shows through it, so back faces are drawn. 40 % alpha drew translucent (the lid's line shows through the airlock). No shadow on the ground under the barrel or the vanilla bottle; the character's shows |
 | Save/load | the model, the wiring, every item's square and turn, and the vessel's machine record (its id) came back |

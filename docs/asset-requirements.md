@@ -95,8 +95,8 @@ runs 64–67, `engine-capabilities.md` G13):
   `texture` names; the mesh file's own texture name is not used), the
   icon as `media/textures/Item_<Name>.png`.
 * Author in metres, Y up, the origin at the centre of the base, and set
-  `undoCoreScale = true` for true size beside a character: at scale 1.0
-  the model drew 1.5 times larger.
+  `undoCoreScale = true` for about true size beside a character: at scale
+  1.0 the model drew 1.5 times larger.
 * The texture's V runs down (row 0 at the top). Fully transparent texels
   are cut out and back faces are drawn; partial alpha draws translucent.
   Items cast no ground shadow.
