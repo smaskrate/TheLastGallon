@@ -681,7 +681,7 @@ At runtime (RT-SP; screenshots in `docs/evidence/2026-11-02_run6*`):
 
 | §21 check | Result |
 | --- | --- |
-| Runtime format | the text `.x` mesh, its PNG texture and the `Item_` icon loaded from the harness mod's own `media` folders (the icon's texture is the mod's file); the icon showed in the inventory list and the equipped-item button |
+| Runtime format | the text `.x` mesh, its PNG texture and the `Item_` icon loaded from the harness mod's own `media` folders (the icon's texture is the mod's file); the icon showed in the inventory list and the equipped-item button. The supplied binary FBX and its PNG texture loaded from the mod's own folders too (runs 68–69, below) |
 | Orientation | Y up. At `worldZRotation` 0 the mesh's +X faced east (+x, the screen's lower right) and +Z north (−y, the upper right); 90 turned +X to the south (lower left): degrees run clockwise seen from above |
 | Scale | at scale 1.0 a mesh in metres drew 1.5 times the size of the same mesh with `undoCoreScale` (150 against 100 px wide, run 66). With `undoCoreScale` the 0.56 m barrel measured about 0.53 m against the character's shoulders: about true size, as far as a screenshot can measure. Vanilla's water bottle drew close to life size |
 | Texture conventions | V runs down the image, as in DirectX: row 0 at the top of the barrel (the window 48–68 % down the body, where rows 90–127 put it; "TOP" upright with its arrow up). The texture is the one the model script names; the `.x` file's `TextureFilename` is not used (vanilla `CubePuzzle.x` names `Cube.png`) |

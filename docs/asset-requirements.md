@@ -290,7 +290,7 @@ the first to cut.
 
 | Tier | New 3D models | Icons | UI symbols | Original sounds | Release art |
 | --- | --- | --- | --- | --- | --- |
-| A | 4, plus 5 vanilla meshes (own textures optional) | 9 | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster, icon, banner, screenshots |
+| A | 4 (the fermenter's supplied 2026-11-02, so 3 to make), plus 5 vanilla meshes (own textures optional) | 9 | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster, icon, banner, screenshots |
 | B | 15 (2 blocked on G11, 1 optional) | 15 | 2 badges | about 10 | — |
 | C | 13 (1 blocked on G11, 1 optional) | 9 | about 5 | about 9 | — |
 
