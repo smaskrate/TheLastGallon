@@ -1,0 +1,36 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 60608
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, generators put down by the menus' unequip
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=88990600048364940539 hours=2.0096 DayLength=4
+STEP rtgu_setup begin
+PASS RTGU.free_ground_found :: from 10660,10645: 10660,10645
+OBS  RTGU.generator A at 10662,10645 fuel=6.00 record=G1798162920-1
+OBS  RTGU.generator B at 10664,10645 fuel=4.00 record=G1798162920-2
+STEP rtgu_take_a begin
+OBS  RTGU.rtgu_take_a take: valid=false canReachTo=false objectIndex=1 connected=false; the character on 10660,10645, the generator on 10662,10645
+OBS  RTGU.rtgu_take_a queued ISWalkToTimedAction,ISTakeGenerator
+PASS RTGU.a_carried_with_its_record :: hand=Base.Generator record=G1798162920-1 expected=G1798162920-1 both hands=true
+STEP rtgu_take_b begin
+OBS  RTGU.rtgu_take_b take: valid=false canReachTo=false objectIndex=1 connected=false; the character on 10661,10645, the generator on 10664,10645
+OBS  RTGU.rtgu_take_b queued ISWalkToTimedAction,ISUnequipAction,ISTakeGenerator
+OBS  RTGU.a_put_down_by_the_take generators near the character: 10663,10645 fuel=6.00 record=G1798162920-1
+OBS  RTGU.a_put_down_by_the_take object=true at 10663,10645 fuel=6 record=G1798162920-1; the character on 10663,10645
+PASS RTGU.a_put_down_by_the_take_record_on_its_object :: object=G1798162920-1 expected=G1798162920-1
+PASS RTGU.a_put_down_by_the_take_fuel_kept :: object=6 carried=6
+PASS RTGU.b_carried_with_its_record :: hand=Base.Generator record=G1798162920-2 expected=G1798162920-2 both hands=true
+STEP rtgu_equip_bat begin
+OBS  RTGU.rtgu_equip_bat queued ISUnequipAction,ISEquipWeaponAction
+OBS  RTGU.b_put_down_by_the_weapon generators near the character: 10663,10645 fuel=6.00 record=G1798162920-1; 10664,10645 fuel=4.00 record=G1798162920-2
+OBS  RTGU.b_put_down_by_the_weapon object=true at 10664,10645 fuel=4 record=G1798162920-2; the character on 10664,10645
+PASS RTGU.b_put_down_by_the_weapon_record_on_its_object :: object=G1798162920-2 expected=G1798162920-2
+PASS RTGU.b_put_down_by_the_weapon_fuel_kept :: object=4 carried=4
+PASS RTGU.bat_equipped :: Base.BaseballBat
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.06
+SUMMARY pass=8 fail=0
+DONE

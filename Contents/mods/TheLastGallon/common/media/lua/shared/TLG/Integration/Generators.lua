@@ -14,9 +14,10 @@
 --                      "generatorFullType", nothing else). TLG wraps pickup,
 --                      IsoGenerator.new and every Lua drop path (Java converts
 --                      the dropped item in IsoGridSquare.AddWorldInventoryItem):
---                      ISDropWorldItemAction, forceDropHeavyItems and
---                      ISTransferAction to the floor. Drops done by Java alone
---                      are not seen; such a generator reads as untracked fuel.
+--                      ISDropWorldItemAction, ISUnequipAction (the menus'
+--                      unequip), forceDropHeavyItems and ISTransferAction to
+--                      the floor. Drops done by Java alone are not seen; such
+--                      a generator reads as untracked fuel.
 --   effects            start gate on ISActivateGenerator: failToStart() when the
 --                      fuel is incompatible or the start roll fails
 require "TLG/Integration/Containers"
@@ -261,8 +262,29 @@ local function installPlacement()
         reattach(items, sq, 0)
         return r
     end)
-    -- Heavy items are dropped at the character's feet when another heavy item
-    -- is taken (SRC ISEquipWeaponAction.lua:75, called from 17 places).
+    -- The menus unequip the hands before a generator or another heavy item is
+    -- taken or a weapon equipped (SRC ISWorldObjectContextMenu.lua:664-673,
+    -- ISInventoryPaneContextMenu.lua:3734, :4166-4171), and the unequip drops
+    -- a heavy hand item at the feet itself unless it is unequipped to be
+    -- dropped or placed (ISUnequipAction.lua:134). Only a generator that left
+    -- the inventory is looked for.
+    wrap(ISUnequipAction, "complete", function(orig, self, ...)
+        local items, sq = {}, nil
+        if World.isAuthority() and self.character then
+            items = carriedGenerators(self.item)
+            sq = self.character:getCurrentSquare()
+        end
+        local r = orig(self, ...)
+        local inv, dropped = self.character and self.character:getInventory(), {}
+        for _, it in ipairs(items) do
+            if not (inv and inv:contains(it)) then dropped[#dropped + 1] = it end
+        end
+        reattach(dropped, sq, 1)
+        return r
+    end)
+    -- Heavy items are also dropped at the character's feet by
+    -- forceDropHeavyItems (SRC ISEquipWeaponAction.lua:75, called from 17
+    -- places: a vehicle entered, an animal handled, a trap set, the takes).
     if forceDropHeavyItems then
         local origDrop = forceDropHeavyItems
         forceDropHeavyItems = function(character, ...)

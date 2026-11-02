@@ -23,7 +23,7 @@ alternative), **NOT RUN**.
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP)** idle, start gate, stall; driving NOT RUN | Native idle burn reconciled proportionally; `ISStartVehicleEngine` refused on a 36 % ethanol blend, allowed on station fuel; the blend stalled a force-started engine within a game minute; mod never subtracts |
 | G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 |
-| G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator) and drag to the floor all carry the record |
+| G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator), the menus' unequip (run 85) and drag to the floor all carry the record |
 | G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
 | G07 Action authority | Which stage mutates on the server? | SRC-ONLY | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`; MP NOT RUN |
 | G08 Persistence | Reliable stores/IDs | **PASS (DS + SP)** single player | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5), as do machine records and conversion projects (runs 7–8); MP reconnect NOT RUN |
@@ -226,7 +226,10 @@ RT-SP (runs 3–6, `Base.Generator`, max fuel 10 L):
   since vanilla equips it there); the drop action, `forceDropHeavyItems`
   (taking a second generator while carrying one) and dragging the item to
   the floor all carry it to the converted object, with vanilla fuel equal.
-  The second generator taken in the same action got its own record.
+  The second generator taken in the same action got its own record. Run 85
+  (2026-11-02) took the generators from the world menu instead: the
+  menus' unequip put the carried one down (taking a second generator,
+  then equipping a bat), and each record reached its new object.
 
 Source evidence:
 
@@ -248,10 +251,10 @@ Source evidence:
 * Implemented (D-013): the adapter carries the TLG sidecar, device identity
   and conversion project by wrapping `ISTakeGenerator.complete` (object →
   item), the Lua drop paths `ISDropWorldItemAction.complete`,
+  `ISUnequipAction.complete` (the menus' unequip, G14; run 85),
   `forceDropHeavyItems` and `ISTransferAction:transferItem` to the floor,
   and `IsoGenerator.new` (wrapping verified RT-SP). Drops done by Java alone
-  are not seen, nor yet the drop `ISUnequipAction.complete` makes when the
-  menus unequip a carried generator (G14; not run, not fixed).
+  are not seen.
 
 ## G06 Stations — PASS (SP)
 
@@ -658,7 +661,9 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `onGrabCorpseItem`, `equipWeapon`): `forceDropHeavyItems`, which the
   take calls afterwards, then finds the hands empty. The mod follows that
   drop for its machines (run 81: the menus queued `ISUnequipAction` then
-  `ISEquipHeavyItem`); the generator adapter does not yet (G05).
+  `ISEquipHeavyItem`), and so does the generator adapter (run 85: a
+  second generator taken from the world menu, a bat equipped from the
+  inventory menu).
 
 ## G13: one original model imported (RT-SP runs 64–67, 2026-11-02)
 
@@ -850,7 +855,9 @@ run 77 34/2, a vanilla heavy item taken off the floor, run 78 **8/0**,
 and after the fix run 79 **39/0**, and the zip with the carry installed
 clean, run 80 **94/0** and **14/0**, then the vessel put down by the
 menus' unequip, run 81 **43/0**, and the zip with that installed clean,
-run 82 **94/0** and **14/0**. Most failures were traced to the harness
+run 82 **94/0** and **14/0**, then generators put down the same way, run
+83 5/3 (before the fix; its first take never ran), run 84 1/1 (the same
+take) and run 85 **8/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

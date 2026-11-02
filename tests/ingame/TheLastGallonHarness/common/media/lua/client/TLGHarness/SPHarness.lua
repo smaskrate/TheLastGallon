@@ -40,6 +40,8 @@
 --             fermentation vessel in one hand and in both
 --   sp-rtmhh -> heavy items carried in both hands: a meteorite, an anvil,
 --             the vessel scripted as a heavy item
+--   sp-rtgu -> generators put down by the menus' unequip: one taken while
+--             carrying another, then a bat equipped while carrying one
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -68,7 +70,8 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
-    or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
+    or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8749,6 +8752,197 @@ RT.heavySteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmhh_go", "tests"), RT
     RT.MI.heavy("vessel", "TLG.FermenterVessel"), RT.MI.shot("rtmhh_vessel", true),
     RT.MI.heavyFromFloor, RT.MI.shot("rtmhh_from_floor", true), RT.finish }
 
+------------------------------------------------------------------------------
+-- Generators put down by the menus' unequip (request "sp-rtgu"). Before a
+-- take the world menu unequips the hands (ISWorldObjectContextMenu
+-- .onTakeGenerator, SRC ISWorldObjectContextMenu.lua:664-673), as the
+-- inventory menu does before equipping a weapon while a heavy item is held
+-- (ISInventoryPaneContextMenu.equipWeapon, :3734); ISUnequipAction.complete
+-- then drops a heavy hand item at the feet itself (ISUnequipAction.lua:134),
+-- where Java converts a generator (IsoGridSquare.AddWorldInventoryItem,
+-- BC). Generator A, then B, are taken from the world menu, B's take putting
+-- A down that way; then a bat equipped from the inventory menu puts B down
+-- on another tile. Each record must reach the object its generator became
+-- (phase A's G05 covers the other drops).
+------------------------------------------------------------------------------
+RT.GU = {}
+
+function RT.GU.queued()
+    local q, types = ISTimedActionQueue.getTimedActionQueue(player()), {}
+    for _, a in ipairs(q and q.queue or {}) do types[#types + 1] = tostring(a.Type) end
+    return table.concat(types, ",")
+end
+
+-- Five free outdoor tiles in a row, each reaching the next: the character
+-- on the first, A (6 L) on the third and B (4 L) on the fifth, each with its
+-- own record. Each take starts with a walk: in runs 83-84 the take of a
+-- generator next to the start tile left the queue unperformed, while B's,
+-- after a walk, went through.
+RT.GU.setup = { name = "rtgu_setup", timeout = 1200, fn = function(ctx, ticks)
+    local U = RT.GU
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        pcall(function() p:setUnlimitedCarry(true) end)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 30 then return nil end
+    if ctx.spawned then return ticks - ctx.spawned >= 60 or nil end
+    local px, py = math.floor(player():getX()), math.floor(player():getY())
+    for r = 0, 12 do
+        for dx = -r, r do
+            for dy = -r, r do
+                if not U.x and math.max(math.abs(dx), math.abs(dy)) == r then
+                    local ok = true
+                    for k = 0, 4 do ok = ok and RT.MI.clear(px + dx + k, py + dy) end
+                    for k = 0, 3 do
+                        ok = ok and sq(px + dx + k, py + dy, 0):canReachTo(sq(px + dx + k + 1, py + dy, 0))
+                    end
+                    if ok then U.x, U.y = px + dx, py + dy end
+                end
+            end
+        end
+    end
+    R:check("RTGU.free_ground_found", function()
+        return U.x ~= nil, string.format("from %d,%d: %s,%s", px, py, tostring(U.x), tostring(U.y))
+    end)
+    if not U.x then
+        RT.abort = "no free ground near the start"
+        return true
+    end
+    player():teleportTo(U.x + 0.5, U.y + 0.5, 0)
+    local G = TLG.Integration.Generators
+    for i, k in ipairs({ "A", "B" }) do
+        local g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(U.x + 2 * i, U.y, 0))
+        g:setFuel(i == 1 and 6.0 or 4.0)
+        G.writeSidecar(g, (G.read(g, true)))
+        U[k] = { obj = g, id = g:getModData().tlg.id, fuel = g:getFuel() }
+        R:line("OBS  RTGU.generator %s at %d,%d fuel=%.2f record=%s", k, U.x + 2 * i, U.y, g:getFuel(), tostring(U[k].id))
+    end
+    ctx.spawned = ticks
+    return nil
+end }
+
+-- What ISTakeGenerator:isValid tests, for each take in the queue.
+function RT.GU.why(name)
+    local q, s = ISTimedActionQueue.getTimedActionQueue(player()), player():getSquare()
+    for _, a in ipairs(q and q.queue or {}) do
+        if a.Type == "ISTakeGenerator" and a.generator then
+            local g = a.generator
+            local gs = g:getSquare()
+            R:line("OBS  RTGU.%s take: valid=%s canReachTo=%s objectIndex=%s connected=%s; the character on %d,%d, the generator on %s",
+                name, tostring(a:isValid()), tostring(gs ~= nil and s:canReachTo(gs)), tostring(g:getObjectIndex()),
+                tostring(g:isConnected()), s:getX(), s:getY(), gs and (gs:getX() .. "," .. gs:getY()) or "-")
+        end
+    end
+end
+
+-- Calls a menu function, then waits for the queue it filled to run out;
+-- once more if `done` says the move did not happen.
+function RT.GU.menu(name, call, check, done)
+    return { name = name, timeout = 3000, fn = function(ctx, ticks)
+        if RT.skip(name) then return true end
+        if not ctx.t0 then
+            call(ctx)
+            ctx.queue = RT.GU.queued()
+            RT.GU.why(name)
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+        R:line("OBS  RTGU.%s queued %s", name, ctx.queue)
+        if done and not done() and not ctx.retried then
+            ctx.retried = true
+            R:line("OBS  RTGU.%s not done when the queue ran out, after %d ticks: once more", name, ticks - ctx.t0)
+            call(ctx)
+            ctx.queue = RT.GU.queued()
+            RT.GU.why(name)
+            ctx.t0 = ticks
+            return nil
+        end
+        check(ctx)
+        return true
+    end }
+end
+
+function RT.GU.carried(label, want)
+    local p = player()
+    local it = p:getPrimaryHandItem()
+    local side = it and it:getModData().tlg
+    R:check("RTGU." .. label .. "_carried_with_its_record", function()
+        return side ~= nil and side.id == want.id and p:getSecondaryHandItem() == it,
+            string.format("hand=%s record=%s expected=%s both hands=%s", tostring(it and it:getFullType()),
+                tostring(side and side.id), tostring(want.id), tostring(it ~= nil and p:getSecondaryHandItem() == it))
+    end)
+end
+
+-- The generator object near the character with `want`'s record; every
+-- generator within two tiles is listed first.
+function RT.GU.putDown(label, want)
+    local s = player():getCurrentSquare()
+    local seen = {}
+    for dx = -2, 2 do
+        for dy = -2, 2 do
+            local t = sq(s:getX() + dx, s:getY() + dy, 0)
+            local objs = t and t:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                if instanceof(o, "IsoGenerator") then
+                    local m = o:getModData().tlg
+                    seen[#seen + 1] = string.format("%d,%d fuel=%.2f record=%s", t:getX(), t:getY(), o:getFuel(),
+                        tostring(m and m.id))
+                end
+            end
+        end
+    end
+    R:line("OBS  RTGU.%s generators near the character: %s", label, table.concat(seen, "; "))
+    local g = findGenerator(s:getX(), s:getY(), 2, want.id)
+    local md = g and g:getModData().tlg
+    if not (md and md.id == want.id) then g, md = nil, nil end
+    R:line("OBS  RTGU.%s object=%s at %s fuel=%s record=%s; the character on %d,%d", label, tostring(g ~= nil),
+        g and (g:getSquare():getX() .. "," .. g:getSquare():getY()) or "-", tostring(g and g:getFuel()), tostring(md and md.id),
+        s:getX(), s:getY())
+    R:check("RTGU." .. label .. "_record_on_its_object", function()
+        return md ~= nil and md.id == want.id and md.kind == "generator",
+            string.format("object=%s expected=%s", tostring(md and md.id), tostring(want.id))
+    end)
+    R:check("RTGU." .. label .. "_fuel_kept", function()
+        return g ~= nil and math.abs(g:getFuel() - want.fuel) <= 1e-3,
+            string.format("object=%s carried=%s", tostring(g and g:getFuel()), tostring(want.fuel))
+    end)
+end
+
+RT.GU.takeA = RT.GU.menu("rtgu_take_a", function()
+    ISWorldObjectContextMenu.onTakeGenerator(nil, RT.GU.A.obj, 0)
+end, function()
+    RT.GU.carried("a", RT.GU.A)
+    if RT.GU.A.obj:getObjectIndex() ~= -1 then RT.abort = "generator A was not taken" end
+end, function() return RT.GU.A.obj:getObjectIndex() == -1 end)
+
+RT.GU.takeB = RT.GU.menu("rtgu_take_b", function()
+    ISWorldObjectContextMenu.onTakeGenerator(nil, RT.GU.B.obj, 0)
+end, function()
+    RT.GU.putDown("a_put_down_by_the_take", RT.GU.A)
+    RT.GU.carried("b", RT.GU.B)
+    if RT.GU.B.obj:getObjectIndex() ~= -1 then RT.abort = "generator B was not taken" end
+end, function() return RT.GU.B.obj:getObjectIndex() == -1 end)
+
+-- On B's old tile, free since its take, so B goes down apart from A.
+RT.GU.equipBat = RT.GU.menu("rtgu_equip_bat", function(ctx)
+    player():teleportTo(RT.GU.x + 4.5, RT.GU.y + 0.5, 0)
+    ctx.bat = player():getInventory():AddItem("Base.BaseballBat")
+    ISInventoryPaneContextMenu.equipWeapon(ctx.bat, true, false, 0)
+end, function(ctx)
+    RT.GU.putDown("b_put_down_by_the_weapon", RT.GU.B)
+    R:check("RTGU.bat_equipped", function()
+        local h = player():getPrimaryHandItem()
+        return h ~= nil and h == ctx.bat, tostring(h and h:getFullType())
+    end)
+end)
+
+RT.genUnequipSteps = { RT.waitWorld, RT.GU.setup, RT.GU.takeA, RT.GU.takeB, RT.GU.equipBat, RT.finish }
+
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
 -- character's hand, not even vanilla's water bottle. Run 73 showed why: a
 -- baseball bat (a weapon) is drawn in the idle character's hand, a water
@@ -9086,7 +9280,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -9176,6 +9370,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtmhh" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, heavy items")
                 TLGH.Steps.run(R, RT.heavySteps, H, nil)
+            elseif REQUEST == "sp-rtgu" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, generators put down by the menus' unequip")
+                TLGH.Steps.run(R, RT.genUnequipSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)

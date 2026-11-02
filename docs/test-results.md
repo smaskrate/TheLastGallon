@@ -1911,3 +1911,36 @@ Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60, 63, 70, 72 and 80; the vessel was crafted and put down as
 in run 80. The console had no error naming the mod; its one exception
 came from the harness's own deep-recursion probe.
+
+## 2026-11-02 — RT-SP client harness, launches 83–85 (generators put down by the menus' unequip)
+
+Launch 81 showed the menus put a carried heavy item down through
+`ISUnequipAction`. The generator adapter re-attached a generator's record
+on every other drop path, but not on this one (it was an open item).
+`Generators.lua` now wraps `ISUnequipAction.complete` as it wraps the
+other drops: for a carried generator that left the inventory, the record
+goes to the object it became (`G.attachNear`). Tests 193/193, with a new
+case (`tests/integration/test_generator_moves.lua`) that fails without
+the wrap, and again without the check that the generator left the
+inventory: one unequipped to be dropped stays there, and a record-less
+generator with the same fuel nearby would get its record.
+
+Command: `tools/run-sp-harness.ps1 -Mode generator-unequip` (new; request
+`sp-rtgu`, no save): two generators with records on the ground. A is
+taken from the world menu (`ISWorldObjectContextMenu.onTakeGenerator`),
+then B the same way while A is carried, then a bat is equipped from the
+inventory menu (`ISInventoryPaneContextMenu.equipWeapon`) while B is
+carried.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run83_generator_unequip.txt`
+to `..._run85_generator_unequip.txt`.
+
+| Launch | Result | |
+| --- | --- | --- |
+| 83 | 5/3 | before the fix. A's take, from the tile next to it, left the queue without being performed, so B's take had nothing to unequip. The bat's equip queued `ISUnequipAction,ISEquipWeaponAction` and put B down: no generator within two tiles of the character had B's record |
+| 84 | 1/1 | with the fix; the same first take failed again, and the run stopped there |
+| 85 | **8/0** | each take after a walk, as B's was in launch 83. B's take queued `ISWalkToTimedAction,ISUnequipAction,ISTakeGenerator`: A went down on the character's tile with its record and its 6 L, and B came into both hands with its own. The bat's equip put B down with its record and its 4 L |
+
+Why the first take of launches 83–84 never ran was not found: the two
+tiles reached each other (`canReachTo`, checked before the take), and
+every take after a walk went through. Not run: a generator put down by
+taking a heavy item from the loot window, or by grabbing a corpse.

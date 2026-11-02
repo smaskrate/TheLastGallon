@@ -1,0 +1,32 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 39760
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, generators put down by the menus' unequip
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=75089472622065952592 hours=2.0096 DayLength=4
+STEP rtgu_setup begin
+PASS RTGU.free_ground_found :: from 10660,10645: 10660,10645
+OBS  RTGU.generator A at 10661,10645 fuel=6.00 record=G692530447-1
+OBS  RTGU.generator B at 10662,10645 fuel=4.00 record=G692530447-2
+STEP rtgu_take_a begin
+OBS  RTGU.rtgu_take_a queued ISTakeGenerator
+FAIL RTGU.a_carried_with_its_record :: hand=nil record=nil expected=G692530447-1 both hands=false
+STEP rtgu_take_b begin
+OBS  RTGU.rtgu_take_b queued ISWalkToTimedAction,ISTakeGenerator
+OBS  RTGU.a_put_down_by_the_take object=true at 10661,10645 fuel=6 record=G692530447-1; the character on 10661,10645
+PASS RTGU.a_put_down_by_the_take_record_on_its_object :: object=G692530447-1 expected=G692530447-1
+PASS RTGU.a_put_down_by_the_take_fuel_kept :: object=6 carried=6
+PASS RTGU.b_carried_with_its_record :: hand=Base.Generator record=G692530447-2 expected=G692530447-2 both hands=true
+STEP rtgu_equip_bat begin
+OBS  RTGU.rtgu_equip_bat queued ISUnequipAction,ISEquipWeaponAction
+OBS  RTGU.b_put_down_by_the_weapon object=true at 10661,10645 fuel=6 record=G692530447-1; the character on 10662,10645
+FAIL RTGU.b_put_down_by_the_weapon_record_on_its_object :: object=G692530447-1 expected=G692530447-2
+FAIL RTGU.b_put_down_by_the_weapon_fuel_kept :: object=6 carried=4
+PASS RTGU.bat_equipped :: Base.BaseballBat
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.04
+SUMMARY pass=5 fail=3
+DONE

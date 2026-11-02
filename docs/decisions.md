@@ -160,10 +160,14 @@ listed with their replacement.
   Lua path that drops a generator item (item → object: Java converts a
   dropped generator item in `IsoGridSquare.AddWorldInventoryItem`, BC) and
   `IsoGenerator.new` (Lua placement paths). The drop paths are
-  `ISDropWorldItemAction.complete` (place/drop), the global
-  `forceDropHeavyItems` (a carried generator is dropped at the character's
-  feet when another heavy item is taken; 17 vanilla callers) and
-  `ISTransferAction:transferItem` to the floor container (inventory drag).
+  `ISDropWorldItemAction.complete` (place/drop), `ISUnequipAction.complete`
+  (the menus unequip a carried generator before another generator or heavy
+  item is taken or a weapon equipped, and the unequip drops a heavy item at
+  the feet itself; added 2026-11-02), the global `forceDropHeavyItems` (a
+  carried generator is dropped at the character's feet when a vehicle is
+  entered, an animal handled, a trap set, and inside the takes; 17 vanilla
+  callers) and `ISTransferAction:transferItem` to the floor container
+  (inventory drag).
   After the drop the sidecar goes to the generator within one square that has
   no sidecar, the item's `generatorFullType` and the item's fuel. Device
   identity and conversion projects (`tlgDeviceId`, `tlgEngineId`,
@@ -176,7 +180,12 @@ listed with their replacement.
   generator then reads as untracked fuel at the pessimistic baseline (D-006).
 * Status: verified RT-SP 2026-10-31 on `Base.Generator`: pickup, drop
   action, `forceDropHeavyItems` (taking a second generator while carrying
-  one), drag to the floor and `IsoGenerator.new` all carry the record.
+  one, the action queued directly), drag to the floor and
+  `IsoGenerator.new` all carry the record. The menus' unequip was missed
+  until 2026-11-02: in run 83 a generator put down by a bat equipped from
+  the inventory menu lost its record; with the `ISUnequipAction` wrap, run
+  85 (8/0) kept both records, of one put down by taking a second generator
+  from the world menu and of one put down by equipping the bat.
 
 ## D-015 Production machines are placeable items
 * Decision: fermenter, stills and drying column are inventory items placed on
