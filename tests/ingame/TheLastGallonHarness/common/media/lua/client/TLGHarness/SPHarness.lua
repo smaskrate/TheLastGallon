@@ -44,6 +44,10 @@
 --             carrying another, then a bat equipped while carrying one
 --   sp-rtmp -> pose trial: the vessel held with the held-bag pose, its hand
 --             model switched between placements and photographed
+--   sp-rtmph -> both arms through the harness's own pose files: the game's
+--             shrug, its unused holding clip and its box-packing clip
+--   sp-rtmpf -> five of the game's both-hands clips held still on their
+--             first frame, the 0.5 m barrel in hand
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
@@ -73,7 +77,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8409,7 +8413,7 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
 RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
-    or REQUEST == "sp-rtmp"
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module: StaticModel =
     -- WaterTank reads back as Base.WaterTank (run 68).
@@ -8959,13 +8963,32 @@ RT.genUnequipSteps = { RT.waitWorld, RT.GU.setup, RT.GU.takeA, RT.GU.takeB, RT.G
 -- (ISEquipHeavyItem) and photographed from the front, from behind on its
 -- right and walking.
 ------------------------------------------------------------------------------
-RT.MP = { item = "TLGHarness.PoseBag", variants = { "Base.WaterTank", "TLGHarness.FermenterHeldL50",
-    "TLGHarness.FermenterHeldS40", "TLGHarness.FermenterHeldS33", "TLGHarness.FermenterHeldS27" } }
+-- Each trial: the stand-in item held and its hand model.
+RT.MP = { prefix = "rtmp", trials = {} }
+for _, model in ipairs({ "Base.WaterTank", "TLGHarness.FermenterHeldL50", "TLGHarness.FermenterHeldS40",
+    "TLGHarness.FermenterHeldS33", "TLGHarness.FermenterHeldS27" }) do
+    RT.MP.trials[#RT.MP.trials + 1] = { item = "TLGHarness.PoseBag", model = model }
+end
+-- Request "sp-rtmph": both arms, through the harness's own pose files
+-- (AnimSets/player/maskingright/tlg*.xml): the game's Bob_IdleHolding clip
+-- (none of its pose files uses it; run 88 drew no two-armed hold), its
+-- box-packing clip (both hands in front) and its shrug, which shows at once
+-- whether a mod's pose file plays at all. The animator's own log
+-- (AnimatorDebugMonitor, as the debug menu's anim monitor uses it) is
+-- written for each.
+if REQUEST == "sp-rtmph" then
+    RT.MP.prefix = "rtmph"
+    RT.MP.trials = { { item = "TLGHarness.PoseShrug", model = "Base.WaterTank" },
+        { item = "TLGHarness.PoseHold", model = "Base.WaterTank" },
+        { item = "TLGHarness.PosePack", model = "Base.WaterTank" },
+        { item = "TLGHarness.PosePack", model = "TLGHarness.FermenterHeldC33" } }
+end
 
--- The stand-in's hand model set to `model`; the ones held before are gone,
--- and the character is back where the trial started.
-function RT.MP.use(model)
-    return { name = "rtmp_use_" .. model, timeout = 300, fn = function(ctx, ticks)
+-- The trial's item gets hand model `model`; the stand-ins held before are
+-- gone, the character is back where the trial started and a fresh animator
+-- log starts.
+function RT.MP.use(item, model)
+    return { name = "rtmp_use_" .. item .. "_" .. model, timeout = 300, fn = function(ctx, ticks)
         if RT.skip("rtmp_use") then return true end
         local p = player()
         if ticks == 1 then
@@ -8975,17 +8998,45 @@ function RT.MP.use(model)
             local inv, old = p:getInventory(), {}
             local items = inv:getItems()
             for i = 0, items:size() - 1 do
-                if items:get(i):getFullType() == RT.MP.item then old[#old + 1] = items:get(i) end
+                if items:get(i):getFullType():find("^TLGHarness%.Pose") then old[#old + 1] = items:get(i) end
             end
             for _, it in ipairs(old) do inv:Remove(it) end
             RT.MP.x, RT.MP.y = RT.MP.x or p:getX(), RT.MP.y or p:getY()
             p:teleportTo(RT.MP.x, RT.MP.y, 0)
-            local si = getScriptManager():getItem(RT.MP.item)
+            local si = getScriptManager():getItem(item)
             si:DoParam("StaticModel = " .. model)
-            R:line("OBS  RTMP.%s StaticModel=%s", model, tostring(si:getStaticModel()))
+            R:line("OBS  RTMP.%s StaticModel=%s", item, tostring(si:getStaticModel()))
+            if REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
+                local m = AnimatorDebugMonitor.new(p)
+                m:setFilter(1, true)
+                m:setFilter(2, true)
+                m:setFilter(3, true)
+                p:setDebugMonitor(m)
+                RT.MP.monitor = m
+            end
             return nil
         end
         return ticks >= 30 or nil
+    end }
+end
+
+-- What the animator logged since the trial's item was taken: the names it
+-- mentions, and the log as text in TLG_animlog_<label>.txt.
+function RT.MP.animLog(label)
+    return { name = "rtmp_animlog_" .. label, timeout = 120, fn = function(ctx, ticks)
+        local m = RT.MP.monitor
+        if not m then return true end
+        local text = tostring(m:getLogString()):gsub("<LINE>", "\n"):gsub("<[^>]*>", "")
+        local hits = {}
+        for _, key in ipairs({ "tlgholding", "tlgpackbox", "tlgshrug", "Bob_IdleHolding", "Bob_IdlePackBox",
+            "Bob_EmoteShrug2H", "maskingright", "holdingbagright" }) do
+            if text:find(key, 1, true) then hits[#hits + 1] = key end
+        end
+        local lines = {}
+        for l in text:gmatch("[^\n]+") do lines[#lines + 1] = l end
+        TLGH.writeFile("TLG_animlog_" .. label .. ".txt", lines)
+        R:line("OBS  RTMP.%s animator log mentions: %s (%d lines)", label, table.concat(hits, ","), #lines)
+        return true
     end }
 end
 
@@ -9021,14 +9072,48 @@ function RT.MP.walkShot(name)
 end
 
 RT.poseSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmp_go", "tests"), RT.MI.zoomTo("rtmp_zoom", 0.25) }
-for i, model in ipairs(RT.MP.variants) do
-    local tag = model:gsub("^.*%.", "")
-    local steps = { RT.MP.use(model), RT.MI.heavy("pose_" .. tag, RT.MP.item), RT.MP.face("SE"),
-        RT.MI.shot("rtmp_" .. i .. "_" .. tag .. "_front", true), RT.MP.face("NE"),
-        RT.MI.shot("rtmp_" .. i .. "_" .. tag .. "_back_right", true), RT.MP.walkShot("rtmp_" .. i .. "_" .. tag .. "_walking") }
+for i, t in ipairs(RT.MP.trials) do
+    local tag = t.item:gsub("^.*%.", "") .. "_" .. t.model:gsub("^.*%.", "")
+    local shot = RT.MP.prefix .. "_" .. i .. "_" .. tag
+    local steps = { RT.MP.use(t.item, t.model), RT.MI.heavy("pose_" .. tag, t.item), RT.MP.face("SE"),
+        RT.MP.animLog(i .. "_" .. tag), RT.MI.shot(shot .. "_front", true), RT.MP.face("NE"),
+        RT.MI.shot(shot .. "_back_right", true), RT.MP.walkShot(shot .. "_walking") }
     for _, s in ipairs(steps) do RT.poseSteps[#RT.poseSteps + 1] = s end
 end
 RT.poseSteps[#RT.poseSteps + 1] = RT.finish
+
+-- Sets the right hand's pose variable itself (the game sets it from the
+-- held item's mask when the hand models are reset, BC
+-- ModelManager.addMaskingModel) and lets the pose settle.
+function RT.MP.mask(node)
+    return { name = "rtmp_mask_" .. node, timeout = 300, fn = function(ctx, ticks)
+        if ticks == 1 then player():setVariable("RightHandMask", node) end
+        if ticks == 40 then
+            R:line("OBS  RTMP.mask %s set; RightHandMask=%s", node, tostring(player():getVariableString("RightHandMask")))
+        end
+        return ticks >= 40 or nil
+    end }
+end
+
+-- Request "sp-rtmpf" (run 90): the box-packing clip moves
+-- (run 89), so the game's both-hands-in-front clips are held still on their
+-- first frame (tlgfreeze*.xml, speed 0 as vanilla's torch pose) while the
+-- 0.5 m barrel is held; each pose is switched in through the variable.
+if REQUEST == "sp-rtmpf" then
+    RT.MP.freeze = { "tlgfreezepack", "tlgfreezepacksmall", "tlgfreezeunpack", "tlgfreezeunpacksmall", "tlgfreezeammo" }
+    RT.poseSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmp_go", "tests"), RT.MI.zoomTo("rtmp_zoom", 0.25),
+        RT.MP.use("TLGHarness.PosePack", "TLGHarness.FermenterHeldC33"),
+        RT.MI.heavy("pose_freeze", "TLGHarness.PosePack") }
+    for i, node in ipairs(RT.MP.freeze) do
+        local shot = "rtmph_freeze_" .. i .. "_" .. node
+        for _, s in ipairs({ RT.MP.mask(node), RT.MP.face("SE"), RT.MI.shot(shot .. "_front", true), RT.MP.face("NE"),
+            RT.MI.shot(shot .. "_back_right", true) }) do
+            RT.poseSteps[#RT.poseSteps + 1] = s
+        end
+    end
+    RT.poseSteps[#RT.poseSteps + 1] = RT.MP.animLog("freeze")
+    RT.poseSteps[#RT.poseSteps + 1] = RT.finish
+end
 
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
 -- character's hand, not even vanilla's water bottle. Run 73 showed why: a
@@ -9367,7 +9452,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -9460,7 +9545,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgu" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, generators put down by the menus' unequip")
                 TLGH.Steps.run(R, RT.genUnequipSteps, H, nil)
-            elseif REQUEST == "sp-rtmp" then
+            elseif REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, pose trial")
                 TLGH.Steps.run(R, RT.poseSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
@@ -9490,7 +9575,7 @@ end
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
 if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

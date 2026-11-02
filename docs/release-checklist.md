@@ -41,8 +41,11 @@ decision and is **not** authorised by any task in this repository.
   vanilla's water bottle; carried, it is not drawn at all). Runs 86–87
   tried vanilla's held-bag pose, which shows a carried item, with the
   supplied barrel placed at the right hand: true size reaches the floor,
-  0.5 m hangs clear (`TLGHarness_models.txt`). Not adopted yet. Also the
-  supplied model's editable sources (a `.blend` file or the Tripo
+  0.5 m hangs clear (`TLGHarness_models.txt`). Not adopted yet. Runs
+  88–90: a mod's own pose file can move both arms (verified), but none of
+  the game's clips tried carries an item in both arms; a carry clip
+  (Mixamo, retargeted onto the game's skeleton) would fill the gap. Also
+  the supplied model's editable sources (a `.blend` file or the Tripo
   project; `art-src/fermenter/PROVENANCE.md`).
 
 ## Commands for the remaining runtime gates
@@ -69,6 +72,8 @@ tools\run-sp-harness.ps1 -Mode held                             # held items clo
 tools\run-sp-harness.ps1 -Mode heavy                            # heavy items in both hands; a meteorite taken off the floor
 tools\run-sp-harness.ps1 -Mode generator-unequip                # generators put down by the menus' unequip keep their records
 tools\run-sp-harness.ps1 -Mode pose                             # a vessel stand-in held with the held-bag pose, hand models compared
+tools\run-sp-harness.ps1 -Mode pose-hold                        # both arms through the harness's own pose files, with the animator's log
+tools\run-sp-harness.ps1 -Mode pose-freeze                      # the game's both-hands clips held still on their first frame
 tools\run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60      # a campfire and a barbecue lit from their menus, a fermenter beside each, a trip away
 tools\run-sp-harness.ps1 -Mode italian -TimeoutMinutes 20    # the client in Italian: every Italian string, the Fuel and machine menus
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361

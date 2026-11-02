@@ -1978,3 +1978,37 @@ mask variable read `holdingbagright`).
 Each barrel is held in the right hand only (the pose is one-armed; the
 left arm hangs free), and its tap points into her leg. The mod ships none
 of this: the vessel is still drawn only during actions.
+
+## 2026-11-02 — RT-SP client harness, launches 88–90 (both arms through a mod's own pose file, a trial)
+
+The user asked whether Mixamo carry clips would help. A hold pose is one
+anim node in `AnimSets/player/maskingright/`. Vanilla's
+`holdingbagright.xml` names a clip (`Bob_Idle_Bag`), the condition
+`RightHandMask == holdingbagright` and the bones it drives
+(`Bip01_R_Clavicle`, `Bip01_Prop1`). The harness mod now has its own
+nodes there (`tlg*.xml`), each driving both clavicles and both prop
+bones. Stand-in items (`TLGHarness.PoseHold`, `PosePack`, `PoseShrug`
+in `TLGHarness_pose.txt`) select them through `primaryAnimMask`. From
+launch 89, the animator's own log was kept for each pose
+(`AnimatorDebugMonitor`, as the debug menu's anim monitor uses it).
+Commands: `tools/run-sp-harness.ps1 -Mode pose-hold` (new; request
+`sp-rtmph`, launches 88-89, no save) and `-Mode pose-freeze` (new;
+request `sp-rtmpf`, launch 90, no save).
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run88_pose_hold.txt`,
+`..._run89_pose_hold.txt`, `..._run90_pose_freeze.txt`, the animator
+logs `2026-11-02_run89_animlog_shrug.txt` and
+`2026-11-02_run90_animlog_frozen.txt`, and the sheets
+`2026-11-02_run89_two_arm_pose_sheet.jpg` and
+`2026-11-02_run90_frozen_pose_sheet.jpg`.
+
+| Launch | Result | |
+| --- | --- | --- |
+| 88 | **8/0** | `Bob_IdleHolding` (in `anims_X/Bob`; none of the game's pose files uses it) on both arms: both arms down and the item at the right hand, standing and walking. Not a carry |
+| 89 | **9/0** | each time the animator log shows the masking layer switch to the harness's node and play its clip (`player/maskingright/tlgshrug`, track `Bob_EmoteShrug2H`): a mod's own pose file loads and plays. The shrug moved both forearms, so one right-hand pose drives both arms. `Bob_IdleHolding` again kept the arms down. `Bob_IdlePackBox` brought both hands forward around the 0.5 m barrel at one moment, but it is a packing loop: walking, the barrel swung below the waist and the left hand came off it |
+| 90 | **6/0** | five of the game's both-hands-in-front clips (packing and unpacking a box, large and small, opening an ammo box), each held still on its first frame (`m_SpeedScale` 0.00, as vanilla's torch pose holds its clip) and switched in through `RightHandMask`. From the front the barrel sits at her chest in two of them. From behind on the right she holds it out at arm's length with her right hand, and her left hand does not touch it |
+
+What this settles: the game side of a two-armed carry works from a mod.
+Its own pose file is loaded, one pose drives both arms, a clip can be
+held still, and the item is drawn at the right hand. What is missing is a
+clip of both arms carrying something in front: none of the game's own
+clips tried is one. The mod ships none of this.

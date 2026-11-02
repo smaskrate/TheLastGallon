@@ -1,0 +1,97 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 29544
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, pose trial
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=206122919384658510 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=Base.WaterTank Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmp_go begin
+STEP rtmp_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.25 in 3 scrolls (enabled=true, min 0.25)
+STEP rtmp_use_TLGHarness.PosePack_TLGHarness.FermenterHeldC33 begin
+OBS  RTMP.TLGHarness.PosePack StaticModel=TLGHarness.FermenterHeldC33
+STEP pose_freeze begin
+PASS RTMH.heavy_pose_freeze :: TLGHarness.PosePack heavy=true both hands=true
+STEP rtmp_mask_tlgfreezepack begin
+OBS  RTMP.mask tlgfreezepack set; RightHandMask=tlgfreezepack
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgfreezepack LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_1_tlgfreezepack_front begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_1_tlgfreezepack_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.06
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgfreezepack LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_1_tlgfreezepack_back_right begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_1_tlgfreezepack_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.07
+STEP rtmp_mask_tlgfreezepacksmall begin
+OBS  RTMP.mask tlgfreezepacksmall set; RightHandMask=tlgfreezepacksmall
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgfreezepacksmall LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_2_tlgfreezepacksmall_front begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_2_tlgfreezepacksmall_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.09
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgfreezepacksmall LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_2_tlgfreezepacksmall_back_right begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_2_tlgfreezepacksmall_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.10
+STEP rtmp_mask_tlgfreezeunpack begin
+OBS  RTMP.mask tlgfreezeunpack set; RightHandMask=tlgfreezeunpack
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgfreezeunpack LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_3_tlgfreezeunpack_front begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_3_tlgfreezeunpack_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.12
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgfreezeunpack LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_3_tlgfreezeunpack_back_right begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_3_tlgfreezeunpack_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.13
+STEP rtmp_mask_tlgfreezeunpacksmall begin
+OBS  RTMP.mask tlgfreezeunpacksmall set; RightHandMask=tlgfreezeunpacksmall
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgfreezeunpacksmall LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_4_tlgfreezeunpacksmall_front begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_4_tlgfreezeunpacksmall_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.15
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgfreezeunpacksmall LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_4_tlgfreezeunpacksmall_back_right begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_4_tlgfreezeunpacksmall_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.17
+STEP rtmp_mask_tlgfreezeammo begin
+OBS  RTMP.mask tlgfreezeammo set; RightHandMask=tlgfreezeammo
+STEP rtmp_face_SE begin
+OBS  RTMP.facing SE (asked SE); RightHandMask=tlgfreezeammo LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_5_tlgfreezeammo_front begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_5_tlgfreezeammo_front.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.18
+STEP rtmp_face_NE begin
+OBS  RTMP.facing NE (asked NE); RightHandMask=tlgfreezeammo LeftHandMask=
+STEP rtmi_shot_rtmph_freeze_5_tlgfreezeammo_back_right begin
+OBS  RTMI.screenshot tlg_rtmph_freeze_5_tlgfreezeammo_back_right.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.20
+STEP rtmp_animlog_freeze begin
+OBS  RTMP.freeze animator log mentions: Bob_IdlePackBox,maskingright (129 lines)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.21
+SUMMARY pass=6 fail=0
+DONE
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_1_tlgfreezepack_back_right.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_1_tlgfreezepack_front.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_2_tlgfreezepacksmall_back_right.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_2_tlgfreezepacksmall_front.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_3_tlgfreezeunpack_back_right.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_3_tlgfreezeunpack_front.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_4_tlgfreezeunpacksmall_back_right.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_4_tlgfreezeunpacksmall_front.png
+screenshot: 
+C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_5_tlgfreezeammo_back_right.png
+screenshot: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\Screenshots\tlg_rtmph_freeze_5_tlgfreezeammo_front.png

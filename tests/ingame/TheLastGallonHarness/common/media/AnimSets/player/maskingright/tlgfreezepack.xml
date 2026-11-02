@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pose trial (request sp-rtmpf): the game's own Bob_IdlePackBox clip held still
+     on its first frame (speed 0, as vanilla's holdingTorchLeft.xml holds
+     Bob_IdleFlashLight) on both arms, built like tlgholding.xml. Selected
+     when RightHandMask is tlgfreezepack. Harness mod only, never packaged. -->
+<animNode>
+	<m_Name>tlgfreezepack</m_Name>
+	<m_Priority>10</m_Priority>
+	<m_AnimName>Bob_IdlePackBox</m_AnimName>
+	<m_BlendTime>0.20</m_BlendTime>
+	<m_SpeedScale>0.00</m_SpeedScale>
+	<m_Conditions x_name="5b000001-1c2d-4e3f-8a9b-0c1d2e3f4a01">
+		<m_Name>RightHandMask</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>tlgfreezepack</m_Value>
+	</m_Conditions>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01</boneName>
+		<weight>0.00</weight>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

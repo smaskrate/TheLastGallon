@@ -93,4 +93,30 @@ module TLGHarness
             rotate = -94.8078 -85.9541 174.4184,
         }
     }
+
+    /* The both-arms trial (sp-rtmph): the barrel's middle at the right
+       hand, at true size and at 0.5 m, with the lantern's turn. */
+    model FermenterHeldC50
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.5,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.25,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
+
+    model FermenterHeldC33
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.33,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.165,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
 }

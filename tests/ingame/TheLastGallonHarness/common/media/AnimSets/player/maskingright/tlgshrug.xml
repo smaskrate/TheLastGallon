@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Pose trial (request sp-rtmph): the game's own Bob_EmoteShrug2H clip,
+     on both arms. Built like vanilla's
+     maskingright/holdingbagright.xml (one arm, from Bip01_R_Clavicle), with
+     both clavicles and both prop bones; selected when an item's
+     primaryAnimMask is tlgshrug. Harness mod only, never packaged. -->
+<animNode>
+	<m_Name>tlgshrug</m_Name>
+	<m_Priority>10</m_Priority>
+	<m_AnimName>Bob_EmoteShrug2H</m_AnimName>
+	<m_BlendTime>0.20</m_BlendTime>
+	<m_SpeedScale>1.00</m_SpeedScale>
+	<m_Conditions x_name="9e8b6a24-7d13-4c2f-b5e0-6a1f3c8d2b47">
+		<m_Name>RightHandMask</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>tlgshrug</m_Value>
+	</m_Conditions>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01</boneName>
+		<weight>0.00</weight>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

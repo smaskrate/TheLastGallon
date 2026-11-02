@@ -19,4 +19,49 @@ module TLGHarness
         RequiresEquippedBothHands = true,
         Tags = base:heavyitem,
     }
+
+    /* The same with the harness's own both-arms pose
+       (AnimSets/player/maskingright/tlgholding.xml: the game's unused
+       Bob_IdleHolding clip on both arms; request sp-rtmph). */
+    item PoseHold
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgholding,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    /* Two more for the same trial: the game's box-packing clip (both hands
+       in front) and its shrug, which no one could mistake for an idle
+       (tlgpackbox.xml, tlgshrug.xml). */
+    item PosePack
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgpackbox,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseShrug
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgshrug,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
 }

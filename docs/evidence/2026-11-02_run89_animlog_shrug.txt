@@ -1,0 +1,129 @@
+    [variable] : added -> 'isanimatingbackwards', value: 'false'. 
+     [variable] : added -> 'bdograpple', value: 'false'. 
+     [variable] : added -> 'bdocontinuegrapple', value: 'false'. 
+     [variable] : added -> 'bisgrappling', value: 'false'. 
+     [variable] : added -> 'grappleresult', value: ''. 
+     [variable] : added -> 'sharedgrappletype', value: ''. 
+     [variable] : added -> 'sharedgrappleanimnode', value: ''. 
+     [variable] : added -> 'sharedgrappletime', value: '0.0'. 
+     [variable] : added -> 'sharedgrapplefraction', value: '0.0'. 
+     [variable] : added -> 'grappleoffsetforward', value: '0.0'. 
+     [variable] : added -> 'grappleoffsetbehaviour', value: 'NONE'. 
+     [variable] : added -> 'bearingtograppledtarget', value: '0.0'. 
+     [variable] : added -> 'bbeinggrappled', value: 'false'. 
+     [variable] : added -> 'grappledby', value: ''. 
+     [variable] : added -> 'grappledbytype', value: 'None'. 
+     [variable] : added -> 'grapplegrabanim', value: 'false'. 
+     [variable] : added -> 'grappleanim', value: 'false'. 
+     [variable] : added -> 'anygrappleanim', value: 'false'. 
+     [variable] : added -> 'grapplethrowoutwindow', value: 'false'. 
+     [variable] : added -> 'grapplethrowoverfence', value: 'false'. 
+     [variable] : added -> 'grapplethrowintocontainer', value: 'false'. 
+     [variable] : added -> 'canragdoll', value: 'true'. 
+     [variable] : added -> 'iseditingragdoll', value: 'false'. 
+     [variable] : added -> 'isragdoll', value: 'false'. 
+     [variable] : added -> 'issimulationactive', value: 'false'. 
+     [variable] : added -> 'isupright', value: 'false'. 
+     [variable] : added -> 'isonback', value: 'false'. 
+     [variable] : added -> 'isragdollfall', value: 'false'. 
+     [variable] : added -> 'isvehiclecollision', value: 'false'. 
+     [variable] : added -> 'usephysichitreaction', value: 'false'. 
+     [variable] : added -> 'useragdollvehiclecollision', value: 'false'. 
+     [variable] : added -> 'bheadlookaround', value: 'false'. 
+     [variable] : added -> 'lookhorizontal', value: '0.0'. 
+     [variable] : added -> 'lookvertical', value: '0.0'. 
+     [variable] : added -> 'hitforce', value: '0.0'. 
+     [variable] : added -> 'hitdir', value: 'FRONT'. 
+     [variable] : added -> 'hitdir.x', value: '0.0'. 
+     [variable] : added -> 'hitdir.y', value: '0.0'. 
+     [variable] : added -> 'recoilvarx', value: '0.0'. 
+     [variable] : added -> 'recoilvary', value: '0.0'. 
+     [variable] : added -> 'hideequippedhandl', value: 'false'. 
+     [variable] : added -> 'hideequippedhandr', value: 'false'. 
+     [variable] : added -> 'aimingmode', value: 'NOT_AIMING'. 
+     [variable] : added -> 'hastarget', value: 'false'. 
+     [variable] : added -> 'isunarmed', value: 'true'. 
+     [variable] : added -> 'ismeleeweaponequipped', value: 'false'. 
+     [variable] : added -> 'israngedweaponequipped', value: 'false'. 
+     [variable] : added -> 'blandlight', value: 'false'. 
+     [variable] : added -> 'blandlightmask', value: 'false'. 
+     [variable] : added -> 'bhardfall', value: 'false'. 
+     [variable] : added -> 'bhardfall2', value: 'false'. 
+     [variable] : added -> 'fallimpactseverity', value: 'None'. 
+     [variable] : added -> 'bdoshove', value: 'false'. 
+     [variable] : added -> 'bdostomp', value: 'false'. 
+     [variable] : added -> 'combatspeed', value: '1.0'. 
+     [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.27465293'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: 'null'. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'hastimedactions' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isperforminganaction' changed from 'false' to: 'true'. 
+     [variable] : added -> 'performingaction', value: 'Loot'. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] activated -> animstate: 'player/actions/Loot'. 
+     [layer][1] changed -> animstate from '' to: 'player/actions/Loot'. 
+     [layer][1] [active_nodes] : activated -> 'Loot'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_IdleLooting_Mid'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'weapon' changed from 'null' to: ''. 
+     [variable] : updated -> 'isperforminganaction' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'performingaction' changed from 'Loot' to: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [layer][1] changed -> animstate from 'player/actions/Loot' to: 'player'. 
+     [variable] : added -> 'righthandmask', value: 'tlgshrug'. 
+     [layer][1] changed -> animstate from 'player' to: 'player/maskingright/tlgshrug'. 
+     [layer][1] [active_nodes] : activated -> 'tlgshrug'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_EmoteShrug2H'. 
+     [layer][1] [active_nodes] : deactivated -> 'Loot'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_IdleLooting_Mid'. 
+ 

@@ -1,0 +1,129 @@
+    [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'righthandmask' changed from 'tlgfreezepack' to: 'tlgfreezepacksmall'. 
+     [layer][1] [active_nodes] : activated -> 'tlgfreezepacksmall'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_IdlePackBox_Small'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgfreezepack'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_IdlePackBox'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgfreezepack' to: 'player/maskingright/tlgfreezepacksmall'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'righthandmask' changed from 'tlgfreezepacksmall' to: 'tlgfreezeunpack'. 
+     [layer][1] [active_nodes] : activated -> 'tlgfreezeunpack'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_IdleUnPackBox'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgfreezepacksmall'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_IdlePackBox_Small'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgfreezepacksmall' to: 'player/maskingright/tlgfreezeunpack'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'righthandmask' changed from 'tlgfreezeunpack' to: 'tlgfreezeunpacksmall'. 
+     [layer][1] [active_nodes] : activated -> 'tlgfreezeunpacksmall'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_IdleUnPackBox_Small'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgfreezeunpack'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_IdleUnPackBox'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgfreezeunpack' to: 'player/maskingright/tlgfreezeunpacksmall'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'righthandmask' changed from 'tlgfreezeunpacksmall' to: 'tlgfreezeammo'. 
+     [layer][1] [active_nodes] : activated -> 'tlgfreezeammo'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_IdleOpenAmmoBox'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgfreezeunpacksmall'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_IdleUnPackBox_Small'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgfreezeunpacksmall' to: 'player/maskingright/tlgfreezeammo'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/idle'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [layer][0] changed -> animstate from 'player/idle' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+ 
