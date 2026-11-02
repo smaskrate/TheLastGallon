@@ -73,10 +73,11 @@ still is welded in hand.
 
 1. **Fermentation vessel** – six planks, twelve nails, an empty jar and a
    hammer (Carpentry 2). It is carried in both hands, one at a time, like
-   a generator: double-click or drag it in the loot window to pick it up,
-   and it goes down at your feet when you get into a vehicle or take
-   another heavy item. Place it on the ground, carry feedstock (sugar,
-   corn, potatoes, sugar beets, pumpkins, watermelons, fruit), clean water
+   a generator, and you see it held in front of you: double-click or drag
+   it in the loot window to pick it up, and it goes down at your feet when
+   you get into a vehicle or take another heavy item. Place it on the
+   ground, carry feedstock (sugar, corn, potatoes, sugar beets, pumpkins,
+   watermelons, fruit), clean water
    and yeast, choose **Load mash and start fermenting**: it takes 5 L of
    water per kg of sugar. About 4 days when warm. A machine has the
    temperature of where it stands, averaged over the day: outdoors the

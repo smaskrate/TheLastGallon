@@ -137,6 +137,12 @@
   carried still don't count (checked in game). The game leaves a heavy
   item standing where it was when taken that way in single player; the
   mod lifts its own vessel properly.
+* You see the fermentation vessel in your arms while you carry it: held
+  in front of you in both arms, standing and walking (checked in game).
+  The game draws no carried heavy item, so the mod has its own carry
+  pose, made from a Mixamo animation. During an action with its own
+  movement, such as taking things from a container, the barrel briefly
+  shows at the action's hand position.
 * The four machines' inventory category reads "Tool"; it showed the raw
   key "IGUI_ItemCat_Tools" (found and checked in game).
 * Migrations with preserved future schemas.

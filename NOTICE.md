@@ -12,6 +12,13 @@
   Studio as the tool that generated it. They were generated under a
   commercial Tripo licence, which Tripo's published help pages say allows
   their distribution (`art-src/fermenter/PROVENANCE.md`).
+* The fermentation vessel's carry animation
+  (`media/anims_X/Bob/Bob_TLG_CarryVessel.x`) was made for this mod from
+  Mixamo's "Carrying" animation (Adobe), supplied on 2026-11-02. Only the
+  arm movement was carried over, onto the game's own skeleton; no Mixamo
+  character, bone or mesh is included. Adobe's Mixamo FAQ says its
+  animations may be used royalty free in video games
+  (`art-src/carry/PROVENANCE.md`).
 * No external mods, libraries or Workshop content are bundled or required.
 * Real-world references in the specification (R8–R13) informed abstract game
   rules only; no text or data from them is reproduced.

@@ -563,3 +563,33 @@ listed with their replacement.
   before it was found, and written to the record alone that water was
   dropped by the next read. Vehicle tanks, pumps and generators keep their
   composition in the record only (D-006) and are unchanged.
+
+## D-025 The fermentation vessel is shown carried in both arms
+* Decision: the vessel's script names a hold pose of the mod's own
+  (`primaryAnimMask = tlgcarryvessel`). Its pose file
+  `AnimSets/player/maskingright/tlgcarryvessel.xml` plays the clip
+  `anims_X/Bob/Bob_TLG_CarryVessel.x` on both clavicles' subtrees and the
+  prop bones. The hand model `TLG.FermenterHeld` is the floor model at
+  true size (0.75 m), centred on `Bip01_Prop1` with the hurricane
+  lantern's turn. The clip's arms come from two Mixamo "Carrying" clips
+  the user supplied (arm spacings 0.45 m and 0.95 m), blended halfway
+  and retargeted onto the game's skeleton by `tools/blender/pz_arms.py`.
+  The clip also places `Bip01_Prop1` 0.17 file units in front of the
+  hands and 0.06 down, with the barrel's tap forward.
+* Reason: the user asked for the vessel to be carried with two hands
+  (D-015 amendment). A standing character draws a carried non-weapon only
+  through a hand pose (BC `ModelManager.addEquippedModelInstance`), and
+  the game's poses are one-armed (runs 86–90). A mod's own pose file loads
+  and can drive both arms (runs 89–90). Each placement was chosen in game
+  with the user. The first clip held a 0.6 m barrel (run 92). The wider
+  clip left the hands beside the true-size barrel (run 93). The halfway
+  blend held it at its sides (run 94). At 0.17 forward its back cleared
+  the chest (run 95).
+* Consequences: verified RT-SP run 96 (6/0) with the shipped vessel,
+  standing, from the side and walking. An action that plays its own
+  animation replaces the pose on that layer: during "Loot" the barrel
+  followed the action's prop bone and tilted up beside the head. Placing
+  the vessel plays none and keeps the pose. Running, sneaking and
+  multiplayer are not run. The clip ships with Mixamo's terms recorded
+  (`art-src/carry/PROVENANCE.md`); the source FBX files, which hold
+  Mixamo's character, stay out of the repository and the package.

@@ -17,4 +17,24 @@ module TLG
         texture = TLG/Fermenter,
         scale = 0.5,
     }
+
+    /* FermenterHeld: the same barrel carried in both arms. The carry clip
+       (Bob_TLG_CarryVessel, AnimSets/player/maskingright/tlgcarryvessel.xml)
+       puts Bip01_Prop1 in front of the chest, turned so this attachment
+       stands the barrel upright with its tap forward: the hurricane
+       lantern's Bip01_Prop1 turn (models_items.txt
+       Lantern_Hurricane_HandleUp). An attachment offset moves the model
+       1.5 m per unit whatever its scale, so -0.25 centres the 0.75 m barrel
+       on the bone (RT-SP runs 86-95). */
+    model FermenterHeld
+    {
+        mesh = TLG/Fermenter,
+        texture = TLG/Fermenter,
+        scale = 0.5,
+        attachment Bip01_Prop1
+        {
+            offset = 0.0 0.0 -0.25,
+            rotate = -94.8078 -85.9541 174.4184,
+        }
+    }
 }

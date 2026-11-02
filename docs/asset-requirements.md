@@ -21,8 +21,11 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
   holds (`art-src/fermenter/PROVENANCE.md`). The import test's model
   lives in the dev-only harness mod.
 * Every other shipped item and machine borrows a vanilla icon and model by
-  name, and so does the vessel's model in the hand. The vessel's icon is
-  the mod's own, drawn by `tools/make-icons.ps1` to match its model.
+  name. The vessel's icon is the mod's own, drawn by
+  `tools/make-icons.ps1` to match its model. Since 2026-11-02 the vessel
+  is also carried in both arms as its own model (`TLG.FermenterHeld`),
+  through a carry pose made from two Mixamo clips (`art-src/carry/`,
+  D-025).
   The names exist in 42.21 (`models_items.txt`; `Item_*` entries in
   `UI.pack`/`UI2.pack`). How they render was first looked at on
   2026-11-02 (run 66, `engine-capabilities.md` G13): the drying column
@@ -33,9 +36,9 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
   respirator-filter icon (`AirFilters` is vanilla's `RespiratorFilters`
   icon); the pot still and reflux still share the pot icon and the
   cooking-pot model, so they cannot be told apart. On the floor the drying
-  column is a car's fuel tank (`SmallGasTank` = `WorldItems/NormalGasTank1`)
-  and the fermentation vessel a water-cooler bottle (`WaterTank`). The
-  manual shows the smithing magazine cover.
+  column is a car's fuel tank (`SmallGasTank` = `WorldItems/NormalGasTank1`);
+  the fermentation vessel was a water-cooler bottle (`WaterTank`) until its
+  own model arrived. The manual shows the smithing magazine cover.
 * Five small items (sampling kit, stabilizer, filter, manual, yeast
   starter) have no `WorldStaticModel`; what they look like on the floor
   is unknown.
@@ -111,11 +114,14 @@ runs 64–67) and the supplied fermenter's FBX (runs 68–69)
   times `scale`, times 1.5; its `UnitScaleFactor` is ignored. A Blender
   export in metres with no node scaling, 1.0 tall, stands 0.75 m tall at
   `scale = 0.5`, and its UVs need no flip.
-* In the hand: an idle character draws a held weapon but no other item;
-  during an action the item's `StaticModel` is drawn at the hand bone
-  (`Bip01_Prop1`) with that model script's attachment block. Without one,
-  the supplied fermenter hangs on its side there (run 74): a hand model
-  needs its `attachment Bip01_Prop1` offset and rotation tuned.
+* In the hand: an idle character draws a held weapon, and any other item
+  only through a hand pose (`primaryAnimMask`); during an action the
+  item's `StaticModel` is drawn at `Bip01_Prop1` with that model script's
+  attachment block. Without one the supplied fermenter hangs on its side
+  there (run 74). An attachment offset moves a model 1.5 m per unit
+  whatever its scale (runs 86–87). The game's poses are one-armed; a
+  two-armed carry needs a clip of its own, retargeted onto the game's
+  skeleton by `tools/blender/pz_arms.py` (runs 88–96).
 * Not verified: multiplayer.
 
 Sound playback and zombie attraction are separate (spec §22): a machine
@@ -127,7 +133,7 @@ loop adds world noise only through code that decides to.
 
 | Audit | Code id | Now | Needed |
 | --- | --- | --- | --- |
-| A04 | `TLG.FermenterVessel` (`fermenter_barrel`, 160 L) | its own model `TLG.Fermenter` since 2026-11-02 (supplied; in the hand still `WaterTank`) | done on the floor; a model or attachment for the hand |
+| A04 | `TLG.FermenterVessel` (`fermenter_barrel`, 160 L) | its own model `TLG.Fermenter` since 2026-11-02 (supplied), carried in both arms as `TLG.FermenterHeld` through the carry pose (A30) | done; the editable sources still missing |
 | A03 | `TLG.PotStill` (`pot_still`, 60 L, firebox) | `CookingPotGround`, in hand `CookingPot` | Pot, lyne arm, worm condenser, firebox |
 | A03 | `TLG.RefluxStill` (`reflux_still`, 120 L, firebox) | the same cooking pot | Boiler, packed column, reflux condenser, firebox; must read differently from the pot still |
 | I04 | `TLG.DryingColumn` (`drying_column`, 40 L) | `SmallGasTank`, a car fuel tank | Pipe column of quicklime with a receiver |

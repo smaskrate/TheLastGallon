@@ -752,7 +752,8 @@ supplied FBX has no node scaling, so `scale = 0.5` stands it about 0.75 m
 tall; beside the 0.56 m test barrel it measured about 15 % wider, as its
 proportions give (run 68). Its texture drew the right way up: Blender's
 FBX UVs need no flip. Its turns and its place came back after the save.
-The model in the hand is still vanilla's `WaterTank`. The icon is the
+Since run 96 it is also the model carried in both arms (`TLG.FermenterHeld`,
+D-025); before, the hand showed vanilla's `WaterTank`. The icon is the
 mod's own since run 71: `Item_TLG_Fermenter.png`, drawn by
 `tools/make-icons.ps1`, loaded from the mod's `media/textures` and seen
 in the equipped-item button.
@@ -788,10 +789,21 @@ a writer needs:
   itself.
 
 `tools/blender/pz_arms.py` writes a clip from a Mixamo clip's arms on
-those terms. The game loaded one from the harness mod's `anims_X/Bob`
-and played it through the harness's pose file (runs 91–92, the
-animator's log naming the track). Whether the game also reads FBX clips
-is untested.
+those terms. It can also blend in a second clip of the same animation
+exported with another arm spacing, and it places the held item from the
+hands. The game loaded such clips from the harness mod's `anims_X/Bob`
+and played them through the harness's pose files (runs 91–95, the
+animator's log naming the track).
+
+The mod ships one: `Bob_TLG_CarryVessel` with
+`AnimSets/player/maskingright/tlgcarryvessel.xml` and the hand model
+`TLG.FermenterHeld` (D-025). With the shipped vessel the animator's log
+shows the masking layer (`[layer][1]`) play it standing and walking (run
+96). Actions use the same layer (`player/actions/Loot` was
+`[layer][1]` in the same log), so an action with its own animation
+replaces the carry pose while it runs: the barrel then follows that
+animation's `Bip01_Prop1` (run 96, tilted up beside the head). Whether
+the game also reads FBX clips is untested.
 
 ## Client harness status
 

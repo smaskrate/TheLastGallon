@@ -4,8 +4,8 @@ module TLG
        ("tlgProc", TLG.Integration.Machines) and travels with pickup.
        The fermenter stands on the floor as the mod's own model
        (TLG_models.txt) and has its own icon (Item_TLG_Fermenter.png, drawn
-       by tools/make-icons.ps1); the other models, the in-hand models and
-       the other icons are verified vanilla references used as placeholders
+       by tools/make-icons.ps1); the other machines' models, in-hand models
+       and icons are verified vanilla references used as placeholders
        (docs/asset-audit.csv A03/A04/I04/I09). DisplayCategory must be a
        vanilla category: the inventory shows getText("IGUI_ItemCat_" ..
        category) (ISInventoryPane.lua:2547), and "Tools" has no text
@@ -16,11 +16,14 @@ module TLG
        hands (ISEquipHeavyItem) and drops it at the character's feet when
        another heavy item is taken or a weapon equipped from the menus
        (ISUnequipAction) or a vehicle entered (forceDropHeavyItems);
-       Machines.install follows each. An idle character draws no carried
-       item but a weapon, so its
-       hand model shows only during actions (RT-SP runs 73-75). Recipes use
-       item ids verified in the
-       42.21 item scripts; craftRecipe grammar mirrors vanilla
+       Machines.install follows each. A standing character draws a carried
+       non-weapon only through a hand pose (BC
+       ModelManager.addEquippedModelInstance), and the game's poses are
+       one-armed, so the fermenter has the mod's own: primaryAnimMask =
+       tlgcarryvessel (AnimSets/player/maskingright/tlgcarryvessel.xml, clip
+       anims_X/Bob/Bob_TLG_CarryVessel.x) carries it in both arms in front,
+       drawn as TLG.FermenterHeld (RT-SP runs 86-95). Recipes use item ids
+       verified in the 42.21 item scripts; craftRecipe grammar mirrors vanilla
        generated/entities/*/craftRecipes. Tags decide where a recipe is
        offered: the crafting window and the inventory "craft" menu list only
        InHandCraft / AnySurfaceCraft recipes (ISHandcraftWindow.lua:53; BC
@@ -42,8 +45,9 @@ module TLG
         ItemType = base:normal,
         Weight = 8.0,
         Icon = TLG_Fermenter,
-        StaticModel = WaterTank,
+        StaticModel = TLG.FermenterHeld,
         WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgcarryvessel,
         RequiresEquippedBothHands = true,
         Tags = base:heavyitem,
     }

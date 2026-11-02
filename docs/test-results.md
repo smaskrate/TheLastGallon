@@ -2109,3 +2109,39 @@ Result: **8/0**; the animator log shows each node playing. From the side:
 
 0.17 is the fit. Not checked, as before: actions, running, sneaking and
 multiplayer. The mod ships none of this yet.
+
+## 2026-11-02 — RT-SP client harness, launch 96 (the shipped vessel carried in both arms)
+
+The user approved the halfway blend with the item 0.17 forward (launch
+95). The mod now ships it (D-025):
+- `media/anims_X/Bob/Bob_TLG_CarryVessel.x`, written by `pz_arms.py` with
+  launch 95's settings; byte for byte it is `Bob_TLGCarryMid17.x` apart
+  from the name.
+- The pose file `media/AnimSets/player/maskingright/tlgcarryvessel.xml`.
+- The hand model `TLG.FermenterHeld`: the floor model at true size,
+  centred on `Bip01_Prop1`.
+- The vessel's script: `StaticModel = TLG.FermenterHeld` and
+  `primaryAnimMask = tlgcarryvessel`.
+
+Before the launch: tests 193/193 and the compile check 102/0.
+Command: `tools/run-sp-harness.ps1 -Mode vessel-carry` (new; request
+`sp-rtmv`, no save). The shipped vessel is taken into both hands
+(`ISEquipHeavyItem`) and photographed from the front, from the side and
+walking. It is then held through a do-nothing action playing vanilla's
+"Loot", as `ISEquipHeavyItem` plays it, with the vessel as the action's
+hand model.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run96_vessel_carry.txt`,
+`2026-11-02_run96_vessel_carry_sheet.jpg` and the animator log
+`2026-11-02_run96_animlog_vessel.txt`.
+
+Result: **6/0**. The vessel's script read back as shipped
+(`StaticModel=TLG.FermenterHeld`), the vessel was in both hands, and the
+animator's log shows the masking layer play `tlgcarryvessel` with
+`Bob_TLG_CarryVessel`, loaded from the mod itself. Front, side and
+walking show launch 95's carry. During the "Loot" action, the action
+replaces the pose on that same layer: the barrel follows the action's
+`Bip01_Prop1` and tilts up beside the head until the action ends. The
+console had no exception.
+
+Not checked: running, sneaking, the vessel through real actions (placing
+it plays no animation and keeps the pose), multiplayer.
