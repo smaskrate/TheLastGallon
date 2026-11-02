@@ -707,8 +707,9 @@ the fix, run 50 **28/0**, with run 33's controls again, run 51 **32/0**,
 then the full mode on the zip with that fix installed clean, run 52
 **94/0** and **14/0**, and fuel first found late in a new world, run 53
 **7/0**, then the mod removed from a save and added back, run 54 1/0, 2/0
-and 4/1 and, after the fix, run 55 **1/0**, **2/0** and **5/0**. Most
-failures were
+and 4/1 and, after the fix, run 55 **1/0**, **2/0** and **5/0**, then the
+full mode on the zip with that fix installed clean, run 56 **94/0** and
+**14/0**. Most failures were
 traced to the harness itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

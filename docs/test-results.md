@@ -1498,3 +1498,25 @@ run 54 (`Driver.lua:182`, inside `pcall`). Launches 1 and 3 had no Lua or
 TLG error; the ERROR lines in their consoles are the game's own (fonts,
 map zones). Not run, as in run 54: a save that still lists the mod after
 it was uninstalled, a server, the mod's other fluids and items.
+
+## 2026-11-02 — RT-SP client harness, launch 56 (the zip with the inflow fix installed clean)
+
+Command: `tools/rehearse-install.ps1 -NoBuild`, on the zip in `dist/` that
+run 55 used. That is the package of commit `49cf55a`: 82 files, SHA-256
+`196912cf…`, 205,134 bytes, with the inflow fix (D-006 amendment) and the
+removal docs. It differs from run 52's zip (`75873ed3…`) in eight files:
+`Transactions.lua`, `Containers.lua`, `Vehicles.lua`, `Generators.lua`,
+`Stations.lua`, the player guide, `migrations.md` and the changelog. The
+zip matched its manifest (82 files), was installed into a fresh isolated
+cache and ran the full harness.
+Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run56_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42, 47
+and 52.
+* The workbench was dark (light 0.15 at 10.52 game time); with the torch
+  in hand all four machines were crafted from the menu.
+* After the save and continue, every record came back.
+* The console showed "machine move hooks installed" on both loads and no
+  TLG error or warning. Its one Lua error, a stack overflow, is the
+  harness's own deliberate deep recursion (`LuaProbe.lua`); no stack frame
+  names the mod.
