@@ -97,8 +97,33 @@ Muldraugh, KY is the only map referenced by tests (Gas2Go at 10639,10615 from
 ## Multiplayer
 
 Architecture: server-authoritative commands with ledger dedupe and revision
-checks (domain-tested). Dedicated server loads the mod (verified). Client
-connection, replication and concurrency: NOT RUN.
+checks (domain-tested). Checked on a dedicated server with two players,
+both on one computer (RT-MP, 2026-11-03):
+- **Verified:**
+  - a fuel sample and a stabilizer treatment asked from a client and
+    answered by the server;
+  - the same request sent again, answered from the ledger without using
+    a second stabilizer;
+  - the can's record, the same on the client and on the server;
+  - a machine's status, asked by either player within reach;
+  - the field manual in the server's loot, read through Inspect;
+  - the small items' floor models, seen by both players and after one
+    leaves and joins again;
+  - the fermentation vessel's carry pose, seen on the other player's
+    screen at every gait.
+- **The game's own limit (42.21):** on a dedicated server no heavy item can
+  be taken off the floor through the loot window (double-click or drag);
+  the server fails the action and the item stays where it is. That
+  includes the fermentation vessel. Vanilla's meteorite fails the same way
+  without the mod.
+- Reading print media, the manual included, is recorded on the server
+  and not on the reading player's client, as for the game's own fliers.
+- A server must reach the mod's folder by its real path. Through a
+  junction or symbolic link the game cannot start a server with a mod
+  that ships animation files, as this one does since its carry pose.
+- **NOT RUN:** pours, refuelling, conversions, generators and vehicles in
+  multiplayer; two players working the same machine at once; a server
+  restart; players without admin rights; a real network.
 
 ## External mods
 

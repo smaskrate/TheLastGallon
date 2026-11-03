@@ -1,0 +1,7 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.message from tlga: spawn item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641
+OBS  MPS.reply spawned id=1627563670 item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641

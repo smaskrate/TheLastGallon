@@ -178,6 +178,14 @@
   nothing. It teaches no recipe.
 * The four machines' inventory category reads "Tool"; it showed the raw
   key "IGUI_ItemCat_Tools" (found and checked in game).
+* Multiplayer, checked on a dedicated server with two players (both on
+  one computer): the fuel commands, a machine's status, the manual found
+  in the server's loot, the small items on the floor for both players and
+  after a rejoin, and the vessel's carry pose seen by the other player. The
+  game itself (42.21) cannot take a heavy item off the floor on a server,
+  so in multiplayer the fermentation vessel cannot be picked up from the
+  floor through the loot window. A server must not reach the mod's folder
+  through a junction or link. See the support matrix.
 * Migrations with preserved future schemas.
 * What I know about it remembers a first Look and smell on fuel the mod
   had not recorded yet; it used to say "unknown" right after the look.

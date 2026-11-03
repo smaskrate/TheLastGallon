@@ -649,6 +649,12 @@ listed with their replacement.
   standing clip, and its pictures
   (run 117) show the barrel tilting and swinging with the run's lean,
   which run 108's note had missed.
+* Amendment (2026-11-03, RT-MP runs 142–145): in multiplayer the other
+  player's client draws the carry pose at every gait (it holds the
+  vessel's `RightHandMask` on the carrier). On a dedicated server the
+  vessel cannot be taken off the floor through the loot window: the
+  game's `ISEquipHeavyItem.complete` fails there for every heavy item,
+  vanilla's meteorite too, also without the mod (run 144).
 
 ## D-026 The field manual is print media found in loot
 * Decision: `TLG.ManualFuelSystems` is read as the game reads its

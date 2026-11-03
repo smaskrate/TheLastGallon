@@ -1,0 +1,150 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_stand begin
+STEP mp_wait_b begin
+STEP give_fuel begin
+STEP mp_have_fuel begin
+PASS MP.items_from_server_A :: can 1479297314 (5 L), stabilizers 2
+STEP sample begin
+PASS MP.sample_A :: ok=true reason=nil duplicate=nil state=nil
+STEP treat begin
+PASS MP.stabilize_A :: ok=true reason=nil duplicate=nil state=nil
+STEP mp_after_treat begin
+PASS MP.stabilizer_used_once_A :: stabilizers left 1
+STEP mp_retry begin
+PASS MP.retry_answered_from_ledger_A :: ok=true reason=nil duplicate=true state=nil stabilizers left 1
+STEP probe_can begin
+OBS  MP.can_record client {cond=1.0000,deg={gasoline=0.0701},dirty=0.0000,id=S106995508-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2208,v=1.0000}
+OBS  MP.can_record server {cond=1.0000,deg={gasoline=0.0701},dirty=0.0000,id=S106995508-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2208,v=1.0000} (fluid 5.0000)
+PASS MP.can_record_same_on_client_A :: see the two records above
+STEP spawn_vessel begin
+STEP mp_vessel_lands begin
+STEP mp_walk_to_vessel begin
+STEP status begin
+PASS MP.machine_status_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP mp_walk_back begin
+STEP mp_status_please begin
+STEP mp_wait_status_b begin
+STEP roll_manual begin
+PASS MP.manual_in_server_loot_A :: 9 manuals in 400 containers filled on the server; printMedia=true
+STEP manual begin
+PASS MP.manual_offers_inspect_A :: TLG.ManualFuelSystems printMedia on the client: TLG_ManualFuelSystems
+OBS  MP.manual read on this client: isPrintMediaRead(TLG_ManualFuelSystems) when the read ended=false, 5 s later=false
+STEP manual_read_on_server begin
+PASS MP.manual_read_on_server_A :: server isPrintMediaRead=true
+STEP give_flier begin
+STEP flier begin
+PASS MP.flier_offers_inspect_A :: Base.Flier_Nolans printMedia on the client: nolansusedcars
+OBS  MP.flier read on this client: isPrintMediaRead(nolansusedcars) when the read ended=false, 5 s later=false
+STEP flier_read_on_server begin
+PASS MP.flier_read_on_server_A :: server isPrintMediaRead=true
+STEP manual_read_kept_like_vanilla begin
+PASS MP.manual_read_kept_like_vanilla_A :: manual: server true, client false; flier: server true, client false
+STEP give_floor begin
+STEP mp_floor_items_arrive begin
+STEP mp_walk_drop_1 begin
+STEP mp_drop_TLG.FuelSampleKit begin
+STEP mp_dropped_1 begin
+STEP mp_walk_drop_2 begin
+STEP mp_drop_TLG.YeastStarter begin
+STEP mp_dropped_2 begin
+STEP mp_walk_drop_3 begin
+STEP mp_drop_TLG.FuelStabilizer begin
+STEP mp_dropped_3 begin
+STEP mp_walk_drop_4 begin
+STEP mp_drop_TLG.ManualFuelSystems begin
+STEP mp_dropped_4 begin
+STEP mp_walk_drop_5 begin
+STEP mp_drop_TLG.FuelFilter begin
+STEP mp_dropped_5 begin
+STEP mp_walk_floor_view begin
+STEP mp_floor_ready begin
+STEP mp_shot_floor begin
+OBS  MP.screenshot tlg_mpa_floor.png ok=true ; zoom 0.50; player 10659.5,10644.5
+STEP mp_wait_floor_b begin
+STEP floor_seen begin
+OBS  MP.floor_seen this client 10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+OBS  MP.floor_seen the server  10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+PASS MP.floor_seen_A :: same as the server=true; missing on the server: none
+STEP spawn_meteorite begin
+STEP mp_meteorite_lands begin
+STEP mp_walk_onto_meteorite begin
+STEP mp_take_meteorite begin
+OBS  MP.meteorite on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.meteorite pickup queued: ISEquipHeavyItem
+OBS  MP.meteorite pickup 30 ticks on: ISEquipHeavyItem
+FAIL MP.meteorite_from_floor_A :: primary=nil secondary=nil; still on its square=true
+STEP mp_drop_heavy begin
+STEP mp_walk_onto_vessel begin
+STEP mp_take_vessel begin
+OBS  MP.vessel on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.vessel pickup queued: ISEquipHeavyItem
+OBS  MP.vessel pickup 30 ticks on: ISEquipHeavyItem
+FAIL MP.vessel_from_floor_A :: primary=nil secondary=nil; still on its square=true
+STEP mp_hold_vessel begin
+PASS MP.vessel_in_both_hands_A :: handed over by the server; primary=TLG.FermenterVessel RightHandMask=tlgcarryvessel
+STEP mp_walk_carry_start begin
+STEP mp_gait_stand begin
+OBS  MP.screenshot tlg_mpa_carry_stand.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry stand on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_walk begin
+OBS  MP.screenshot tlg_mpa_carry_walk.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry walk on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_run begin
+OBS  MP.screenshot tlg_mpa_carry_run.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry run on A's own screen: running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sprint begin
+OBS  MP.screenshot tlg_mpa_carry_sprint.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry sprint on A's own screen: running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sneak begin
+OBS  MP.screenshot tlg_mpa_carry_sneak.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry sneak on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_crouch begin
+OBS  MP.screenshot tlg_mpa_carry_crouch.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry crouch on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_put_down begin
+OBS  MP.vessel put down: in the hands nil
+STEP mp_walk_back_end begin
+STEP mp_leave begin
+OBS  MP.leaving to the main menu
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: true)
+OBS  MP.game_start A again
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10659,10644 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_settle begin
+STEP floor_after_rejoin begin
+OBS  MP.floor_after_rejoin this client 10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel;10664,10641:Base.LargeMeteorite
+OBS  MP.floor_after_rejoin the server  10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel;10664,10641:Base.LargeMeteorite
+PASS MP.floor_after_rejoin_A :: same as the server=true; missing on the server: none
+STEP mp_shot_after_rejoin begin
+OBS  MP.screenshot tlg_mpa_after_rejoin.png ok=true ; zoom 0.50; player 10659.5,10644.5
+STEP mp_rejoined begin
+STEP mp_wait_rejoin_b begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=2 fail=0
+DONE

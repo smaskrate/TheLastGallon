@@ -2934,3 +2934,81 @@ Launch 138: **2/0**.
 Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run138_client_a.txt`,
 `…_run138_server.txt`. The server's raw log is not kept: `adduser` echoes
 the passwords.
+
+## 2026-11-03 — RT-MP harness, launches 139–145 (two clients)
+
+Client A acts and client B watches, both on the TLGDev server. Items come
+from the server (`MPServer.lua`: `AddItem` with `sendAddItemToContainer`,
+or `AddWorldInventoryItem` for the floor), never from a client. The two
+clients wait on each other through the server's relay.
+
+What was checked, in launch 145 (A **18/2** over its two sessions, B
+**10/0**):
+- **The mod's requests** from a client, through `TLG.Net` and the
+  server's handlers. A fuel sample and a stabilizer treatment of a can in
+  A's inventory were answered. The same treatment sent again with the same
+  request id came back from the ledger (`duplicate=true`), and A still had
+  one of its two stabilizers. The can's record (its mod data) read the
+  same on A's client as on the server.
+- **A machine's status** asked by either player within reach of a vessel
+  the server put down: `Ready` for both. In launch 139 it was asked from
+  about four tiles away and refused with `no_access`.
+- **The manual** in the server's loot: 9 manuals in 400 containers filled
+  on the server from four of its loot lists (12 in launches 139–140). The
+  rolled manual reached A with its print media data, its menu offered
+  Inspect, and reading it was recorded on the server. A's own client did
+  not show it read, at once or 5 s later. Vanilla's Nolan's flier, given
+  and read the same way, behaved exactly so: recorded on the server, not
+  on the client.
+- **The small items' floor models**, dropped by A through the inventory's
+  Drop after walking to each square. A's and B's clients each list the
+  same items on the same squares around the spawn point as the server
+  does, all five there. A then left to the main menu and joined again; A's
+  and B's lists still matched the server's. In the pictures each model
+  lies in its colours on both screens.
+- **The carry pose on another player's screen.** With the vessel in A's
+  arms, B's client held the carry pose's mask (`RightHandMask` =
+  `tlgcarryvessel`) and the vessel in both hands on A's character at each
+  gait. B's own screenshots show A carrying it standing, walking, running,
+  sprinting, sneaking and crouched; sneaking, A is drawn faded on B's
+  screen.
+- **Taking a heavy item off the floor** as a double-click in the loot
+  window does (`ISInventoryPaneContextMenu.equipHeavyItem` on the item the
+  floor listing holds) failed for the vessel and for vanilla's meteorite
+  alike. Both stayed on their squares. On the server
+  `ISEquipHeavyItem.complete` stopped at its line 63 (`DoRemoveItem` of a
+  nil container: a world item has none there). Launch 144 ran the
+  meteorite alone on a server and client without The Last Gallon (the
+  harness's own requirement on it stripped): it failed the same way. So
+  this is the game's own multiplayer bug, and it keeps players from taking
+  the vessel into their arms from the floor. To watch the pose anyway, the
+  server handed A a vessel the way that `complete` does on the server
+  (`AddItem`, both hands, `sendEquip`).
+
+How the harness got there:
+- Launch 139: the drops landed a square or two off. The harness had
+  teleported A, and the server dropped each item where it last saw her.
+  It now walks.
+- Launches 140–142: the vessel pickup was tried from the next square and
+  with the interface hidden, then standing on the vessel. The listing held
+  it and the action ran, and then the server error above showed. Launch
+  143 meant to run without the mod, but the harness's `require` brought it
+  in, so launch 144 strips that line from the deployed copies.
+- Launch 142 read `running=false` while running. That leg now turns on
+  Toggle to Run, as the single-player legs do, and reads `running=true` on
+  both screens.
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run145_client_a.txt`,
+`…_run145_client_b.txt`, `…_run145_server.txt`, `…_run144_nomod_client_a.txt`
+and `…_run144_nomod_server.txt`. The sheets are
+`2026-11-03_run145_mp_carry_on_other_screen_sheet.jpg` and
+`2026-11-03_run145_mp_floor_sheet.jpg`.
+
+Not checked:
+- the world menu's Grab of the vessel;
+- two players working one machine at once;
+- the TLG pour, refuelling, conversions, generators and vehicles in
+  multiplayer;
+- a server restart;
+- players without admin rights (both test accounts were admins);
+- a real network (everything ran on this machine).

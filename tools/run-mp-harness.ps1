@@ -31,8 +31,15 @@
   Watchdog limit for the whole run.
 .PARAMETER ModSource
   Folder deployed as the mod (default: the repository's).
+.PARAMETER Only
+  carry: only the vessel's pickup and the gaits (two clients); heavy: only
+  vanilla's meteorite taken off the floor (one client).
+.PARAMETER NoMod
+  Server and clients without The Last Gallon, the harness alone: a control
+  for what vanilla does (with -Only heavy).
 #>
-param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "")
+param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
+    [ValidateSet("", "carry", "heavy")][string]$Only = "", [switch]$NoMod)
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     Write-Host "The Windows session is locked; unlock the desktop and run again."
@@ -46,7 +53,7 @@ $serverCache = Join-Path $base "mpserver"
 $roles = @("mp-a", "mp-b")[0..($Clients - 1)]
 $users = @("tlga", "tlgb")
 $clientCaches = @(1..$Clients | ForEach-Object { Join-Path $base "mpclient$_" })
-$active = @("TheLastGallon", "TheLastGallonHarness")
+$active = if ($NoMod) { @("TheLastGallonHarness") } else { @("TheLastGallon", "TheLastGallonHarness") }
 
 & (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $serverCache -ModSource $ModSource -ActiveMods $active | Out-Null
 foreach ($c in $clientCaches) {
@@ -83,6 +90,15 @@ public static class TlgFinalPath {
 $serverCache = [TlgFinalPath]::Of($serverCache)
 $clientCaches = @($clientCaches | ForEach-Object { [TlgFinalPath]::Of($_) })
 Write-Host "caches: $serverCache; $($clientCaches -join '; ')"
+# Without the mod the harness must not require it (its mod.info does, and
+# run 143's server loaded the mod for it). Only the deployed copies change;
+# the next deploy mirrors the repository's back.
+if ($NoMod) {
+    foreach ($c in @($serverCache) + $clientCaches) {
+        $info = Join-Path $c "mods\TheLastGallonHarness\42\mod.info"
+        (Get-Content $info) | Where-Object { $_ -notmatch "^require=" } | Set-Content -Encoding ascii $info
+    }
+}
 
 # Accounts: kept beside the server's own credentials (setup-devenv.ps1).
 $credFile = Join-Path $serverCache "dev-credentials.txt"
@@ -98,6 +114,9 @@ foreach ($u in $users) {
 $save = Join-Path $serverCache "Saves\Multiplayer\TLGDev"
 if (Test-Path $save) { Remove-Item -Recurse -Force $save }
 $serverDir = Join-Path $serverCache "Server"
+# The server's mods, set each run (the server rewrites the rest of its ini).
+$ini = Join-Path $serverDir "TLGDev.ini"
+(Get-Content $ini) -replace "^Mods=.*$", "Mods=$($active -join ';')" | Set-Content -Encoding ascii $ini
 @"
 function SpawnRegions()
 	return {
@@ -152,7 +171,7 @@ for ($i = 0; $i -lt $Clients; $i++) {
     Remove-Item (Join-Path $lua "TLG_harness_mp.txt"), (Join-Path $lua "TLG_harness_mpstate.txt") -ErrorAction SilentlyContinue
     Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_request.txt") -Value $roles[$i]
     @("ip=127.0.0.1", "port=16361", "user=$($users[$i])", "password=$($cred[$users[$i]])",
-        "serverPassword=$($cred.serverPassword)") | Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_connect.txt")
+        "serverPassword=$($cred.serverPassword)", "only=$Only") | Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_connect.txt")
 }
 $serverLua = Join-Path $serverCache "Lua"
 New-Item -ItemType Directory -Force $serverLua | Out-Null
@@ -184,6 +203,9 @@ $jvm = "--enable-native-access=ALL-UNNAMED --add-exports=java.base/jdk.internal.
     "-ip 127.0.0.1 -port 16361 -udpport 16362"
 $serverOut = Join-Path $serverCache "server-stdout.txt"
 $serverErr = Join-Path $serverCache "server-stderr.txt"
+# The last run's log still says SERVER STARTED (run 139 sent the account
+# commands before this server read its console).
+Remove-Item $serverOut, $serverErr -ErrorAction SilentlyContinue
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = "cmd.exe"
 $psi.Arguments = "/c """"$java"" $jvm > ""$serverOut"" 2> ""$serverErr"""""
@@ -311,3 +333,6 @@ for ($i = 0; $i -lt $Clients; $i++) {
 $f = Join-Path $serverLua "TLG_harness_mpserver.txt"
 Write-Host "===== server: $f"
 if (Test-Path $f) { Get-Content $f } else { Write-Host "no results file" }
+# 0 when every client finished its steps (whatever they found), else 5;
+# not robocopy's last code, which run 139 returned.
+exit $(if ($allDone) { 0 } else { 5 })

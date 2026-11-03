@@ -25,7 +25,7 @@ alternative), **NOT RUN**.
 | G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator), the menus' unequip (run 85) and drag to the floor all carry the record |
 | G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
-| G07 Action authority | Which stage mutates on the server? | SRC-ONLY | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`; MP NOT RUN |
+| G07 Action authority | Which stage mutates on the server? | **PASS (MP)** for the mod's requests; vanilla's heavy pickup FAIL | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`. Dedicated server with two clients on this machine (RT-MP runs 139–145): the mod's sample, stabilize and machine-status requests answered by the server, a repeated request answered from its ledger, an item's record the same on client and server. Vanilla's `ISEquipHeavyItem` cannot take a heavy item off the floor on a server (also without the mod, run 144). See "RT-MP: two clients on a dedicated server" |
 | G08 Persistence | Reliable stores/IDs | **PASS (DS + SP)** single player | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5), as do machine records and conversion projects (runs 7–8); MP reconnect NOT RUN |
 | G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
@@ -868,6 +868,35 @@ The Last Gallon ships them since the carry pose (D-025). So a server must
 reach the mod by its real path. `tools/run-mp-harness.ps1` passes each
 cache's final path.
 
+## RT-MP: two clients on a dedicated server (runs 139–145)
+
+`tools/run-mp-harness.ps1 -Clients 2` (test results, launches 139–145).
+What the game does there, as far as this mod meets it:
+- A timed action that a client queues runs on the server too (B42's
+  `NetTimedAction`), which acts at the character's position as the server
+  knows it. After a teleport that lags: run 139's drops landed where the
+  server last saw her. A walk keeps it current.
+- A heavy item cannot be taken off the floor on a dedicated server
+  (42.21). The loot window's double-click and drag call
+  `equipHeavyItem` on the item its floor listing holds; on the server
+  `ISEquipHeavyItem.complete` takes that item's container, which a world
+  item does not have there, and fails ("attempted index: DoRemoveItem of
+  non-table", line 63). This happens for vanilla's meteorite on a server
+  without the mod too (run 144), and for the fermentation vessel. Done on
+  the server as that `complete` does it (`AddItem`,
+  `sendAddItemToContainer`, both hands, `sendEquip`), the vessel comes
+  into both hands.
+- A remote player's animation variables reach the other clients. B's
+  client held the vessel's `RightHandMask` (`tlgcarryvessel`) and the
+  vessel in both hands on A's character, and drew the carry pose at every
+  gait.
+- Reading print media is recorded on the server's character, not on the
+  reading client's, for vanilla's flier as for the manual
+  (`isPrintMediaRead`, run 140 and 145).
+- An item's mod data written by the server reached the owning client
+  unchanged (the can's TLG record), and items put down or dropped on the
+  floor reached both clients, and a client that left and joined again.
+
 ## Animation tooling (2026-11-02)
 
 For a two-armed carry clip (runs 88–90 showed the game plays a mod's own
@@ -1199,7 +1228,11 @@ zip with them installed clean, run 130 **94/0** and **14/0**, and every
 icon from its item tree, run 131 **19/0**, then the four small items' own
 floor models, runs 132 and 133 **19/0** each, then the zip with them
 installed clean, run 134 **94/0** and **14/0**, and the models from its
-item tree, run 135 **19/0**. Most failures were traced to
+item tree, run 135 **19/0**, then multiplayer: a dedicated server and one
+client, runs 136–137 (the server stopped on its pose-file checksum) and
+138 **2/0**, then two clients, runs 139–142 (the harness's own teething),
+143–144 (vanilla's heavy pickup without the mod, 1/1) and 145 **18/2** and
+**10/0**. Most failures were traced to
 the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
