@@ -3322,3 +3322,29 @@ Still not checked in multiplayer: a real network (the user chose to leave
 it NOT RUN, with no second machine), siphoning (it had the same fault and
 has the same fix), a vehicle conversion, the stills and the drying column,
 and a vessel taken from a crate.
+
+## 2026-11-03 — RT-SP launch 163 and RT-MP launch 164 (the zip with the multiplayer fix)
+
+Launch 163. Command: `tools/rehearse-install.ps1`. It rebuilt the package
+first (200/200 tests, compile check 114/0, translations OK, every shipped
+XML file parsing): the zip of commit `142d009`, 120 files, SHA-256
+`16c93e7f…`, 3,817,600 bytes. It differs from launch 149's zip
+(`0947f1e7…`, `9824306`) in the multiplayer fix (the constructor hooks in
+`Stations.lua`, `Vehicles.lua` and `Generators.lua`, and the pour's reply
+in `ISTLGPourFuel.lua`) and in the shipped support matrix and changelog.
+The zip matched its manifest, was installed into a fresh isolated cache
+and ran the full harness.
+
+Result: phase A **94/0**, phase B **14/0**, the same as launch 149. Phase
+A's fuel chain went through the changed hooks in single player: pump to
+can, can to car, the siphon back into a can, can to generator, pump to
+car, the blend, and the mod's pours with their replies. The console's one
+exception came from the harness's own deep-recursion probe.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run163_install_rehearsal.txt`.
+
+Launch 164, `tools/run-mp-harness.ps1 -Clients 1 -Only fuel` with the mod
+deployed from the package's item tree. The server's copy held the
+package's own docs, and its `Stations.lua` matched the package's. Result:
+A **19/0**, as launch 160.
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run164_fuel_packaged_client_a.txt`
+and `…_server.txt`.
