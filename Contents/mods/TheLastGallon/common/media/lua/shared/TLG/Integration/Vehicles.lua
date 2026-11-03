@@ -155,6 +155,9 @@ local function settleIntoTank(action, srcRec, movedLitres, correctCan)
     V.writeSidecar(vehicle, merged)
 end
 
+-- Not for a constructor: those keep vanilla's parameters (below), as a
+-- multiplayer client sends a timed action's fields named as its new's
+-- parameters (BC NetTimedAction.set; Stations.lua says more, RT-MP run 156).
 local function wrap(class, method, fn)
     local orig = class[method]
     if orig == nil then return false end
@@ -162,10 +165,12 @@ local function wrap(class, method, fn)
     return true
 end
 
+-- SRC ISAddGasolineToVehicle.lua:159, new(character, part, item, otherItems).
 local function installAddGasoline()
     local A = ISAddGasolineToVehicle
     if A == nil then return end
-    wrap(A, "new", function(orig, class, character, part, item, otherItems)
+    local orig = A.new
+    A.new = function(class, character, part, item, otherItems)
         local o = orig(class, character, part, item, otherItems)
         if World.isAuthority() and o and o.vehicle and item and item:getFluidContainer() then
             local ok = pcall(function()
@@ -176,7 +181,7 @@ local function installAddGasoline()
             if not ok then o.tlgTankBefore = nil end
         end
         return o
-    end)
+    end
     local function settle(self)
         if self.tlgSettled or not self.tlgTankBefore or not self.tlgCanBefore then return end
         self.tlgSettled = true
@@ -190,11 +195,13 @@ local function installAddGasoline()
 end
 
 -- Siphon: vanilla adds Petrol to the can; correct the can's native fluids to
--- the tank's real composition and carry the tank's condition.
+-- the tank's real composition and carry the tank's condition (SRC
+-- ISTakeGasolineFromVehicle.lua:158, new(character, part, item, otherItems)).
 local function installTakeGasoline()
     local A = ISTakeGasolineFromVehicle
     if A == nil then return end
-    wrap(A, "new", function(orig, class, character, part, item, otherItems)
+    local orig = A.new
+    A.new = function(class, character, part, item, otherItems)
         local o = orig(class, character, part, item, otherItems)
         if World.isAuthority() and o and part and item and item:getFluidContainer() then
             pcall(function()
@@ -205,7 +212,7 @@ local function installTakeGasoline()
             end)
         end
         return o
-    end)
+    end
     local function settle(self)
         if self.tlgSettled or not self.tlgTankBefore or not self.tlgCanBefore then return end
         self.tlgSettled = true

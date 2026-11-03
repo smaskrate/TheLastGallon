@@ -122,6 +122,12 @@ local function draw(obj, before, litres)
     return p
 end
 
+-- Not for a constructor: those keep vanilla's parameters (below). In
+-- multiplayer a client sends a timed action's fields named as its new's
+-- parameters, read from the function itself (BC NetTimedAction.set), and
+-- the server calls new with them. Wrapped as function(self, ...), new
+-- declared none, so the server built ISTakeFuel without its pump and the
+-- fuel never moved (RT-MP run 156).
 local function wrap(class, method, fn)
     local orig = class and class[method]
     if orig == nil then return false end
@@ -129,9 +135,11 @@ local function wrap(class, method, fn)
     return true
 end
 
--- Pump -> can.
+-- Pump -> can (SRC ISTakeFuel.lua:97, new(character, fuelStation, petrolCan)).
 local function installTakeFuel()
-    wrap(ISTakeFuel, "new", function(orig, class, character, fuelStation, petrolCan)
+    local orig = ISTakeFuel and ISTakeFuel.new
+    if orig == nil then return end
+    ISTakeFuel.new = function(class, character, fuelStation, petrolCan)
         local o = orig(class, character, fuelStation, petrolCan)
         if World.isAuthority() and o and fuelStation and petrolCan and petrolCan:getFluidContainer() then
             pcall(function()
@@ -141,7 +149,7 @@ local function installTakeFuel()
             end)
         end
         return o
-    end)
+    end
     local function settle(self)
         if self.tlgSettled or not self.tlgPumpBefore or not self.tlgCanBefore then return end
         self.tlgSettled = true
@@ -167,9 +175,12 @@ local function installTakeFuel()
     wrap(ISTakeFuel, "serverStop", function(orig, self) local r = orig(self); settle(self); return r end)
 end
 
--- Pump -> vehicle.
+-- Pump -> vehicle (SRC ISRefuelFromGasPump.lua:108, new(character, part,
+-- fuelStation)).
 local function installRefuelFromPump()
-    wrap(ISRefuelFromGasPump, "new", function(orig, class, character, part, fuelStation)
+    local orig = ISRefuelFromGasPump and ISRefuelFromGasPump.new
+    if orig == nil then return end
+    ISRefuelFromGasPump.new = function(class, character, part, fuelStation)
         local o = orig(class, character, part, fuelStation)
         if World.isAuthority() and o and part and fuelStation then
             pcall(function()
@@ -179,7 +190,7 @@ local function installRefuelFromPump()
             end)
         end
         return o
-    end)
+    end
     local function settle(self)
         if self.tlgSettled or not self.tlgPumpBefore or not self.tlgTankBefore then return end
         self.tlgSettled = true

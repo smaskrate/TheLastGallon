@@ -113,6 +113,9 @@ function G.evaluate(gen)
     return Consumers.evaluate(G.profile(gen), rec, { ambientC = ambient }), rec
 end
 
+-- Not for a constructor: those keep vanilla's parameters (below), as a
+-- multiplayer client sends a timed action's fields named as its new's
+-- parameters (BC NetTimedAction.set; Stations.lua says more, RT-MP run 156).
 local function wrap(class, method, fn)
     local orig = class and class[method]
     if orig == nil then return false end
@@ -120,9 +123,12 @@ local function wrap(class, method, fn)
     return true
 end
 
--- Can -> generator (SRC ISAddFuel.lua:47-61, litres map 1:1 to fuel).
+-- Can -> generator (SRC ISAddFuel.lua:47-61, litres map 1:1 to fuel; new at
+-- :70, new(character, generator, petrol, maxTime)).
 local function installAddFuel()
-    wrap(ISAddFuel, "new", function(orig, class, character, generator, petrol, maxTime)
+    local orig = ISAddFuel and ISAddFuel.new
+    if orig == nil then return end
+    ISAddFuel.new = function(class, character, generator, petrol, maxTime)
         local o = orig(class, character, generator, petrol, maxTime)
         if World.isAuthority() and o and generator and petrol and petrol:getFluidContainer() then
             pcall(function()
@@ -132,7 +138,7 @@ local function installAddFuel()
             end)
         end
         return o
-    end)
+    end
     wrap(ISAddFuel, "complete", function(orig, self)
         local r = orig(self)
         if self.tlgGenBefore and self.tlgCanBefore and not self.tlgSettled then
