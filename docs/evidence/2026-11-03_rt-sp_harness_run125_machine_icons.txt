@@ -1,0 +1,65 @@
+# TLG single-player harness, the machine models
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=6612035846229838014 hours=2.0096 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Tool"); TLG.PotStill=Tool ("Tool"); TLG.RefluxStill=Tool ("Tool"); TLG.DryingColumn=Tool ("Tool")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmm_check begin
+PASS RTMM.model_scripts_loaded :: TLG.PotStill mesh=TLG/PotStill texture=TLG/PotStill; TLG.RefluxStill mesh=TLG/RefluxStill texture=TLG/RefluxStill; TLG.DryingColumn mesh=TLG/DryingColumn texture=TLG/DryingColumn; TLG.FuelFilter mesh=TLG/FuelFilter texture=TLG/FuelFilter
+PASS RTMM.items_wired :: TLG.PotStill WorldStaticModel=TLG.PotStill StaticModel=nil; TLG.RefluxStill WorldStaticModel=TLG.RefluxStill StaticModel=nil; TLG.DryingColumn WorldStaticModel=TLG.DryingColumn StaticModel=nil; TLG.FuelFilter WorldStaticModel=TLG.FuelFilter StaticModel=nil
+PASS RTMM.icons_found :: TLG.PotStill icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_PotStill.png; TLG.RefluxStill icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_RefluxStill.png; TLG.DryingColumn icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_DryingColumn.png; TLG.FuelFilter icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_FuelFilter.png
+STEP rtmi_place begin
+OBS  RTMI.placed from 10659,10646 to 10666,10639 (anchor 10660,10645); t0 square before free=true solid=false solidTrans=false, after free=true solid=false solidTrans=false
+PASS RTMI.all_placed :: 5 of 5 on their squares; turns t0=0 filter=0 column=0 pot=0 reflux=0
+PASS RTMI.vessel_icon :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+OBS  RTMI.status menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTMI.vessel_is_a_machine :: Ready <LINE> Temperature here now: 53.9 °F, outdoors
+STEP rtmm_go_row begin
+STEP rtmm_zoom_row begin
+OBS  RTMI.zoom 1.00 -> 1.00 in 0 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtmm_row begin
+OBS  RTMI.screenshot tlg_rtmm_row.png ok=true ; interface hidden; zoom 1.00; player 10661,10642; game hour 9.03
+STEP rtmm_zoom_close begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtmm_stand_column_pot begin
+STEP rtmi_shot_rtmm_beside_column_pot begin
+OBS  RTMI.screenshot tlg_rtmm_beside_column_pot.png ok=true ; interface hidden; zoom 0.50; player 10662,10643; game hour 9.06
+STEP rtmm_stand_reflux begin
+STEP rtmi_shot_rtmm_beside_reflux begin
+OBS  RTMI.screenshot tlg_rtmm_beside_reflux.png ok=true ; interface hidden; zoom 0.50; player 10665,10640; game hour 9.07
+STEP rtmm_zoom_hand begin
+OBS  RTMI.zoom 0.50 -> 0.25 in 1 scrolls (enabled=true, min 0.25)
+STEP rtmm_go_hand begin
+STEP action_pot begin
+OBS  RTMH.action_pot action running=true hand model=nil
+STEP rtmi_shot_rtmm_action_pot begin
+OBS  RTMI.screenshot tlg_rtmm_action_pot.png ok=true ; interface hidden; zoom 0.25; player 10660,10643; game hour 9.11
+STEP icon_pot begin
+TIMEOUT icon_pot after 901 ticks
+STEP rtmi_shot_rtmm_icon_pot begin
+OBS  RTMI.screenshot tlg_rtmm_icon_pot.png ok=true ; interface shown; zoom 0.25; player 10660,10643; game hour 9.19
+STEP icon_reflux begin
+OBS  RTMI.held_icon_reflux flags hideWeaponModel=false hideEquippedHandL=false hideEquippedHandR=false
+PASS RTMI.held_icon_reflux :: TLG.RefluxStill in the primary hand: TLG.RefluxStill; in both: false
+STEP rtmi_shot_rtmm_icon_reflux begin
+OBS  RTMI.screenshot tlg_rtmm_icon_reflux.png ok=true ; interface shown; zoom 0.25; player 10660,10643; game hour 9.22
+STEP icon_column begin
+OBS  RTMI.held_icon_column flags hideWeaponModel=false hideEquippedHandL=false hideEquippedHandR=false
+PASS RTMI.held_icon_column :: TLG.DryingColumn in the primary hand: TLG.DryingColumn; in both: false
+STEP rtmi_shot_rtmm_icon_column begin
+OBS  RTMI.screenshot tlg_rtmm_icon_column.png ok=true ; interface shown; zoom 0.25; player 10660,10643; game hour 9.24
+STEP icon_filter begin
+OBS  RTMI.held_icon_filter flags hideWeaponModel=false hideEquippedHandL=false hideEquippedHandR=false
+PASS RTMI.held_icon_filter :: TLG.FuelFilter in the primary hand: TLG.FuelFilter; in both: false
+STEP rtmi_shot_rtmm_icon_filter begin
+OBS  RTMI.screenshot tlg_rtmm_icon_filter.png ok=true ; interface shown; zoom 0.25; player 10660,10643; game hour 9.26
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.27
+SUMMARY pass=14 fail=0
+DONE

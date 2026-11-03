@@ -24,9 +24,11 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
   `art-src/potstill`, `refluxstill`, `dryingcolumn` and `fuelfilter`;
   RT-SP runs 120–122). The import test's model lives in the dev-only
   harness mod.
-* Every icon but the vessel's, and every other item's model, is
-  borrowed from vanilla by name. The vessel's icon is the mod's own, drawn
-  by `tools/make-icons.ps1` to match its model. Since 2026-11-02 the vessel
+* Five icons are the mod's own: the vessel's, drawn by
+  `tools/make-icons.ps1` to match its model, and since 2026-11-03 the two
+  stills', the drying column's and the fuel filter's, rendered from their
+  models by `tools/make-model-icons.ps1` (runs 125–126). Every other icon,
+  and every other item's model, is borrowed from vanilla by name. Since 2026-11-02 the vessel
   is also carried in both arms as its own model (`TLG.FermenterHeld`),
   through a carry pose made from two Mixamo clips (`art-src/carry/`,
   D-025). The other machines have no hand model: the game draws a held
@@ -38,14 +40,15 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
   read as a car fuel tank, the pot still as a cooking pot, and the
   vessel's `WaterTank` is a water-cooler bottle.
 * Several placeholders collide or mislead. The sampling kit and yeast
-  starter share the jar icon; the fuel filter and drying column share the
-  respirator-filter icon (`AirFilters` is vanilla's `RespiratorFilters`
-  icon); the pot still and reflux still share the pot icon, so in the
-  inventory they cannot be told apart. On the floor they could not either
-  until their own models arrived (both were the cooking pot), and the
-  drying column was a car's fuel tank (`SmallGasTank` =
-  `WorldItems/NormalGasTank1`); the fermentation vessel was a water-cooler
-  bottle (`WaterTank`). The manual shows the smithing magazine cover.
+  starter share the jar icon. Until their own icons (2026-11-03), the fuel
+  filter and drying column shared the respirator-filter icon (`AirFilters`
+  is vanilla's `RespiratorFilters` icon), and the pot still and reflux
+  still the pot icon, so in the inventory they could not be told apart.
+  On the floor they could not either until their own models arrived (both
+  were the cooking pot), and the drying column was a car's fuel tank
+  (`SmallGasTank` = `WorldItems/NormalGasTank1`); the fermentation vessel
+  was a water-cooler bottle (`WaterTank`). The manual shows the smithing
+  magazine cover.
 * Four small items (sampling kit, stabilizer, manual, yeast starter) have
   no `WorldStaticModel`; what they look like on the floor is unknown. The
   fuel filter has its own since 2026-11-03.
@@ -222,10 +225,10 @@ Icons, 32×32:
 | --- | --- | --- | --- |
 | A01 | `TLG.FuelSampleKit` | `GlassJar` | same as the yeast starter |
 | I05 | `TLG.YeastStarter` | `GlassJar` | same as the sampling kit |
-| I02 | `TLG.FuelFilter` | `AirFilters` (respirator filter) | same as the drying column |
-| I06 | `TLG.DryingColumn` | `AirFilters` | same as the fuel filter |
-| I07 | `TLG.PotStill` | `Pot` | same as the reflux still |
-| I08 | `TLG.RefluxStill` | `Pot` | same as the pot still |
+| I02 | `TLG.FuelFilter` | its own `TLG_FuelFilter` since 2026-11-03, rendered from its model (`tools/make-model-icons.ps1`) | done |
+| I06 | `TLG.DryingColumn` | its own `TLG_DryingColumn` since 2026-11-03, rendered from its model | done |
+| I07 | `TLG.PotStill` | its own `TLG_PotStill` since 2026-11-03, rendered from its model | done |
+| I08 | `TLG.RefluxStill` | its own `TLG_RefluxStill` since 2026-11-03, rendered from its model | done |
 | I09 | `TLG.FermenterVessel` | its own `TLG_Fermenter` since 2026-11-02 (`tools/make-icons.ps1`) | done |
 | I01 | `TLG.FuelStabilizer` | `Bleach` | |
 | I03 | `TLG.ManualFuelSystems` | `MagazineBlacksmith1` (smithing magazine) | also needs a cover texture for its model; seen in play since the manual spawns in loot (runs 101–103) |

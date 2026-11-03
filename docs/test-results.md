@@ -2669,8 +2669,8 @@ stills held at true size) and `2026-11-03_run122_machine_models_sheet.jpg`
 
 Not checked: the models turned other ways than 0 degrees (the fermenter's
 turns drew and reloaded in launches 68–69, the same code), the models
-seen after a save and reload (launch 123 reloaded two of them, unseen), multiplayer, and the items' icons (still vanilla's
-pot and respirator filter).
+seen after a save and reload (launch 123 reloaded two of them, unseen), multiplayer, and the items' icons (then still vanilla's
+pot and respirator filter; their own since launches 125–126).
 
 ## 2026-11-03 — RT-SP client harness, launches 123–124 (the zip with the supplied models)
 
@@ -2698,3 +2698,35 @@ package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGal
 shipped hashes, the four models drew beside the fermenter, and the pot
 still held through an action drew nothing. The console had no exception.
 Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run124_machine_models_packaged.txt`.
+
+## 2026-11-03 — RT-SP client harness, launches 125–126 (the four items' own icons)
+
+After the models, the user chose their icons next. `tools/make-model-icons.ps1`
+renders each from the shipped model and texture with
+`tools/blender/pz_icon.py`: orthographic, Eevee in Blender 4.5.15 LTS,
+lit from the upper left, shrunk from 256 to 32 pixels with hard edges,
+reduced to twelve colours and outlined in the fermenter icon's #1E150C.
+The views were chosen by eye at 32 pixels from trial renders (the
+reflux still from its left side, where its column stands clear of its
+arm). The items now say `Icon = TLG_PotStill`, `TLG_RefluxStill`,
+`TLG_DryingColumn` and `TLG_FuelFilter`. Two renders of one model gave the
+same icon (the 256-pixel renders differed in a few pixels).
+
+The machine-models mode now also checks that each item's icon loads the
+mod's `Item_TLG_<Name>.png` (not the game's question mark), and equips
+each item in turn to photograph it with the interface shown.
+
+| Launch | Result | What it showed |
+| --- | --- | --- |
+| 125 | **14/0** | All four icons found. The reflux still's, the drying column's and the filter's showed in the equipped-item button. The pot still's equip was queued behind the 1200-tick do-nothing action before it, its step timed out after 900 ticks (reported, not counted as a failure), and the button was empty in its picture |
+| 126 | **15/0** | The equips moved before that action: all four icons in the button, the stills now told apart at a glance |
+
+Each console had no exception.
+
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run125_machine_icons.txt`,
+`…_run126_machine_icons.txt`, the button crops
+`2026-11-03_run126_machine_icons_buttons.jpg` and the icons enlarged beside
+the fermenter's, `2026-11-03_machine_icons_8x.png`.
+
+Not checked: the icons in the inventory list (the list stayed collapsed
+in launch 68's shots, so the button stands in for it), multiplayer.

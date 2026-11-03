@@ -133,7 +133,9 @@
   small canister. Before, both stills were a cooking pot and the drying
   column a car's fuel tank. A still in your hand is no longer drawn as a
   cooking pot during an action; nothing is drawn there, as for a carried
-  generator. Their inventory icons are unchanged. Checked in game.
+  generator. Each also has its own inventory icon, rendered from its
+  model, so the two stills, and the filter and the drying column, no
+  longer share one. Checked in game.
 * A generator you carry keeps its fuel's record and its conversion when
   the game puts it down for you, as it does when you take another
   generator or equip a weapon from the menus (the record checked in

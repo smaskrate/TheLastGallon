@@ -705,8 +705,20 @@ listed with their replacement.
   package's item tree after the zip of `8c9dd19` installed clean (runs
   123–124), whose save and continue loaded a placed reflux still and
   drying column back (not photographed). Neither still's
-  model shows a firebox. The icons are still vanilla placeholders (I02,
-  I06–I08), and the editable sources were not supplied. Multiplayer is
+  model shows a firebox. The icons were still vanilla placeholders (I02,
+  I06–I08; see the amendment), and the editable sources were not
+  supplied. Multiplayer is
   not run. The licence record rests on the user's statement of 2026-11-02
   that they hold a commercial Tripo licence; the models were generated
   the next day.
+* Amendment (2026-11-03, runs 125–126): the four items have their own
+  icons, rendered from their models. The user chose this next, after the
+  models. `tools/make-model-icons.ps1` runs `tools/blender/pz_icon.py` on
+  each shipped model and texture: an orthographic Eevee render lit from
+  the upper left, shrunk to 32×32 with hard edges, reduced to twelve
+  colours, with the fermenter icon's dark outline, so they sit beside its
+  drawn icon. Each view was chosen by eye at 32 pixels (the reflux still
+  from its left side, where its column stands clear of its arm). The two
+  stills, and the filter and the drying column, no longer share an icon.
+  Seen in game in the equipped-item button (run 126); the fermenter's icon
+  stays the drawn one.

@@ -5,10 +5,9 @@ module TLG
        The fermenter, the two stills and the drying column stand on the
        floor as the mod's own models (TLG_models.txt); only the fermenter
        has a hand model (the others have none, so nothing is drawn in the
-       hand during an action). The fermenter has its own icon
-       (Item_TLG_Fermenter.png, drawn by tools/make-icons.ps1); the other
-       machines' icons are verified vanilla references used as placeholders
-       (docs/asset-audit.csv I06-I08). DisplayCategory must be a
+       hand during an action). Each has its own icon (Item_TLG_<Name>.png):
+       the fermenter's drawn by tools/make-icons.ps1, the others rendered
+       from their models by tools/make-model-icons.ps1. DisplayCategory must be a
        vanilla category: the inventory shows getText("IGUI_ItemCat_" ..
        category) (ISInventoryPane.lua:2547), and "Tools" has no text
        (runs 65-66 showed the raw key). The fermenter is carried in both
@@ -59,7 +58,7 @@ module TLG
         DisplayCategory = Tool,
         ItemType = base:normal,
         Weight = 5.0,
-        Icon = Pot,
+        Icon = TLG_PotStill,
         WorldStaticModel = TLG.PotStill,
     }
 
@@ -68,7 +67,7 @@ module TLG
         DisplayCategory = Tool,
         ItemType = base:normal,
         Weight = 11.0,
-        Icon = Pot,
+        Icon = TLG_RefluxStill,
         WorldStaticModel = TLG.RefluxStill,
     }
 
@@ -77,7 +76,7 @@ module TLG
         DisplayCategory = Tool,
         ItemType = base:normal,
         Weight = 3.0,
-        Icon = AirFilters,
+        Icon = TLG_DryingColumn,
         WorldStaticModel = TLG.DryingColumn,
     }
 

@@ -31,7 +31,12 @@ was: that method gives the fermenter's shipped PNG byte for byte. The
 model script is `TLG.DryingColumn` in `media/scripts/TLG_models.txt`.
 
 Not supplied: editable sources (a `.blend` file or the Tripo project) and
-an inventory icon; the item still shows a vanilla icon.
+an inventory icon. The icon, `media/textures/Item_TLG_DryingColumn.png` (32×32,
+728 bytes, SHA-256 `BA9FB33D411636F892FD188F078A3C04C72AF88ADBFD196DB07CD59A183831F3`), was rendered for the mod
+from this model and its PNG texture by `tools/make-model-icons.ps1`
+(`tools/blender/pz_icon.py`: Blender 4.5.15 LTS, Eevee, reduced to
+twelve colours with the fermenter icon's outline); it holds nothing but
+that render.
 
 Redistribution rights, recorded 2026-11-03:
 

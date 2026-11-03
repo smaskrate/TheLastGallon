@@ -67,7 +67,8 @@
 --   sp-rtmps -> sprint carry trials: candidate clips keyed for the game's
 --             sprint, photographed over more than a stride both ways
 --   sp-rtmm -> the stills', drying column's and fuel filter's own models on
---             the floor beside the fermenter, and the stills in the hand
+--             the floor beside the fermenter, a still in the hand during an
+--             action, and their icons in the equipped-item button
 --   sp-rtman -> the field manual: its loot lists, manuals rolled from them,
 --             one read through the inventory menu (sp-rtmanit: in Italian)
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
@@ -9899,8 +9900,11 @@ RT.fermenterReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmfb_
 -- character standing on the row between the items. None of the four has a
 -- hand model: run 120 held the stills at true size through an action and
 -- they covered the character, and run 121 drew nothing for the drying
--- column, which had none. So the pot still is held through a do-nothing
--- action (which draws an item's hand model) to see nothing drawn.
+-- column, which had none. Each item is then equipped in turn and
+-- photographed with the interface shown, where the equipped-item button
+-- shows its icon (as the fermenter's was seen, runs 64-66); last, the pot
+-- still is held through a do-nothing action (which draws an item's hand
+-- model) to see nothing drawn.
 RT.MM = { models = { "PotStill", "RefluxStill", "DryingColumn", "FuelFilter" },
     items = { { "TLG.PotStill", "TLG.PotStill", nil }, { "TLG.RefluxStill", "TLG.RefluxStill", nil },
         { "TLG.DryingColumn", "TLG.DryingColumn", nil }, { "TLG.FuelFilter", "TLG.FuelFilter", nil } } }
@@ -9925,6 +9929,18 @@ RT.MM.check = { name = "rtmm_check", timeout = 300, fn = function()
         wired[#wired + 1] = string.format("%s WorldStaticModel=%s StaticModel=%s", w[1], tostring(world), tostring(hand))
     end
     R:check("RTMM.items_wired", function() return all, table.concat(wired, "; ") end)
+    -- Each item's icon, rendered from its model (tools/make-model-icons.ps1):
+    -- Icon = TLG_<Name> must load the mod's Item_TLG_<Name>.png, not the
+    -- game's question mark.
+    local icons, found = {}, true
+    for _, w in ipairs(RT.MM.items) do
+        local it = instanceItem(w[1])
+        local tex = it and it:getTex()
+        local name = tostring(tex and tex:getName())
+        found = found and has(name, "Item_TLG_" .. w[1]:gsub("^TLG%.", "")) and not has(name, "Question_On")
+        icons[#icons + 1] = string.format("%s icon=%s", w[1], name)
+    end
+    R:check("RTMM.icons_found", function() return found, table.concat(icons, "; ") end)
     return true
 end }
 
@@ -9947,6 +9963,12 @@ RT.machineModelSteps = { RT.waitWorld, RT.MI.setup, RT.MM.check, RT.MI.place,
     RT.MM.stand("rtmm_stand_column_pot", 2), RT.MI.shot("rtmm_beside_column_pot", true),
     RT.MM.stand("rtmm_stand_reflux", 5), RT.MI.shot("rtmm_beside_reflux", true),
     RT.MI.zoomTo("rtmm_zoom_hand", 0.25), RT.MI.goTo("rtmm_go_hand", "tests"),
+    -- The equips come first: the do-nothing action runs 1200 ticks, and an
+    -- equip queued behind it outlasted its step (run 125).
+    RT.MI.hold("icon_pot", "TLG.PotStill"), RT.MI.shot("rtmm_icon_pot", false),
+    RT.MI.hold("icon_reflux", "TLG.RefluxStill"), RT.MI.shot("rtmm_icon_reflux", false),
+    RT.MI.hold("icon_column", "TLG.DryingColumn"), RT.MI.shot("rtmm_icon_column", false),
+    RT.MI.hold("icon_filter", "TLG.FuelFilter"), RT.MI.shot("rtmm_icon_filter", false),
     RT.MI.propAction("action_pot", "TLG.PotStill", nil), RT.MI.shot("rtmm_action_pot", true),
     RT.finish }
 

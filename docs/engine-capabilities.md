@@ -802,6 +802,18 @@ hand model is, a still covered the character from feet to head (run
 120). With no hand model the game drew nothing in the hand (the drying
 column, run 121), so the stills have none (run 122).
 
+Since run 125 the four have their own icons too, rendered from their
+models by `tools/make-model-icons.ps1` (`tools/blender/pz_icon.py`): an
+orthographic Eevee render (Blender 4.5.15 LTS, in the background), shrunk
+to 32×32 with hard edges and twelve colours and given the fermenter
+icon's outline. `Icon = TLG_PotStill` loads `Item_TLG_PotStill.png` from
+the mod's `media/textures`, as the fermenter's does, and each showed in
+the equipped-item button (run 126). Two
+renders of one model gave the same icon though the large renders
+differed in a few pixels. In run 125 the pot still's equip was queued
+behind the harness's 1200-tick do-nothing action and its step timed out;
+run 126 equipped first.
+
 ## Animation tooling (2026-11-02)
 
 For a two-armed carry clip (runs 88–90 showed the game plays a mod's own
@@ -1125,7 +1137,8 @@ mode, run 117 **26/0**, then the zip with it installed clean, run 118
 **26/0**, then the supplied models of the stills, the drying column and
 the fuel filter, runs 120, 121 and 122 **10/0** each, then the zip with
 them installed clean, run 123 **94/0** and **14/0**, and the models from
-its item tree, run 124 **10/0**. Most failures were traced to the harness
+its item tree, run 124 **10/0**, then their icons, runs 125 **14/0** (one
+equip timed out) and 126 **15/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
