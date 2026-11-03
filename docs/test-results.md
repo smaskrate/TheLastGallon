@@ -2784,3 +2784,28 @@ icons enlarged, `2026-11-03_item_icons_8x.png`.
 
 Not checked: the icons in the inventory list (the button stands in for
 it), multiplayer.
+
+## 2026-11-03 — RT-SP client harness, launches 130–131 (the zip with every icon)
+
+Launch 130. Command: `tools/rehearse-install.ps1`, which rebuilt the
+package first (197/197 tests, compile check 105/0, translations OK, every
+shipped XML file parsing): the zip of commit `21feecf`, 112 files,
+SHA-256 `b01db3e7…`, 3,743,610 bytes. It differs from launch 127's zip
+(`f9c52565…`, 108 files) in the four new icons
+(`Item_TLG_FuelSampleKit.png`, `Item_TLG_YeastStarter.png`,
+`Item_TLG_FuelStabilizer.png`, `Item_TLG_ManualFuelSystems.png`), the item
+script's `Icon` lines, and the changelog and notice. The zip matched its
+manifest, was installed into a fresh isolated cache and ran the full
+harness.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run130_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as launch 127. The
+console's one exception came from the harness's own deep-recursion
+probe, and no line named the icons or models.
+
+Launch 131, `-Mode machine-models` with the mod deployed from the
+package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`):
+**19/0**, as launch 129. The nine deployed icons carried the shipped
+hashes, all eight rendered ones loaded, and each item equipped showed its
+icon. The console had no exception.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run131_item_icons_packaged.txt`.

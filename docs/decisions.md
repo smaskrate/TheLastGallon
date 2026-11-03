@@ -746,7 +746,9 @@ listed with their replacement.
   from the filter and the drying column.
 * Consequences: verified RT-SP run 129 (19/0): every one of the eight
   rendered icons loads the mod's own `Item_TLG_<Name>.png`, and each item
-  equipped shows it in the equipped-item button. The shapes are this
+  equipped shows it in the equipped-item button; again from the package's
+  item tree after the zip of `21feecf` installed clean (runs 130–131).
+  The shapes are this
   repository's own, so the icons carry no outside asset. The four items'
   floor models are unchanged (A29): the stabilizer, the kit, the starter
   and the manual still have none.
