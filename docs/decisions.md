@@ -840,6 +840,7 @@ listed with their replacement.
   record. Put down, it ran again where it lay. When both players took it
   at once, the second action reached the server and was refused, leaving
   one vessel. Single player is unchanged (RT-SP run 148, 43/0, as run 81).
-  Vanilla's meteorite still stays on the floor on a server. Not checked
-  live: the refusals for a vessel out of reach or on no square; the
-  vessel taken from a container in multiplayer.
+  Vanilla's meteorite still stays on the floor on a server. A vessel in
+  the player's own inventory is still equipped by the game's `complete`
+  on a server (run 151). Not checked live: the refusals for a vessel out
+  of reach or on no square; a vessel taken from a crate in multiplayer.

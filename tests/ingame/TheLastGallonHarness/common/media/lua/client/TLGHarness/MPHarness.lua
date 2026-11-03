@@ -890,6 +890,7 @@ A.raceSeen = probeVessel("race", function(m)
 end)
 
 A.tryTake = call("try_take", "try_take", function() return { id = A.vesselId } end, "try_take", function(m)
+    A.takesBeforeOwn = m.takes or ""
     report():line("OBS  MP.try_take holder=%s taker=%s result=%s holder keeps it=%s taker has it=%s takes=%s",
         tostring(m.holder), tostring(m.taker), tostring(m.result), tostring(m.holderKeeps), tostring(m.takerHas),
         tostring(m.takes))
@@ -909,6 +910,49 @@ local function raceDrop()
     end }
 end
 
+-- T7: a vessel equipped from A's own inventory, as a double-click there
+-- does. The mod's take on the server leaves a machine in the taker's own
+-- inventory to the game's complete (Machines.takeOnServer: nil, logged by
+-- the server as "tlga:nil"), which works there.
+A.giveVessel = call("give_vessel", "give", { items = V }, "given", function(m)
+    local got = ids(m.ids)
+    A.ownVesselId = got[V] and got[V][1]
+end)
+
+A.equipOwn = { name = "mp_equip_own_vessel", timeout = 2400, fn = function(ctx, ticks)
+    local p = player()
+    if not ctx.queued then
+        local item = inventoryItem(A.ownVesselId)
+        if not item then
+            if ticks < 600 then return nil end
+            report():line("FAIL MP.own_vessel_equipped_%s :: it never reached the inventory", MP.role)
+            return true
+        end
+        ISInventoryPaneContextMenu.equipHeavyItem(p, item)
+        ctx.queued = ticks
+        report():line("OBS  MP.own vessel %s queued: %s", tostring(A.ownVesselId), actionNames(p))
+        return nil
+    end
+    if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+    ctx.idle = ctx.idle or ticks
+    if ticks - ctx.idle < 120 then return nil end
+    local held = p:getPrimaryHandItem()
+    check("own_vessel_equipped", function()
+        return inBothHands(p, V) and held:getID() == A.ownVesselId, string.format("primary=%s id=%s",
+            tostring(held and held:getFullType()), tostring(held and held:getID()))
+    end)
+    return true
+end }
+
+A.ownSeen = call("probe_own_vessel", "probe_vessel", function() return { id = A.ownVesselId } end, "probe_vessel",
+    function(m)
+        local since = string.sub(m.takes or "", #(A.takesBeforeOwn or "") + 1)
+        report():line("OBS  MP.own vessel server: where=%s; the server's takes since:%s", tostring(m.where), since)
+        check("own_vessel_left_to_the_game_on_server", function()
+            return m.where == "inventory tlga both hands" and since == " tlga:nil", "see the line above"
+        end)
+    end)
+
 local function raceStepsA()
     return {
         raceReady("mp_race_ready", "race_ready", function()
@@ -916,7 +960,8 @@ local function raceStepsA()
             return { x = tonumber(x), y = tonumber(y) }
         end),
         waitFrom("mp_wait_race_at", "race_at"), raceTake(true), waitFrom("mp_wait_race_done", "race_done"),
-        A.raceSeen, A.tryTake, once("mp_race_drop_please", function() send("race_drop", {}) end), raceDrop() }
+        A.raceSeen, A.tryTake, once("mp_race_drop_please", function() send("race_drop", {}) end), raceDrop(),
+        A.giveVessel, A.equipOwn, A.ownSeen, raceDrop() }
 end
 
 local function raceStepsB(backX, backY)

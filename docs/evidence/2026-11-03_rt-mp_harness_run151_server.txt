@@ -1,0 +1,47 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlgb: hello role=B
+OBS  MPS.message from tlga: start role=A
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=spawn_vessel x=10663 y=10642
+OBS  MPS.reply spawned batch=Processing id=1705211507 item=TLG.FermenterVessel role=A tag=spawn_vessel x=10663 y=10642
+OBS  MPS.message from tlga: spawn item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641
+OBS  MPS.reply spawned batch=nil id=744530297 item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641
+OBS  MPS.take of 1705211507 by tlga: true
+OBS  MPS.message from tlga: probe_vessel id=1705211507 role=A tag=vessel_taken
+OBS  MPS.reply probe_vessel listed=no pause=not_placed role=A site=10663,10642 state=Paused tag=vessel_taken takes=tlga:true vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlga: gait name=stand role=A
+OBS  MPS.message from tlgb: gait_shot name=stand role=B
+OBS  MPS.message from tlga: gait name=walk role=A
+OBS  MPS.message from tlgb: gait_shot name=walk role=B
+OBS  MPS.message from tlga: gait name=run role=A
+OBS  MPS.message from tlgb: gait_shot name=run role=B
+OBS  MPS.message from tlga: gait name=sprint role=A
+OBS  MPS.message from tlgb: gait_shot name=sprint role=B
+OBS  MPS.message from tlga: gait name=sneak role=A
+OBS  MPS.message from tlgb: gait_shot name=sneak role=B
+OBS  MPS.message from tlga: gait name=crouch role=A
+OBS  MPS.message from tlgb: gait_shot name=crouch role=B
+OBS  MPS.message from tlga: probe_vessel id=1705211507 role=A tag=vessel_put_down
+OBS  MPS.reply probe_vessel listed=10658,10647 pause=none role=A site=10658,10647 state=Processing tag=vessel_put_down takes=tlga:true vessels=1 where=floor 10658,10647
+OBS  MPS.message from tlga: race_ready role=A x=10658 y=10647
+OBS  MPS.message from tlgb: race_at role=B
+OBS  MPS.message from tlga: race_now role=A
+OBS  MPS.take of 1705211507 by tlga: true
+OBS  MPS.take of 1705211507 by tlgb: false
+OBS  MPS.message from tlgb: race_done role=B
+OBS  MPS.message from tlga: probe_vessel id=1705211507 role=A tag=race
+OBS  MPS.reply probe_vessel listed=no pause=not_placed role=A site=10658,10647 state=Paused tag=race takes=tlga:true tlga:true tlgb:false vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlga: try_take id=1705211507 role=A tag=try_take
+OBS  MPS.take of 1705211507 by tlgb: false
+OBS  MPS.reply try_take holder=tlga holderKeeps=true result=false role=A tag=try_take taker=tlgb takerHas=false takes=tlga:true tlga:true tlgb:false tlgb:false
+OBS  MPS.message from tlga: race_drop role=A
+OBS  MPS.message from tlga: give items=TLG.FermenterVessel role=A tag=give_vessel
+OBS  MPS.reply given ids=TLG.FermenterVessel=1202666597 role=A tag=give_vessel
+OBS  MPS.take of 1202666597 by tlga: nil
+OBS  MPS.message from tlga: probe_vessel id=1202666597 role=A tag=probe_own_vessel
+OBS  MPS.reply probe_vessel listed=no pause=none role=A site=none state=none tag=probe_own_vessel takes=tlga:true tlga:true tlgb:false tlgb:false tlga:nil vessels=2 where=inventory tlga both hands
+OBS  MPS.message from tlga: finish role=A

@@ -3087,7 +3087,8 @@ Not checked:
 - the refusals for a vessel out of reach (more than 2.5 tiles) or on no
   square, live: `tests/integration/test_machine_sites.lua` covers them;
 - the vessel taken from a container in multiplayer (the game's own
-  `complete`, which the mod leaves alone);
+  `complete`, which the mod leaves alone; from the player's own inventory
+  since checked, launch 151);
 - the world menu's Grab of the vessel in multiplayer;
 - two players working one machine's batch at once; the TLG pour,
   refuelling, conversions, generators and vehicles in multiplayer; a
@@ -3119,3 +3120,25 @@ ran again where it was put down. In the race B's action reached the
 server and was refused, as in launches 146 and 147.
 Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run150_packaged_client_a.txt`,
 `…_client_b.txt` and `…_server.txt`.
+
+## 2026-11-03 — RT-MP launch 151 (a vessel equipped from the inventory on a server)
+
+The one path the server's take changed that had worked before on a
+server: a vessel in the player's own inventory equipped into both hands,
+as a double-click in the inventory does. Before D-030 the game's
+`complete` ran for it; now the mod's take must recognise the player as
+the holder and leave the item to that `complete`. After the race, the
+server gave A a second vessel and A equipped it from the inventory
+(`equipHeavyItem` on the inventory item). Command: `tools/run-mp-harness.ps1
+-Clients 2 -Only carry`.
+
+Result: A **12/0**, B **8/0**. The vessel came into A's hands, and the
+server held it in A's inventory and both hands. The server's log shows
+the mod's take returning nothing for it (`tlga:nil`), so the game's own
+`complete` did the equip. Everything launch 146 checked passed again,
+the race included (B's take refused on the server).
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run151_client_a.txt`,
+`…_client_b.txt` and `…_server.txt`.
+
+Not checked: a vessel taken from a crate or another container in
+multiplayer (also left to the game's `complete`).
