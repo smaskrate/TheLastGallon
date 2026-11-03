@@ -720,5 +720,6 @@ listed with their replacement.
   drawn icon. Each view was chosen by eye at 32 pixels (the reflux still
   from its left side, where its column stands clear of its arm). The two
   stills, and the filter and the drying column, no longer share an icon.
-  Seen in game in the equipped-item button (run 126); the fermenter's icon
-  stays the drawn one.
+  Seen in game in the equipped-item button (run 126), and again from the
+  package's item tree after the zip of `f69a74a` installed clean (runs
+  127–128); the fermenter's icon stays the drawn one.

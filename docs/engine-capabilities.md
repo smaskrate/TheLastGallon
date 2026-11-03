@@ -1138,7 +1138,9 @@ mode, run 117 **26/0**, then the zip with it installed clean, run 118
 the fuel filter, runs 120, 121 and 122 **10/0** each, then the zip with
 them installed clean, run 123 **94/0** and **14/0**, and the models from
 its item tree, run 124 **10/0**, then their icons, runs 125 **14/0** (one
-equip timed out) and 126 **15/0**. Most failures were traced to the harness
+equip timed out) and 126 **15/0**, then the zip with them installed clean,
+run 127 **94/0** and **14/0**, and the icons from its item tree, run 128
+**15/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
