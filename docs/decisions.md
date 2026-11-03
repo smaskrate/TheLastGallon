@@ -654,7 +654,8 @@ listed with their replacement.
   vessel's `RightHandMask` on the carrier). On a dedicated server the
   vessel cannot be taken off the floor through the loot window: the
   game's `ISEquipHeavyItem.complete` fails there for every heavy item,
-  vanilla's meteorite too, also without the mod (run 144).
+  vanilla's meteorite too, also without the mod (run 144). Since D-030 the
+  mod takes the vessel off the floor itself on a server (runs 146–147).
 
 ## D-026 The field manual is print media found in loot
 * Decision: `TLG.ManualFuelSystems` is read as the game reads its
@@ -792,3 +793,53 @@ listed with their replacement.
   writes the same files but for the time in each FBX's header. Not
   checked: an item dropped by a player (turned at random) or seen after a
   reload; multiplayer.
+
+## D-030 On a server the mod takes the fermentation vessel off the floor itself
+* Decision: on a dedicated server, when a player takes one of the mod's
+  machines off the floor into both hands (the loot window's double-click
+  or drag: `ISInventoryPaneContextMenu.equipHeavyItem`, `ISEquipHeavyItem`),
+  the server does the work of `ISEquipHeavyItem.complete` itself
+  (`Machines.takeOnServer`, called from the hook the mod already has on
+  that `complete`). A heavy item in hand goes down first
+  (`forceDropHeavyItems`, as that `complete` begins). The world object
+  comes off its square as the floor transfer takes it
+  (`transmitRemoveItemFromSquare`, `removeWorldObject`), and the item goes
+  into the inventory and both hands. The clients are told as that
+  `complete` tells them (`sendAddItemToContainer`, `sendEquip`). The batch
+  is accounted first (`Machines.pickedUp`), so the item reaches the
+  player's client with its carried record. The action is refused
+  (`complete` returns false and the server rejects it) when the machine is
+  already in another character's inventory, lies on no square, or is
+  more than 2.5 tiles away (the reach of the machines' requests). From a
+  container (an inventory, a bag, a crate), and in single player, the
+  game's own `complete` runs as before. Only the mod's machines are
+  handled, and of them only the fermentation vessel is carried in both
+  arms. Vanilla's heavy items are left as vanilla leaves them (D-025).
+* Reason: the user asked for it on 2026-11-03 ("Yes, make it", to "Shall
+  the mod give the vessel its own server-side pickup, working around the
+  game's bug?"). In 42.21 no heavy item comes off the floor on a dedicated
+  server: RT-MP runs 140–145, and vanilla's meteorite without the mod in
+  run 144. So players could not lift the vessel there. The server finds
+  the item the loot window named among the square's world objects and
+  lists it in a floor container of its own without adding it (BC
+  `ContainerID.collectFloorItems`). The item has no container, and
+  `complete` fails at its line 63. The client's side of the action (its
+  walk, animation and time) stays vanilla's; only the server's `complete`
+  is replaced. The refusals are new, because before this the server never
+  got that far. When two players take the vessel at once, both actions
+  carry the same item object. Given the action that completes second,
+  vanilla's `complete` would take the vessel out of the first player's
+  inventory while the first still held it, and a later put-down would
+  leave a second vessel.
+* Consequences: verified by `tests/integration/test_machine_sites.lua`
+  (the server's take, the refusals, and the game's `complete` left to
+  containers and to vanilla's items) and RT-MP runs 146–147, a dedicated
+  server with two clients on this machine. The vessel came off the floor
+  into the player's arms. The server held it in that player's inventory
+  and both hands with its batch carried, and the client got the carried
+  record. Put down, it ran again where it lay. When both players took it
+  at once, the second action reached the server and was refused, leaving
+  one vessel. Single player is unchanged (RT-SP run 148, 43/0, as run 81).
+  Vanilla's meteorite still stays on the floor on a server. Not checked
+  live: the refusals for a vessel out of reach or on no square; the
+  vessel taken from a container in multiplayer.

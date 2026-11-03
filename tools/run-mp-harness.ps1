@@ -32,8 +32,9 @@
 .PARAMETER ModSource
   Folder deployed as the mod (default: the repository's).
 .PARAMETER Only
-  carry: only the vessel's pickup and the gaits (two clients); heavy: only
-  vanilla's meteorite taken off the floor (one client).
+  carry: only the vessel's pickup, the gaits, its put-down and the two
+  players taking it at once (two clients); heavy: only vanilla's meteorite
+  taken off the floor (one client).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).

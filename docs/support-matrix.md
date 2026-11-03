@@ -110,12 +110,17 @@ both on one computer (RT-MP, 2026-11-03):
   - the small items' floor models, seen by both players and after one
     leaves and joins again;
   - the fermentation vessel's carry pose, seen on the other player's
-    screen at every gait.
+    screen at every gait;
+  - the fermentation vessel taken off the floor into both arms through
+    the loot window, its batch paused while carried and running again
+    where it is put down; when two players take it at once, one gets it
+    and the other's action is refused.
 - **The game's own limit (42.21):** on a dedicated server no heavy item can
   be taken off the floor through the loot window (double-click or drag);
-  the server fails the action and the item stays where it is. That
-  includes the fermentation vessel. Vanilla's meteorite fails the same way
-  without the mod.
+  the server fails the action and the item stays where it is. Vanilla's
+  meteorite fails the same way without the mod. For the fermentation
+  vessel the mod does the server's part itself (D-030); the game's own
+  heavy items are left as the game leaves them.
 - Reading print media, the manual included, is recorded on the server
   and not on the reading player's client, as for the game's own fliers.
 - A server must reach the mod's folder by its real path. Through a
@@ -179,8 +184,8 @@ not opened. With a full inventory vanilla drops the output on the floor
 | --- | --- | --- |
 | Pick up | world menu Grab, the loot window's Grab button; a grab no Lua sees (multiplayer's) is credited up to the last time the machine was found placed | **Verified RT-SP** (runs 27, 45, 79) |
 | Put down | place action, inventory Drop | **Verified RT-SP** (runs 27, 45, 79) |
-| The fermentation vessel in both hands (a heavy item) | loot window double-click or drag (`ISEquipHeavyItem`; the mod lifts the world object 42.21 leaves on the square); put down at the feet by the menus' unequip (`ISUnequipAction`: another heavy item taken, a weapon equipped), by `forceDropHeavyItems` (a vehicle entered, an animal handled, a trap set) or by the mod when an action that plays its own animation starts (D-025 amendment) | **Verified RT-SP** (run 79: taken, carried an hour, dropped by `forceDropHeavyItems` called directly; run 81: taken again, carried half an hour, put down by taking a meteorite the double-click way; run 99: put down when a loot from a bag on the floor started, and by the menus' unequip when a bat was equipped from the inventory menu). Entering a vehicle NOT RUN |
-| The fermentation vessel carried at each gait (its carry pose, D-025) | walking, running; sprinting, crouched or not, with a sprint pose of its own; crouched, still or moving, with a crouched pose of its own | **Verified RT-SP** (run 108: kept in both hands with the pose on at every gait, the barrel tipping into the torso when crouched; run 113: the crouched pose holds it upright, crouched still, walking and running; run 117: the sprint pose holds it upright and steady through the stride, sprinting standing or crouched; running, it tilts with the lean). Multiplayer NOT RUN |
+| The fermentation vessel in both hands (a heavy item) | loot window double-click or drag (`ISEquipHeavyItem`; the mod lifts the world object 42.21 leaves on the square; on a dedicated server, where that action fails, the mod takes it itself, D-030); put down at the feet by the menus' unequip (`ISUnequipAction`: another heavy item taken, a weapon equipped), by `forceDropHeavyItems` (a vehicle entered, an animal handled, a trap set) or by the mod when an action that plays its own animation starts (D-025 amendment) | **Verified RT-SP** (run 79: taken, carried an hour, dropped by `forceDropHeavyItems` called directly; run 81: taken again, carried half an hour, put down by taking a meteorite the double-click way; run 99: put down when a loot from a bag on the floor started, and by the menus' unequip when a bat was equipped from the inventory menu). **Verified RT-MP** (runs 146–147, dedicated server: taken off the floor the double-click way, its batch carried on the server and on the player's client, put down at the feet by the server's command and running again there; two players taking it at once, the second refused). Entering a vehicle NOT RUN |
+| The fermentation vessel carried at each gait (its carry pose, D-025) | walking, running; sprinting, crouched or not, with a sprint pose of its own; crouched, still or moving, with a crouched pose of its own | **Verified RT-SP** (run 108: kept in both hands with the pose on at every gait, the barrel tipping into the torso when crouched; run 113: the crouched pose holds it upright, crouched still, walking and running; run 117: the sprint pose holds it upright and steady through the stride, sprinting standing or crouched; running, it tilts with the lean). **Verified RT-MP** (runs 145–147: the other player's client draws the pose at every gait) |
 
 ## Pathway machines
 

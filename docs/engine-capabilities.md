@@ -25,7 +25,7 @@ alternative), **NOT RUN**.
 | G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator), the menus' unequip (run 85) and drag to the floor all carry the record |
 | G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
-| G07 Action authority | Which stage mutates on the server? | **PASS (MP)** for the mod's requests; vanilla's heavy pickup FAIL | B42 actions mutate in `update()`/`animEvent` (server) and `complete()`. Dedicated server with two clients on this machine (RT-MP runs 139–145): the mod's sample, stabilize and machine-status requests answered by the server, a repeated request answered from its ledger, an item's record the same on client and server. Vanilla's `ISEquipHeavyItem` cannot take a heavy item off the floor on a server (also without the mod, run 144). See "RT-MP: two clients on a dedicated server" |
+| G07 Action authority | Which stage mutates on the server? | **PASS (MP)** for the mod's requests and the vessel's pickup; vanilla's heavy pickup FAIL | B42 actions mutate in `complete()`, which the server runs at the action's end; it never calls a client's action's Lua `update` or `isValid`, and `NetTimedAction` forwards `animEvent` to the Lua action (BC). Dedicated server with two clients on this machine (RT-MP runs 139–147): the mod's sample, stabilize and machine-status requests answered by the server, a repeated request answered from its ledger, an item's record the same on client and server. Vanilla's `ISEquipHeavyItem` cannot take a heavy item off the floor on a server (also without the mod, run 144); for the vessel the mod does it on the server (D-030, runs 146–147), and refused the second of two players taking it at once. See "RT-MP: two clients on a dedicated server" and "RT-MP: a client's timed action on the server" |
 | G08 Persistence | Reliable stores/IDs | **PASS (DS + SP)** single player | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5), as do machine records and conversion projects (runs 7–8); MP reconnect NOT RUN |
 | G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
@@ -898,6 +898,58 @@ What the game does there, as far as this mod meets it:
 - An item's mod data written by the server reached the owning client
   unchanged (the can's TLG record), and items put down or dropped on the
   floor reached both clients, and a client that left and joined again.
+
+## RT-MP: a client's timed action on the server, and the heavy pickup (BC)
+
+How a 42.21 server runs a timed action a client queued (`javap` of
+`projectzomboid.jar`), as far as the vessel's pickup meets it (D-030):
+- The client sends the action's type and, for each parameter of its `new`
+  after `self`, the action's field of that name (`NetTimedAction.set`
+  reads the names from the function's prototype). An inventory item goes
+  as its container (`ContainerID`)
+  and its id (`PZNetKahluaTableImpl.saveInventoryItem`). The server finds
+  that container, takes the item with that id from it
+  (`loadInventoryItem`, `getItemWithID`) and calls `<Type>:new` with the
+  arguments (`NetTimedAction.parse`).
+- For a floor container the server builds a container of its own and
+  appends the item of each world object on the squares to its list
+  (`ContainerID.collectFloorItems`: `getItems().add(
+  IsoWorldInventoryObject.getItem())`), not through `AddItem`. The action
+  so gets the world object's own item, and that item's container is nil.
+- When the action's time is up the server calls its `complete`
+  (`ActionManager.update` → `NetTimedAction.perform`). True marks it
+  Done; false, or an error, marks it Reject; either is sent to the
+  client. `perform` looks `complete` up with `rawget` on the action, and
+  PZ's `KahluaTableImpl.rawget` falls back to its metatable's `rawget`.
+  So a method replaced in the class table, as the mod's hooks replace
+  them, is the one called. The server calls no Lua `isValid` or `update`
+  of the action (`NetTimedAction.isValid` returns false, its `update` is
+  empty); it calls `serverStart` and `serverStop` if the action has them.
+- A multiplayer client never runs the Lua `complete`
+  (`LuaTimedActionNew.complete` calls it only when not
+  `GameClient.client`); single player does.
+- `ISEquipHeavyItem.complete` takes `self.item:getContainer()` and calls
+  its `DoRemoveItem` (line 63). For an item off the floor on a server
+  that container is nil: "attempted index: DoRemoveItem of non-table"
+  (runs 141–145).
+- `InventoryItem.syncItemFields` sends the item's fields, mod data
+  included (`SyncItemFieldsPacket`), to the player whose inventory holds
+  it (the outermost container's parent an `IsoPlayer`); for an item in no
+  container it sends nothing. An item sent by `sendAddItemToContainer`
+  reaches the client with its mod data (the manual's print media, run
+  145).
+- For a floor container `luautils.walkToContainer` returns at once (SRC
+  `luautils.lua:307`): the loot window lists only what is within reach,
+  so `equipHeavyItem` queues no walk.
+
+In game (RT-MP runs 146–147, test results): with the mod's own take on
+the server, the vessel came off the floor into the player's arms through
+the loot window's way. The server held it in that player's inventory and
+both hands, with its batch carried, and the player's client got the
+carried record with the item. When two players took it at once, both
+actions reached the server's `complete` with the same item object. The
+first took it, and the second was refused (false, so Reject) and left no
+second vessel. Vanilla's meteorite still stays on the floor there.
 
 ## Animation tooling (2026-11-02)
 

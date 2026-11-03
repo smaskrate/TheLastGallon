@@ -23,8 +23,12 @@
 -- campfire built by the player (a Lua campfire over a permanent IsoFire,
 -- not an IsoFireplace) was read but never noted. With M.fireOf, run 35
 -- noted it in every hour and credited its warmth over the trip exactly.
--- A still or drying column picked up while processing, upper floors and MP
--- replication are NOT RUN.
+-- A still or drying column picked up while processing and upper floors are
+-- NOT RUN. In multiplayer (RT-MP runs 145-147) a vessel's status was
+-- answered for both players, and on a dedicated server the mod takes the
+-- vessel off the floor into both arms itself (M.takeOnServer, D-030; the
+-- game's own way fails there): its batch was carried on the server and the
+-- record reached the player's client with the item.
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
 --   processing         only while the item lies on the ground (D-015). The
@@ -544,6 +548,49 @@ function M.putDownForAction(character)
     end
 end
 
+-- How far from a machine the server lets a character take it off the floor:
+-- the machines' requests' reach (MachineHandlers).
+M.TAKE_REACH = 2.5
+
+-- A machine taken into both arms on a dedicated server (D-030). There 42.21's
+-- ISEquipHeavyItem.complete cannot take an item off the floor (RT-MP runs
+-- 140-145; vanilla's meteorite too, without the mod, run 144): the server
+-- looks up the item the loot window named among the square's world objects
+-- and lists it in a floor container of its own without adding it (BC
+-- ContainerID.collectFloorItems appends IsoWorldInventoryObject.getItem()),
+-- so the item has no container and that complete fails at its line 63.
+-- For the mod's machines (the fermentation vessel is the one carried in both
+-- arms) the server does that complete's work itself: any heavy item in hand
+-- put down first, the world object taken off its square as the floor
+-- transfer takes it, the item into the inventory and both hands, the clients
+-- told as that complete tells them (sendAddItemToContainer, sendEquip). The
+-- batch is accounted before the item is sent, so the carried record goes
+-- with it. Returns true when taken; false when refused (the action is
+-- rejected): already in another character's inventory (two players took it
+-- off the floor at once and the other's action completed first; vanilla's
+-- complete would take it from them), on no square, or out of reach; nil
+-- when vanilla's complete applies (the machine in a container).
+function M.takeOnServer(character, item)
+    if item:getContainer() ~= nil then
+        local outer = item:getOutermostContainer()
+        local holder = outer and outer:getParent()
+        if holder ~= nil and holder ~= character and instanceof(holder, "IsoGameCharacter") then return false end
+        return nil
+    end
+    local sq, at = M.square(item), character:getSquare()
+    if sq == nil or at == nil or at:DistToProper(sq) > M.TAKE_REACH then return false end
+    forceDropHeavyItems(character)
+    M.liftFromGround(item)
+    if M.tracked(item) then account(M.pickedUp, item) end
+    local inv = character:getInventory()
+    inv:AddItem(item)
+    sendAddItemToContainer(inv, item)
+    character:setPrimaryHandItem(item)
+    character:setSecondaryHandItem(item)
+    sendEquip(character)
+    return true
+end
+
 -- The moves the game's Lua makes (SRC 42.21), accounted on the authority:
 -- the world menu's Grab (ISGrabItemAction.transferItem, given the world
 -- object; single player only: in multiplayer the server grabs in a Java
@@ -559,7 +606,9 @@ end
 -- heavy item or a generator is taken or a weapon equipped), and by
 -- forceDropHeavyItems (SRC ISEquipWeaponAction.lua:75: when a vehicle is
 -- entered, an animal handled, a trap set). Told apart by whether the item
--- lies on the ground before and after, not by container types.
+-- lies on the ground before and after, not by container types. On a
+-- dedicated server a machine is taken into both hands by M.takeOnServer
+-- instead of that complete, which fails there for an item on the floor.
 -- The mod adds one put-down: an action that plays its own animation
 -- (ISBaseTimedAction.setActionAnim: looting, dressing, eating, the mod's
 -- work action) replaces the vessel's carry pose on the arms' layer
@@ -597,6 +646,10 @@ function M.install()
     end)
     wrap(ISEquipHeavyItem, "complete", function(orig, self, ...)
         local item = World.isAuthority() and self.item and M.machineFor(self.item) and self.item or nil
+        if item and isServer() then
+            local taken = M.takeOnServer(self.character, item)
+            if taken ~= nil then return taken end
+        end
         local was = item and M.isPlaced(item)
         local r = orig(self, ...)
         if was then

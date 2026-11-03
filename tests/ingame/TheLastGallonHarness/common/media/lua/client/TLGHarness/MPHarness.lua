@@ -330,13 +330,16 @@ end }
 ------------------------------------------------------------------------------
 -- Walks to a square as a player would, then waits a second. A teleport
 -- left the server's idea of the character a square or more behind, and
--- run 139's drops landed where the server last saw her.
+-- run 139's drops landed where the server last saw her. `x` may be a
+-- function giving x, y when the step starts.
 local function walkTo(name, x, y)
     return { name = name, timeout = 2400, fn = function(ctx, ticks)
         local p = player()
         if ticks == 1 then
+            local tx, ty = x, y
+            if type(x) == "function" then tx, ty = x() end
             ISTimedActionQueue.clear(p)
-            ISTimedActionQueue.add(ISWalkToTimedAction:new(p, getCell():getGridSquare(x, y, 0)))
+            ISTimedActionQueue.add(ISWalkToTimedAction:new(p, getCell():getGridSquare(tx, ty, 0)))
             return nil
         end
         if ticks < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
@@ -545,8 +548,11 @@ A.compare = call("probe_can", "probe_item", function() return { id = A.can and A
 -- no_access).
 A.spawnVessel = call("spawn_vessel", "spawn", function()
     local x, y = S.spot(3)
-    return { item = "TLG.FermenterVessel", x = x, y = y }
-end, "spawned", function(m) A.vesselId = tonumber(m.id) end)
+    return { item = "TLG.FermenterVessel", x = x, y = y, batch = "1" }
+end, "spawned", function(m)
+    A.vesselId = tonumber(m.id)
+    report():line("OBS  MP.vessel %s spawned with its batch %s", tostring(m.id), tostring(m.batch))
+end)
 
 -- T5: a manual the server rolled from its loot lists, then a vanilla flier
 -- given by the server, each read through Inspect.
@@ -588,12 +594,13 @@ end
 -- T4: a heavy item taken off the floor as a double-click in the loot
 -- window takes it: A stands on its square, the loot window lists it, and
 -- equipHeavyItem gets the item as that floor container holds it
--- (ISInventoryPane.lua does the same). Run 141: for the vessel the
--- server's ISEquipHeavyItem.complete failed ("attempted index: DoRemoveItem
--- of non-table": the world item has no container there), so vanilla's
--- meteorite is tried first, the same way. If the vessel does not come into
--- A's hands, the server hands it over (MPServer.lua hold) so the carry pose
--- can still be watched from both screens.
+-- (ISInventoryPane.lua does the same). The server's ISEquipHeavyItem.complete
+-- fails there ("attempted index: DoRemoveItem of non-table", runs 141-145:
+-- the world item has no container on the server), so vanilla's meteorite
+-- must stay on the floor; the mod takes the vessel itself (D-030). If the
+-- vessel does not come into A's hands, the server hands it over
+-- (MPServer.lua hold) so the carry pose can still be watched from both
+-- screens.
 local function floorListing(fullType)
     local floor = ISInventoryPage.GetFloorContainer(0)
     local items = floor and floor:getItems()
@@ -615,7 +622,9 @@ local function inBothHands(p, fullType)
     return held ~= nil and held:getFullType() == fullType and p:getSecondaryHandItem() == held
 end
 
-local function takeHeavy(name, fullType, k)
+-- `taken`: whether the item must come into both hands (the mod's vessel) or
+-- stay on its square (vanilla's own heavy items on a server).
+local function takeHeavy(name, fullType, k, taken)
     return { name = "mp_take_" .. name, timeout = 2400, fn = function(ctx, ticks)
         local p = player()
         if ticks == 1 then
@@ -648,15 +657,52 @@ local function takeHeavy(name, fullType, k)
         if ticks - ctx.idle < 120 then return nil end
         local held = p:getPrimaryHandItem()
         local x, y = S.spot(k)
-        check(name .. "_from_floor", function()
-            return inBothHands(p, fullType), string.format("primary=%s secondary=%s; still on its square=%s",
-                tostring(held and held:getFullType()),
-                tostring(p:getSecondaryHandItem() and p:getSecondaryHandItem():getFullType()),
-                tostring(floorItem(x, y, fullType) ~= nil))
-        end)
+        local still = floorItem(x, y, fullType) ~= nil
+        local detail = string.format("primary=%s secondary=%s; still on its square=%s",
+            tostring(held and held:getFullType()),
+            tostring(p:getSecondaryHandItem() and p:getSecondaryHandItem():getFullType()), tostring(still))
+        if taken then
+            check(name .. "_from_floor", function() return inBothHands(p, fullType) and not still, detail end)
+        else
+            check(name .. "_left_on_floor_by_the_game", function()
+                return not inBothHands(p, fullType) and still, detail
+            end)
+        end
         return true
     end }
 end
+
+-- Where the server holds the vessel, how many vessels it holds around, the
+-- vessel's batch and the mod's takes on the server so far (MPServer.lua
+-- probe_vessel).
+local function probeVessel(name, judge)
+    return call(name, "probe_vessel", function() return { id = A.vesselId } end, "probe_vessel", function(m)
+        report():line("OBS  MP.%s server: where=%s vessels=%s state=%s pause=%s site=%s listed=%s takes=%s", name,
+            tostring(m.where), tostring(m.vessels), tostring(m.state), tostring(m.pause), tostring(m.site),
+            tostring(m.listed), tostring(m.takes))
+        judge(m)
+    end)
+end
+
+-- Taken by the mod on the server: in A's inventory and both hands, the only
+-- vessel there, its batch carried (paused, off the hourly list).
+A.takenSeen = probeVessel("vessel_taken", function(m)
+    check("vessel_taken_on_server", function()
+        return m.where == "inventory tlga both hands" and m.vessels == 1 and m.state == "Paused"
+            and m.pause == "not_placed" and m.listed == "no", "see the server's line above"
+    end)
+end)
+
+-- The record A's client got with the vessel: the batch carried, as the
+-- server accounted it before sending the item (Machines.takeOnServer).
+A.carriedRecord = once("mp_carried_record", function()
+    local held = player():getPrimaryHandItem()
+    local rec = held and held:getModData().tlgProc
+    check("vessel_record_carried_on_client", function()
+        return rec ~= nil and rec.pause == "not_placed", string.format("state=%s pause=%s", tostring(rec and rec.state),
+            tostring(rec and rec.pause))
+    end)
+end)
 
 -- The vessel handed over by the server, unless A already holds it.
 A.holdVessel = { name = "mp_hold_vessel", timeout = 1800, fn = function(ctx, ticks)
@@ -758,6 +804,132 @@ A.putDown = { name = "mp_put_down", timeout = 900, fn = function(ctx, ticks)
     return true
 end }
 
+-- Put down at A's feet: on the floor where its record says, listed for the
+-- hourly reading there, its batch running again.
+A.putDownSeen = probeVessel("vessel_put_down", function(m)
+    A.vesselAt, A.takesBefore = m.site, m.takes or ""
+    check("vessel_put_down_on_server", function()
+        return m.where == "floor " .. tostring(m.site) and m.vessels == 1 and m.state == "Processing"
+            and m.pause == "none" and m.listed == m.site, "see the server's line above"
+    end)
+end)
+
+-- T6: both players take the vessel off the floor at once (D-030's refusal).
+-- B stands next to it; A tells B and starts at once, B starts on the tick
+-- the message comes. The server parses both actions while the vessel still
+-- lies there, so the one completing second finds it in the first's
+-- inventory and must be refused: one vessel, one holder. Whether that
+-- second action reached the server's complete or its client stopped it
+-- first shows in the server's takes. The same take, run on the server for
+-- the player without the vessel (MPServer.lua try_take), must be refused.
+local V = "TLG.FermenterVessel"
+local B = {}
+MP.B = B
+
+local function holdsVessel(p) return p ~= nil and inBothHands(p, V) end
+
+local function count(s, pattern) return select(2, string.gsub(s or "", pattern, "")) end
+
+-- The loot window refreshed, then `message` sent (with `args()`).
+local function raceReady(name, message, args)
+    return { name = name, timeout = 900, fn = function(ctx, ticks)
+        if ticks == 1 then
+            pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+            return nil
+        end
+        if ticks < 60 then return nil end
+        local _, listed = floorListing(V)
+        report():line("OBS  MP.race %s ready: the loot window lists the vessel=%s", MP.role, tostring(listed ~= nil))
+        send(message, args and args() or {})
+        return true
+    end }
+end
+
+local function raceTake(first)
+    return { name = "mp_race_take", timeout = 3600, fn = function(ctx, ticks)
+        local p = player()
+        if not ctx.queued then
+            if first then
+                send("race_now", {})
+            elseif not nextFrom("race_now") then
+                return nil
+            end
+            local _, listed = floorListing(V)
+            if not listed then
+                report():line("FAIL MP.race_listed_%s :: the loot window does not list the vessel", MP.role)
+                return true
+            end
+            ISInventoryPaneContextMenu.equipHeavyItem(p, listed)
+            ctx.queued = ticks
+            report():line("OBS  MP.race %s queued at tick %d: %s", MP.role, ticks, actionNames(p))
+            return nil
+        end
+        if ticks - ctx.queued == 30 then report():line("OBS  MP.race %s 30 ticks on: %s", MP.role, actionNames(p)) end
+        if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+        ctx.idle = ctx.idle or ticks
+        if ticks - ctx.idle < 180 then return nil end
+        local other = otherPlayer()
+        local mine, theirs = holdsVessel(p), holdsVessel(other)
+        check("race_one_holder_seen", function()
+            return (mine and 1 or 0) + (theirs and 1 or 0) == 1, string.format("this player holds it=%s, the other=%s"
+                .. " (found=%s)", tostring(mine), tostring(theirs), tostring(other ~= nil))
+        end)
+        return true
+    end }
+end
+
+A.raceSeen = probeVessel("race", function(m)
+    local since = string.sub(m.takes or "", #(A.takesBefore or "") + 1)
+    local taken, refused = count(since, ":true"), count(since, ":false")
+    report():line("OBS  MP.race the server's takes since the put-down:%s; the second action %s", since,
+        refused > 0 and "was refused on the server" or "did not reach the server's complete")
+    check("race_one_vessel_one_holder_on_server", function()
+        return m.vessels == 1 and taken == 1 and (m.where == "inventory tlga both hands"
+            or m.where == "inventory tlgb both hands") and m.pause == "not_placed", "see the server's line above"
+    end)
+end)
+
+A.tryTake = call("try_take", "try_take", function() return { id = A.vesselId } end, "try_take", function(m)
+    report():line("OBS  MP.try_take holder=%s taker=%s result=%s holder keeps it=%s taker has it=%s takes=%s",
+        tostring(m.holder), tostring(m.taker), tostring(m.result), tostring(m.holderKeeps), tostring(m.takerHas),
+        tostring(m.takes))
+    check("take_of_a_held_vessel_refused_on_server", function()
+        return m.result == "false" and m.holderKeeps == "true" and m.takerHas == "false", "see the line above"
+    end)
+end)
+
+-- Whoever holds the vessel after the race puts it down again.
+local function raceDrop()
+    return { name = "mp_race_drop", timeout = 600, fn = function(ctx, ticks)
+        if ticks == 1 then
+            if holdsVessel(player()) then dropHeavy(player()) end
+            return nil
+        end
+        return ticks >= 120 or nil
+    end }
+end
+
+local function raceStepsA()
+    return {
+        raceReady("mp_race_ready", "race_ready", function()
+            local x, y = string.match(A.vesselAt or "", "(%-?%d+),(%-?%d+)")
+            return { x = tonumber(x), y = tonumber(y) }
+        end),
+        waitFrom("mp_wait_race_at", "race_at"), raceTake(true), waitFrom("mp_wait_race_done", "race_done"),
+        A.raceSeen, A.tryTake, once("mp_race_drop_please", function() send("race_drop", {}) end), raceDrop() }
+end
+
+local function raceStepsB(backX, backY)
+    return {
+        waitFrom("mp_wait_race_ready", "race_ready", function(m) B.raceX, B.raceY = tonumber(m.x), tonumber(m.y) end),
+        walkTo("mp_walk_to_race", function()
+            local nx, ny = S.spot(2)
+            return (B.raceX or nx) + 1, (B.raceY or ny) + 1
+        end),
+        raceReady("mp_race_at", "race_at"), raceTake(false), once("mp_race_done", function() send("race_done", {}) end),
+        waitFrom("mp_wait_race_drop", "race_drop"), raceDrop(), walkTo("mp_walk_back_after_race", backX, backY) }
+end
+
 -- Last: leave to the main menu and join again (MainScreen's in-game Exit).
 A.leave = { name = "mp_leave", timeout = 600, fn = function(ctx, ticks)
     if ticks == 1 then
@@ -808,14 +980,16 @@ local function carrySteps()
             return { item = "Base.LargeMeteorite", x = x, y = y }
         end, "spawned", function() end),
         wait("mp_meteorite_lands", 120), walkTo("mp_walk_onto_meteorite", S.spot(4)),
-        takeHeavy("meteorite", "Base.LargeMeteorite", 4), A.dropHeavy,
-        walkTo("mp_walk_onto_vessel", S.spot(3)), takeHeavy("vessel", "TLG.FermenterVessel", 3), A.holdVessel,
+        takeHeavy("meteorite", "Base.LargeMeteorite", 4, false), A.dropHeavy,
+        walkTo("mp_walk_onto_vessel", S.spot(3)), takeHeavy("vessel", "TLG.FermenterVessel", 3, true), A.takenSeen,
+        A.carriedRecord, A.holdVessel,
         walkTo("mp_walk_carry_start", S.spot(-2)),
         gait("stand", {}), gait("walk", { to = 2 }), gait("run", { to = -2, run = true }),
         gait("sprint", { to = 2, sprint = true }), gait("sneak", { to = -2, sneak = true }),
-        gait("crouch", { sneak = true }), A.putDown }
+        gait("crouch", { sneak = true }), A.putDown, A.putDownSeen }
 end
 for _, s in ipairs(carrySteps()) do table.insert(MP.stepsA, s) end
+for _, s in ipairs(raceStepsA()) do table.insert(MP.stepsA, s) end
 table.insert(MP.stepsA, walkTo("mp_walk_back_end", bx0, by0))
 table.insert(MP.stepsA, A.leave)
 
@@ -825,6 +999,7 @@ if MP.only == "carry" then
     MP.stepsA = { MP.waitWorld, zoomTo("mp_zoom", 0.5), stand("mp_stand", bx0, by0),
         waitFrom("mp_wait_b", "hello", function() send("start", {}) end), A.spawnVessel, wait("mp_vessel_lands", 120) }
     for _, s in ipairs(carrySteps()) do table.insert(MP.stepsA, s) end
+    for _, s in ipairs(raceStepsA()) do table.insert(MP.stepsA, s) end
     table.insert(MP.stepsA, once("mp_finish_b", function() send("finish", {}) end))
     table.insert(MP.stepsA, MP.finish)
 elseif MP.only == "heavy" then
@@ -836,7 +1011,7 @@ elseif MP.only == "heavy" then
             return { item = "Base.LargeMeteorite", x = x, y = y }
         end, "spawned", function() end),
         wait("mp_meteorite_lands", 120), walkTo("mp_walk_onto_meteorite", S.spot(4)),
-        takeHeavy("meteorite", "Base.LargeMeteorite", 4), shot("meteorite"), A.dropHeavy, MP.finish }
+        takeHeavy("meteorite", "Base.LargeMeteorite", 4, false), shot("meteorite"), A.dropHeavy, MP.finish }
 end
 
 -- After joining again: the floor as A's client receives it from the server.
@@ -884,18 +1059,23 @@ MP.stepsB = {
     once("mp_floor_shot", function() screenshot("floor") end), compareFloor("floor_seen_by_other"),
     once("mp_floor_shot_done", function() send("floor_shot", {}) end),
     seeGait("stand"), seeGait("walk"), seeGait("run"), seeGait("sprint"), seeGait("sneak"), seeGait("crouch"),
+}
+for _, s in ipairs(raceStepsB(vx + 1, vy + 1)) do table.insert(MP.stepsB, s) end
+for _, s in ipairs({
     waitFrom("mp_wait_reconnecting", "reconnecting", function() report():line("OBS  MP.A is leaving to join again") end),
     waitFrom("mp_wait_rejoined", "rejoined"), wait("mp_rejoin_settle", 60),
     once("mp_rejoin_shot", function() screenshot("after_rejoin") end), compareFloor("floor_seen_after_other_rejoined"),
     once("mp_rejoin_shot_done", function() send("rejoin_shot", {}) end),
     waitFrom("mp_wait_finish", "finish"), MP.finish,
-}
+}) do table.insert(MP.stepsB, s) end
 if MP.only == "carry" then
     MP.stepsB = { MP.waitWorld, zoomTo("mp_zoom", 0.5), stand("mp_stand", vx, vy, 1),
         once("mp_hide_ui", function() ISUIHandler.setVisibleAllUI(false) end),
         once("mp_hello", function() send("hello", {}) end), waitFrom("mp_wait_start", "start"),
-        seeGait("stand"), seeGait("walk"), seeGait("run"), seeGait("sprint"), seeGait("sneak"), seeGait("crouch"),
-        waitFrom("mp_wait_finish", "finish"), MP.finish }
+        seeGait("stand"), seeGait("walk"), seeGait("run"), seeGait("sprint"), seeGait("sneak"), seeGait("crouch") }
+    for _, s in ipairs(raceStepsB(vx + 1, vy + 1)) do table.insert(MP.stepsB, s) end
+    table.insert(MP.stepsB, waitFrom("mp_wait_finish", "finish"))
+    table.insert(MP.stepsB, MP.finish)
 end
 
 Events.OnGameStart.Add(function()

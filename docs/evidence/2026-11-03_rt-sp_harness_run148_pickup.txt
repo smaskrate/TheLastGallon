@@ -1,0 +1,76 @@
+# TLG single-player harness, real game clock, pickup
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=19041595062462141243 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rtp_sites begin
+OBS  RTP.spots character 10618,10628; A 10617,10628 B 10617,10629 C 10618,10629 D 10619,10628; A goes back down at 10619,10629; grid power=true
+PASS RTP.grid_is_on :: isHydroPowerOn=true
+PASS RTP.all_in_a_room :: in a room: true,true,true,true,true,true
+STEP rtp_run begin
+OBS  RTP.load_A menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_A :: sugar=6 water=30
+OBS  RTP.load_B menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_B :: sugar=6 water=30
+OBS  RTP.load_C menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_C :: sugar=6 water=30
+OBS  RTP.load_D menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTP.loaded_D :: sugar=6 water=30
+OBS  RTP.loaded at 4.2393 game h: process ids P465768691-1 P465768691-2 P465768691-3 P465768691-4; skill in the record 0
+OBS  RTP.grab_B the loot window lists B on the floor=true
+OBS  RTP.grab_D lifted without the game's Lua: ok=true 
+OBS  RTP.picked up A at 7.258541107177734, B at 7.272599220275879, D at 7.272673606872559 game h (load 4.2393)
+PASS RTP.picked_up_A_world_menu_grab :: carried=true
+PASS RTP.picked_up_B_loot_window_grab :: carried=true listed in the loot window=true
+PASS RTP.picked_up_D_unseen :: carried=true
+PASS RTP.pickup_pauses_A :: id=P465768691-1 state=Paused pause=not_placed done=3.0192 t=7.2585, 7 readings and notes kept; picked up at 7.2585
+PASS RTP.pickup_pauses_B :: id=P465768691-2 state=Paused pause=not_placed done=3.0332 t=7.2725, 7 readings and notes kept; picked up at 7.2726
+PASS RTP.D015_B_placed_hours_before_pickup_count :: done 3.0332 h at the pickup, placed 3.0333 h
+PASS RTP.unseen_pickup_changes_nothing_yet :: id=P465768691-4 state=Processing pause=nil done=0.0000 t=4.2393, 7 readings and notes kept
+PASS RTP.hourly_list_at_pickup :: listed: A false, B false, C true, D true
+PASS RTP.menu_while_carried :: status offered=true place first greyed=true load mash gone=true
+OBS  RTP.status_A_carried menu "Status" -> ok=true reason=nil state=Paused stage=ferment outputs={} consumed=nil
+PASS RTP.carried_status_paused :: state=Paused pause=not_placed dialog=Paused <LINE> Reason: it was picked up; place it to continue <LINE> Stage: fermenting
+PASS RTP.D015_A_placed_hours_before_pickup_count :: done 3.0192 h after the carried status, placed 3.0192 h
+PASS RTP.hourly_list_drops_unseen_machine :: listed: A false, B false, C true, D false
+PASS RTP.nothing_filed_while_carried :: 0 readings or notes after the pickups, 3.00 game h carried
+OBS  RTP.put down A at 10619,10629 (10.27438735961914 game h), B at 10618,10628 (10.275854110717773), D at 10618,10628 (10.277341842651367)
+PASS RTP.put_down_A_place_action :: at 10619,10629
+PASS RTP.put_down_B_inventory_drop :: at 10618,10628
+PASS RTP.put_down_D_inventory_drop :: at 10618,10628
+PASS RTP.put_down_resumes_A :: id=P465768691-1 state=Processing pause=nil done=3.0192 t=10.2743, 7 readings and notes kept; site 10619,10629; listed 10619,10629
+PASS RTP.put_down_resumes_B :: id=P465768691-2 state=Processing pause=nil done=3.0332 t=10.2758, 7 readings and notes kept; site 10618,10628; listed 10618,10628
+PASS RTP.unseen_pickup_credited_up_to_last_seen :: last seen 7.170930862426758, 0.1017 h before the grab; done 2.9316 h, seen - load 2.9316 h; state=Processing t=10.2773 listed 10618,10628
+PASS RTP.read_hourly_after_put_down :: 6 hours, worst 0.000000 (D hour 11: filed 22, game 22.0000)
+PASS RTP.fire_notes_after_put_down :: hours noted since the put-down: A 3, B 3, D 3
+OBS  RTP.status_A menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.status_B menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.status_C menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.status_D menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTP.read at 12.2777 game h, 8.0384 h after the load: done A 5.0225 B 5.0351 C 8.0384 D 4.9320 h; carried A 3.0158 B 3.0033 D 3.0047 h
+PASS RTP.control_C_full_rate :: done 8.0384 h in 8.0384 game h
+PASS RTP.D015_A_placed_hours_after_put_down_count :: done 2.0034 h since the carried status, placed 2.0033 h since put down
+PASS RTP.D015_B_carried_hours_do_not_count :: done 5.0351 h, placed 5.0351 h, carried 3.0033 h
+PASS RTP.unseen_move_carried_hours_do_not_count :: done 4.9320 h: 2.9316 h up to the last seen and 2.0003 h since put down
+PASS RTP.processing_after_put_down :: A Processing B Processing C Processing D Processing
+OBS  RTP.status A: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 °F, in a room | B: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 °F, in a room | C: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 °F, in a room | D: Working <LINE> Stage: fermenting <LINE> Temperature here today: 71.6 °F, in a room
+PASS RTP.progress_like_the_control_after_the_move :: in 2.0066 game h: A 2.0066 B 2.0066 C 2.0066 D 2.0066 h
+OBS  RTP.take_C listed in the loot window=true; at 14.293636322021484 game h; heavy=true
+PASS RTP.heavy_C_taken_into_both_hands :: primary=true secondary=true; still on its tile=false
+PASS RTP.heavy_C_pickup_pauses :: state=Paused pause=not_placed t=14.293561935424805; done 10.0543 h, placed 10.0543 h
+OBS  RTP.drop_C forceDropHeavyItems ok=true  at 15.2938 game h; on 10618,10628
+PASS RTP.heavy_C_dropped_at_the_feet :: on 10618,10628, the character on 10618,10628
+PASS RTP.heavy_C_put_down_resumes :: state=Processing t=15.293840408325195 site 10618,10628 listed 10618,10628
+PASS RTP.D015_C_two_handed_carry_hours_do_not_count :: done 11.0544 h, placed 11.0544 h, carried 1.0002 h
+PASS RTP.heavy_C_taken_again_pauses :: primary=true secondary=true; state=Paused pause=not_placed t=16.30324935913086
+OBS  RTP.drop_C2 the meteorite listed in the loot window=true; queued ISUnequipAction,ISEquipHeavyItem; C on 10618,10628 at 16.814109802246094 game h
+PASS RTP.heavy_C_unequipped_at_the_feet :: C on 10618,10628, the character on 10618,10628; the meteorite in both hands=true
+PASS RTP.heavy_C_unequip_put_down_resumes :: state=Processing pause=nil t=16.814035415649414 site 10618,10628 listed 10618,10628
+PASS RTP.D015_C_unequip_drop_carried_hours_do_not_count :: done 12.0657 h, placed 12.0658 h, carried 1.0002 h and 0.5108 h
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 17.82
+SUMMARY pass=43 fail=0
+DONE

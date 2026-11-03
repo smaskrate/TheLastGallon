@@ -50,6 +50,10 @@ local function square(g, x, y, z, room, air)
     function sq:getY() return self.y end
     function sq:getZ() return self.z end
     function sq:isInARoom() return self.room end
+    function sq:DistToProper(o)
+        local dx, dy = self.x - o.x, self.y - o.y
+        return math.sqrt(dx * dx + dy * dy)
+    end
     local list, others = {}, {}
     function list:size() return #sq.objs end
     function list:get(i) return sq.objs[i + 1] end
@@ -596,6 +600,119 @@ T.case("integration: a machine carried in both hands is accounted when taken and
         function rock:getFullType() return "Base.LargeMeteorite" end
         setmetatable({ item = rock, character = character }, { __index = ISEquipHeavyItem }):complete()
         T.ok(rock:getWorldItem() ~= nil, "not the mod's item: untouched")
+    end)
+    for _, k in ipairs(names) do _G[k] = saved[k] end
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: on a dedicated server the mod takes a machine off the floor into both hands", function()
+    local g = fakeGame(2)
+    local names = { "ISGrabItemAction", "ISTransferAction", "ISDropWorldItemAction", "ISEquipHeavyItem", "ISUnequipAction",
+        "forceDropHeavyItems", "sendAddItemToContainer", "sendEquip" }
+    local saved = {}
+    for _, k in ipairs(names) do saved[k] = _G[k] end
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        isServer = function() return true end
+        local a, b, far = square(g, 1, 1, 0, false, 22), square(g, 2, 1, 0, false, 22), square(g, 6, 1, 0, false, 22)
+        -- What the server's game does (42.21): the action's item is the world
+        -- object's own, without a container (BC ContainerID.collectFloorItems),
+        -- and ISEquipHeavyItem.complete removes it from its container (line
+        -- 63, failing without one); sendAddItemToContainer and sendEquip tell
+        -- the clients; forceDropHeavyItems puts a heavy hand item down.
+        local vanilla, sent, equips, drops = 0, {}, {}, 0
+        local function person(at)
+            local p, inv = { class = "IsoGameCharacter", at = at, hands = {} }, { items = {} }
+            function inv:AddItem(it) self.items[it], it.container = true, self end
+            function inv:DoRemoveItem(it) self.items[it], it.container = nil, nil end
+            function inv:contains(it) return self.items[it] == true end
+            function inv:getParent() return p end
+            function p:getInventory() return inv end
+            function p:getSquare() return self.at end
+            function p:getCurrentSquare() return self.at end
+            function p:getPrimaryHandItem() return self.hands.primary end
+            function p:getSecondaryHandItem() return self.hands.secondary end
+            function p:setPrimaryHandItem(it) self.hands.primary = it end
+            function p:setSecondaryHandItem(it) self.hands.secondary = it end
+            return p
+        end
+        local function held(item)
+            function item:getContainer() return self.container end
+            function item:getOutermostContainer() return self.container end
+            return item
+        end
+        forceDropHeavyItems = function(chr)
+            drops = drops + 1
+            local it = chr:getPrimaryHandItem()
+            if it then
+                chr:getInventory():DoRemoveItem(it)
+                place(it, chr:getCurrentSquare())
+            end
+            chr.hands.primary, chr.hands.secondary = nil, nil
+        end
+        ISGrabItemAction, ISTransferAction, ISDropWorldItemAction, ISUnequipAction = {}, {}, {}, {}
+        ISEquipHeavyItem = { complete = function(self)
+            vanilla = vanilla + 1
+            forceDropHeavyItems(self.character)
+            local src = self.item:getContainer()
+            src:DoRemoveItem(self.item)
+            self.character:getInventory():AddItem(self.item)
+            self.character:setPrimaryHandItem(self.item)
+            self.character:setSecondaryHandItem(self.item)
+            return true
+        end }
+        sendAddItemToContainer = function(inv, it)
+            local rec = it:getModData().tlgProc
+            sent[#sent + 1] = { inv = inv, item = it, pause = rec and rec.pause }
+        end
+        sendEquip = function(chr) equips[#equips + 1] = chr end
+        Machines.install()
+        local function take(item, chr)
+            return setmetatable({ item = item, character = chr }, { __index = ISEquipHeavyItem }):complete()
+        end
+        local item = held(startedOn(a, "P17", env))
+        local ann, ben = person(b), person(b)
+        g.now = 4
+        T.eq(take(item, ann), true)
+        T.eq(vanilla, 0, "the game's complete, which fails here, is not called")
+        T.eq(drops, 1, "heavy items in hand put down first, as that complete does")
+        T.ok(item:getWorldItem() == nil and #a.objs == 0 and a.transmitted == 1, "off its square, the clients told")
+        T.ok(ann:getInventory():contains(item) and ann.hands.primary == item and ann.hands.secondary == item,
+            "in the inventory and both hands")
+        T.eq(#sent, 1); T.ok(sent[1].inv == ann:getInventory() and sent[1].item == item, "the item sent to her client")
+        T.eq(sent[1].pause, "not_placed", "sent with the carried record")
+        T.eq(#equips, 1); T.ok(equips[1] == ann, "her hands sent")
+        local rec = item:getModData().tlgProc
+        T.near(work(rec), 2, 1e-9, "counted to the pickup"); T.ok(World.get().machineSites.P17 == nil, "no longer listed")
+        -- Ben's action on the same vessel, completing after hers (both taken
+        -- off the floor at once): refused, she keeps it.
+        T.eq(take(item, ben), false)
+        T.ok(ann.hands.primary == item and ann:getInventory():contains(item) and not ben:getInventory():contains(item),
+            "still hers alone")
+        T.eq(vanilla, 0); T.eq(#sent, 1); T.eq(drops, 1, "nothing put down for a refused take")
+        -- Out of reach (4 tiles from Ben) or on no square: refused, left as it is.
+        local distant = held(machine(far, nil))
+        T.eq(take(distant, ben), false)
+        T.ok(distant:getWorldItem() ~= nil and far.transmitted == nil and #sent == 1, "left where it lies")
+        T.eq(take(held(machine(nil, nil)), ben), false)
+        -- In a container, his own inventory or a crate: the game's complete,
+        -- which works there.
+        local own = held(machine(nil, nil))
+        ben:getInventory():AddItem(own)
+        T.eq(take(own, ben), true); T.eq(vanilla, 1); T.ok(ben.hands.primary == own)
+        local crate = { items = {} }
+        function crate:DoRemoveItem(it) self.items[it], it.container = nil, nil end
+        function crate:getParent() return { class = "IsoObject" } end
+        local boxed = held(machine(nil, nil))
+        boxed.container = crate
+        T.eq(take(boxed, ben), true); T.eq(vanilla, 2); T.ok(ben.hands.primary == boxed)
+        -- A heavy item that is not the mod's is left to the game: its
+        -- complete fails on the floor as it does without the mod.
+        local rock = held(machine(b, nil))
+        function rock:getFullType() return "Base.LargeMeteorite" end
+        T.raises(function() take(rock, ben) end)
+        T.eq(vanilla, 3); T.ok(rock:getWorldItem() ~= nil, "still on the floor")
     end)
     for _, k in ipairs(names) do _G[k] = saved[k] end
     g.restore()

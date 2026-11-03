@@ -11,9 +11,9 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
 | RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
-| RT-MP two clients (authority, reconnect, concurrency) | No second client available in this environment |
+| RT-MP: two players working one machine's batch at once; the TLG pour, refuelling, conversions, generators and vehicles; a server restart; players without admin rights; a real network | Not in the harness yet (it runs a server and two clients on this machine, launches 139–147) |
 | Performance baseline | Requires a measured client session |
-| Packaged-artifact install/upgrade rehearsal | Not run |
+| Upgrade from an earlier release; install through the Steam Workshop | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12) |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -3021,3 +3021,74 @@ Not checked:
 - a server restart;
 - players without admin rights (both test accounts were admins);
 - a real network (everything ran on this machine).
+
+## 2026-11-03 — RT-MP harness, launches 146–147, and RT-SP launch 148 (the vessel taken off the floor on a server)
+
+On a server the mod now takes the fermentation vessel off the floor
+itself (D-030). The harness takes it as a player does: A stands on its
+square, and `equipHeavyItem` gets the item the loot window's floor listing
+holds, as a double-click passes it. The harness's server side gained
+three things:
+- `probe_vessel`: where the server holds the vessel (on the floor around
+  the spawn point, or in a player's inventory, in both hands or not), how
+  many vessels lie or are carried there in all, its batch, and its entry
+  in the hourly reading's list;
+- a log of every take the mod makes on the server, with its result
+  (`Machines.takeOnServer`, wrapped by the harness);
+- `try_take`: the take run on the server, as the server runs a completed
+  action, for the player who does not hold the vessel.
+
+The vessel the server puts down now has a batch running
+(`ethanol_ferment`, written as loading and starting one leave the
+record), so the pickup's accounting shows.
+
+Launch 146 ran the carry part alone (`-Only carry`: A **10/0**, B
+**8/0**). Launch 147 ran the whole run (A **26/0** over its two sessions,
+B **11/0**). Both gave the same results:
+- **Vanilla's meteorite** still stays on its square, as the game leaves
+  it on a server (the control).
+- **The vessel** came off the floor into A's arms: in both hands, and gone
+  from its square on A's client. On the server it was in A's inventory and
+  both hands, the only vessel there, its batch carried (`Paused`,
+  `not_placed`) and off the hourly list. A's client got the same record
+  with the item. The server's log has one take, by A: `true`.
+- **Carried and put down.** B saw the carry pose at every gait, as in
+  launch 145. Put down at A's feet (the server's command for it), the
+  vessel lay where its record says (10658,10647), listed there, its batch
+  running again (`Processing`).
+- **Both players at once.** B walked next to the vessel. A sent B a
+  message and took the vessel at once; B queued its take on the tick the
+  message reached it (tick 5 of its waiting step in launch 146, tick 4 in
+  launch 147). On the server A's take came first (`true`). Then B's action
+  reached the server's `complete` and was refused (`false`). One vessel,
+  in A's arms, its batch carried; each client saw A holding it and B not.
+  Run on the server for B against the vessel A held, the take returned
+  false again and A kept it.
+- Everything launch 145 checked passed again in launch 147: the mod's
+  requests, the ledger, the can's record, a machine's status for both
+  players (now `Processing`), the manual in the server's loot and read,
+  and the floor models for both players and after A's rejoin.
+
+Launch 148 (`tools/run-sp-harness.ps1 -Mode pickup`, single player)
+checked that the change leaves single player as it was: **43/0**, the
+same checks as run 81. Among them, C was taken into both hands the
+double-click way and off its tile, its batch paused while carried, dropped
+at the feet and resumed there, then taken again and put down by taking a
+meteorite.
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run146_client_a.txt`,
+`…_run146_client_b.txt` and `…_run146_server.txt`, the same three for run
+147, and `2026-11-03_rt-sp_harness_run148_pickup.txt`. The domain suite
+has the server's take as a case of its own in
+`tests/integration/test_machine_sites.lua` (198 cases, all passed). With
+the take disabled, the case fails as the game does.
+
+Not checked:
+- the refusals for a vessel out of reach (more than 2.5 tiles) or on no
+  square, live: `tests/integration/test_machine_sites.lua` covers them;
+- the vessel taken from a container in multiplayer (the game's own
+  `complete`, which the mod leaves alone);
+- the world menu's Grab of the vessel in multiplayer;
+- two players working one machine's batch at once; the TLG pour,
+  refuelling, conversions, generators and vehicles in multiplayer; a
+  server restart; players without admin rights; a real network.
