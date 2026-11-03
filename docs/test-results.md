@@ -3092,3 +3092,30 @@ Not checked:
 - two players working one machine's batch at once; the TLG pour,
   refuelling, conversions, generators and vehicles in multiplayer; a
   server restart; players without admin rights; a real network.
+
+## 2026-11-03 — RT-SP launch 149 and RT-MP launch 150 (the zip with the server's take)
+
+Launch 149. Command: `tools/rehearse-install.ps1`. It rebuilt the package
+first (198/198 tests, compile check 111/0, translations OK, every shipped
+XML file parsing): the zip of commit `9824306`, 120 files, SHA-256
+`0947f1e7…`, 3,815,729 bytes. It differs from launch 134's zip
+(`e249719d…`, `8950b57`) in `Machines.lua` (the server's take, D-030)
+and in the shipped support matrix and changelog (multiplayer). The zip
+matched its manifest, was installed into a fresh isolated cache and ran
+the full harness.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run149_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as launch 134. The
+console's one exception came from the harness's own deep-recursion
+probe, and the mod logged no error or warning.
+
+Launch 150, `tools/run-mp-harness.ps1 -Clients 2 -Only carry` with the
+mod deployed from the package's item tree (`-ModSource
+…\dist\TheLastGallon\Contents\mods\TheLastGallon`; the server's copy held
+the package's own docs, and its `Machines.lua` matched the package's):
+A **10/0**, B **8/0**, as launch 146. The vessel came off the floor into
+A's arms with its batch carried. B saw it carried at every gait, and it
+ran again where it was put down. In the race B's action reached the
+server and was refused, as in launches 146 and 147.
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run150_packaged_client_a.txt`,
+`…_client_b.txt` and `…_server.txt`.

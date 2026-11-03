@@ -1,0 +1,88 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_stand begin
+STEP mp_wait_b begin
+STEP spawn_vessel begin
+OBS  MP.vessel 1596247402 spawned with its batch Processing
+STEP mp_vessel_lands begin
+STEP spawn_meteorite begin
+STEP mp_meteorite_lands begin
+STEP mp_walk_onto_meteorite begin
+STEP mp_take_meteorite begin
+OBS  MP.meteorite on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.meteorite pickup queued: ISEquipHeavyItem
+OBS  MP.meteorite pickup 30 ticks on: ISEquipHeavyItem
+PASS MP.meteorite_left_on_floor_by_the_game_A :: primary=nil secondary=nil; still on its square=true
+STEP mp_drop_heavy begin
+STEP mp_walk_onto_vessel begin
+STEP mp_take_vessel begin
+OBS  MP.vessel on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.vessel pickup queued: ISEquipHeavyItem
+OBS  MP.vessel pickup 30 ticks on: ISEquipHeavyItem
+PASS MP.vessel_from_floor_A :: primary=TLG.FermenterVessel secondary=TLG.FermenterVessel; still on its square=false
+STEP vessel_taken begin
+OBS  MP.vessel_taken server: where=inventory tlga both hands vessels=1 state=Paused pause=not_placed site=10663,10642 listed=no takes=tlga:true
+PASS MP.vessel_taken_on_server_A :: see the server's line above
+STEP mp_carried_record begin
+PASS MP.vessel_record_carried_on_client_A :: state=Paused pause=not_placed
+STEP mp_hold_vessel begin
+PASS MP.vessel_in_both_hands_A :: taken off the floor; primary=TLG.FermenterVessel RightHandMask=tlgcarryvessel
+STEP mp_walk_carry_start begin
+STEP mp_gait_stand begin
+OBS  MP.screenshot tlg_mpa_carry_stand.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry stand on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_walk begin
+OBS  MP.screenshot tlg_mpa_carry_walk.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry walk on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_run begin
+OBS  MP.screenshot tlg_mpa_carry_run.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry run on A's own screen: running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sprint begin
+OBS  MP.screenshot tlg_mpa_carry_sprint.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry sprint on A's own screen: running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sneak begin
+OBS  MP.screenshot tlg_mpa_carry_sneak.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry sneak on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_crouch begin
+OBS  MP.screenshot tlg_mpa_carry_crouch.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry crouch on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_put_down begin
+OBS  MP.vessel put down: in the hands nil
+STEP vessel_put_down begin
+OBS  MP.vessel_put_down server: where=floor 10658,10647 vessels=1 state=Processing pause=none site=10658,10647 listed=10658,10647 takes=tlga:true
+PASS MP.vessel_put_down_on_server_A :: see the server's line above
+STEP mp_race_ready begin
+OBS  MP.race A ready: the loot window lists the vessel=true
+STEP mp_wait_race_at begin
+STEP mp_race_take begin
+OBS  MP.race A queued at tick 1: ISEquipHeavyItem
+OBS  MP.race A 30 ticks on: ISEquipHeavyItem
+PASS MP.race_one_holder_seen_A :: this player holds it=true, the other=false (found=true)
+STEP mp_wait_race_done begin
+STEP race begin
+OBS  MP.race server: where=inventory tlga both hands vessels=1 state=Paused pause=not_placed site=10658,10647 listed=no takes=tlga:true tlga:true tlgb:false
+OBS  MP.race the server's takes since the put-down: tlga:true tlgb:false; the second action was refused on the server
+PASS MP.race_one_vessel_one_holder_on_server_A :: see the server's line above
+STEP try_take begin
+OBS  MP.try_take holder=tlga taker=tlgb result=false holder keeps it=true taker has it=false takes=tlga:true tlga:true tlgb:false tlgb:false
+PASS MP.take_of_a_held_vessel_refused_on_server_A :: see the line above
+STEP mp_race_drop_please begin
+STEP mp_race_drop begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=10 fail=0
+DONE
