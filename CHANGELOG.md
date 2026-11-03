@@ -142,6 +142,13 @@
   a tied cloth, a corked bottle of tar, and an olive field manual. Before,
   the kit and the starter were both a glass jar, the stabilizer a bleach
   bottle and the manual a smithing magazine. Checked in game.
+* The same four now lie on the floor as their own models, made from the
+  shapes of their icons at true size: the kit's three sample jars with
+  the hose coiled in front (0.34 m across), the starter's jar under its
+  tied cloth (0.16 m tall), the stabilizer's corked bottle (0.17 m tall)
+  and the manual on its back (0.24 m long). Before, none of the four had
+  a floor model, so every item of the mod now has its own. Checked in
+  game.
 * A generator you carry keeps its fuel's record and its conversion when
   the game puts it down for you, as it does when you take another
   generator or equip a weapon from the menus (the record checked in

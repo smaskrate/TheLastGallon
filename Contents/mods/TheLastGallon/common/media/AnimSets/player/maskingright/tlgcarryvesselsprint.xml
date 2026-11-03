@@ -8,7 +8,7 @@
      The game's sprint leans the chest 41 degrees and twists it through
      each stride, and a player's arms hang from Bip01_Spine1 (BC
      IsoPlayer.onAnimPlayerCreated), so the standing clip tilts and swings
-     the vessel (runs 108 and 116). This clip, Bob_TLG_CarryVesselSprint
+     the vessel (runs 108 and 113). This clip, Bob_TLG_CarryVesselSprint
      (media/anims_X/Bob), runs as long as the game's Bob_Sprint and holds the
      same arms keyed against each of its keys by tools/blender/pz_arms.py,
      in their standing directions, with the vessel upright 0.17 file units

@@ -751,4 +751,35 @@ listed with their replacement.
   The shapes are this
   repository's own, so the icons carry no outside asset. The four items'
   floor models are unchanged (A29): the stabilizer, the kit, the starter
-  and the manual still have none.
+  and the manual still have none. (Since D-029 they have their own.)
+
+## D-029 The kit, the starter, the stabilizer and the manual have floor models of their own
+* Decision: `TLG.FuelSampleKit`, `TLG.YeastStarter`, `TLG.FuelStabilizer`
+  and `TLG.ManualFuelSystems` lie on the floor as models of their own
+  (`TLG_models.txt`). `tools/make-prop-models.ps1`
+  (`tools/blender/pz_prop_models.py`) makes them from the shapes their
+  icons are rendered from (D-028), as each lies on the floor: the kit's
+  hose coiled flat in front of its jars instead of tipped towards the
+  eye, and the manual on its back. Each is the supplied models' kind of
+  FBX (D-027): one mesh with a palette texture of flat colours, and half
+  the icons' sides (136 to 972 triangles). Each scale sets a true size:
+  the kit 0.34 m across with jars 0.12 m tall (0.225), the starter 0.16 m
+  tall (0.108), the stabilizer 0.17 m (0.115), the manual 0.24 by 0.18 m
+  (0.16). The icons are unchanged.
+* Reason: the user asked for floor models in the asset-requirements
+  session on 2026-11-03 ("Add floor models"), relayed by that session.
+  They did not say whether these should be new models or the vanilla
+  stand-ins the audit named (A29). Own models were made: every other
+  model and icon of the mod is its own, and the stand-ins would have put
+  the kit and the starter down as the same vanilla jar and the stabilizer
+  as a bleach bottle, against their icons. Before, the four had no
+  `WorldStaticModel` at all.
+* Consequences: verified RT-SP runs 132–133 (19/0 each): the scripts
+  load with their own meshes and textures, the items name them, and all
+  four drew on the floor in their colours (run 133), at the supplied
+  models' scale. The shapes and the build are this repository's own, so
+  the models carry no outside asset. A rebuild writes the same files but
+  for the time in each FBX's header. Not checked: an item dropped by a
+  player (turned at random) or seen after a reload; multiplayer. Should
+  the vanilla stand-ins be wanted after all, they are four
+  `WorldStaticModel` lines.

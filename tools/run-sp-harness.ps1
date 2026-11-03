@@ -127,9 +127,12 @@
   ways, photographed eight times over more than one stride; no save.
   machine-models: the models supplied on 2026-11-03 (TLG_models.txt): the
   fuel filter, the drying column and the two stills put down beside the
-  fermenter, photographed as a row and with the character between them,
-  a still held through an action, then each item equipped and
-  photographed with the interface shown for its icon; no save.
+  fermenter, and on its other side the sampling kit, the yeast starter,
+  the stabilizer and the manual (their floor models built by
+  tools/make-prop-models.ps1), photographed as a row and with the
+  character between them, a still held through an action, then each item
+  equipped and photographed with the interface shown for its icon; no
+  save.
   manual, manual-italian: the fuel systems field manual: the loot lists
   that hold it, manuals rolled from them as the game fills a container,
   its page measured with its text panel shown, and a rolled manual read

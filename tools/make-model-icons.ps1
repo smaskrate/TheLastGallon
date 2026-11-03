@@ -12,10 +12,11 @@
   chosen by eye at 32 pixels: the pot still and the drying column from a
   little right of the front, the reflux still from its left side (its
   column upright and its arm clear of it), the filter from above its lid.
-  The items with no model of their own (the sampling kit, the yeast
-  starter, the fuel stabilizer and the manual) get simple shapes built
-  for their icons by tools/blender/pz_icon_props.py, rendered the same
-  way. The fermenter's icon is drawn by tools/make-icons.ps1 instead.
+  The sampling kit, the yeast starter, the fuel stabilizer and the manual
+  are rendered the same way from simple shapes built for them by
+  tools/blender/pz_icon_props.py; tools/make-prop-models.ps1 builds their
+  floor models from the same shapes, as each lies on the floor. The
+  fermenter's icon is drawn by tools/make-icons.ps1 instead.
 .PARAMETER Blender
   blender.exe (default: the portable 4.5.15 LTS install).
 .PARAMETER OutDir

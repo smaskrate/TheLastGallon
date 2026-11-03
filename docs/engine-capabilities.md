@@ -31,7 +31,7 @@ alternative), **NOT RUN**.
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
 | G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14; the check passed in run 14). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
-| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. An original static test model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67); the supplied fermenter model (FBX) ships and was drawn, turned and reloaded (runs 68–69); four more supplied models (the stills, the drying column, the fuel filter) ship and were drawn beside it (runs 120–122). Held items: drawn only during actions for non-weapons, as in vanilla (runs 73–74). See "G13: one original model imported" below. NOT RUN: animation, multiplayer rendering, sounds; vehicle parts are G11 |
+| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. An original static test model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67); the supplied fermenter model (FBX) ships and was drawn, turned and reloaded (runs 68–69); four more supplied models (the stills, the drying column, the fuel filter) ship and were drawn beside it (runs 120–122); four of the mod's own, exported from Blender (the kit, the starter, the stabilizer, the manual), were drawn on the floor at the supplied models' scale (runs 132–133). Held items: drawn only during actions for non-weapons, as in vanilla (runs 73–74). See "G13: one original model imported" below. NOT RUN: animation, multiplayer rendering, sounds; vehicle parts are G11 |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
 ## Lua runtime
@@ -812,11 +812,38 @@ the equipped-item button (run 126). Two
 renders of one model gave the same icon though the large renders
 differed in a few pixels. In run 125 the pot still's equip was queued
 behind the harness's 1200-tick do-nothing action and its step timed out;
-run 126 equipped first. Since run 129 the four items with no model (the
-sampling kit, the yeast starter, the stabilizer, the manual) have icons
+run 126 equipped first. Since run 129 the four items with no supplied
+model (the sampling kit, the yeast starter, the stabilizer, the manual) have icons
 rendered the same way from simple shapes built for them
 (`tools/blender/pz_icon_props.py`, D-028), so every item's icon is the
 mod's own.
+
+### The small items' own floor models (runs 132–133)
+
+`tools/make-prop-models.ps1` builds the floor models of the sampling kit,
+the yeast starter, the stabilizer and the manual from the shapes their
+icons are rendered from (D-029). It writes them as the supplied models
+are, which Blender's FBX exporter does with
+`apply_scale_options="FBX_SCALE_UNITS"`: the metre goes into
+`UnitScaleFactor` 100 and the node keeps scale 1. The exporter's default,
+`FBX_SCALE_NONE`, scales the node 100 and leaves the unit factor 1, so the
+game, which sizes by the node, would draw the model 100 times too large.
+The default axes (forward −Z, up Y, the space transform not baked) turn
+the node −90° about X, as in the supplied files. Drawn on the floor in
+run 133, they measured across at the supplied models' scale in frames
+from the same run (`test-results.md`). The exporter takes its object ids
+from Python's string hash, which Blender seeds anew each run; started
+with `PYTHONHASHSEED` set and `--python-use-system-env`, it keeps them.
+
+Two things about the pictures. Run 132's morning fog washed out every
+model in the frame. Since run 133 the harness holds the fog at 0 as
+vanilla's tutorial does (`Tutorial1.lua`: `getClimateFloat(5)`,
+`setEnableOverride(true)`, `setOverride(0, 1)`). In run 133 the fog read
+0 before the override as well as after, and the pictures were clear, so
+whether the override keeps a fog away is not shown. And an item on the
+floor is drawn about a row below the feet of a character standing on its
+row (run 132), so the close-ups are taken from a square nearer the
+camera.
 
 ## Animation tooling (2026-11-02)
 
@@ -1146,7 +1173,8 @@ equip timed out) and 126 **15/0**, then the zip with them installed clean,
 run 127 **94/0** and **14/0**, and the icons from its item tree, run 128
 **15/0**, then the four other items' icons, run 129 **19/0**, then the
 zip with them installed clean, run 130 **94/0** and **14/0**, and every
-icon from its item tree, run 131 **19/0**. Most failures were traced to
+icon from its item tree, run 131 **19/0**, then the four small items' own
+floor models, runs 132 and 133 **19/0** each. Most failures were traced to
 the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)

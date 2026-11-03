@@ -85,4 +85,47 @@ module TLG
         texture = TLG/FuelFilter,
         scale = 0.1,
     }
+
+    /* The sampling kit, the yeast starter, the fuel stabilizer and the
+       manual on the floor: the mod's own shapes, the ones their icons are
+       rendered from, built as each lies on the floor by
+       tools/make-prop-models.ps1 (tools/blender/pz_prop_models.py). Each
+       is the same kind of FBX as the supplied models, 1.0 along its
+       largest side with its base at the origin, and has a texture of flat
+       colours. FuelSampleKit: three sample jars with a hose coiled flat in
+       front; 0.225 gives jars 0.12 m tall (0.13 m with their lids) and the
+       kit 0.34 m across and deep. */
+    model FuelSampleKit
+    {
+        mesh = TLG/FuelSampleKit,
+        texture = TLG/FuelSampleKit,
+        scale = 0.225,
+    }
+
+    /* YeastStarter: a jar of culture under a cloth tied with string; 0.108
+       gives a jar 0.13 m across, 0.16 m tall with its cloth. */
+    model YeastStarter
+    {
+        mesh = TLG/YeastStarter,
+        texture = TLG/YeastStarter,
+        scale = 0.108,
+    }
+
+    /* FuelStabilizer: a corked bottle of tar; 0.115 stands it 0.17 m tall
+       and 0.11 m across. */
+    model FuelStabilizer
+    {
+        mesh = TLG/FuelStabilizer,
+        texture = TLG/FuelStabilizer,
+        scale = 0.115,
+    }
+
+    /* ManualFuelSystems: the field manual on its back; 0.16 makes it
+       0.24 m by 0.18 m and 2.4 cm thick. */
+    model ManualFuelSystems
+    {
+        mesh = TLG/ManualFuelSystems,
+        texture = TLG/ManualFuelSystems,
+        scale = 0.16,
+    }
 }

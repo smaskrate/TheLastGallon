@@ -74,7 +74,7 @@ def render(fbx, texture, out, azimuth=15.0, elevation=20.0):
 def render_scene(out, azimuth=15.0, elevation=20.0):
     """Every mesh in the current scene, with its own materials, rendered and
     reduced to the icon `out` as the module docstring says (tools/blender/
-    pz_icon_props.py builds scenes for items that have no model)."""
+    pz_icon_props.py builds scenes for items that have no supplied model)."""
     bpy.context.view_layer.update()
     meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     pts = [o.matrix_world @ v.co for o in meshes for v in o.data.vertices]

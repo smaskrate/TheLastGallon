@@ -8448,12 +8448,20 @@ end
 -- then the fuel filter, the drying column and the two stills, turned 0
 -- degrees, two or three tiles apart where they are wide. Each is
 -- photographed from the square behind it, where the character stands.
+-- Left of the fermenter, the small items' own floor models (the sampling
+-- kit, the yeast starter, the stabilizer and the manual), two on each side
+-- of the square she stands on for them (-5). The kit keeps its own model
+-- here instead of carrying the test barrel (RT.MI.wire).
 if REQUEST == "sp-rtmm" then
-    RT.MI.keys = { "t0", "filter", "column", "pot", "reflux" }
-    RT.MI.across = { t0 = -1, filter = 0, column = 1, pot = 3, reflux = 6 }
-    RT.MI.types = { filter = "TLG.FuelFilter", column = "TLG.DryingColumn", pot = "TLG.PotStill", reflux = "TLG.RefluxStill" }
+    RT.MI.keys = { "t0", "filter", "column", "pot", "reflux", "kit", "starter", "stabilizer", "manual" }
+    RT.MI.across = { t0 = -1, filter = 0, column = 1, pot = 3, reflux = 6, kit = -3, starter = -4, stabilizer = -6,
+        manual = -7 }
+    RT.MI.types = { filter = "TLG.FuelFilter", column = "TLG.DryingColumn", pot = "TLG.PotStill", reflux = "TLG.RefluxStill",
+        kit = "TLG.FuelSampleKit", starter = "TLG.YeastStarter", stabilizer = "TLG.FuelStabilizer",
+        manual = "TLG.ManualFuelSystems" }
     RT.MI.turns = {}
     RT.MI.views = { tests = 1, small = 0, pot = 3, reflux = 6, row = 2 }
+    RT.MI.small = nil
 end
 
 -- The mesh (and texture) each model script must name.
@@ -8470,7 +8478,9 @@ function RT.MI.wire()
         si:DoParam("StaticModel = " .. RT.MI.hand)
         si:DoParam("Icon = " .. RT.MI.icon)
     end
-    kit:DoParam("WorldStaticModel = " .. RT.MI.small)
+    -- The kit carries the true-size test barrel, unless its own floor model
+    -- is what is looked at (sp-rtmm).
+    if RT.MI.small then kit:DoParam("WorldStaticModel = " .. RT.MI.small) end
     return true
 end
 
@@ -8494,7 +8504,8 @@ function RT.MI.checkWiring(prefix)
         RT.MI.kit, tostring(s.kit))
     R:check(prefix .. ".model_scripts_loaded", function() return s.ok == true, table.concat(meshes, "; ") end)
     R:check(prefix .. ".vessel_wired", function()
-        return s.world == RT.MI.model and s.hand == RT.MI.hand and s.icon == RT.MI.icon and s.kit == RT.MI.small,
+        return s.world == RT.MI.model and s.hand == RT.MI.hand and s.icon == RT.MI.icon
+            and (RT.MI.small == nil or s.kit == RT.MI.small),
             string.format("WorldStaticModel=%s StaticModel=%s Icon=%s; kit WorldStaticModel=%s", tostring(s.world),
                 tostring(s.hand), tostring(s.icon), tostring(s.kit))
     end)
@@ -8538,12 +8549,15 @@ RT.MI.setup = { name = "rtmi_setup", timeout = 1200, fn = function(ctx, ticks)
     if ticks - ctx.t0 < 30 then return nil end
     M.checkWiring("RTMI")
     local px, py = math.floor(player():getX()), math.floor(player():getY())
+    -- Every square of the row, and of the views behind it, must be clear.
+    local first, last = -1, 7
+    for _, k in pairs(M.across) do first, last = math.min(first, k), math.max(last, k) end
     for r = 0, 12 do
         for dx = -r, r do
             for dy = -r, r do
                 if not M.cx and math.max(math.abs(dx), math.abs(dy)) == r then
                     local cx, cy, ok = px + dx, py + dy, true
-                    for k = -1, 7 do
+                    for k = first, last do
                         local x, y = M.spot(cx, cy, k)
                         local bx, by = M.behind(cx, cy, k)
                         ok = ok and M.clear(x, y) and M.clear(bx, by)
@@ -9900,15 +9914,21 @@ RT.fermenterReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmfb_
 -- character standing on the row between the items. None of the four has a
 -- hand model: run 120 held the stills at true size through an action and
 -- they covered the character, and run 121 drew nothing for the drying
--- column, which had none. Each item is then equipped in turn and
--- photographed with the interface shown, where the equipped-item button
--- shows its icon (as the fermenter's was seen, runs 64-66), the four
--- small items whose icons are drawn from shapes too; last, the pot
+-- column, which had none. The small items' floor models, built from the
+-- shapes of their icons (tools/make-prop-models.ps1), are photographed at
+-- 0.5 with her between them and at 0.25 two at a time. The fog is held at
+-- 0 first (RT.MM.clearSky). Each item is then equipped in turn
+-- and photographed with the interface shown, where the equipped-item
+-- button shows its icon (as the fermenter's was seen, runs 64-66), the
+-- four small items whose icons are drawn from shapes too; last, the pot
 -- still is held through a do-nothing action (which draws an item's hand
 -- model) to see nothing drawn.
-RT.MM = { models = { "PotStill", "RefluxStill", "DryingColumn", "FuelFilter" },
+RT.MM = { models = { "PotStill", "RefluxStill", "DryingColumn", "FuelFilter", "FuelSampleKit", "YeastStarter",
+        "FuelStabilizer", "ManualFuelSystems" },
     items = { { "TLG.PotStill", "TLG.PotStill", nil }, { "TLG.RefluxStill", "TLG.RefluxStill", nil },
-        { "TLG.DryingColumn", "TLG.DryingColumn", nil }, { "TLG.FuelFilter", "TLG.FuelFilter", nil } },
+        { "TLG.DryingColumn", "TLG.DryingColumn", nil }, { "TLG.FuelFilter", "TLG.FuelFilter", nil },
+        { "TLG.FuelSampleKit", "TLG.FuelSampleKit", nil }, { "TLG.YeastStarter", "TLG.YeastStarter", nil },
+        { "TLG.FuelStabilizer", "TLG.FuelStabilizer", nil }, { "TLG.ManualFuelSystems", "TLG.ManualFuelSystems", nil } },
     -- Every item whose icon the mod renders: the four above from their
     -- models, the other four from shapes built for them.
     icons = { "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn", "TLG.FuelFilter", "TLG.FuelSampleKit",
@@ -9950,24 +9970,50 @@ RT.MM.check = { name = "rtmm_check", timeout = 300, fn = function()
 end }
 
 -- The character on the row itself, on square k, at the items' depth (run
--- 120 stood her behind them and at zoom 0.25 they fell below the frame).
-function RT.MM.stand(name, k)
+-- 120 stood her behind them and at zoom 0.25 they fell below the frame),
+-- or `ahead` squares nearer the camera. The items are drawn about a row
+-- below her feet (run 132), so at zoom 0.25 she stands a square ahead,
+-- between two of them (k half way), to bring them into the frame.
+function RT.MM.stand(name, k, ahead)
     return { name = name, timeout = 600, fn = function(ctx, ticks)
         if ticks == 1 then
             ISTimedActionQueue.clear(player())
             local x, y = RT.MI.spot(RT.MI.cx, RT.MI.cy, k)
-            player():teleportTo(x + 0.5, y + 0.5, 0)
+            local d = ahead or 0
+            player():teleportTo(x + 0.5 + d, y + 0.5 + d, 0)
         end
         return ticks >= 90 or nil
     end }
 end
 
-RT.machineModelSteps = { RT.waitWorld, RT.MI.setup, RT.MM.check, RT.MI.place,
+-- No fog, held off as vanilla's tutorial does (Tutorial1.lua: any
+-- weather stopped, the fog intensity's override set to 0): run 132's
+-- morning fog washed every model out. In run 133 it read 0 before too.
+RT.MM.clearSky = { name = "rtmm_clear_sky", timeout = 600, fn = function(ctx, ticks)
+    local cm = getClimateManager()
+    local fog = cm:getClimateFloat(5)
+    if ticks == 1 then
+        ctx.before = fog:getFinalValue()
+        if cm:getWeatherPeriod():isRunning() then cm:stopWeatherAndThunder() end
+        fog:setEnableOverride(true)
+        fog:setOverride(0, 1)
+        return nil
+    end
+    if ticks < 120 then return nil end
+    R:line("OBS  RTMM.fog intensity %.2f -> %.2f", ctx.before, fog:getFinalValue())
+    return true
+end }
+
+RT.machineModelSteps = { RT.waitWorld, RT.MI.setup, RT.MM.clearSky, RT.MM.check, RT.MI.place,
     RT.MI.goTo("rtmm_go_row", "row"), RT.MI.zoomTo("rtmm_zoom_row", 1.0), RT.MI.shot("rtmm_row", true),
     RT.MI.zoomTo("rtmm_zoom_close", 0.5),
     RT.MM.stand("rtmm_stand_column_pot", 2), RT.MI.shot("rtmm_beside_column_pot", true),
     RT.MM.stand("rtmm_stand_reflux", 5), RT.MI.shot("rtmm_beside_reflux", true),
-    RT.MI.zoomTo("rtmm_zoom_hand", 0.25), RT.MI.goTo("rtmm_go_hand", "tests"),
+    RT.MM.stand("rtmm_stand_small", -5), RT.MI.shot("rtmm_beside_small", true),
+    RT.MI.zoomTo("rtmm_zoom_hand", 0.25),
+    RT.MM.stand("rtmm_stand_kit_starter", -3.5, 1), RT.MI.shot("rtmm_close_kit_starter", true),
+    RT.MM.stand("rtmm_stand_stabilizer_manual", -6.5, 1), RT.MI.shot("rtmm_close_stabilizer_manual", true),
+    RT.MI.goTo("rtmm_go_hand", "tests"),
     -- The equips come first: the do-nothing action runs 1200 ticks, and an
     -- equip queued behind it outlasted its step (run 125).
     RT.MI.hold("icon_pot", "TLG.PotStill"), RT.MI.shot("rtmm_icon_pot", false),

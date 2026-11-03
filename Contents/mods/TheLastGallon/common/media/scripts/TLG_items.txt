@@ -1,10 +1,12 @@
 module TLG
 {
-    /* Every icon here is the mod's own (Item_TLG_<Name>.png, rendered by
-       tools/make-model-icons.ps1): the filter's from its model, the
-       others' from simple shapes built for them
-       (tools/blender/pz_icon_props.py). Display names come from
-       Translate/<lang>/ItemName.json. */
+    /* Every icon and floor model here is the mod's own (TLG_models.txt).
+       The icons (Item_TLG_<Name>.png) are rendered by
+       tools/make-model-icons.ps1: the filter's from its supplied model,
+       the others' from simple shapes built for them
+       (tools/blender/pz_icon_props.py). The same shapes, as each lies on
+       the floor, are the others' floor models (tools/make-prop-models.ps1).
+       Display names come from Translate/<lang>/ItemName.json. */
 
     /* A01 sampling/testing kit: enables "kit" precision inspection. */
     item FuelSampleKit
@@ -13,6 +15,7 @@ module TLG
         ItemType = base:normal,
         Weight = 0.4,
         Icon = TLG_FuelSampleKit,
+        WorldStaticModel = TLG.FuelSampleKit,
         Tags = base:glass,
     }
 
@@ -23,6 +26,7 @@ module TLG
         ItemType = base:normal,
         Weight = 0.3,
         Icon = TLG_FuelStabilizer,
+        WorldStaticModel = TLG.FuelStabilizer,
     }
 
     /* Filter cartridge: sediment, free water and some biomass. On the floor
@@ -47,6 +51,7 @@ module TLG
         ItemType = base:literature,
         Weight = 0.5,
         Icon = TLG_ManualFuelSystems,
+        WorldStaticModel = TLG.ManualFuelSystems,
         OnCreate = TLG.Integration.Manual.onCreate,
     }
 
@@ -58,5 +63,6 @@ module TLG
         ItemType = base:normal,
         Weight = 0.3,
         Icon = TLG_YeastStarter,
+        WorldStaticModel = TLG.YeastStarter,
     }
 }

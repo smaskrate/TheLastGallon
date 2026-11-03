@@ -22,15 +22,18 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
   the reflux still's, the drying column's and the fuel filter's
   (`TLG.PotStill`, `TLG.RefluxStill`, `TLG.DryingColumn`, `TLG.FuelFilter`;
   `art-src/potstill`, `refluxstill`, `dryingcolumn` and `fuelfilter`;
-  RT-SP runs 120–122). The import test's model lives in the dev-only
-  harness mod.
+  RT-SP runs 120–122). Four more are the mod's own, built from simple
+  shapes by `tools/make-prop-models.ps1`: the sampling kit's, the yeast
+  starter's, the stabilizer's and the manual's (`TLG.FuelSampleKit`,
+  `TLG.YeastStarter`, `TLG.FuelStabilizer`, `TLG.ManualFuelSystems`;
+  D-029). The import test's model lives in the dev-only harness mod.
 * Every item's icon is the mod's own: the vessel's, drawn by
   `tools/make-icons.ps1` to match its model, and since 2026-11-03 the
   others, rendered by `tools/make-model-icons.ps1`: the two stills', the
   drying column's and the fuel filter's from their models (runs 125–126),
   the sampling kit's, the yeast starter's, the stabilizer's and the
   manual's from simple shapes built for them (`tools/blender/pz_icon_props.py`,
-  run 129). Every other item's model is borrowed from vanilla by name. Since 2026-11-02 the vessel
+  run 129). No item's model is borrowed from vanilla any more. Since 2026-11-02 the vessel
   is also carried in both arms as its own model (`TLG.FermenterHeld`),
   through a carry pose made from two Mixamo clips (`art-src/carry/`,
   D-025). The other machines have no hand model: the game draws a held
@@ -51,9 +54,11 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
   car's fuel tank (`SmallGasTank` = `WorldItems/NormalGasTank1`); the
   fermentation vessel was a water-cooler bottle (`WaterTank`). The manual's
   icon was the smithing magazine cover until its own.
-* Four small items (sampling kit, stabilizer, manual, yeast starter) have
-  no `WorldStaticModel`; what they look like on the floor is unknown. The
-  fuel filter has its own since 2026-11-03.
+* Every item stands on the floor as its own model since 2026-11-03. The
+  four small items with no supplied model (sampling kit, yeast starter,
+  stabilizer, manual) had no `WorldStaticModel` until then; theirs are
+  built from the shapes of their icons (`tools/make-prop-models.ps1`,
+  D-029). The fuel filter's is supplied.
 * One sound is used: `VehicleAddFuelFromCanister`, by the TLG pour.
   Conversion work, a timed action of several hours, is silent. Sampling,
   treatments, the machine menu, draining a generator and pouring into a
@@ -164,11 +169,11 @@ loop adds world noise only through code that decides to.
 | A03 | `TLG.PotStill` (`pot_still`, 60 L, firebox) | its own model `TLG.PotStill` since 2026-11-03 (supplied): a lidded pot with a swan neck and hose, 1.05 m wide; no hand model | done, though it shows no firebox or condenser; the editable sources still missing |
 | A03 | `TLG.RefluxStill` (`reflux_still`, 120 L, firebox) | its own model `TLG.RefluxStill` since 2026-11-03 (supplied): a boiler under a column with a condenser box, 1.35 m tall; it reads apart from the pot still | done, though it shows no firebox; the editable sources still missing |
 | I04 | `TLG.DryingColumn` (`drying_column`, 40 L) | its own model `TLG.DryingColumn` since 2026-11-03 (supplied): a pipe column standing in its receiver jar, 0.82 m tall | done; the editable sources still missing |
-| A29 | `TLG.FuelSampleKit` | no world model | vanilla `JarGlass_Ground` (as `Base.EmptyJar`) now; own texture later |
-| A29 | `TLG.FuelStabilizer` | no world model | vanilla `BleachBottle` now; own label later |
+| A29 | `TLG.FuelSampleKit` | its own model `TLG.FuelSampleKit` since 2026-11-03 (D-029): three sample jars with a hose coiled in front, 0.34 m across | done |
+| A29 | `TLG.FuelStabilizer` | its own model `TLG.FuelStabilizer` since 2026-11-03: a corked bottle of tar, 0.17 m tall | done |
 | A29 | `TLG.FuelFilter` | its own model `TLG.FuelFilter` since 2026-11-03 (supplied): a canister 0.15 m tall | done |
-| A29 | `TLG.ManualFuelSystems` | no world model | vanilla `Magazine` / `MagazineGround` with an own cover texture; it spawns in loot since 2026-11-02 (runs 101–103, D-026), so a player can drop it on a floor |
-| A29 | `TLG.YeastStarter` | no world model | vanilla `JarGlass_Ground` now; own texture later |
+| A29 | `TLG.ManualFuelSystems` | its own model `TLG.ManualFuelSystems` since 2026-11-03: the field manual on its back, 0.24 m long; it spawns in loot since 2026-11-02 (runs 101–103, D-026), so a player can drop it on a floor | done |
+| A29 | `TLG.YeastStarter` | its own model `TLG.YeastStarter` since 2026-11-03: a jar of culture under a tied cloth, 0.16 m tall | done |
 
 A machine's in-hand model can reuse its floor mesh through a second `model`
 entry, as the vessel's does for its carry pose. One held in a single hand
@@ -233,7 +238,7 @@ Icons, 32×32:
 | I08 | `TLG.RefluxStill` | its own `TLG_RefluxStill` since 2026-11-03, rendered from its model | done |
 | I09 | `TLG.FermenterVessel` | its own `TLG_Fermenter` since 2026-11-02 (`tools/make-icons.ps1`) | done |
 | I01 | `TLG.FuelStabilizer` | its own `TLG_FuelStabilizer` since 2026-11-03: a corked bottle of tar with a label | done |
-| I03 | `TLG.ManualFuelSystems` | its own `TLG_ManualFuelSystems` since 2026-11-03: an olive field manual | the icon is done; it has no floor model yet (A29), so no cover texture either |
+| I03 | `TLG.ManualFuelSystems` | its own `TLG_ManualFuelSystems` since 2026-11-03: an olive field manual | done; its floor model is built from the same shapes (A29) |
 
 UI symbols (A02). Spec §16 asks for text and symbols, not colour alone.
 The UI today is text in context menus and rich-text dialogs, so showing

@@ -2809,3 +2809,60 @@ package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGal
 hashes, all eight rendered ones loaded, and each item equipped showed its
 icon. The console had no exception.
 Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run131_item_icons_packaged.txt`.
+
+## 2026-11-03 — RT-SP client harness, launches 132–133 (floor models for the four small items)
+
+The user asked, in the asset-requirements session, for floor models for
+the sampling kit, the yeast starter, the fuel stabilizer and the field
+manual ("Add floor models"; D-029). They are made from the shapes their
+icons are rendered from. `tools/make-prop-models.ps1` runs
+`tools/blender/pz_prop_models.py`, which builds each shape as it lies on
+the floor (`pz_icon_props.py`'s new `floor` switch: the kit's hose coiled
+flat, clear of its jars; the manual on its back) with half the icons'
+sides. It joins each into one mesh with a palette texture of flat
+colours and exports it as the supplied models are. Dumped, each file
+matched the supplied filter's: Y up, `UnitScaleFactor` 100, the node
+turned −90° about X, no node scaling, triangles, one material, 1.0 along
+its largest side. Re-imported in Blender, all four stood upright in
+their colours. Two builds first differed in the exporter's object ids,
+which come from Python's string hash (Blender seeds it anew each run),
+and in the order of the starter's triangles. The build now fixes both,
+and three rebuilds differed only in the time in each file's header. The
+eight icons rendered again byte for byte after the shape builder gained
+the switch.
+
+The machine-models mode now puts the four left of the fermenter, two on
+each side of the character, and checks their model scripts and wiring
+with the others'. In this mode the kit keeps its own model; until now
+the harness gave it the true-size test barrel in every model mode. The
+clear-ground search now covers every square the row uses (it stopped at
+square 7).
+
+Launch 132: **19/0**. All eight model scripts named their own mesh and
+texture, the items named their models, and all nine items lay on their
+squares. The four drew on the floor, but a morning fog washed out every
+model in the frame, the supplied ones too. At zoom 0.25 the two beside
+the character stood at the foot of the frame: an item is drawn about a
+row below the feet of a character standing on its row.
+
+Launch 133, with the fog intensity's override set to 0 as vanilla's
+tutorial does (`Tutorial1.lua`) and the close-ups taken from a square
+nearer the camera: **19/0**. The fog read 0 before the override as well
+as after, so the clear sky may be the weather's. In clear light all four show
+their colours: the kit's three jars of fuel with dark lids and the red
+hose coiled in front, the starter's jar under its cloth and string, the
+stabilizer's corked bottle with its label and red band, the manual on
+its back with its badge and title band. Widths were measured against the
+character, taken as 1.75 m from hair to soles, with the camera 30° above
+the ground. At zoom 0.5 the starter, the stabilizer and the manual came
+out 12–18 % wider than planned, and the supplied filter and the drying
+column's jar 14 % wider, in frames from the same run. The close-ups at
+0.25 gave 12–15 %. So the new models take the supplied models' scale.
+The console had no exception and no line about the models.
+
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run132_floor_models.txt`,
+`…_run133_floor_models.txt`, and the sheet
+`2026-11-03_run133_floor_models_sheet.jpg`.
+
+Not checked: an item dropped by a player (turned at random), the models
+after a reload, multiplayer.
