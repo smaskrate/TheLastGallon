@@ -1,0 +1,1051 @@
+RT-SP run 116 (tools/run-sp-harness.ps1 -Mode pose-sprint, four sprint carry candidates): the animator's log of each leg,
+as AnimatorDebugMonitor.getLogString returned it at the end of the leg (its newest 128 lines).
+
+===== leg: tlgsprintsync06_sprint (TLG_animlog_tlgsprintsync06_sprint.txt) =====
+    [variable] : added -> 'fallimpactseverity', value: 'None'. 
+     [variable] : added -> 'bdoshove', value: 'false'. 
+     [variable] : added -> 'bdostomp', value: 'false'. 
+     [variable] : added -> 'combatspeed', value: '1.0'. 
+     [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.5121893'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintsync06'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintsync06stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintsync06stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync06'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintSync06'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync06stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync06stand' to: 'player/maskingright/tlgsprintsync06'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync06'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintSync06'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync06' to: 'player/maskingright/tlgsprintsync06stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+
+===== leg: tlgsprintsync06_sprint_back (TLG_animlog_tlgsprintsync06_sprint_back.txt) =====
+    [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.9875139'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintsync06'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintsync06stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintsync06stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'sprint' to: 'idle'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturningaround' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync06'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintSync06'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync06stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync06stand' to: 'player/maskingright/tlgsprintsync06'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_SprintToStop'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturningaround' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync06'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintSync06'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync06' to: 'player/maskingright/tlgsprintsync06stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+
+===== leg: tlgsprintsync10_sprint (TLG_animlog_tlgsprintsync10_sprint.txt) =====
+    [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.012991419'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintsync10'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintsync10stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintsync10stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync10stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'sprint' to: 'idle'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturningaround' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync10'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintSync10'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync10stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync10stand' to: 'player/maskingright/tlgsprintsync10'. 
+     [variable] : updated -> 'isturningaround' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync10stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync10'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintSync10'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync10' to: 'player/maskingright/tlgsprintsync10stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+
+===== leg: tlgsprintsync10_sprint_back (TLG_animlog_tlgsprintsync10_sprint_back.txt) =====
+    [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.9851259'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintsync10'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintsync10stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintsync10stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync10stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'sprint' to: 'idle'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturningaround' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync10'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintSync10'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync10stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync10stand' to: 'player/maskingright/tlgsprintsync10'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_SprintToStop'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturningaround' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintsync10stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintsync10'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintSync10'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintsync10' to: 'player/maskingright/tlgsprintsync10stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+
+===== leg: tlgsprintmean06_sprint (TLG_animlog_tlgsprintmean06_sprint.txt) =====
+    [variable] : added -> 'bdostomp', value: 'false'. 
+     [variable] : added -> 'combatspeed', value: '1.0'. 
+     [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.013785543'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintmean06'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintmean06stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintmean06stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintmean06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'sprint' to: 'idle'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturningaround' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintmean06'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintMean06'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintmean06stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintmean06stand' to: 'player/maskingright/tlgsprintmean06'. 
+     [variable] : updated -> 'isturningaround' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintmean06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintmean06'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintMean06'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintmean06' to: 'player/maskingright/tlgsprintmean06stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+
+===== leg: tlgsprintmean06_sprint_back (TLG_animlog_tlgsprintmean06_sprint_back.txt) =====
+    [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.9890321'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintmean06'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintmean06stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintmean06stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintmean06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'sprint' to: 'idle'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturningaround' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintmean06'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintMean06'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintmean06stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintmean06stand' to: 'player/maskingright/tlgsprintmean06'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_SprintToStop'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturningaround' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintmean06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintmean06'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintMean06'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintmean06' to: 'player/maskingright/tlgsprintmean06stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+
+===== leg: tlgsprintfirst06_sprint (TLG_animlog_tlgsprintfirst06_sprint.txt) =====
+    [variable] : added -> 'bdostomp', value: 'false'. 
+     [variable] : added -> 'combatspeed', value: '1.0'. 
+     [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.014310253'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintfirst06'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintfirst06stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintfirst06stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintfirst06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'sprint' to: 'idle'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturningaround' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintfirst06'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintFirst06'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintfirst06stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintfirst06stand' to: 'player/maskingright/tlgsprintfirst06'. 
+     [variable] : updated -> 'isturningaround' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintfirst06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintfirst06'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintFirst06'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintfirst06' to: 'player/maskingright/tlgsprintfirst06stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+
+===== leg: tlgsprintfirst06_sprint_back (TLG_animlog_tlgsprintfirst06_sprint_back.txt) =====
+    [variable] : added -> 'blockmovement', value: 'false'. 
+     [variable] : added -> 'sneaking', value: 'false'. 
+     [variable] : added -> 'initiateattack', value: 'false'. 
+     [variable] : added -> 'ismoving', value: 'false'. 
+     [variable] : added -> 'isrunning', value: 'false'. 
+     [variable] : added -> 'run', value: 'false'. 
+     [variable] : added -> 'issprinting', value: 'false'. 
+     [variable] : added -> 'sprint', value: 'false'. 
+     [variable] : added -> 'isstrafing', value: 'false'. 
+     [variable] : added -> 'walkspeed', value: '0.8'. 
+     [variable] : added -> 'walkinjury', value: '0.0'. 
+     [variable] : added -> 'runspeed', value: '0.65'. 
+     [variable] : added -> 'idlespeed', value: '0.01'. 
+     [variable] : added -> 'deltax', value: '0.0'. 
+     [variable] : added -> 'deltay', value: '0.0'. 
+     [variable] : added -> 'windspeed', value: '0.0'. 
+     [variable] : added -> 'windforce', value: '0.9928032'. 
+     [variable] : added -> 'ipx', value: '0.0'. 
+     [variable] : added -> 'ipy', value: '0.0'. 
+     [variable] : added -> 'attacktype', value: ''. 
+     [variable] : added -> 'attackfrombehind', value: 'false'. 
+     [variable] : added -> 'bundervehicle', value: 'false'. 
+     [variable] : added -> 'reanimatetimer', value: '0.0'. 
+     [variable] : added -> 'isattacking', value: 'false'. 
+     [variable] : added -> 'beensprintingfor', value: '0.0'. 
+     [variable] : added -> 'bannedattacking', value: 'false'. 
+     [variable] : added -> 'meleepressed', value: 'false'. 
+     [variable] : added -> 'grapplepressed', value: 'false'. 
+     [variable] : added -> 'canletgoofgrappled', value: 'true'. 
+     [variable] : added -> 'weapon', value: ''. 
+     [variable] : added -> 'bclient', value: 'false'. 
+     [variable] : added -> 'bremote', value: 'false'. 
+     [variable] : added -> 'isperforminganaction', value: 'false'. 
+     [variable] : added -> 'bshoveaiming', value: 'false'. 
+     [variable] : added -> 'bgrappleaiming', value: 'false'. 
+     [variable] : added -> 'attackvariationx', value: '0.0'. 
+     [variable] : added -> 'attackvariationy', value: '0.0'. 
+     [variable] : added -> 'sneaklimpspeedscale', value: '1.0'. 
+     [variable] : added -> 'pressedrunbutton', value: 'false'. 
+     [variable] : added -> 'pressedmovement', value: 'false'. 
+     [variable] : added -> 'righthandmask', value: 'tlgsprintfirst06'. 
+     [variable] : added -> 'performingaction', value: ''. 
+     [variable] : added -> 'lootposition', value: ''. 
+     [variable] : added -> 'rangedweapon', value: 'false'. 
+     [variable] : added -> 'battackfrombehind', value: ''. 
+     [variable] : added -> 'collided', value: ''. 
+     Character.currentState changed from 'null' to: 'IdleState'. 
+     [layer][0] activated -> animstate: 'player/idle/Idle'. 
+     [layer][0] changed -> animstate from '' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] activated -> animstate: 'player/maskingright/tlgsprintfirst06stand'. 
+     [layer][1] changed -> animstate from '' to: 'player/maskingright/tlgsprintfirst06stand'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintfirst06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'sprint' to: 'idle'. 
+     [variable] : updated -> 'ismoving' changed from 'false' to: 'true'. 
+     Character.currentState changed from 'IdleState' to: 'PlayerMovementState'. 
+     [layer][0] changed -> animstate from 'player/idle/Idle' to: 'player/run/defaultRun'. 
+     [layer][0] [active_nodes] : activated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Run'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_IdleToRun'. 
+     [variable] : updated -> 'isturning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturning90' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'isturningaround' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'previousstate' changed from 'idle' to: 'run'. 
+     [variable] : updated -> 'isrunning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'run' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'issprinting' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'sprint' changed from 'false' to: 'true'. 
+     [layer][0] changed -> animstate from 'player/run/defaultRun' to: 'player/sprint/defaultSprint'. 
+     [layer][0] [active_nodes] : activated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Sprint'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintfirst06'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLGSprintFirst06'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_RunLightLimpR'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Walk'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkLightLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpL'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_IdleToRun'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_WalkHeavyLimpR'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintfirst06stand'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLG_CarryVessel'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintfirst06stand' to: 'player/maskingright/tlgsprintfirst06'. 
+     [layer][0] [active_nodes] : deactivated -> 'Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_SprintToStop'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Idle_HeavyBreathing'. 
+     [variable] : updated -> 'isturningaround' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'isturning90' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'bmoving' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'previousstate' changed from 'run' to: 'sprint'. 
+     [variable] : updated -> 'ismoving' changed from 'true' to: 'false'. 
+     Character.currentState changed from 'PlayerMovementState' to: 'IdleState'. 
+     [layer][0] changed -> animstate from 'player/sprint/defaultSprint' to: 'player/idle/Idle'. 
+     [layer][0] [active_nodes] : activated -> 'Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_Idle_HeavyBreathing'. 
+     [layer][0] [anim_tracks] : activated -> 'Bob_SprintToStop'. 
+     [layer][1] [active_nodes] : activated -> 'tlgsprintfirst06stand'. 
+     [layer][1] [anim_tracks] : activated -> 'Bob_TLG_CarryVessel'. 
+     [variable] : updated -> 'isrunning' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'run' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'issprinting' changed from 'true' to: 'false'. 
+     [variable] : updated -> 'sprint' changed from 'true' to: 'false'. 
+     [layer][1] [active_nodes] : deactivated -> 'tlgsprintfirst06'. 
+     [layer][1] [anim_tracks] : deactivated -> 'Bob_TLGSprintFirst06'. 
+     [layer][1] changed -> animstate from 'player/maskingright/tlgsprintfirst06' to: 'player/maskingright/tlgsprintfirst06stand'. 
+     [layer][0] [active_nodes] : deactivated -> 'defaultSprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Sprint'. 
+     [layer][0] [anim_tracks] : deactivated -> 'Bob_Run'. 
+     [variable] : updated -> 'bmoving' changed from 'false' to: 'true'. 
+     [variable] : updated -> 'hastimedactions' changed from 'true' to: 'false'. 
+ 
+

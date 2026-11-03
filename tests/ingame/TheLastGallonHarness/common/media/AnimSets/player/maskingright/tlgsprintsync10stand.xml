@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sprint carry trial (request sp-rtmps): the shipped standing carry clip,
+     Bob_TLG_CarryVessel, for the trial item whose primaryAnimMask is tlgsprintsync10
+     at every other gait. Harness mod only, never packaged. -->
+<animNode>
+	<m_Name>tlgsprintsync10stand</m_Name>
+	<m_Priority>10</m_Priority>
+	<m_AnimName>Bob_TLG_CarryVessel</m_AnimName>
+	<m_BlendTime>0.30</m_BlendTime>
+	<m_SpeedScale>1.00</m_SpeedScale>
+	<m_Conditions x_name="702d6717-b035-43ed-be95-a7a0ce87e8a2">
+		<m_Name>RightHandMask</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>tlgsprintsync10</m_Value>
+	</m_Conditions>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01</boneName>
+		<weight>0.00</weight>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

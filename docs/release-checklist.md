@@ -40,9 +40,11 @@ decision and is **not** authorised by any task in this repository.
 * The fermentation vessel carried: the mod puts it down before any Lua
   action that plays its own animation (run 99), since that animation
   replaces the carry pose. Walking, running, sprinting and sneaking keep
-  it in both hands with the pose on (run 108), and crouched it has a
-  pose of its own that holds it upright (run 113). Sprinting still tilts
-  the barrel with the runner's lean (the standing clip). Not covered and
+  it in both hands with the pose on (run 108). Crouched it has a pose of
+  its own that holds it upright (run 113), and so has sprinting, crouched
+  or not (run 117). Running still tilts the barrel with the runner's lean
+  and swings it through the stride (the standing clip; run 117's
+  pictures). Not covered and
   not run: animations the game starts without a Lua action (opening
   doors, shoving, emotes); multiplayer with the carry pose (a multiplayer
   client asks the server to put it down, as the vehicle entry does).
@@ -78,8 +80,9 @@ tools\run-sp-harness.ps1 -Mode pose-freeze                      # the game's bot
 tools\run-sp-harness.ps1 -Mode vessel-carry                     # the shipped vessel carried in both arms: front, side, walking, an action
 tools\run-sp-harness.ps1 -Mode vessel-carry -ModSource "$PWD\dist\TheLastGallon\Contents\mods\TheLastGallon"  # the same from the package's item tree (after tools\package.ps1)
 tools\run-sp-harness.ps1 -Mode vessel-actions                   # the vessel and a generator through a real loot, the vessel unequipped for a bat
-tools\run-sp-harness.ps1 -Mode vessel-gaits                     # the vessel carried walking, running, sprinting, sneaking, running crouched, crouched
+tools\run-sp-harness.ps1 -Mode vessel-gaits                     # the vessel carried walking, running, sprinting, sneaking, running and sprinting crouched, crouched
 tools\run-sp-harness.ps1 -Mode pose-crouch                      # crouched carry candidates (harness clips Bob_TLGCrouch*), crouched still, walking, running
+tools\run-sp-harness.ps1 -Mode pose-sprint                      # sprint carry candidates (harness clips Bob_TLGSprint*), sprinting the row both ways
 tools\run-sp-harness.ps1 -Mode manual                           # the field manual: its loot lists, manuals rolled from them, one read through Inspect
 tools\run-sp-harness.ps1 -Mode manual-italian                   # the same in a client set to Italian
 tools\run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60      # a campfire and a barbecue lit from their menus, a fermenter beside each, a trip away

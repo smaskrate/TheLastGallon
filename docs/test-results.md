@@ -2379,7 +2379,10 @@ Launch 108: **21/0**.
   her hands. Sprinting, it tilts forward with her lean. Crouched, still,
   walking or running, it tips forward, its lid turned out and its bottom
   swung back between her knees, and her hips and belly sink into its
-  back. Her hands stay on its sides throughout.
+  back. Her hands stay on its sides throughout. (Corrected after launch
+  117: running tilts the barrel too and swings it through the stride.
+  Launch 117's pictures show it plainly, and read again, launch 113's
+  show it as well.)
 - Why (corrected after launch 110): the game reparents a player's
   `Bip01_Prop1` under the right hand and the clavicles under
   `Bip01_Spine1` (BC `IsoPlayer.onAnimPlayerCreated`), so the barrel turns
@@ -2464,7 +2467,7 @@ Launch 113, `-Mode vessel-gaits` with the shipped files: **23/0**.
 - The pictures: crouched, still or moving, the barrel stands upright in
   front of her, her hands on its upper sides and the lid below her chin.
   Walking, running and sprinting look as in launch 108; sprinting still
-  tilts the barrel with her lean.
+  tilts the barrel with her lean (and so does running: see launch 117).
 - The vessel stayed in both hands through every leg. The console had no
   exception.
 
@@ -2476,8 +2479,8 @@ Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run109_crouch_trials.txt`,
 and `…_run113_vessel_gaits_sheet.jpg`; and the five legs' animator logs,
 `2026-11-03_run113_animlogs_gaits.txt`.
 
-Not checked: multiplayer; a sprint pose of its own (not made); the
-crouch through the keyboard's own key.
+Not checked: multiplayer; a sprint pose of its own (not made then; see
+launches 116–117); the crouch through the keyboard's own key.
 
 ## 2026-11-03 — RT-SP client harness, launches 114–115 (the zip with the crouched pose)
 
@@ -2503,3 +2506,95 @@ The crouched legs played `tlgcarryvesselsneak` at every shot. Crouching
 still switched to `tlgcarryvesselsneakidle`, and standing up switched
 back to `tlgcarryvessel`. The console had no exception.
 Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run115_vessel_gaits_packaged.txt`.
+
+## 2026-11-03 — RT-SP client harness, launches 116–117 (a sprint carry pose)
+
+After launch 113 the user asked for a sprint pose made the same way as
+the crouched one. That way keys the arms for one frame of the game's
+clip, and the crouch clips' chests move under 10° through a stride. The
+sprint's does not: `Bob_Sprint.x` turns `Bip01_Spine1` up to 76° from its
+first frame, and its first frame stands 36° from the stride's mean. The
+lean holds at 41°, while the shoulder line's yaw and roll swing ±25° and
+±18°. Two engine facts, read in the bytecode, decided how to answer it
+(engine capabilities, animation tooling):
+- A looping track in a sub-layer runs at the time fraction of the body
+  layer's sync track (`AnimLayer.updateInternal` and `findSyncTrack`;
+  `m_SyncTrackingEnabled` is true unless a pose file says otherwise).
+- A reparented bone takes its offset from the clip's own pose at the
+  track's current time (`AnimationPlayer.getTrackTransform`).
+
+So a clip as long as the body's, keyed against each of its keys, should
+hold the arms in step with the stride. The retarget tool gained `--sync`
+(one key at each of the body clip's key times, its other bones carrying
+the body clip's own keys) and `--body-key N` (the pose at its N-th key
+time). Its default output is unchanged: the three shipped carry clips
+rebuild byte for byte (`ECC4C413…`, `658AC930…`, `FCBB621A…`).
+
+Launch 116. Command: `tools/run-sp-harness.ps1 -Mode pose-sprint` (new;
+request `sp-rtmps`, no save). Each candidate is a harness item with the
+shipped hand model. Its own pose files play the candidate clip while the
+character sprints and moves (the conditions planned for the vessel), and
+the shipped standing clip otherwise. Each sprints the views row both
+ways, photographed eight times between 30 and 65 percent of the way:
+about 3 tiles, more than one 0.67 s stride.
+
+| Candidate | Keyed for (all from `Bob_Sprint.x`, arms in their standing directions, 0.17 forward) | Down | The pictures |
+| --- | --- | --- | --- |
+| first frame | its first frame, as the crouch clips were | 0.06 | the barrel tilts and swings hardest |
+| mean key | its key 6, 1.6° from the stride's mean chest | 0.06 | it swings on either side of upright |
+| per key | each of its 21 keys (`--sync`) | 0.06 | upright and steady in all 16 shots; the rim at her chin |
+| per key | the same | 0.10 | upright and steady in all 16 shots; the lid below her chin, the hands on its upper sides |
+
+Result: **33/0**. Every shot was taken sprinting, with the candidate's
+node active, and the standing node came back at the end of each leg.
+Only the game's syncing the hand clip to the body's would keep the
+per-key clips steady while the others swing. Chosen: the per-key clip,
+0.10 down.
+
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run116_sprint_trials.txt`
+was rebuilt from the game's archived debug log (its `[TLGH]` lines, the
+logger's trailing period removed): the next launch cleared the harness's
+own result file before it was copied. Its last 60 lines match the copy
+the launcher printed. Also the eight legs' animator logs,
+`2026-11-03_run116_animlogs_sprint_trials.txt`, and the sheet,
+`2026-11-03_run116_sprint_trials_sheet.jpg`.
+
+Shipped (D-025, third amendment): `Bob_TLG_CarryVesselSprint.x`, keyed
+against each key of `Bob_Sprint`. It plays through
+`tlgcarryvesselsprint.xml`: the vessel's mask, `isSprinting` and
+`isMoving` true, three conditions, more than the standing node's one and
+the crouched node's two. `isMoving` keeps it apart from the crouched
+still node. Provenance is in `art-src/carry/PROVENANCE.md`.
+
+Launch 117, `-Mode vessel-gaits` with the shipped files, now with a leg
+sprinting crouched and eight shots on each sprinting leg: **26/0**.
+- Walking (1.91 tiles a second) and running (2.98) played the standing
+  node; sneaking (1.60) and running crouched (2.45) the crouched node, as
+  in launch 113.
+- Sprinting (3.17) played `tlgcarryvesselsprint` at all eight shots, the
+  body going from `player/run/defaultRun` to `player/sprint/defaultSprint`.
+- Sprinting crouched (3.52): sprinting and still sneaking at all eight
+  shots. The body went from `player/run/sneakRun` to the standing sprint,
+  `player/sprint/defaultSprint`, and the carry from
+  `tlgcarryvesselsneak` to `tlgcarryvesselsprint`.
+- Crouching still switched to `tlgcarryvesselsneakidle`, and standing up
+  back to `tlgcarryvessel`.
+- The pictures: sprinting, standing or crouched, the barrel stands
+  upright and steady in front of her at all sixteen shots, the lid below
+  her chin and her hands on its sides. Walking and the crouched gaits
+  look as in launch 113. Running, the barrel tilts with her lean and
+  swings through the stride: launch 108's note said otherwise and is
+  corrected above.
+- The vessel stayed in both hands through every leg. The console had no
+  exception.
+
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run117_vessel_gaits.txt`,
+the six legs' animator logs `2026-11-03_run117_animlogs_gaits.txt` and the
+sheet `2026-11-03_run117_vessel_gaits_sheet.jpg`.
+
+Not checked: multiplayer; the keys pressed on a keyboard (the harness
+sets the flags they set); the low crouch near walls; a running pose of
+its own (not made, so running still tilts the barrel); what the vessel's
+weight does to a normal character (the harness has god mode and
+unlimited carry); a `WalkSpeed` other than 0.8, which changes the body's
+blend of `Bob_Sprint` and `Bob_Run`.

@@ -20,11 +20,12 @@ its usual Bip01_Prop1 attachment only. A player's animation player
 reparents bones (BC IsoPlayer.onAnimPlayerCreated): the clavicles under
 Bip01_Spine1, Bip01_Prop1 under Bip01_R_Hand, Bip01_Prop2 under
 Bip01_L_Hand. Such a bone keeps the offset to its new parent that the
-clip's own pose gives it (run 110), so the clip's other bones must hold
-the body pose the arms were keyed for, and the held item stays where the
-right hand takes it.
+clip's own pose gives it at the track's time (BC
+AnimationPlayer.getTrackTransform; run 110), so the clip's other bones
+must hold the body pose the arms were keyed for, and the held item stays
+where the right hand takes it.
 
-  blender -b --factory-startup --python tools/blender/pz_arms.py -- <clip.fbx> <out.x> <ClipName> [step] [forward] [down] [clip2.fbx] [blend] [--body <clip.x>] [--arms chest|world]
+  blender -b --factory-startup --python tools/blender/pz_arms.py -- <clip.fbx> <out.x> <ClipName> [step] [forward] [down] [clip2.fbx] [blend] [--body <clip.x>] [--arms chest|world] [--body-key N | --sync]
 
 writes every step-th frame (default 2) at 4800 ticks per second, 160 per
 frame of 30 fps; the other bones hold the first frame of Bob_Idle.x (of
@@ -40,13 +41,27 @@ the standing body's axes, so it stays upright. --arms chest (the default)
 reads the arm directions in that pose's chest, so the arms bend with it;
 --arms world reads them in the standing chest, so they keep their
 standing directions from wherever the shoulders are.
+
+--body-key N takes the body pose at the clip's N-th key time instead of
+its first frame. --sync keys the clip for the whole body clip, one key at
+each of its key times, each against the body pose at that time, with the
+Mixamo frame at the same fraction of its range (step is unused). The
+other bones carry the body clip's own keys, so the clip runs as long as
+it. A looping track in a sub-layer is moved every update to the time
+fraction of the parent layer's sync track (BC AnimLayer.updateInternal
+and findSyncTrack; a node's m_SyncTrackingEnabled defaults to true), and
+the masking layer's parent is the body's, so the arms follow the body's
+cycle. The sprint's chest twists through a stride, up to 76 degrees from
+its first frame in Bob_Sprint.x (under 10 in the crouch clips), which
+one frame cannot answer.
 """
+import bisect
 import os
 import re
 import sys
 
 import bpy
-from mathutils import Matrix, Vector
+from mathutils import Matrix, Quaternion, Vector
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import pz_x  # noqa: E402
@@ -124,27 +139,80 @@ def _chest(world):
     return _frame(p["Bip01_L_UpperArm"] - p["Bip01_R_UpperArm"], p["Bip01_Neck"] - p["Bip01_Spine1"], -1.0)
 
 
+def _sample(track, t, rot):
+    """A key track's value at tick t: its neighbouring keys interpolated
+    (rotations slerped), held past either end."""
+    i = bisect.bisect_right([k[0] for k in track], t) - 1
+    if i < 0:
+        return track[0][1]
+    if i >= len(track) - 1 or track[i][0] == t:
+        return track[i][1]
+    (t0, v0), (t1, v1) = track[i], track[i + 1]
+    f = (t - t0) / float(t1 - t0)
+    if rot:
+        q = Quaternion(v0).slerp(Quaternion(v1), f)
+        return (q.w, q.x, q.y, q.z)
+    return tuple(a + (b - a) * f for a, b in zip(v0, v1))
+
+
+def _pose_at(frames, keys, t):
+    """World matrices of a game clip's bones at tick t, from its keys (the
+    file's frame for a bone without rotation and position keys)."""
+    out = []
+    for name, parent, rows in frames:
+        k = keys.get(name, {})
+        if "R" in k and "T" in k:
+            m = Quaternion(_sample(k["R"], t, True)).to_matrix().transposed().to_4x4()
+            m.translation = Vector(_sample(k["T"], t, False))
+            rows = [list(r) for r in m.transposed()]
+        out.append((name, parent, rows))
+    return pz_x.world_matrices(out)
+
+
+def _key_times(keys):
+    return sorted({k[0] for tracks in keys.values() for track in tracks.values() for k in track})
+
+
 def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, fbx2=None, blend=0.5, body=None,
-             arms="chest"):
+             arms="chest", body_key=None, sync=False):
     """With fbx2 (the same clip with another arm spacing, frame for frame),
     each direction is blended: (1 - blend) of fbx's, blend of fbx2's. With
-    body (a game clip), the clip is keyed for that clip's first frame
-    (module docstring)."""
+    body (a game clip), the clip is keyed for that clip's first frame, its
+    body_key-th key time, or with sync each of its key times (module
+    docstring)."""
     ref = pz_x.parse_frames(REFERENCE)
     parent = {n: p for n, p, _ in ref}
     local_ref = {n: pz_x.local_matrix(rows) for n, _, rows in ref}
     world_ref = pz_x.world_matrices(ref)
-    world_body = pz_x.world_matrices(pz_x.parse_frames(body)) if body else world_ref
-    world_arms = world_ref if arms == "world" else world_body
+    hold = None
+    # The arm bones' offsets from their parents: Bob_Idle's, which the
+    # shipped clips were built with; with --body-key or --sync the body
+    # clip's own (its clavicles sit up to 0.011 from Bob_Idle's), which
+    # the written file carries.
+    offsets = {b: m.translation for b, m in local_ref.items()}
+    if body and (sync or body_key is not None):
+        body_frames, body_keys = pz_x.parse_frames(body), pz_x.parse_animation(body)[2]
+        times = _key_times(body_keys)
+        if body_key is not None:
+            hold = times[body_key]
+        world_body = _pose_at(body_frames, body_keys, hold or 0)
+        offsets.update({b: Vector(k["T"][0][1]) for b, k in body_keys.items() if "T" in k})
+    else:
+        world_body = pz_x.world_matrices(pz_x.parse_frames(body)) if body else world_ref
     prop_local = {n: pz_x.local_matrix(rows) for n, _, rows in pz_x.parse_frames(PROP_REFERENCE)}["Bip01_Prop1"]
     p = {n: world_ref[n].translation for n in world_ref}
     left_p, up_p, fwd_p = _chest(world_ref)
-    left_a, up_a, fwd_a = _chest(world_arms)
 
     bpy.ops.wm.read_factory_settings(use_empty=True)
     arm, prefix = _import(fbx)
     second = _import(fbx2) if fbx2 else None
     first, last = (int(v) for v in arm.animation_data.action.frame_range)
+    if sync:
+        samples = [(t, first + int(round(t * (last - first) / float(times[-1])))) for t in times]
+        end = times[-1]
+    else:
+        samples = [((f - first) * TICKS_PER_FRAME, f) for f in range(first, last + 1, step)]
+        end = (last - first) * TICKS_PER_FRAME
 
     chains = {s: ["Bip01_%s_Clavicle" % s, "Bip01_%s_UpperArm" % s, "Bip01_%s_Forearm" % s, "Bip01_%s_Hand" % s]
               for s, _ in SIDES}
@@ -152,8 +220,12 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
                    (parent.get(n) or "").startswith("Bip01_%s_Finger" % s)] for s, _ in SIDES}
     keyed = [b for s, _ in SIDES for b in chains[s] + fingers[s]] + ["Bip01_Prop1"]
     keys = {b: [] for b in keyed}
-    report = []
-    for f in range(first, last + 1, step):
+    report, held = [], []
+    for tick, f in samples:
+        if sync:
+            world_body = _pose_at(body_frames, body_keys, tick)
+        world_arms = world_ref if arms == "world" else world_body
+        left_a, up_a, fwd_a = _chest(world_arms)
         bpy.context.scene.frame_set(f)
         vec = _vectors(_mixamo_positions(arm, prefix), left_a, up_a, fwd_a)
         if second:
@@ -177,12 +249,12 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
             for bone, rot in zip(chains[s], targets):
                 pw = world[parent[bone]]
                 lrot = pw.to_3x3().transposed() @ rot
-                local = Matrix.Translation(local_ref[bone].translation) @ lrot.to_4x4()
+                local = Matrix.Translation(offsets[bone]) @ lrot.to_4x4()
                 world[bone] = pw @ local
-                keys[bone].append((f, lrot))
+                keys[bone].append((tick, lrot))
             for bone in fingers[s]:
                 world[bone] = world[parent[bone]] @ local_ref[bone]
-                keys[bone].append((f, local_ref[bone].to_3x3()))
+                keys[bone].append((tick, local_ref[bone].to_3x3()))
             hands[s] = world["Bip01_%s_Hand" % s].translation
         # The held item: between the hands and a little forward, turned as
         # the bag pose turns it, then a quarter about the body's up. These
@@ -194,8 +266,9 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
             prop_world = (turn @ prop_world.to_3x3()).to_4x4()
         prop_world.translation = mid
         prop = world_body["Bip01"].inverted() @ prop_world
-        keys["Bip01_Prop1"].append((f, prop.to_3x3(), prop.translation.copy()))
-        if f == first:
+        keys["Bip01_Prop1"].append((tick, prop.to_3x3(), prop.translation.copy()))
+        held.append((mid, hands["L"] - mid, hands["R"] - mid, world_body["Bip01_Neck"].translation - mid))
+        if tick == samples[0][0]:
             chest = p["Bip01_Spine1"].dot(fwd_p)
             report.append("PZA hands L %s R %s apart %.3f; item height over pelvis %.3f; forward of Bip01_Spine1: "
                           "hands %.3f, item %.3f" % (
@@ -213,7 +286,18 @@ def retarget(fbx, out_path, clip_name, step=2, forward=PROP_FORWARD, down=0.0, f
                                       b["Bip01_Pelvis"], b["Bip01_Spine1"], b["Bip01_Neck"], knee,
                                       (hands["L"] + hands["R"]) * 0.5, mid)
                                       for v in ((pt - b["Bip01_L_Foot"]).dot(up_p), (pt - b["Bip01_L_Foot"]).dot(fwd_p))]))
-    _write(out_path, clip_name, keys, first, last, body or REFERENCE)
+
+    def spread(vs):
+        mean = sum(vs, Vector()) / len(vs)
+        return max((v - mean).length for v in vs)
+
+    neck = [(n.dot(up_p), n.dot(fwd_p)) for _, _, _, n in held]
+    report.append("PZA over %d keys (%d ticks): the item moves up to %.3f from its mean; against the item the left "
+                  "hand moves up to %.3f, the right %.3f; the neck over the item %.3f to %.3f, in front of it %.3f to "
+                  "%.3f" % (len(held), end, spread([h[0] for h in held]), spread([h[1] for h in held]),
+                            spread([h[2] for h in held]), min(u for u, _ in neck), max(u for u, _ in neck),
+                            min(fw for _, fw in neck), max(fw for _, fw in neck)))
+    _write(out_path, clip_name, keys, end, body or REFERENCE, hold, sync)
     for r in report:
         print(r)
     print("PZA wrote %s: %d frames of %s, %d bones keyed" % (out_path, len(keys["Bip01_Prop1"]), clip_name, len(keys)))
@@ -235,14 +319,14 @@ def _key_lines(kind, keys):
     return out
 
 
-def _write(out_path, clip_name, keys, first, last, body=REFERENCE):
-    """The keyed bones' keys; every other bone, and the file's frames, hold
-    the first frame of body."""
+def _write(out_path, clip_name, keys, end, body=REFERENCE, hold=None, copy=False):
+    """The keyed bones' keys, at their ticks, to tick end; every other bone,
+    and the file's frames, hold the first frame of body (its pose at tick
+    hold, with hold), or with copy carry body's own keys."""
     with open(body, "r", encoding="latin-1") as f:
         text = f.read()
     header = text[:re.search(r"^AnimationSet\s", text, re.M).start()]
     _, _, template = pz_x.parse_animation(body)
-    end = (last - first) * TICKS_PER_FRAME
     lines = ["AnimationSet %s {" % clip_name]
     for bone, tkeys in template.items():
         lines += [" Animation {", "  ", "  { %s }" % bone, ""]
@@ -251,17 +335,22 @@ def _write(out_path, clip_name, keys, first, last, body=REFERENCE):
             for entry in keys[bone]:
                 q = _quat(entry[1], prev)
                 prev = q
-                rows.append(((entry[0] - first) * TICKS_PER_FRAME, (q.w, q.x, q.y, q.z)))
+                rows.append((entry[0], (q.w, q.x, q.y, q.z)))
             t0 = tkeys["T"][0][1] if "T" in tkeys else (0.0, 0.0, 0.0)
-            trows = [((e[0] - first) * TICKS_PER_FRAME, tuple(e[2])) for e in keys[bone]] if len(keys[bone][0]) > 2 \
-                else [(0, t0), (end, t0)]
+            trows = [(e[0], tuple(e[2])) for e in keys[bone]] if len(keys[bone][0]) > 2 else [(0, t0), (end, t0)]
             lines += _key_lines(1, [(0, (1.0, 1.0, 1.0)), (end, (1.0, 1.0, 1.0))]) + [""]
             lines += _key_lines(0, rows) + [""] + _key_lines(2, trows)
         else:
             r0 = tkeys["R"][0][1] if "R" in tkeys else (1.0, 0.0, 0.0, 0.0)
             t0 = tkeys["T"][0][1] if "T" in tkeys else (0.0, 0.0, 0.0)
+            if hold is not None:
+                r0 = _sample(tkeys["R"], hold, True) if "R" in tkeys else r0
+                t0 = _sample(tkeys["T"], hold, False) if "T" in tkeys else t0
+            rrows, trows = [(0, r0), (end, r0)], [(0, t0), (end, t0)]
+            if copy:
+                rrows, trows = tkeys.get("R", rrows), tkeys.get("T", trows)
             lines += _key_lines(1, [(0, (1.0, 1.0, 1.0)), (end, (1.0, 1.0, 1.0))]) + [""]
-            lines += _key_lines(0, [(0, r0), (end, r0)]) + [""] + _key_lines(2, [(0, t0), (end, t0)])
+            lines += _key_lines(0, rrows) + [""] + _key_lines(2, trows)
         lines += [" }", ""]
     lines.append("}")
     with open(out_path, "w", encoding="latin-1", newline="\n") as f:
@@ -271,12 +360,18 @@ def _write(out_path, clip_name, keys, first, last, body=REFERENCE):
 if __name__ == "__main__":
     args = sys.argv[sys.argv.index("--") + 1:]
     named = {}
-    for flag in ("--body", "--arms"):
+    for flag in ("--body", "--arms", "--body-key"):
         if flag in args:
             i = args.index(flag)
             named[flag[2:]] = args[i + 1]
             del args[i:i + 2]
+    sync = "--sync" in args
+    if sync:
+        args.remove("--sync")
+    if (sync or "body-key" in named) and "body" not in named:
+        sys.exit("pz_arms: --sync and --body-key need --body")
     retarget(args[0], args[1], args[2], int(args[3]) if len(args) > 3 else 2,
              float(args[4]) if len(args) > 4 else PROP_FORWARD, float(args[5]) if len(args) > 5 else 0.0,
              args[6] if len(args) > 6 else None, float(args[7]) if len(args) > 7 else 0.5,
-             named.get("body"), named.get("arms", "chest"))
+             named.get("body"), named.get("arms", "chest"),
+             int(named["body-key"]) if "body-key" in named else None, sync)

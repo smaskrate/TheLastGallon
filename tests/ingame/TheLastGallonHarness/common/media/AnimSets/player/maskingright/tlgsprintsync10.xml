@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Sprint carry trial (request sp-rtmps): Bob_TLGSprintSync10, the halfway blend of the
+     user's two Mixamo clips keyed by tools/blender/pz_arms.py with its sync option for the whole of the game's Bob_Sprint (a key at each of its 21 key times, each against the body pose at that time),
+     the arms in their standing directions and the item upright, 0.17 forward of the
+     hands and 0.10 down. Selected when an item's primaryAnimMask is tlgsprintsync10
+     and the character sprints and moves, the conditions planned for the vessel's own
+     sprint node. Harness mod only, never packaged. -->
+<animNode>
+	<m_Name>tlgsprintsync10</m_Name>
+	<m_Priority>10</m_Priority>
+	<m_AnimName>Bob_TLGSprintSync10</m_AnimName>
+	<m_BlendTime>0.15</m_BlendTime>
+	<m_SpeedScale>1.00</m_SpeedScale>
+	<m_Conditions x_name="956d2b8d-6f64-4a3d-863e-c20ed9487519">
+		<m_Name>RightHandMask</m_Name>
+		<m_Type>STRING</m_Type>
+		<m_Value>tlgsprintsync10</m_Value>
+	</m_Conditions>
+	<m_Conditions x_name="e79a5bb2-67d3-419b-b84b-78d4e22a3baa">
+		<m_Name>isSprinting</m_Name>
+		<m_Type>BOOL</m_Type>
+		<m_Value>true</m_Value>
+	</m_Conditions>
+	<m_Conditions x_name="d19e5c07-9a13-463e-85ea-59e0ea0c9b91">
+		<m_Name>isMoving</m_Name>
+		<m_Type>BOOL</m_Type>
+		<m_Value>true</m_Value>
+	</m_Conditions>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01</boneName>
+		<weight>0.00</weight>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_R_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_L_Clavicle</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop1</boneName>
+	</m_SubStateBoneWeights>
+	<m_SubStateBoneWeights>
+		<boneName>Bip01_Prop2</boneName>
+	</m_SubStateBoneWeights>
+</animNode>

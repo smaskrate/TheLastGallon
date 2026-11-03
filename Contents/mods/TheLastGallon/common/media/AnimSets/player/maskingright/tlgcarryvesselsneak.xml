@@ -4,7 +4,8 @@
      it has one condition more than tlgcarryvessel.xml, so the game plays it
      instead whenever the character sneaks (BC AnimState.getAnimNodes plays
      the matching nodes with the most conditions); tlgcarryvesselsneakidle.xml
-     takes over when she stops. A player's arms hang from Bip01_Spine1 and the
+     takes over when she stops, and tlgcarryvesselsprint.xml while
+     sprinting. A player's arms hang from Bip01_Spine1 and the
      vessel's bone from the right hand (BC IsoPlayer.onAnimPlayerCreated), so
      the standing clip tips the vessel with the crouched chest (run 108). This
      clip, Bob_TLG_CarryVesselSneak (media/anims_X/Bob), holds the same arms

@@ -592,7 +592,8 @@ listed with their replacement.
   action's prop bone, tilted up beside the head (see the amendment).
   Placing the vessel plays no animation and keeps the pose. Running,
   sprinting and sneaking keep it too (run 108), but crouched the barrel
-  tipped forward and the torso sank into it (see the second amendment).
+  tipped forward and the torso sank into it (see the second amendment),
+  and running and sprinting tilt it with the lean (see the third).
   Multiplayer is not run. The clip ships with Mixamo's terms recorded
   (`art-src/carry/PROVENANCE.md`); the source FBX files, which hold
   Mixamo's character, stay out of the repository and the package.
@@ -627,6 +628,25 @@ listed with their replacement.
   forward brought her face back to the lid. Verified with the gait mode
   (run 113), and again from the package's item tree after the zip of
   `3b3ed77` installed clean (runs 114–115).
+* Third amendment (2026-11-03, runs 116–117): sprinting, crouched or not,
+  the vessel has a pose of its own. The user asked for it after run 113,
+  where sprinting still tilted the barrel. `tlgcarryvesselsprint.xml`
+  (the vessel's mask, `isSprinting` and `isMoving` true) outranks the
+  standing and crouched nodes. Its clip is made from the same two Mixamo
+  clips, but the crouch method does not carry over. The sprint twists
+  the chest through each stride, up to 76° from the clip's first frame,
+  and the game runs a looping hand clip at the body clip's time fraction
+  (BC `AnimLayer.findSyncTrack`). So the clip is as long as the game's
+  `Bob_Sprint`, keyed against each of its 21 keys (`pz_arms.py --sync`),
+  with the arms in their standing directions and the vessel upright,
+  0.17 file units in front of the hands and 0.10 down. Chosen in game
+  from four candidates (run 116): keyed for one frame, the barrel swung
+  through the stride; keyed per key, it stayed steady. At 0.06 down its
+  rim reached her chin; at 0.10 the lid sat below it. Verified with the
+  gait mode, now also sprinting crouched (run 117), where the body plays
+  the standing sprint. Running keeps the standing clip, and its pictures
+  (run 117) show the barrel tilting and swinging with the run's lean,
+  which run 108's note had missed.
 
 ## D-026 The field manual is print media found in loot
 * Decision: `TLG.ManualFuelSystems` is read as the game reads its

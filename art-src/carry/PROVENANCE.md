@@ -53,6 +53,27 @@ pose. No Mixamo bone, mesh or texture is in them. They play through
 `maskingright` folder. In-game checks: `docs/test-results.md`, launches
 109–113.
 
+Shipped for sprinting (2026-11-03), written from the same two files, in
+the same folder:
+
+| File | Bytes | SHA-256 | Body (`--body`, with `--sync`) |
+| --- | --- | --- | --- |
+| `Bob_TLG_CarryVesselSprint.x` | 192,047 | `2D36AC574CD6F1D26E4756AF0EE1217947A9EF889FB6FC20FEEB380B2D39141E` | `Bob_Sprint.x` |
+
+```
+blender -b --factory-startup --python tools/blender/pz_arms.py -- Carrying.fbx Bob_TLG_CarryVesselSprint.x Bob_TLG_CarryVesselSprint 2 0.17 0.10 CarryingBiggerArmSpace.fbx 0.5 --body <game>/media/anims_X/Bob/Bob_Sprint.x --arms world --sync
+```
+
+It runs as long as the game's sprint clip, 3200 ticks, with a key at
+each of that clip's 21 key times. Each key holds the same arms in their
+standing directions, laid from the shoulders of the sprint's pose at that
+time, from the Mixamo frame at the same fraction of the clip. The held
+item stands upright, 0.17 file units in front of the hands and 0.10 down.
+Its other bones carry the game's own `Bob_Sprint.x` keys. No Mixamo bone,
+mesh or texture is in it. It plays through `tlgcarryvesselsprint.xml` in
+the same `maskingright` folder. In-game checks: `docs/test-results.md`,
+launches 116–117.
+
 Licence, recorded 2026-11-02:
 
 * Adobe's Mixamo FAQ (helpx.adobe.com/creative-cloud/faq/mixamo-faq.html,

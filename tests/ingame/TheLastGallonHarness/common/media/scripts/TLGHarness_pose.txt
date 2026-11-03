@@ -198,4 +198,61 @@ module TLGHarness
         RequiresEquippedBothHands = true,
         Tags = base:heavyitem,
     }
+
+    /* Sprint carry trials (request sp-rtmps): the halfway blend with the
+       arms in their standing directions and the item upright, 0.17 forward
+       of the hands; keyed for each key of the game's Bob_Sprint (0.06 or
+       0.10 down), for its key nearest the stride's mean chest, or for its
+       first frame (0.06 down; tlgsprint*.xml, Bob_TLGSprint*.x). */
+    item PoseSprintSync06
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgsprintsync06,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseSprintSync10
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgsprintsync10,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseSprintMean06
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgsprintmean06,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
+
+    item PoseSprintFirst06
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 8.0,
+        Icon = TLG_Fermenter,
+        StaticModel = WaterTank,
+        WorldStaticModel = TLG.Fermenter,
+        primaryAnimMask = tlgsprintfirst06,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem,
+    }
 }

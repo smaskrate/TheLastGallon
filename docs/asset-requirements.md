@@ -126,10 +126,17 @@ runs 64–67) and the supplied fermenter's FBX (runs 68–69)
   chest (`IsoPlayer.onAnimPlayerCreated` reparents them), so a carried
   item turns with the chest. The standing clip keeps the pose on walking,
   running, sprinting and sneaking (run 108), but crouched the vessel
-  tipped into the torso. Two crouched clips keyed for the game's crouch
-  walk and crouch idle keep it upright (A30, runs 110–113). A clip keyed
-  for another body pose must hold that pose in its other bones too
+  tipped into the torso, and running and sprinting tilt it with the lean
+  (run 117). Two crouched clips keyed for the game's crouch walk and
+  crouch idle keep it upright (A30, runs 110–113). A clip keyed for
+  another body pose must hold that pose in its other bones too
   (`pz_arms.py --body`).
+* The game runs a looping hand clip at the body clip's time fraction
+  (BC `AnimLayer.findSyncTrack`), so a hand clip can follow a gait whose
+  chest moves through the stride. The sprint clip is as long as the
+  game's `Bob_Sprint` and keyed against each of its keys
+  (`pz_arms.py --sync`); it keeps the vessel upright and steady (A30,
+  runs 116–117). Running has no clip of its own yet.
 * Not verified: multiplayer.
 
 Sound playback and zombie attraction are separate (spec §22): a machine

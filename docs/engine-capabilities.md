@@ -808,10 +808,28 @@ a writer needs:
   `IsoPlayer.onAnimPlayerCreated`): both clavicles under `Bip01_Spine1`,
   `Bip01_Prop1` under `Bip01_R_Hand`, `Bip01_Prop2` under `Bip01_L_Hand`
   and both thighs under `Bip01`. A reparented bone keeps the offset to
-  its new parent that the playing clip's own pose gives it. In run 110,
-  arms keyed for a crouch, in a clip whose other bones stood upright,
-  swung wide. So a player's arms follow the chest, not the neck, and a
-  held item stays where the right hand takes it.
+  its new parent that the playing clip's own pose gives it at the track's
+  current time: `AnimationPlayer.getTrackTransform` takes the bone's model
+  transform in the track's own pose, relative to the new parent's in that
+  pose, and lays it on the new parent's current transform (BC). In run
+  110, arms keyed for a crouch, in a clip whose other bones stood
+  upright, swung wide. So a player's arms follow the chest, not the neck,
+  and a held item stays where the right hand takes it.
+- A looping track in a sub-layer runs at the time fraction of its parent
+  layer's sync track. Each update, `AnimLayer.updateInternal` moves every
+  playing, looping track whose node has `m_SyncTrackingEnabled` (true
+  unless a pose file says otherwise; the `AnimNode` constructor sets it)
+  to that fraction (`moveCurrentTimeValueToFraction`). `findSyncTrack`
+  takes the parent layer's current sync track, or without one the
+  heaviest synced track of the layer's heaviest node (BC). The first
+  sub-layer's parent is the root layer, and each further one's the one
+  before (`AdvancedAnimator.ensureLayerParents`). So a carry clip on
+  `[layer][1]` runs in step with the body's clip. Vanilla's mask clips
+  have their gait's length: `Bob_Sprint_Bag.x` has `Bob_Sprint.x`'s 3200
+  ticks and 21 keys. Run 116 showed it (below). The mod's standing and
+  crouched carry clips last 10 s, so they run through once in each cycle
+  of the body's clip (`Bob_Idle.x` and the gait clips are 3200 ticks,
+  0.67 s); their arms move at most 3° over the whole clip.
 
 `tools/blender/pz_arms.py` writes a clip from a Mixamo clip's arms on
 those terms. It can also blend in a second clip of the same animation
@@ -838,14 +856,20 @@ also reads FBX clips is untested.
 That node plays at every gait (runs 107–108): walking, running,
 sprinting, sneaking and running crouched. The game's turn animations take
 `[layer][1]` and the pose moves to `[layer][2]` while they play. The
-vessel turns with the right hand, and so with the chest. Walking and
-running, the barrel stays upright between the hands, and sprinting it
-tilts with the lean. Crouched, it tips forward and the torso sinks into
-it (run 108's pictures). At their first frames the crouch clips bend
-`Bip01_Spine1`'s direction 55–71° from `Bob_Idle`'s, against 41–45° for
-the run and sprint clips and 14° walking. The game's held bag has a node
-and a clip for each gait instead (`maskingright/runbagright.xml`,
-`walksneakbagright.xml`, `idlesneakbagright.xml` and others).
+vessel turns with the right hand, and so with the chest. Walking, the
+barrel stays upright between the hands; running and sprinting, it tilts
+with the lean and swings through the stride (run 108's pictures said
+running kept it upright; run 117's show it tilting). Crouched, it tips
+forward and the torso sinks into it (run 108's pictures). At their first
+frames the crouch clips bend `Bip01_Spine1`'s direction 55–71° from
+`Bob_Idle`'s, against 41–45° for the run and sprint clips and 14°
+walking. The run and sprint clips also twist the chest through each
+stride: their `Bip01_Spine1` turns up to 71° and 76° from its first
+frame, the shoulder line's yaw and roll swinging ±18–25° while the lean
+holds at 41–44°, against under 10° in the crouch clips. The game's held
+bag has a node and a clip for each gait instead
+(`maskingright/runbagright.xml`, `walksneakbagright.xml`,
+`idlesneakbagright.xml` and others).
 
 Since run 113 the mod has two crouched nodes as well. A state plays the
 nodes that match with the most conditions (BC `AnimState.getAnimNodes`,
@@ -862,6 +886,35 @@ vessel stands upright 0.17 file units in front of the hands and 0.12 down
 only a console line, and its node never plays (run 109: `--` inside an
 XML comment). `tools/package.ps1` and `tools/run-sp-harness.ps1` now
 reject such XML.
+
+Since run 117 the mod has a sprint node too. `tlgcarryvesselsprint.xml`
+(the vessel's `RightHandMask`, `isSprinting` and `isMoving` true) has
+more conditions than the standing and crouched nodes, so it plays
+whenever the character sprints, crouched or not; `isMoving` keeps it
+apart from the crouched still node. Crouched and sprinting, the body
+plays the standing sprint (`player/sprint/defaultSprint`, run 117's
+log), so one clip serves both. One frame cannot answer a chest that
+twists through the stride. Run 116 tried four clips, each sprinting the
+row both ways and photographed eight times across about 3 tiles (more
+than one 0.67 s stride):
+- keyed for `Bob_Sprint`'s first frame, as the crouch clips were: the
+  barrel tilted and swung hardest;
+- keyed for its key nearest the stride's mean chest (`--body-key 6`, 1.6°
+  from the mean): it swung on either side of upright;
+- keyed against each of `Bob_Sprint`'s 21 keys (`pz_arms.py --sync`),
+  0.06 or 0.10 down: it stayed upright and steady in all 16 shots of
+  each.
+
+Only the game's syncing the hand clip to the body's would hold the last
+steady while the others swing. The shipped clip
+`Bob_TLG_CarryVesselSprint` is the per-key one at 0.10 down, which put
+the lid below the chin (0.06 down put the rim at it). The arms keep
+their standing directions from the shoulders of each key, so the hands
+move up to 0.013 file units against the vessel through a stride. In the
+harness, `WalkSpeed` read 0.8 (the logs of runs 113 and 117), which by
+`defaultSprint.xml`'s blend points makes the body 60% `Bob_Sprint` and
+40% `Bob_Run`, in phase with it. Their chests differ by up to 6° of yaw,
+so the clip, keyed for `Bob_Sprint` alone, is off by about 3° there.
 
 The run and sprint toggles set the character's forced-run and
 forced-sprint flags, which Lua can set too (`setForceRun`,
@@ -1032,7 +1085,9 @@ pose: candidates in runs 109 20/12 (their pose files did not parse), 110
 **32/0** (arms keyed for a crouch swung wide), 111 and 112 **32/0**, and
 the shipped pose through the gait mode, run 113 **23/0**, then the zip
 with it installed clean, run 114 **94/0** and **14/0**, and the gait mode
-from its item tree, run 115 **23/0**. Most failures were traced to the harness
+from its item tree, run 115 **23/0**, then a sprint carry pose:
+candidates in run 116 **33/0**, and the shipped pose through the gait
+mode, run 117 **26/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
