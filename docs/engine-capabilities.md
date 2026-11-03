@@ -812,7 +812,11 @@ the equipped-item button (run 126). Two
 renders of one model gave the same icon though the large renders
 differed in a few pixels. In run 125 the pot still's equip was queued
 behind the harness's 1200-tick do-nothing action and its step timed out;
-run 126 equipped first.
+run 126 equipped first. Since run 129 the four items with no model (the
+sampling kit, the yeast starter, the stabilizer, the manual) have icons
+rendered the same way from simple shapes built for them
+(`tools/blender/pz_icon_props.py`, D-028), so every item's icon is the
+mod's own.
 
 ## Animation tooling (2026-11-02)
 
@@ -1140,7 +1144,8 @@ them installed clean, run 123 **94/0** and **14/0**, and the models from
 its item tree, run 124 **10/0**, then their icons, runs 125 **14/0** (one
 equip timed out) and 126 **15/0**, then the zip with them installed clean,
 run 127 **94/0** and **14/0**, and the icons from its item tree, run 128
-**15/0**. Most failures were traced to the harness
+**15/0**, then the four other items' icons, run 129 **19/0**. Most
+failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

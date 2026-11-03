@@ -2756,3 +2756,31 @@ package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGal
 shipped hashes, and each icon showed in the equipped-item button. The
 console had no exception.
 Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run128_machine_icons_packaged.txt`.
+
+## 2026-11-03 — RT-SP client harness, launch 129 (icons for the four items with no model)
+
+The user asked, in the asset-requirements session, for icons for the
+sampling kit, the yeast starter, the fuel stabilizer and the field
+manual (D-028). None has a model, so `tools/blender/pz_icon_props.py`
+builds simple shapes for each and renders them through the same pipeline
+as the model icons: three small jars of fuel and a red rubber hose; a jar
+of cream culture under a tied cloth; a corked bottle of tar with a label;
+an olive field manual. The first try made the starter a squat tub, too
+like the filter, and the stabilizer a tin can; the second, a taller jar
+under a cloth dome and a bottle, read apart at 32 pixels. Two renders
+gave the same files, and the four model icons rebuilt byte for byte after
+the renderer was split to serve both.
+
+The machine-models mode now checks all eight rendered icons and equips
+the four new items too.
+
+Launch 129: **19/0**. Every one of the eight items loaded its own
+`Item_TLG_<Name>.png`, and each, equipped, showed it in the equipped-item
+button. The console had no exception.
+
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run129_item_icons.txt`,
+the button crops `2026-11-03_run129_item_icons_buttons.jpg` and all nine
+icons enlarged, `2026-11-03_item_icons_8x.png`.
+
+Not checked: the icons in the inventory list (the button stands in for
+it), multiplayer.

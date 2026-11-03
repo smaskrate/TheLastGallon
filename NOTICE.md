@@ -1,16 +1,16 @@
 # Notices
 
-* The package copies no game assets. The icons and world models of every
-  item but the fermentation vessel, the two stills, the drying column and
-  the fuel filter are referenced by name from the installed Project
-  Zomboid game (The Indie Stone) and are not redistributed
-  (`docs/asset-audit.csv`). The vessel's icon
-  (`media/textures/Item_TLG_Fermenter.png`) was drawn for the mod by
-  `tools/make-icons.ps1`; the stills', the drying column's and the fuel
-  filter's (`Item_TLG_PotStill.png`, `Item_TLG_RefluxStill.png`,
-  `Item_TLG_DryingColumn.png`, `Item_TLG_FuelFilter.png`) were rendered
-  for the mod from their own supplied models by
-  `tools/make-model-icons.ps1`.
+* The package copies no game assets. The world models of every item but
+  the fermentation vessel, the two stills, the drying column and the fuel
+  filter are referenced by name from the installed Project Zomboid game
+  (The Indie Stone) and are not redistributed (`docs/asset-audit.csv`).
+  Every item's icon (`media/textures/Item_TLG_*.png`) was made for the
+  mod: the vessel's drawn by `tools/make-icons.ps1`, the stills', the
+  drying column's and the fuel filter's rendered from their own supplied
+  models by `tools/make-model-icons.ps1`, and the sampling kit's, the
+  yeast starter's, the stabilizer's and the manual's rendered by the same
+  tool from simple shapes built for them
+  (`tools/blender/pz_icon_props.py`).
 * The fermentation vessel's model and texture
   (`media/models_X/TLG/Fermenter.fbx`, `media/textures/TLG/Fermenter.png`)
   were supplied for this mod on 2026-11-02, and the pot still's, the

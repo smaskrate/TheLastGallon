@@ -723,3 +723,30 @@ listed with their replacement.
   Seen in game in the equipped-item button (run 126), and again from the
   package's item tree after the zip of `f69a74a` installed clean (runs
   127–128); the fermenter's icon stays the drawn one.
+
+## D-028 Every item has an icon of its own
+* Decision: the sampling kit, the yeast starter, the fuel stabilizer and
+  the field manual have their own icons, like the other five items. None
+  of the four has a model, so `tools/blender/pz_icon_props.py` builds
+  simple shapes for each from Blender primitives and renders them through
+  the same pipeline as the model icons (`tools/blender/pz_icon.py`; D-027
+  amendment): 32×32, twelve colours, the fermenter icon's outline. The kit
+  is three small jars of fuel and a red rubber hose (its recipe: 3 jars
+  and a hose); the starter a jar of cream culture under a cloth tied with
+  string; the stabilizer a corked bottle of black wood tar with a label,
+  the one bottle among the jars; the manual an olive field manual with a
+  title band and an orange badge. `tools/make-model-icons.ps1` renders all
+  eight icons; two renders give the same files.
+* Reason: the user asked for them in the asset-requirements session on
+  2026-11-03 ("Yes, give them icons. Make icons also for the Fuel Systems
+  Manual and Fuel Stabilizer"), relayed by that session. The kit and the
+  starter shared vanilla's glass jar, the stabilizer showed bleach and the
+  manual a smithing magazine. Three of the four are jars, so each was
+  shaped and coloured to read apart at 32 pixels, from each other and
+  from the filter and the drying column.
+* Consequences: verified RT-SP run 129 (19/0): every one of the eight
+  rendered icons loads the mod's own `Item_TLG_<Name>.png`, and each item
+  equipped shows it in the equipped-item button. The shapes are this
+  repository's own, so the icons carry no outside asset. The four items'
+  floor models are unchanged (A29): the stabilizer, the kit, the starter
+  and the manual still have none.

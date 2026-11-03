@@ -1,7 +1,9 @@
 module TLG
 {
-    /* Placeholder icons reuse vanilla icon references verified in the 42.21
-       item scripts (docs/asset-audit.csv). Display names come from
+    /* Every icon here is the mod's own (Item_TLG_<Name>.png, rendered by
+       tools/make-model-icons.ps1): the filter's from its model, the
+       others' from simple shapes built for them
+       (tools/blender/pz_icon_props.py). Display names come from
        Translate/<lang>/ItemName.json. */
 
     /* A01 sampling/testing kit: enables "kit" precision inspection. */
@@ -10,7 +12,7 @@ module TLG
         DisplayCategory = VehicleMaintenance,
         ItemType = base:normal,
         Weight = 0.4,
-        Icon = GlassJar,
+        Icon = TLG_FuelSampleKit,
         Tags = base:glass,
     }
 
@@ -20,7 +22,7 @@ module TLG
         DisplayCategory = VehicleMaintenance,
         ItemType = base:normal,
         Weight = 0.3,
-        Icon = Bleach,
+        Icon = TLG_FuelStabilizer,
     }
 
     /* Filter cartridge: sediment, free water and some biomass. On the floor
@@ -44,7 +46,7 @@ module TLG
         DisplayCategory = SkillBook,
         ItemType = base:literature,
         Weight = 0.5,
-        Icon = MagazineBlacksmith1,
+        Icon = TLG_ManualFuelSystems,
         OnCreate = TLG.Integration.Manual.onCreate,
     }
 
@@ -55,6 +57,6 @@ module TLG
         DisplayCategory = Food,
         ItemType = base:normal,
         Weight = 0.3,
-        Icon = GlassJar,
+        Icon = TLG_YeastStarter,
     }
 }

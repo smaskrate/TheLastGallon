@@ -136,6 +136,12 @@
   generator. Each also has its own inventory icon, rendered from its
   model, so the two stills, and the filter and the drying column, no
   longer share one. Checked in game.
+* The sampling kit, the yeast starter, the fuel stabilizer and the field
+  manual have their own inventory icons too, so no two of the mod's items
+  share one: three small jars of fuel with a hose, a jar of culture under
+  a tied cloth, a corked bottle of tar, and an olive field manual. Before,
+  the kit and the starter were both a glass jar, the stabilizer a bleach
+  bottle and the manual a smithing magazine. Checked in game.
 * A generator you carry keeps its fuel's record and its conversion when
   the game puts it down for you, as it does when you take another
   generator or equip a weapon from the menus (the record checked in

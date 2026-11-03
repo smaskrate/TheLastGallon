@@ -9902,12 +9902,17 @@ RT.fermenterReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmfb_
 -- they covered the character, and run 121 drew nothing for the drying
 -- column, which had none. Each item is then equipped in turn and
 -- photographed with the interface shown, where the equipped-item button
--- shows its icon (as the fermenter's was seen, runs 64-66); last, the pot
+-- shows its icon (as the fermenter's was seen, runs 64-66), the four
+-- small items whose icons are drawn from shapes too; last, the pot
 -- still is held through a do-nothing action (which draws an item's hand
 -- model) to see nothing drawn.
 RT.MM = { models = { "PotStill", "RefluxStill", "DryingColumn", "FuelFilter" },
     items = { { "TLG.PotStill", "TLG.PotStill", nil }, { "TLG.RefluxStill", "TLG.RefluxStill", nil },
-        { "TLG.DryingColumn", "TLG.DryingColumn", nil }, { "TLG.FuelFilter", "TLG.FuelFilter", nil } } }
+        { "TLG.DryingColumn", "TLG.DryingColumn", nil }, { "TLG.FuelFilter", "TLG.FuelFilter", nil } },
+    -- Every item whose icon the mod renders: the four above from their
+    -- models, the other four from shapes built for them.
+    icons = { "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn", "TLG.FuelFilter", "TLG.FuelSampleKit",
+        "TLG.YeastStarter", "TLG.FuelStabilizer", "TLG.ManualFuelSystems" } }
 
 RT.MM.check = { name = "rtmm_check", timeout = 300, fn = function()
     local sm = getScriptManager()
@@ -9933,12 +9938,12 @@ RT.MM.check = { name = "rtmm_check", timeout = 300, fn = function()
     -- Icon = TLG_<Name> must load the mod's Item_TLG_<Name>.png, not the
     -- game's question mark.
     local icons, found = {}, true
-    for _, w in ipairs(RT.MM.items) do
-        local it = instanceItem(w[1])
+    for _, t in ipairs(RT.MM.icons) do
+        local it = instanceItem(t)
         local tex = it and it:getTex()
         local name = tostring(tex and tex:getName())
-        found = found and has(name, "Item_TLG_" .. w[1]:gsub("^TLG%.", "")) and not has(name, "Question_On")
-        icons[#icons + 1] = string.format("%s icon=%s", w[1], name)
+        found = found and has(name, "Item_TLG_" .. t:gsub("^TLG%.", "")) and not has(name, "Question_On")
+        icons[#icons + 1] = string.format("%s icon=%s", t, name)
     end
     R:check("RTMM.icons_found", function() return found, table.concat(icons, "; ") end)
     return true
@@ -9969,6 +9974,10 @@ RT.machineModelSteps = { RT.waitWorld, RT.MI.setup, RT.MM.check, RT.MI.place,
     RT.MI.hold("icon_reflux", "TLG.RefluxStill"), RT.MI.shot("rtmm_icon_reflux", false),
     RT.MI.hold("icon_column", "TLG.DryingColumn"), RT.MI.shot("rtmm_icon_column", false),
     RT.MI.hold("icon_filter", "TLG.FuelFilter"), RT.MI.shot("rtmm_icon_filter", false),
+    RT.MI.hold("icon_kit", "TLG.FuelSampleKit"), RT.MI.shot("rtmm_icon_kit", false),
+    RT.MI.hold("icon_starter", "TLG.YeastStarter"), RT.MI.shot("rtmm_icon_starter", false),
+    RT.MI.hold("icon_stabilizer", "TLG.FuelStabilizer"), RT.MI.shot("rtmm_icon_stabilizer", false),
+    RT.MI.hold("icon_manual", "TLG.ManualFuelSystems"), RT.MI.shot("rtmm_icon_manual", false),
     RT.MI.propAction("action_pot", "TLG.PotStill", nil), RT.MI.shot("rtmm_action_pot", true),
     RT.finish }
 

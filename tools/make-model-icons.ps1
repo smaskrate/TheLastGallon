@@ -12,7 +12,10 @@
   chosen by eye at 32 pixels: the pot still and the drying column from a
   little right of the front, the reflux still from its left side (its
   column upright and its arm clear of it), the filter from above its lid.
-  The fermenter's icon is drawn by tools/make-icons.ps1 instead.
+  The items with no model of their own (the sampling kit, the yeast
+  starter, the fuel stabilizer and the manual) get simple shapes built
+  for their icons by tools/blender/pz_icon_props.py, rendered the same
+  way. The fermenter's icon is drawn by tools/make-icons.ps1 instead.
 .PARAMETER Blender
   blender.exe (default: the portable 4.5.15 LTS install).
 .PARAMETER OutDir
@@ -40,5 +43,10 @@ foreach ($v in $views) {
         (Join-Path $media "models_X\TLG\$name.fbx") (Join-Path $media "textures\TLG\$name.png") $out $v[1] $v[2] 2>&1 |
         Where-Object { "$_" -match "^PZI |Error|Traceback" } | ForEach-Object { Write-Host "$_" }
     if (-not (Test-Path $out)) { throw "no icon written for $name" }
+}
+& $Blender -b --factory-startup --python (Join-Path $PSScriptRoot "blender\pz_icon_props.py") -- $OutDir 2>&1 |
+    Where-Object { "$_" -match "^PZI |Error|Traceback" } | ForEach-Object { Write-Host "$_" }
+foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems") {
+    if (-not (Test-Path (Join-Path $OutDir "Item_TLG_$name.png"))) { throw "no icon written for $name" }
 }
 Write-Host "icons written to $OutDir"

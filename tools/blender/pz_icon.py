@@ -63,11 +63,20 @@ def _flatten(colours, count=COLOURS, contrast=CONTRAST):
 def render(fbx, texture, out, azimuth=15.0, elevation=20.0):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     bpy.ops.import_scene.fbx(filepath=fbx)
-    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     mat = _material(texture)
-    for o in meshes:
-        o.data.materials.clear()
-        o.data.materials.append(mat)
+    for o in bpy.context.scene.objects:
+        if o.type == "MESH":
+            o.data.materials.clear()
+            o.data.materials.append(mat)
+    render_scene(out, azimuth, elevation)
+
+
+def render_scene(out, azimuth=15.0, elevation=20.0):
+    """Every mesh in the current scene, with its own materials, rendered and
+    reduced to the icon `out` as the module docstring says (tools/blender/
+    pz_icon_props.py builds scenes for items that have no model)."""
+    bpy.context.view_layer.update()
+    meshes = [o for o in bpy.context.scene.objects if o.type == "MESH"]
     pts = [o.matrix_world @ v.co for o in meshes for v in o.data.vertices]
 
     scene = bpy.context.scene
