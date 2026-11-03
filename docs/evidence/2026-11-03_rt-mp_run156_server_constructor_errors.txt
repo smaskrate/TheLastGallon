@@ -1,0 +1,11 @@
+4189:attempted index: getSquare of non-table: null
+4194:	Lua(Vanilla).new(ISTakeFuel.lua:100)
+4197:	java.lang.RuntimeException: attempted index: getSquare of non-table: null at KahluaThread.tableget(KahluaThread.java:1430).
+4200:		Lua(Vanilla).new(ISTakeFuel.lua:100)
+4217:	Lua(Vanilla).new(ISTakeFuel.lua:100)
+4223:LOG  : Lua          f:356 st:1.106.976.559> no such vehicle id=	nil
+4229:attempted index: getFluidContainer of non-table: null
+4234:	Lua(Vanilla).new(ISAddFuel.lua:73)
+4237:	java.lang.RuntimeException: attempted index: getFluidContainer of non-table: null at KahluaThread.tableget(KahluaThread.java:1430).
+4240:		Lua(Vanilla).new(ISAddFuel.lua:73)
+4257:	Lua(Vanilla).new(ISAddFuel.lua:73)

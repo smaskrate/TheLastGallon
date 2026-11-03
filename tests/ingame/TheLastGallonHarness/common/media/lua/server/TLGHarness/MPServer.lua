@@ -25,7 +25,9 @@ local M = TLGH.MPServer
 local S = TLGH.MPShared
 
 local function report()
-    if not M.R then M.R = TLGH.Report.new("TLG_harness_mpserver.txt", "TLG multiplayer harness, server") end
+    -- Appended: a restart (-Restart) starts a new Lua state on the same file,
+    -- which the launcher deletes before each run.
+    if not M.R then M.R = TLGH.Report.new("TLG_harness_mpserver.txt", "TLG multiplayer harness, server", true) end
     return M.R
 end
 
@@ -57,10 +59,15 @@ function services.give(player, args)
     local ids, inv = {}, player:getInventory()
     for _, fullType in ipairs(split(args.items)) do
         local item = inv:AddItem(fullType)
-        if item and fullType == "Base.PetrolCan" and args.petrol then
+        if item and fullType == "Base.PetrolCan" and (args.petrol or args.fill) then
             local fc = item:getFluidContainer()
             fc:Empty()
-            fc:addFluid(Fluid.Petrol, tonumber(args.petrol))
+            local litres = tonumber(args.litres or args.petrol) or 0
+            if litres > 0 then fc:addFluid(args.fill and Fluid.Get(args.fill) or Fluid.Petrol, litres) end
+        end
+        -- Water as the single-player harness carries it: a bucket filled.
+        if item and fullType == "Base.BucketEmpty" and args.water then
+            item:getFluidContainer():addFluid(Fluid.Water, tonumber(args.water))
         end
         sendAddItemToContainer(inv, item)
         ids[#ids + 1] = fullType .. "=" .. tostring(item and item:getID())
@@ -108,6 +115,20 @@ end
 -- The machine takes the mod made on the server, "user:result" in order.
 M.takes = M.takes or {}
 
+-- Stage hours a batch has done (its recipe's stages before the current one,
+-- and the current one's hours so far).
+local function workDone(rec)
+    local done = 0
+    for i, st in ipairs(rec.recipe and rec.recipe.params.stages or {}) do
+        if i < (rec.stage or 0) then
+            done = done + st.hours
+        elseif i == rec.stage then
+            done = done + (rec.stageDone or 0)
+        end
+    end
+    return done
+end
+
 -- Where the server holds the vessel `id` (on the floor around the spawn
 -- point, in an online player's inventory, in both hands), how many vessels
 -- lie there or are carried in all, its batch, the hourly reading's entry for
@@ -145,7 +166,147 @@ function services.probe_vessel(player, args)
     reply("probe_vessel", args, { where = #places > 0 and table.concat(places, "; ") or "nowhere", vessels = count,
         state = tostring(rec and rec.state or "none"), pause = tostring(rec and rec.pause or "none"),
         site = rec and rec.site and rec.site.x and (rec.site.x .. "," .. rec.site.y) or "none",
-        listed = listed and (listed.x .. "," .. listed.y) or "no", takes = table.concat(M.takes, " ") })
+        listed = listed and (listed.x .. "," .. listed.y) or "no", takes = table.concat(M.takes, " "),
+        t = rec and rec.t or -1, seen = rec and rec.seen or -1, done = rec and workDone(rec) or -1,
+        now = TLG.World.now(), inputs = S.text(rec and rec.inputs) })
+end
+
+-- The fuel case's site at the Muldraugh Gas2Go (SPHarness.lua's STATION):
+-- the first pump with stock, a car with an empty tank three squares off it
+-- (as the single-player chain parks it) and two empty generators,
+-- connected, put down by the server (IsoGenerator's constructor sends a
+-- new one to the clients, BC; addVehicleDebug as ProfessionVehicles.lua
+-- calls it on a server).
+local STATION = { x0 = 10630, y0 = 10600, x1 = 10690, y1 = 10650 }
+
+local function pumpAt(x, y)
+    local sq = getCell():getGridSquare(x, y, 0)
+    local objs = sq and sq:getObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        local o = objs:get(i)
+        if o:getPipedFuelAmount() > 0 then return o end
+    end
+    return nil
+end
+
+local function generatorAt(x, y)
+    local sq = getCell():getGridSquare(x, y, 0)
+    local objs = sq and sq:getObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        if instanceof(objs:get(i), "IsoGenerator") then return objs:get(i) end
+    end
+    return nil
+end
+
+local function emptyGenerator(x, y)
+    local g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), getCell():getGridSquare(x, y, 0))
+    g:setFuel(0)
+    g:getModData().tlg = nil
+    g:setConnected(true)
+    g:sync()
+    g:transmitModData()
+    return g
+end
+
+function services.setup_fuel(player, args)
+    local px, py
+    for x = STATION.x0, STATION.x1 do
+        for y = STATION.y0, STATION.y1 do
+            local p = px == nil and pumpAt(x, y)
+            if p and p:getPipedFuelAmount() > 200 then px, py = x, y end
+        end
+    end
+    if not px then
+        reply("fuel_site", args, { error = "no pump with stock" })
+        return
+    end
+    local car = addVehicleDebug("Base.CarNormal", IsoDirections.N, nil, getCell():getGridSquare(px + 3, py + 3, 0))
+    -- Its key to the requester, who unlocks, drives and starts it with it
+    -- (run 157: the menu queued an unlock without one and A never got in).
+    local key = car and car:createVehicleKey()
+    if key then
+        player:getInventory():AddItem(key)
+        sendAddItemToContainer(player:getInventory(), key)
+    end
+    local tank = car and car:getPartById("GasTank")
+    if tank then
+        tank:setContainerContentAmount(0)
+        tank:getModData().tlg = nil
+        car:transmitPartModData(tank)
+    end
+    emptyGenerator(px - 4, py + 6)
+    emptyGenerator(px - 6, py + 6)
+    reply("fuel_site", args, { px = px, py = py, car = tostring(car and car:getId()), g1x = px - 4, g1y = py + 6,
+        g2x = px - 6, g2y = py + 6, units = pumpAt(px, py):getPipedFuelAmount() })
+end
+
+-- The conversion case: an empty generator by the spawn point, the tools and
+-- parts the single-player loop hands over (SPHarness.lua
+-- loop_convert_generator), and the skills and recipe the conversion asks
+-- for, set on the server's player as the single-player loop sets them
+-- (the conversion's handlers read them there).
+function services.setup_conversion(player, args)
+    local x, y = S.spot(3)
+    emptyGenerator(x, y)
+    local inv = player:getInventory()
+    for _, t in ipairs({ { "Base.Wrench", 1 }, { "Base.Pliers", 1 }, { "Base.Screwdriver", 1 }, { "Base.RubberHose", 3 },
+        { "Base.Screws", 10 }, { "Base.ElectricWire", 3 } }) do
+        for _ = 1, t[2] do sendAddItemToContainer(inv, inv:AddItem(t[1])) end
+    end
+    player:setPerkLevelDebug(Perks.Mechanics, 4)
+    player:setPerkLevelDebug(Perks.Electricity, 2)
+    player:getKnownRecipes():add("Generator")
+    reply("conversion_site", args, { x = x, y = y, mechanics = player:getPerkLevel(Perks.Mechanics),
+        electricity = player:getPerkLevel(Perks.Electricity) })
+end
+
+-- A generator's consumer profile, fuel and state on the server.
+function services.probe_generator(player, args)
+    local g = generatorAt(tonumber(args.x), tonumber(args.y))
+    local profile = g and TLG.Integration.Generators.profile(g)
+    reply("probe_generator", args, { found = tostring(g ~= nil), profile = tostring(profile),
+        fuel = g and g:getFuel() or -1, on = tostring(g and g:isActivated()), side = S.text(g and g:getModData().tlg) })
+end
+
+-- Litres in a TLG record's fuel table.
+local function litres(side)
+    local total = 0
+    for _, q in pairs(side and side.q or {}) do total = total + q end
+    return total
+end
+
+-- The server's view of the fuel case: the pump, the car's tank, both
+-- generators, the generator item a player carries, and the requester's
+-- items `ids` ("id;id"): amounts, and each TLG record as text.
+function services.probe_fuel(player, args)
+    local out = {}
+    local pump = pumpAt(tonumber(args.px), tonumber(args.py))
+    out.pumpUnits = pump and pump:getPipedFuelAmount() or -1
+    out.pumpSide = S.text(pump and pump:getModData().tlg)
+    local car = getVehicleById(tonumber(args.car) or -1)
+    local tank = car and car:getPartById("GasTank")
+    out.tankL = tank and tank:getContainerContentAmount() or -1
+    out.tankSide = S.text(tank and tank:getModData().tlg)
+    out.tankRecL = litres(tank and tank:getModData().tlg)
+    out.engine = tostring(car and car:isEngineRunning())
+    for _, k in ipairs({ "g1", "g2" }) do
+        local g = generatorAt(tonumber(args[k .. "x"]), tonumber(args[k .. "y"]))
+        out[k .. "Fuel"] = g and g:getFuel() or -1
+        out[k .. "On"] = tostring(g and g:isActivated())
+        out[k .. "Side"] = S.text(g and g:getModData().tlg)
+        out[k .. "RecL"] = litres(g and g:getModData().tlg)
+    end
+    local carried = player:getInventory():getFirstTypeRecurse("Base.Generator")
+    out.genItemSide = S.text(carried and carried:getModData().tlg)
+    out.genItemRecL = litres(carried and carried:getModData().tlg)
+    local items = {}
+    for _, id in ipairs(split(args.ids)) do
+        local it = player:getInventory():getItemWithIDRecursiv(tonumber(id))
+        local fc = it and it:getFluidContainer()
+        items[#items + 1] = id .. "=" .. (fc and string.format("%.4f", fc:getAmount()) or "nil") .. " " .. S.sidecar(it)
+    end
+    out.items = table.concat(items, " | ")
+    reply("probe_fuel", args, out)
 end
 
 -- The take a second player's action makes when it completes after the
@@ -241,8 +402,9 @@ Events.OnServerStarted.Add(function()
     local ok, err = pcall(function()
         local R = report()
         local zc = SandboxVars.ZombieConfig or {}
-        R:line("OBS  MPS.sandbox Zombies=%s PopulationMultiplier=%s Start=%s Peak=%s", tostring(SandboxVars.Zombies),
-            tostring(zc.PopulationMultiplier), tostring(zc.PopulationStartMultiplier), tostring(zc.PopulationPeakMultiplier))
+        R:line("OBS  MPS.sandbox Zombies=%s PopulationMultiplier=%s Start=%s Peak=%s DayLength=%s",
+            tostring(SandboxVars.Zombies), tostring(zc.PopulationMultiplier), tostring(zc.PopulationStartMultiplier),
+            tostring(zc.PopulationPeakMultiplier), tostring(SandboxVars.DayLength))
         -- No fog, held off as vanilla's tutorial does (Tutorial1.lua): run
         -- 138's morning fog again. The clients take the server's climate.
         local cm = getClimateManager()

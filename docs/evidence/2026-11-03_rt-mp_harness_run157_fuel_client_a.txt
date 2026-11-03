@@ -1,0 +1,172 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP fuel_site begin
+OBS  MP.fuel site: pump 10636,10622 (1664 units), car 236, generators 10632,10628 and 10630,10628 
+STEP mp_fuel_site_arrives begin
+STEP mp_fuel_site_seen begin
+PASS MP.fuel_site_seen_A :: pump=true car=true tank=0 g1=0 g2=0
+STEP give_empty_can begin
+STEP mp_can1_arrives begin
+OBS  MP.can1 in the inventory=true, 0.0000 L
+STEP mp_pump_to_can begin
+OBS  MP.pump_to_can queued: ISWalkToTimedAction, ISEquipWeaponAction, ISTakeFuel
+STEP after_pump_to_can begin
+OBS  MP.after_pump_to_can server: pump units=1654 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2277},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1651.9469,sediment=0.5747,water=1.4784},rev=1.0000,stab=0.0000,t=2.9329,v=1.0000}
+OBS  MP.after_pump_to_can server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.after_pump_to_can server: g1 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_pump_to_can server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_pump_to_can server: carried generator record 0.0000 L nil; items 1236748834=10.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000}
+PASS MP.pump_to_can_A :: can 10.0000 L; this client 1236748834=10.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000}
+STEP mp_can_to_car begin
+OBS  MP.can_to_car queued: ISPathFindAction, ISEquipWeaponAction, ISAddGasolineToVehicle
+STEP after_can_to_car begin
+OBS  MP.after_can_to_car server: pump units=1654 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2277},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1651.9469,sediment=0.5747,water=1.4784},rev=1.0000,stab=0.0000,t=2.9329,v=1.0000}
+OBS  MP.after_can_to_car server: tank 10.0000 L, record 10.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2279},id=V108328475-14,mic=0.0000,prov={1={from=S108328475-13,k=in,n=10.0000,t=3.2368}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,stab=0.0000,t=3.2368,v=1.0000}
+OBS  MP.after_can_to_car server: g1 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_can_to_car server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_can_to_car server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000}
+PASS MP.can_to_car_A :: can had 10.0000 L; server tank 10.0000 L, record 10.0000 L; this client's tank 10.0000 L
+STEP mp_pump_to_car begin
+OBS  MP.pump_to_car queued: ISPathFindAction, ISRefuelFromGasPump
+STEP after_pump_to_car begin
+OBS  MP.after_pump_to_car server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pump_to_car server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pump_to_car server: g1 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_pump_to_car server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_pump_to_car server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000}
+PASS MP.pump_to_car_A :: tank 10.0000 -> 59.0000 L, record 59.0000 L
+STEP give_petrol_can begin
+STEP mp_can2_arrives begin
+OBS  MP.can2 in the inventory=true, 5.0000 L
+STEP mp_can_to_generator begin
+OBS  MP.can_to_generator queued: ISWalkToTimedAction, ISEquipWeaponAction, ISAddFuel
+STEP after_can_to_generator begin
+OBS  MP.after_can_to_generator server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_can_to_generator server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_can_to_generator server: g1 fuel 5.0000 L, record 5.0000 L, on=false {cond=1.0000,deg={gasoline=0.0448},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906}},q={gasoline=5.0000,water=0.0000},rev=1.0000,stab=0.0000,t=4.9906,v=1.0000}
+OBS  MP.after_can_to_generator server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_can_to_generator server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar
+PASS MP.can_to_generator_A :: generator 5.0000 L, record 5.0000 L; can 0.0000 L
+STEP give_pour_can begin
+STEP mp_can3_arrives begin
+OBS  MP.can3 in the inventory=true, 3.0000 L
+STEP mp_walk_to_generator_1 begin
+STEP mp_pour_petrol begin
+OBS  MP.pour_petrol queued: ISTLGPourFuel
+STEP mp_pour_petrol_result begin
+OBS  MP.pour_petrol result on the player's client: none
+FAIL MP.pour_petrol_result_reaches_the_player_A :: the pour's callback never ran on the client
+STEP after_pour_petrol begin
+OBS  MP.after_pour_petrol server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pour_petrol server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pour_petrol server: g1 fuel 8.0000 L, record 8.0000 L, on=false {cond=1.0000,deg={gasoline=0.0729},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=8.0000,water=0.0000},rev=2.0000,stab=0.0000,t=5.1558,v=1.0000}
+OBS  MP.after_pour_petrol server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_pour_petrol server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000}
+PASS MP.pour_petrol_into_generator_A :: generator 5.0000 -> 8.0000 L, record 8.0000 L; can 0.0000 L
+STEP give_ethanol_can begin
+STEP mp_can4_arrives begin
+OBS  MP.can4 in the inventory=true, 3.0000 L
+STEP mp_pour_ethanol begin
+OBS  MP.pour_ethanol queued: ISTLGPourFuel
+STEP mp_pour_ethanol_result begin
+OBS  MP.pour_ethanol result on the player's client: none
+FAIL MP.pour_ethanol_result_reaches_the_player_A :: the pour's callback never ran on the client
+STEP after_pour_ethanol begin
+OBS  MP.after_pour_ethanol server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pour_ethanol server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pour_ethanol server: g1 fuel 8.0000 L, record 8.0000 L, on=false {cond=1.0000,deg={gasoline=0.0729},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=8.0000,water=0.0000},rev=2.0000,stab=0.0000,t=5.1558,v=1.0000}
+OBS  MP.after_pour_ethanol server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.after_pour_ethanol server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=3.0000 no-sidecar
+PASS MP.pour_ethanol_refused_nothing_moved_A :: generator 8.0000 L (was 8.0000); can 3.0000 L
+STEP mp_walk_to_generator_2 begin
+STEP mp_pour_ethanol_confirmed begin
+OBS  MP.pour_ethanol_confirmed queued: ISTLGPourFuel
+STEP mp_pour_ethanol_confirmed_result begin
+OBS  MP.pour_ethanol_confirmed result on the player's client: none
+FAIL MP.pour_ethanol_confirmed_result_reaches_the_player_A :: the pour's callback never ran on the client
+STEP after_pour_ethanol_confirmed begin
+OBS  MP.after_pour_ethanol_confirmed server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pour_ethanol_confirmed server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_pour_ethanol_confirmed server: g1 fuel 8.0000 L, record 8.0000 L, on=false {cond=1.0000,deg={gasoline=0.0729},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=8.0000,water=0.0000},rev=2.0000,stab=0.0000,t=5.1558,v=1.0000}
+OBS  MP.after_pour_ethanol_confirmed server: g2 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={ethanol=0.0502},id=G108328475-21,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-20,k=in,n=3.0000,t=5.4704}},q={ethanol=2.9997,water=0.0003},rev=1.0000,stab=0.0000,t=5.4704,v=1.0000}
+OBS  MP.after_pour_ethanol_confirmed server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.4704,v=1.0000}
+PASS MP.pour_ethanol_confirmed_into_empty_generator_A :: generator 2 3.0000 L, record 3.0000 L; can 0.0000 L
+STEP mp_start_generator_1 begin
+OBS  MP.start_generator_1 queued: ISActivateGenerator
+STEP mp_start_generator_2 begin
+OBS  MP.start_generator_2 queued: ISActivateGenerator
+STEP after_generator_starts begin
+OBS  MP.after_generator_starts server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_generator_starts server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_generator_starts server: g1 fuel 8.0000 L, record 8.0000 L, on=true {cond=1.0000,deg={gasoline=0.0729},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=8.0000,water=0.0000},rev=2.0000,stab=0.0000,t=5.1558,v=1.0000}
+OBS  MP.after_generator_starts server: g2 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={ethanol=0.0502},id=G108328475-21,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-20,k=in,n=3.0000,t=5.4704}},q={ethanol=2.9997,water=0.0003},rev=1.0000,stab=0.0000,t=5.4704,v=1.0000}
+OBS  MP.after_generator_starts server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.4704,v=1.0000}
+PASS MP.generator_on_petrol_starts_A :: g1 on=true
+PASS MP.generator_on_ethanol_refused_A :: g2 on=false
+STEP mp_generator_runs begin
+STEP generator_status begin
+OBS  MP.generator_status reply: ok=true reason=nil duplicate=nil state=nil
+STEP after_generator_burn begin
+OBS  MP.after_generator_burn server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_generator_burn server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_generator_burn server: g1 fuel 7.9880 L, record 8.0000 L, on=true {cond=1.0000,deg={gasoline=0.0729},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=8.0000,water=0.0000},rev=2.0000,stab=0.0000,t=5.1558,v=1.0000}
+OBS  MP.after_generator_burn server: g2 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={ethanol=0.0502},id=G108328475-21,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-20,k=in,n=3.0000,t=5.4704}},q={ethanol=2.9997,water=0.0003},rev=1.0000,stab=0.0000,t=5.4704,v=1.0000}
+OBS  MP.after_generator_burn server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.4704,v=1.0000}
+FAIL MP.generator_burn_followed_A :: fuel 8.0000 -> 7.9880 L, record 8.0000 L
+STEP mp_stop_generator_1 begin
+OBS  MP.stop_generator_1 queued: ISActivateGenerator
+STEP mp_unplug_generator begin
+OBS  MP.unplug_generator queued: ISPlugGenerator
+STEP mp_take_generator begin
+OBS  MP.take_generator queued: ISUnequipAction, ISTakeGenerator
+STEP after_take_generator begin
+OBS  MP.after_take_generator server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_take_generator server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_take_generator server: g1 fuel -1.0000 L, record 0.0000 L, on=nil nil
+OBS  MP.after_take_generator server: g2 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={ethanol=0.0502},id=G108328475-21,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-20,k=in,n=3.0000,t=5.4704}},q={ethanol=2.9997,water=0.0003},rev=1.0000,stab=0.0000,t=5.4704,v=1.0000}
+OBS  MP.after_take_generator server: carried generator record 7.9880 L {cond=1.0000,deg={gasoline=0.0737},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=7.9880,water=0.0000},rev=2.0000,stab=0.0000,t=7.0083,v=1.0000}; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.4704,v=1.0000}
+PASS MP.generator_record_on_the_item_A :: object fuel -1; item record 7.9880 L (generator had 7.9880 L)
+STEP mp_place_generator begin
+OBS  MP.place_generator queued: ISDropWorldItemAction
+STEP after_place_generator begin
+OBS  MP.after_place_generator server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_place_generator server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_place_generator server: g1 fuel 7.9880 L, record 7.9880 L, on=false {cond=1.0000,deg={gasoline=0.0737},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=7.9880,water=0.0000},rev=2.0000,stab=0.0000,t=7.0083,v=1.0000}
+OBS  MP.after_place_generator server: g2 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={ethanol=0.0502},id=G108328475-21,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-20,k=in,n=3.0000,t=5.4704}},q={ethanol=2.9997,water=0.0003},rev=1.0000,stab=0.0000,t=5.4704,v=1.0000}
+OBS  MP.after_place_generator server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.4704,v=1.0000}
+PASS MP.generator_record_back_on_the_object_A :: object fuel 7.9880 L, record 7.9880 L (carried 7.9880 L)
+STEP mp_enter_car begin
+OBS  MP.enter_car queued: ISPathFindAction, ISUnlockVehicleDoor, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP mp_start_car begin
+OBS  MP.start_car queued: ISStartVehicleEngine
+STEP after_car_start begin
+OBS  MP.after_car_start server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_car_start server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_car_start server: g1 fuel 7.9880 L, record 7.9880 L, on=false {cond=1.0000,deg={gasoline=0.0737},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=7.9880,water=0.0000},rev=2.0000,stab=0.0000,t=7.0083,v=1.0000}
+OBS  MP.after_car_start server: g2 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={ethanol=0.0502},id=G108328475-21,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-20,k=in,n=3.0000,t=5.4704}},q={ethanol=2.9997,water=0.0003},rev=1.0000,stab=0.0000,t=5.4704,v=1.0000}
+OBS  MP.after_car_start server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.4704,v=1.0000}
+FAIL MP.car_starts_on_station_fuel_A :: engine running=false; driver=false
+STEP mp_car_idles begin
+STEP after_car_idle begin
+OBS  MP.after_car_idle server: pump units=1617 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2282},frac=-0.0000,id=R108328475-12,mic=0.0000,prov={},q={gasoline=1603.0077,sediment=0.5577,water=1.4346},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_car_idle server: tank 59.0000 L, record 59.0000 L, engine running=false {cond=1.0000,deg={gasoline=0.2283},id=V108328475-14,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=49.0000,t=4.6281}},q={gasoline=58.9268,sediment=0.0205,water=0.0527},rev=2.0000,stab=0.0000,t=4.6281,v=1.0000}
+OBS  MP.after_car_idle server: g1 fuel 7.9880 L, record 7.9880 L, on=false {cond=1.0000,deg={gasoline=0.0737},id=G108328475-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-17,k=in,n=5.0000,t=4.9906},2={from=S108328475-18,k=in,n=3.0000,t=5.1558}},q={gasoline=7.9880,water=0.0000},rev=2.0000,stab=0.0000,t=7.0083,v=1.0000}
+OBS  MP.after_car_idle server: g2 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={ethanol=0.0502},id=G108328475-21,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S108328475-20,k=in,n=3.0000,t=5.4704}},q={ethanol=2.9997,water=0.0003},rev=1.0000,stab=0.0000,t=5.4704,v=1.0000}
+OBS  MP.after_car_idle server: carried generator record 0.0000 L nil; items 1236748834=0.0000 {cond=1.0000,deg={gasoline=0.2277},dirty=0.0000,id=S108328475-13,mic=0.0000,prov={1={from=R108328475-12,k=pump,n=10.0000,t=2.9329}},q={gasoline=9.9876,sediment=0.0035,water=0.0089},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.9329,v=1.0000} | 1689027371=0.0000 no-sidecar | 387253960=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-18,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.1558,v=1.0000} | 1306944394=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S108328475-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=5.4704,v=1.0000}
+FAIL MP.car_idle_burn_followed_A :: tank 59.0000 -> 59.0000 L, record 59.0000 L
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=13 fail=6
+DONE

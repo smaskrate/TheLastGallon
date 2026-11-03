@@ -21,12 +21,12 @@ alternative), **NOT RUN**.
 | --- | --- | --- | --- |
 | G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), in English and in Italian (runs 43–44), not on the DS |
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
-| G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP)** idle, start gate, stall; driving NOT RUN | Native idle burn reconciled proportionally; `ISStartVehicleEngine` refused on a 36 % ethanol blend, allowed on station fuel; the blend stalled a force-started engine within a game minute; mod never subtracts |
-| G04 Generator consumption | Extend fuel/burn? | **PASS (SP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 |
-| G05 Generator lifecycle | State survives pickup? | **PASS (SP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator), the menus' unequip (run 85) and drag to the floor all carry the record |
-| G06 Stations | Per-pump or shared? | **PASS (SP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units) |
-| G07 Action authority | Which stage mutates on the server? | **PASS (MP)** for the mod's requests and the vessel's pickup; vanilla's heavy pickup FAIL | B42 actions mutate in `complete()`, which the server runs at the action's end; it never calls a client's action's Lua `update` or `isValid`, and `NetTimedAction` forwards `animEvent` to the Lua action (BC). Dedicated server with two clients on this machine (RT-MP runs 139–147): the mod's sample, stabilize and machine-status requests answered by the server, a repeated request answered from its ledger, an item's record the same on client and server. Vanilla's `ISEquipHeavyItem` cannot take a heavy item off the floor on a server (also without the mod, run 144); for the vessel the mod does it on the server (D-030, runs 146–147), and refused the second of two players taking it at once. See "RT-MP: two clients on a dedicated server" and "RT-MP: a client's timed action on the server" |
-| G08 Persistence | Reliable stores/IDs | **PASS (DS + SP)** single player | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5), as do machine records and conversion projects (runs 7–8); MP reconnect NOT RUN |
+| G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP + MP)** idle, start gate; stall SP; driving NOT RUN | Native idle burn reconciled proportionally; `ISStartVehicleEngine` refused on a 36 % ethanol blend, allowed on station fuel; the blend stalled a force-started engine within a game minute; mod never subtracts. MP (RT-MP run 160): a car started on station fuel with its key, its idle burn reconciled on read (a status) |
+| G04 Generator consumption | Extend fuel/burn? | **PASS (SP + MP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100. MP (RT-MP runs 160, 162): the same on a server, and a flex-converted generator started on ethanol |
+| G05 Generator lifecycle | State survives pickup? | **PASS (SP + MP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator), the menus' unequip (run 85) and drag to the floor all carry the record. MP (RT-MP run 160): taken (once unplugged) and put back with the place action, the record carried both ways |
+| G06 Stations | Per-pump or shared? | **PASS (SP + MP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units). MP (RT-MP run 160): pump to can and pump to car on a server, the station's record carried; until the fix there (run 156) the mod's constructor hooks stopped both |
+| G07 Action authority | Which stage mutates on the server? | **PASS (MP)** for the mod's requests and the vessel's pickup; vanilla's heavy pickup FAIL | B42 actions mutate in `complete()`, which the server runs at the action's end; it never calls a client's action's Lua `update` or `isValid`, and `NetTimedAction` forwards `animEvent` to the Lua action (BC). Dedicated server with two clients on this machine (RT-MP runs 139–162, plain players in run 154): the mod's sample, stabilize and machine-status requests answered by the server, two players' loads of one fermenter (one taken, one `machine_busy`), a repeated request answered from its ledger, an item's record the same on client and server. Vanilla's `ISEquipHeavyItem` cannot take a heavy item off the floor on a server (also without the mod, run 144); for the vessel the mod does it on the server (D-030, runs 146–147), and refused the second of two players taking it at once. See "RT-MP: two clients on a dedicated server" and "RT-MP: a client's timed action on the server" |
+| G08 Persistence | Reliable stores/IDs | **PASS (DS + SP + MP)** | Global ModData (DS, SP); item, world item, vehicle part, generator object and pump object modData, fluids and TLG records survive save and reload (RT-SP runs 4–5), as do machine records and conversion projects (runs 7–8). MP: a client's rejoin (RT-MP runs 145–147) and a server restart (run 161) kept the floor, a can's record and a running batch |
 | G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
@@ -941,6 +941,27 @@ How a 42.21 server runs a timed action a client queued (`javap` of
 - For a floor container `luautils.walkToContainer` returns at once (SRC
   `luautils.lua:307`): the loot window lists only what is within reach,
   so `equipHeavyItem` queues no walk.
+- The fields go in the order of `new`'s parameters, and the server passes
+  what it receives in that order. A nil goes as a placeholder
+  (`PZNetKahluaNull`). A function has no type to send
+  (`PZNetKahluaTableImpl.getValueByte`, `canSave`) and is skipped, so the
+  fields after it move up a place: in RT-MP run 157 the pour's request id
+  took its callback's place.
+- So a constructor wrapped as `function(self, ...)` declares no parameter,
+  and nothing is sent: the server calls `new` with no arguments. RT-MP
+  run 156: `ISTakeFuel.lua:100` "attempted index: getSquare of non-table",
+  `ISAddFuel.lua:73` "attempted index: getFluidContainer of non-table",
+  "no such vehicle id= nil". The mod's wrapped constructors keep
+  vanilla's parameters since.
+- The world menu's Grab on a client queues an inventory transfer
+  (`ISInventoryTransferAction`; SRC `ISWorldObjectContextMenu.lua:1436`,
+  its `isClient()` branch), which the server carries out as an item
+  transaction. No Lua of the mod sees it (RT-MP run 155). The inventory's
+  Drop of the same vessel was seen: the record was put down at once.
+- `setaccesslevel` takes a role's name (BC `Roles`: banned, user,
+  priority, observer, gm, moderator, admin). "none" becomes an empty name
+  and is refused ("Access Level '' unknown", run 153). Accounts keep their
+  level in the server's database between runs.
 
 In game (RT-MP runs 146–147, test results): with the mod's own take on
 the server, the vessel came off the floor into the player's arms through

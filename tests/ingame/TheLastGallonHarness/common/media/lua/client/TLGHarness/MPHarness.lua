@@ -54,9 +54,13 @@ pcall(function() getCore():setOptionShowSurvivalGuide(false) end)
 
 -- What the client has done so far, kept in a file because joining reloads
 -- the Lua (the launcher deletes it): joining, joined, rejoin (A asked to
--- leave and join again), rejoining, rejoined.
+-- leave and join again), restart_wait (left for the server's restart, until
+-- the launcher's go-file), rejoining, rejoined.
 local function phase() return TLGH.readKeyValues("TLG_harness_mpstate.txt").phase end
 local function setPhase(p) TLGH.writeFile("TLG_harness_mpstate.txt", { "phase=" .. p }) end
+-- -Restart: the server is saved, stopped and started again while both
+-- clients wait at the main menu (tools/run-mp-harness.ps1).
+MP.restart = TLGH.readKeyValues("TLG_harness_connect.txt").restart == "1"
 
 ------------------------------------------------------------------------------
 -- Main menu: join, then make the character.
@@ -91,6 +95,10 @@ Events.OnFETick.Add(function()
     fe.ticks = fe.ticks + 1
     local ok, err = pcall(function()
         local p = phase()
+        if p == "restart_wait" and TLGH.readKeyValues("TLG_harness_mpgo.txt").go == "1" then
+            setPhase("rejoin")
+            p = "rejoin"
+        end
         if not fe.joining and not isClient() and fe.ticks > 120 and MainScreen and MainScreen.instance
             and ConnectToServer and ConnectToServer.instance and (p == nil or p == "rejoin") then
             fe.joining = true
@@ -207,11 +215,6 @@ end
 local function inventoryItem(id) return id and player():getInventory():getItemWithID(id) end
 
 local function countType(fullType) return player():getInventory():getCountTypeRecurse(fullType) end
-
-local function teleport(x, y)
-    ISTimedActionQueue.clear(player())
-    player():teleportTo(x + 0.5, y + 0.5, 0)
-end
 
 -- Scrolls the zoom to `target` one level at a time (as SPHarness's
 -- RT.MI.zoomTo, which reads the direction from Core.getNextZoom).
@@ -976,21 +979,64 @@ local function raceStepsB(backX, backY)
 end
 
 -- Last: leave to the main menu and join again (MainScreen's in-game Exit).
-A.leave = { name = "mp_leave", timeout = 600, fn = function(ctx, ticks)
-    if ticks == 1 then
-        send("reconnecting", {})
-        return nil
-    end
-    if ticks < 60 then return nil end
-    setPhase("rejoin")
-    report():line("OBS  MP.leaving to the main menu")
-    setGameSpeed(1)
-    getCore():quit()
-    return true
-end }
+-- With -Restart both players leave, the server is saved, stopped and
+-- started again on the same world, and both join again.
+local function leave(name, message)
+    return { name = name, timeout = 600, fn = function(ctx, ticks)
+        if ticks == 1 then
+            if message then send(message, {}) end
+            return nil
+        end
+        if ticks < 60 then return nil end
+        setPhase(MP.restart and "restart_wait" or "rejoin")
+        report():line("OBS  MP.leaving to the main menu%s", MP.restart and " for the server's restart" or "")
+        setGameSpeed(1)
+        getCore():quit()
+        return true
+    end }
+end
+A.leave = leave("mp_leave", MP.restart and "restarting" or "reconnecting")
 
+-- What the server holds of the can's and the vessel's records before the
+-- restart, kept in a file (leaving reloads the Lua), and compared after it:
+-- the can's record whole, the vessel's state, site, inputs, stage hours and
+-- hourly-list entry (its notes and last-seen time move on while it stands).
+local SNAP = "TLG_harness_mpsnap.txt"
+local function vesselText(m)
+    return string.format("state=%s pause=%s site=%s listed=%s inputs=%s done=%.4f", tostring(m.state),
+        tostring(m.pause), tostring(m.site), tostring(m.listed), tostring(m.inputs), tonumber(m.done) or -1)
+end
+A.snapCan = call("snap_can", "probe_item", function() return { id = A.can and A.can:getID() } end, "probe_item",
+    function(m) A.snap = { "can=" .. tostring(m.sidecar), "canId=" .. tostring(A.can and A.can:getID()) } end)
+A.snapVessel = call("snap_vessel", "probe_vessel", function() return { id = A.vesselId } end, "probe_vessel",
+    function(m)
+        A.snap[#A.snap + 1] = "vessel=" .. vesselText(m)
+        A.snap[#A.snap + 1] = "vesselId=" .. tostring(A.vesselId)
+        TLGH.writeFile(SNAP, A.snap)
+        report():line("OBS  MP.before the restart: can %s; vessel %s", tostring(m and A.snap[1]), vesselText(m))
+    end)
+A.afterCan = call("after_restart_can", "probe_item", function()
+    return { id = TLGH.readKeyValues(SNAP).canId }
+end, "probe_item", function(m)
+    local snap = TLGH.readKeyValues(SNAP)
+    check("can_record_kept_over_the_restart", function()
+        return m.found == "true" and m.sidecar == snap.can and snap.can ~= "no-sidecar", string.format("before %s; after %s",
+            tostring(snap.can), tostring(m.sidecar))
+    end)
+end)
+A.afterVessel = call("after_restart_vessel", "probe_vessel", function()
+    return { id = TLGH.readKeyValues(SNAP).vesselId }
+end, "probe_vessel", function(m)
+    local snap = TLGH.readKeyValues(SNAP)
+    check("vessel_record_kept_over_the_restart", function()
+        return vesselText(m) == snap.vessel, string.format("before %s; after %s", tostring(snap.vessel), vesselText(m))
+    end)
+end)
+
+-- Where a role stands to watch: walked to, as a player without admin
+-- rights can (the spawn point is a square away).
 local function stand(name, x, y, d)
-    return once(name, function() teleport(x + (d or 0), y + (d or 0)) end)
+    return walkTo(name, x + (d or 0), y + (d or 0))
 end
 
 local bx0, by0 = S.behind(0)
@@ -1036,6 +1082,10 @@ end
 for _, s in ipairs(carrySteps()) do table.insert(MP.stepsA, s) end
 for _, s in ipairs(raceStepsA()) do table.insert(MP.stepsA, s) end
 table.insert(MP.stepsA, walkTo("mp_walk_back_end", bx0, by0))
+if MP.restart then
+    table.insert(MP.stepsA, A.snapCan)
+    table.insert(MP.stepsA, A.snapVessel)
+end
 table.insert(MP.stepsA, A.leave)
 
 -- `-Only carry` (tools/run-mp-harness.ps1): the vessel's pickup and gaits alone.
@@ -1066,6 +1116,24 @@ MP.stepsRejoined = {
     once("mp_rejoined", function() send("rejoined", {}) end), waitFrom("mp_wait_rejoin_b", "rejoin_shot"),
     once("mp_finish_b", function() send("finish", {}) end), MP.finish,
 }
+-- After the server's restart: each compares the floor with the server's,
+-- A also the records; A waits until B is back (a message sent before A
+-- joined would be lost) and a little more for B's comparison.
+if MP.restart then
+    MP.stepsRejoined = MP.role == "A" and {
+        MP.waitWorld, zoomTo("mp_zoom", 0.5), wait("mp_settle", 120),
+        compareFloor("floor_after_restart"), A.afterCan, A.afterVessel,
+        { name = "mp_wait_b_back", timeout = 6000, fn = function(ctx, ticks)
+            if otherPlayer() == nil then return nil end
+            ctx.seen = ctx.seen or ticks
+            return ticks - ctx.seen >= 900 or nil
+        end },
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+    } or {
+        MP.waitWorld, zoomTo("mp_zoom", 0.5), wait("mp_settle", 120),
+        compareFloor("floor_seen_after_restart"), waitFrom("mp_wait_finish", "finish"), MP.finish,
+    }
+end
 
 ------------------------------------------------------------------------------
 -- Client B: stands where it sees the row and answers A.
@@ -1106,7 +1174,10 @@ MP.stepsB = {
     seeGait("stand"), seeGait("walk"), seeGait("run"), seeGait("sprint"), seeGait("sneak"), seeGait("crouch"),
 }
 for _, s in ipairs(raceStepsB(vx + 1, vy + 1)) do table.insert(MP.stepsB, s) end
-for _, s in ipairs({
+for _, s in ipairs(MP.restart and {
+    waitFrom("mp_wait_restarting", "restarting", function() report():line("OBS  MP.A is leaving for the restart") end),
+    leave("mp_leave", nil),
+} or {
     waitFrom("mp_wait_reconnecting", "reconnecting", function() report():line("OBS  MP.A is leaving to join again") end),
     waitFrom("mp_wait_rejoined", "rejoined"), wait("mp_rejoin_settle", 60),
     once("mp_rejoin_shot", function() screenshot("after_rejoin") end), compareFloor("floor_seen_after_other_rejoined"),
@@ -1122,6 +1193,14 @@ if MP.only == "carry" then
     table.insert(MP.stepsB, waitFrom("mp_wait_finish", "finish"))
     table.insert(MP.stepsB, MP.finish)
 end
+
+-- What MPHarnessCases.lua builds its modes from.
+MP.h = { report = report, player = player, check = check, send = send, nextFrom = nextFrom, waitFrom = waitFrom,
+    call = call, once = once, wait = wait, ids = ids, inventoryItem = inventoryItem, countType = countType,
+    walkTo = walkTo, idle = idle, request = request, brief = brief, screenshot = screenshot, shot = shot,
+    otherPlayer = otherPlayer, floorItem = floorItem, floorListing = floorListing, inBothHands = inBothHands,
+    actionNames = actionNames, dropHeavy = dropHeavy, stand = stand, zoomTo = zoomTo, setPhase = setPhase,
+    bx0 = bx0, by0 = by0, vx = vx, vy = vy }
 
 Events.OnGameStart.Add(function()
     local p = phase()

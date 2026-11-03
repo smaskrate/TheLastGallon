@@ -280,6 +280,12 @@ listed with their replacement.
   the mod followed only `forceDropHeavyItems`, which the menus' take
   reaches with the hands already empty (found by reading
   `equipHeavyItem`).
+* In multiplayer (RT-MP run 155): the world menu's Grab of a running
+  vessel is the move no Lua sees, as foreseen. The record still said
+  `Processing` after it. The first status while it was carried paused it,
+  credited up to the last time it was found placed, and nothing more
+  counted while carried. The inventory's Drop was seen: the batch ran
+  again at once where the vessel landed.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

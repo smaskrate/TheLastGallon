@@ -9,8 +9,9 @@
   with one spawn point (the single-player harness's open ground at
   10660,10645, so no spawn town is asked for) and no zombies. Once the
   server is up, the console creates the test accounts tlga and tlgb with
-  admin access (adduser, setaccesslevel), their passwords random and kept
-  in mpserver\dev-credentials.txt, never printed.
+  admin access (adduser, setaccesslevel; the user role with -NonAdmin),
+  their passwords random and kept in mpserver\dev-credentials.txt, never
+  printed.
 
   Each client gets its role (TLG_harness_request.txt: mp-a, mp-b) and the
   connection (TLG_harness_connect.txt) in its cache's Lua folder. The
@@ -34,13 +35,26 @@
 .PARAMETER Only
   carry: only the vessel's pickup, the gaits, its put-down and the two
   players taking it at once (two clients); heavy: only vanilla's meteorite
-  taken off the floor (one client).
+  taken off the floor (one client); machines: a running vessel moved by the
+  world menu's Grab, and two players loading one fermenter at once (two
+  clients); fuel: pours and refuelling at the Gas2Go pumps, a generator and
+  a car (one or two clients); conversion: a generator converted at the
+  workshop on the shortest day (one client).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
+.PARAMETER NonAdmin
+  Both test accounts are plain players (setaccesslevel user). The server's
+  lines naming a kick or the anti-cheat are printed after the run either way.
+.PARAMETER Restart
+  With the full run: instead of A leaving and joining again, both clients
+  leave to the main menu, the server is saved, stopped and started again
+  on the same world, and both join again (each client waits for
+  Lua\TLG_harness_mpgo.txt, written once the server is up again).
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy")][string]$Only = "", [switch]$NoMod)
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion")][string]$Only = "", [switch]$NoMod,
+    [switch]$NonAdmin, [switch]$Restart)
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     Write-Host "The Windows session is locked; unlock the desktop and run again."
@@ -137,10 +151,14 @@ end
 # No zombies: Zombies 6 is "None" (Sandbox_ZombieCount_option6); the server
 # reads each option it finds and keeps the rest at their defaults
 # (SandboxOptions.loadServerLuaFile, BC). The server harness logs the
-# values it got.
+# values it got. The conversion's 7.5 work hours fit the run on the
+# shortest day (DayLength 1: 15 minutes, Sandbox_DayLength_option1), and
+# the fuel case's generator and car burn enough there to be seen (run 156
+# read none in half a minute on the default day).
+$dayLength = if ($Only -eq "conversion" -or $Only -eq "fuel") { "`n    DayLength = 1," } else { "" }
 @"
 SandboxVars = {
-    VERSION = 6,
+    VERSION = 6,$dayLength
     Zombies = 6,
     ZombieConfig = {
         PopulationMultiplier = 0.0,
@@ -169,10 +187,12 @@ for ($i = 0; $i -lt $Clients; $i++) {
     ($opts.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) | Set-Content -Encoding ascii (Join-Path $c "options.ini")
     $lua = Join-Path $c "Lua"
     New-Item -ItemType Directory -Force $lua | Out-Null
-    Remove-Item (Join-Path $lua "TLG_harness_mp.txt"), (Join-Path $lua "TLG_harness_mpstate.txt") -ErrorAction SilentlyContinue
+    Remove-Item (Join-Path $lua "TLG_harness_mp.txt"), (Join-Path $lua "TLG_harness_mpstate.txt"),
+        (Join-Path $lua "TLG_harness_mpgo.txt"), (Join-Path $lua "TLG_harness_mpsnap.txt") -ErrorAction SilentlyContinue
     Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_request.txt") -Value $roles[$i]
     @("ip=127.0.0.1", "port=16361", "user=$($users[$i])", "password=$($cred[$users[$i]])",
-        "serverPassword=$($cred.serverPassword)", "only=$Only") | Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_connect.txt")
+        "serverPassword=$($cred.serverPassword)", "only=$Only", "restart=$(if ($Restart) { '1' } else { '0' })") |
+        Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_connect.txt")
 }
 $serverLua = Join-Path $serverCache "Lua"
 New-Item -ItemType Directory -Force $serverLua | Out-Null
@@ -204,9 +224,9 @@ $jvm = "--enable-native-access=ALL-UNNAMED --add-exports=java.base/jdk.internal.
     "-ip 127.0.0.1 -port 16361 -udpport 16362"
 $serverOut = Join-Path $serverCache "server-stdout.txt"
 $serverErr = Join-Path $serverCache "server-stderr.txt"
-# The last run's log still says SERVER STARTED (run 139 sent the account
-# commands before this server read its console).
-Remove-Item $serverOut, $serverErr -ErrorAction SilentlyContinue
+# The first server's log, kept through a restart for the scan at the end.
+$serverOut1 = Join-Path $serverCache "server-stdout-1.txt"
+Remove-Item $serverOut1 -ErrorAction SilentlyContinue
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = "cmd.exe"
 $psi.Arguments = "/c """"$java"" $jvm > ""$serverOut"" 2> ""$serverErr"""""
@@ -214,27 +234,59 @@ $psi.WorkingDirectory = $GameDir
 $psi.UseShellExecute = $false
 $psi.RedirectStandardInput = $true
 $psi.CreateNoWindow = $true
-$server = [System.Diagnostics.Process]::Start($psi)
-# .NET writes a UTF-8 BOM into the pipe first; an empty first line absorbs it.
-$console = New-Object System.IO.StreamWriter($server.StandardInput.BaseStream, (New-Object System.Text.ASCIIEncoding))
-$console.AutoFlush = $true
-$console.WriteLine("")
-Write-Host "server started (shell pid $($server.Id))"
-while ((Get-Date) -lt $deadline -and -not $server.HasExited -and (Read-Shared $serverOut) -notmatch "\*\*\* SERVER STARTED") {
-    Start-Sleep -Seconds 3
+
+# Starts the server and waits for it to say it is up. The last log still
+# says SERVER STARTED (run 139 sent the account commands before the new
+# server read its console), so it goes first.
+function Start-HarnessServer {
+    Remove-Item $serverOut, $serverErr -ErrorAction SilentlyContinue
+    $t0 = Get-Date
+    $script:server = [System.Diagnostics.Process]::Start($psi)
+    # .NET writes a UTF-8 BOM into the pipe first; an empty first line absorbs it.
+    $script:console = New-Object System.IO.StreamWriter($script:server.StandardInput.BaseStream,
+        (New-Object System.Text.ASCIIEncoding))
+    $script:console.AutoFlush = $true
+    $script:console.WriteLine("")
+    Write-Host "server started (shell pid $($script:server.Id))"
+    while ((Get-Date) -lt $deadline -and -not $script:server.HasExited -and
+        (Read-Shared $serverOut) -notmatch "\*\*\* SERVER STARTED") {
+        Start-Sleep -Seconds 3
+    }
+    if ($script:server.HasExited -or (Read-Shared $serverOut) -notmatch "\*\*\* SERVER STARTED") {
+        Write-Host "server did not start (shell exited: $($script:server.HasExited) $(if ($script:server.HasExited) { $script:server.ExitCode }))"
+        (Read-Shared $serverErr) -split "`n" | Where-Object { $_ -match "ERROR|Exception|couldn't" } | Select-Object -Last 6 |
+            ForEach-Object { $l = $_.Trim(); foreach ($p in $cred.Values) { if ($p) { $l = $l.Replace($p, "********") } }; Write-Host "server: $l" }
+        Stop-HarnessServers
+        return $false
+    }
+    Write-Host "server up after $([int]((Get-Date) - $t0).TotalSeconds) s"
+    return $true
 }
-if ($server.HasExited -or (Read-Shared $serverOut) -notmatch "\*\*\* SERVER STARTED") {
-    Write-Host "server did not start (shell exited: $($server.HasExited) $(if ($server.HasExited) { $server.ExitCode }))"
-    (Read-Shared $serverErr) -split "`n" | Where-Object { $_ -match "ERROR|Exception|couldn't" } | Select-Object -Last 6 |
-        ForEach-Object { $l = $_.Trim(); foreach ($p in $cred.Values) { if ($p) { $l = $l.Replace($p, "********") } }; Write-Host "server: $l" }
+
+# Saves the world and quits through the console.
+function Stop-HarnessServer {
+    $script:console.WriteLine("save")
+    Start-Sleep -Seconds 5
+    $script:console.WriteLine("quit")
+    $grace = (Get-Date).AddSeconds(120)
+    while ((Get-Date) -lt $grace -and -not $script:server.HasExited) { Start-Sleep -Seconds 3 }
+    if (-not $script:server.HasExited) {
+        Write-Host "watchdog: stopping the server"
+        Stop-Process -Id $script:server.Id -Force
+    }
     Stop-HarnessServers
-    exit 4
 }
-Write-Host "server up after $([int]((Get-Date) - $started).TotalSeconds) s"
+
+if (-not (Start-HarnessServer)) { exit 4 }
+# The accounts outlive the world in the server's database, so the level is
+# set each run, by role name (BC Roles: banned, user, priority, observer,
+# gm, moderator, admin). Run 152 skipped it and run 153 sent "none", which
+# the server refused ("Access Level '' unknown"): both stayed admin.
+$level = if ($NonAdmin) { "user" } else { "admin" }
 foreach ($u in $users) {
     $console.WriteLine("adduser ""$u"" ""$($cred[$u])""")
     Start-Sleep -Seconds 2
-    $console.WriteLine("setaccesslevel ""$u"" ""admin""")
+    $console.WriteLine("setaccesslevel ""$u"" ""$level""")
     Start-Sleep -Seconds 2
 }
 # The lines naming the accounts, passwords masked.
@@ -289,8 +341,23 @@ for ($i = 0; $i -lt $Clients; $i++) {
 }
 
 $clicks = 0
+$restarted = $false
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 5
+    # -Restart: once every client waits at the main menu, the server goes
+    # down saved and comes up again on the same world.
+    if ($Restart -and -not $restarted) {
+        $left = @($clientCaches | Where-Object {
+            (Read-Shared (Join-Path $_ "Lua\TLG_harness_mpstate.txt")) -match "phase=restart_wait" }).Count
+        if ($left -eq $Clients) {
+            Write-Host "all clients left: restarting the server"
+            Stop-HarnessServer
+            Move-Item -Force $serverOut $serverOut1
+            $restarted = $true
+            if (-not (Start-HarnessServer)) { break }
+            foreach ($c in $clientCaches) { Set-Content -Encoding ascii (Join-Path $c "Lua\TLG_harness_mpgo.txt") -Value "go=1" }
+        }
+    }
     $allDone = $true
     for ($i = 0; $i -lt $Clients; $i++) {
         $c = $clientCaches[$i]; $p = $procs[$i]
@@ -310,17 +377,16 @@ $grace = (Get-Date).AddSeconds(90)
 while ((Get-Date) -lt $grace -and @($procs | Where-Object { -not $_.HasExited }).Count -gt 0) { Start-Sleep -Seconds 3 }
 foreach ($p in $procs) { if (-not $p.HasExited) { Write-Host "watchdog: stopping client $($p.Id)"; Stop-Process -Id $p.Id -Force } }
 
-$console.WriteLine("save")
-Start-Sleep -Seconds 5
-$console.WriteLine("quit")
-$grace = (Get-Date).AddSeconds(120)
-while ((Get-Date) -lt $grace -and -not $server.HasExited) { Start-Sleep -Seconds 3 }
-if (-not $server.HasExited) {
-    Write-Host "watchdog: stopping the server"
-    Stop-Process -Id $server.Id -Force
-}
+if (-not $script:server.HasExited) { Stop-HarnessServer }
 Stop-HarnessServers
 Write-Host "server exited"
+# A kicked client shows only as missing checks otherwise.
+((Read-Shared $serverOut1) + "`n" + (Read-Shared $serverOut)) -split "`n" |
+    Where-Object { $_ -match "(?i)\bkick(ed)?\b|anti-?cheat|\bbanned\b" } | ForEach-Object {
+    $l = $_.Trim()
+    foreach ($p in $cred.Values) { if ($p) { $l = $l.Replace($p, "********") } }
+    Write-Host "server: $l"
+}
 
 for ($i = 0; $i -lt $Clients; $i++) {
     $f = Join-Path $clientCaches[$i] "Lua\TLG_harness_mp.txt"

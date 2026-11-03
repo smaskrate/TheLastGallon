@@ -1,0 +1,38 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlgb: hello role=B
+OBS  MPS.message from tlga: start role=A
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=spawn_grab_vessel x=10663 y=10642
+OBS  MPS.reply spawned batch=Processing id=181827704 item=TLG.FermenterVessel role=A tag=spawn_grab_vessel x=10663 y=10642
+OBS  MPS.message from tlga: probe_vessel id=181827704 role=A tag=grab_before
+OBS  MPS.reply probe_vessel done=0 inputs={sugar_eq=6.0000,water=30.0000} listed=10663,10642 now=2.2387256622314453 pause=none role=A seen=2.2298412322998047 site=10663,10642 state=Processing t=2.2298412322998047 tag=grab_before takes= vessels=1 where=floor 10663,10642
+OBS  MPS.message from tlga: probe_vessel id=181827704 role=A tag=grab_after
+OBS  MPS.reply probe_vessel done=0 inputs={sugar_eq=6.0000,water=30.0000} listed=10663,10642 now=2.2662649154663086 pause=none role=A seen=2.2298412322998047 site=10663,10642 state=Processing t=2.2298412322998047 tag=grab_after takes= vessels=1 where=inventory tlga
+OBS  MPS.message from tlga: probe_vessel id=181827704 role=A tag=grab_carried_1
+OBS  MPS.reply probe_vessel done=0 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=2.266709327697754 pause=not_placed role=A seen=2.2298412322998047 site=10663,10642 state=Paused t=2.2662649154663086 tag=grab_carried_1 takes= vessels=1 where=inventory tlga
+OBS  MPS.message from tlga: probe_vessel id=181827704 role=A tag=grab_carried_2
+OBS  MPS.reply probe_vessel done=0 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=2.3337879180908203 pause=not_placed role=A seen=2.2298412322998047 site=10663,10642 state=Paused t=2.333343505859375 tag=grab_carried_2 takes= vessels=1 where=inventory tlga
+OBS  MPS.message from tlga: probe_vessel id=181827704 role=A tag=grab_dropped
+OBS  MPS.reply probe_vessel done=0 inputs={sugar_eq=6.0000,water=30.0000} listed=10662,10643 now=2.3475542068481445 pause=none role=A seen=2.334676742553711 site=10662,10643 state=Processing t=2.334676742553711 tag=grab_dropped takes= vessels=1 where=floor 10662,10643
+OBS  MPS.message from tlga: probe_vessel id=181827704 role=A tag=grab_placed_1
+OBS  MPS.reply probe_vessel done=0.012877464294433594 inputs={sugar_eq=6.0000,water=30.0000} listed=10662,10643 now=2.34799861907959 pause=none role=A seen=2.3475542068481445 site=10662,10643 state=Processing t=2.3475542068481445 tag=grab_placed_1 takes= vessels=1 where=floor 10662,10643
+OBS  MPS.message from tlga: probe_vessel id=181827704 role=A tag=grab_placed_2
+OBS  MPS.reply probe_vessel done=0.07994270324707031 inputs={sugar_eq=6.0000,water=30.0000} listed=10662,10643 now=2.4150638580322266 pause=none role=A seen=2.4146194458007812 site=10662,10643 state=Processing t=2.4146194458007812 tag=grab_placed_2 takes= vessels=1 where=floor 10662,10643
+OBS  MPS.message from tlga: spawn item=TLG.FermenterVessel role=A tag=spawn_load_vessel x=10658 y=10647
+OBS  MPS.reply spawned batch=nil id=814578983 item=TLG.FermenterVessel role=A tag=spawn_load_vessel x=10658 y=10647
+OBS  MPS.message from tlga: give items=Base.Sugar;Base.Sugar;Base.Yeast;Base.BucketEmpty role=A tag=give_feedstock water=10
+OBS  MPS.reply given ids=Base.Sugar=996486108;Base.Sugar=1687491607;Base.Yeast=1199552379;Base.BucketEmpty=997136865 role=A tag=give_feedstock
+OBS  MPS.message from tlga: load_setup role=A
+OBS  MPS.message from tlgb: give items=Base.Sugar;Base.Sugar;Base.Yeast;Base.BucketEmpty role=B tag=give_feedstock water=10
+OBS  MPS.reply given ids=Base.Sugar=1027142983;Base.Sugar=1355615722;Base.Yeast=1701878643;Base.BucketEmpty=1973102994 role=B tag=give_feedstock
+OBS  MPS.message from tlgb: load_ready role=B
+OBS  MPS.message from tlga: load_now role=A
+OBS  MPS.message from tlga: load_result ok=true reason=nil role=A
+OBS  MPS.message from tlgb: load_result ok=false reason=machine_busy role=B
+OBS  MPS.message from tlga: probe_vessel id=814578983 role=A tag=load_server
+OBS  MPS.reply probe_vessel done=0 inputs={sugar_eq=2.0000,water=10.0000} listed=10658,10647 now=2.4634742736816406 pause=none role=A seen=2.4541492462158203 site=10658,10647 state=Processing t=2.4541492462158203 tag=load_server takes= vessels=2 where=floor 10658,10647
+OBS  MPS.message from tlga: finish role=A

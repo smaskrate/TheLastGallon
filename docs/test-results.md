@@ -11,7 +11,8 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
 | RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
-| RT-MP: two players working one machine's batch at once; the TLG pour, refuelling, conversions, generators and vehicles; a server restart; players without admin rights; a real network | Not in the harness yet (it runs a server and two clients on this machine, launches 139–147) |
+| RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–162) |
+| RT-MP: siphoning, a vehicle conversion, the stills and the drying column, a vessel taken from a crate | Not in the multiplayer harness yet |
 | Performance baseline | Requires a measured client session |
 | Upgrade from an earlier release; install through the Steam Workshop | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12) |
 
@@ -3142,3 +3143,182 @@ Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run151_client_a.txt`,
 
 Not checked: a vessel taken from a crate or another container in
 multiplayer (also left to the game's `complete`).
+
+## 2026-11-03 — RT-MP launches 152–155 (plain players; the world menu's Grab; two players on one fermenter)
+
+The user asked for the multiplayer cases not run yet (relayed by the
+asset-requirements session: "Yes, test the rest"). Everything ran on this
+machine, unattended. A real network needs a second machine, and the user
+chose to leave it NOT RUN ("Leave it not run").
+
+**Plain players.** `-NonAdmin` makes both test accounts plain players.
+Launches 152 and 153 left them admins and are not counted. Accounts keep
+their access level between runs in the server's database. Launch 152
+only skipped the `setaccesslevel` command. Launch 153 sent the level
+"none", and the server refused it ("Access Level '' unknown"). From launch
+154 the launcher sets the role by name, `user`. Both clients now walk to
+where they stand rather than being teleported.
+
+Launch 154 was the full run with both players `role=user` (the server
+logged "User tlga is now user"): A **28/0**, B **11/0**. Everything
+launch 151 checked passed, the race and the inventory equip included. The
+server logged no kick and no anti-cheat line. The launcher's scan for
+those had matched two packet names in the server's start-up list
+(`ViewBannedIPs`, `ViewBannedSteamIDs`); it now matches whole words.
+
+**The world menu's Grab and two players on one fermenter** (`-Only
+machines`, launch 155: A **13/0**, B **2/0**):
+- **Grab.** A running vessel the server put down was taken with the world
+  menu's Grab (`ISWorldObjectContextMenu.onGrabWItem`). On a client that
+  queues an inventory transfer (`ISInventoryTransferAction`), which the
+  server carries out as an item transaction. None of the mod's Lua saw
+  it, and the mod's server-side take was not called. Right after the
+  grab, the server's record still said `Processing` at the old tile. The
+  first status asked while it was carried paused it (`Paused`,
+  `not_placed`). The batch was credited only up to the last time the
+  vessel was found placed (`seen`, here its start), so about 2 game
+  minutes of work were lost, within D-015's ten. A second status 15 s
+  later had counted nothing more.
+- **Drop.** Dropped through the inventory, the vessel was seen being put
+  down. Right after the drop the record was already `Processing` at the
+  new tile and listed there for the hourly reading. A later status
+  counted on from there (0.0129 h, then 0.0799 h).
+- **Two players loading one fermenter.** Each carried 2 kg of sugar, a
+  yeast and 10 L of water in a bucket, stood next to the same empty
+  vessel and loaded it as the mod's menu does (`machine.loadFerment` with
+  the target alone). B sent its request on the tick A's message reached
+  it. A's load was taken: the batch `Processing` with 2 kg and 10 L, and
+  A's sugar, yeast and water gone. B's was refused (`machine_busy`), and
+  B kept all of its own.
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run154_nonadmin_client_a.txt`,
+`…_client_b.txt`, `…_server.txt`, and the same three for
+`run155_machines`.
+
+## 2026-11-03 — RT-MP launches 156–160 (pours, refuelling, a generator and a car; two multiplayer bugs fixed)
+
+`-Only fuel`, one client, at the Muldraugh Gas2Go. From launch 157 it ran
+on the shortest day (DayLength 1), so a generator's and a car's burn show
+within the run. The server finds a pump with stock and puts down a car
+with an empty tank three squares off it, as the single-player chain parks
+it, plus two empty, connected generators. A then does the single-player
+chain's hops through the game's own menu functions, which walk and equip
+as a click does: a pump into an empty can, the can into the car, the pump
+into the car, a can into the first generator. Then come the mod's pour
+(petrol, then ethanol refused, then ethanol confirmed into the second
+generator), both generators started, the first one's burn, unplugging,
+taking and putting it back, and the car started and left idling. After
+each step the server reports the pump, the tank, both generators and A's
+cans with their records.
+
+Launch 156 (A 9/10) found two bugs in the mod:
+1. **Vanilla's refuelling did nothing with the mod on a server.** Filling
+   the can at the pump, pumping into the car and pouring the can into the
+   generator played on the client and moved no fuel. The server's log has
+   `ISTakeFuel.lua:100` "attempted index: getSquare of non-table",
+   `ISAddFuel.lua:73` "attempted index: getFluidContainer of non-table" and
+   "no such vehicle id= nil". A client sends a timed action's fields named
+   as its constructor's parameters, read from the function itself (BC
+   `NetTimedAction.set`), and the server calls the constructor with them.
+   The mod had wrapped those constructors as `function(self, ...)`, which
+   declares none, so the server built each action empty. Each wrapped
+   constructor now declares vanilla's parameters: `ISTakeFuel`,
+   `ISRefuelFromGasPump`, `ISAddGasolineToVehicle`,
+   `ISTakeGasolineFromVehicle` and `ISAddFuel`. A test in
+   `tests/integration/test_mp_actions.lua` fails if a constructor is
+   wrapped with varargs again.
+2. **The pour's result never reached the player.** The mod's pour ran on
+   the server, but its callback stayed on the client and never ran: a
+   function is not sent with the action (BC `PZNetKahluaTableImpl.save`).
+   So an incompatible fuel was refused with no message, and no offer to
+   pour it anyway. The client now keeps the callback under the request id
+   it sends with the action, and the server answers under that id, as the
+   mod's requests are answered. Launch 157 still showed no result. The
+   server passes the fields it receives in order, so the skipped function
+   let the id take the callback's place. The client now takes the callback
+   off the action, and a nil keeps its place.
+
+Launches 157–159 settled the harness:
+- Launch 157: the generator had to be unplugged before it could be taken
+  (`ISTakeGenerator.isValid` refuses a connected one). Its record is
+  reconciled with the game's burn when it is read (a status writes
+  nothing), so the burn is checked against the status's answer.
+- Launch 158: the car was locked; the server now gives A its key
+  (`BaseVehicle.createVehicleKey`).
+- Launch 159: the car did not start. A start can fail by chance (the
+  mod's gate weighs the fuel's quality), so the harness tries three
+  times, as the single-player gate step does.
+
+Launch 160 (A **19/0**):
+- The pump filled the empty can with 10 L, with the station's fuel
+  record, the same on the client as on the server.
+- The can went into the car (10 L) and the pump took it to 59 L, the
+  tank's record matching both times, also on the client.
+- A can put 5 L into the generator.
+- The mod's pour added 3 L of petrol. Ethanol into that petrol generator
+  was refused (`incompatible`) with nothing moved. Confirmed, the ethanol
+  went into the empty second generator. All three results reached the
+  player's client.
+- The petrol generator started and the ethanol one was refused.
+- The first generator burned 0.012 L, and the status's record followed
+  it. Unplugged, taken and put back, it carried that record to the item
+  and back.
+- The car unlocked with its key, started on the first try and idled
+  0.025 L, its record following.
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run156_fuel_client_a.txt`
+and `…_server.txt` for each of launches 156–160, and
+`2026-11-03_rt-mp_run156_server_constructor_errors.txt` (the server's
+lines above).
+
+## 2026-11-03 — RT-MP launch 161 (a server restart)
+
+`tools/run-mp-harness.ps1 -Clients 2 -Restart`: the full run, ending with
+a server restart in place of A's rejoin. A first asks the server for its
+can's and its vessel's records and keeps them in a file. Then both
+clients leave to the main menu. The launcher saves and quits the server,
+starts it again on the same world (up in 24 s) and writes each client a
+go-file, and both join again.
+
+Result: A **30/0** over its sessions, B **12/0**. After the restart both
+clients' floors matched the server's: the two vessels, the five small
+items and the meteorite on their tiles. The can's record came back
+unchanged. The vessel's came back with the same state, site, hourly-list
+entry, inputs and stage hours (`Processing`, 10658,10647, 6 kg and 30 L,
+0.5250 h).
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run161_restart_client_a.txt`,
+`…_client_b.txt` and `…_server.txt`.
+
+## 2026-11-03 — RT-MP launch 162 (a generator conversion)
+
+`-Only conversion`, one client, on the shortest day (DayLength 1: the
+conversion's 7.5 work hours took about 4.7 real minutes). The server put
+down an empty generator by the spawn point and gave A the tools and parts
+the single-player loop hands over. It set A's skills and the Generator
+recipe on its own copy of the player, where the conversion's handlers
+read them, as the single-player loop sets them; A's client set the same.
+A then did what the workshop menu does: Start (`conversion.begin`), Hand
+over parts (`conversion.deliver`), and Work on it (`WorkshopMenu.work`,
+`ISTLGConversionWork`).
+
+Result: A **7/0**.
+- The conversion began (`InProgress`, inspect), and handing over the
+  parts used a rubber hose, 4 screws and an electric wire.
+- The work action reported to the server 31 times, a quarter hour of
+  world time each, and ended by itself at `Commissioned`. The project's
+  status said the same, and on the server the generator's effective
+  profile is `generator_si_flex`. Its fuel record keeps the base profile
+  (`generator_si_stock`); the commissioned conversion gives the effective
+  one (Generators.profile).
+- Ethanol poured into it without a confirmation was accepted, 3 L, and
+  the result reached the player's client. The generator then started on
+  it.
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run162_conversion_client_a.txt`
+and `…_server.txt`.
+
+Still not checked in multiplayer: a real network (the user chose to leave
+it NOT RUN, with no second machine), siphoning (it had the same fault and
+has the same fix), a vehicle conversion, the stills and the drying column,
+and a vessel taken from a crate.

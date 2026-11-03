@@ -114,7 +114,31 @@ both on one computer (RT-MP, 2026-11-03):
   - the fermentation vessel taken off the floor into both arms through
     the loot window, its batch paused while carried and running again
     where it is put down; when two players take it at once, one gets it
-    and the other's action is refused.
+    and the other's action is refused;
+  - all of the above with both players without admin rights;
+  - two players loading one fermenter at once: one load is taken, the
+    other refused ("machine busy") with the player's ingredients kept;
+  - a running fermenter taken with the world menu's Grab: the server
+    does not see that move, so the batch pauses at the next look at it,
+    credited up to the last time it was seen standing; dropped from the
+    inventory, it runs again at once where it lands;
+  - at the pumps: a pump into a can, a can into a car, a pump into a car,
+    a can into a generator, each with its fuel's record; the mod's pour
+    into a generator, ethanol refused into a petrol one and poured on
+    confirmation into another, with the result shown to the player;
+  - a generator started on petrol and refused on ethanol, its burn
+    followed, its record carried when it is taken and put back; a car
+    started with its key and idling, its burn followed;
+  - a generator converted to flex fuel at the workshop (Start, Hand over
+    parts, Work on it to Commissioned), then fed ethanol without a
+    confirmation and started on it;
+  - a server restart: both players' floor, a can's record and a running
+    fermenter's batch the same afterwards.
+- **Fixed after the first multiplayer fuel test:** with the mod on a
+  server, the game's own refuelling (pump to can, pump to car, can to car
+  or generator, siphoning) moved no fuel, and the mod's pour never showed
+  the player its result. Both work now; siphoning has the same fix but
+  was not run in multiplayer.
 - **The game's own limit (42.21):** on a dedicated server no heavy item can
   be taken off the floor through the loot window (double-click or drag);
   the server fails the action and the item stays where it is. Vanilla's
@@ -127,9 +151,9 @@ both on one computer (RT-MP, 2026-11-03):
   junction the game cannot start a server with a mod that ships animation
   files, as this one does since its carry pose (tried; a symbolic link
   was not).
-- **NOT RUN:** pours, refuelling, conversions, generators and vehicles in
-  multiplayer; two players working the same machine at once; a server
-  restart; players without admin rights; a real network.
+- **NOT RUN:** a real network (everything ran on one computer; the user
+  chose not to test across machines for now); siphoning, a vehicle
+  conversion, the stills and the drying column in multiplayer.
 
 ## External mods
 
