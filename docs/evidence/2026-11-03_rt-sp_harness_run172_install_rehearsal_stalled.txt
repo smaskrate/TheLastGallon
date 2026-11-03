@@ -1,0 +1,96 @@
+# TLG single-player harness phase A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP wait_world begin
+worldName=54927842025361487693 start=10660,10645 hours=2.0096 tlgNow=2.0096
+STEP lua_probe_client begin
+## Lua runtime (in-game environment)
+OBS  lua._VERSION :: Kahlua kahlua.major.kahlua.minor.kahlua.fix for Lua lua.version (J2SE)
+OBS  lua.type(next) :: nil
+OBS  lua.type(math.random) :: nil
+OBS  lua.type(table.unpack) :: nil
+OBS  lua.type(unpack) :: function
+OBS  lua.type(require) :: function
+OBS  lua.type(loadstring) :: function
+OBS  lua.type(getfenv) :: function
+OBS  lua.type(os) :: table
+OBS  lua.type(os.time) :: function
+OBS  lua.type(io) :: nil
+OBS  lua.-7 % 3 :: -1
+OBS  lua.error(table) type :: string
+OBS  lua.string.format('%s', nil) :: rejected
+OBS  lua.require returns module table :: true (table)
+OBS  lua.tostring(1e20) :: 1.0E20
+OBS  lua.deep recursion 3000 :: ERROR Stack overflow java.lang.RuntimeException
+OBS  classmetatables :: table
+STEP g01_client_translations begin
+PASS G01c.translation_IG_UI :: The Last Gallon
+PASS G01c.translation_Fluid :: Ethanol
+PASS G01c.translation_ContextMenu :: Fuel (The Last Gallon)
+PASS G01c.item_display_name :: Fuel Sampling Kit
+OBS  G13.icon_texture_GlassJar :: true
+OBS  G01c.adapters :: transferWrapped=true pumpWrapped=true
+STEP find_pumps begin
+OBS  G06.pump location_shop_gas2go_01_13 at 10636,10622 units=8899 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10636,10623 units=4804 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10636,10629 units=4294 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10636,10630 units=2973 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10654,10622 units=14609 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10654,10623 units=6158 isPump=true
+OBS  G06.pump location_shop_gas2go_01_13 at 10654,10629 units=8604 isPump=true
+OBS  G06.pump location_shop_gas2go_01_12 at 10654,10630 units=3392 isPump=true
+OBS  G06.pump_count 8 other_fuel_sprites=location_shop_gas2go_01_2@10636,10619;location_shop_gas2go_01_1@10636,10620;location_shop_gas2go_01_2@10636,10633;location_shop_gas2go_01_1@10636,10634;location_shop_gas2go_01_0@10637,10619;location_shop_gas2go_01_3@10637,10620;location_shop_gas2go_01_0@10637,10633;location_shop_gas2go_01_3@10637,10634;location_shop_gas2go_01_2@10654,10619;location_shop_gas2go_01_1@10654,10620;location_shop_gas2go_01_2@10654,10633;location_shop_gas2go_01_1@10654,10634;location_shop_gas2go_01_0@10655,10619;location_shop_gas2go_01_3@10655,10620;location_shop_gas2go_01_0@10655,10633;location_shop_gas2go_01_3@10655,10634;location_shop_gas2go_01_1@10666,10620;location_shop_gas2go_01_40@10666,10633;location_shop_gas2go_01_1@10667,10620;location_shop_gas2go_01_40@10667,10633;location_shop_gas2go_01_1@10668,10620;location_shop_gas2go_01_40@10668,10633;location_shop_gas2go_01_2@10669,10620;location_shop_gas2go_01_8@10669,10621;location_shop_gas2go_01_8@10669,10622;location_shop_gas2go_01_8@10669,10623;location_shop_gas2go_01_0@10669,10624;location_shop_gas2go_01_0@10669,10625;location_shop_gas2go_01_10@10669,10626;location_shop_gas2go_01_60@10669,10626;location_shop_gas2go_01_0@10669,10627;location_shop_gas2go_01_0@10669,10628;location_shop_gas2go_01_19@10669,10628;location_shop_gas2go_01_8@10669,10629;location_shop_gas2go_01_19@10669,10629;location_shop_gas2go_01_8@10669,10630;location_shop_gas2go_01_19@10669,10630;location_shop_gas2go_01_8@10669,10631;location_shop_gas2go_01_19@10669,10631;location_shop_gas2go_01_0@10669,10632;location_shop_gas2go_01_19@10669,10632;location_shop_gas2go_01_1@10669,10633;location_shop_gas2go_01_1@10670,10620;location_shop_gas2go_01_1@10670,10633;location_shop_gas2go_01_1@10671,10620;location_shop_gas2go_01_1@10671,10633;location_shop_gas2go_01_0@10672,10614;location_shop_gas2go_01_1@10672,10620;location_shop_gas2go_01_20@10672,10630;location_shop_gas2go_01_19@10672,10631;location_shop_gas2go_01_1@10672,10633;location_shop_gas2go_01_2@10673,10618;location_shop_gas2go_01_10@10673,10619;location_shop_gas2go_01_3@10673,10620;location_shop_gas2go_01_21@10673,10630;location_shop_gas2go_01_1@10673,10633;location_shop_gas2go_01_11@10674,10618;location_shop_gas2go_01_21@10674,10630;location_shop_gas2go_01_1@10674,10633;location_shop_gas2go_01_1@10675,10618;location_shop_gas2go_01_21@10675,10630;location_shop_gas2go_01_1@10675,10633;location_shop_gas2go_01_1@10676,10618;location_shop_gas2go_01_21@10676,10630;location_shop_gas2go_01_1@10676,10633;location_shop_gas2go_01_0@10677,10615;location_shop_gas2go_01_0@10677,10616;location_shop_gas2go_01_0@10677,10617;location_shop_gas2go_01_0@10677,10618;location_shop_gas2go_01_0@10677,10619;location_shop_gas2go_01_0@10677,10620;location_shop_gas2go_01_0@10677,10621;location_shop_gas2go_01_0@10677,10622;location_shop_gas2go_01_0@10677,10623;location_shop_gas2go_01_0@10677,10624;location_shop_gas2go_01_0@10677,10625;location_shop_gas2go_01_0@10677,10626;location_shop_gas2go_01_0@10677,10627;location_shop_gas2go_01_0@10677,10628;location_shop_gas2go_01_0@10677,10629;location_shop_gas2go_01_0@10677,10630;location_shop_gas2go_01_0@10677,10631;location_shop_gas2go_01_0@10677,10632;location_shop_gas2go_01_3@10677,10633
+OBS  G06.sandbox :: infinite=false contamination=true
+STEP vehicle_scripts begin
+OBS  G09.vehicle_script_count 241 chosen=Base.CarNormal
+STEP vehicles_spawn begin
+OBS  G03.vehicle1 id=236 script=Base.CarNormal at 10639.0,10625.0 tankCap=49 amount=0 side=no-sidecar
+OBS  G03.vehicle2 id=235 script=Base.CarNormal at 10644.0,10625.0 tankCap=59 amount=0 side=no-sidecar
+STEP generator_spawn begin
+PASS G05.IsoGenerator_new_wrappable :: calls=1
+OBS  G04.generator :: type=Base.Generator maxFuel=10 fuel=0 cond=100 index=1 md.generatorFullType=Base.Generator
+STEP chain_1_pump_to_can begin
+OBS  CHAIN.1_pump_to_can.before src initialized id=nil rev=0 total=8899.0000 q[gasoline=8885.1452,sediment=4.9073,water=8.9475] deg[gasoline=0.0594] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can litres src 8899.0000->8889.0000 dst 0.0000->10.0000
+OBS  CHAIN.1_pump_to_can.after src ok id=R1939059303-1 rev=1 total=8889.0000 q[gasoline=8875.1608,sediment=4.9018,water=8.9375] deg[gasoline=0.0594] mic=0 stab=0
+OBS  CHAIN.1_pump_to_can.after dst ok id=S1939059303-2 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0594] mic=0 stab=0
+PASS CHAIN.1_pump_to_can.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.1_pump_to_can.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.1_pump_to_can.fuel_state_carried :: worst=1.62e-08 at deg:gasoline
+OBS  G06.pump_to_can units 8899->8889 (-10) canL +10.0000 litres_per_unit=1.0000 frac=1.8189894035458565E-12 fluids=total=10.0000 [Petrol=9.9844,TLG_FuelSediment=0.0055,TLG_FuelWater=0.0101]
+OBS  G03.vanilla_menus_accept_station_can :: true
+STEP chain_2_can_to_vehicle begin
+OBS  CHAIN.2_can_to_vehicle.before src ok id=S1939059303-2 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0594] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  CHAIN.2_can_to_vehicle.after src reconciled id=S1939059303-2 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.2_can_to_vehicle.after dst ok id=V1939059303-3 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0594] mic=0 stab=0
+PASS CHAIN.2_can_to_vehicle.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.2_can_to_vehicle.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.2_can_to_vehicle.fuel_state_carried :: worst=1.89e-08 at deg:gasoline
+STEP chain_3_vehicle_to_can begin
+OBS  CHAIN.3_vehicle_to_can.before src ok id=V1939059303-3 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0594] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  CHAIN.3_vehicle_to_can.after src ok id=V1939059303-3 rev=2 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.3_vehicle_to_can.after dst ok id=S1939059303-5 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0594] mic=0 stab=0
+PASS CHAIN.3_vehicle_to_can.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.3_vehicle_to_can.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.3_vehicle_to_can.fuel_state_carried :: worst=1.89e-08 at deg:gasoline
+STEP chain_4_can_to_generator begin
+OBS  CHAIN.4_can_to_generator.before src ok id=S1939059303-5 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0594] mic=0 stab=0
+OBS  CHAIN.4_can_to_generator.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.4_can_to_generator litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  CHAIN.4_can_to_generator.after src reconciled id=S1939059303-5 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  CHAIN.4_can_to_generator.after dst ok id=G1939059303-6 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0595] mic=0 stab=0
+PASS CHAIN.4_can_to_generator.litres_conserved :: out=10.00000 in=10.00000
+PASS CHAIN.4_can_to_generator.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS CHAIN.4_can_to_generator.fuel_state_carried :: worst=2.11e-08 at deg:gasoline
+STEP chain_summary begin
+PASS CHAIN.end_to_end.litres :: drawn=10.00000 generator=10.00000 left_on_the_way=0.00000
+PASS CHAIN.end_to_end.fuel_state :: worst=3.87e-05 at deg:gasoline | station aged id=nil rev=0 total=8899.0000 q[gasoline=8885.1452,sediment=4.9073,water=8.9475] deg[gasoline=0.0594] mic=0 stab=0 | generator now id=G1939059303-6 rev=1 total=10.0000 q[gasoline=9.9844,sediment=0.0055,water=0.0101] deg[gasoline=0.0595] mic=0 stab=0
+STEP g06_pump_to_vehicle begin
+OBS  G06.pump_to_vehicle in area after 1 placement(s) at 10637.88,10626.23
+OBS  G06.pump_to_vehicle.before src ok id=R1939059303-1 rev=1 total=8889.0000 q[gasoline=8875.1607,sediment=4.9018,water=8.9375] deg[gasoline=0.0594] mic=0 stab=0
+OBS  G06.pump_to_vehicle.before dst - id=V1939059303-3 rev=2 total=0.0000 q[] deg[] mic=0 stab=0

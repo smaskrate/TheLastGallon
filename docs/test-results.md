@@ -3426,3 +3426,27 @@ A and server each).
 
 Still not run in multiplayer: a real network (the user's choice), a still
 or drying column picked up while working, and a crate as such.
+
+## 2026-11-03 — RT-SP launches 172–173 (the zip of `be48759`)
+
+`tools/rehearse-install.ps1` built the zip of commit `be48759`: 120 files,
+SHA-256 `85b078bf…`, 3,817,924 bytes, the same bytes in both launches.
+200/200 tests, compile check 114/0 and translations OK came first. The zip
+differs from launch 163's (`16c93e7f…`) only in the header comments of six
+adapters (multiplayer now cited) and in the shipped support matrix and
+changelog. It matched its manifest and was installed into a fresh
+isolated cache.
+
+Launch 172 froze. The game's log stops at frame 2485, right after phase
+A's pump-to-car step queued the refuelling, with no error. The launcher's
+watchdog stopped the client after 40 minutes. The Windows session was
+unlocked when this was checked afterwards, and nothing was found that
+explains it. The same code had passed that step in launch 163.
+
+Launch 173, the same zip again: phase A **94/0**, phase B **14/0**, the
+pump-to-car step included (39 L, its record carried). The console's one
+exception came from the harness's own deep-recursion probe.
+
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run173_install_rehearsal.txt`,
+and launch 172's partial file,
+`2026-11-03_rt-sp_harness_run172_install_rehearsal_stalled.txt`.
