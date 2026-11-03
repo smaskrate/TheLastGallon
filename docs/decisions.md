@@ -642,9 +642,11 @@ listed with their replacement.
   0.17 file units in front of the hands and 0.10 down. Chosen in game
   from four candidates (run 116): keyed for one frame, the barrel swung
   through the stride; keyed per key, it stayed steady. At 0.06 down its
-  rim reached her chin; at 0.10 the lid sat below it. Verified with the
+  rim reached the chin; at 0.10 the lid sat below it. Verified with the
   gait mode, now also sprinting crouched (run 117), where the body plays
-  the standing sprint. Running keeps the standing clip, and its pictures
+  the standing sprint, and again from the package's item tree after the
+  zip of `2e0d80d` installed clean (runs 118–119). Running keeps the
+  standing clip, and its pictures
   (run 117) show the barrel tilting and swinging with the run's lean,
   which run 108's note had missed.
 

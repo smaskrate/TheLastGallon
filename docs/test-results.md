@@ -2535,15 +2535,17 @@ request `sp-rtmps`, no save). Each candidate is a harness item with the
 shipped hand model. Its own pose files play the candidate clip while the
 character sprints and moves (the conditions planned for the vessel), and
 the shipped standing clip otherwise. Each sprints the views row both
-ways, photographed eight times between 30 and 65 percent of the way:
-about 3 tiles, more than one 0.67 s stride.
+ways, photographed eight times between 30 and 65 percent of the way: 3
+to 4 tiles at about 3.2 tiles a second, just over one stride
+(`defaultSprint.xml` plays the 0.67 s clip at speed scales 0.96 and
+0.80).
 
 | Candidate | Keyed for (all from `Bob_Sprint.x`, arms in their standing directions, 0.17 forward) | Down | The pictures |
 | --- | --- | --- | --- |
 | first frame | its first frame, as the crouch clips were | 0.06 | the barrel tilts and swings hardest |
 | mean key | its key 6, 1.6° from the stride's mean chest | 0.06 | it swings on either side of upright |
-| per key | each of its 21 keys (`--sync`) | 0.06 | upright and steady in all 16 shots; the rim at her chin |
-| per key | the same | 0.10 | upright and steady in all 16 shots; the lid below her chin, the hands on its upper sides |
+| per key | each of its 21 keys (`--sync`) | 0.06 | upright and steady in all 16 shots; the rim at the chin |
+| per key | the same | 0.10 | upright and steady in all 16 shots; the lid below the chin, the hands on its upper sides |
 
 Result: **33/0**. Every shot was taken sprinting, with the candidate's
 node active, and the standing node came back at the end of each leg.
@@ -2597,4 +2599,37 @@ sets the flags they set); the low crouch near walls; a running pose of
 its own (not made, so running still tilts the barrel); what the vessel's
 weight does to a normal character (the harness has god mode and
 unlimited carry); a `WalkSpeed` other than 0.8, which changes the body's
-blend of `Bob_Sprint` and `Bob_Run`.
+blend of `Bob_Sprint` and `Bob_Run`; turning or colliding while
+sprinting. A turn animation takes `[layer][1]` and moves the carry to
+`[layer][2]` (launch 108). The carry keeps the body's timing, since each
+layer passes its parent's sync track on (`AnimLayer.findSyncTrack`), but
+the turn poses the chest instead of `Bob_Sprint`, so the barrel may not
+hold steady while it plays.
+
+## 2026-11-03 — RT-SP client harness, launches 118–119 (the zip with the sprint pose)
+
+Launch 118. Command: `tools/rehearse-install.ps1`, which rebuilt the
+package first (197/197 tests, compile check 105/0, translations OK, every
+shipped XML file parsing): the zip of commit `2e0d80d`, 96 files,
+SHA-256 `e3a284a3…`, 1,103,955 bytes. It differs from launch 114's zip
+(`5ab59e10…`, 94 files) in the sprint carry pose: two new files
+(`Bob_TLG_CarryVesselSprint.x` and `tlgcarryvesselsprint.xml`) and new
+comments in `tlgcarryvessel.xml` and `tlgcarryvesselsneak.xml`. The
+changelog and the support matrix changed too. The zip matched its
+manifest, was installed into a fresh isolated cache and ran the full
+harness.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run118_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as launch 114. The
+console's one exception came from the harness's own deep-recursion
+probe.
+
+Launch 119, `-Mode vessel-gaits` with the mod deployed from the package's
+item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`):
+**26/0**, as launch 117. The deployed clips and pose files carried the
+shipped hashes (the sprint clip `2D36AC57…`, its pose file `a756e8f9…`,
+as in the zip's manifest). Both sprinting legs played
+`tlgcarryvesselsprint` at all eight shots, crouched or not, and the
+other legs and the crouch played the nodes they played in launch 117.
+The console had no exception.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run119_vessel_gaits_packaged.txt`.

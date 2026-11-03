@@ -823,13 +823,16 @@ a writer needs:
   takes the parent layer's current sync track, or without one the
   heaviest synced track of the layer's heaviest node (BC). The first
   sub-layer's parent is the root layer, and each further one's the one
-  before (`AdvancedAnimator.ensureLayerParents`). So a carry clip on
-  `[layer][1]` runs in step with the body's clip. Vanilla's mask clips
-  have their gait's length: `Bob_Sprint_Bag.x` has `Bob_Sprint.x`'s 3200
-  ticks and 21 keys. Run 116 showed it (below). The mod's standing and
-  crouched carry clips last 10 s, so they run through once in each cycle
-  of the body's clip (`Bob_Idle.x` and the gait clips are 3200 ticks,
-  0.67 s); their arms move at most 3° over the whole clip.
+  before (`AdvancedAnimator.ensureLayerParents`), so the root layer's
+  sync track passes down the chain; a layer with no live node clears its
+  own, and the layers below it then keep their own time. So a carry clip
+  on `[layer][1]` runs in step with the body's clip. Vanilla's sprint bag
+  clip has its gait's length: `Bob_Sprint_Bag.x` has `Bob_Sprint.x`'s
+  3200 ticks and 21 keys (the one vanilla mask clip checked). Run 116
+  showed it (below). The mod's standing and crouched carry clips last
+  10 s, so they run through once in each cycle of the body's clip
+  (`Bob_Idle.x` and the gait clips are 3200 ticks, 0.67 s); their arms
+  move at most 3° over the whole clip.
 
 `tools/blender/pz_arms.py` writes a clip from a Mixamo clip's arms on
 those terms. It can also blend in a second clip of the same animation
@@ -893,10 +896,13 @@ more conditions than the standing and crouched nodes, so it plays
 whenever the character sprints, crouched or not; `isMoving` keeps it
 apart from the crouched still node. Crouched and sprinting, the body
 plays the standing sprint (`player/sprint/defaultSprint`, run 117's
-log), so one clip serves both. One frame cannot answer a chest that
-twists through the stride. Run 116 tried four clips, each sprinting the
-row both ways and photographed eight times across about 3 tiles (more
-than one 0.67 s stride):
+log), so one clip serves both. It blends in over 0.15 s, as
+`defaultSprint.xml` does (the crouched nodes take 0.30). One frame cannot
+answer a chest that twists through the stride. Run 116 tried four clips,
+each sprinting the row both ways and photographed eight times across 3
+to 4 tiles at about 3.2 tiles a second, just over one stride
+(`defaultSprint.xml` plays the 0.67 s clip at speed scales 0.96 and
+0.80):
 - keyed for `Bob_Sprint`'s first frame, as the crouch clips were: the
   barrel tilted and swung hardest;
 - keyed for its key nearest the stride's mean chest (`--body-key 6`, 1.6°
@@ -1087,7 +1093,9 @@ the shipped pose through the gait mode, run 113 **23/0**, then the zip
 with it installed clean, run 114 **94/0** and **14/0**, and the gait mode
 from its item tree, run 115 **23/0**, then a sprint carry pose:
 candidates in run 116 **33/0**, and the shipped pose through the gait
-mode, run 117 **26/0**. Most failures were traced to the harness
+mode, run 117 **26/0**, then the zip with it installed clean, run 118
+**94/0** and **14/0**, and the gait mode from its item tree, run 119
+**26/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container
