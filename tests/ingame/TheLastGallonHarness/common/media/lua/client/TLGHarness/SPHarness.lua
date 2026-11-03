@@ -66,6 +66,8 @@
 --             game's crouch, crouched still, walking and running
 --   sp-rtmps -> sprint carry trials: candidate clips keyed for the game's
 --             sprint, photographed over more than a stride both ways
+--   sp-rtmm -> the stills', drying column's and fuel filter's own models on
+--             the floor beside the fermenter, and the stills in the hand
 --   sp-rtman -> the field manual: its loot lists, manuals rolled from them,
 --             one read through the inventory menu (sp-rtmanit: in Italian)
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
@@ -97,7 +99,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8433,12 +8435,24 @@ RT.MI = { model = "TLGHarness.FermenterTest", hand = "TLGHarness.FermenterTestHa
 -- vessel keeps its own scripts (TLG_models.txt, TLG_machines.txt) and the
 -- undoCoreScale test barrel stands beside it for size; nothing is held.
 RT.MI.shipped = REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit"
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit"
 if RT.MI.shipped then
     -- The game keeps a resolved model name with its module (StaticModel =
     -- WaterTank read back as Base.WaterTank, run 68). The vessel's hand
     -- model is the mod's own since 2026-11-02 (the carry pose).
     RT.MI.model, RT.MI.hand, RT.MI.icon = "TLG.Fermenter", "TLG.FermenterHeld", "TLG_Fermenter"
+end
+
+-- The supplied machine models (request "sp-rtmm"): the fermenter for size,
+-- then the fuel filter, the drying column and the two stills, turned 0
+-- degrees, two or three tiles apart where they are wide. Each is
+-- photographed from the square behind it, where the character stands.
+if REQUEST == "sp-rtmm" then
+    RT.MI.keys = { "t0", "filter", "column", "pot", "reflux" }
+    RT.MI.across = { t0 = -1, filter = 0, column = 1, pot = 3, reflux = 6 }
+    RT.MI.types = { filter = "TLG.FuelFilter", column = "TLG.DryingColumn", pot = "TLG.PotStill", reflux = "TLG.RefluxStill" }
+    RT.MI.turns = {}
+    RT.MI.views = { tests = 1, small = 0, pot = 3, reflux = 6, row = 2 }
 end
 
 -- The mesh (and texture) each model script must name.
@@ -9753,9 +9767,9 @@ RT.MI.place = { name = "rtmi_place", timeout = 600, fn = function(ctx, ticks)
         return nil
     end
     if ticks < 60 then return nil end
-    local s0 = sq(M.spots.t0.x, M.spots.t0.y, 0)
+    local s0, last = sq(M.spots.t0.x, M.spots.t0.y, 0), M.spots[M.keys[#M.keys]]
     R:line("OBS  RTMI.placed from %d,%d to %d,%d (anchor %d,%d); t0 square before %s, after free=%s solid=%s solidTrans=%s",
-        M.spots.t0.x, M.spots.t0.y, M.spots.tank.x, M.spots.tank.y, M.cx, M.cy, ctx.before, tostring(s0:isFree(false)),
+        M.spots.t0.x, M.spots.t0.y, last.x, last.y, M.cx, M.cy, ctx.before, tostring(s0:isFree(false)),
         tostring(s0:isSolid()), tostring(s0:isSolidTrans()))
     R:check("RTMI.all_placed", function()
         local n, turns = 0, {}
@@ -9877,6 +9891,64 @@ RT.fermenterSteps = { RT.waitWorld, RT.MI.setup, RT.MI.place, RT.MI.goTo("rtmf_g
     RT.MI.shot("rtmf_icon", false), RT.MI.beforeSave, RT.saveAndExitAs("rtmf_save_and_exit", "sp-rtmfb") }
 RT.fermenterReloadSteps = { RT.MI.reload, RT.MI.reloadStatus, RT.MI.goTo("rtmfb_go_vessels", "tests"),
     RT.MI.zoomTo("rtmfb_zoom", 0.5), RT.MI.shot("rtmf_reloaded_vessels", true), RT.finish }
+
+-- The machine models supplied on 2026-11-03 (request "sp-rtmm"): the model
+-- scripts must name their own mesh and texture, and the items their models
+-- (TLG_models.txt, TLG_machines.txt, TLG_items.txt). The row (RT.MI.place,
+-- configured above) is photographed whole at zoom 1.0, then at 0.5 with the
+-- character standing on the row between the items. None of the four has a
+-- hand model: run 120 held the stills at true size through an action and
+-- they covered the character, and run 121 drew nothing for the drying
+-- column, which had none. So the pot still is held through a do-nothing
+-- action (which draws an item's hand model) to see nothing drawn.
+RT.MM = { models = { "PotStill", "RefluxStill", "DryingColumn", "FuelFilter" },
+    items = { { "TLG.PotStill", "TLG.PotStill", nil }, { "TLG.RefluxStill", "TLG.RefluxStill", nil },
+        { "TLG.DryingColumn", "TLG.DryingColumn", nil }, { "TLG.FuelFilter", "TLG.FuelFilter", nil } } }
+
+RT.MM.check = { name = "rtmm_check", timeout = 300, fn = function()
+    local sm = getScriptManager()
+    local got, ok = {}, true
+    for _, name in ipairs(RT.MM.models) do
+        local ms = sm:getModelScript("TLG." .. name)
+        local mesh, tex = ms and ms:getMeshName(), ms and ms:getTextureName()
+        local want = "TLG/" .. name:gsub("Held$", "")
+        ok = ok and mesh == want and tex == want
+        got[#got + 1] = string.format("TLG.%s mesh=%s texture=%s", name, tostring(mesh), tostring(tex))
+    end
+    R:check("RTMM.model_scripts_loaded", function() return ok, table.concat(got, "; ") end)
+    local wired, all = {}, true
+    for _, w in ipairs(RT.MM.items) do
+        local si = sm:getItem(w[1])
+        local world, hand = si and si:getWorldStaticModel(), si and si:getStaticModel()
+        -- An item with no hand model may read back nil or an empty name.
+        all = all and world == w[2] and (hand == w[3] or (w[3] == nil and hand == ""))
+        wired[#wired + 1] = string.format("%s WorldStaticModel=%s StaticModel=%s", w[1], tostring(world), tostring(hand))
+    end
+    R:check("RTMM.items_wired", function() return all, table.concat(wired, "; ") end)
+    return true
+end }
+
+-- The character on the row itself, on square k, at the items' depth (run
+-- 120 stood her behind them and at zoom 0.25 they fell below the frame).
+function RT.MM.stand(name, k)
+    return { name = name, timeout = 600, fn = function(ctx, ticks)
+        if ticks == 1 then
+            ISTimedActionQueue.clear(player())
+            local x, y = RT.MI.spot(RT.MI.cx, RT.MI.cy, k)
+            player():teleportTo(x + 0.5, y + 0.5, 0)
+        end
+        return ticks >= 90 or nil
+    end }
+end
+
+RT.machineModelSteps = { RT.waitWorld, RT.MI.setup, RT.MM.check, RT.MI.place,
+    RT.MI.goTo("rtmm_go_row", "row"), RT.MI.zoomTo("rtmm_zoom_row", 1.0), RT.MI.shot("rtmm_row", true),
+    RT.MI.zoomTo("rtmm_zoom_close", 0.5),
+    RT.MM.stand("rtmm_stand_column_pot", 2), RT.MI.shot("rtmm_beside_column_pot", true),
+    RT.MM.stand("rtmm_stand_reflux", 5), RT.MI.shot("rtmm_beside_reflux", true),
+    RT.MI.zoomTo("rtmm_zoom_hand", 0.25), RT.MI.goTo("rtmm_go_hand", "tests"),
+    RT.MI.propAction("action_pot", "TLG.PotStill", nil), RT.MI.shot("rtmm_action_pot", true),
+    RT.finish }
 
 ------------------------------------------------------------------------------
 -- Italian (request "sp-it", release gate 10): the client in Italian
@@ -10045,7 +10117,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -10129,6 +10201,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtmf" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the fermenter's model, before the save")
                 TLGH.Steps.run(R, RT.fermenterSteps, H, nil)
+            elseif REQUEST == "sp-rtmm" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the machine models")
+                TLGH.Steps.run(R, RT.machineModelSteps, H, nil)
             elseif REQUEST == "sp-rtmh" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, held items")
                 TLGH.Steps.run(R, RT.heldSteps, H, nil)
@@ -10171,7 +10246,7 @@ end
 -- The test model on the fermenter before any vessel is created or loaded,
 -- and again at boot in case the scripts are read after this file.
 if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     local ok, wired = pcall(RT.MI.wire)
     print("[TLGH] model import wiring at load: ok=" .. tostring(ok) .. " wired=" .. tostring(wired))
     Events.OnGameBoot.Add(function() pcall(RT.MI.wire) end)

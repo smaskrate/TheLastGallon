@@ -679,3 +679,31 @@ listed with their replacement.
   print media. Inspect read it and the game recorded it read, in EN and IT. A
   manual made before this change has no page (none could be obtained).
   Its icon and cover are still vanilla placeholders (A29, I03).
+
+## D-027 The stills, the drying column and the fuel filter use the supplied models
+* Decision: `TLG.PotStill`, `TLG.RefluxStill`, `TLG.DryingColumn` and
+  `TLG.FuelFilter` stand on the floor as the models the user supplied on
+  2026-11-03 (`TLG_models.txt`; provenance in `art-src/potstill`,
+  `refluxstill`, `dryingcolumn` and `fuelfilter`). They ship as the
+  fermenter's model does: each FBX byte for byte, each texture saved as
+  PNG. Each scale sets a true size from the capacity the machine models:
+  the pot still a 60 L pot (0.7: a 0.44 m pot, 1.05 m wide with its swan
+  neck and hose), the reflux still a 120 L boiler under its column (0.9:
+  1.35 m tall), the drying column a 40 L receiver jar under its column
+  (0.55: 0.82 m tall), the filter a 0.15 m canister (0.1). None of them
+  has a hand model; the stills' vanilla cooking pot in the hand is gone.
+* Reason: the user asked for them. The placeholders misled: the two
+  stills were the same cooking pot and the drying column a car's fuel
+  tank (run 66). The game draws a non-weapon held in one hand only during
+  an action, and the stills held then at true size covered the character
+  from feet to head (run 120). With no hand model the game draws nothing
+  there (run 121), as it does for a carried generator.
+* Consequences: verified RT-SP runs 120–122 (10/0 each): the scripts load
+  with their own meshes and textures, the items name them, and all four
+  drew on the floor beside the fermenter; next to the character the
+  heights came within about 10 % of the planned sizes. Neither still's
+  model shows a firebox. The icons are still vanilla placeholders (I02,
+  I06–I08), and the editable sources were not supplied. Multiplayer is
+  not run. The licence record rests on the user's statement of 2026-11-02
+  that they hold a commercial Tripo licence; the models were generated
+  the next day.

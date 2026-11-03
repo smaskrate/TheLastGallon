@@ -31,7 +31,7 @@ alternative), **NOT RUN**.
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
 | G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermenter whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14; the check passed in run 14). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
-| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. An original static test model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67); the supplied fermenter model (FBX) ships and was drawn, turned and reloaded (runs 68–69). Held items: drawn only during actions for non-weapons, as in vanilla (runs 73–74). See "G13: one original model imported" below. NOT RUN: animation, multiplayer rendering, sounds; vehicle parts are G11 |
+| G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. An original static test model (text `.x` mesh, PNG texture, 32×32 icon) loaded from a mod folder, drawn on the fermenter, turned and reloaded; three vanilla placeholders seen drawn (RT-SP runs 64–67); the supplied fermenter model (FBX) ships and was drawn, turned and reloaded (runs 68–69); four more supplied models (the stills, the drying column, the fuel filter) ship and were drawn beside it (runs 120–122). Held items: drawn only during actions for non-weapons, as in vanilla (runs 73–74). See "G13: one original model imported" below. NOT RUN: animation, multiplayer rendering, sounds; vehicle parts are G11 |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
 ## Lua runtime
@@ -738,7 +738,8 @@ At runtime (RT-SP; screenshots in `docs/evidence/2026-11-02_run6*`):
 
 The placeholders were seen drawn for the first time (run 66): the drying
 column as a car fuel tank and the pot still as a cooking pot, both small
-beside vanilla's water bottle, which has the vessel's `WaterTank` model.
+beside vanilla's water bottle, which has the vessel's `WaterTank` model
+(all three replaced since by the mod's own models: runs 68–69 and 120–122).
 The same screenshots show the machines' inventory category as the raw key
 `IGUI_ItemCat_Tools`: the four machine scripts say `DisplayCategory =
 Tools`, and vanilla's category is `Tool` (`Translate/EN/IG_UI.json:293`).
@@ -774,6 +775,32 @@ D-025); before, the hand showed vanilla's `WaterTank`. The icon is the
 mod's own since run 71: `Item_TLG_Fermenter.png`, drawn by
 `tools/make-icons.ps1`, loaded from the mod's `media/textures` and seen
 in the equipped-item button.
+
+### Four more supplied models (runs 120–122)
+
+The pot still's, the reflux still's, the drying column's and the fuel
+filter's own models, supplied on 2026-11-03 (`PROVENANCE.md` in
+`art-src/potstill`, `refluxstill`, `dryingcolumn` and `fuelfilter`), ship
+the same way: the FBX byte for byte in `media/models_X/TLG`, the JPEG
+texture saved as PNG, which gives the fermenter's shipped PNG byte for
+byte. Each is the same kind of file as the fermenter's (Blender 5.0.1,
+FBX 7400, Y up, base at the origin, about 1,000 triangles), sized 1.0
+along its largest side. Each `scale` sets a true size from the capacity
+the machine models: the pot still 0.7 (a 0.44 m pot of 55 L; 1.05 m wide
+with its swan neck and hose), the reflux still 0.9 (a 0.55 m boiler of
+110 L under its column; 1.35 m tall), the drying column 0.55 (a 0.35 m
+receiver jar of 40 L; 0.82 m tall), the filter 0.1 (0.15 m). Standing
+beside them on the same row (run 121), the character measured them
+within about 10 % of those heights, taking the character as 1.75 m and
+each base at the centre of its ground ellipse.
+
+`run-sp-harness.ps1 -Mode machine-models` checks the model scripts and
+the items' wiring, puts the four down beside a fermenter, and
+photographs the row and then the character between them. Held during
+an action at true size through a second model entry, as the fermenter's
+hand model is, a still covered the character from feet to head (run
+120). With no hand model the game drew nothing in the hand (the drying
+column, run 121), so the stills have none (run 122).
 
 ## Animation tooling (2026-11-02)
 
@@ -1095,7 +1122,9 @@ from its item tree, run 115 **23/0**, then a sprint carry pose:
 candidates in run 116 **33/0**, and the shipped pose through the gait
 mode, run 117 **26/0**, then the zip with it installed clean, run 118
 **94/0** and **14/0**, and the gait mode from its item tree, run 119
-**26/0**. Most failures were traced to the harness
+**26/0**, then the supplied models of the stills, the drying column and
+the fuel filter, runs 120, 121 and 122 **10/0** each. Most failures were
+traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

@@ -13,35 +13,42 @@ Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 **B** biodiesel, wood gas, biogas and propane (domain only, not wired),
 **C** electricity, further vehicle conversions and stations.
 
-## State on 2026-11-02
+## State on 2026-11-03
 
-* One original asset ships: the fermentation vessel's world model
-  (`TLG.Fermenter`, an FBX and its texture), supplied on 2026-11-02 and
-  generated with Tripo Studio under a commercial Tripo licence the user
-  holds (`art-src/fermenter/PROVENANCE.md`). The import test's model
-  lives in the dev-only harness mod.
-* Every other shipped item and machine borrows a vanilla icon and model by
-  name. The vessel's icon is the mod's own, drawn by
-  `tools/make-icons.ps1` to match its model. Since 2026-11-02 the vessel
+* Five original world models ship, each an FBX and its texture generated
+  with Tripo Studio under a commercial Tripo licence the user holds: the
+  fermentation vessel's (`TLG.Fermenter`, supplied on 2026-11-02;
+  `art-src/fermenter/PROVENANCE.md`), and since 2026-11-03 the pot still's,
+  the reflux still's, the drying column's and the fuel filter's
+  (`TLG.PotStill`, `TLG.RefluxStill`, `TLG.DryingColumn`, `TLG.FuelFilter`;
+  `art-src/potstill`, `refluxstill`, `dryingcolumn` and `fuelfilter`;
+  RT-SP runs 120–122). The import test's model lives in the dev-only
+  harness mod.
+* Every icon but the vessel's, and every other item's model, is
+  borrowed from vanilla by name. The vessel's icon is the mod's own, drawn
+  by `tools/make-icons.ps1` to match its model. Since 2026-11-02 the vessel
   is also carried in both arms as its own model (`TLG.FermenterHeld`),
   through a carry pose made from two Mixamo clips (`art-src/carry/`,
-  D-025).
+  D-025). The other machines have no hand model: the game draws a held
+  non-weapon only during an action, and a still held then at true size
+  covered the character (runs 120–121).
   The names exist in 42.21 (`models_items.txt`; `Item_*` entries in
   `UI.pack`/`UI2.pack`). How they render was first looked at on
   2026-11-02 (run 66, `engine-capabilities.md` G13): the drying column
-  reads as a car fuel tank, the pot still as a cooking pot, and the
+  read as a car fuel tank, the pot still as a cooking pot, and the
   vessel's `WaterTank` is a water-cooler bottle.
 * Several placeholders collide or mislead. The sampling kit and yeast
   starter share the jar icon; the fuel filter and drying column share the
   respirator-filter icon (`AirFilters` is vanilla's `RespiratorFilters`
-  icon); the pot still and reflux still share the pot icon and the
-  cooking-pot model, so they cannot be told apart. On the floor the drying
-  column is a car's fuel tank (`SmallGasTank` = `WorldItems/NormalGasTank1`);
-  the fermentation vessel was a water-cooler bottle (`WaterTank`) until its
-  own model arrived. The manual shows the smithing magazine cover.
-* Five small items (sampling kit, stabilizer, filter, manual, yeast
-  starter) have no `WorldStaticModel`; what they look like on the floor
-  is unknown.
+  icon); the pot still and reflux still share the pot icon, so in the
+  inventory they cannot be told apart. On the floor they could not either
+  until their own models arrived (both were the cooking pot), and the
+  drying column was a car's fuel tank (`SmallGasTank` =
+  `WorldItems/NormalGasTank1`); the fermentation vessel was a water-cooler
+  bottle (`WaterTank`). The manual shows the smithing magazine cover.
+* Four small items (sampling kit, stabilizer, manual, yeast starter) have
+  no `WorldStaticModel`; what they look like on the floor is unknown. The
+  fuel filter has its own since 2026-11-03.
 * One sound is used: `VehicleAddFuelFromCanister`, by the TLG pour.
   Conversion work, a timed action of several hours, is silent. Sampling,
   treatments, the machine menu, draining a generator and pouring into a
@@ -149,17 +156,19 @@ loop adds world noise only through code that decides to.
 | Audit | Code id | Now | Needed |
 | --- | --- | --- | --- |
 | A04 | `TLG.FermenterVessel` (`fermenter_barrel`, 160 L) | its own model `TLG.Fermenter` since 2026-11-02 (supplied), carried in both arms as `TLG.FermenterHeld` through the carry pose (A30) | done; the editable sources still missing |
-| A03 | `TLG.PotStill` (`pot_still`, 60 L, firebox) | `CookingPotGround`, in hand `CookingPot` | Pot, lyne arm, worm condenser, firebox |
-| A03 | `TLG.RefluxStill` (`reflux_still`, 120 L, firebox) | the same cooking pot | Boiler, packed column, reflux condenser, firebox; must read differently from the pot still |
-| I04 | `TLG.DryingColumn` (`drying_column`, 40 L) | `SmallGasTank`, a car fuel tank | Pipe column of quicklime with a receiver |
+| A03 | `TLG.PotStill` (`pot_still`, 60 L, firebox) | its own model `TLG.PotStill` since 2026-11-03 (supplied): a lidded pot with a swan neck and hose, 1.05 m wide; no hand model | done, though it shows no firebox or condenser; the editable sources still missing |
+| A03 | `TLG.RefluxStill` (`reflux_still`, 120 L, firebox) | its own model `TLG.RefluxStill` since 2026-11-03 (supplied): a boiler under a column with a condenser box, 1.35 m tall; it reads apart from the pot still | done, though it shows no firebox; the editable sources still missing |
+| I04 | `TLG.DryingColumn` (`drying_column`, 40 L) | its own model `TLG.DryingColumn` since 2026-11-03 (supplied): a pipe column standing in its receiver jar, 0.82 m tall | done; the editable sources still missing |
 | A29 | `TLG.FuelSampleKit` | no world model | vanilla `JarGlass_Ground` (as `Base.EmptyJar`) now; own texture later |
 | A29 | `TLG.FuelStabilizer` | no world model | vanilla `BleachBottle` now; own label later |
-| A29 | `TLG.FuelFilter` | no world model | vanilla `RespiratorFilters` (`models_clothes.txt`) now; cartridge model later |
+| A29 | `TLG.FuelFilter` | its own model `TLG.FuelFilter` since 2026-11-03 (supplied): a canister 0.15 m tall | done |
 | A29 | `TLG.ManualFuelSystems` | no world model | vanilla `Magazine` / `MagazineGround` with an own cover texture; it spawns in loot since 2026-11-02 (runs 101–103, D-026), so a player can drop it on a floor |
 | A29 | `TLG.YeastStarter` | no world model | vanilla `JarGlass_Ground` now; own texture later |
 
 A machine's in-hand model can reuse its floor mesh through a second `model`
-entry.
+entry, as the vessel's does for its carry pose. One held in a single hand
+is drawn only during an action, at true size: the stills covered the
+character (runs 120–121), so they have none.
 
 ### B. Biodiesel, wood gas, biogas, propane
 

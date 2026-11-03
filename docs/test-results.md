@@ -2633,3 +2633,41 @@ as in the zip's manifest). Both sprinting legs played
 other legs and the crouch played the nodes they played in launch 117.
 The console had no exception.
 Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run119_vessel_gaits_packaged.txt`.
+
+## 2026-11-03 — RT-SP client harness, launches 120–122 (the stills', drying column's and fuel filter's own models)
+
+The user supplied four models for the mod in `<game>/createdAssets/`
+(provenance in `art-src/potstill`, `refluxstill`, `dryingcolumn` and
+`fuelfilter`). They ship as the fermenter's did: each FBX byte for byte
+in `media/models_X/TLG`, each JPEG texture saved as PNG (the method gives
+the fermenter's shipped PNG byte for byte), and a model script each in
+`TLG_models.txt`. Their scales set true sizes from the machines'
+capacities: the pot still 0.7 (1.05 m wide, 0.68 m tall, a 0.44 m pot of
+55 L), the reflux still 0.9 (1.35 m tall, a 0.55 m boiler of 110 L), the
+drying column 0.55 (0.82 m, a 0.35 m receiver jar of 40 L) and the
+filter 0.1 (0.15 m). The items name them as their `WorldStaticModel`
+(`TLG_machines.txt`, `TLG_items.txt`).
+
+Command: `tools/run-sp-harness.ps1 -Mode machine-models` (new; request
+`sp-rtmm`, no save). It checks each model script's mesh and texture and
+each item's wiring, then puts the four down on cleared ground beside a
+fermenter, at 0 degrees, and photographs them.
+
+| Launch | Result | What it showed |
+| --- | --- | --- |
+| 120 | **10/0** | Every model drew, textured, in the row beside the fermenter. The close-ups missed: the character stood behind each item and at zoom 0.25 the item fell below the frame. Held through an action, the stills' hand models (the floor mesh at true size, upright and centred on the hand bone as the fermenter's is) covered the character from feet to head |
+| 121 | **10/0** | The character standing on the row between the items, at zoom 0.5. Taking her as 1.75 m, the reflux still measured 1.41 m (1.35 m planned), the drying column 0.90 m (0.82 m) and the pot still's pot about 0.35 m high (0.36 m), each base taken at the centre of its ground ellipse. The drying column, which has no hand model, held through an action: nothing drawn |
+| 122 | **10/0** | The stills without hand models, as shipped: the row and the character beside the items as in launch 121; the pot still held through an action, nothing drawn |
+
+Each launch's console had no exception.
+
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run120_machine_models.txt`,
+`…_run121_machine_models.txt` and `…_run122_machine_models.txt`; the
+sheets `2026-11-03_run120_machine_models_sheet.jpg` (the row and the
+stills held at true size) and `2026-11-03_run122_machine_models_sheet.jpg`
+(runs 121–122).
+
+Not checked: the models turned other ways than 0 degrees (the fermenter's
+turns drew and reloaded in launches 68–69, the same code), a save and
+reload with them down, multiplayer, and the items' icons (still vanilla's
+pot and respirator filter).

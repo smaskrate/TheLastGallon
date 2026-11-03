@@ -125,6 +125,15 @@
   barrel with a lid, an airlock and a tap, about 0.75 m tall, and has an
   icon to match. Checked in game: put down turned four ways, saved and
   continued; the icon shows in the equipped-item button.
+* The pot still, the reflux still, the drying column and the fuel filter
+  stand on the floor as their own models too, sized to what they hold:
+  the pot still a pot with a swan neck and a hose, about 1 m wide; the
+  reflux still a boiler under its column, about 1.35 m tall; the drying
+  column a pipe column in its receiver jar, about 0.8 m tall; the filter a
+  small canister. Before, both stills were a cooking pot and the drying
+  column a car's fuel tank. A still in your hand is no longer drawn as a
+  cooking pot during an action; nothing is drawn there, as for a carried
+  generator. Their inventory icons are unchanged. Checked in game.
 * A generator you carry keeps its fuel's record and its conversion when
   the game puts it down for you, as it does when you take another
   generator or equip a weapon from the menus (the record checked in

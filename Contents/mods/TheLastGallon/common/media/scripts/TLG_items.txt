@@ -23,13 +23,15 @@ module TLG
         Icon = Bleach,
     }
 
-    /* Filter cartridge: sediment, free water and some biomass. */
+    /* Filter cartridge: sediment, free water and some biomass. On the floor
+       it is the mod's own model (TLG_models.txt). */
     item FuelFilter
     {
         DisplayCategory = VehicleMaintenance,
         ItemType = base:normal,
         Weight = 0.2,
         Icon = AirFilters,
+        WorldStaticModel = TLG.FuelFilter,
     }
 
     /* Manual: read like the game's print media, it shows a page on

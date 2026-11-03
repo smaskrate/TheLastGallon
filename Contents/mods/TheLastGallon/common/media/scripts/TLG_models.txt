@@ -37,4 +37,52 @@ module TLG
             rotate = -94.8078 -85.9541 174.4184,
         }
     }
+
+    /* The pot still, the reflux still, the drying column and the fuel
+       filter, supplied 2026-11-03 (provenance in art-src/potstill,
+       refluxstill, dryingcolumn and fuelfilter): the same kind of FBX as
+       the fermenter, Y up, base at the origin, each 1.0 along its largest
+       side. Each scale sets a true size from the capacity the machine
+       models (docs/asset-requirements.md). PotStill: a 60 L pot still,
+       0.42 of the model across its pot, so 0.7 gives a 0.44 m pot about
+       0.36 m deep (55 L); the swan neck and hose take it to 1.05 m wide
+       and 0.68 m tall. */
+    model PotStill
+    {
+        mesh = TLG/PotStill,
+        texture = TLG/PotStill,
+        scale = 0.7,
+    }
+
+    /* RefluxStill: a 120 L boiler, 0.41 across in the model, so 0.9 gives
+       a 0.55 m pot 0.46 m deep (110 L) under its column, 1.35 m tall in
+       all. */
+    model RefluxStill
+    {
+        mesh = TLG/RefluxStill,
+        texture = TLG/RefluxStill,
+        scale = 0.9,
+    }
+
+    /* DryingColumn: the column stands in its receiver jar, 0.425 across in
+       the model, so 0.55 gives a 0.35 m jar 0.40 m tall (40 L) and 0.82 m
+       in all. */
+    model DryingColumn
+    {
+        mesh = TLG/DryingColumn,
+        texture = TLG/DryingColumn,
+        scale = 0.55,
+    }
+
+    /* FuelFilter: a filter canister 0.15 m tall and 0.14 m across. None of
+       these four has a hand model: the game draws a held non-weapon only
+       during an action, and at true size a still held then covered the
+       character from feet to head (RT-SP runs 120-121); with no hand model
+       nothing is drawn there, as for a carried generator. */
+    model FuelFilter
+    {
+        mesh = TLG/FuelFilter,
+        texture = TLG/FuelFilter,
+        scale = 0.1,
+    }
 }

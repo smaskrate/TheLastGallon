@@ -2,11 +2,13 @@ module TLG
 {
     /* Machines are placeable items: process state lives in item modData
        ("tlgProc", TLG.Integration.Machines) and travels with pickup.
-       The fermenter stands on the floor as the mod's own model
-       (TLG_models.txt) and has its own icon (Item_TLG_Fermenter.png, drawn
-       by tools/make-icons.ps1); the other machines' models, in-hand models
-       and icons are verified vanilla references used as placeholders
-       (docs/asset-audit.csv A03/A04/I04/I09). DisplayCategory must be a
+       The fermenter, the two stills and the drying column stand on the
+       floor as the mod's own models (TLG_models.txt); only the fermenter
+       has a hand model (the others have none, so nothing is drawn in the
+       hand during an action). The fermenter has its own icon
+       (Item_TLG_Fermenter.png, drawn by tools/make-icons.ps1); the other
+       machines' icons are verified vanilla references used as placeholders
+       (docs/asset-audit.csv I06-I08). DisplayCategory must be a
        vanilla category: the inventory shows getText("IGUI_ItemCat_" ..
        category) (ISInventoryPane.lua:2547), and "Tools" has no text
        (runs 65-66 showed the raw key). The fermenter is carried in both
@@ -58,8 +60,7 @@ module TLG
         ItemType = base:normal,
         Weight = 5.0,
         Icon = Pot,
-        StaticModel = CookingPot,
-        WorldStaticModel = CookingPotGround,
+        WorldStaticModel = TLG.PotStill,
     }
 
     item RefluxStill
@@ -68,8 +69,7 @@ module TLG
         ItemType = base:normal,
         Weight = 11.0,
         Icon = Pot,
-        StaticModel = CookingPot,
-        WorldStaticModel = CookingPotGround,
+        WorldStaticModel = TLG.RefluxStill,
     }
 
     item DryingColumn
@@ -78,7 +78,7 @@ module TLG
         ItemType = base:normal,
         Weight = 3.0,
         Icon = AirFilters,
-        WorldStaticModel = SmallGasTank,
+        WorldStaticModel = TLG.DryingColumn,
     }
 
     craftRecipe TLG_MakeFermenterVessel
