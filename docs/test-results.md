@@ -2892,3 +2892,45 @@ the hashes built into the mod, and all four drew on the floor in their
 colours, as in launch 133. The fog read 0 again before the override. The
 console had no exception.
 Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run135_floor_models_packaged.txt`.
+
+## 2026-11-03 — RT-MP harness, launches 136–138 (a server and one client, unattended)
+
+The user asked, in the asset-requirements session, for a multiplayer test
+("Yes, test multiplayer"). `tools/run-mp-harness.ps1` runs the TLGDev
+dedicated server and its clients on this machine with no clicks:
+- a fresh world with one spawn point (the harness's open ground at
+  10660,10645) and no zombies;
+- two test accounts, made admin from the server console (`adduser`,
+  `setaccesslevel`);
+- each client joins by IP as vanilla's Join by IP popup does and passes
+  character creation with the screens' own Next handlers
+  (`TLGHarness/MPHarness.lua`);
+- a relay on the server (`TLGHarness/MPServer.lua`) carries the harness's
+  messages between the clients.
+
+Stage 1 is the server and one client.
+
+Launches 136 and 137: the server stopped before loading any Lua. Its
+pose-file checksum found none of the mod's `AnimSets` files ("couldn't
+find …tlgcarryvessel.xml"), and world generation then failed. The game's
+Java resolves `%LOCALAPPDATA%` for this session's processes to the Claude
+app's package folder, and the checksum mixes that path with the one it
+was given (engine capabilities, "RT-MP: a dedicated server needs the
+mods' real path"). The dev server last started on 2026-10-30, before the
+mod had pose files. Launch 137 failed because launch 136's server had
+printed "Server Terminated" but kept running, holding the port and its
+log files. The launcher now passes each cache's final path and stops any
+harness server left running.
+
+Launch 138: **2/0**.
+- The server was up in 21 s, with Zombies 6 and the population
+  multipliers 0. Both accounts were created and made admin (the console
+  lines masked).
+- Client A joined, made its character (unemployed) and spawned at
+  10660,10645, as tlga with the admin role and no zombies in its cell.
+- A harness message came back through the server's relay after 4 ticks.
+- Its picture shows the character with its name tag, in the morning fog.
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run138_client_a.txt`,
+`…_run138_server.txt`. The server's raw log is not kept: `adduser` echoes
+the passwords.

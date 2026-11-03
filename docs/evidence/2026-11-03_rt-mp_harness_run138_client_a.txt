@@ -1,0 +1,21 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_relay begin
+PASS MP.relay_A :: echo after 4 ticks
+STEP mp_shot_joined begin
+OBS  MP.screenshot tlg_mpa_joined.png ok=true ; zoom 1.00; player 10660,10645
+STEP mp_finish begin
+SUMMARY pass=2 fail=0
+DONE

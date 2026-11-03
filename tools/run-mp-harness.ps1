@@ -1,0 +1,313 @@
+<#
+.SYNOPSIS
+  Runs the multiplayer harness: the TLGDev dedicated server and one or two
+  clients on this machine, unattended.
+.DESCRIPTION
+  Each process has its own isolated cache under %LOCALAPPDATA%\TheLastGallon
+  (mpserver, mpclient1, mpclient2), deployed by setup-devenv.ps1. The
+  server's world is made fresh each run (only its TLGDev save is deleted),
+  with one spawn point (the single-player harness's open ground at
+  10660,10645, so no spawn town is asked for) and no zombies. Once the
+  server is up, the console creates the test accounts tlga and tlgb with
+  admin access (adduser, setaccesslevel), their passwords random and kept
+  in mpserver\dev-credentials.txt, never printed.
+
+  Each client gets its role (TLG_harness_request.txt: mp-a, mp-b) and the
+  connection (TLG_harness_connect.txt) in its cache's Lua folder. The
+  harness (TLGHarness/MPHarness.lua) joins by IP as vanilla's Join by IP
+  popup does, passes character creation with the screens' own Next
+  handlers, runs its steps and quits. As the single-player launcher does,
+  this script posts the click a finished world load waits for to each
+  client's window. The clients run without -debug, as players do.
+
+  Results: each client's <cache>\Lua\TLG_harness_mp.txt and the server's
+  mpserver\Lua\TLG_harness_mpserver.txt. The server's own stdout holds the
+  account passwords (adduser echoes them), so it is never printed or
+  archived; only its lines naming the accounts are shown, the passwords
+  masked.
+.PARAMETER Clients
+  1 (client A only) or 2 (A and B).
+.PARAMETER TimeoutMinutes
+  Watchdog limit for the whole run.
+.PARAMETER ModSource
+  Folder deployed as the mod (default: the repository's).
+#>
+param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "")
+$ErrorActionPreference = "Stop"
+if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
+    Write-Host "The Windows session is locked; unlock the desktop and run again."
+    exit 2
+}
+$repo = Split-Path -Parent $PSScriptRoot
+if (-not $GameDir) { $GameDir = $env:PZ_GAME_DIR }
+if (-not $GameDir) { $GameDir = (Resolve-Path (Join-Path $repo "..\..")).Path }
+$base = Join-Path $env:LOCALAPPDATA "TheLastGallon"
+$serverCache = Join-Path $base "mpserver"
+$roles = @("mp-a", "mp-b")[0..($Clients - 1)]
+$users = @("tlga", "tlgb")
+$clientCaches = @(1..$Clients | ForEach-Object { Join-Path $base "mpclient$_" })
+$active = @("TheLastGallon", "TheLastGallonHarness")
+
+& (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $serverCache -ModSource $ModSource -ActiveMods $active | Out-Null
+foreach ($c in $clientCaches) {
+    & (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $c -ModSource $ModSource -ActiveMods $active | Out-Null
+}
+
+# Each cache by its final path. A server sums the mods' pose files by their
+# path relative to the mod folder's canonical path (BC
+# AdvancedAnimator.loadModMedia, ZomboidFileSystem.getRelativeFile), but walks
+# them under the path it was given. When the two differ (a link, or Windows
+# redirecting %LOCALAPPDATA% for a packaged app's processes, which the game's
+# Java resolves) no pose file is found relative and the server stops before
+# loading any Lua (run 136: "couldn't find ...tlgcarryvessel.xml").
+Add-Type @"
+using System; using System.Runtime.InteropServices; using System.Text; using Microsoft.Win32.SafeHandles;
+public static class TlgFinalPath {
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern SafeFileHandle CreateFileW(string name, uint access, uint share, IntPtr sec, uint disp, uint flags, IntPtr tmpl);
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    static extern uint GetFinalPathNameByHandleW(SafeFileHandle h, StringBuilder buf, uint len, uint flags);
+    public static string Of(string path) {
+        using (SafeFileHandle h = CreateFileW(path, 0, 7, IntPtr.Zero, 3, 0x02000000, IntPtr.Zero)) {
+            if (h.IsInvalid) return path;
+            StringBuilder sb = new StringBuilder(1024);
+            uint n = GetFinalPathNameByHandleW(h, sb, 1024, 0);
+            if (n == 0 || n >= 1024) return path;
+            string s = sb.ToString();
+            if (s.StartsWith(@"\\?\UNC\")) return @"\\" + s.Substring(8);
+            return s.StartsWith(@"\\?\") ? s.Substring(4) : s;
+        }
+    }
+}
+"@
+$serverCache = [TlgFinalPath]::Of($serverCache)
+$clientCaches = @($clientCaches | ForEach-Object { [TlgFinalPath]::Of($_) })
+Write-Host "caches: $serverCache; $($clientCaches -join '; ')"
+
+# Accounts: kept beside the server's own credentials (setup-devenv.ps1).
+$credFile = Join-Path $serverCache "dev-credentials.txt"
+$cred = [ordered]@{}
+Get-Content $credFile | ForEach-Object { $k, $v = $_ -split "=", 2; if ($k) { $cred[$k] = $v } }
+$chars = (48..57) + (65..90) + (97..122)
+foreach ($u in $users) {
+    if (-not $cred.Contains($u)) { $cred[$u] = -join ($chars | Get-Random -Count 20 | ForEach-Object { [char]$_ }) }
+}
+($cred.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) | Set-Content -Encoding ascii $credFile
+
+# A fresh world each run: only the server's TLGDev save goes.
+$save = Join-Path $serverCache "Saves\Multiplayer\TLGDev"
+if (Test-Path $save) { Remove-Item -Recurse -Force $save }
+$serverDir = Join-Path $serverCache "Server"
+@"
+function SpawnRegions()
+	return {
+		{ name = "TLG harness", serverfile = "TLGDev_spawnpoints.lua" },
+	}
+end
+"@ | Set-Content -Encoding ascii (Join-Path $serverDir "TLGDev_spawnregions.lua")
+@"
+function SpawnPoints()
+	return {
+		unemployed = {
+			{ posX = 10660, posY = 10645, posZ = 0 },
+		},
+	}
+end
+"@ | Set-Content -Encoding ascii (Join-Path $serverDir "TLGDev_spawnpoints.lua")
+# No zombies: Zombies 6 is "None" (Sandbox_ZombieCount_option6); the server
+# reads each option it finds and keeps the rest at their defaults
+# (SandboxOptions.loadServerLuaFile, BC). The server harness logs the
+# values it got.
+@"
+SandboxVars = {
+    VERSION = 6,
+    Zombies = 6,
+    ZombieConfig = {
+        PopulationMultiplier = 0.0,
+        PopulationStartMultiplier = 0.0,
+        PopulationPeakMultiplier = 0.0,
+    },
+}
+"@ | Set-Content -Encoding ascii (Join-Path $serverDir "TLGDev_SandboxVars.lua")
+
+# First-run prompts, as tools/run-sp-harness.ps1 answers them (the user's
+# own answered values read only).
+$userOptions = Join-Path $env:USERPROFILE "Zomboid\options.ini"
+$keys = @("termsOfServiceVersion", "doneNewSaveFolder", "showFirstTimeSearchTutorial",
+    "showFirstAnimalZoneInfo", "shownWelcomeMessageVersion")
+$opts = [ordered]@{ version = "1"; fullScreen = "false"; screenWidth = "1280"; screenHeight = "720"; language = "EN";
+    showFirstTimeSneakTutorial = "false"; showWelcomeMessage2 = "false"; tutorialDone = "true";
+    showSurvivalGuide = "false" }
+if (Test-Path $userOptions) {
+    foreach ($line in Get-Content $userOptions) {
+        $k, $v = $line -split "=", 2
+        if ($keys -contains $k) { $opts[$k] = $v }
+    }
+}
+for ($i = 0; $i -lt $Clients; $i++) {
+    $c = $clientCaches[$i]
+    ($opts.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) | Set-Content -Encoding ascii (Join-Path $c "options.ini")
+    $lua = Join-Path $c "Lua"
+    New-Item -ItemType Directory -Force $lua | Out-Null
+    Remove-Item (Join-Path $lua "TLG_harness_mp.txt"), (Join-Path $lua "TLG_harness_mpstate.txt") -ErrorAction SilentlyContinue
+    Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_request.txt") -Value $roles[$i]
+    @("ip=127.0.0.1", "port=16361", "user=$($users[$i])", "password=$($cred[$users[$i]])",
+        "serverPassword=$($cred.serverPassword)") | Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_connect.txt")
+}
+$serverLua = Join-Path $serverCache "Lua"
+New-Item -ItemType Directory -Force $serverLua | Out-Null
+Remove-Item (Join-Path $serverLua "TLG_harness_mpserver.txt") -ErrorAction SilentlyContinue
+
+# A harness server left from an earlier run holds the port and its log
+# files (run 136's printed "Server Terminated" and kept running).
+function Stop-HarnessServers {
+    Get-CimInstance Win32_Process -Filter "Name = 'java.exe'" | Where-Object {
+        $_.CommandLine -match "zombie\.network\.GameServer" -and $_.CommandLine -match "TheLastGallon\\mpserver" } |
+        ForEach-Object { Write-Host "stopping harness server $($_.ProcessId)"; Stop-Process -Id $_.ProcessId -Force }
+}
+Stop-HarnessServers
+
+function Read-Shared([string]$path) {
+    if (-not (Test-Path $path)) { return "" }
+    $fs = [System.IO.File]::Open($path, "Open", "Read", "ReadWrite, Delete")
+    try { return (New-Object System.IO.StreamReader($fs)).ReadToEnd() } finally { $fs.Dispose() }
+}
+$deadline = (Get-Date).AddMinutes($TimeoutMinutes)
+$started = Get-Date
+
+# The server, its console on a pipe (as tools/dev-server-controller.ps1).
+$java = Join-Path $GameDir "jre64\bin\java.exe"
+$jvm = "--enable-native-access=ALL-UNNAMED --add-exports=java.base/jdk.internal.misc=ALL-UNNAMED " +
+    "-XX:+UseZGC -XX:-CreateCoredumpOnCrash -XX:-OmitStackTraceInFastThrow -Xmx3072m " +
+    "-Djava.library.path=./natives/;./natives/win64/;./ -cp ./;projectzomboid.jar zombie.network.GameServer " +
+    "-nosteam ""-cachedir=$serverCache"" -servername TLGDev -adminusername admin -adminpassword $($cred.admin) " +
+    "-ip 127.0.0.1 -port 16361 -udpport 16362"
+$serverOut = Join-Path $serverCache "server-stdout.txt"
+$serverErr = Join-Path $serverCache "server-stderr.txt"
+$psi = New-Object System.Diagnostics.ProcessStartInfo
+$psi.FileName = "cmd.exe"
+$psi.Arguments = "/c """"$java"" $jvm > ""$serverOut"" 2> ""$serverErr"""""
+$psi.WorkingDirectory = $GameDir
+$psi.UseShellExecute = $false
+$psi.RedirectStandardInput = $true
+$psi.CreateNoWindow = $true
+$server = [System.Diagnostics.Process]::Start($psi)
+# .NET writes a UTF-8 BOM into the pipe first; an empty first line absorbs it.
+$console = New-Object System.IO.StreamWriter($server.StandardInput.BaseStream, (New-Object System.Text.ASCIIEncoding))
+$console.AutoFlush = $true
+$console.WriteLine("")
+Write-Host "server started (shell pid $($server.Id))"
+while ((Get-Date) -lt $deadline -and -not $server.HasExited -and (Read-Shared $serverOut) -notmatch "\*\*\* SERVER STARTED") {
+    Start-Sleep -Seconds 3
+}
+if ($server.HasExited -or (Read-Shared $serverOut) -notmatch "\*\*\* SERVER STARTED") {
+    Write-Host "server did not start (shell exited: $($server.HasExited) $(if ($server.HasExited) { $server.ExitCode }))"
+    (Read-Shared $serverErr) -split "`n" | Where-Object { $_ -match "ERROR|Exception|couldn't" } | Select-Object -Last 6 |
+        ForEach-Object { $l = $_.Trim(); foreach ($p in $cred.Values) { if ($p) { $l = $l.Replace($p, "********") } }; Write-Host "server: $l" }
+    Stop-HarnessServers
+    exit 4
+}
+Write-Host "server up after $([int]((Get-Date) - $started).TotalSeconds) s"
+foreach ($u in $users) {
+    $console.WriteLine("adduser ""$u"" ""$($cred[$u])""")
+    Start-Sleep -Seconds 2
+    $console.WriteLine("setaccesslevel ""$u"" ""admin""")
+    Start-Sleep -Seconds 2
+}
+# The lines naming the accounts, passwords masked.
+$text = Read-Shared $serverOut
+foreach ($u in $users) {
+    $text -split "`n" | Where-Object { $_ -match [regex]::Escape($u) } | ForEach-Object {
+        $l = $_.Trim()
+        foreach ($p in $cred.Values) { if ($p) { $l = $l.Replace($p, "********") } }
+        Write-Host "server: $l"
+    }
+}
+
+# The clients.
+Add-Type @"
+using System; using System.Runtime.InteropServices;
+public static class TlgMpWin {
+    [DllImport("user32.dll")] public static extern bool PostMessage(IntPtr h, uint m, IntPtr w, IntPtr l);
+    [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr h, out RECT r);
+    [StructLayout(LayoutKind.Sequential)] public struct RECT { public int L, T, R, B; }
+}
+"@
+function Send-GameClick([IntPtr]$hwnd) {
+    $r = New-Object TlgMpWin+RECT
+    [TlgMpWin]::GetClientRect($hwnd, [ref]$r) | Out-Null
+    $lp = [IntPtr]((([int](($r.B - $r.T) / 2)) -shl 16) -bor [int](($r.R - $r.L) / 2))
+    [TlgMpWin]::PostMessage($hwnd, 0x0201, [IntPtr]1, $lp) | Out-Null  # WM_LBUTTONDOWN
+    Start-Sleep -Milliseconds 300
+    [TlgMpWin]::PostMessage($hwnd, 0x0202, [IntPtr]0, $lp) | Out-Null  # WM_LBUTTONUP
+}
+$json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
+$vm = @($json.vmArgs | Where-Object { $_ -notmatch '^-Dzomboid.steam=' }) + @("-Dzomboid.steam=0", "-XX:+UseZGC")
+$procs = @()
+for ($i = 0; $i -lt $Clients; $i++) {
+    $c = $clientCaches[$i]
+    $clientArgs = $vm + @("-cp", ($json.classpath -join ";"), ($json.mainClass -replace "/", "."), "-nosteam", "-nosound", "-cachedir=$c")
+    $p = Start-Process -FilePath $java -ArgumentList $clientArgs -WorkingDirectory $GameDir `
+        -RedirectStandardOutput (Join-Path $c "client-stdout.txt") -RedirectStandardError (Join-Path $c "client-stderr.txt") -PassThru
+    Write-Host "client $($roles[$i]) started, pid $($p.Id)"
+    $procs += $p
+    # Client B joins once A is in the game, so the two loads do not compete.
+    if ($i -lt $Clients - 1) {
+        while ((Get-Date) -lt $deadline -and -not $p.HasExited -and
+            (Read-Shared (Join-Path $c "Lua\TLG_harness_mp.txt")) -notmatch "(?m)^STEP ") {
+            Start-Sleep -Seconds 5
+            $log = Read-Shared (Join-Path $c "console.txt")
+            if (([regex]::Matches($log, "game loading took")).Count -gt ([regex]::Matches($log, "STATE: exit zombie\.gameStates\.GameLoadingState")).Count) {
+                $p.Refresh()
+                if ($p.MainWindowHandle -ne [IntPtr]::Zero) { Send-GameClick $p.MainWindowHandle }
+            }
+        }
+    }
+}
+
+$clicks = 0
+while ((Get-Date) -lt $deadline) {
+    Start-Sleep -Seconds 5
+    $allDone = $true
+    for ($i = 0; $i -lt $Clients; $i++) {
+        $c = $clientCaches[$i]; $p = $procs[$i]
+        if ((Read-Shared (Join-Path $c "Lua\TLG_harness_mp.txt")) -notmatch "(?m)^DONE") { $allDone = $false }
+        if ($p.HasExited) { continue }
+        $log = Read-Shared (Join-Path $c "console.txt")
+        if (([regex]::Matches($log, "game loading took")).Count -gt ([regex]::Matches($log, "STATE: exit zombie\.gameStates\.GameLoadingState")).Count) {
+            $p.Refresh()
+            if ($p.MainWindowHandle -ne [IntPtr]::Zero) { Send-GameClick $p.MainWindowHandle; $clicks++ }
+        }
+    }
+    if ($allDone) { break }
+    if (@($procs | Where-Object { -not $_.HasExited }).Count -eq 0) { break }
+}
+Write-Host "click-to-start clicks sent: $clicks"
+$grace = (Get-Date).AddSeconds(90)
+while ((Get-Date) -lt $grace -and @($procs | Where-Object { -not $_.HasExited }).Count -gt 0) { Start-Sleep -Seconds 3 }
+foreach ($p in $procs) { if (-not $p.HasExited) { Write-Host "watchdog: stopping client $($p.Id)"; Stop-Process -Id $p.Id -Force } }
+
+$console.WriteLine("save")
+Start-Sleep -Seconds 5
+$console.WriteLine("quit")
+$grace = (Get-Date).AddSeconds(120)
+while ((Get-Date) -lt $grace -and -not $server.HasExited) { Start-Sleep -Seconds 3 }
+if (-not $server.HasExited) {
+    Write-Host "watchdog: stopping the server"
+    Stop-Process -Id $server.Id -Force
+}
+Stop-HarnessServers
+Write-Host "server exited"
+
+for ($i = 0; $i -lt $Clients; $i++) {
+    $f = Join-Path $clientCaches[$i] "Lua\TLG_harness_mp.txt"
+    Write-Host "===== client $($roles[$i]): $f"
+    if (Test-Path $f) { Get-Content $f } else { Write-Host "no results file"; Get-Content (Join-Path $clientCaches[$i] "client-stdout.txt") -Tail 30 }
+    $shots = Join-Path $clientCaches[$i] "Screenshots"
+    if (Test-Path $shots) {
+        Get-ChildItem $shots -File | Where-Object { $_.LastWriteTime -ge $started } | ForEach-Object { Write-Host "screenshot: $($_.FullName)" }
+    }
+}
+$f = Join-Path $serverLua "TLG_harness_mpserver.txt"
+Write-Host "===== server: $f"
+if (Test-Path $f) { Get-Content $f } else { Write-Host "no results file" }

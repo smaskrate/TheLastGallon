@@ -845,6 +845,29 @@ floor is drawn about a row below the feet of a character standing on its
 row (run 132), so the close-ups are taken from a square nearer the
 camera.
 
+## RT-MP: a dedicated server needs the mods' real path (runs 136–138)
+
+A dedicated server sums its mods' pose files (`AnimSets`, `actiongroups`)
+when it starts (BC `GameServer.doMinimumInit`, `AdvancedAnimator`). It
+names each file relative to the mod's folder after resolving that folder
+to its canonical path (`loadModMedia`: `getCanonicalFile`, lowercased),
+but walks the folder by the path it was given, then looks each name up as
+a game file (`ZomboidFileSystem.getRelativeFile`, `getAbsolutePath`).
+When the given path is not the canonical one, no name comes out relative
+and the lookup fails ("couldn't find …tlgcarryvessel.xml"). The server
+then stops before loading any Lua, and world generation fails on a nil
+`worldgen`. Two ways to get there:
+- a junction or link to the mod folder;
+- in this test session, Windows redirecting `%LOCALAPPDATA%` for the
+  Claude app's processes, which the game's Java 25 resolves.
+
+That logic was replayed outside the game with its own Java. Through the
+redirected path and through a junction the name stays absolute; through
+the real path it is relative. Mods without pose files are not affected;
+The Last Gallon ships them since the carry pose (D-025). So a server must
+reach the mod by its real path. `tools/run-mp-harness.ps1` passes each
+cache's final path.
+
 ## Animation tooling (2026-11-02)
 
 For a two-armed carry clip (runs 88–90 showed the game plays a mod's own

@@ -93,6 +93,7 @@ tools\run-sp-harness.ps1 -Mode manual-italian                   # the same in a 
 tools\run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60      # a campfire and a barbecue lit from their menus, a fermenter beside each, a trip away
 tools\run-sp-harness.ps1 -Mode italian -TimeoutMinutes 20    # the client in Italian: every Italian string, the Fuel and machine menus
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361
+tools\run-mp-harness.ps1 -Clients 2   # the TLGDev server and two harness clients on this machine, unattended
 tools\package.ps1                     # the release zip (never uploads)
 tools\rehearse-install.ps1            # that zip installed in a fresh cache and played through a save; ~20 min
 tools\rehearse-install.ps1 -Scenario existing   # a save played 10 days without the mod, then with it; ~30 min
