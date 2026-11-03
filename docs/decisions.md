@@ -701,7 +701,10 @@ listed with their replacement.
 * Consequences: verified RT-SP runs 120–122 (10/0 each): the scripts load
   with their own meshes and textures, the items name them, and all four
   drew on the floor beside the fermenter; next to the character the
-  heights came within about 10 % of the planned sizes. Neither still's
+  heights came within about 10 % of the planned sizes. Again from the
+  package's item tree after the zip of `8c9dd19` installed clean (runs
+  123–124), whose save and continue loaded a placed reflux still and
+  drying column back (not photographed). Neither still's
   model shows a firebox. The icons are still vanilla placeholders (I02,
   I06–I08), and the editable sources were not supplied. Multiplayer is
   not run. The licence record rests on the user's statement of 2026-11-02

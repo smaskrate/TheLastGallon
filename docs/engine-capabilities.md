@@ -1123,8 +1123,9 @@ candidates in run 116 **33/0**, and the shipped pose through the gait
 mode, run 117 **26/0**, then the zip with it installed clean, run 118
 **94/0** and **14/0**, and the gait mode from its item tree, run 119
 **26/0**, then the supplied models of the stills, the drying column and
-the fuel filter, runs 120, 121 and 122 **10/0** each. Most failures were
-traced to the harness
+the fuel filter, runs 120, 121 and 122 **10/0** each, then the zip with
+them installed clean, run 123 **94/0** and **14/0**, and the models from
+its item tree, run 124 **10/0**. Most failures were traced to the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)
 and some found mod defects: run 4's ground-can result (container

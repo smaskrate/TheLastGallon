@@ -2668,6 +2668,33 @@ stills held at true size) and `2026-11-03_run122_machine_models_sheet.jpg`
 (runs 121–122).
 
 Not checked: the models turned other ways than 0 degrees (the fermenter's
-turns drew and reloaded in launches 68–69, the same code), a save and
-reload with them down, multiplayer, and the items' icons (still vanilla's
+turns drew and reloaded in launches 68–69, the same code), the models
+seen after a save and reload (launch 123 reloaded two of them, unseen), multiplayer, and the items' icons (still vanilla's
 pot and respirator filter).
+
+## 2026-11-03 — RT-SP client harness, launches 123–124 (the zip with the supplied models)
+
+Launch 123. Command: `tools/rehearse-install.ps1`, which rebuilt the
+package first (197/197 tests, compile check 105/0, translations OK, every
+shipped XML file parsing): the zip of commit `8c9dd19`, 104 files,
+SHA-256 `0a0a6a1e…`, 3,734,318 bytes. It differs from launch 118's zip
+(`e3a284a3…`, 96 files) in the four supplied models: eight new files (four
+FBX meshes and four PNG textures, each with the hash its provenance
+records), the model and item scripts, and the changelog and notice. The
+zip matched its manifest, was installed into a fresh isolated cache and
+ran the full harness.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run123_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as launch 118. Phase
+B found a placed reflux still and drying column back after the save and
+continue (`G08.machine_records_persist`): they loaded with their new
+models, though nothing photographed them. The console's one exception
+came from the harness's own deep-recursion probe, and no line named the
+new models or textures.
+
+Launch 124, `-Mode machine-models` with the mod deployed from the
+package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`):
+**10/0**, as launch 122. The deployed meshes and textures carried the
+shipped hashes, the four models drew beside the fermenter, and the pot
+still held through an action drew nothing. The console had no exception.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run124_machine_models_packaged.txt`.
