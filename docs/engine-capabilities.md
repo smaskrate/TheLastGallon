@@ -1174,7 +1174,9 @@ run 127 **94/0** and **14/0**, and the icons from its item tree, run 128
 **15/0**, then the four other items' icons, run 129 **19/0**, then the
 zip with them installed clean, run 130 **94/0** and **14/0**, and every
 icon from its item tree, run 131 **19/0**, then the four small items' own
-floor models, runs 132 and 133 **19/0** each. Most failures were traced to
+floor models, runs 132 and 133 **19/0** each, then the zip with them
+installed clean, run 134 **94/0** and **14/0**, and the models from its
+item tree, run 135 **19/0**. Most failures were traced to
 the harness
 itself (placement, a nearly full target generator, a
 lookup that matched the neighbouring object, an overloaded test character)

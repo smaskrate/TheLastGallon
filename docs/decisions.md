@@ -777,9 +777,10 @@ listed with their replacement.
 * Consequences: verified RT-SP runs 132–133 (19/0 each): the scripts
   load with their own meshes and textures, the items name them, and all
   four drew on the floor in their colours (run 133), at the supplied
-  models' scale. The shapes and the build are this repository's own, so
-  the models carry no outside asset. A rebuild writes the same files but
-  for the time in each FBX's header. Not checked: an item dropped by a
-  player (turned at random) or seen after a reload; multiplayer. Should
-  the vanilla stand-ins be wanted after all, they are four
-  `WorldStaticModel` lines.
+  models' scale. Again from the package's item tree after the zip of
+  `8950b57` installed clean (runs 134–135). The shapes and the build are
+  this repository's own, so the models carry no outside asset. A rebuild
+  writes the same files but for the time in each FBX's header. Not
+  checked: an item dropped by a player (turned at random) or seen after a
+  reload; multiplayer. Should the vanilla stand-ins be wanted after all,
+  they are four `WorldStaticModel` lines.

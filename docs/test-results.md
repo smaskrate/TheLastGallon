@@ -2866,3 +2866,29 @@ Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run132_floor_models.txt`,
 
 Not checked: an item dropped by a player (turned at random), the models
 after a reload, multiplayer.
+
+## 2026-11-03 — RT-SP client harness, launches 134–135 (the zip with the floor models)
+
+Launch 134. Command: `tools/rehearse-install.ps1`, which rebuilt the
+package first (197/197 tests, compile check 105/0, translations OK, every
+shipped XML file parsing): the zip of commit `8950b57`, 120 files,
+SHA-256 `e249719d…`, 3,813,797 bytes. It differs from launch 130's zip
+(`b01db3e7…`, 112 files) in the four floor models, eight new files (each
+an FBX in `media/models_X/TLG` and its texture in `media/textures/TLG`),
+the model script's four entries and the item script's
+`WorldStaticModel` lines; the sprint pose's comment, the changelog and
+the notice changed too. The zip matched its manifest, was installed into
+a fresh isolated cache and ran the full harness.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run134_install_rehearsal.txt`.
+
+Result: phase A **94/0**, phase B **14/0**, the same as launch 130. The
+console's one exception came from the harness's own deep-recursion
+probe, and no line named the models.
+
+Launch 135, `-Mode machine-models` with the mod deployed from the
+package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`):
+**19/0**, as launch 133. The four deployed models and textures carried
+the hashes built into the mod, and all four drew on the floor in their
+colours, as in launch 133. The fog read 0 again before the override. The
+console had no exception.
+Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run135_floor_models_packaged.txt`.
