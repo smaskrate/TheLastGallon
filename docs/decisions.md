@@ -773,7 +773,10 @@ listed with their replacement.
   model and icon of the mod is its own, and the stand-ins would have put
   the kit and the starter down as the same vanilla jar and the stabilizer
   as a bleach bottle, against their icons. Before, the four had no
-  `WorldStaticModel` at all.
+  `WorldStaticModel` at all. Asked afterwards in that session whether to
+  keep the new models rather than the stand-ins, the user answered "Keep
+  the originals" (2026-11-03). They had already marked Keep on each of
+  the four's icon and floor model in that session's asset picker.
 * Consequences: verified RT-SP runs 132–133 (19/0 each): the scripts
   load with their own meshes and textures, the items name them, and all
   four drew on the floor in their colours (run 133), at the supplied
@@ -782,5 +785,4 @@ listed with their replacement.
   this repository's own, so the models carry no outside asset. A rebuild
   writes the same files but for the time in each FBX's header. Not
   checked: an item dropped by a player (turned at random) or seen after a
-  reload; multiplayer. Should the vanilla stand-ins be wanted after all,
-  they are four `WorldStaticModel` lines.
+  reload; multiplayer.
