@@ -3,7 +3,9 @@
 -- a Base.Generator and flex_car_normal on a Base.CarNormal: begin, deliver,
 -- work to Commissioned through ISTLGConversionWork (run 9), flex profile,
 -- project after save and reload; every step from the workshop menu (run
--- 12). Cancel, remove, engine replacement, other chassis and MP are NOT RUN.
+-- 12). On a dedicated server both again from the workshop's steps (RT-MP
+-- runs 162 and 169), each then run on ethanol. Cancel, remove, engine
+-- replacement and other chassis are NOT RUN.
 --
 --   project store   vehicle Engine part modData "tlgConv"; generator object
 --                   modData "tlgConv" (carried through pickup/placement by the

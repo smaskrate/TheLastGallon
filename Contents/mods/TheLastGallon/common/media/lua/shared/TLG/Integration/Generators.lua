@@ -1,6 +1,7 @@
 -- Adapter: vanilla generators (IsoGenerator objects and carried generator items).
 -- Runtime status: refuel, burn reconciliation, pickup, all Lua drop paths and
--- the start gate verified RT-SP 2026-10-31; MP NOT RUN (engine-capabilities).
+-- the start gate verified RT-SP 2026-10-31; on a dedicated server refuel,
+-- burn reconciliation, the gate, take and the place action (RT-MP run 160).
 --
 --   quantity owner     native IsoGenerator.fuel (litres, getMaxFuel())
 --   composition owner  TLG sidecar (object modData "tlg"; item modData "tlg"

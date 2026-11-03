@@ -7,7 +7,9 @@
 --                      storage, sealed, cond, dirty, label, prov and the last
 --                      reconciled composition q; every record write sets the
 --                      native fluids to q where they differ (C.commit)
---   replication        item: syncItemFields (MP NOT RUN); object: transmitModData
+--   replication        item: syncItemFields (a can's record the same on the
+--                      client as on the server, RT-MP runs 145-171); object:
+--                      transmitModData
 --   reconciliation     on every read: native decreases leave proportionally,
 --                      unknown increases mix in at the world baseline when
 --                      found, into the record advanced to then (D-006)

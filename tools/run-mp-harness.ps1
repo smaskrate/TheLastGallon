@@ -37,9 +37,11 @@
   players taking it at once (two clients); heavy: only vanilla's meteorite
   taken off the floor (one client); machines: a running vessel moved by the
   world menu's Grab, and two players loading one fermenter at once (two
-  clients); fuel: pours and refuelling at the Gas2Go pumps, a generator and
-  a car (one or two clients); conversion: a generator converted at the
-  workshop on the shortest day (one client).
+  clients), with a vessel taken out of a crate; fuel: pours, refuelling and
+  siphoning at the Gas2Go pumps, a generator and a car (one client);
+  conversion: a generator converted at the workshop; carconv: a car
+  converted; stills: both stills and the drying column (one client each,
+  on the shortest day).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -53,7 +55,8 @@
   Lua\TLG_harness_mpgo.txt, written once the server is up again).
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion")][string]$Only = "", [switch]$NoMod,
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills")][string]$Only = "",
+    [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart)
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -155,7 +158,7 @@ end
 # shortest day (DayLength 1: 15 minutes, Sandbox_DayLength_option1), and
 # the fuel case's generator and car burn enough there to be seen (run 156
 # read none in half a minute on the default day).
-$dayLength = if ($Only -eq "conversion" -or $Only -eq "fuel") { "`n    DayLength = 1," } else { "" }
+$dayLength = if (@("conversion", "fuel", "carconv", "stills") -contains $Only) { "`n    DayLength = 1," } else { "" }
 @"
 SandboxVars = {
     VERSION = 6,$dayLength

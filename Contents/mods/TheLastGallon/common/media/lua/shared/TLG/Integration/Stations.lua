@@ -1,6 +1,7 @@
 -- Adapter: gas station pumps (IsoObject piped fuel).
 -- Runtime status: pump -> can and pump -> vehicle verified RT-SP 2026-10-31
--- (1 L per unit on both paths); infinite sandbox and MP NOT RUN.
+-- (1 L per unit on both paths), and on a dedicated server (RT-MP run 160);
+-- the infinite sandbox setting is NOT RUN.
 --
 --   quantity           native pipedFuelAmount (int units in pump modData,
 --                      BC IsoObject.getPipedFuelAmount); TLG convention

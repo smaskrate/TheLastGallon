@@ -1,0 +1,58 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP carconv_site begin
+OBS  MP.carconv car 237; the server's player: Mechanics 4
+STEP mp_train_mechanics begin
+STEP mp_carconv_items_arrive begin
+STEP mp_walk_to_car begin
+STEP carconv_begin begin
+OBS  MP.carconv_begin reply: ok=true reason=nil duplicate=nil state=InProgress stage=inspect missing=nil consumed=nil done=0/13
+PASS MP.carconv_begun_A :: ok=true reason=nil duplicate=nil state=InProgress
+STEP carconv_deliver begin
+OBS  MP.carconv_deliver reply: ok=true reason=nil duplicate=nil state=InProgress stage=inspect missing=nil consumed={Base.ElectricWire=2.0000,Base.EngineParts=2.0000,Base.RubberHose=2.0000,Base.Screws=6.0000} done=0/13
+PASS MP.carconv_parts_handed_over_A :: ok=true reason=nil duplicate=nil state=InProgress
+STEP mp_carconv_work begin
+OBS  MP.carconv work queued: ISPathFindAction, ISTLGConversionWork
+OBS  MP.work reply 1: ok=true reason=nil duplicate=nil state=InProgress stage=inspect done=0/13 credited=nil
+OBS  MP.work reply 2: ok=true reason=nil duplicate=nil state=InProgress stage=inspect done=0.2505216598510742/13 credited=0.2505216598510742
+OBS  MP.work reply 3: ok=true reason=nil duplicate=nil state=InProgress stage=inspect done=0.5010671615600586/13 credited=0.2505455017089844
+OBS  MP.work reply 53: ok=true reason=nil duplicate=nil state=Commissioned stage=nil done=nil/nil credited=0.2430438995361328
+OBS  MP.carconv work ended after 29380 ticks, 53 replies, the last: ok=true reason=nil duplicate=nil state=Commissioned
+STEP carconv_status begin
+OBS  MP.carconv_status reply: ok=true reason=nil duplicate=nil state=Commissioned stage=nil missing=nil consumed=nil done=nil/nil
+PASS MP.carconv_commissioned_A :: ok=true reason=nil duplicate=nil state=Commissioned
+STEP converted_car begin
+OBS  MP.converted_car server: profile=engine_si_flex tank 0.0000 L, record 0.0000 L, engine running=false nil
+PASS MP.car_converted_to_flex_A :: profile=engine_si_flex
+STEP give_carconv_ethanol begin
+STEP mp_ccCan_arrives begin
+OBS  MP.ccCan in the inventory=true, 3.0000 L
+STEP mp_pour_ethanol_into_flex_car begin
+OBS  MP.pour_ethanol_into_flex_car queued: ISPathFindAction, ISTLGPourFuel
+STEP flex_car_after_pour begin
+OBS  MP.flex_car_after_pour server: profile=engine_si_flex tank 3.0000 L, record 3.0000 L, engine running=false {cond=1.0000,deg={ethanol=0.0314},id=V109369456-16,mic=0.0000,prov={1={from=S109369456-15,k=in,n=3.0000,t=15.4316}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=15.4316,v=1.0000}
+OBS  MP.pour_ethanol_into_flex_car result on the player's client: ok=true reason=nil duplicate=nil state=nil
+PASS MP.flex_car_takes_ethanol_unconfirmed_A :: tank 3.0000 L, record 3.0000 L; result ok=true reason=nil duplicate=nil state=nil
+STEP mp_enter_flex_car begin
+OBS  MP.enter_flex_car queued: ISPathFindAction, ISUnlockVehicleDoor, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP mp_start_flex_car begin
+OBS  MP.start_flex_car running=true after 1 attempt(s)
+STEP flex_car_after_start begin
+OBS  MP.flex_car_after_start server: profile=engine_si_flex tank 2.9980 L, record 3.0000 L, engine running=true {cond=1.0000,deg={ethanol=0.0314},id=V109369456-16,mic=0.0000,prov={1={from=S109369456-15,k=in,n=3.0000,t=15.4316}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=15.4316,v=1.0000}
+PASS MP.flex_car_starts_on_ethanol_A :: engine running=true
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=7 fail=0
+DONE

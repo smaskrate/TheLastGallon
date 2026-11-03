@@ -259,7 +259,65 @@ C.loadBoth = waitFrom("mp_wait_load_result", "load_result", function(m)
     end)
 end)
 
+------------------------------------------------------------------------------
+-- machines, A: a vessel taken out of a crate (the container nearest the
+-- spawn point; MPServer.lua crate_vessel) as a double-click in the loot
+-- window takes it (equipHeavyItem, which walks to the container). From a
+-- container the game's own complete works on a server, and the mod's take
+-- leaves it to it (D-030).
+------------------------------------------------------------------------------
+local function crateId() return C.crateSite and tonumber(C.crateSite.id) end
+
+C.crate = call("crate_vessel", "crate_vessel", {}, "crated", function(m)
+    C.crateSite = m
+    report():line("OBS  MP.crate vessel %s put in a %s at %s,%s %s", tostring(m.id), tostring(m.type), tostring(m.x),
+        tostring(m.y), tostring(m.error or ""))
+end)
+
+C.takeFromCrate = { name = "mp_take_from_crate", timeout = 3600, fn = function(ctx, ticks)
+    local p = player()
+    if not ctx.queued then
+        local s = C.crateSite
+        local sq = s and s.x and getCell():getGridSquare(tonumber(s.x), tonumber(s.y), 0)
+        local objs = sq and sq:getObjects()
+        local item
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            local c = objs:get(i):getContainer()
+            item = item or (c and c:getItemWithID(crateId()))
+        end
+        if not item then
+            if ticks < 600 then return nil end
+            report():line("FAIL MP.crate_vessel_listed_%s :: this client does not see the vessel in the container", MP.role)
+            return true
+        end
+        ISInventoryPaneContextMenu.equipHeavyItem(p, item)
+        ctx.queued = ticks
+        report():line("OBS  MP.crate take queued: %s", h.actionNames(p))
+        return nil
+    end
+    if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+    ctx.idle = ctx.idle or ticks
+    if ticks - ctx.idle < 120 then return nil end
+    local held = p:getPrimaryHandItem()
+    check("crate_vessel_in_both_hands", function()
+        return h.inBothHands(p, V) and held:getID() == crateId(), string.format("primary=%s id=%s",
+            tostring(held and held:getFullType()), tostring(held and held:getID()))
+    end)
+    return true
+end }
+
+C.crateSeen = probe("crate_after", crateId, function(m)
+    -- Trimmed: the first take of a run has no space before it (run 166).
+    local since = string.match(string.sub(m.takes or "", #(C.takesBeforeCrate or "") + 1), "^%s*(.-)%s*$")
+    report():line("OBS  MP.crate the server's takes since: %s", since)
+    check("crate_vessel_left_to_the_game_on_server", function()
+        return m.where == "inventory tlga both hands" and since == "tlga:nil", "where=" .. tostring(m.where)
+            .. " takes since: " .. since
+    end)
+end)
+
 C.loaded = probe("load_server", fId, function(m)
+    C.takesBeforeCrate = m.takes or ""
     check("load_server_batch_from_one", function()
         return m.state == "Processing" and m.inputs == "{sugar_eq=2.0000,water=10.0000}", "see the server's line above"
     end)
@@ -434,10 +492,28 @@ end, 180)
 
 FU.afterPumpToCar = probeFuel("after_pump_to_car", function(m)
     FU.tank2 = tonumber(m.tankL)
+    FU.tank2b = FU.tank2
     check("pump_to_car", function()
         return FU.tank2 > (FU.tank1 or 0) + 1 and near(tonumber(m.tankRecL), FU.tank2, 2e-3)
             and tonumber(m.pumpUnits) < (FU.units1 or 0), string.format("tank %.4f -> %.4f L, record %.4f L",
             FU.tank1 or -1, FU.tank2 or -1, tonumber(m.tankRecL) or -1)
+    end)
+end)
+
+-- Siphoning (the game's own menu: ISVehiclePartMenu.onTakeGasoline, with a
+-- rubber hose, the item tagged base:siphongas) back into the can poured
+-- into the car, which the menu prefers while it is still in hand.
+FU.giveHose = call("give_hose", "give", { items = "Base.RubberHose" }, "given", function() end)
+
+FU.siphon = act("siphon", function(ctx, p) ISVehiclePartMenu.onTakeGasoline(p, tank()) end, 180)
+
+FU.afterSiphon = probeFuel("after_siphon", function(m)
+    local can, rec = canL("can1"), tonumber(m["recL" .. tostring(FU.can1)])
+    FU.tank2 = tonumber(m.tankL)
+    check("siphon_car_to_can", function()
+        return can > 0 and near(FU.tank2 + can, FU.tank2b, 2e-3) and near(tonumber(m.tankRecL), FU.tank2, 2e-3)
+            and near(rec, can, 2e-3), string.format("tank %.4f -> %.4f L, record %.4f L; can %.4f L, record %.4f L",
+            FU.tank2b or -1, FU.tank2 or -1, tonumber(m.tankRecL) or -1, can, rec or -1)
     end)
 end)
 
@@ -729,9 +805,295 @@ CV.afterStart = probeGen("flex_after_start", function(m)
     check("flex_generator_starts_on_ethanol", function() return m.on == "true", "on=" .. tostring(m.on) end)
 end)
 
+------------------------------------------------------------------------------
+-- carconv, A: a Base.CarNormal converted to flex fuel as the workshop menu
+-- does it (begin, hand over parts, Menu.work, which paths to the engine
+-- area first), on the shortest day; then ethanol poured into it without a
+-- confirmation, and the car started on it with its key.
+------------------------------------------------------------------------------
+local CC = {}
+MP.CC = CC
+
+local function ccCar() return CC.site and getVehicleById(tonumber(CC.site.car)) end
+local function ccRef() return CC.site and { kind = "vehicle", id = tonumber(CC.site.car) } end
+
+CC.setup = call("carconv_site", "setup_carconv", {}, "carconv_site", function(m)
+    CC.site = m
+    report():line("OBS  MP.carconv car %s; the server's player: Mechanics %s", tostring(m.car), tostring(m.mechanics))
+end)
+
+CC.train = once("mp_train_mechanics", function()
+    player():setPerkLevelDebug(Perks.Mechanics, 4)
+    player():getKnownRecipes():add("Basic Mechanics")
+end)
+
+local function ccRequest(name, command, extra, judge)
+    return request(name, command, function()
+        local a = { device = ccRef() }
+        for k, v in pairs(extra or {}) do a[k] = v end
+        return a.device and a
+    end, function(r)
+        report():line("OBS  MP.%s reply: %s stage=%s missing=%s consumed=%s done=%s/%s", name, brief(r), tostring(r.stage),
+            S.text(r.missing), S.text(r.consumed), tostring(r.doneHours), tostring(r.totalHours))
+        judge(r)
+    end)
+end
+
+CC.begin = ccRequest("carconv_begin", "conversion.begin", { conversion = "flex_car_normal" }, function(r)
+    check("carconv_begun", function() return r.ok == true and r.state == "InProgress", brief(r) end)
+end)
+
+CC.deliver = ccRequest("carconv_deliver", "conversion.deliver", nil, function(r)
+    check("carconv_parts_handed_over", function() return r.ok == true, brief(r) end)
+end)
+
+CC.work = { name = "mp_carconv_work", timeout = 72000, fn = function(ctx, ticks)
+    local p = player()
+    if not ctx.queued then
+        if not ccCar() then
+            report():line("FAIL MP.carconv_work_%s :: no car", MP.role)
+            return true
+        end
+        TLG.UI.WorkshopMenu.work(p, ccRef(), ccCar())
+        ctx.queued = ticks
+        report():line("OBS  MP.carconv work queued: %s", h.actionNames(p))
+        return nil
+    end
+    if ticks - ctx.queued < 120 or not TLGH.Steps.actionsIdle(p) then return nil end
+    report():line("OBS  MP.carconv work ended after %d ticks, %d replies, the last: %s", ticks - ctx.queued,
+        CV.replies or 0, CV.last and brief(CV.last) or "none")
+    return true
+end }
+
+CC.status = ccRequest("carconv_status", "conversion.status", nil, function(r)
+    check("carconv_commissioned", function() return r.ok == true and r.state == "Commissioned", brief(r) end)
+end)
+
+local function probeCar(name, judge)
+    return call(name, "probe_vehicle", function() return { car = CC.site and CC.site.car } end, "probe_vehicle",
+        function(m)
+            report():line("OBS  MP.%s server: profile=%s tank %.4f L, record %.4f L, engine running=%s %s", name,
+                tostring(m.profile), tonumber(m.tankL) or -1, tonumber(m.recL) or -1, tostring(m.engine), tostring(m.side))
+            judge(m)
+        end)
+end
+
+CC.profile = probeCar("converted_car", function(m)
+    check("car_converted_to_flex", function() return m.profile == "engine_si_flex", "profile=" .. tostring(m.profile) end)
+end)
+
+-- From the filler, where the mod's menu offers the pour (FuelContextMenu:
+-- the player in the tank's area) and the server takes it (run 168 poured
+-- from the engine, where the work had left A: not_at_fuel_cap).
+CC.pour = act("pour_ethanol_into_flex_car", function(ctx, p)
+    local car = ccCar()
+    ISTimedActionQueue.add(ISPathFindAction:pathToVehicleArea(p, car, car:getPartById("GasTank"):getArea()))
+    ISTimedActionQueue.add(ISTLGPourFuel:new(p, inventoryItem(FU.ccCan), ccRef(), car, false,
+        function(r) CC.pourReply = r end))
+end, 180)
+
+CC.afterPour = probeCar("flex_car_after_pour", function(m)
+    report():line("OBS  MP.pour_ethanol_into_flex_car result on the player's client: %s",
+        CC.pourReply and brief(CC.pourReply) or "none")
+    check("flex_car_takes_ethanol_unconfirmed", function()
+        return CC.pourReply ~= nil and CC.pourReply.ok == true and near(tonumber(m.tankL), 3, 2e-3)
+            and near(tonumber(m.recL), 3, 2e-3), string.format("tank %.4f L, record %.4f L; result %s",
+            tonumber(m.tankL) or -1, tonumber(m.recL) or -1, CC.pourReply and brief(CC.pourReply) or "none")
+    end)
+end)
+
+-- Started as FU.start does it, up to three tries.
+local function startCar(name, getCar)
+    return { name = "mp_" .. name, timeout = 7200, fn = function(ctx, ticks)
+        local p = player()
+        if not ctx.t then
+            ctx.attempts, ctx.t = 1, ticks
+            ISVehicleMenu.onStartEngine(p)
+            return nil
+        end
+        if ticks - ctx.t < 300 or not TLGH.Steps.actionsIdle(p) then return nil end
+        local v = getCar()
+        if (v and v:isEngineRunning()) or ctx.attempts >= 3 then
+            report():line("OBS  MP.%s running=%s after %d attempt(s)", name, tostring(v and v:isEngineRunning()),
+                ctx.attempts)
+            return true
+        end
+        ctx.attempts, ctx.t = ctx.attempts + 1, ticks
+        ISVehicleMenu.onStartEngine(p)
+        return nil
+    end }
+end
+
+CC.enter = act("enter_flex_car", function(ctx, p) ISVehicleMenu.onEnter(p, ccCar(), 0) end, 120)
+CC.start = startCar("start_flex_car", ccCar)
+
+CC.afterStart = probeCar("flex_car_after_start", function(m)
+    check("flex_car_starts_on_ethanol", function() return m.engine == "true", "engine running=" .. tostring(m.engine) end)
+end)
+
+------------------------------------------------------------------------------
+-- stills, A: both stills and the drying column, run through the mod's
+-- machine requests as their menu sends them, around a fermenter the server
+-- made done (MPServer.lua setup_production), on the shortest day: firewood
+-- and the wash into each still, distilled, collected into a can each, the
+-- reflux still's run dried with quicklime and collected again.
+------------------------------------------------------------------------------
+local PR = {}
+MP.PR = PR
+
+local function machineRef(key)
+    local it = PR.site and findVessel(tonumber(PR.site[key]))
+    return it and TLG.Integration.Machines.refFor(it)
+end
+
+-- The player's empty jerry cans by id, the first for the pot still's run,
+-- the second for the reflux still's, the third for the dried ethanol.
+local function jerry(n)
+    local list = player():getInventory():getItemsFromFullType("Base.JerryCan")
+    local cans = {}
+    for i = 0, (list and list:size() or 0) - 1 do cans[#cans + 1] = list:get(i) end
+    table.sort(cans, function(a, b) return a:getID() < b:getID() end)
+    return cans[n]
+end
+
+local function mreq(name, command, key, extra, judge)
+    return request(name, command, function()
+        local ref = machineRef(key)
+        if not ref then return nil end
+        local a = { target = ref }
+        for k, v in pairs(type(extra) == "function" and extra() or extra or {}) do a[k] = v end
+        return a
+    end, function(r)
+        report():line("OBS  MP.%s reply: %s pause=%s stage=%s outputs=%s firebox=%s washL=%s", name, brief(r),
+            tostring(r.pause), tostring(r.stage), S.text(r.outputs), tostring(r.firebox), tostring(r.washL))
+        judge(r)
+    end)
+end
+
+PR.setup = call("production_site", "setup_production", {}, "production_site", function(m)
+    PR.site = m
+    report():line("OBS  MP.production fermenter %s (%s after %s h, outputs %s), pot still %s, reflux still %s,"
+        .. " drying column %s", tostring(m.fermenter), tostring(m.state), tostring(m.hours), tostring(m.outputs),
+        tostring(m.pot), tostring(m.reflux), tostring(m.dryer))
+end)
+
+PR.fermenter = mreq("fermenter_status", "machine.status", "fermenter", nil, function(r)
+    check("fermenter_done", function() return r.ok == true and r.state == "OutputReady", brief(r) end)
+end)
+
+local function logs(name) return call(name, "give", { items = "Base.Log;Base.Log" }, "given", function() end) end
+
+local function fed(name, key)
+    return mreq(name, "machine.addFuel", key, nil, function(r)
+        check(name, function() return r.ok == true and (tonumber(r.firebox) or 0) > 0, brief(r) end)
+    end)
+end
+
+local function washed(name, key)
+    return mreq(name, "machine.loadWash", key, nil, function(r)
+        check(name, function() return r.ok == true and r.state == "Processing" and (tonumber(r.washL) or 0) > 0,
+            brief(r) .. " washL=" .. tostring(r.washL) end)
+    end)
+end
+
+-- Asks each machine's status every 5 s (an access is what moves a record
+-- on) until all are OutputReady. A still that stops for heat (its firebox
+-- burned out, pause no_heat) is fed again as a player tends it: two more
+-- logs, then its firewood (run 170: 60 L of wash in the pot still need 51
+-- kWh; two logs give it 34, and it waited).
+local function ready(name, keys)
+    return { name = "mp_" .. name, timeout = 72000, fn = function(ctx, ticks)
+        if ctx.pending then return nil end
+        ctx.answers = ctx.answers or {}
+        if ctx.feed then
+            if ticks < ctx.feed.at then return nil end
+            ctx.pending = 1
+            local k = ctx.feed.key
+            TLG.Net.request("machine.addFuel", { target = machineRef(k) }, function(r)
+                report():line("OBS  MP.%s %s fed again: %s firebox=%s", name, k, brief(r), tostring(r.firebox))
+                ctx.feed, ctx.pending, ctx.answers = nil, nil, {}
+            end)
+            return nil
+        end
+        local all = true
+        for _, k in ipairs(keys) do
+            if ctx.answers[k] ~= "OutputReady" then all = false end
+            if ctx.answers[k] == "no_heat" then
+                send("give", { items = "Base.Log;Base.Log", tag = "refeed_" .. k })
+                report():line("OBS  MP.%s %s stopped for heat after %d ticks: two more logs", name, k, ticks)
+                ctx.feed = { key = k, at = ticks + 120 }
+                return nil
+            end
+        end
+        if all then
+            report():line("OBS  MP.%s all done after %d ticks", name, ticks)
+            return true
+        end
+        if ctx.next and ticks < ctx.next then return nil end
+        ctx.pending, ctx.next = #keys, ticks + 300
+        for _, k in ipairs(keys) do
+            TLG.Net.request("machine.status", { target = machineRef(k) }, function(r)
+                ctx.answers[k] = r.pause == "no_heat" and "no_heat" or r.state
+                ctx.pending = ctx.pending - 1
+                if ctx.pending <= 0 then ctx.pending = nil end
+            end)
+        end
+        return nil
+    end }
+end
+
+local function collected(name, key, n)
+    return mreq(name, "machine.collect", key, function()
+        local can = jerry(n)
+        return { destination = { kind = "item", id = can and can:getID() } }
+    end, function(r)
+        check(name, function() return r.ok == true, brief(r) end)
+    end)
+end
+
+-- What this client holds of a can's fuel: its litres and its TLG record's
+-- ethanol and water (the server writes it and sends it with the item).
+local function canFuel(n)
+    local can = jerry(n)
+    local q = can and can:getModData().tlg and can:getModData().tlg.q or {}
+    return can and can:getFluidContainer():getAmount() or -1, q.ethanol or 0, q.water or 0
+end
+
+-- The reflux still's run to the single-player loop's purity (under 7 %
+-- water, LOOP.distill_completed); the pot still makes weaker spirit.
+PR.cans = once("mp_stills_cans", function()
+    for n, still in ipairs({ "pot", "reflux" }) do
+        local litres, eth, water = canFuel(n)
+        report():line("OBS  MP.%s still's run in can %s: %.4f L, ethanol %.4f, water %.4f", still,
+            tostring(jerry(n) and jerry(n):getID()), litres, eth, water)
+        check(still .. "_still_run_bottled", function()
+            local pure = still == "pot" or water / math.max(1e-9, eth + water) < 0.07
+            return eth > 0.5 and pure and near(eth + water, litres, 2e-3),
+                string.format("%.4f L: ethanol %.4f, water %.4f", litres, eth, water)
+        end)
+    end
+end)
+
+PR.dry = mreq("dry_load", "machine.loadDry", "dryer", function()
+    local can = jerry(2)
+    return { source = { kind = "item", id = can and can:getID() } }
+end, function(r)
+    check("dry_loaded", function() return r.ok == true and r.state == "Processing", brief(r) end)
+end)
+
+PR.dried = once("mp_dried_can", function()
+    local litres, eth, water = canFuel(3)
+    report():line("OBS  MP.dried ethanol in can %s: %.4f L, ethanol %.4f, water %.4f",
+        tostring(jerry(3) and jerry(3):getID()), litres, eth, water)
+    check("dried_ethanol_bottled", function()
+        return eth > 0.5 and water <= eth * 0.005 + 1e-4 and near(eth + water, litres, 2e-3),
+            string.format("%.4f L: ethanol %.4f, water %.4f", litres, eth, water)
+    end)
+end)
+
 -- Each reply the work action gets from the server, logged (the first few
 -- and any that is not plain progress).
-if MP.only == "conversion" and ISTLGConversionWork then
+if (MP.only == "conversion" or MP.only == "carconv") and ISTLGConversionWork then
     local onReply = ISTLGConversionWork.onReply
     ISTLGConversionWork.onReply = function(self, r)
         CV.replies, CV.last = (CV.replies or 0) + 1, r
@@ -762,6 +1124,7 @@ if MP.only == "machines" then
         C.spawnLoad, C.give, C.haveFeed, standNear("mp_walk_to_load", 1, -1),
         once("mp_load_setup", function() send("load_setup", {}) end), waitFrom("mp_wait_load_ready", "load_ready"),
         loadNow(true), C.loadBoth, C.loaded,
+        C.crate, wait("mp_crate_vessel_arrives", 120), C.takeFromCrate, C.crateSeen,
         once("mp_finish_b", function() send("finish", {}) end), MP.finish,
     }
     MP.stepsB = {
@@ -776,6 +1139,7 @@ elseif MP.only == "fuel" then
         MP.waitWorld, FU.setup, wait("mp_fuel_site_arrives", 300), FU.seen,
         giveCan("give_empty_can", { petrol = "0" }, "can1"), arrived("can1"), FU.pumpToCan, FU.afterPumpToCan,
         FU.canToCar, FU.afterCanToCar, FU.pumpToCar, FU.afterPumpToCar,
+        FU.giveHose, wait("mp_hose_arrives", 120), FU.siphon, FU.afterSiphon,
         giveCan("give_petrol_can", { petrol = "5" }, "can2"), arrived("can2"), FU.canToGen, FU.afterCanToGen,
         giveCan("give_pour_can", { petrol = "3" }, "can3"), arrived("can3"),
         walkTo("mp_walk_to_generator_1", function() return site("g1x") + 1, site("g1y") end),
@@ -798,6 +1162,28 @@ elseif MP.only == "conversion" then
         CV.begin, CV.deliver, CV.work, CV.status, CV.profile,
         giveCan("give_conversion_ethanol", { fill = "TLG_Ethanol", litres = "3" }, "cvCan"), arrived("cvCan"),
         CV.pour, CV.afterPour, CV.start, CV.afterStart,
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+    }
+    MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+elseif MP.only == "carconv" then
+    MP.stepsA = {
+        MP.waitWorld, CC.setup, CC.train, wait("mp_carconv_items_arrive", 300),
+        walkTo("mp_walk_to_car", S.CX + 1, S.CY + 1),
+        CC.begin, CC.deliver, CC.work, CC.status, CC.profile,
+        giveCan("give_carconv_ethanol", { fill = "TLG_Ethanol", litres = "3" }, "ccCan"), arrived("ccCan"),
+        CC.pour, CC.afterPour, CC.enter, CC.start, CC.afterStart,
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+    }
+    MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+elseif MP.only == "stills" then
+    MP.stepsA = {
+        MP.waitWorld, PR.setup, wait("mp_production_site_arrives", 300), PR.fermenter,
+        logs("give_logs_pot"), wait("mp_logs_pot_arrive", 120), fed("pot_firewood", "pot"), washed("pot_wash", "pot"),
+        logs("give_logs_reflux"), wait("mp_logs_reflux_arrive", 120), fed("reflux_firewood", "reflux"),
+        washed("reflux_wash", "reflux"), ready("stills_distil", { "pot", "reflux" }),
+        collected("pot_collect", "pot", 1), collected("reflux_collect", "reflux", 2), wait("mp_runs_arrive", 120),
+        PR.cans, PR.dry, ready("drying", { "dryer" }), collected("dry_collect", "dryer", 3),
+        wait("mp_dried_arrives", 120), PR.dried,
         once("mp_finish_b", function() send("finish", {}) end), MP.finish,
     }
     MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }

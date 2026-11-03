@@ -11,8 +11,8 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
 | RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
-| RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–162) |
-| RT-MP: siphoning, a vehicle conversion, the stills and the drying column, a vessel taken from a crate | Not in the multiplayer harness yet |
+| RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
+| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container) | Not in the multiplayer harness yet |
 | Performance baseline | Requires a measured client session |
 | Upgrade from an earlier release; install through the Steam Workshop | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12) |
 
@@ -3348,3 +3348,81 @@ package's own docs, and its `Stations.lua` matched the package's. Result:
 A **19/0**, as launch 160.
 Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run164_fuel_packaged_client_a.txt`
 and `…_server.txt`.
+
+## 2026-11-03 — RT-MP launches 165–171 (siphoning, a vessel from a container, a car conversion, the stills and the drying column)
+
+The user asked for the four cases still not run in multiplayer ("Yes, run
+them", relayed by the asset-requirements session). All ran on this
+machine, unattended; a real network stays NOT RUN, as the user chose.
+
+**Siphoning** (`-Only fuel`, launch 165: A **20/0**). After the pump took
+the car to 59 L, A got a rubber hose (the item tagged `base:siphongas`)
+and siphoned through the game's own menu (`ISVehiclePartMenu.onTakeGasoline`)
+into the can still in hand. 10 L went from the car (59 → 49 L) into the
+can. The tank's record followed (49 L), and the can's record holds the
+tank's fuel, its traces of sediment and water included. The rest of
+launch 160's checks passed again.
+
+**A vessel taken out of a container** (`-Only machines`, launches
+166–167). The server put a vessel into the container nearest the spawn
+point. No crate stood within 40 squares, so it was a bin (10665,10636).
+A took it out as a double-click in the loot window does
+(`equipHeavyItem`), which walked A to the bin. The vessel came into A's
+hands. On the server it was in A's inventory and both hands, and the
+mod's take returned nothing for it (`tlga:nil`), leaving it to the
+game's own `complete`. The mod treats every container that is not a
+character's inventory alike, a crate as a bin (D-030). Launch 166 showed
+the same results but failed its check on the take log's spacing (a
+run's first take has no space before it); launch 167 passed (A **15/0**,
+B **2/0**, everything launch 155 checked too).
+
+**A car conversion** (`-Only carconv`, launches 168–169, the shortest
+day). The server parked a `Base.CarNormal` with an empty tank and gave A
+its key, the tools and parts of `flex_car_normal`, and Mechanics 4 with
+Basic Mechanics. A did what the workshop menu does: Start, Hand over
+parts (2 rubber hoses, 2 engine parts, 6 screws and 2 electric wires
+used), Work on it. The work
+action paths to the engine and reported 53 times (13 hours of world time,
+about 8 real minutes) up to `Commissioned`. The car's profile on the
+server then read `engine_si_flex`. In launch 168 A poured ethanol from
+where the work had left it, at the engine, and the server refused it
+(`no_access_destination`; the mod takes a pour into a car only at the
+filler, and its menu offers it only there); the empty car then would not
+start. Launch 169 (A **7/0**) walked to the filler first: 3 L of ethanol
+went in without a confirmation, with the result shown to the player, and
+the car started on it at the first try.
+
+**The stills and the drying column** (`-Only stills`, launches 170–171,
+the shortest day). A fermenter's 97 hours do not fit a run. So the server
+ran a batch (20 kg of sugar, 100 L of water) to its end through the
+domain, as `tests/domain/test_production.lua` runs it (July, a day at a
+step: 11 L of ethanol in 100 L of water), and kept it done. It stood
+between the pot still, the reflux still and the drying column, each a
+square from A. Everything after went through the mod's machine requests,
+as their menu sends them:
+- two logs into each still's firebox (18 kg);
+- the wash into each: 60 L into the pot still, the 51 L left into the
+  reflux still;
+- distilling, each still's status asked every 5 s;
+- collecting each run into an empty jerry can;
+- the reflux run into the drying column with quicklime, 12 hours of
+  drying, and the dried ethanol collected.
+
+In launch 170 the pot still stopped for heat (`no_heat`) and was still
+waiting at the end. Its 60 L need 51 kWh at its firebox's efficiency, and
+two logs give 34. A player feeds it again, as single-player run 28 did.
+Launch 171 (A **13/0**) gave it two more logs when it stopped, and it
+finished:
+- the pot still's run: 6.54 L, 80 % ethanol, its purity;
+- the reflux still's run: 4.95 L, 94 %;
+- the dried ethanol: 4.67 L with 0.023 L of water, under 0.5 %, the cans'
+  records holding each.
+
+Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run165_fuel_siphon_client_a.txt`
+and `…_server.txt`, `…_run167_machines_container_client_a.txt`,
+`…_client_b.txt` and `…_server.txt`, `…_run169_carconv_client_a.txt` and
+`…_server.txt`, and `…_run170_stills_…` and `…_run171_stills_…` (client
+A and server each).
+
+Still not run in multiplayer: a real network (the user's choice), a still
+or drying column picked up while working, and a crate as such.

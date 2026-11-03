@@ -6,7 +6,8 @@
 -- authority credits only the time since the previous report (at most
 -- WORKER_TIMEOUT_HOURS). Walking away stops it with a final report.
 -- Reports go through TLG.Net (single player: locally; multiplayer: client
--- requests, NOT RUN); a server-side copy of the action never reports.
+-- requests, RT-MP runs 162 and 169); a server-side copy of the action
+-- never reports.
 -- Verified RT-SP 2026-10-31: reports, ending itself at Commissioned, stop()
 -- when the character was moved out of reach, no credit for time away (run
 -- 9); queued from the workshop menu after the walk to the engine area, a

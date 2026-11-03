@@ -304,9 +304,117 @@ function services.probe_fuel(player, args)
         local it = player:getInventory():getItemWithIDRecursiv(tonumber(id))
         local fc = it and it:getFluidContainer()
         items[#items + 1] = id .. "=" .. (fc and string.format("%.4f", fc:getAmount()) or "nil") .. " " .. S.sidecar(it)
+        out["recL" .. id] = litres(it and it:getModData().tlg)
     end
     out.items = table.concat(items, " | ")
     reply("probe_fuel", args, out)
+end
+
+-- The crate case: a vessel put into the container nearest the spawn point
+-- (a crate if one is within reach of the search), as a player finds one.
+function services.crate_vessel(player, args)
+    local best, bestD, bestType
+    for dx = -40, 40 do
+        for dy = -40, 40 do
+            local sq = getCell():getGridSquare(S.CX + dx, S.CY + dy, 0)
+            local objs = sq and sq:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                local c = o:getContainer()
+                if c and not instanceof(o, "IsoGenerator") then
+                    local d = dx * dx + dy * dy - (c:getType() == "crate" and 1e6 or 0)
+                    if bestD == nil or d < bestD then best, bestD, bestType = o, d, c:getType() end
+                end
+            end
+        end
+    end
+    if not best then
+        reply("crated", args, { error = "no container within 40 squares" })
+        return
+    end
+    local c = best:getContainer()
+    local item = c:AddItem("TLG.FermenterVessel")
+    sendAddItemToContainer(c, item)
+    reply("crated", args, { id = tostring(item and item:getID()), type = bestType, x = best:getSquare():getX(),
+        y = best:getSquare():getY(), index = best:getObjectIndex() })
+end
+
+-- The car conversion case: a car with an empty tank (the conversion drains
+-- it first) and its key, the tools and parts the conversion asks for, and
+-- the skills and recipe on the server's player (as setup_conversion).
+function services.setup_carconv(player, args)
+    local x, y = S.CX + 3, S.CY + 3
+    local car = addVehicleDebug("Base.CarNormal", IsoDirections.N, nil, getCell():getGridSquare(x, y, 0))
+    local tank = car and car:getPartById("GasTank")
+    if tank then
+        tank:setContainerContentAmount(0)
+        tank:getModData().tlg = nil
+        car:transmitPartModData(tank)
+    end
+    local inv = player:getInventory()
+    local key = car and car:createVehicleKey()
+    if key then sendAddItemToContainer(inv, inv:AddItem(key)) end
+    for _, t in ipairs({ { "Base.Wrench", 1 }, { "Base.Pliers", 1 }, { "Base.Screwdriver", 1 }, { "Base.RubberHose", 2 },
+        { "Base.EngineParts", 2 }, { "Base.Screws", 6 }, { "Base.ElectricWire", 2 } }) do
+        for _ = 1, t[2] do sendAddItemToContainer(inv, inv:AddItem(t[1])) end
+    end
+    player:setPerkLevelDebug(Perks.Mechanics, 4)
+    player:getKnownRecipes():add("Basic Mechanics")
+    reply("carconv_site", args, { car = tostring(car and car:getId()), mechanics = player:getPerkLevel(Perks.Mechanics) })
+end
+
+-- A car's consumer profile, tank and engine on the server.
+function services.probe_vehicle(player, args)
+    local car = getVehicleById(tonumber(args.car) or -1)
+    local tank = car and car:getPartById("GasTank")
+    reply("probe_vehicle", args, { found = tostring(car ~= nil),
+        profile = tostring(car and TLG.Integration.Vehicles.profile(car)),
+        tankL = tank and tank:getContainerContentAmount() or -1, recL = litres(tank and tank:getModData().tlg),
+        side = S.text(tank and tank:getModData().tlg), engine = tostring(car and car:isEngineRunning()) })
+end
+
+-- The stills case. A fermenter whose batch is done stands between both
+-- stills and the drying column, each a square from the player's square
+-- (the spawn point). 97 hours of fermentation do not fit a run, so the
+-- batch is run to its end through the domain as the domain tests run it
+-- (tests/domain/test_production.lua: July, a day at a step) and kept done
+-- from now; the stills load its wash and everything after goes through the
+-- mod's requests. The player gets the lime and cans the single-player loop
+-- hands over; the wood comes a still's worth at a time (give), as a
+-- firebox takes all the wood it has room for.
+function services.setup_production(player, args)
+    local Machines, Process, World = TLG.Integration.Machines, TLG.Domain.Process, TLG.World
+    local env = TLG.Domain.Climate.new({ dayOfYear = 190, hourOfDay = 9 }, {}, nil)
+    local rec = Process.new({ id = World.newId("P"), machine = "fermenter_barrel", t = 0 })
+    rec = Process.load(rec, "ethanol_ferment", { sugar_eq = 20, water = 100 }).proc
+    rec = Process.start(rec, 0).proc
+    local t = 0
+    while (rec.state == "Processing" or rec.state == "Paused") and t < 24 * 30 do
+        t = t + 24
+        rec = Process.advance(rec, t, env)
+    end
+    rec.t = World.now()
+    local function put(type, dx, dy)
+        local sq = getCell():getGridSquare(S.CX + dx, S.CY + dy, 0)
+        return sq:AddWorldInventoryItem(type, 0.5, 0.5, 0)
+    end
+    local fermenter = put("TLG.FermenterVessel", -1, 0)
+    fermenter:getModData()[Machines.SIDECAR] = rec
+    rec = Machines.advance(fermenter, rec, World.now(), World.env())
+    Machines.write(fermenter, rec)
+    Machines.index(fermenter, rec)
+    local pot, reflux, dryer = put("TLG.PotStill", 1, 0), put("TLG.RefluxStill", 0, 1), put("TLG.DryingColumn", 0, -1)
+    local inv = player:getInventory()
+    for _, t2 in ipairs({ { "Base.Quicklime", 2 }, { "Base.JerryCan", 3 } }) do
+        for _ = 1, t2[2] do
+            local it = inv:AddItem(t2[1])
+            if it and it:getFluidContainer() then it:getFluidContainer():Empty() end
+            sendAddItemToContainer(inv, it)
+        end
+    end
+    reply("production_site", args, { fermenter = tostring(fermenter:getID()), pot = tostring(pot:getID()),
+        reflux = tostring(reflux:getID()), dryer = tostring(dryer:getID()), state = tostring(rec.state),
+        outputs = S.text(rec.outputs), hours = t })
 end
 
 -- The take a second player's action makes when it completes after the

@@ -848,5 +848,6 @@ listed with their replacement.
   one vessel. Single player is unchanged (RT-SP run 148, 43/0, as run 81).
   Vanilla's meteorite still stays on the floor on a server. A vessel in
   the player's own inventory is still equipped by the game's `complete`
-  on a server (run 151). Not checked live: the refusals for a vessel out
-  of reach or on no square; a vessel taken from a crate in multiplayer.
+  on a server (run 151), and so is one taken out of a container (a bin,
+  run 167). Not checked live: the refusals for a vessel out of reach or
+  on no square.

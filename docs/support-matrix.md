@@ -131,14 +131,21 @@ both on one computer (RT-MP, 2026-11-03):
     started with its key and idling, its burn followed;
   - a generator converted to flex fuel at the workshop (Start, Hand over
     parts, Work on it to Commissioned), then fed ethanol without a
-    confirmation and started on it;
+    confirmation and started on it; a car the same way, the ethanol
+    poured at its filler;
+  - siphoning a car into a can, each record following;
+  - a fermentation vessel taken out of a container (a bin) into both
+    arms;
+  - both stills and the drying column: firewood, wash from a finished
+    fermenter, distilling (the pot still fed again when its fire ran
+    out), each run collected into a can, the reflux run dried and
+    collected (80 %, 94 % and dried to under 0.5 % water);
   - a server restart: both players' floor, a can's record and a running
     fermenter's batch the same afterwards.
 - **Fixed after the first multiplayer fuel test:** with the mod on a
   server, the game's own refuelling (pump to can, pump to car, can to car
   or generator, siphoning) moved no fuel, and the mod's pour never showed
-  the player its result. Both work now; siphoning has the same fix but
-  was not run in multiplayer.
+  the player its result. Both work now.
 - **The game's own limit (42.21):** on a dedicated server no heavy item can
   be taken off the floor through the loot window (double-click or drag);
   the server fails the action and the item stays where it is. Vanilla's
@@ -152,8 +159,8 @@ both on one computer (RT-MP, 2026-11-03):
   files, as this one does since its carry pose (tried; a symbolic link
   was not).
 - **NOT RUN:** a real network (everything ran on one computer; the user
-  chose not to test across machines for now); siphoning, a vehicle
-  conversion, the stills and the drying column in multiplayer.
+  chose not to test across machines for now); a still or drying column
+  picked up while working, in multiplayer.
 
 ## External mods
 

@@ -1,0 +1,17 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_carconv role=A tag=carconv_site
+OBS  MPS.reply carconv_site car=237 mechanics=4 role=A tag=carconv_site
+OBS  MPS.message from tlga: probe_vehicle car=237 role=A tag=converted_car
+OBS  MPS.reply probe_vehicle engine=false found=true profile=engine_si_flex recL=0 role=A side=nil tag=converted_car tankL=0
+OBS  MPS.message from tlga: give fill=TLG_Ethanol items=Base.PetrolCan litres=3 role=A tag=give_carconv_ethanol
+OBS  MPS.reply given ids=Base.PetrolCan=2071117991 role=A tag=give_carconv_ethanol
+OBS  MPS.message from tlga: probe_vehicle car=237 role=A tag=flex_car_after_pour
+OBS  MPS.reply probe_vehicle engine=false found=true profile=engine_si_flex recL=3 role=A side={cond=1.0000,deg={ethanol=0.0314},id=V109369456-16,mic=0.0000,prov={1={from=S109369456-15,k=in,n=3.0000,t=15.4316}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=15.4316,v=1.0000} tag=flex_car_after_pour tankL=3
+OBS  MPS.message from tlga: probe_vehicle car=237 role=A tag=flex_car_after_start
+OBS  MPS.reply probe_vehicle engine=true found=true profile=engine_si_flex recL=3 role=A side={cond=1.0000,deg={ethanol=0.0314},id=V109369456-16,mic=0.0000,prov={1={from=S109369456-15,k=in,n=3.0000,t=15.4316}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=15.4316,v=1.0000} tag=flex_car_after_start tankL=2.99796986579895
+OBS  MPS.message from tlga: finish role=A

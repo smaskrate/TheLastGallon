@@ -183,8 +183,7 @@
   into a car or a generator, and siphoning played their animation but
   moved no fuel: the mod's hooks hid each action's details from the
   server. They work now, each keeping its fuel's record (checked on a
-  server for all but siphoning, which had the same fault and has the same
-  fix). The mod's own pour now tells the player its result in multiplayer
+  server). The mod's own pour now tells the player its result in multiplayer
   too: a refused fuel shows its message and the offer to pour it anyway,
   as in single player.
 * Multiplayer, checked on a dedicated server with two players (both on
@@ -194,10 +193,12 @@
   Also: players without admin rights; two players loading one fermenter
   at once (one gets it, the other keeps their ingredients); a running
   fermenter taken with the world menu's Grab (its batch pauses the next
-  time anyone looks at it); refuelling at the pumps, generators started
-  or refused by their fuel, a car started and idling; a generator
-  converted to flex fuel and run on ethanol; and a server restart, with
-  the floor and the records kept. A real network was not tried. The
+  time anyone looks at it); refuelling and siphoning at the pumps,
+  generators started or refused by their fuel, a car started and idling;
+  a generator and a car converted to flex fuel and run on ethanol; both
+  stills and the drying column from wash to dried ethanol; the vessel
+  taken out of a container; and a server restart, with the floor and the
+  records kept. A real network was not tried. The
   game itself (42.21) cannot take a heavy item off the floor on a server;
   for the fermentation vessel the mod now does it on the server, so
   players lift it from the floor through the loot window as in single

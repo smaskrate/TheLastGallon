@@ -1,5 +1,6 @@
 -- Server transport: client requests -> authoritative handlers -> reply.
--- Multiplayer behaviour is NOT RUN (engine-capabilities G07).
+-- Verified on a dedicated server: the fuel, machine and conversion requests
+-- (RT-MP runs 139-171, engine-capabilities G07).
 require "TLG/Authority/Handlers"
 require "TLG/Authority/MachineHandlers"
 require "TLG/Authority/ConversionHandlers"
