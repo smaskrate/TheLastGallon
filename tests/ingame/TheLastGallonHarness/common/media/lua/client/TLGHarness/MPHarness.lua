@@ -33,8 +33,17 @@ local S = TLGH.MPShared
 MP.role = REQUEST == "mp-a" and "A" or "B"
 MP.other = MP.role == "A" and "B" or "A"
 
+-- Joining reloads the Lua, so the report is reopened in each Lua state; the
+-- checks of the earlier states count toward this client's summary (run
+-- 145's A ended "pass=2 fail=0" for its second session alone).
 local function report()
-    if not MP.R then MP.R = TLGH.Report.new("TLG_harness_mp.txt", "TLG multiplayer harness, client " .. MP.role, true) end
+    if not MP.R then
+        MP.R = TLGH.Report.new("TLG_harness_mp.txt", "TLG multiplayer harness, client " .. MP.role, true)
+        for _, l in ipairs(MP.R.lines) do
+            if string.sub(l, 1, 5) == "PASS " then MP.R.pass = MP.R.pass + 1 end
+            if string.sub(l, 1, 5) == "FAIL " then MP.R.fail = MP.R.fail + 1 end
+        end
+    end
     return MP.R
 end
 

@@ -119,8 +119,9 @@ both on one computer (RT-MP, 2026-11-03):
 - Reading print media, the manual included, is recorded on the server
   and not on the reading player's client, as for the game's own fliers.
 - A server must reach the mod's folder by its real path. Through a
-  junction or symbolic link the game cannot start a server with a mod
-  that ships animation files, as this one does since its carry pose.
+  junction the game cannot start a server with a mod that ships animation
+  files, as this one does since its carry pose (tried; a symbolic link
+  was not).
 - **NOT RUN:** pours, refuelling, conversions, generators and vehicles in
   multiplayer; two players working the same machine at once; a server
   restart; players without admin rights; a real network.

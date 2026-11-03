@@ -3002,7 +3002,16 @@ Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run145_client_a.txt`,
 `…_run145_client_b.txt`, `…_run145_server.txt`, `…_run144_nomod_client_a.txt`
 and `…_run144_nomod_server.txt`. The sheets are
 `2026-11-03_run145_mp_carry_on_other_screen_sheet.jpg` and
-`2026-11-03_run145_mp_floor_sheet.jpg`.
+`2026-11-03_run145_mp_floor_sheet.jpg`. Client A's file ends with
+`SUMMARY pass=2 fail=0`: the report starts its counts again after the
+rejoin, so that line covers the second session only. Its lines give 18
+passed and 2 failed in all. Since then the harness counts the earlier
+sessions' lines into the summary.
+
+The server's path, tried on a real server: started with its cache reached
+through a junction, it stopped on the pose-file checksum ("couldn't find
+…\servercache_link\…tlgcarryvessel.xml", "Server Terminated"), as the
+replay predicted. A symbolic link was not tried.
 
 Not checked:
 - the world menu's Grab of the vessel;
