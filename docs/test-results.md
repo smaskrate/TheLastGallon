@@ -3873,9 +3873,14 @@ Phase B **14/0**, after save, exit and continue. The console's one
 exception came from the harness's own deep-recursion probe.
 
 Not run: the mod list panel itself (the checks read the values it draws
-from), and the Workshop uploader's checks (nothing was uploaded). The
-zip of the commit that takes these changes is stamped with that commit's
-time, so its SHA-256 will differ from this one. Its files should match
-this manifest; that was not checked yet.
+from), and the Workshop uploader's checks (nothing was uploaded).
+
+After the commit (`1d03a03`, on the user's "Do that"): `tools/package.ps1`
+built the zip of the commit, 218/218 tests, compile check 118/0 and
+translations OK first. It is SHA-256
+`47be8fd67966eafd8538ce84c5eb2ac36ae5dfe25aad0306a633a75f91b68522`,
+3,990,078 bytes. Its manifest is identical to launch 190's: the same 125
+files, byte for byte. Only the entries' time stamps differ, set from the
+commit. A second build gave the same bytes. This is the 0.1.0 package.
 
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run190_install_rehearsal.txt`.
