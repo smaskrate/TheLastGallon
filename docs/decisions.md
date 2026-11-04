@@ -989,3 +989,47 @@ listed with their replacement.
   mode in single player (a campfire and a barbecue; the campfire on a
   server is run 189's), which the equivalence tests cover with their
   stand-ins.
+
+## D-033 Version 0.1.0, licensed CC BY-NC-SA 4.0, with release metadata
+* Decision:
+  * The mod is licensed under CC BY-NC-SA 4.0 (`LICENSE.md`, at the
+    repository root and in the package's `docs/`), © 2026 Manuel Alessio
+    (`author=` in `mod.info`). Not covered: the five supplied Tripo models
+    with their textures, and the four carry clips made from Mixamo's
+    animation. They ship only as part of the mod.
+  * Version 0.1.0: `modversion` in `mod.info`, `TLG.VERSION` (`Core.lua`),
+    the changelog's heading (2026-11-04) and the player guide's first
+    line. The package is `dist/TheLastGallon-0.1.0.zip`.
+  * `mod.info`: a one-line description of what ships, holding no `=`
+    (every key is matched with `contains`, engine-capabilities G01);
+    `category=features`; `poster=poster.png` (the preview) and
+    `icon=icon.png` (the vessel's inventory icon), both in `42/`.
+  * `workshop.txt`, written by `tools/package.ps1`: the title "The Last
+    Gallon"; a description in Steam's BBCode of what ships, how it was
+    tested and what this version leaves out; the tags Build 42, Realistic,
+    Vehicles and Items (`media/WorkshopTags.txt`); visibility private.
+  * The Workshop preview, `art-src/preview.png` (256×256), is made by
+    `tools/make-preview.ps1` from the mod's own five machine models. The
+    package carries it beside `Contents/`, and it is also the poster.
+* Reason: the user asked for the release metadata on 2026-11-04 ("Yes,
+  release metadata"). Asked about the licence and the version, they chose
+  "CC BY-NC-SA 4.0" and "Bump to 0.1.0 now". Rights to the models and the
+  clips come from Tripo's and Adobe's terms (their `PROVENANCE.md`), as
+  summarised there; neither terms text was read in full. The mod's
+  licence cannot hand on more than those terms give, so it excludes them.
+  The version does not mean the gates passed: several are PARTIAL
+  (`release-checklist.md`). Publishing stays the user's manual step;
+  visibility is private.
+* Consequences: the world record's `modVersion` is only logged
+  (`World.lua`), so the bump needs no migration. The tools find the zip
+  through `modversion`. The package holds 125 files, four more than
+  before: the poster, the icon, `docs/LICENSE.md` and `preview.png`. The
+  harness checks what the game read from `mod.info`: the version, the
+  category, the description, and the poster and icon as textures
+  (`g01_client_mod_info`). The zip, installed into a fresh cache, passed
+  them all (run 190: phase A 100/0, phase B 14/0). The game read version
+  0.1.0, the category and the whole description, and loaded the poster as
+  a 256×256 texture and the icon as 32×32 from `42/`. Not done: the
+  Workshop banner and screenshots (R04). Not run: the mod list panel
+  itself (the checks read what it draws from), and the uploader's own
+  checks, since nothing was uploaded.

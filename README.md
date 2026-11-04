@@ -1,26 +1,35 @@
 # The Last Gallon
 
-Project Zomboid **Build 42.21.0** mod: fuel deterioration, alternative fuels,
-engine conversions and energy infrastructure. Specification:
-`The_Last_Gallon_Implementation_Plan.md`.
+Project Zomboid **Build 42.21.0** mod: fuel that ages and gets
+contaminated, engines that feel it, home-made ethanol and flex-fuel
+conversions. Specification: `The_Last_Gallon_Implementation_Plan.md`.
 
-Status: development build. Domain layer and authority logic are implemented
-and tested on the game's own Lua VM. In a single-player client (2026-10-31)
-the fuel adapters, start gates and the ethanol loop are verified through
-the player's menus: crafting the machines, a batch of ethanol, then flex
-conversions of a generator and a standard car that run on it, also with the
-game clock running. Multiplayer is not tested. See
-`docs/release-checklist.md` for every open gate.
+Version 0.1.0, the first release (`CHANGELOG.md`). The domain layer and
+the authority logic are tested on the game's own Lua VM
+(`tools/run-tests.ps1`). In game, automated and unattended, on this
+computer: single player through the player's menus (the fuel adapters,
+start gates, stalls, poor fuel's effects on engines, the ethanol loop from
+crafting the machines to a converted generator and car running on the
+ethanol, saves and reloads), and a dedicated server with two players on
+this computer (the same paths, carrying the vessel, the machines' timers).
+The zip from `tools/package.ps1` is installed into a fresh game folder and
+played (`tools/rehearse-install.ps1`). A real network, the crafting window
+and the pathways other than ethanol are not tested; `docs/release-checklist.md`
+lists every gate and what is still open. Publishing to the Workshop is a
+manual step, not done by any script here.
+
+Licence: CC BY-NC-SA 4.0, except the supplied machine models and the carry
+animations (`LICENSE.md`, `NOTICE.md`).
 
 ## Layout
 
 | Path | Contents |
 | --- | --- |
-| `Contents/mods/TheLastGallon/` | Runtime package (`42/mod.info`, `common/media/...`) |
-| `tests/` | Domain tests, fixtures, dev-only in-game harness mod |
-| `tools/` | Test runner, dev environment, server controller, packaging |
-| `docs/` | Environment, capabilities, decisions, matrices, balance, guides |
-| `art-src/` | Editable art sources (none yet) |
+| `Contents/mods/TheLastGallon/` | Runtime package (`42/mod.info`, poster and icon; `common/media/...`) |
+| `tests/` | Domain tests, fixtures, the in-game harness mods (dev only) |
+| `tools/` | Test runner, harness launchers, dev environment, art tools, packaging |
+| `docs/` | Environment, capabilities, decisions, matrices, balance, guides, test results and evidence |
+| `art-src/` | Supplied models as delivered, with their provenance; the Workshop preview |
 
 ## Quick commands (PowerShell, from this folder)
 
@@ -29,12 +38,16 @@ tools\run-tests.ps1                                      # domain suite on Kahlu
 tools\run-tests.ps1 -Entry tests/support/compile_check.lua
 tools\check-translations.ps1
 tools\setup-devenv.ps1                                   # deploy to the isolated dev cache
-tools\dev-server-controller.ps1                          # isolated dedicated server
-tools\run-sp-harness.ps1                                 # automated SP experiments (unlocked desktop, no input, ~12 min)
+tools\run-sp-harness.ps1                                 # single player, unattended (unlocked desktop, no input, ~15 min); -Mode for the other cases
+tools\run-mp-harness.ps1 -Clients 2                      # dedicated server and two clients on this computer, unattended; -Only for the other cases
+tools\make-preview.ps1                                   # Workshop preview, mod list poster and icon (Blender)
 tools\package.ps1                                        # build dist/ (never uploads)
 tools\rehearse-install.ps1                               # install the zip in a fresh cache and play it (~20 min)
 tools\rehearse-install.ps1 -Scenario existing            # the zip added to a save played without it (~30 min)
 ```
+
+Every harness mode, with what it covers and how long it takes, is listed
+in `docs/release-checklist.md`; the results are in `docs/test-results.md`.
 
 Players install from the zip as `docs/player-guide.md` describes; this
 README does not ship in the package.

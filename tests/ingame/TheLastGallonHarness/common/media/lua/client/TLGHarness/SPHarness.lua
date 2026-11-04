@@ -334,6 +334,39 @@ add({ name = "g01_client_translations", fn = function()
     return true
 end })
 
+-- The mod's mod.info as the game read it (BC ChooseGameInfo.readModInfoAux:
+-- every key is matched with contains, poster= and icon= resolved in the
+-- version folder first, then common/), and the pictures the mod list draws
+-- from it (ModInfoPanelDesc, ModListBox).
+add({ name = "g01_client_mod_info", fn = function()
+    local info = getModInfoByID(TLG.MOD_ID)
+    R:check("G01c.mod_info_found", function() return info ~= nil, tostring(info and info:getDir()) end)
+    if not info then return true end
+    R:check("G01c.mod_info_version", function()
+        local v = info:getModVersion(); return v == TLG.VERSION, string.format("mod.info %s, TLG.VERSION %s", tostring(v), tostring(TLG.VERSION))
+    end)
+    R:check("G01c.mod_info_category", function() local c = info:getCategory(); return c == "features", tostring(c) end)
+    R:check("G01c.mod_info_description", function()
+        local d = info:getDescription() or ""
+        return d:sub(1, 30) == "Fuel that ages, takes up water" and d:find("CC BY%-NC%-SA 4%.0") ~= nil,
+            string.format("%d chars: %s", #d, d:sub(1, 60))
+    end)
+    R:check("G01c.mod_info_poster", function()
+        if info:getPosterCount() ~= 1 then return false, "posters=" .. tostring(info:getPosterCount()) end
+        local p = info:getPoster(0)
+        local t = getTexture(p)
+        return t ~= nil and t:getWidth() == 256 and t:getHeight() == 256,
+            string.format("%s %s", tostring(p), t and (t:getWidth() .. "x" .. t:getHeight()) or "no texture")
+    end)
+    R:check("G01c.mod_info_icon", function()
+        local p = info:getIcon()
+        local t = p and p ~= "" and getTexture(p) or nil
+        return t ~= nil and t:getWidth() == 32 and t:getHeight() == 32,
+            string.format("%s %s", tostring(p), t and (t:getWidth() .. "x" .. t:getHeight()) or "no texture")
+    end)
+    return true
+end })
+
 add({ name = "find_pumps", timeout = 600, fn = function()
     H.pumps = {}
     local others = {}

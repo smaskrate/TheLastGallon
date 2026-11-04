@@ -14,7 +14,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
-| Upgrade from an earlier release; install through the Steam Workshop | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12) |
+| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12); uploading is the user's manual step, not taken |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -3839,3 +3839,43 @@ Not run in multiplayer: driving on poor fuel, so the lowered power's
 effect on the car's speed there; flex-converted engines; other chassis;
 several clients' machines and cars at once; a real network (the user's
 choice).
+
+## 2026-11-04 — RT-SP launch 190 (the 0.1.0 zip, with its release metadata)
+
+The user asked for the release metadata ("Yes, release metadata") and,
+asked, chose the licence and the version: CC BY-NC-SA 4.0, and 0.1.0 now
+(D-033). `tools/make-preview.ps1` made the preview (256×256, 80,474
+bytes), which is also the poster. `tools/package.ps1` then built
+`TheLastGallon-0.1.0.zip` from uncommitted changes on `6123c0e`. Before
+it: 218/218 tests, compile check 118/0, translations OK. The zip has 125
+files, SHA-256 `2b5e1afc…`, 3,990,078 bytes. It differs from launch 187's
+zip (`bac724c6…`, `b7dd527`) in:
+
+* the version (`mod.info`, `Core.lua`) and the rest of `mod.info`: the
+  description, category, poster and icon;
+* four new files: `42/poster.png`, `42/icon.png`, `docs/LICENSE.md` and
+  `preview.png` beside `Contents`;
+* a header comment of `Vehicles.lua`;
+* the shipped changelog, notice and player guide.
+
+`tools/rehearse-install.ps1 -NoBuild`: the zip matched its manifest (125
+files) and was installed into a fresh isolated cache. Phase A **100/0**:
+launch 187's 94 checks and six new ones (`g01_client_mod_info`), on what
+the game read from the installed `mod.info`:
+
+* version `0.1.0`, equal to `TLG.VERSION`;
+* category `features`;
+* the description whole (493 characters, licence included);
+* the poster found in `42/` and loaded as a 256×256 texture;
+* the icon found in `42/` and loaded as 32×32.
+
+Phase B **14/0**, after save, exit and continue. The console's one
+exception came from the harness's own deep-recursion probe.
+
+Not run: the mod list panel itself (the checks read the values it draws
+from), and the Workshop uploader's checks (nothing was uploaded). The
+zip of the commit that takes these changes is stamped with that commit's
+time, so its SHA-256 will differ from this one. Its files should match
+this manifest; that was not checked yet.
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run190_install_rehearsal.txt`.

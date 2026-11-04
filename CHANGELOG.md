@@ -1,7 +1,12 @@
 # Changelog
 
-## 0.1.0-dev (unreleased)
+## 0.1.0 (2026-11-04)
 
+* First release. The mod is licensed under CC BY-NC-SA 4.0, except the
+  five supplied machine models and the carry animations, which ship only
+  as part of the mod (`LICENSE.md`).
+* The game's mod list shows the mod's poster, its icon (the fermentation
+  vessel's) and its category.
 * Fuel identity, ageing (chemical condition) and contamination (water,
   sediment, microbial) with storage, sealing, stabilizer and climate effects.
 * Inspection with method precision, hysteresis and "unknown" state; filter,

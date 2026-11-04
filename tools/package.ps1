@@ -47,7 +47,7 @@ foreach ($doc in "player-guide.md", "support-matrix.md", "migrations.md") {
 }
 # README.md is the developers' (its commands do not ship); the player guide
 # says how to install.
-foreach ($doc in "CHANGELOG.md", "NOTICE.md") {
+foreach ($doc in "CHANGELOG.md", "NOTICE.md", "LICENSE.md") {
     if (Test-Path (Join-Path $repo $doc)) { Copy-Item (Join-Path $repo $doc) $docsOut }
 }
 
@@ -64,13 +64,40 @@ $badXml = @(Get-ChildItem -Recurse -File -Filter *.xml $modOut | Where-Object {
 })
 if ($badXml.Count -gt 0) { $badXml | ForEach-Object { Write-Host "XML ERROR $($_.FullName)" }; throw "package contains XML that does not parse" }
 
+# The Workshop page's text (Steam's BBCode), offered by the game's uploader
+# for review. Tags from the game's media/WorkshopTags.txt. Visibility stays
+# private: publishing is the user's step, never this script's.
 @"
 version=1
-title=The Last Gallon (development build $version)
-description=Fuel deterioration, alternative fuels, engine conversions and energy infrastructure.
-description=Tested only on Project Zomboid 42.21.0 (4a0e9546ec). See docs/support-matrix.md inside the mod.
-description=Development build: several features are untested in game (marked in docs/player-guide.md inside the mod).
-tags=Build 42;Realistic;Vehicles
+title=The Last Gallon
+description=Fuel that ages, takes up water and gathers dirt, and engines that feel it. Version $version for Project Zomboid Build 42.21.
+description=
+description=[h2]Fuel that goes bad[/h2]
+description=[list]
+description=[*]Fuel left behind by the old world slowly goes stale. How fast depends on what it is, how it is stored, how warm it gets and whether the container is sealed. Water and sediment get in too, and diesel can grow sludge.
+description=[*]Look and smell, or take a sample with a sampling kit, to judge what you found. Filter it, drain the water, add stabilizer, seal it, clean old containers.
+description=[*]Poor fuel makes engines hard to start and stalls them, costs a car power and wears car and generator engines. A sandbox option turns the stalls off.
+description=[*]About one gas station in ten holds water-contaminated fuel: sample before you fill up.
+description=[/list]
+description=
+description=[h2]Make your own: ethanol[/h2]
+description=[list]
+description=[*]Ferment sugar, corn, potatoes or fruit in a fermentation vessel, distil the wash in a pot or reflux still, and dry it with quicklime in a drying column.
+description=[*]Convert a generator or a car to flex fuel at the workshop, and run it on your ethanol.
+description=[*]The machines follow the weather and the warmth where they stand: in winter, keep a fire fed near the fermenter.
+description=[*]The Field Manual: Fuel Systems turns up in garages, gas stations, farms and bookstores.
+description=[/list]
+description=
+description=[h2]Good to know[/h2]
+description=[list]
+description=[*]Tested only on Project Zomboid 42.21.0, in single player and on a dedicated server (two players on one computer). Other builds are not supported.
+description=[*]English and Italian.
+description=[*]New and existing saves. Read the player guide before removing the mod: without it the game drops its machines and the ethanol in your containers (docs/player-guide.md in the mod folder).
+description=[*]Not in this version: biodiesel, wood gas, biogas, propane and electrical networks.
+description=[/list]
+description=
+description=Licence: CC BY-NC-SA 4.0, except the five supplied machine models and the carry animations, which ship only as part of the mod (docs/LICENSE.md in the mod folder).
+tags=Build 42;Realistic;Vehicles;Items
 visibility=private
 "@ | Set-Content -Encoding ascii (Join-Path $item "workshop.txt")
 if (-not (Test-Path (Join-Path $repo "art-src\preview.png"))) {
@@ -93,7 +120,7 @@ Get-ChildItem -Recurse -File $item | Sort-Object FullName | ForEach-Object {
 $zip = Join-Path $dist "TheLastGallon-$version.zip"
 if (Test-Path $zip) { Remove-Item $zip }
 $shipped = @("Contents", "docs/player-guide.md", "docs/support-matrix.md", "docs/migrations.md", "CHANGELOG.md",
-    "NOTICE.md", "tools/package.ps1")
+    "NOTICE.md", "LICENSE.md", "art-src/preview.png", "tools/package.ps1")
 $stamp = [DateTimeOffset]::Parse((& git -C $repo log -1 --format=%cI -- $shipped))
 $commit = (& git -C $repo rev-parse --short HEAD)
 $dirty = @(& git -C $repo status --porcelain -- $shipped).Count -gt 0

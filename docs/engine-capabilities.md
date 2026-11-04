@@ -74,7 +74,31 @@ Probe: `tests/support/runtime_probe.lua` (runner) and
 * **BC** `ChooseGameInfo.readModInfoAux` keys: `name= id= author= description=
   poster= url= modversion= icon= category= require= incompatible=
   loadModAfter= loadModBefore= versionMin= versionMax= pack= tiledef=`;
-  `require=`/`incompatible=` strip `\`.
+  `require=`/`incompatible=` strip `\`. Each line is matched with
+  `String.contains` and the key removed with `replace`, in that order
+  (`name=` first, then `poster=`, then `description=`), so a value holding
+  another key's text, such as a description with `name=` in it, is read
+  as that key: the mod's description holds no `=`. `poster=` and `icon=`
+  name a file in the version folder (`42/`) if it exists there, otherwise
+  in `common/`; several `poster=` lines make several posters.
+* **SRC** mod list (`OptionScreens/ModSelector`): `ModInfoPanelDesc`
+  draws the first poster at 200×200 beside the description;
+  `ModListBox` draws the icon in a square as tall as a button, and a mod
+  with no `icon=` gets its `category=`'s item icon (`map` Item_Map,
+  `vehicle` Item_CarTire, `features` Item_ElectronicsScrap, `modpack`
+  Item_SewingBox; `ModSelectorModel`). The mod sets `category=features`,
+  `poster=poster.png` (256×256) and `icon=icon.png` (32×32), both in
+  `42/`.
+* **BC/SRC** Workshop uploader (`SteamWorkshopItem`, `WorkshopSubmitScreen`,
+  `UI.json`): `preview.png` beside `Contents/` must be exactly 256×256 and
+  no larger than 1000 KB; `Contents/` may hold only `buildings/`,
+  `creative/` and `mods/`, and `mods/` only folders; the constant
+  `*.exe *.dll *.bat *.app *.dylib *.sh *.so *.zip` lists the refused file
+  types. `workshop.txt` keys: `version=`, `id=`, `title=`, `description=`
+  (one line each, joined with line breaks), `tags=` (`;`-separated, from
+  `media/WorkshopTags.txt`) and `visibility=` (`public`, `friendsOnly`,
+  `private`, `unlisted`). The upload screen offers the title, description,
+  tags and visibility for editing before anything is sent.
 * **BC** first-run copy: `Core.loadOptions()` → `initOptionsINI()` →
   `copyPasteFolders("mods")` when `<cachedir>/options.ini` is missing (caused
   the 2026-10-30 incident, `environment.md`).

@@ -17,7 +17,9 @@
 --                      and stall verified RT-SP 2026-10-31; driving burn
 --                      reconciliation and a stall on the move RT-SP
 --                      2026-11-04 (runs 175-176); power, wear and the stall
---                      option on a running engine RT-SP run 179 (D-031)
+--                      option on a running engine RT-SP run 179 and on a
+--                      dedicated server, seen by two clients, RT-MP run 188
+--                      (D-031; driving on poor fuel there NOT RUN)
 --
 -- Vanilla actions mutate the tank incrementally in update() on the
 -- authoritative side and finish in complete() (SRC ISAddGasolineToVehicle.lua),

@@ -1,6 +1,6 @@
 # The Last Gallon — player guide
 
-Development build for Project Zomboid 42.21.0. Features marked *(untested in
+Version 0.1.0, for Project Zomboid 42.21.0. Features marked *(untested in
 game)* are implemented but have not been verified in a running game yet.
 
 ## Installing

@@ -261,9 +261,9 @@ Release art (audit R01–R04):
 
 | Asset | For | Note |
 | --- | --- | --- |
-| `preview.png`, 256×256 | Workshop upload (required) | taken from `art-src/preview.png` |
-| poster | in-game mod list (`poster=` in `mod.info`) | optional; `mod.info` has none |
-| mod icon | in-game mod list (`icon=` in `mod.info`) | optional |
+| `preview.png`, 256×256 | Workshop upload (required) | taken from `art-src/preview.png`, made by `tools/make-preview.ps1` from the mod's own models (D-033) |
+| poster | in-game mod list (`poster=` in `mod.info`) | `42/poster.png`, the preview; loaded by the game from the installed zip (run 190) |
+| mod icon | in-game mod list (`icon=` in `mod.info`) | `42/icon.png`, the vessel's inventory icon; loaded likewise (run 190) |
 | Workshop banner and screenshots | Workshop page | spec §22 |
 
 ### B and C
