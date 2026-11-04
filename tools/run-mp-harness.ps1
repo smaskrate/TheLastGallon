@@ -41,7 +41,13 @@
   siphoning at the Gas2Go pumps, a generator and a car (one client);
   conversion: a generator converted at the workshop; carconv: a car
   converted; stills: both stills and the drying column (one client each,
-  on the shortest day).
+  on the shortest day). effects: what poor fuel does to an engine (D-031)
+  with the server applying it: a car idling on stale petrol loses power and
+  wears, the start gate and the stall option on a blend it cannot take, and
+  a generator's wear charged at a refuel (two clients: A drives, B
+  watches). timers: the machines' hourly readings and ten-minute notes on
+  the server (D-032), beside a campfire the server builds and lights, and
+  what each timer costs there (one client). Both on the shortest day.
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -55,7 +61,7 @@
   Lua\TLG_harness_mpgo.txt, written once the server is up again).
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart)
 $ErrorActionPreference = "Stop"
@@ -158,7 +164,7 @@ end
 # shortest day (DayLength 1: 15 minutes, Sandbox_DayLength_option1), and
 # the fuel case's generator and car burn enough there to be seen (run 156
 # read none in half a minute on the default day).
-$dayLength = if (@("conversion", "fuel", "carconv", "stills") -contains $Only) { "`n    DayLength = 1," } else { "" }
+$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers") -contains $Only) { "`n    DayLength = 1," } else { "" }
 @"
 SandboxVars = {
     VERSION = 6,$dayLength

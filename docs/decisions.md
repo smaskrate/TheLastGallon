@@ -920,10 +920,15 @@ listed with their replacement.
   repeated 26/0 with the change (run 178). Generator wear shows at the next
   refuel, move or switch, not as it burns. A car saved with its engine
   running on poor fuel is saved with the lowered power; without the mod,
-  only a repair or an engine swap restores it (`migrations.md`). Not run:
-  multiplayer, where the driver's client applies the power it receives
-  through `setEngineFeature` and so scales the received loudness again
-  (vanilla's own); flex-converted engines; other chassis.
+  only a repair or an engine swap restores it (`migrations.md`). On a
+  dedicated server (RT-MP run 188, A 22/0, B 9/0), the server lowered the
+  power, charged the wear, refused the start, held the floor with stalls
+  off, stalled the engine with them on and charged the generator at its
+  refuel. Both clients, the driver's and another's, showed the power,
+  state and condition the server had. A client's loudness is the
+  server's × 0.37 from the first engine packet the game sends (vanilla's
+  own), and the mod's changes left it there. Not run: driving in
+  multiplayer, flex-converted engines, other chassis.
 
 ## D-032 The machines' notes, readings and catch-up do the same work for less
 * Decision: four changes to the machines' timers and catch-up
@@ -976,8 +981,11 @@ listed with their replacement.
   the same as before, so `migrations.md` has nothing to add. Records the
   notes and readings wrote in place were saved, exited and continued in
   the install rehearsal of the package (run 187,
-  `machine_records_persist`). Not run since the change:
-  * the open fires mode (a campfire and a barbecue), which the equivalence
-    tests cover with their stand-ins;
-  * multiplayer, where the server runs these timers (the record written in
-    place goes out through the same `transmitModData` as before).
+  `machine_records_persist`). On a dedicated server (RT-MP run 189, 6/0),
+  32 running fermenters, four of them beside a campfire the server lit,
+  got every hourly reading (96 of 96) and every ten-minute note (576 of
+  576) as the air and the campfire give them, and the status catch-up
+  credited the fire's warmth. Not run since the change: the open fires
+  mode in single player (a campfire and a barbecue; the campfire on a
+  server is run 189's), which the equivalence tests cover with their
+  stand-ins.

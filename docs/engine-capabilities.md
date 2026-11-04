@@ -277,7 +277,9 @@ Source evidence:
   network field `zombie.network.fields.vehicle.VehicleEngine` writes the
   state, quality, loudness and power, and the receiving side applies them
   through `setEngineFeature`, so a client scales the stored loudness again.
-  That is vanilla's own; multiplayer was not run.
+  That is vanilla's own: the server's `BaseVehicle.onEngineStateChanged`
+  calls `transmitEngine` on every state change too. Multiplayer: see the
+  next subsection.
 * BC `VehiclePart.repair()` on the Engine sets quality 100, loudness from
   the script (× the zombie attraction multiplier) and power from the
   script's engine force. The debug-spawned, repaired `Base.CarNormal` had
@@ -292,7 +294,11 @@ Source evidence:
   constants are 0.02 (`GeneratorBasePowerConsumption`), 0.13 a
   fridge-freezer, 0.002 a light switch. How the base enters the hourly
   burn was not traced: run 179's generator, with nothing plugged in, burned
-  0.002 L an hour. Lua has no list
+  0.002 L an hour. On a dedicated server on the shortest day (RT-MP run
+  188) one burned 0.0348 L in 6 game hours, 0.0058 L an hour; why it
+  differs from run 179 (a server, the day's length, or run 179's ×40 game
+  speed) was not traced. The wear is charged on the litres burned, so it
+  holds either way. Lua has no list
   of generators (`AllGenerators` is private, `IsoCell` has no getter for
   the objects it processes). `getScriptManager():FindItem(
   gen:getGeneratorItemType()):getConditionLowerChance()` gave 30 in game.
@@ -315,6 +321,52 @@ Source evidence:
   times the rate, 3 points with 0.009094 carried: exactly the 3.009094 due.
   `chargeWear` called again at once took nothing. Run 177 had passed all
   this but one expectation, which used the factor from before the 6 hours.
+
+### Engine power and wear in multiplayer (RT-MP run 188, 2026-11-04; D-031)
+
+`tools/run-mp-harness.ps1 -Clients 2 -Only effects` (the shortest day; A
+drives, B watches). Run 188: A **22/0**, B **9/0**.
+
+* BC: `VehicleEngine.update` returns at once on a client (`GameClient.client`),
+  so the server runs a car's engine: its state, auto shut-down and stalls, and
+  the world sound that draws zombies, which reads the server's loudness.
+  A client applies each engine packet (`VehicleUpdatePacket` flag 4) by
+  calling the state's `engineDo…` and then `setEngineFeature(q, l, p)`.
+* On the server the mod's minute pass lowered a car on petrol aged to 2.6
+  from 4000 to 3406 at the first pass that saw it run, and held it for 100
+  game minutes of idling. Quality 97 and loudness 40 stayed as they were.
+  Both clients showed 3406 30 and 31 ticks after they saw the engine run
+  (A and B); the server's `transmitEngine` is how it gets there.
+* Each client's loudness was 14, the server's 40 × 0.37037036, from the
+  first engine packet (the engine still starting, before the mod set any
+  power). It stayed 14 through every change the mod made. The scaling is
+  vanilla's, and it does not reach what zombies hear, which the server
+  emits.
+* Wear on the server, the car rate × 1000 (a fixture: idling burned
+  0.00056 L a game minute, 0.0503 L in 90 minutes): 5 points off and
+  0.608324 carried, exactly the 5.608324 due. Both clients showed the
+  Engine part's condition as the server's (`transmitPartCondition`).
+* The power came back (4000, no state left) at the first minute pass after
+  the shut-off, on the server and on both clients.
+* A blend no stock engine takes (written over the record): with stalls on,
+  the server's start gate refused the start (`ISStartVehicleEngine.complete`
+  runs on the server); with stalls off it ran 29 game minutes at 2000, the
+  floor, without a stall; stalls on again, it stalled at the next minute
+  pass and had 4000 back one pass later. Each client showed the state and
+  power the server had.
+* A generator (8 L, record aged to 3.0, switched on by the server) burned
+  0.0348 L in 6 game hours. A's 2 L refuel through the world menu charged,
+  in `ISAddFuel.new` on the server, 8 points with 0.718012 carried: the
+  8.718012 due at 100 times the rate. Charged again at once: nothing. A's
+  client showed condition 92, as the server.
+* The mod's minute pass on the server cost 0.015 ms a vehicle on average
+  (4290 calls, about 22 vehicles in the server's cell; whole-ms clock, max
+  2 ms).
+* Not run in multiplayer: driving, so the lowered power's effect on the
+  car's speed there is not measured (`CarController` reads
+  `getEnginePower`, and both clients held the server's power; which side
+  runs it for a driven car was not traced), flex-converted engines, other
+  chassis.
 
 ## G04/G05 Generators — PASS (SP)
 
@@ -721,11 +773,19 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   read. Both fires burned out during a 12 hour trip that unloaded them:
   the campfire one minute per event, the barbecue by game time
   (`lastUpdateTime` is saved, BC `IsoBarbecue.save`).
-* Heat sources on a dedicated server (BC 42.21, not run in multiplayer):
-  `IsoBarbecue.update` returns before `updateHeatSource` when
-  `GameServer.server` is set, so there a barbecue warms no tile.
+* Heat sources on a dedicated server (BC 42.21): `IsoBarbecue.update`
+  returns before `updateHeatSource` when `GameServer.server` is set, so
+  there a barbecue warms no tile (not run in multiplayer).
   `IsoFireplace.update` calls `updateHeatSource` on the server too, and an
-  `IsoFire` adds its permanent heat source with no server check.
+  `IsoFire` adds its permanent heat source with no server check. RT-MP run
+  189 ran the campfire on a server: built through
+  `SCampfireSystem.instance:addCampfire`, given 480 minutes of fuel and
+  lit through its global object (`setFuel`, `lightFire`). At the first
+  note the server's `getAirTemperatureForSquare` read 20.15 °C on the
+  square beside it against 15.65 °C unwarmed, and all four squares beside
+  it read warmer than unwarmed in each pass logged. None of 28 machines 13
+  squares or more away was warmed. Its fuel fell by one a
+  game minute (480 → 300 in three game hours), as in single player.
 * Grid power: `IsoWorld.hydroPowerOn` starts from
   `SandboxOptions.doesPowerGridExist()`, true while the world's age in days
   is at most `ElecShutModifier` (so −1: never);

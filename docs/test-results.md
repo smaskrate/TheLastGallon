@@ -12,8 +12,8 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
-| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); the engine effects of poor fuel (D-031) | Not in the multiplayer harness yet |
-| Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`). Electrical networks are not built in game in this build |
+| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188) | Not in the multiplayer harness yet |
+| Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
 | Upgrade from an earlier release; install through the Steam Workshop | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12) |
 
 ## 2026-10-30 — Kahlua runtime probe
@@ -3748,3 +3748,94 @@ exception came from the harness's own deep-recursion probe.
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run187_install_rehearsal.txt`,
 and launch 186's partial file,
 `2026-11-04_rt-sp_harness_run186_install_rehearsal_interrupted.txt`.
+
+## 2026-11-04 — RT-MP launches 188–189 (engine effects and the machines' timers on a server)
+
+The user asked to test the engine effects (D-031) and the timers (D-032)
+on a dedicated server ("Yes, test multiplayer"), the not-run item both
+decisions named. Two new modes of `tools/run-mp-harness.ps1`, on the
+shortest day, ran unattended on this machine. The server holds the
+fixtures and watches the engine every game minute, after the mod's own
+pass (`MPServer.lua`). The clients act as players do (`MPHarnessCases.lua`).
+
+**Engine effects** (`-Clients 2 -Only effects`, launch 188: A **22/0**,
+B **9/0**). The server parked a `Base.CarNormal` by the spawn point and
+gave A its key. A poured 10 L of petrol in from a can. The server aged the
+tank's record to 2.6 (power factor 0.851, wear factor 1.743) and turned
+stalls off. Idling burns about 0.00056 L a game minute, so the car wear
+rate ran at 1000 times its value (a fixture). A started the engine and
+idled for 100 game minutes:
+- the server lowered the power from 4000 to 3406 at the first minute pass
+  that saw the engine run, and held it; quality 97 and loudness 40 stayed;
+- both clients showed 3406, 30 and 31 ticks after they saw the engine run;
+- the 0.0503 L burned owed 5.608324 points: 5 came off the Engine part
+  and 0.608324 was carried, on the server and on both clients;
+- after A shut the engine off through the menu, the power was 4000 again
+  at the next minute pass, on the server and both clients.
+
+Then a blend no stock engine takes (petrol and ethanol 5 to 3, written
+over the record):
+- with stalls on, the server's start gate refused A's start;
+- with stalls off, the engine ran 29 game minutes at 2000, the floor,
+  without a stall;
+- with stalls on again, it stalled at the next minute pass and had 4000
+  back one pass later.
+
+Each client showed what the server had.
+
+Each client's loudness read 14, the server's 40 × 0.37037036. It did so
+from the first engine packet, while the engine was still starting, before
+the mod set any power, and it held there to the end. A client applies a
+received engine through `setEngineFeature`, which stores the loudness
+scaled (BC `VehicleEngine.parse`). That is vanilla's own. The server runs
+the engine and emits the noise zombies hear from its own loudness
+(`VehicleEngine.update` returns at once on a client).
+
+Last, a generator by the car: 8 L poured in from a can, its record aged to
+3.0, switched on by the server (a fixture) for 6 game hours. It burned
+0.0348 L (single-player run 179's burned 0.012 L in 6 hours; the
+difference was not traced, `engine-capabilities.md`). A's 2 L refuel through the world menu made the server build
+`ISAddFuel`. Its `new` charged, at 100 times the rate (a fixture), 8
+points with 0.718012 carried: exactly the 8.718012 due. Charged again at
+once: nothing. A's client showed condition 92, as the server. The mod's
+minute pass cost 0.015 ms a vehicle on the server (4290 calls over about
+22 vehicles in its cell).
+
+**The machines' timers** (`-Clients 1 -Only timers`, launch 189: A
+**6/0**). The server built a campfire 11 squares from the spawn point
+(`SCampfireSystem.instance:addCampfire`) and gave it 480 minutes of fuel.
+It lit it, then put a running fermenter on each of the four squares
+beside it and 28 more out of its reach (13 squares or more). Over three
+game hours the harness's own handlers, run right after the mod's in the
+same event, compared every record with what they read themselves:
+- 96 of 96 hourly readings equalled the air at their machine;
+- 576 of 576 ten-minute notes were as the air and the campfire give them.
+  The four machines beside the fire were warmed in each pass logged (1–3,
+  6, 12 and 18; air 20.15 against 15.65 °C unwarmed at the first) and
+  noted the campfire: its
+  offset, its fuel by the server's campfire object (474 at the first
+  note, 10 less each pass). None of the 28 away was warmed, and they
+  noted none.
+
+A then asked the status of a machine by the fire and one away, standing
+at each, as the menu does. Both were `Processing`. The catch-up the
+server ran from those notes and readings gave the fire's machine a site
+temperature of 21.75 °C against 17.32 °C away.
+
+The timers' costs on the server, as they ran (whole-ms clock): the
+hourly readings 1 ms, the ten-minute notes 3.6 ms on average (6 ms the
+most). The server's own bench, as the performance mode times them: the
+hour's climate record and readings 0.398 ms, a note pass 2.51 ms, a
+machine's status catch-up 0.106 ms. The bench's writes stayed on the
+server, so these leave out sending the records to clients; the timed
+events include it.
+
+Evidence: `docs/evidence/2026-11-04_rt-mp_harness_run188_effects_client_a.txt`,
+`…_client_b.txt` and `…_server.txt`, and
+`…_run189_timers_client_a.txt` and `…_server.txt`. No server stdout was
+kept (it holds the accounts' passwords).
+
+Not run in multiplayer: driving on poor fuel, so the lowered power's
+effect on the car's speed there; flex-converted engines; other chassis;
+several clients' machines and cars at once; a real network (the user's
+choice).

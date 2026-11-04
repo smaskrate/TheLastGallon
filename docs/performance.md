@@ -231,11 +231,35 @@ for running fermenters. With 480 readings each it would be about 54 ms
 per note and 140 ms per hourly reading. The fire scan grows with the area
 the warmed machines cover rather than with their number.
 
+## On a dedicated server (RT-MP runs 188–189)
+
+The server runs the timers and answers the requests. Two multiplayer modes
+timed them there (`tools/run-mp-harness.ps1 -Only effects` with two
+clients, `-Only timers` with one). The server and its clients ran on the
+reference machine, sharing its CPU, and the clock counts whole
+milliseconds. These are observations, not budgets.
+
+| What | Server |
+| --- | --- |
+| The minute pass, per vehicle in the server's cell (about 22, one idling on stale petrol; run 188) | 0.015 ms on average over 4290 calls, 2 ms the most |
+| Hourly climate record and readings, 32 running fermenters (run 189's bench) | 0.398 ms |
+| Ten-minute note pass, 32 fermenters, four beside a lit campfire (bench) | 2.51 ms |
+| A fermenter's status catch-up (read, advance, site air; bench) | 0.106 ms |
+| The same timers as they ran over three game hours | readings 1 ms; notes 3.6 ms on average, 6 ms the most |
+
+The bench kept its writes on the server, so its figures leave out sending
+the records to the clients; the timed events include it. Single player
+gave 0.55 ms per reading and 0.59 ms per note for 32 fresh fermenters
+(run 185). The server's note pass costs more here because four machines
+stand by a fire: each pass scans the squares within reach of them.
+
 ## Not measured
 
 - **Multiple electrical networks:** no network is built in game in this
   build. The energy model is domain-only (gate 4).
-- **Several clients using shared storage:** multiplayer was not measured.
-  There, the server runs the timers and answers the requests.
+- **Several clients using shared storage:** the server's timers were
+  timed with one player's car or machines (above). Several players'
+  cars and machines at once were not measured, nor frames on a client in
+  multiplayer.
 - **Other machines:** every figure is this machine's. A slower CPU makes
   each call proportionally slower.

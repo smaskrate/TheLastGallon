@@ -12,7 +12,8 @@
 -- - roll_manual: containers filled from the manual's loot lists as the
 --   game fills them (ItemPickerJava.doRollItem), the first manual given.
 -- It also logs every take of a machine off the floor the mod makes on the
--- server (Machines.takeOnServer, D-030) with its result.
+-- server (Machines.takeOnServer, D-030) with its result, and holds the
+-- fixtures and watches of the effects and timers cases (below).
 -- Results: <cachedir>/Lua/TLG_harness_mpserver.txt.
 require "TLGHarness/Report"
 require "TLGHarness/MPShared"
@@ -504,6 +505,674 @@ function services.roll_manual(player, args)
     end
     reply("rolled", args, { fills = fills, manuals = found, id = tostring(kept and kept:getID()),
         printMedia = tostring(kept and kept:getModData().printMedia ~= nil) })
+end
+
+------------------------------------------------------------------------------
+-- The effects case (-Only effects; D-031 on a server). The server applies the
+-- engine effects: Vehicles.lua's pass every game minute, and a generator's
+-- wear charged in ISAddFuel.new when the server builds a client's refuel.
+-- The fixtures are the single-player mode's (SPHarness.lua RT.E): the tank's
+-- record aged in place, an unfit blend written over it, the stall option, the
+-- wear rates scaled. A watch every game minute, registered after the mod's
+-- pass, logs the car's engine and follows each run of it: its own power, the
+-- target the fuel gives, how many minute passes it took to get there, whether
+-- it strayed, quality and loudness, the stop and the power coming back. The
+-- litres the mod charges wear for are counted at V.applyWear, as
+-- RT.E.wrapWear counts them, and its cost per call is timed.
+------------------------------------------------------------------------------
+local EF = M.EF or {}
+M.EF = EF
+
+local function efCar() return EF.car and getVehicleById(EF.car) or nil end
+
+-- The car's engine as the server holds it.
+local function engineFacts(v)
+    local V = TLG.Integration.Vehicles
+    local engine = v and v:getPartById("Engine")
+    local tank = v and v:getPartById("GasTank")
+    local md = engine and engine:getModData()
+    return { power = v and v:getEnginePower() or -1, quality = v and v:getEngineQuality() or -1,
+        loudness = v and v:getEngineLoudness() or -1, running = tostring(v ~= nil and v:isEngineRunning()),
+        state = tostring(v and v:getEngineState()), cond = engine and engine:getCondition() or -1,
+        tankL = tank and tank:getContainerContentAmount() or -1,
+        powerState = S.text(md and md[V.POWER_KEY]), wearCarry = S.text(md and md[V.WEAR_KEY]) }
+end
+
+local function stallsOption(on)
+    SandboxVars.TheLastGallon = SandboxVars.TheLastGallon or {}
+    SandboxVars.TheLastGallon.VehicleStalls = on
+    report():line("OBS  MPS.effects sandbox VehicleStalls=%s", tostring(SandboxVars.TheLastGallon.VehicleStalls))
+end
+
+-- The fuel as the engine sees it, as text and fields.
+local function evaluation(e)
+    return { compatible = tostring(e and e.compatible), grade = tostring(e and e.grade),
+        powerFactor = e and e.powerFactor or -1, wearFactor = e and e.wearFactor or -1,
+        startFactor = e and e.startFactor or -1, reasons = e and e.reasons and table.concat(e.reasons, ",") or "" }
+end
+
+-- One game minute of the car, after the mod's pass.
+local function efMinute()
+    local ok, err = pcall(function()
+        local v = efCar()
+        if v == nil then return end
+        local V, EE = TLG.Integration.Vehicles, TLG.Domain.EngineEffects
+        EF.minute = (EF.minute or 0) + 1
+        local f = engineFacts(v)
+        local running = v:isEngineRunning()
+        local run = EF.run
+        if running and (run == nil or run.stoppedAt ~= nil) then
+            local st = v:getPartById("Engine"):getModData()[V.POWER_KEY]
+            local e = V.evaluate(v)
+            local factor = (e ~= nil and e.grade ~= "empty") and e.powerFactor or 1
+            local base = (st and st.base) or f.power
+            run = { from = EF.minute, base = base, factor = factor, target = EE.targetPower(base, factor) }
+            EF.run = run
+            EF.runs = (EF.runs or 0) + 1
+            report():line("OBS  MPS.effects run %d seen at minute %d: own power %d, factor %.6f, target %d",
+                EF.runs, EF.minute, base, factor, run.target)
+        end
+        if run then
+            if running then
+                if run.reachedAt == nil and f.power == run.target then run.reachedAt = EF.minute - run.from end
+                if run.reachedAt ~= nil and f.power ~= run.target and run.strayed == nil then
+                    run.strayed = string.format("%d at minute %d", f.power, EF.minute - run.from)
+                end
+            elseif run.stoppedAt == nil then
+                run.stoppedAt = EF.minute
+            end
+            if run.stoppedAt ~= nil and run.backAt == nil and f.power == run.base and f.powerState == "nil" then
+                run.backAt = EF.minute - run.stoppedAt
+            end
+        end
+        if EF.q0 ~= nil and (f.quality ~= EF.q0 or f.loudness ~= EF.l0) and EF.featuresChanged == nil then
+            EF.featuresChanged = string.format("quality %d loudness %d at minute %d", f.quality, f.loudness, EF.minute)
+        end
+        -- The log: every minute while it runs and the minute it stops.
+        if running or (run and run.stoppedAt == EF.minute) or EF.minute % 10 == 0 then
+            report():line("OBS  MPS.effects minute %d: running %s %s power %d quality %d loudness %d engine %d tank %.4f"
+                .. " power state %s wear carry %s", EF.minute, f.running, f.state, f.power, f.quality, f.loudness,
+                f.cond, f.tankL, f.powerState, f.wearCarry)
+        end
+    end)
+    if not ok then report():line("STEPERR MPS.effects_minute :: %s", tostring(err)) end
+end
+
+local function efWrap()
+    local V, EE = TLG.Integration.Vehicles, TLG.Domain.EngineEffects
+    if not EF.wearOrig then
+        EF.wearOrig = V.applyWear
+        V.applyWear = function(vehicle, e)
+            local id = vehicle:getId()
+            local last = V.lastTank[id]
+            local tank = V.tank(vehicle)
+            local now = tank and tank:getContainerContentAmount()
+            local r = EF.wearOrig(vehicle, e)
+            if EF.count and last and now and now < last and e and e.grade ~= "empty" then
+                local K = EF.count
+                K.calls, K.litres = K.calls + 1, K.litres + (last - now)
+                K.accrual = K.accrual + (last - now) * math.max(0, e.wearFactor - 1)
+                    * EE.vehicleWearPerLitre(SandboxVars and SandboxVars.CarGasConsumption)
+            end
+            return r
+        end
+    end
+    if not EF.effectsOrig then
+        EF.effectsOrig = V.applyEffects
+        EF.cost = { n = 0, ms = 0, max = 0 }
+        V.applyEffects = function(vehicle, rng)
+            local t0 = getTimestampMs()
+            local r = EF.effectsOrig(vehicle, rng)
+            local ms = getTimestampMs() - t0
+            EF.cost.n, EF.cost.ms = EF.cost.n + 1, EF.cost.ms + ms
+            if ms > EF.cost.max then EF.cost.max = ms end
+            return r
+        end
+    end
+    if not EF.watching then
+        Events.EveryOneMinute.Add(efMinute)
+        EF.watching = true
+    end
+end
+
+local function efRestore()
+    local V, EE, G = TLG.Integration.Vehicles, TLG.Domain.EngineEffects, TLG.Integration.Generators
+    if EF.wearOrig then V.applyWear, EF.wearOrig = EF.wearOrig, nil end
+    if EF.effectsOrig then V.applyEffects, EF.effectsOrig = EF.effectsOrig, nil end
+    if EF.vehicleRate then EE.VEHICLE_WEAR_PER_LITRE, EF.vehicleRate = EF.vehicleRate, nil end
+    if EF.genRate then EE.generatorWearPerLitre, EF.genRate = EF.genRate, nil end
+    if EF.chargeOrig then G.chargeWear, EF.chargeOrig = EF.chargeOrig, nil end
+    if EF.watching then
+        Events.EveryOneMinute.Remove(efMinute)
+        EF.watching = false
+    end
+    stallsOption(true)
+end
+
+-- The site: a car three squares off the spawn point with an empty tank, its
+-- key to the requester (as setup_carconv), and an empty generator, connected.
+function services.setup_effects(player, args)
+    local car = addVehicleDebug("Base.CarNormal", IsoDirections.N, nil, getCell():getGridSquare(S.CX + 3, S.CY + 3, 0))
+    local tank = car and car:getPartById("GasTank")
+    if tank then
+        tank:setContainerContentAmount(0)
+        tank:getModData().tlg = nil
+        car:transmitPartModData(tank)
+    end
+    local inv = player:getInventory()
+    local key = car and car:createVehicleKey()
+    if key then sendAddItemToContainer(inv, inv:AddItem(key)) end
+    local gx, gy = S.spot(3)
+    local g = emptyGenerator(gx, gy)
+    pcall(function() g:setCondition(100) end)
+    EF.car, EF.gx, EF.gy = car and car:getId(), gx, gy
+    local f = engineFacts(car)
+    reply("effects_site", args, { car = tostring(EF.car), g1x = gx, g1y = gy, power = f.power, quality = f.quality,
+        loudness = f.loudness, cond = f.cond, genCond = g and g:getCondition() or -1,
+        oneIn = tostring(g and TLG.Integration.Generators.lowerChanceOneIn(g)) })
+end
+
+-- The tank's record aged in place to `deg` (fixture), then the fuel as the
+-- engine sees it.
+function services.effects_age(player, args)
+    local V = TLG.Integration.Vehicles
+    local v = efCar()
+    local rec = V.read(v, true)
+    for id, _ in pairs(rec.deg) do rec.deg[id] = tonumber(args.deg) end
+    V.writeSidecar(v, rec)
+    local out = evaluation(V.evaluate(v))
+    out.tank = S.text(v:getPartById("GasTank"):getModData().tlg)
+    out.tankL = v:getPartById("GasTank"):getContainerContentAmount()
+    reply("effects_age", args, out)
+end
+
+-- The tank's litres made a blend no stock engine takes (fixture): petrol and
+-- ethanol 5 to 3, as the single-player mode's second leg poured them.
+function services.effects_blend(player, args)
+    local V = TLG.Integration.Vehicles
+    local v = efCar()
+    local rec = V.read(v, true)
+    local total = 0
+    for _, q in pairs(rec.q) do total = total + q end
+    rec.q = { gasoline = total * 5 / 8, ethanol = total * 3 / 8 }
+    rec.deg = { gasoline = rec.deg.gasoline or 0, ethanol = 0 }
+    rec.rev = (rec.rev or 0) + 1
+    V.writeSidecar(v, rec)
+    local out = evaluation(V.evaluate(v))
+    out.tank = S.text(v:getPartById("GasTank"):getModData().tlg)
+    reply("effects_blend", args, out)
+end
+
+-- A leg begins: the stall option, the car wear rate times `scale` (fixture),
+-- the counters reset, the engine's quality, loudness, condition and wear
+-- carried as they are now (the engine off).
+function services.effects_arm(player, args)
+    local V, EE = TLG.Integration.Vehicles, TLG.Domain.EngineEffects
+    local v = efCar()
+    stallsOption(args.stalls == "true")
+    EF.vehicleRate = EF.vehicleRate or EE.VEHICLE_WEAR_PER_LITRE
+    EE.VEHICLE_WEAR_PER_LITRE = EF.vehicleRate * (tonumber(args.scale) or 1)
+    efWrap()
+    local f = engineFacts(v)
+    local w = v:getPartById("Engine"):getModData()[V.WEAR_KEY]
+    EF.q0, EF.l0, EF.cond0, EF.carry0 = f.quality, f.loudness, f.cond, type(w) == "number" and w or 0
+    EF.count = { calls = 0, litres = 0, accrual = 0 }
+    EF.run, EF.featuresChanged = nil, nil
+    report():line("OBS  MPS.effects armed: car wear %.4f per litre at factor 2 (x%s fixture); engine %d, carry %.6f; "
+        .. "quality %d loudness %d power %d", EE.VEHICLE_WEAR_PER_LITRE, tostring(args.scale), f.cond, EF.carry0,
+        f.quality, f.loudness, f.power)
+    f.rate = EE.VEHICLE_WEAR_PER_LITRE
+    reply("effects_arm", args, f)
+end
+
+-- The stall option switched with the engine as it is.
+function services.effects_stalls(player, args)
+    stallsOption(args.on == "true")
+    EF.stallsAt = EF.minute or 0
+    reply("effects_stalls", args, { on = tostring(SandboxVars.TheLastGallon.VehicleStalls), minute = EF.stallsAt })
+end
+
+-- The engine now and the current run, the wear counted since the leg began.
+function services.effects_probe(player, args)
+    local V = TLG.Integration.Vehicles
+    local v = efCar()
+    local f = engineFacts(v)
+    local run = EF.run or {}
+    local K = EF.count or { calls = 0, litres = 0, accrual = 0 }
+    local w = v and v:getPartById("Engine"):getModData()[V.WEAR_KEY]
+    f.minute, f.runs = EF.minute or 0, EF.runs or 0
+    f.base, f.factor, f.target = run.base or -1, run.factor or -1, run.target or -1
+    f.reachedAt, f.strayed = run.reachedAt or -1, run.strayed or ""
+    f.stoppedAfter = run.stoppedAt and run.stoppedAt - (EF.stallsAt or 0) or -1
+    f.ranFor = run.from and ((run.stoppedAt or EF.minute) - run.from) or -1
+    f.backAt = run.backAt or -1
+    f.featuresChanged = EF.featuresChanged or ""
+    f.q0, f.l0, f.cond0, f.carry0 = EF.q0 or -1, EF.l0 or -1, EF.cond0 or -1, EF.carry0 or 0
+    f.carry = type(w) == "number" and w or 0
+    f.calls, f.litres, f.accrual = K.calls, K.litres, K.accrual
+    f.costN, f.costMs, f.costMax = EF.cost and EF.cost.n or 0, EF.cost and EF.cost.ms or 0, EF.cost and EF.cost.max or 0
+    reply("effects_probe", args, f)
+end
+
+-- The generator's record aged in place to `deg` (fixture), then switched on
+-- by the server as the single-player mode switches it (fixture: the start
+-- gate's roll is not what this case is about).
+function services.effects_gen_age(player, args)
+    local G = TLG.Integration.Generators
+    local g = generatorAt(EF.gx, EF.gy)
+    local rec = G.read(g, true)
+    for id, _ in pairs(rec.deg) do rec.deg[id] = tonumber(args.deg) end
+    G.writeSidecar(g, rec)
+    local out = evaluation(G.evaluate(g))
+    g:setActivated(true)
+    g:sync()
+    out.fuel, out.cond, out.on = g:getFuel(), g:getCondition(), tostring(g:isActivated())
+    out.side = S.text(g:getModData().tlg)
+    out.hours = getGameTime():getWorldAgeHours()
+    reply("effects_gen_age", args, out)
+end
+
+-- Before the charging refuel: the generator rate times `scale` (fixture), its
+-- wear state cleared, and every chargeWear on the server logged with what it
+-- owes as the single-player check computes it (the record as written, aged
+-- to the call; RT.E.genCharge).
+function services.effects_gen_arm(player, args)
+    local G, EE = TLG.Integration.Generators, TLG.Domain.EngineEffects
+    local g = generatorAt(EF.gx, EF.gy)
+    EF.genRate = EF.genRate or EE.generatorWearPerLitre
+    local base, scale = EF.genRate, tonumber(args.scale) or 1
+    EE.generatorWearPerLitre = function(n, c) return scale * base(n, c) end
+    g:getModData()[G.WEAR_KEY] = nil
+    EF.charges = {}
+    if not EF.chargeOrig then
+        EF.chargeOrig = G.chargeWear
+        G.chargeWear = function(gen)
+            local b = {}
+            pcall(function()
+                local side = gen:getModData().tlg
+                local written = 0
+                for _, q in pairs(side and side.q or {}) do written = written + q end
+                local w = gen:getModData()[G.WEAR_KEY]
+                local ambient
+                pcall(function() ambient = getClimateManager():getTemperature() end)
+                local now = TLG.Domain.Aging.advance((G.read(gen, false)), TLG.World.now(), TLG.World.env())
+                local e = TLG.Domain.Consumers.evaluate(G.profile(gen), now, { ambientC = ambient })
+                b = { cond = gen:getCondition(), fuel = gen:getFuel(), written = written,
+                    carry = (type(w) == "table" and w.c) or 0, charged = (type(w) == "table" and w.charged) or 0,
+                    perLitre = EE.generatorWearPerLitre(G.lowerChanceOneIn(gen),
+                        SandboxVars and SandboxVars.GeneratorFuelConsumption), wear = e.wearFactor }
+            end)
+            local whole = EF.chargeOrig(gen)
+            local w = gen:getModData()[G.WEAR_KEY]
+            b.whole, b.cond1, b.carry1 = whole, gen:getCondition(), (type(w) == "table" and w.c) or 0
+            if EF.charges then
+                EF.charges[#EF.charges + 1] = b
+                report():line("OBS  MPS.effects chargeWear %d: written %.6f L, fuel %.6f L, charged before %.6f L, "
+                    .. "factor %.6f, %.4f points a litre at factor 2: condition %s -> %s, carry %.6f -> %.6f, %s taken",
+                    #EF.charges, b.written or -1, b.fuel or -1, b.charged or -1, b.wear or -1, b.perLitre or -1,
+                    tostring(b.cond), tostring(b.cond1), b.carry or -1, b.carry1, tostring(whole))
+            end
+            return whole
+        end
+    end
+    reply("effects_gen_arm", args, { fuel = g:getFuel(), cond = g:getCondition(), side = S.text(g:getModData().tlg),
+        hours = getGameTime():getWorldAgeHours() })
+end
+
+-- After the refuel: the first charge that owed something, then one more
+-- charge at once (it must take nothing); the generator switched off and
+-- every fixture undone.
+function services.effects_gen_probe(player, args)
+    local G = TLG.Integration.Generators
+    local g = generatorAt(EF.gx, EF.gy)
+    local out, first, later = {}, nil, 0
+    for i, b in ipairs(EF.charges or {}) do
+        if first == nil and (b.written or 0) - (b.fuel or 0) > 1e-6 then
+            first = b
+            out.firstIndex = i
+        elseif first ~= nil then
+            later = later + (b.whole or 0)
+        end
+    end
+    out.charges = #(EF.charges or {})
+    if first then
+        out.cond, out.cond1, out.carry, out.carry1 = first.cond, first.cond1, first.carry, first.carry1
+        out.burned = first.written - first.fuel - first.charged
+        out.due = first.carry + out.burned * (first.wear - 1) * first.perLitre
+        out.whole, out.wear, out.perLitre = first.whole, first.wear, first.perLitre
+    end
+    local c0 = g:getCondition()
+    out.again = G.chargeWear(g)
+    out.againCond = g:getCondition()
+    out.againFrom = c0
+    out.later = later
+    out.fuelNow = g:getFuel()
+    out.condNow = g:getCondition()
+    g:setActivated(false)
+    g:sync()
+    efRestore()
+    reply("effects_gen_probe", args, out)
+end
+
+function services.effects_cleanup(player, args)
+    efRestore()
+    reply("effects_cleanup", args, { stalls = tostring(SandboxVars.TheLastGallon.VehicleStalls) })
+end
+
+------------------------------------------------------------------------------
+-- The timers case (-Only timers; D-032 on a server). A campfire the server
+-- builds, fuels and lights as the single-player open fires mode does
+-- (SCampfireSystem.instance:addCampfire; the global object's setFuel and
+-- lightFire), four running fermenters beside it and 28 more out of its
+-- reach. The harness's own hourly and ten-minute handlers, registered after
+-- the mod's, run right after its readings and notes in the same event and
+-- compare each record with what they read themselves: the hour's reading
+-- with the air at the machine (Machines.airAt), the ten-minute note with
+-- whether the air there is above the unwarmed value and, if so, the campfire
+-- (its offset, its fuel by the server's own campfire object). Each of the
+-- mod's timer calls is timed.
+------------------------------------------------------------------------------
+local TM = M.TM or {}
+M.TM = TM
+
+local function free(s)
+    if s == nil then return false end
+    local ok, r = pcall(function()
+        return s:getFloor() ~= nil and s:isFree(false) and s:isOutside() and not s:isInARoom()
+            and s:getWorldObjects():size() == 0
+    end)
+    return ok and r == true
+end
+
+-- A spot with it and the eight squares round it free outdoor floor, nearest
+-- (x0, y0) first.
+local function openSpot(x0, y0)
+    for r = 0, 20 do
+        for dx = -r, r do
+            for dy = -r, r do
+                if math.max(math.abs(dx), math.abs(dy)) == r then
+                    local x, y, ok = x0 + dx, y0 + dy, true
+                    for ax = -1, 1 do
+                        for ay = -1, 1 do
+                            if ok and not free(getCell():getGridSquare(x + ax, y + ay, 0)) then ok = false end
+                        end
+                    end
+                    if ok then return x, y end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function campLua()
+    local ok, o = pcall(function() return SCampfireSystem.instance:getLuaObjectAt(TM.fx, TM.fy, 0) end)
+    return ok and o or nil
+end
+
+-- A timer of the mod's, timed on every call.
+local function timed(tbl, name, key)
+    local orig = tbl[name]
+    TM.orig = TM.orig or {}
+    TM.orig[key] = { tbl = tbl, name = name, fn = orig }
+    TM.costs[key] = { n = 0, list = {} }
+    tbl[name] = function(...)
+        local t0 = getTimestampMs()
+        local a, b, c = orig(...)
+        local c1 = TM.costs[key]
+        c1.n = c1.n + 1
+        c1.list[#c1.list + 1] = getTimestampMs() - t0
+        return a, b, c
+    end
+end
+
+local function machineItem(m)
+    local sq = getCell():getGridSquare(m.x, m.y, 0)
+    local objs = sq and sq:getWorldObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        local it = objs:get(i):getItem()
+        if it and it:getID() == m.id then return it, sq end
+    end
+    return nil, sq
+end
+
+-- After the mod's reading: each machine's reading for the hour that ended
+-- against the air read now.
+local function tmHour()
+    local ok, err = pcall(function()
+        local Machines = TLG.Integration.Machines
+        local slot = math.floor(TLG.World.now() - 0.5)
+        TM.hours = (TM.hours or 0) + 1
+        for _, m in ipairs(TM.machines) do
+            local item, sq = machineItem(m)
+            local rec = item and item:getModData()[Machines.SIDECAR]
+            local got = rec and rec.temps and rec.temps[slot]
+            local air = sq and Machines.airAt(sq)
+            if got ~= nil and air ~= nil and got == air then
+                m.readings = (m.readings or 0) + 1
+            else
+                m.badReadings = (m.badReadings or 0) + 1
+                report():line("OBS  MPS.timers hour slot %d machine %s at %d,%d: reading %s, air now %s", slot,
+                    tostring(m.id), m.x, m.y, tostring(got), tostring(air))
+            end
+        end
+        report():line("OBS  MPS.timers hour %d (slot %d) checked", TM.hours, slot)
+    end)
+    if not ok then report():line("STEPERR MPS.timers_hour :: %s", tostring(err)) end
+end
+
+-- After the mod's note: each machine's note for this hour against the air
+-- read now and the campfire.
+local function tmTen()
+    local ok, err = pcall(function()
+        local Machines = TLG.Integration.Machines
+        local hour = math.floor(TLG.World.now())
+        local camp = campLua()
+        local fuel = camp and camp.fuelAmt or -1
+        TM.tens = (TM.tens or 0) + 1
+        local warmCount = 0
+        for _, m in ipairs(TM.machines) do
+            local item, sq = machineItem(m)
+            local rec = item and item:getModData()[Machines.SIDECAR]
+            local note = rec and rec.fires and rec.fires[hour]
+            local air = sq and Machines.airAt(sq)
+            local warm = air ~= nil and air > Machines.unwarmedAt(sq) + Machines.FIRE_TOL
+            local good
+            if warm then
+                warmCount = warmCount + 1
+                good = type(note) == "table" and note.k == "campfire" and note.x == TM.fx - m.x and note.y == TM.fy - m.y
+                    and math.abs((note.f or -99) - fuel) <= 1
+            else
+                good = note == false
+            end
+            if warm then m.warmNotes = (m.warmNotes or 0) + 1 end
+            if good then
+                m.goodNotes = (m.goodNotes or 0) + 1
+            else
+                m.badNotes = (m.badNotes or 0) + 1
+                report():line("OBS  MPS.timers note hour %d machine %s at %d,%d: %s; air %.4f, unwarmed %.4f, campfire fuel %s",
+                    hour, tostring(m.id), m.x, m.y, S.text(note), air or -99, Machines.unwarmedAt(sq), tostring(fuel))
+            end
+        end
+        if TM.tens <= 3 or TM.tens % 6 == 0 then
+            local m1 = TM.machines[1]
+            local item, sq = machineItem(m1)
+            local rec = item and item:getModData()[Machines.SIDECAR]
+            report():line("OBS  MPS.timers ten minutes %d (hour %d): %d machine(s) warm; campfire fuel %s lit %s; "
+                .. "machine 1 air %.4f unwarmed %.4f note %s", TM.tens, hour, warmCount, tostring(fuel),
+                tostring(camp and camp.isLit), Machines.airAt(sq) or -99, Machines.unwarmedAt(sq),
+                S.text(rec and rec.fires and rec.fires[hour]))
+        end
+    end)
+    if not ok then report():line("STEPERR MPS.timers_ten :: %s", tostring(err)) end
+end
+
+function services.setup_timers(player, args)
+    local Machines = TLG.Integration.Machines
+    local fx, fy = openSpot(S.CX - 8, S.CY + 8)
+    if fx == nil then
+        reply("timers_site", args, { error = "no open spot for the campfire" })
+        return
+    end
+    TM.fx, TM.fy = fx, fy
+    local okC, errC = pcall(function() SCampfireSystem.instance:addCampfire(getCell():getGridSquare(fx, fy, 0)) end)
+    local camp = campLua()
+    if camp then
+        camp:setFuel(tonumber(args.fuel) or 480)
+        camp:lightFire()
+        camp:saveData()
+    end
+    -- Four beside the fire, then 28 out of its reach (13 squares or more),
+    -- every other square, nearest the spawn point first.
+    TM.machines = {}
+    for _, d in ipairs({ { 1, 0 }, { -1, 0 }, { 0, 1 }, { 0, -1 } }) do
+        local s = getCell():getGridSquare(fx + d[1], fy + d[2], 0)
+        local item = s:AddWorldInventoryItem("TLG.FermenterVessel", 0.5, 0.5, 0)
+        local rec = startBatch(item)
+        TM.machines[#TM.machines + 1] = { id = item:getID(), x = fx + d[1], y = fy + d[2], near = true, state = rec.state }
+    end
+    local want = tonumber(args.far) or 28
+    for r = 0, 20 do
+        for dx = -r, r, 2 do
+            for dy = -r, r, 2 do
+                if #TM.machines < 4 + want and math.max(math.abs(dx), math.abs(dy)) == r then
+                    local x, y = S.CX + 4 + dx, S.CY - 4 + dy
+                    local far = (x - fx) * (x - fx) + (y - fy) * (y - fy) >= 13 * 13
+                    local s = getCell():getGridSquare(x, y, 0)
+                    if far and free(s) then
+                        local item = s:AddWorldInventoryItem("TLG.FermenterVessel", 0.5, 0.5, 0)
+                        local rec = startBatch(item)
+                        TM.machines[#TM.machines + 1] = { id = item:getID(), x = x, y = y, near = false, state = rec.state }
+                    end
+                end
+            end
+        end
+    end
+    TM.costs = {}
+    timed(Machines, "sampleSites", "hour_readings")
+    timed(Machines, "observeFires", "ten_minute_notes")
+    timed(TLG.World, "recordClimate", "hour_climate")
+    timed(TLG.Authority.Handlers.commands, "machine.status", "machine_status")
+    Events.EveryHours.Add(tmHour)
+    Events.EveryTenMinutes.Add(tmTen)
+    TM.h0 = TLG.World.now()
+    local near, farN = {}, 0
+    for _, m in ipairs(TM.machines) do
+        if m.near then near[#near + 1] = m.id .. "@" .. m.x .. "," .. m.y else farN = farN + 1 end
+    end
+    report():line("OBS  MPS.timers site: campfire %d,%d built=%s %s lit=%s fuel %s exterior %s radius %s; beside it %s; "
+        .. "%d out of reach", fx, fy, tostring(okC), tostring(errC or ""), tostring(camp and camp.isLit),
+        tostring(camp and camp.fuelAmt), tostring(camp and camp.exterior), tostring(camp and camp:fireRadius()),
+        table.concat(near, " "), farN)
+    local m1, mf = TM.machines[1], TM.machines[#TM.machines]
+    reply("timers_site", args, { fx = fx, fy = fy, built = tostring(okC), lit = tostring(camp and camp.isLit),
+        fuel = camp and camp.fuelAmt or -1, machines = #TM.machines, far = farN, nearId = tostring(m1.id),
+        nearX = m1.x, nearY = m1.y, farId = tostring(mf.id), farX = mf.x, farY = mf.y, h0 = TM.h0 })
+end
+
+local function costText(key)
+    local c = TM.costs[key]
+    if c == nil or c.n == 0 then return key .. " none" end
+    local s = {}
+    for i, v in ipairs(c.list) do s[i] = v end
+    table.sort(s)
+    local sum = 0
+    for _, v in ipairs(s) do sum = sum + v end
+    return string.format("%s %d call(s): median %.0f ms, mean %.2f ms, max %.0f ms", key, c.n,
+        s[math.floor((#s + 1) / 2)], sum / #s, s[#s])
+end
+
+-- What the hours and notes gave each machine, and the timers' costs so far.
+function services.probe_timers(player, args)
+    local Machines = TLG.Integration.Machines
+    local out = { hours = TM.hours or 0, tens = TM.tens or 0, machines = #TM.machines }
+    local readings, badR, goodN, badN, warmNear, warmFar, nearNotes = 0, 0, 0, 0, 0, 0, 0
+    local slotsMin = 99999
+    for _, m in ipairs(TM.machines) do
+        readings, badR = readings + (m.readings or 0), badR + (m.badReadings or 0)
+        goodN, badN = goodN + (m.goodNotes or 0), badN + (m.badNotes or 0)
+        if m.near and (m.warmNotes or 0) > 0 then warmNear = warmNear + 1 end
+        if not m.near and (m.warmNotes or 0) > 0 then warmFar = warmFar + 1 end
+        local item = machineItem(m)
+        local rec = item and item:getModData()[Machines.SIDECAR]
+        local n = 0
+        for _ in pairs(rec and rec.temps or {}) do n = n + 1 end
+        if n < slotsMin then slotsMin = n end
+        if m.near then
+            for _, note in pairs(rec and rec.fires or {}) do
+                if type(note) == "table" and note.k == "campfire" then nearNotes = nearNotes + 1 end
+            end
+        end
+    end
+    out.readings, out.badReadings, out.goodNotes, out.badNotes = readings, badR, goodN, badN
+    out.warmNear, out.warmFar, out.nearCampfireHours, out.slotsMin = warmNear, warmFar, nearNotes, slotsMin
+    local camp = campLua()
+    out.fuel, out.lit = camp and camp.fuelAmt or -1, tostring(camp and camp.isLit)
+    out.now = TLG.World.now()
+    for _, k in ipairs({ "hour_climate", "hour_readings", "ten_minute_notes", "machine_status" }) do
+        out["cost_" .. k] = costText(k)
+        report():line("OBS  MPS.timers cost %s", out["cost_" .. k])
+    end
+    reply("probe_timers", args, out)
+end
+
+-- The timers' bodies on the server, as the single-player performance mode
+-- times them (RT.PF.bench: the first call alone, then five batches of at
+-- least 200 ms, the median batch's ms per call); the hour's climate record
+-- put back after.
+function services.bench_timers(player, args)
+    local Machines, W = TLG.Integration.Machines, TLG.World
+    local function bench(fn)
+        local t0 = getTimestampMs()
+        fn()
+        local first = getTimestampMs() - t0
+        local per, calls = {}, 1
+        for _ = 1, 5 do
+            local n, s, e = 0, getTimestampMs(), 0
+            repeat
+                fn()
+                n = n + 1
+                e = getTimestampMs() - s
+            until e >= 200 or n >= 200000
+            per[#per + 1] = e / n
+            calls = calls + n
+        end
+        table.sort(per)
+        return string.format("first %.0f ms; median %.4f ms per call (batches %.4f-%.4f, %d calls)", first, per[3],
+            per[1], per[5], calls), per[3]
+    end
+    -- The originals, not the timed wrappers. The bench's writes stay on the
+    -- server (Machines.write quiet): hundreds of hourly readings would each
+    -- send 32 records to the client. The timed events above include the
+    -- sends; the bench times the work without them.
+    local sample = TM.orig.hour_readings.fn
+    local notes = TM.orig.ten_minute_notes.fn
+    local climate = TM.orig.hour_climate.fn
+    local write = Machines.write
+    Machines.write = function(item, rec) return write(item, rec, true) end
+    local md = W.get()
+    local acc, log = TLG.Tables.deepCopy(md.climateAcc), TLG.Tables.deepCopy(md.climateLog)
+    local out = {}
+    local ok, err = pcall(function()
+        out.hourText, out.hour = bench(function() climate(); sample() end)
+        md.climateAcc, md.climateLog = acc, log
+        out.tenText, out.ten = bench(notes)
+        -- The status request's catch-up for the machine beside the fire
+        -- (MachineHandlers machineState: read, advance; then the site's air).
+        local item = machineItem(TM.machines[1])
+        out.statusText, out.status = bench(function()
+            local rec = Machines.read(item, true)
+            rec = Machines.advance(item, rec, W.now(), W.env())
+            Machines.siteTemp(item, rec, W.now(), W.env())
+        end)
+    end)
+    Machines.write = write
+    if not ok then out.error = tostring(err) end
+    for _, k in ipairs({ "hour", "ten", "status" }) do
+        report():line("OBS  MPS.timers bench %s: %s", k, tostring(out[k .. "Text"]))
+    end
+    if out.error then report():line("STEPERR MPS.bench_timers :: %s", out.error) end
+    reply("bench_timers", args, out)
 end
 
 Events.OnServerStarted.Add(function()

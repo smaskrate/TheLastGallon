@@ -1,8 +1,11 @@
 -- Multiplayer harness, further cases (tools/run-mp-harness.ps1 -Only
--- machines|fuel|conversion), built from MPHarness.lua's helpers (MP.h).
+-- machines|fuel|conversion|carconv|stills|effects|timers), built from
+-- MPHarness.lua's helpers (MP.h).
 -- machines: a running vessel moved where no Lua sees it (the world menu's
 -- Grab and the inventory's Drop are item transactions on a client, D-015),
--- and two players loading one fermenter at once.
+-- and two players loading one fermenter at once. effects and timers: the
+-- engine effects (D-031) and the machines' timers (D-032) with the server
+-- applying them (each described where its steps are built).
 -- Results: <cachedir>/Lua/TLG_harness_mp.txt, as MPHarness.lua's.
 require "TLGHarness/MPHarness"
 
@@ -1112,6 +1115,436 @@ local function standNear(name, dx, dy)
     end)
 end
 
+------------------------------------------------------------------------------
+-- effects (D-031 with a server applying it), A drives and B watches, on the
+-- shortest day. The server holds the fixtures and watches the engine every
+-- game minute (MPServer.lua, the effects case). A pours 10 L of petrol into
+-- the car from a can, the server ages the tank's record to 2.6 (power factor
+-- 0.851, wear factor 1.743) and scales the car wear rate by 1000: idling
+-- burns about 0.0005 L a game minute (RT-MP run 160), so at the
+-- single-player mode's 100 no whole point would come off. Stalls are off for
+-- that leg. A starts the engine and idles; the server must lower the power
+-- within two minute passes of seeing it run and hold it, keep quality and
+-- loudness, charge the wear of the litres counted and give the power back
+-- within two minute passes of the stop. Then a blend no stock engine takes
+-- (written over the record, petrol and ethanol 5 to 3): with stalls on, the
+-- start is refused; with stalls off, it runs at half power (the floor);
+-- stalls on again, it stalls within two minute passes. Last, a generator:
+-- 8 L poured in from a can, its record aged to 3.0, switched on by the server
+-- for 6 game hours, then a 2 L refuel, whose ISAddFuel.new on the server
+-- charges the wear at 100 times the rate, once.
+-- Both clients follow the car every tick and log each change. At each mark A
+-- takes the server's engine and compares its own; B is sent the server's
+-- values and compares its own. A client applies a received engine through
+-- setEngineFeature, which stores the loudness times 0.37037036 (BC
+-- VehicleEngine.parse), so a client's loudness is not the server's: it is
+-- watched for any change after the client first saw the engine run.
+------------------------------------------------------------------------------
+local EF = { scale = 1000, genScale = 100, staleDeg = 2.6, genDeg = 3.0, genHours = 6, W = {} }
+MP.EF = EF
+
+local function efCar() return EF.carId and getVehicleById(EF.carId) or nil end
+
+local function efEngine(v)
+    local e = v and v:getPartById("Engine")
+    return e and e:getCondition() or -1
+end
+
+local function efWatch()
+    local ok, err = pcall(function()
+        local v = efCar()
+        if v == nil then return end
+        local W = EF.W
+        local p, q, l, run, c = v:getEnginePower(), v:getEngineQuality(), v:getEngineLoudness(), v:isEngineRunning(),
+            efEngine(v)
+        EF.ticks = (EF.ticks or 0) + 1
+        if W.p ~= p or W.q ~= q or W.l ~= l or W.run ~= run or W.c ~= c then
+            report():line("OBS  MP.effects tick %d on %s's client: power %d quality %d loudness %d running %s engine %d",
+                EF.ticks, MP.role, p, q, l, tostring(run), c)
+            W.p, W.q, W.l, W.run, W.c = p, q, l, run, c
+        end
+        if W.lFirst == nil then W.lFirst = l end
+        if run and W.lBase == nil then W.lBase = l end
+        if W.lBase ~= nil and l ~= W.lBase and W.lChanged == nil then
+            W.lChanged = string.format("%d at tick %d (was %d)", l, EF.ticks, W.lBase)
+        end
+    end)
+    if not ok and not EF.watchFailed then
+        EF.watchFailed = true
+        report():line("STEPERR MP.effects_watch_%s :: %s", MP.role, tostring(err))
+    end
+end
+
+-- This client's view of the engine against the server's values `m`.
+local function efSeen(name, m, cond)
+    local v = efCar()
+    local p, q, l = v and v:getEnginePower(), v and v:getEngineQuality(), v and v:getEngineLoudness()
+    local run, c = v and tostring(v:isEngineRunning()), efEngine(v)
+    EF.serverL = tonumber(m.loudness)
+    report():line("OBS  MP.effects %s on %s's client: power %s quality %s loudness %s running %s engine %s; the server's"
+        .. " power %s quality %s loudness %s running %s engine %s", name, MP.role, tostring(p), tostring(q), tostring(l),
+        tostring(run), tostring(c), tostring(m.power), tostring(m.quality), tostring(m.loudness), tostring(m.running),
+        tostring(m.cond))
+    check("effects_" .. name .. "_engine_seen", function()
+        return v ~= nil and p == tonumber(m.power) and q == tonumber(m.quality) and run == tostring(m.running),
+            string.format("power %s (server %s) quality %s (server %s) running %s (server %s)", tostring(p),
+                tostring(m.power), tostring(q), tostring(m.quality), tostring(run), tostring(m.running))
+    end)
+    if cond then
+        check("effects_" .. name .. "_engine_condition_seen", function()
+            return c == tonumber(m.cond), string.format("%s (server %s)", tostring(c), tostring(m.cond))
+        end)
+    end
+end
+
+-- After the last mark, on each client: the loudness since the client first
+-- saw the engine run.
+local function efLoudness()
+    local W = EF.W
+    local scaled = EF.serverL and math.floor(EF.serverL * 0.37037036)
+    report():line("OBS  MP.effects loudness on %s's client: %s before the engine first ran, %s at its first running tick,"
+        .. " changed since: %s; the server's %s (x0.37037036 = %s)", MP.role, tostring(W.lFirst), tostring(W.lBase),
+        tostring(W.lChanged or "no"), tostring(EF.serverL), tostring(scaled))
+    check("effects_loudness_kept_after_the_engine_first_ran", function()
+        return W.lBase ~= nil and W.lChanged == nil, W.lChanged or ("held at " .. tostring(W.lBase))
+    end)
+end
+
+local function efNum(m, k) return tonumber(m[k]) or -1 end
+
+-- A takes the server's engine (MPServer effects_probe), judges it, compares
+-- its own view, and sends the server's values to B, which compares its own.
+local function efMark(name, judge, cond)
+    return call("effects_" .. name, "effects_probe", {}, "effects_probe", function(m)
+        report():line("OBS  MP.effects %s server: running %s %s power %s (own %s, factor %.6f, target %s, reached after"
+            .. " %s minute pass(es)%s; ran %s, stopped %s pass(es) after the last option change, own power back after"
+            .. " %s) quality %s loudness %s engine %s carry %.6f; minute %s, runs %s; wear counted %s minute(s) %.6f L"
+            .. " %.6f points from engine %s carry %.6f; %s; the mod's pass %s call(s) %s ms, max %s ms",
+            name, tostring(m.running), tostring(m.state), tostring(m.power), tostring(m.base), efNum(m, "factor"),
+            tostring(m.target), tostring(m.reachedAt), m.strayed ~= "" and (", strayed " .. tostring(m.strayed)) or "",
+            tostring(m.ranFor), tostring(m.stoppedAfter), tostring(m.backAt), tostring(m.quality), tostring(m.loudness),
+            tostring(m.cond), efNum(m, "carry"), tostring(m.minute), tostring(m.runs), tostring(m.calls),
+            efNum(m, "litres"), efNum(m, "accrual"), tostring(m.cond0), efNum(m, "carry0"),
+            m.featuresChanged ~= "" and ("features changed: " .. tostring(m.featuresChanged)) or "quality and loudness as armed",
+            tostring(m.costN), tostring(m.costMs), tostring(m.costMax))
+        judge(m)
+        efSeen(name, m, cond)
+        send("ef_mark", { name = name, power = m.power, quality = m.quality, loudness = m.loudness, cond = m.cond,
+            running = m.running, condCheck = cond and "1" or "0" })
+        EF.lastRuns = tonumber(m.runs)
+    end)
+end
+
+local function efSeenByB(name) return waitFrom("mp_effects_seen_" .. name, "ef_seen") end
+
+EF.setup = call("effects_site", "setup_effects", {}, "effects_site", function(m)
+    EF.site, EF.carId = m, tonumber(m.car)
+    FU.site = { car = m.car, g1x = m.g1x, g1y = m.g1y }
+    report():line("OBS  MP.effects site: car %s, generator %s,%s (condition %s, one in %s); engine power %s quality %s"
+        .. " loudness %s condition %s", tostring(m.car), tostring(m.g1x), tostring(m.g1y), tostring(m.genCond),
+        tostring(m.oneIn), tostring(m.power), tostring(m.quality), tostring(m.loudness), tostring(m.cond))
+    send("ef_site", { car = m.car })
+end)
+
+EF.seeCar = { name = "mp_effects_see_car", timeout = 1800, fn = function(ctx, ticks)
+    local v = efCar()
+    if v == nil then return nil end
+    if not EF.watching then
+        Events.OnTick.Add(efWatch)
+        EF.watching = true
+    end
+    report():line("OBS  MP.effects car %s on %s's client: power %d quality %d loudness %d engine %d", tostring(EF.carId),
+        MP.role, v:getEnginePower(), v:getEngineQuality(), v:getEngineLoudness(), efEngine(v))
+    return true
+end }
+
+EF.age = call("effects_age", "effects_age", { deg = tostring(EF.staleDeg) }, "effects_age", function(m)
+    report():line("OBS  MP.effects stale tank %.4f L %s; compatible=%s grade=%s powerFactor=%.6f wearFactor=%.6f",
+        efNum(m, "tankL"), tostring(m.tank), tostring(m.compatible), tostring(m.grade), efNum(m, "powerFactor"),
+        efNum(m, "wearFactor"))
+    check("effects_stale_fuel_costs_power_and_wear", function()
+        return m.compatible == "true" and efNum(m, "powerFactor") < 1 and efNum(m, "wearFactor") > 1
+            and efNum(m, "tankL") > 9.9, string.format("%.4f L, compatible=%s power %.6f wear %.6f", efNum(m, "tankL"),
+            tostring(m.compatible), efNum(m, "powerFactor"), efNum(m, "wearFactor"))
+    end)
+end)
+
+local function efArm(name, stalls, scale)
+    return call("effects_arm_" .. name, "effects_arm", { stalls = stalls, scale = tostring(scale) }, "effects_arm",
+        function(m)
+            report():line("OBS  MP.effects armed %s: stalls %s, car wear %.4f a litre at factor 2 (x%d fixture); engine %s"
+                .. " quality %s loudness %s power %s running %s", name, stalls, efNum(m, "rate"), scale,
+                tostring(m.cond), tostring(m.quality), tostring(m.loudness), tostring(m.power), tostring(m.running))
+        end)
+end
+
+local function efStalls(name, on)
+    return call("effects_stalls_" .. name, "effects_stalls", { on = on }, "effects_stalls", function(m)
+        report():line("OBS  MP.effects stalls %s on the server at minute %s", tostring(m.on), tostring(m.minute))
+    end)
+end
+
+EF.staleRunning = efMark("stale_running", function(m)
+    check("effects_stale_power_lowered_on_the_server", function()
+        local r = efNum(m, "reachedAt")
+        return m.running == "true" and efNum(m, "factor") < 1 and efNum(m, "target") < efNum(m, "base")
+            and efNum(m, "power") == efNum(m, "target") and r >= 0 and r <= 2 and m.strayed == "",
+            string.format("%s -> %s (factor %.6f) after %s minute pass(es)%s, now %s", tostring(m.base),
+                tostring(m.target), efNum(m, "factor"), tostring(m.reachedAt),
+                m.strayed ~= "" and (", strayed " .. tostring(m.strayed)) or ", held", tostring(m.power))
+    end)
+    check("effects_stale_quality_and_loudness_kept_on_the_server", function()
+        return m.featuresChanged == "" and efNum(m, "quality") == efNum(m, "q0") and efNum(m, "loudness") == efNum(m, "l0"),
+            m.featuresChanged ~= "" and tostring(m.featuresChanged) or string.format("quality %s loudness %s",
+                tostring(m.quality), tostring(m.loudness))
+    end)
+end, false)
+
+EF.shutOff = act("effects_shut_off", function(ctx, p) ISVehicleMenu.onShutOff(p) end, 600)
+
+EF.staleStopped = efMark("stale_stopped", function(m)
+    check("effects_stale_power_back_after_the_stop", function()
+        local b = efNum(m, "backAt")
+        return m.running == "false" and efNum(m, "power") == efNum(m, "base") and m.powerState == "nil" and b >= 0
+            and b <= 2, string.format("power %s (own %s) %s minute pass(es) after the stop; state %s", tostring(m.power),
+            tostring(m.base), tostring(m.backAt), tostring(m.powerState))
+    end)
+    check("effects_stale_engine_worn_by_the_litres_burned", function()
+        local taken = efNum(m, "cond0") - efNum(m, "cond")
+        local due = efNum(m, "carry0") + efNum(m, "accrual")
+        return efNum(m, "calls") > 0 and taken >= 1 and taken == math.floor(due + 1e-9)
+            and math.abs(taken + efNum(m, "carry") - due) <= 1e-6,
+            string.format("%d points taken + %.6f carried = %.6f; due %.6f (%s minute(s), %.6f L)", taken,
+                efNum(m, "carry"), taken + efNum(m, "carry"), due, tostring(m.calls), efNum(m, "litres"))
+    end)
+end, true)
+
+EF.blend = call("effects_blend", "effects_blend", {}, "effects_blend", function(m)
+    report():line("OBS  MP.effects unfit blend %s; compatible=%s powerFactor=%.6f reasons %s", tostring(m.tank),
+        tostring(m.compatible), efNum(m, "powerFactor"), tostring(m.reasons))
+    check("effects_blend_unfit_for_the_engine", function()
+        return m.compatible == "false", string.format("compatible=%s %s", tostring(m.compatible), tostring(m.reasons))
+    end)
+end)
+
+-- One start through the menu, expected refused by the server's gate.
+EF.tryStart = { name = "mp_effects_start_refused", timeout = 2400, fn = function(ctx, ticks)
+    local p = player()
+    if not ctx.t then
+        ctx.t = ticks
+        ISVehicleMenu.onStartEngine(p)
+        report():line("OBS  MP.effects start queued: %s", h.actionNames(p))
+        return nil
+    end
+    if ticks - ctx.t < 600 or not TLGH.Steps.actionsIdle(p) then return nil end
+    local v = efCar()
+    report():line("OBS  MP.effects start on the unfit blend: running=%s state=%s on A's client", tostring(v and v:isEngineRunning()),
+        tostring(v and v:getEngineState()))
+    return true
+end }
+
+EF.unfitRefused = efMark("unfit_refused", function(m)
+    check("effects_start_refused_on_the_unfit_blend", function()
+        return m.running == "false" and efNum(m, "runs") == (EF.lastRuns or -1),
+            string.format("running %s, runs %s (before %s)", tostring(m.running), tostring(m.runs), tostring(EF.lastRuns))
+    end)
+end, false)
+
+EF.unfitRunning = efMark("unfit_running", function(m)
+    check("effects_unfit_runs_at_the_floor_with_stalls_off", function()
+        local r, base = efNum(m, "reachedAt"), efNum(m, "base")
+        return m.running == "true" and efNum(m, "runs") == (EF.lastRuns or -1) + 1
+            and efNum(m, "target") == math.floor(base * 0.5 + 0.5) and efNum(m, "power") == efNum(m, "target")
+            and r >= 0 and r <= 2 and m.strayed == "" and efNum(m, "ranFor") >= 10,
+            string.format("power %s (own %s, target %s) after %s pass(es)%s; ran %s minute(s) without a stall",
+                tostring(m.power), tostring(m.base), tostring(m.target), tostring(m.reachedAt),
+                m.strayed ~= "" and (", strayed " .. tostring(m.strayed)) or "", tostring(m.ranFor))
+    end)
+end, false)
+
+-- Stalls on with the engine running: A's client must see it stop.
+EF.waitStall = { name = "mp_effects_wait_stall", timeout = 2400, fn = function(ctx, ticks)
+    local v = efCar()
+    if v and v:isEngineRunning() and ticks < 1800 then return nil end
+    ctx.stopped = ctx.stopped or ticks
+    if ticks - ctx.stopped < 600 then return nil end
+    report():line("OBS  MP.effects A's client: running=%s %d ticks after stalls went on", tostring(v and v:isEngineRunning()),
+        ctx.stopped)
+    return true
+end }
+
+EF.unfitStalled = efMark("unfit_stalled", function(m)
+    check("effects_unfit_stalls_with_the_option_on", function()
+        local s, b = efNum(m, "stoppedAfter"), efNum(m, "backAt")
+        return m.running == "false" and s >= 0 and s <= 2 and efNum(m, "power") == efNum(m, "base") and b >= 0 and b <= 2,
+            string.format("stopped %s minute pass(es) after stalls went on; power %s (own %s) %s pass(es) later",
+                tostring(m.stoppedAfter), tostring(m.power), tostring(m.base), tostring(m.backAt))
+    end)
+end, true)
+
+EF.exit = act("effects_exit", function(ctx, p) ISVehicleMenu.onExit(p) end, 120)
+
+local function efFuelGen(name, key)
+    return act(name, function(ctx, p)
+        ISWorldObjectContextMenu.doAddFuelGenerator(nil, gen(1), nil, inventoryItem(FU[key]), 0)
+    end, 180)
+end
+
+EF.genAge = call("effects_gen_age", "effects_gen_age", { deg = tostring(EF.genDeg) }, "effects_gen_age", function(m)
+    EF.genH0 = tonumber(m.hours)
+    report():line("OBS  MP.effects generator %.4f L, condition %s, on %s, record %s; compatible=%s wearFactor=%.6f",
+        efNum(m, "fuel"), tostring(m.cond), tostring(m.on), tostring(m.side), tostring(m.compatible), efNum(m, "wearFactor"))
+    check("effects_gen_fuel_wears", function()
+        return m.on == "true" and m.compatible == "true" and efNum(m, "wearFactor") > 1 and math.abs(efNum(m, "fuel") - 8) < 2e-3,
+            string.format("on %s, %.4f L, wear %.6f", tostring(m.on), efNum(m, "fuel"), efNum(m, "wearFactor"))
+    end)
+end)
+
+EF.genRun = { name = "mp_effects_generator_runs", timeout = 30000, fn = function(ctx, ticks)
+    local hrs = getGameTime():getWorldAgeHours()
+    if EF.genH0 and hrs - EF.genH0 < EF.genHours and ticks < 28000 then return nil end
+    local g = gen(1)
+    report():line("OBS  MP.effects generator ran %.2f game h: fuel %.4f L, condition %s on A's client", hrs - (EF.genH0 or hrs),
+        g and g:getFuel() or -1, tostring(g and g:getCondition()))
+    return true
+end }
+
+EF.genArm = call("effects_gen_arm", "effects_gen_arm", { scale = tostring(EF.genScale) }, "effects_gen_arm", function(m)
+    report():line("OBS  MP.effects generator armed (wear x%d fixture): %.4f L, condition %s, record %s", EF.genScale,
+        efNum(m, "fuel"), tostring(m.cond), tostring(m.side))
+end)
+
+EF.genProbe = call("effects_gen_probe", "effects_gen_probe", {}, "effects_gen_probe", function(m)
+    local g = gen(1)
+    report():line("OBS  MP.effects generator charge (call %s of %s): %.6f L burned at factor %.6f, %.4f points a litre at"
+        .. " factor 2: %.6f due; condition %s -> %s, carry %.6f -> %.6f; charged again: %s (condition %s -> %s), later"
+        .. " calls %s; now %.4f L, condition %s; A's client %s", tostring(m.firstIndex), tostring(m.charges),
+        efNum(m, "burned"), efNum(m, "wear"), efNum(m, "perLitre"), efNum(m, "due"), tostring(m.cond), tostring(m.cond1),
+        efNum(m, "carry"), efNum(m, "carry1"), tostring(m.again), tostring(m.againFrom), tostring(m.againCond),
+        tostring(m.later), efNum(m, "fuelNow"), tostring(m.condNow), tostring(g and g:getCondition()))
+    check("effects_gen_worn_by_the_litres_burned", function()
+        local taken, due = efNum(m, "cond") - efNum(m, "cond1"), efNum(m, "due")
+        return m.firstIndex ~= nil and taken >= 1 and taken == math.floor(due + 1e-9)
+            and math.abs(taken + efNum(m, "carry1") - due) <= 1e-6,
+            string.format("%d points taken + %.6f carried; due %.6f", taken, efNum(m, "carry1"), due)
+    end)
+    check("effects_gen_not_charged_twice", function()
+        return efNum(m, "again") == 0 and efNum(m, "againCond") == efNum(m, "againFrom") and efNum(m, "later") == 0,
+            string.format("again %s, later calls %s", tostring(m.again), tostring(m.later))
+    end)
+    check("effects_gen_condition_seen", function()
+        return g ~= nil and g:getCondition() == efNum(m, "condNow"),
+            string.format("%s (server %s)", tostring(g and g:getCondition()), tostring(m.condNow))
+    end)
+end)
+
+EF.cleanup = call("effects_cleanup", "effects_cleanup", {}, "effects_cleanup", function(m)
+    report():line("OBS  MP.effects fixtures undone; stalls %s", tostring(m.stalls))
+end)
+
+-- B: the marks A sends, until A finishes.
+EF.watchB = { name = "mp_effects_watch_marks", timeout = 120000, fn = function(ctx, ticks)
+    local m = nextFrom("ef_mark")
+    if m then
+        efSeen(m.name, m, m.condCheck == "1")
+        send("ef_seen", { name = m.name })
+    end
+    if nextFrom("finish") then
+        efLoudness()
+        return true
+    end
+    return nil
+end }
+
+------------------------------------------------------------------------------
+-- timers (D-032 with a server running them), A only, on the shortest day.
+-- The server builds, fuels and lights a campfire, puts four running
+-- fermenters beside it and 28 out of its reach, and checks every reading and
+-- note its timers write against its own read of the air and the campfire
+-- (MPServer.lua, the timers case). After three game hours A takes the
+-- results, asks the status of a machine by the fire and one away from it as
+-- the menu does (the catch-up from those notes and readings runs on the
+-- server), and has the server time the timers' bodies.
+------------------------------------------------------------------------------
+local TM = { hours = 3 }
+MP.TM = TM
+
+TM.setup = call("timers_site", "setup_timers", { fuel = "480", far = "28" }, "timers_site", function(m)
+    TM.site = m
+    report():line("OBS  MP.timers site: campfire %s,%s built=%s lit=%s fuel %s; %s machines (%s out of reach); by the fire"
+        .. " %s at %s,%s, away %s at %s,%s %s", tostring(m.fx), tostring(m.fy), tostring(m.built), tostring(m.lit),
+        tostring(m.fuel), tostring(m.machines), tostring(m.far), tostring(m.nearId), tostring(m.nearX), tostring(m.nearY),
+        tostring(m.farId), tostring(m.farX), tostring(m.farY), tostring(m.error or ""))
+    check("timers_campfire_and_machines_on_the_server", function()
+        return m.lit == "true" and tonumber(m.machines) == 32,
+            string.format("lit %s, %s machines", tostring(m.lit), tostring(m.machines))
+    end)
+end)
+
+TM.wait = { name = "mp_timers_hours", timeout = 12000, fn = function(ctx, ticks)
+    local hrs = getGameTime():getWorldAgeHours()
+    ctx.h0 = ctx.h0 or hrs
+    if hrs - ctx.h0 < TM.hours and ticks < 11000 then return nil end
+    report():line("OBS  MP.timers %.2f game hours passed", hrs - ctx.h0)
+    return true
+end }
+
+TM.probe = call("timers_probe", "probe_timers", {}, "probe_timers", function(m)
+    report():line("OBS  MP.timers server: %s hour(s), %s ten-minute pass(es), %s machines; readings matched %s, not %s;"
+        .. " notes matched %s, not %s; warmed by the fire: %s beside it, %s away; campfire notes by the fire %s; fewest"
+        .. " readings on a record %s; campfire fuel %s lit %s", tostring(m.hours), tostring(m.tens), tostring(m.machines),
+        tostring(m.readings), tostring(m.badReadings), tostring(m.goodNotes), tostring(m.badNotes), tostring(m.warmNear),
+        tostring(m.warmFar), tostring(m.nearCampfireHours), tostring(m.slotsMin), tostring(m.fuel), tostring(m.lit))
+    for _, k in ipairs({ "hour_climate", "hour_readings", "ten_minute_notes", "machine_status" }) do
+        report():line("OBS  MP.timers cost on the server: %s", tostring(m["cost_" .. k]))
+    end
+    local hours, tens, n = efNum(m, "hours"), efNum(m, "tens"), efNum(m, "machines")
+    check("timers_hourly_readings_on_the_server", function()
+        return hours >= TM.hours and efNum(m, "badReadings") == 0 and efNum(m, "readings") == hours * n,
+            string.format("%s of %d readings matched the air (%s hours, %s machines)", tostring(m.readings), hours * n,
+                tostring(m.hours), tostring(m.machines))
+    end)
+    check("timers_fire_notes_on_the_server", function()
+        return tens >= 6 * TM.hours and efNum(m, "badNotes") == 0 and efNum(m, "goodNotes") == tens * n
+            and efNum(m, "warmNear") == 4 and efNum(m, "warmFar") == 0,
+            string.format("%s of %d notes as the air and the campfire give them; warmed %s beside the fire, %s away",
+                tostring(m.goodNotes), tens * n, tostring(m.warmNear), tostring(m.warmFar))
+    end)
+end)
+
+local function tmStatus(name, which)
+    return request("timers_status_" .. name, "machine.status", function()
+        local s = TM.site
+        local x, y = tonumber(s[which .. "X"]), tonumber(s[which .. "Y"])
+        local item = h.floorItem(x, y, "TLG.FermenterVessel")
+        return item and { target = TLG.Integration.Machines.refFor(item) }
+    end, function(r)
+        report():line("OBS  MP.timers status %s: %s stage=%s siteC=%s siteNow=%s", name, brief(r), tostring(r.stage),
+            tostring(r.siteC), tostring(r.siteNow))
+        check("timers_status_" .. name, function()
+            return r.ok == true and r.state == "Processing", brief(r)
+        end)
+    end)
+end
+
+local function tmWalk(name, which)
+    return walkTo("mp_walk_to_" .. name, function()
+        return tonumber(TM.site[which .. "X"]), tonumber(TM.site[which .. "Y"])
+    end)
+end
+
+TM.bench = call("timers_bench", "bench_timers", {}, "bench_timers", function(m)
+    for _, k in ipairs({ "hour", "ten", "status" }) do
+        report():line("OBS  MP.timers bench on the server %s: %s", k, tostring(m[k .. "Text"]))
+    end
+end)
+
+TM.costs = call("timers_costs", "probe_timers", {}, "probe_timers", function(m)
+    for _, k in ipairs({ "hour_climate", "hour_readings", "ten_minute_notes", "machine_status" }) do
+        report():line("OBS  MP.timers cost on the server at the end: %s", tostring(m["cost_" .. k]))
+    end
+end)
+
 if MP.only == "machines" then
     local bx0, by0, vx, vy = h.bx0, h.by0, h.vx, h.vy
     MP.stepsA = {
@@ -1185,6 +1618,39 @@ elseif MP.only == "stills" then
         PR.cans, PR.dry, ready("drying", { "dryer" }), collected("dry_collect", "dryer", 3),
         wait("mp_dried_arrives", 120), PR.dried,
         once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+    }
+    MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+elseif MP.only == "effects" then
+    -- B says hello once in the world: a message sent before it joined
+    -- would never reach it.
+    MP.stepsA = {
+        MP.waitWorld, waitFrom("mp_wait_b", "hello"), EF.setup, EF.seeCar, waitFrom("mp_wait_b_sees_car", "ef_ready"),
+        giveCan("give_effects_can", { petrol = "10" }, "efCan"), arrived("efCan"), FU.canToCar,
+        EF.age, efArm("stale", "false", EF.scale), FU.enter, FU.start, wait("mp_effects_idle", 3600),
+        EF.staleRunning, efSeenByB("stale_running"),
+        EF.shutOff, EF.staleStopped, efSeenByB("stale_stopped"),
+        EF.blend, efArm("unfit", "true", 1), EF.tryStart, EF.unfitRefused, efSeenByB("unfit_refused"),
+        efStalls("off", "false"), FU.start, wait("mp_effects_unfit_idle", 900),
+        EF.unfitRunning, efSeenByB("unfit_running"),
+        efStalls("on", "true"), EF.waitStall, EF.unfitStalled, efSeenByB("unfit_stalled"),
+        once("mp_effects_loudness", efLoudness), EF.exit,
+        giveCan("give_generator_can", { petrol = "8" }, "genCan1"), arrived("genCan1"),
+        efFuelGen("effects_gen_fuel", "genCan1"), EF.genAge, EF.genRun, EF.genArm,
+        giveCan("give_generator_can_2", { petrol = "2" }, "genCan2"), arrived("genCan2"),
+        efFuelGen("effects_gen_charge", "genCan2"), EF.genProbe, EF.cleanup,
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+    }
+    MP.stepsB = {
+        MP.waitWorld, walkTo("mp_walk_to_watch", S.CX - 2, S.CY + 4), once("mp_hello", function() send("hello", {}) end),
+        waitFrom("mp_wait_effects_site", "ef_site", function(m) EF.carId = tonumber(m.car) end), EF.seeCar,
+        once("mp_effects_ready", function() send("ef_ready", {}) end), EF.watchB, MP.finish,
+    }
+elseif MP.only == "timers" then
+    MP.stepsA = {
+        MP.waitWorld, TM.setup, TM.wait, TM.probe,
+        tmWalk("machine_by_the_fire", "near"), tmStatus("by_the_fire", "near"),
+        tmWalk("machine_away", "far"), tmStatus("away", "far"),
+        TM.bench, TM.costs, MP.finish,
     }
     MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
 end
