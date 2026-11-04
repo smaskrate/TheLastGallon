@@ -3724,3 +3724,27 @@ Not run since D-032:
 
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run183_performance.txt`,
 `…_run184_fireplace.txt` and `…_run185_performance.txt`.
+
+## 2026-11-04 — RT-SP launches 186–187 (the zip of `b7dd527`)
+
+`tools/rehearse-install.ps1` built the zip of commit `b7dd527` (D-032 and
+the performance baseline): 121 files, SHA-256 `bac724c6…`, 3,825,684 bytes.
+218/218 tests, compile check 118/0 and translations OK came first. The zip
+differs from launch 180's (`34fbd7f7…`, `b604f6b`) in `Machines.lua`,
+`Climate.lua` and `Tables.lua` and in the shipped changelog. It matched its
+manifest and was installed into a fresh isolated cache.
+
+Launch 186 was cut short when the computer switched off. It had reached
+phase A's crafting step with 64 checks passed and none failed. Its partial
+file is kept.
+
+Launch 187, the same zip built again (the same bytes): phase A **94/0**,
+phase B **14/0**, the same 108 checks as launch 180. Phase A ran the
+machines on the game clock, so their hourly readings and ten-minute notes
+wrote records in place (D-032). Saved, exited and continued, those
+records came back (`G08.machine_records_persist`). The console's one
+exception came from the harness's own deep-recursion probe.
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run187_install_rehearsal.txt`,
+and launch 186's partial file,
+`2026-11-04_rt-sp_harness_run186_install_rehearsal_interrupted.txt`.

@@ -973,12 +973,11 @@ listed with their replacement.
   and 185 (after it). The fireplace mode (run 184, 21/0, as run 23)
   noted the fire in all 98 noted hours with none off. It credited the trip
   away exactly (7.5397 h) and matched the air to 0.00000 °C. Records are
-  the same as before, so `migrations.md` has nothing to add. Not run since
-  the change:
+  the same as before, so `migrations.md` has nothing to add. Records the
+  notes and readings wrote in place were saved, exited and continued in
+  the install rehearsal of the package (run 187,
+  `machine_records_persist`). Not run since the change:
   * the open fires mode (a campfire and a barbecue), which the equivalence
     tests cover with their stand-ins;
   * multiplayer, where the server runs these timers (the record written in
-    place goes out through the same `transmitModData` as before);
-  * a save and reload of records the notes and readings wrote in place.
-    The install rehearsal's save and continue covers it
-    (`machine_records_persist`).
+    place goes out through the same `transmitModData` as before).
