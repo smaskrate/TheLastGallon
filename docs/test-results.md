@@ -3590,3 +3590,24 @@ generator.
 
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run177_engine_effects.txt`,
 `…_run178_driving.txt` and `…_run179_engine_effects.txt`.
+
+## 2026-11-04 — RT-SP launch 180 (the zip of `b604f6b`)
+
+`tools/rehearse-install.ps1` built the zip of commit `b604f6b`, the engine
+effects (D-031): 121 files, SHA-256 `34fbd7f7…`, 3,823,662 bytes. 214/214
+tests, compile check 117/0 and translations OK came first. The zip differs
+from launch 173's (`85b078bf…`, `be48759`) in the new
+`TLG/Domain/EngineEffects.lua`, the changed `Vehicles.lua`, `Generators.lua`
+and `Resolver.lua`, and the shipped player guide, support matrix,
+migrations notes and changelog. It matched its manifest and was installed
+into a fresh isolated cache.
+
+Result: phase A **94/0**, phase B **14/0**: the same 108 checks as launch
+173, none added, missing or failed. Phase A ran through the changed
+adapters on good fuel: the car idled half a game hour under the mod's
+per-minute effects, and the can-to-generator step went through `ISAddFuel`,
+whose wrapper now starts with the wear charge. The effects on poor fuel are not part
+of the full harness; launch 179 tested them. The console's one exception
+came from the harness's own deep-recursion probe.
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run180_install_rehearsal.txt`.
