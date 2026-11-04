@@ -86,6 +86,12 @@ back):
   amendment).
 * Vanilla Petrol keeps working. TLG sidecars in item modData and the world
   record in global ModData persist and are inert.
+* A car saved with its engine running on poor fuel is saved with the power
+  the mod lowered (D-031; the game saves the engine's power, BC
+  `BaseVehicle.save`). With the mod, the power comes back once the engine
+  stops. Without it nothing restores it until a repair or an engine swap
+  (BC `VehiclePart.repair`). Engine wear the mod applied is permanent by
+  design, as damage is. Not run.
 * With the mod back, the world record is the same one, never created again
   (re-adding grants no fresh fuel), and the sidecars read as they were
   saved. Changes made meanwhile are reconciled like any change TLG did not

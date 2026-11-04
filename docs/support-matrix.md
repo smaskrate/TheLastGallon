@@ -41,7 +41,7 @@ player's inventory only.
 
 | Chassis | Stock profile | Conversion | Evidence |
 | --- | --- | --- | --- |
-| Base.CarNormal | engine_si_stock (59 L tank in run 5, 37 L in run 60) | — | **RT-SP**: refuel, siphon, idle burn reconciled, tank record survives reload |
+| Base.CarNormal | engine_si_stock (59 L tank in run 5, 37 L in run 60) | — | **RT-SP**: refuel, siphon, idle burn reconciled, driving burn reconciled (runs 175–176), tank record survives reload |
 | Base.PickUpTruck | engine_si_stock (75 L tank in run 62) | — | **RT-SP** (run 62): refuel from a can and at a pump, siphon, idle burn reconciled, the mod's own pours, start gate and stall |
 | Other vanilla cars | engine_si_stock (assumed: every vanilla tank is "Gasoline") | — | SRC (content type), NOT RUN |
 
@@ -57,6 +57,22 @@ RT-SP run 6): a 36 % ethanol blend is refused and the engine stays off;
 station fuel starts. Stall: the per-minute effect handler stalled an engine
 running on that blend within a game minute. Run 62 repeated all of these
 on two `Base.PickUpTruck`.
+
+Driving (RT-SP run 176, `Base.CarNormal` on a cleared straight road): on
+E10, 352 tiles at 25 km/h burned 0.778 L. All of it was the game's own
+burn: the mod took nothing, and the tank's record followed the drop in
+proportion, keeping the blend. On a blend no stock engine takes, the
+engine stalled at 24.7 km/h, burned nothing more, and the car rolled to a
+stop. No part was damaged. Not run: other chassis, a converted car on the
+move, off-road driving.
+
+Poor fuel on the move (D-031, RT-SP run 179, `Base.CarNormal`): on petrol
+aged to 2.6, the engine ran at 3406 of its 4000 power from its first game
+minute and had its power back two game minutes after stopping, quality and
+loudness unchanged. The Engine part lost the condition its litres owed (at
+100 times the rate in the test). With the sandbox option "Bad fuel can
+stall engines" off, a blend no stock engine takes ran at half power with no
+stall. Not run: multiplayer, other chassis, converted engines.
 
 Station fuel and stock engines (D-017): about 9 in 10 stations start with
 0–0.15 % water, inside every engine's tolerance; about 1 in 10 start at
@@ -75,7 +91,11 @@ into the record. Start gate (`ISActivateGenerator`, RT-SP run 6): activates
 on petrol, refused on E100. Flex conversion (RT-SP run 8): commissioned on a
 `Base.Generator`, which then took dried ethanol without confirmation,
 activated on it and kept the conversion and fuel across reload. Other
-generator types NOT RUN.
+generator types NOT RUN. Wear (D-031, RT-SP run 179): a `Base.Generator` on
+petrol aged to 3.0, run 6 game hours, was charged by the next refuel exactly
+the wear its 0.012 L owed (at 100 times the rate in the test), and only once.
+The item's own rate is read from its script (`ConditionLowerChanceOneIn`
+30, found in game); the other three models' (25, 36, 24) were not run.
 
 ## Stations
 

@@ -79,6 +79,35 @@ Effects: start factor falls to 0.55 at maxDeg, power to 0.8, wear rises to
 start chance; phase separation is incompatible for spark engines. Vehicle
 stall chance per running minute = 4 % × (1 − startFactor); incompatible fuel
 stalls on the next minute (verified in game; the 4 % rate is not measured).
+Stalls and refused starts of cars follow the sandbox option "Bad fuel can
+stall engines" (D-031).
+
+### Engine effects (`TLG/Domain/EngineEffects.lua`, D-031)
+
+What the adapters apply of those factors. First estimates, like the rest.
+
+| Effect | Applied to | Rule |
+| --- | --- | --- |
+| Power | a running car | engine power × powerFactor, never below 0.5 × (`POWER_FLOOR`); the car's own power again within a game minute of stopping or of good fuel |
+| Wear | a running car | per litre burned: (wearFactor − 1) × 0.15 ÷ `CarGasConsumption` condition points of the Engine part |
+| Wear | a generator | per litre burned: (wearFactor − 1) × 1.5 ÷ N ÷ (0.15 × `GeneratorFuelConsumption`), N the item's `ConditionLowerChanceOneIn` (Base.Generator 30, _Old 25, _Yellow 36, _Blue 24) |
+
+* Vanilla car engines never lose condition from running, so the car rate is
+  the mod's own. At wearFactor 2 (fuel close to unusable) and 25 km/h
+  (3.3 L an hour, RT-SP run 176) it is about half a point an hour of
+  driving; a 40 L tank of such fuel costs about 6 points.
+* A vanilla generator loses 1–2 points (1.5 on average) once in N running
+  hours. The reference load is 0.15 L an hour, a fridge's (the power
+  constants 0.02 base + 0.13 fridge-freezer, BC `IsoGenerator`; not
+  measured with a fridge). The generator rate makes the extra wear at
+  wearFactor 2 equal vanilla's own at that load. It follows the fuel burned, so a
+  generator with little plugged in wears little extra: run 177's burned
+  0.012 L in 6 game hours at the roadside. A 10 L tank at wearFactor 1.75
+  (Base.Generator) costs 2.5 points.
+* The power floor only matters for fuel the engine cannot take
+  (powerFactor 0) when the sandbox option "Bad fuel can stall engines" is
+  off; with it on such an engine stalls within a game minute.
+* Generators have no power the mod can lower.
 
 Energy per unit (nominal): gasoline 32.0 MJ/L, ethanol 21.2, diesel 36.0,
 biodiesel 33.0, propane 93 MJ/Nm³, biogas 21.5, wood gas 5.0, firewood

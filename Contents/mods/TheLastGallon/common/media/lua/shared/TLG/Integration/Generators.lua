@@ -1,7 +1,8 @@
 -- Adapter: vanilla generators (IsoGenerator objects and carried generator items).
 -- Runtime status: refuel, burn reconciliation, pickup, all Lua drop paths and
 -- the start gate verified RT-SP 2026-10-31; on a dedicated server refuel,
--- burn reconciliation, the gate, take and the place action (RT-MP run 160).
+-- burn reconciliation, the gate, take and the place action (RT-MP run 160);
+-- wear charged at a refuel RT-SP run 179 (D-031).
 --
 --   quantity owner     native IsoGenerator.fuel (litres, getMaxFuel())
 --   composition owner  TLG sidecar (object modData "tlg"; item modData "tlg"
@@ -20,8 +21,12 @@
 --                      the floor. Drops done by Java alone are not seen; such
 --                      a generator reads as untracked fuel.
 --   effects            start gate on ISActivateGenerator: failToStart() when the
---                      fuel is incompatible or the start roll fails
+--                      fuel is incompatible or the start roll fails; wear for
+--                      the fuel burned since the record was last written,
+--                      charged when the mod next handles the generator
+--                      (refuel, pickup, switching, its commands; D-031)
 require "TLG/Integration/Containers"
+require "TLG/Domain/EngineEffects"
 require "TLG/Boot"
 
 TLG.Integration.Generators = TLG.Integration.Generators or {}
@@ -30,6 +35,7 @@ local C, World = TLG.Integration.Containers, TLG.World
 local Supply, Mixing, Aging, Tx, Consumers = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging,
     TLG.Authority.Transactions, TLG.Domain.Consumers
 local Tables = TLG.Tables
+local EngineEffects = TLG.Domain.EngineEffects
 
 G.DEFAULT_PROFILE = "generator_si_stock"
 G.ITEM_TYPES = { ["Base.Generator"] = true, ["Base.Generator_Old"] = true, ["Base.Generator_Yellow"] = true,
@@ -55,8 +61,10 @@ function G.profile(gen)
     return G.baseProfile(gen)
 end
 
--- Device identity and conversion projects travel with the generator.
-G.CARRIED_KEYS = { "tlgConv", "tlgDeviceId", "tlgEngineId" }
+-- Device identity, conversion projects and the wear fraction travel with the
+-- generator.
+G.WEAR_KEY = "tlgWear"
+G.CARRIED_KEYS = { "tlgConv", "tlgDeviceId", "tlgEngineId", G.WEAR_KEY }
 
 local function fromSidecar(side, cap)
     local rec = Supply.new({ storage = "generator_tank", cap = cap, t = side.t, cond = side.cond, stab = side.stab,
@@ -114,6 +122,60 @@ function G.evaluate(gen)
     return Consumers.evaluate(G.profile(gen), rec, { ambientC = ambient }), rec
 end
 
+-- The generator item's ConditionLowerChanceOneIn: vanilla takes condition
+-- once in that many running hours (BC IsoGenerator.update; 30 for
+-- Base.Generator, 24-36 for the others). nil when the script is not found.
+function G.lowerChanceOneIn(gen)
+    local n
+    pcall(function()
+        local item = getScriptManager():FindItem(gen:getGeneratorItemType())
+        n = item and item:getConditionLowerChance()
+    end)
+    return n
+end
+
+-- Wear for the fuel burned since the generator's record was last written
+-- (D-031). The game burns the fuel; the record keeps what was in the tank
+-- when the mod last wrote it (every write holds the tank's litres then), so
+-- the drop since then is what burned. Each litre is charged once: `charged`
+-- holds what was charged against the record `k` (its total, revision and
+-- time), and a rewritten record starts again from zero. The fuel evaluated is
+-- the record as written, aged to now: a tank run dry still tells what it
+-- burned. Called on the authority before the mod acts on the generator.
+-- Returns the whole points taken off.
+function G.chargeWear(gen)
+    if not World.isAuthority() then return 0 end
+    local md = gen:getModData()
+    local side = md.tlg
+    if type(side) ~= "table" or side.q == nil then return 0 end
+    local fuel = gen:getFuel()
+    local rec = fromSidecar(side, math.max(gen:getMaxFuel(), fuel))
+    local written = Supply.total(rec)
+    local key = string.format("%.6f|%s|%s", written, tostring(side.rev), tostring(side.t))
+    local w = md[G.WEAR_KEY]
+    if type(w) ~= "table" then w = { c = 0 } end
+    if w.k ~= key then w.k, w.charged = key, 0 end
+    local burned = written - fuel
+    local due = burned - (w.charged or 0)
+    local whole = 0
+    if due < -1e-6 then
+        -- Fuel came in that the mod did not see: charge from here on.
+        w.charged = burned
+    elseif due > 1e-6 then
+        local ambient
+        pcall(function() ambient = getClimateManager():getTemperature() end)
+        local e = Consumers.evaluate(G.profile(gen), Aging.advance(rec, World.now(), World.env()), { ambientC = ambient })
+        local perLitre = EngineEffects.generatorWearPerLitre(G.lowerChanceOneIn(gen),
+            SandboxVars and SandboxVars.GeneratorFuelConsumption)
+        local carry
+        carry, whole = EngineEffects.accrue(w.c, due, e.wearFactor, perLitre)
+        w.c, w.charged = carry, burned
+        if whole > 0 then gen:setCondition(math.max(0, gen:getCondition() - whole)) end
+    end
+    md[G.WEAR_KEY] = w
+    return whole
+end
+
 -- Not for a constructor: those keep vanilla's parameters (below), as a
 -- multiplayer client sends a timed action's fields named as its new's
 -- parameters (BC NetTimedAction.set; Stations.lua says more, RT-MP run 156).
@@ -133,6 +195,8 @@ local function installAddFuel()
         local o = orig(class, character, generator, petrol, maxTime)
         if World.isAuthority() and o and generator and petrol and petrol:getFluidContainer() then
             pcall(function()
+                -- Before the refuel moves the tank past what burned.
+                G.chargeWear(generator)
                 o.tlgGenBefore = G.read(generator, true)
                 o.tlgCanBefore = C.read(petrol, "item", true)
                 o.tlgFuelStart = generator:getFuel()
@@ -171,6 +235,7 @@ local function installPickup()
         local side
         if World.isAuthority() then
             pcall(function()
+                G.chargeWear(self.generator)
                 local rec = Aging.advance((G.read(self.generator, true)), World.now(), World.env())
                 side = sidecarOf(rec, G.baseProfile(self.generator))
                 local omd = self.generator:getModData()
@@ -330,6 +395,8 @@ G.startRoll = function() return ZombRandFloat(0, 1) end
 
 local function installStartGate()
     wrap(ISActivateGenerator, "complete", function(orig, self)
+        -- Switched on or off: what burned since the last charge (D-031).
+        if World.isAuthority() and self.generator then pcall(G.chargeWear, self.generator) end
         if self.activate and World.isAuthority() then
             local ok, e = pcall(G.evaluate, self.generator)
             if ok and e and e.grade ~= "empty" and (not e.compatible or G.startRoll() > e.startFactor) then

@@ -78,6 +78,8 @@ function Res.resolve(ref, ctx)
             return false, "out_of_reach"
         end
         function ep:read()
+            -- What burned since the record was written wears it first (D-031).
+            pcall(G.chargeWear, obj)
             local rec, status = G.read(obj, true)
             self.readStatus = status
             return rec

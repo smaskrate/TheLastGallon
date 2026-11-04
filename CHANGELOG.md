@@ -21,6 +21,20 @@
   menus. A separate run let the game clock run the whole loop (136 game
   hours, the conversion work at the game's x40) and unloaded the machines'
   area for a game day: the fermenter caught up exactly on return.
+* Driving, checked in game (2026-11-04): a car burns its fuel at the
+  game's own rate on the road and the mod takes nothing extra; the tank's
+  record follows what was burned and keeps its blend (E10 driven 350
+  tiles). On fuel the engine cannot take, it stalls while driving and the
+  car rolls to a stop.
+* Poor fuel now costs a car power and wears engines, as the player guide
+  said it would: the mod worked both out and applied neither. A car on stale, wet
+  or dirty fuel has less power while its engine runs (never below half) and
+  picks up speed more slowly; its own power comes back once it stops or the
+  fuel is good. Stale or dirty fuel wears car and generator engines a
+  little for every litre burned on it; a generator's wear is counted when
+  it is next refuelled, moved or switched. The sandbox option "Bad fuel can
+  stall engines" now also keeps a running car from stalling; before, it
+  only stopped refused starts. Checked in game.
 * Weather: machines and stored fuel now follow the day's real temperature.
   The mod used to record the season curve, so cold snaps and heat waves
   never reached them; outdoors in a freezing January a fermenter now stops

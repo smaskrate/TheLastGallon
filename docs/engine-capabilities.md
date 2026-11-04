@@ -21,7 +21,7 @@ alternative), **NOT RUN**.
 | --- | --- | --- | --- |
 | G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), in English and in Italian (runs 43–44), not on the DS |
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
-| G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP + MP)** idle, start gate; stall SP; driving NOT RUN | Native idle burn reconciled proportionally; `ISStartVehicleEngine` refused on a 36 % ethanol blend, allowed on station fuel; the blend stalled a force-started engine within a game minute; mod never subtracts. MP (RT-MP run 160): a car started on station fuel with its key, its idle burn reconciled on read (a status); siphoned (run 165); converted to flex fuel and started on ethanol (run 169) |
+| G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP + MP)** idle, start gate; stall, driving, power and wear SP | Power and wear of poor fuel (D-031, RT-SP run 179): engine power × power factor while running, back on stop; Engine part wear per litre burned. Driving burn (RT-SP run 176): 0.778 L over 352 tiles at 25 km/h, all of it vanilla's own burn, reconciled proportionally; an unsuitable blend stalled the engine at 24.7 km/h. Native idle burn reconciled proportionally; `ISStartVehicleEngine` refused on a 36 % ethanol blend, allowed on station fuel; the blend stalled a force-started engine within a game minute; mod never subtracts. MP (RT-MP run 160): a car started on station fuel with its key, its idle burn reconciled on read (a status); siphoned (run 165); converted to flex fuel and started on ethanol (run 169) |
 | G04 Generator consumption | Extend fuel/burn? | **PASS (SP + MP)** burn and start gate | Native burn (0.015 L; connected, no appliance drawing) reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100. MP (RT-MP runs 160, 162): the same on a server, and a flex-converted generator started on ethanol |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP + MP)** with adapter | Pickup, drop action, `forceDropHeavyItems` (taking a second generator), the menus' unequip (run 85) and drag to the floor all carry the record. MP (RT-MP run 160): taken (once unplugged) and put back with the place action, the record carried both ways |
 | G06 Stations | Per-pump or shared? | **PASS (SP + MP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units). MP (RT-MP run 160): pump to can and pump to car on a server, the station's record carried; until the fix there (run 156) the mod's constructor hooks stopped both |
@@ -160,7 +160,7 @@ RT-DS results (`TLG_harness_server.txt`):
 * NOT RUN: world-object containers (rain barrels, FuelPump entity), the
   vanilla `ISFluidTransferAction` driven by a character.
 
-## G03 Vehicle fuel — PASS (SP) for refuel, siphon, idle, start gate and stall
+## G03 Vehicle fuel — PASS (SP) for refuel, siphon, idle, driving, start gate and stall
 
 RT-SP (runs 3–5, `Base.CarNormal`, 59 L tank):
 
@@ -173,7 +173,7 @@ RT-SP (runs 3–5, `Base.CarNormal`, 59 L tank):
 * Idle on station fuel (profile `engine_si_stock`, grade good, compatible):
   0.0148 L burned in 0.5 game hours at game speed 4; the next read reported
   `reconciled`, totals equal to the native amount and unchanged proportions.
-  Driving consumption: NOT RUN.
+  Driving consumption: see "Driving" below (runs 174–176).
 * Start gate (run 6, player as driver, hotwired, vanilla
   `ISStartVehicleEngine`): on a 36 % ethanol blend (`compatible=false`,
   reason `too_much_ethanol`) the gate called `engineDoStartingFailed` and the
@@ -208,7 +208,113 @@ Source evidence:
 * BC `BaseVehicle`: engine state methods (`tryStartEngine`,
   `engineDoStartingFailed(reason)`, `engineDoStalling`, `isEngineRunning`) and
   per-instance `setEngineFeature(quality, loudness, power)`.
-* Consumption is Java-side; the adapter design never subtracts fuel itself.
+* Consumption is the game's own: Java calls vanilla's Lua part updates
+  (driving and idling: SRC `server/Vehicles/Vehicles.lua:450`,
+  `Vehicles.Update.GasTank`); the adapter design never subtracts fuel itself.
+
+### Driving (RT-SP runs 174–176, 2026-11-04)
+
+`tools/run-sp-harness.ps1 -Mode driving` (request `sp-rtd`). Run 176:
+**26/0**.
+
+* Burn: `Vehicles.Update.GasTank` runs about once a game minute while the
+  engine runs and ends in `part:setContainerContentAmount(amount, false,
+  true)`. The engine resolves that function by name once and caches it
+  (BC `LuaManager.getFunctionObject`, `luaFunctionMap`), so wrapping the
+  global later has no effect. The harness counts writes in VehiclePart's
+  method table instead (`getmetatable(part).__index`): three arguments
+  are vanilla's burn, one is anyone else's.
+* Run 176, a `Base.CarNormal` on E10 (9 L petrol + 1 L ethanol through
+  `ISAddGasolineToVehicle`), 352 tiles at 25 km/h in 14.1 game minutes:
+  the tank lost 0.778136 L in 14 burns of exactly that sum, and nothing
+  else wrote the tank. The next read was `reconciled`, the total equal to
+  the native amount and the blend unchanged (worst 5.6e-16). Vanilla's
+  rate there: 0.055 L per game minute, 0.22 L per 100 tiles (3500 rpm).
+  Run 175 burned 0.778017 L over the same 352 tiles, also all vanilla's.
+* Stall on the move: on a 37.5 % ethanol blend (`compatible=false`,
+  `too_much_ethanol`), started past the gate, the mod's per-minute effects
+  held back until 25 km/h and one burn, the next effects call stalled the
+  engine at 24.7 km/h (`Stalling`, 0.78 game minute later). Nothing burned
+  after the stall, and the car rolled 16 tiles to a stop. Run 175 stalled
+  one at 15.8 km/h the same way.
+* No collision in any run: no speed lost while not braking, and every part
+  but brakes, tires, suspension and muffler (vanilla wears those while
+  driving) unchanged at 100.
+* Driving from Lua (BC): `BaseVehicle.setRegulator(true)` with
+  `setRegulatorSpeed(kmh)` is the game's cruise control. With no key
+  held, `CarController.update` gives throttle 0.5 while the car is under
+  that speed, and steering stays 0, so the car runs straight.
+  `setForceBrake()` brakes for one second (`CarController.updateControls`),
+  and braking ends the cruise (`updateRegulator`). While any control is on,
+  the game holds game speed 1. `CarController` and its `clientControls`
+  are not exposed to Lua.
+* Heading: `addVehicleDebug(..., IsoDirections.S, ...)` faced south but a
+  few degrees off (−5 to +10 in runs 174–176), so run 174's cars left their
+  lane within ten tiles; the harness's lane guard braked them. The angle
+  `setAngles(x, y, z)` sets (degrees, `Quaternionf.rotationXYZ`) is ignored
+  when its whole degrees equal the current ones (BC: an `f2i` compare). Two
+  measurements of `getForwardVector(Vector3f.new())` (x, height, z; +z is
+  world +y), one correction between them, put the car on the line (0.000
+  degrees to three decimals), and it held within 0.04 tiles over 352
+  tiles.
+* Not covered: other chassis, a flex-converted car on the move, driving
+  off-road, heater on, towing.
+
+### Engine power and wear (RT-SP runs 177–179, 2026-11-04; D-031)
+
+`tools/run-sp-harness.ps1 -Mode engine-effects` (request `sp-rte`). Run
+179: **36/0**; the driving mode repeated 26/0 on the same code (run 178).
+
+* BC `BaseVehicle.setEngineFeature(int quality, int loudness, int power)`
+  calls `VehicleEngine.setFeatures`, which clamps quality to 0–100 and
+  stores `(int)(loudness × 0.37037036f)`; `getEngineLoudness` returns what
+  it stored. Setting the power alone therefore needs the stored loudness
+  passed back divided by that factor (the adapter reads it back). The
+  engine object (`getVehicleEngine`) is private and `VehicleEngine` is not
+  exposed to Lua. `CarController.update` takes its force from the power:
+  `engineForce = power × (0.5 + engineSpeed / 24000)`.
+* `transmitEngine()` only sets an update flag on a server (BC). The
+  network field `zombie.network.fields.vehicle.VehicleEngine` writes the
+  state, quality, loudness and power, and the receiving side applies them
+  through `setEngineFeature`, so a client scales the stored loudness again.
+  That is vanilla's own; multiplayer was not run.
+* BC `VehiclePart.repair()` on the Engine sets quality 100, loudness from
+  the script (× the zombie attraction multiplier) and power from the
+  script's engine force. The debug-spawned, repaired `Base.CarNormal` had
+  power 4000 and loudness 32 to 48.
+* Vanilla's Lua never lowers a car engine's condition for running
+  (`Vehicles.Update.Engine` only keeps a temperature).
+* Generators: each running hour `IsoGenerator.update` takes 1–2 condition
+  (`Rand.Next(2) + 1`) with a chance of 1 in the item's
+  `ConditionLowerChanceOneIn` (default 30; Base.Generator 30, _Old 25,
+  _Yellow 36, _Blue 24), catching up the hours a chunk was away. Fuel per
+  hour is the power drawn × `GeneratorFuelConsumption`; the power
+  constants are 0.02 (`GeneratorBasePowerConsumption`), 0.13 a
+  fridge-freezer, 0.002 a light switch. How the base enters the hourly
+  burn was not traced: run 179's generator, with nothing plugged in, burned
+  0.002 L an hour. Lua has no list
+  of generators (`AllGenerators` is private, `IsoCell` has no getter for
+  the objects it processes). `getScriptManager():FindItem(
+  gen:getGeneratorItemType()):getConditionLowerChance()` gave 30 in game.
+  `IsoGenerator.setCondition` clamps 0–100 and syncs.
+* Run 179, a car on petrol aged to 2.6 (stalls off, so a random stall at
+  1.2 % a game minute could not cut the leg): power 4000 → 3406 (factor
+  0.851429) 0.12 game minutes after the cruise began, held for 352 tiles,
+  quality 100 and loudness 40 kept, 4000 again two game minutes after the
+  stop with no state left. With the car rate at 100 times its value (a
+  fixture) the 0.778050 L burned in 14 game minutes owed 8.669705 points:
+  8 came off the Engine part and 0.669705 was carried. With the option off,
+  a blend no stock engine takes (factor 0) ran 5.27 game minutes at 2000
+  without a stall, and got 4000 back. To 24 km/h: 0.55 game minutes at full
+  power (run 178), 0.63 at 85 % and 0.76 at half.
+* Run 179, a `Base.Generator` put down by the road (`IsoGenerator.new`),
+  8 L through `ISAddFuel`, its record aged to 3.0, switched on and run 6
+  game hours at x40: it burned 0.012 L (0.002 L an hour, nothing plugged
+  in) and vanilla took no condition. The fuel at the charge had aged to
+  3.0093 (wear factor 1.752328). The next `ISAddFuel` charged, at 100
+  times the rate, 3 points with 0.009094 carried: exactly the 3.009094 due.
+  `chargeWear` called again at once took nothing. Run 177 had passed all
+  this but one expectation, which used the factor from before the 6 hours.
 
 ## G04/G05 Generators — PASS (SP)
 
@@ -1354,7 +1460,7 @@ the harness's expected figure.
 
 ## Next experiments
 
-1. RT-SP, not yet covered: driving consumption, the station-reservoir pour,
+1. RT-SP, not yet covered: the station-reservoir pour,
    a winter with mild days between cold spells
    (the code adds paused hours up across spells), flex-engine starts in the
    cold, a campfire built indoors (radius up to 18), a propane barbecue,

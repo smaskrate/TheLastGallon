@@ -60,10 +60,24 @@ Right-click a fuel can → **Fuel (The Last Gallon)**:
 Stock gasoline engines are happy with up to 15 % ethanol, struggle up to
 25 %, and will not run on more. A converted (flex) engine runs on any
 gasoline/ethanol blend but starts poorly on near-pure ethanol in the cold.
-Stale, wet or dirty fuel makes starting harder, costs power and wears the
-engine; very bad fuel will not run at all. *(Checked in game: refused starts
-and stalls on unsuitable fuel, and a converted car and generator running on
-home-made ethanol. The effects while driving are untested in game.)*
+Stale, wet or dirty fuel makes starting harder, and a car running on it has
+less power, never below half: it picks up speed more slowly. The power
+comes back once the engine stops or gets good fuel. (The mechanics window,
+which opens while the car stands still, lists the engine's power; it was
+not looked at in game while lowered.) Stale or dirty fuel also
+wears car and generator engines faster, a little for every litre they burn
+on it. A generator's loss shows the next time you refuel, move or switch
+it. Very bad fuel will not run at all. With the sandbox option "Bad fuel
+can stall engines" off, cars neither refuse to start nor stall because of
+their fuel, but such fuel still costs them power. *(Checked in game:
+refused starts and stalls on unsuitable fuel, also on the move (the car
+rolls to a stop), and a converted car and generator running on home-made
+ethanol. A car burns fuel at the game's own rate while driving, the mod
+takes nothing extra, and the tank keeps its blend. On stale petrol a car
+ran at 85 % of its power, got it back when stopped, and its engine wore
+for the litres it burned. With the option off, a car on unsuitable fuel ran
+at half power without stalling. A generator on stale petrol was worn when
+next refuelled.)*
 
 ## The field manual
 
@@ -228,6 +242,7 @@ in game).
 | --- | --- | --- |
 | "Condition unknown" | never sampled | Look/smell or use a sampling kit |
 | Engine will not start on fresh-looking fuel | too much ethanol for a stock engine, or water | Sample; drain water; use gasoline or convert the engine |
+| Car slow to pick up speed | stale, wet or dirty fuel lowers its power while the engine runs (it comes back when the engine stops) | Sample; drain water or filter it; use better fuel |
 | Fermenter paused "too cold" | below 8 °C at the machine today (see Status) | Move it into a room, or beside a lit fireplace, wood stove or campfire (a barbecue is too weak outdoors on a frosty day); away, a fire keeps it warm only while its fuel lasts. After 3 days paused in all the batch spoils |
 | Still paused "firebox out of fuel" | wood ran out | Feed the firebox |
 | Fermenter says "Wash is left" | the still holds 60 L (pot) or 120 L (reflux) | Collect the still's ethanol, then Load wash again |
@@ -259,7 +274,9 @@ loads a save without the mod it drops, without a word, what it no longer
 knows: the mod's items (the machines with their batches, empty or not) and
 the mod's fluids in any container. Before you remove it, use up what you
 want to keep: ethanol, diesel, biodiesel, and contaminated fuel (its water
-and sediment are the mod's fluids too). The machines cannot be kept.
+and sediment are the mod's fluids too). The machines cannot be kept. Stop
+every car running on poor fuel before your last save with the mod: a car
+saved running keeps its lowered power without the mod, until a repair.
 
 Petrol stays, and so does what the mod recorded about it. Put the mod back
 later and it finds that record as it was; the world's fuel history does

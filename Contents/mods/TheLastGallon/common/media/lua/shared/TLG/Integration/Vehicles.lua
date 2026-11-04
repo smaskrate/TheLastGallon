@@ -8,15 +8,22 @@
 --                      did not see) leaves proportionally; unknown increase is
 --                      untracked inflow at the pessimistic baseline, mixed in
 --                      when found (D-006, Containers.inflowAt)
---   effects            start/stall/power from ConsumerService; applied through
---                      per-instance engine controls only (G09 verified RT-SP)
+--   effects            start/stall/power/wear from ConsumerService; applied
+--                      through per-instance engine controls only (G09 verified
+--                      RT-SP): the start gate, a stall (both only with the
+--                      sandbox option VehicleStalls), the engine's power while
+--                      it runs and the engine part's condition (D-031)
 --   runtime status     refuel, siphon, idle-burn reconciliation, start gate
---                      and stall verified RT-SP 2026-10-31; driving NOT RUN
+--                      and stall verified RT-SP 2026-10-31; driving burn
+--                      reconciliation and a stall on the move RT-SP
+--                      2026-11-04 (runs 175-176); power, wear and the stall
+--                      option on a running engine RT-SP run 179 (D-031)
 --
 -- Vanilla actions mutate the tank incrementally in update() on the
 -- authoritative side and finish in complete() (SRC ISAddGasolineToVehicle.lua),
 -- so hooks snapshot at construction and settle once at complete/stop.
 require "TLG/Integration/Containers"
+require "TLG/Domain/EngineEffects"
 require "TLG/Boot"
 
 TLG.Integration.Vehicles = TLG.Integration.Vehicles or {}
@@ -24,6 +31,7 @@ local V = TLG.Integration.Vehicles
 local C, World = TLG.Integration.Containers, TLG.World
 local Supply, Mixing, Aging, Tx, Consumers = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging,
     TLG.Authority.Transactions, TLG.Domain.Consumers
+local EngineEffects = TLG.Domain.EngineEffects
 local Tables = TLG.Tables
 
 V.SIDECAR = "tlg"
@@ -243,9 +251,25 @@ local function installTakeGasoline()
 end
 
 ------------------------------------------------------------------------------
--- Engine effects (start gate and stall verified RT-SP, engine-capabilities G03)
+-- Engine effects (start gate and stall verified RT-SP, engine-capabilities G03;
+-- power and wear D-031)
 ------------------------------------------------------------------------------
 V.STALL_CHANCE_PER_MINUTE = 0.04
+-- BC VehicleEngine.setFeatures(quality, loudness, power) stores loudness times
+-- this, and getEngineLoudness returns what it stored.
+V.LOUDNESS_SCALE = 0.37037036
+-- Engine part modData: the power bookkeeping and the wear fraction carried.
+V.POWER_KEY, V.WEAR_KEY = "tlgPower", "tlgWear"
+-- Tank litres at the previous minute, by vehicle id, while its engine ran.
+V.lastTank = V.lastTank or {}
+
+-- The sandbox option "Bad fuel can stall engines" (TheLastGallon.VehicleStalls):
+-- the start gate and the stall on a running engine.
+local function vehicleStallsEnabled()
+    local o = SandboxVars and SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.VehicleStalls
+    return o ~= false
+end
+V.stallsEnabled = vehicleStallsEnabled
 
 function V.evaluate(vehicle)
     local rec = V.read(vehicle, false)
@@ -255,11 +279,67 @@ function V.evaluate(vehicle)
     return Consumers.evaluate(V.profile(vehicle), rec, { ambientC = ambient })
 end
 
--- Called every in-game minute on the authority for running vehicles.
+-- Sets the engine's power and keeps its quality and loudness: the stored
+-- loudness goes back divided by LOUDNESS_SCALE, and since setFeatures rounds
+-- in float the result is read back and the neighbours tried.
+function V.setEnginePower(vehicle, power)
+    local q, l = vehicle:getEngineQuality(), vehicle:getEngineLoudness()
+    local arg = math.ceil(l / V.LOUDNESS_SCALE - 1e-6)
+    for _, a in ipairs({ arg, arg + 1, arg - 1 }) do
+        vehicle:setEngineFeature(q, math.max(0, a), power)
+        if vehicle:getEngineLoudness() == l then break end
+    end
+    -- A multiplayer server sends the engine's features to the clients (BC).
+    vehicle:transmitEngine()
+end
+
+-- Power: lowered by the fuel while the engine runs, the engine's own power
+-- again once it stops or the fuel is fine (D-031).
+function V.applyPower(vehicle, e, running)
+    local engine = vehicle:getPartById("Engine")
+    if engine == nil then return end
+    local md = engine:getModData()
+    local state = md[V.POWER_KEY]
+    if state == nil and not running then return end
+    local factor = 1
+    if running and e ~= nil and e.grade ~= "empty" then factor = e.powerFactor end
+    local newState, setTo = EngineEffects.powerStep(state, vehicle:getEnginePower(), factor, running)
+    md[V.POWER_KEY] = newState
+    if setTo ~= nil then V.setEnginePower(vehicle, setTo) end
+end
+
+-- Wear: the litres burned since the previous minute, at the fuel's wear
+-- factor (D-031). A rise in the tank (refuelling) only moves the reference.
+function V.applyWear(vehicle, e)
+    local tank, engine = V.tank(vehicle), vehicle:getPartById("Engine")
+    if tank == nil or engine == nil then return end
+    local id = vehicle:getId()
+    local now = tank:getContainerContentAmount()
+    local last = V.lastTank[id]
+    V.lastTank[id] = now
+    if last == nil or now >= last or e == nil or e.grade == "empty" then return end
+    local md = engine:getModData()
+    local perLitre = EngineEffects.vehicleWearPerLitre(SandboxVars and SandboxVars.CarGasConsumption)
+    local carry, whole = EngineEffects.accrue(md[V.WEAR_KEY], last - now, e.wearFactor, perLitre)
+    md[V.WEAR_KEY] = carry
+    if whole > 0 then
+        engine:setCondition(math.max(0, engine:getCondition() - whole))
+        vehicle:transmitPartCondition(engine)
+    end
+end
+
+-- Called every in-game minute on the authority for every vehicle in the cell.
 function V.applyEffects(vehicle, rng)
-    if not vehicle:isEngineRunning() then return end
+    if not vehicle:isEngineRunning() then
+        V.lastTank[vehicle:getId()] = nil
+        V.applyPower(vehicle, nil, false)
+        return
+    end
     local e = V.evaluate(vehicle)
+    V.applyPower(vehicle, e, true)
     if e == nil or e.grade == "empty" then return end
+    V.applyWear(vehicle, e)
+    if not vehicleStallsEnabled() then return end
     local roll = rng and rng:next() or ZombRandFloat(0, 1)
     if not e.compatible or roll < V.STALL_CHANCE_PER_MINUTE * (1 - e.startFactor) then
         vehicle:engineDoStalling()
@@ -270,11 +350,6 @@ end
 -- authoritative side): poor or incompatible fuel can make the engine crank
 -- and fail through the vanilla engine state API.
 V.startRoll = function() return ZombRandFloat(0, 1) end
-
-local function vehicleStallsEnabled()
-    local o = SandboxVars and SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.VehicleStalls
-    return o ~= false
-end
 
 local function installStartGate()
     wrap(ISStartVehicleEngine, "complete", function(orig, self)

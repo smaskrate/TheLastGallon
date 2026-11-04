@@ -30,6 +30,10 @@
 --   sp-rtcw -> a new world: an opened can of ethanol poured 300 days on (mod
 --             clock), and a full petrol can looked at then
 --   sp-rtv -> phase A's vehicle steps on another chassis (Base.PickUpTruck)
+--   sp-rtd -> fuel burned while driving: a car on E10 driven down a cleared
+--             road on cruise control, then one stalling on the move
+--   sp-rte -> engine effects of poor fuel (D-031): a car's power and wear on
+--             stale petrol, no stall with the option off, a generator's wear
 --   sp-rtmi -> an original test model wired to the fermenter: placed, turned,
 --             held and photographed, saved and exited to the menu ("sp-rtmib")
 --   sp-rtmib -> main menu continues that save: back in place, photographed
@@ -98,7 +102,7 @@ end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
-    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
+    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
@@ -8397,6 +8401,963 @@ for _, group in ipairs({ RT.V.phaseA({ "wait_world", "find_pumps" }), { RT.V.cho
 end
 
 ------------------------------------------------------------------------------
+-- Driving (request "sp-rtd"; release gate 3): fuel burned on the move.
+-- Vanilla burns a running vehicle's fuel in Lua (SRC server/Vehicles/
+-- Vehicles.lua:450, Vehicles.Update.GasTank, ending in
+-- part:setContainerContentAmount(amount, false, true)); the mod owns none
+-- of it and reconciles the drop on its next read (D-006).
+-- The car drives itself through the game's cruise control
+-- (BaseVehicle.setRegulator/setRegulatorSpeed): with no key held it gives
+-- throttle while the car is slower than the set speed (BC
+-- CarController.update: isRegulator and no gas -> throttle 0.5, isGas below
+-- the speed). Steering stays 0, so the car runs straight. setForceBrake
+-- brakes for one second (BC CarController.updateControls) and a brake ends
+-- the cruise (BC CarController.updateRegulator). While a control is on the
+-- game holds speed 1 (BC CarController.update).
+-- The engine looks the burn function up once and caches it (BC
+-- LuaManager.getFunctionObject, luaFunctionMap), so the harness counts the
+-- burn at VehiclePart.setContainerContentAmount in the class's method
+-- table: vanilla's burn passes three arguments, the mod's own writes one.
+-- No crash: zombies, parked cars, traffic jams and vehicle and zone stories
+-- are off in this world and every vehicle the cell holds is removed. The
+-- route is the main road south of Muldraugh (Nav zone x 10585-10598,
+-- y 10800-11100 in objects.lua), on a column whose lane, three tiles wide,
+-- is street and clear (nothing solid, no tree, no vehicle, no zombie) from
+-- four tiles behind the car. While driving, the lane is checked every tick
+-- 22 tiles ahead; the car brakes on anything not clear, a square not
+-- loaded, a heading off the road or a drift out of the lane. Afterwards: no
+-- impact (speed lost while not braking) and no part lost condition (brakes,
+-- tires, suspension and muffler wear while driving in vanilla and are left
+-- out).
+-- Leg 1: E10 (9 L petrol + 1 L ethanol through vanilla's pour from a can)
+-- driven up to 350 tiles at 25 km/h. Leg 2: a 37.5 % ethanol blend no stock
+-- engine takes, started past the gate; the mod's per-minute effects are
+-- held back until 15 km/h and vanilla's first burn, then the engine must
+-- stall on the move, burn nothing more and the car coast to a stop.
+-- Each car is turned onto the road's line after the spawn (see the spawn
+-- step); run 174's drifted out of the lane within ten tiles.
+------------------------------------------------------------------------------
+RT.D = { speed = 25, maxTiles = 350, maxGameMin = 40, look = 22, behind = 4, minRun = 40, scanAhead = 110, half = 2,
+    drift = 2.5,
+    road = { x0 = 10586, x1 = 10597, y = 10815, dy = 1 }, wear = { "Brake", "Tire", "Suspension", "Muffler" },
+    hook = { installed = false } }
+
+function RT.D.street(s)
+    local f = s and s:getFloor()
+    local sp = f and f:getSprite()
+    local n = sp and sp:getName()
+    return n ~= nil and string.find(n, "street", 1, true) ~= nil
+end
+
+-- Why a car would not pass this square, or nil when it is clear road.
+function RT.D.blocked(s, own)
+    if s == nil then return "unloaded" end
+    if not RT.D.street(s) then return "not_street" end
+    if s:isSolid() or s:isSolidTrans() then return "solid" end
+    if s:HasTree() then return "tree" end
+    local v = s:getVehicleContainer()
+    if v ~= nil and v ~= own then return "vehicle" end
+    local movers = s:getMovingObjects()
+    for i = 0, (movers and movers:size() or 0) - 1 do
+        if instanceof(movers:get(i), "IsoZombie") then return "zombie" end
+    end
+    return nil
+end
+
+-- The lane across `col` at row `y` (a north-south route): `half` tiles
+-- either side (default RT.D.half).
+function RT.D.laneClear(col, y, own, half)
+    half = half or RT.D.half
+    for off = -half, half do
+        local why = RT.D.blocked(sq(col + off, y, 0), own)
+        if why then return false, string.format("%s at %d,%d", why, col + off, y) end
+    end
+    return true
+end
+
+-- The column of the road whose lane is clear from `behind` tiles behind
+-- the start for at least the needed run, as far as the loaded squares
+-- reach; of those, the one nearest the road's middle.
+function RT.D.findRoute()
+    local rd, best, longest = RT.D.road, nil, nil
+    local middle = (rd.x0 + rd.x1 + 1) / 2
+    for col = rd.x0, rd.x1 do
+        local run, why = 0, "end of scan"
+        for k = -RT.D.behind, RT.D.scanAhead do
+            local ok, w = RT.D.laneClear(col, rd.y + k * rd.dy, nil)
+            if not ok then why = w; break end
+            run = run + 1
+        end
+        local c = { col = col, run = run, why = why, off = math.abs(col + 0.5 - middle) }
+        if longest == nil or run > longest.run then longest = c end
+        if run >= RT.D.minRun + RT.D.behind and (best == nil or c.off < best.off) then best = c end
+    end
+    return best or longest
+end
+
+-- The car's heading off the route's line, in degrees (0: facing +y, the
+-- physics z axis; BaseVehicle.getForwardVector gives x, height, z).
+function RT.D.headingError(v)
+    local fv = v:getForwardVector(Vector3f.new())
+    return math.atan2(fv:x(), fv:z()) * 57.2957795, fv:x(), fv:z()
+end
+
+-- Whole degrees as BaseVehicle.setAngles compares them (f2i: toward 0).
+function RT.D.whole(a)
+    return a >= 0 and math.floor(a) or math.ceil(a)
+end
+
+function RT.D.parts(v)
+    local t, list = {}, {}
+    for i = 0, v:getPartCount() - 1 do
+        local p = v:getPartByIndex(i)
+        t[p:getId()] = p:getCondition()
+        list[#list + 1] = p:getId() .. "=" .. tostring(p:getCondition())
+    end
+    table.sort(list)
+    return t, table.concat(list, " ")
+end
+
+-- `alsoWears`: part ids expected to lose condition in this leg (exact ids).
+function RT.D.partsLost(a, b, alsoWears)
+    local out = {}
+    for id, c in pairs(a) do
+        local wear = false
+        for _, w in ipairs(RT.D.wear) do
+            if string.find(id, w, 1, true) then wear = true end
+        end
+        for _, w in ipairs(alsoWears or {}) do
+            if id == w then wear = true end
+        end
+        if not wear and b[id] ~= c then out[#out + 1] = string.format("%s %s->%s", id, tostring(c), tostring(b[id])) end
+    end
+    table.sort(out)
+    return out
+end
+
+-- The burn counter: every write to the watched tank part, split by caller
+-- signature (three arguments: vanilla's burn; one: anyone else).
+function RT.D.hookInstall(part)
+    local K = RT.D.hook
+    K.part, K.vanillaCalls, K.vanillaSum, K.vanillaMoving, K.otherWrites, K.otherSum, K.first = part, 0, 0, 0, 0, 0, {}
+    if K.installed then return true, K.how end
+    local idx, how
+    local okMt, mt = pcall(getmetatable, part)
+    if okMt and type(mt) == "table" and type(mt.__index) == "table" and mt.__index.setContainerContentAmount then
+        idx, how = mt.__index, "getmetatable"
+    elseif type(__classmetatables) == "table" then
+        for _, m in pairs(__classmetatables) do
+            local i = type(m) == "table" and m.__index
+            if type(i) == "table" and i.setContainerContentAmount and i.getContainerContentAmount and i.getVehicle
+                and i.getArea and i.getInventoryItem then
+                idx, how = i, "__classmetatables"
+                break
+            end
+        end
+    end
+    if idx == nil then return false, "no VehiclePart method table" end
+    local orig = idx.setContainerContentAmount
+    K.idx, K.orig, K.how = idx, orig, how
+    idx.setContainerContentAmount = function(self, ...)
+        local watch = K.part ~= nil and self == K.part
+        local before = watch and self:getContainerContentAmount() or 0
+        local r = orig(self, ...)
+        if watch then
+            local after = self:getContainerContentAmount()
+            if select("#", ...) >= 3 then
+                K.vanillaCalls = K.vanillaCalls + 1
+                K.vanillaSum = K.vanillaSum + (before - after)
+                local v = self:getVehicle()
+                local speed = v and math.abs(v:getCurrentSpeedKmHour()) or 0
+                if speed >= 1 then K.vanillaMoving = K.vanillaMoving + (before - after) end
+                if #K.first < 3 then
+                    K.first[#K.first + 1] = string.format("%.6f->%.6f at %.1f km/h", before, after, speed)
+                end
+            else
+                K.otherWrites = K.otherWrites + 1
+                K.otherSum = K.otherSum + (before - after)
+            end
+        end
+        return r
+    end
+    K.installed = true
+    return true, how
+end
+
+function RT.D.hookRemove()
+    local K = RT.D.hook
+    K.part = nil
+    if K.installed and K.idx then K.idx.setContainerContentAmount = K.orig end
+    K.installed = false
+end
+
+-- The mod's per-minute engine effects (Vehicles.lua: the installer looks
+-- V.applyEffects up at each call), held back while the car gets going.
+function RT.D.holdEffects()
+    local V = TLG.Integration.Vehicles
+    if RT.D.effectsOrig then return end
+    RT.D.effectsOrig, RT.D.effectsHeld = V.applyEffects, 0
+    V.applyEffects = function() RT.D.effectsHeld = RT.D.effectsHeld + 1 end
+end
+
+function RT.D.releaseEffects()
+    if RT.D.effectsOrig then
+        TLG.Integration.Vehicles.applyEffects = RT.D.effectsOrig
+        RT.D.effectsOrig = nil
+    end
+end
+
+RT.D.setup = { name = "rtd_setup", timeout = 2400, fn = function(ctx, ticks)
+    local rd = RT.D.road
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        RT.keepFit()
+        R:observe("RTD.sandbox", function()
+            return string.format("Zombies=%s CarSpawnRate=%s TrafficJam=%s VehicleStoryChance=%s ZoneStoryChance=%s DayLength=%s CarGasConsumption=%s VehicleStalls=%s",
+                tostring(SandboxVars.Zombies), tostring(SandboxVars.CarSpawnRate), tostring(SandboxVars.TrafficJam),
+                tostring(SandboxVars.VehicleStoryChance), tostring(SandboxVars.ZoneStoryChance), tostring(SandboxVars.DayLength),
+                tostring(SandboxVars.CarGasConsumption),
+                tostring(SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.VehicleStalls))
+        end)
+        p:teleportTo(rd.x1 + 3, rd.y - 6, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 300 then return nil end
+    local removed = 0
+    for _, v in ipairs(getCell():getVehicles():toArray()) do
+        if pcall(function() v:permanentlyRemove() end) then removed = removed + 1 end
+    end
+    local route = RT.D.findRoute()
+    R:line("OBS  RTD.route column=%s clear run=%d tiles from %d tiles behind y=%d (ended: %s); vehicles removed %d",
+        tostring(route and route.col), route and route.run or -1, RT.D.behind, rd.y, tostring(route and route.why), removed)
+    local ok = route ~= nil and route.run >= RT.D.minRun + RT.D.behind
+    R:check("RTD.route_clear", function()
+        return ok, string.format("column %s, %d tiles clear (need %d)", tostring(route and route.col), route and route.run or -1,
+            RT.D.minRun + RT.D.behind)
+    end)
+    if ok then RT.D.route = { col = route.col, x = route.col + 0.5, y0 = rd.y, dy = rd.dy } end
+    return true
+end }
+
+-- A standard car on the route's start, repaired, its tank empty.
+function RT.D.spawnStep(leg)
+    return { name = "rtd_spawn_" .. leg, timeout = 1200, fn = function(ctx, ticks)
+        local rt = RT.D.route
+        if not rt then R:line("SKIP rtd_spawn_%s: no route", leg); return true end
+        if not ctx.t0 then
+            if RT.D.car then
+                pcall(function() if player():getVehicle() then RT.D.car:exit(player()) end end)
+                pcall(function() RT.D.car:permanentlyRemove() end)
+                RT.D.car = nil
+            end
+            player():teleportTo(rt.col + 4, rt.y0 - 6, 0)
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 150 then return nil end
+        if not ctx.v then
+            for _, v in ipairs(getCell():getVehicles():toArray()) do pcall(function() v:permanentlyRemove() end) end
+            ctx.v = addVehicleDebug("Base.CarNormal", IsoDirections.S, nil, sq(rt.col, rt.y0, 0))
+            ctx.t1 = ticks
+            return nil
+        end
+        if ticks - ctx.t1 < 60 then return nil end
+        local v = ctx.v
+        -- The debug spawn turns the car a few degrees off its direction
+        -- (run 174: 10 and -5 degrees), so it drifted out of its lane within
+        -- ten tiles. Turn it onto the line: measure the heading, set the
+        -- yaw (setAngles), measure again; a wrong sign shows as a larger
+        -- error and is flipped. setAngles ignores a target with the same
+        -- whole degrees as the current angles (BC), so such a step first
+        -- goes 3 degrees past it.
+        if not ctx.aligned then
+            if ctx.waitUntil and ticks < ctx.waitUntil then return nil end
+            local err = RT.D.headingError(v)
+            ctx.tries = (ctx.tries or 0) + 1
+            if ctx.tries == 1 then ctx.err0 = err end
+            if math.abs(err) <= 0.05 or ctx.tries > 12 then
+                ctx.aligned = true
+                R:line("OBS  RTD.%s.aligned heading %.3f -> %.3f degrees off the road in %d measurement(s), angles %.2f,%.2f,%.2f",
+                    leg, ctx.err0, err, ctx.tries, v:getAngleX(), v:getAngleY(), v:getAngleZ())
+                R:check("RTD." .. leg .. ".car_on_the_road_line", function()
+                    return math.abs(err) <= 0.25, string.format("%.3f degrees", err)
+                end)
+            else
+                if ctx.lastErr and math.abs(err) > math.abs(ctx.lastErr) + 0.01 then ctx.sign = -(ctx.sign or 1) end
+                ctx.lastErr = err
+                local ax, ay, az = v:getAngleX(), v:getAngleY(), v:getAngleZ()
+                local target = ay - (ctx.sign or 1) * err
+                if RT.D.whole(target) == RT.D.whole(ay) then
+                    target = target + 3
+                    ctx.lastErr = nil
+                end
+                v:setAngles(ax, target, az)
+                ctx.waitUntil = ticks + 20
+                return nil
+            end
+        end
+        pcall(function() v:repair() end)
+        local part = v:getPartById("GasTank")
+        part:setContainerContentAmount(0)
+        part:getModData().tlg = nil
+        v:transmitPartModData(part)
+        local f = { "?" }
+        pcall(function()
+            local fv = v:getForwardVector(Vector3f.new())
+            f = { string.format("%.4f,%.4f,%.4f", fv:x(), fv:y(), fv:z()) }
+        end)
+        local _, list = RT.D.parts(v)
+        R:line("OBS  RTD.%s.car id=%s at %.2f,%.2f forward(x,y,z)=%s tankCap=%.2f parts %s", leg, tostring(v:getId()), v:getX(),
+            v:getY(), f[1], part:getContainerCapacity(), list)
+        RT.D.car = v
+        return true
+    end }
+end
+
+-- A can of `fills()` poured into the car through vanilla's
+-- ISAddGasolineToVehicle (placed in the fuel-cap area as vehiclePourStep).
+function RT.D.fillStep(leg, fills)
+    return { name = "rtd_fill_" .. leg, timeout = 4000, fn = function(ctx, ticks)
+        local v = RT.D.car
+        local part = v and v:getPartById("GasTank")
+        if not part then R:line("SKIP rtd_fill_%s", leg); return true end
+        if not ctx.placedAt then
+            local c = v:getAreaCenter(part:getArea())
+            ctx.target = { x = c:getX(), y = c:getY() }
+            player():teleportTo(math.floor(ctx.target.x), math.floor(ctx.target.y), 0)
+            ctx.placedAt = ticks
+            return nil
+        end
+        if ticks - ctx.placedAt == 5 then player():setPosition(ctx.target.x, ctx.target.y, 0) end
+        if ticks - ctx.placedAt < 20 then return nil end
+        if not ctx.queued then
+            local can, fc = giveCan("Base.PetrolCan", fills())
+            player():setPrimaryHandItem(can)
+            hopBegin(ctx, "RTD." .. leg .. ".can_to_tank", "item", can, canAmount(fc), "vehicle", v, tankAmount(part))
+            ISTimedActionQueue.add(ISAddGasolineToVehicle:new(player(), part, can, nil))
+            ctx.queued, ctx.t1 = true, ticks
+            return nil
+        end
+        if ticks - ctx.t1 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+        hopEnd(ctx, true)
+        player():setPrimaryHandItem(nil)
+        return true
+    end }
+end
+
+-- One drive along the route. opts.stall: hold the mod's effects back until
+-- 15 km/h, then expect a stall on the move and let the car coast.
+function RT.D.driveStep(leg, opts)
+    return { name = "rtd_drive_" .. leg, timeout = 24000, fn = function(ctx, ticks)
+        local D, rt, v = RT.D, RT.D.route, RT.D.car
+        local part = v and v:getPartById("GasTank")
+        if not (rt and part) then R:line("SKIP rtd_drive_%s", leg); return true end
+        local name = "RTD." .. leg
+        if not ctx.phase then
+            if opts.beforeStart then opts.beforeStart(ctx, v, name) end
+            pcall(function() v:setHotwired(true) end)
+            ctx.entered = v:enter(0, player())
+            pcall(function() v:tryStartEngine(true) end)
+            ctx.phase, ctx.t0 = "starting", ticks
+            return nil
+        end
+        local x, y = v:getX(), v:getY()
+        local speed = math.abs(v:getCurrentSpeedKmHour())
+        if ctx.phase == "starting" then
+            if ticks - ctx.t0 == 120 and not v:isEngineRunning() then pcall(function() v:engineDoStartingSuccess() end) end
+            if not v:isEngineRunning() then
+                if ticks - ctx.t0 > 900 then
+                    R:check(name .. ".engine_started", function()
+                        return false, string.format("entered=%s state=%s", tostring(ctx.entered), tostring(v:getEngineState()))
+                    end)
+                    pcall(function() v:exit(player()) end)
+                    return true
+                end
+                return nil
+            end
+            ctx.e = TLG.Integration.Vehicles.evaluate(v)
+            R:line("OBS  %s.start driver=%s %s", name, tostring(v:isDriver(player())), evaluationText(ctx.e))
+            ctx.view0 = tlgView("vehicle", v)
+            R:line("OBS  %s.before %s", name, viewText(ctx.view0, "-"))
+            ctx.parts0, ctx.partsText0 = D.parts(v)
+            local hooked, how = D.hookInstall(part)
+            ctx.hooked = hooked
+            R:line("OBS  %s.burn_counter installed=%s via %s", name, tostring(hooked), tostring(how))
+            if opts.stall then D.holdEffects() end
+            ctx.tank0, ctx.h0, ctx.x0, ctx.y0 = part:getContainerContentAmount(), hours(), x, y
+            ctx.maxSpeed, ctx.speeds, ctx.lastLog = 0, {}, ticks
+            v:setRegulatorSpeed(D.speed)
+            v:setRegulator(true)
+            R:line("OBS  %s.cruise set %d km/h at %.2f,%.2f tank %.4f h %.4f multiplier %s", name, D.speed, x, y, ctx.tank0,
+                ctx.h0, RT.trueSpeed())
+            if opts.onStart then opts.onStart(ctx, v, name) end
+            ctx.phase, ctx.t1 = "cruise", ticks
+            return nil
+        end
+        local progress = (y - ctx.y0) * rt.dy
+        local lateral = x - rt.x
+        local gameMin = (hours() - ctx.h0) * 60
+        if speed > ctx.maxSpeed then ctx.maxSpeed = speed end
+        if not ctx.t24 and speed >= 24 then
+            ctx.t24 = gameMin
+            R:line("OBS  %s.reached 24 km/h after %.2f game min, %.1f tiles", name, gameMin, progress)
+        end
+        if opts.onTick and ctx.phase ~= "stopped" then opts.onTick(ctx, v, speed, gameMin, progress) end
+        -- Impact: more than 6 km/h lost within 5 ticks while not braking.
+        ctx.speeds[#ctx.speeds + 1] = speed
+        if #ctx.speeds > 6 then table.remove(ctx.speeds, 1) end
+        if not ctx.braking and not ctx.impact and #ctx.speeds == 6 and ctx.speeds[1] - speed > 6 then
+            ctx.impact = string.format("%.1f -> %.1f km/h at %.2f,%.2f", ctx.speeds[1], speed, x, y)
+        end
+        -- Vanilla burns once a game minute; run 175's engine stalled before
+        -- the first burn, so the effects wait for one burn on the move too.
+        if opts.stall and D.effectsOrig and speed >= 15 and D.hook.vanillaCalls >= 1 then
+            D.releaseEffects()
+            ctx.release = { h = hours(), speed = speed, progress = progress, held = D.effectsHeld,
+                burns = D.hook.vanillaCalls }
+            R:line("OBS  %s.effects released at %.1f km/h, %.1f tiles, after %d burn(s) (held %d calls)", name, speed,
+                progress, D.hook.vanillaCalls, D.effectsHeld)
+        end
+        if not ctx.stallAt and ctx.phase ~= "stopped" and not v:isEngineRunning() then
+            ctx.stallAt = { h = hours(), speed = speed, progress = progress, state = tostring(v:getEngineState()),
+                tank = part:getContainerContentAmount(), burns = D.hook.vanillaCalls }
+            R:line("OBS  %s.engine stopped at %.1f km/h, %.1f tiles, state %s", name, speed, progress, ctx.stallAt.state)
+        end
+        if ticks - ctx.lastLog >= 180 then
+            ctx.lastLog = ticks
+            R:line("OBS  %s.sample %.1f tiles lateral %.2f %.1f km/h tank %.4f engine %s rpm %.0f regulator %s %.1f game min",
+                name, progress, lateral, speed, part:getContainerContentAmount(), tostring(v:isEngineRunning()),
+                v:getEngineSpeed(), tostring(v:isRegulator()), gameMin)
+        end
+        if ctx.phase == "cruise" then
+            local why
+            if progress < -1 then
+                why = string.format("heading: moved %.2f,%.2f from the start", x - ctx.x0, y - ctx.y0)
+            elseif math.abs(lateral) > D.drift then
+                why = string.format("drift %.2f off the lane's middle", lateral)
+            elseif progress >= (opts.maxTiles or D.maxTiles) then
+                why = "distance"
+            elseif gameMin >= D.maxGameMin then
+                why = "time"
+            elseif opts.stall and ctx.release and not ctx.stallAt and (hours() - ctx.release.h) * 60 > 3 then
+                why = "no stall 3 game minutes after the release"
+            elseif opts.stall and ctx.stallAt and ticks - ctx.t1 > 18000 then
+                why = "still coasting"
+            elseif ticks - ctx.t1 > 18000 then
+                why = "ticks"
+            else
+                -- The five tiles across the car, wherever it has drifted.
+                local row, col = math.floor(y), math.floor(x)
+                for k = 1, D.look do
+                    local ok, w = D.laneClear(col, row + k * rt.dy, v)
+                    if not ok then why = "ahead " .. k .. ": " .. w; break end
+                end
+            end
+            if opts.stall and ctx.stallAt and not why and speed < 0.3 and ticks - ctx.t1 > 120 then
+                why = "coasted to a stop"
+            end
+            if why then
+                ctx.why, ctx.braking, ctx.phase, ctx.tb, ctx.brakeFrom = why, true, "braking", ticks, speed
+                v:setRegulator(false)
+                R:line("OBS  %s.brake (%s) at %.1f tiles, %.1f km/h", name, why, progress, speed)
+            end
+            return nil
+        end
+        if ctx.phase == "braking" then
+            v:setRegulator(false)
+            if (ticks - ctx.tb) % 10 == 1 then pcall(function() v:setForceBrake() end) end
+            if speed < 0.3 then
+                ctx.still = (ctx.still or 0) + 1
+            else
+                ctx.still = 0
+            end
+            if ctx.still < 30 and ticks - ctx.tb < 3000 then return nil end
+            ctx.phase = "stopped"
+            D.releaseEffects()
+            local runningAtEnd = v:isEngineRunning()
+            local tank1 = part:getContainerContentAmount()
+            local burn = ctx.tank0 - tank1
+            local K = D.hook
+            D.hookRemove()
+            pcall(function() v:shutOff() end)
+            pcall(function() v:engineDoShuttingDown() end)
+            pcall(function() v:exit(player()) end)
+            local view, status = tlgView("vehicle", v)
+            local parts1, partsText1 = D.parts(v)
+            local lost = D.partsLost(ctx.parts0, parts1, opts.alsoWears)
+            if opts.onStopped then opts.onStopped(ctx, v, name, parts1, runningAtEnd) end
+            R:line("OBS  %s.stopped after %.1f tiles, %.2f game min, top %.1f km/h, final lateral %.2f, braked from %.1f km/h (%s)",
+                name, progress, gameMin, ctx.maxSpeed, lateral, ctx.brakeFrom, ctx.why)
+            R:line("OBS  %s.burn tank %.6f -> %.6f (%.6f L); vanilla's burn %d calls %.6f L (%.6f L moving), other writes %d (%.6f L); first %s",
+                name, ctx.tank0, tank1, burn, K.vanillaCalls, K.vanillaSum, K.vanillaMoving, K.otherWrites, K.otherSum,
+                table.concat(K.first, "; "))
+            if gameMin > 0 then
+                R:line("OBS  %s.burn_rate %.4f L per game minute, %.4f L per 100 tiles", name, burn / gameMin,
+                    progress > 0 and burn * 100 / progress or -1)
+            end
+            R:line("OBS  %s.after %s", name, viewText(view, status))
+            R:line("OBS  %s.parts before %s", name, ctx.partsText0)
+            R:line("OBS  %s.parts after  %s", name, partsText1)
+            R:check(name .. ".burn_counter_reached", function()
+                return ctx.hooked and K.vanillaCalls > 0, string.format("installed=%s vanilla calls=%d", tostring(ctx.hooked),
+                    K.vanillaCalls)
+            end)
+            R:check(name .. ".burn_by_vanilla_only", function()
+                return ctx.hooked and K.otherWrites == 0 and burn > (opts.stall and 1e-4 or 0.02)
+                    and math.abs(burn - K.vanillaSum) <= 1e-4,
+                    string.format("tank lost %.6f L, vanilla burned %.6f L, other writes %d (%.6f L)", burn, K.vanillaSum,
+                        K.otherWrites, K.otherSum)
+            end)
+            R:check(name .. ".burn_reconciled_proportionally", function()
+                if not (ctx.view0 and view) then return false, "missing view" end
+                local before = TLG.Domain.Aging.advance(ctx.view0, TLG.World.now(), TLG.World.env())
+                local ok, detail = sameFuel(before, view, 1e-3)
+                local t = TLG.Domain.Supply.total(view)
+                return ok and status == "reconciled" and math.abs(t - tank1) <= 1e-3,
+                    string.format("%s status=%s tlg=%.4f native=%.4f", detail, tostring(status), t, tank1)
+            end)
+            R:check(name .. ".no_impact", function()
+                return ctx.impact == nil, tostring(ctx.impact or "no speed lost while not braking")
+            end)
+            R:check(name .. ".no_part_damaged", function()
+                return #lost == 0, #lost == 0 and "every part but brakes, tires, suspension and muffler unchanged"
+                    or table.concat(lost, ", ")
+            end)
+            if opts.stall then
+                R:check(name .. ".fuel_unfit_for_the_engine", function()
+                    return ctx.e ~= nil and ctx.e.compatible == false, evaluationText(ctx.e)
+                end)
+                R:check(name .. ".got_going_before_the_release", function()
+                    return ctx.release ~= nil and ctx.release.speed >= 15,
+                        ctx.release and string.format("%.1f km/h after %.1f tiles", ctx.release.speed, ctx.release.progress)
+                            or "never released"
+                end)
+                R:check(name .. ".stalled_on_the_move", function()
+                    local s, r = ctx.stallAt, ctx.release
+                    if not (s and r) then return false, "no stall" end
+                    local after = (s.h - r.h) * 60
+                    return s.speed >= 10 and after <= 2.0,
+                        string.format("%.1f km/h, %.2f game min after the release, state %s", s.speed, after, s.state)
+                end)
+                R:check(name .. ".no_burn_after_the_stall", function()
+                    local s = ctx.stallAt
+                    if not s then return false, "no stall" end
+                    return math.abs(s.tank - tank1) <= 1e-9 and K.vanillaCalls == s.burns,
+                        string.format("tank %.6f at the stall, %.6f at the end; burns %d then %d", s.tank, tank1, s.burns,
+                            K.vanillaCalls)
+                end)
+                R:check(name .. ".coasted_to_a_stop_in_lane", function()
+                    return ctx.why == "coasted to a stop" and math.abs(lateral) <= D.drift,
+                        string.format("%s, %.1f tiles, lateral %.2f", tostring(ctx.why), progress, lateral)
+                end)
+            else
+                R:check(name .. ".drove", function()
+                    return progress >= 60 and ctx.maxSpeed >= 15,
+                        string.format("%.1f tiles, top %.1f km/h, %.2f game min, stopped for %s", progress, ctx.maxSpeed,
+                            gameMin, tostring(ctx.why))
+                end)
+                local e = ctx.e
+                if e and e.compatible and e.startFactor == 1 then
+                    R:check(name .. ".no_stall_on_good_fuel", function()
+                        return ctx.stallAt == nil and runningAtEnd,
+                            ctx.stallAt and string.format("stopped at %.1f km/h", ctx.stallAt.speed) or "ran throughout"
+                    end)
+                else
+                    R:line("OBS  %s.no_stall check skipped: %s", name, evaluationText(e))
+                end
+            end
+            return true
+        end
+        return nil
+    end }
+end
+
+RT.D.cleanup = { name = "rtd_cleanup", fn = function()
+    RT.D.releaseEffects()
+    RT.D.hookRemove()
+    return true
+end }
+
+RT.drivingSteps = { RT.waitWorld, RT.D.setup,
+    RT.D.spawnStep("drive"), RT.D.fillStep("drive", function()
+        return { { Fluid.Petrol, 9.0 }, { Fluid.Get("TLG_Ethanol"), 1.0 } }
+    end), RT.D.driveStep("drive", {}),
+    RT.D.spawnStep("stall"), RT.D.fillStep("stall", function()
+        return { { Fluid.Petrol, 5.0 }, { Fluid.Get("TLG_Ethanol"), 3.0 } }
+    end), RT.D.driveStep("stall", { stall = true }),
+    RT.D.cleanup, RT.finish }
+
+------------------------------------------------------------------------------
+-- Engine effects (request "sp-rte"; D-031): what poor fuel does to a running
+-- engine, on the driving mode's cleared road with its crash guards.
+-- Leg 1, stale petrol: 10 L poured from a can, then the tank's record aged to
+-- 2.6 (of the stock engine's 3.5) in place, a declared fixture; power factor
+-- 0.851, wear factor 1.743. The engine's power must drop to its own times the
+-- power factor within two game minutes of the start and stay there, quality
+-- and loudness unchanged, and come back within two game minutes of stopping.
+-- Vanilla's car engines never wear from running, so to see whole points in
+-- 350 tiles the car rate runs at 100 times its value (a fixture): the engine
+-- part's loss plus the fraction carried must equal what the litres the mod
+-- counted, minute by minute, give at that rate. Stalls are off for this leg
+-- (stale fuel stalls 1.2 % of game minutes), so a random stall cannot cut it.
+-- Leg 2, stalls off: the sandbox option "Bad fuel can stall engines" off, a
+-- blend no stock engine takes, started past the gate, 120 tiles: it must run
+-- throughout, at half power (the floor).
+-- Leg 3, a generator: Base.Generator put down beside the road, 8 L poured in
+-- through vanilla's ISAddFuel, its record aged to 3.0 of 4.0 (wear factor
+-- 1.75), switched on and left 6 game hours at x40. A second ISAddFuel then
+-- charges the wear for what burned: the condition read just before and just
+-- after the action is made (the charge runs in ISAddFuel.new) must differ by
+-- the whole points due, at 100 times the rate (a fixture; the generator burns
+-- 0.02 L an hour with nothing plugged in). Charged again at once: nothing.
+------------------------------------------------------------------------------
+RT.E = { wearScale = 100, staleDeg = 2.6, genDeg = 3.0, genHours = 6 }
+
+-- Counts the litres the mod charges wear for, minute by minute, and what they
+-- come to (V.applyWear is looked up at each call).
+function RT.E.wrapWear()
+    local V, EE = TLG.Integration.Vehicles, TLG.Domain.EngineEffects
+    if RT.E.wearOrig then return end
+    RT.E.wearOrig = V.applyWear
+    RT.E.count = { calls = 0, litres = 0, accrual = 0 }
+    V.applyWear = function(vehicle, e)
+        local id = vehicle:getId()
+        local last = V.lastTank[id]
+        local tank = V.tank(vehicle)
+        local now = tank and tank:getContainerContentAmount()
+        local r = RT.E.wearOrig(vehicle, e)
+        if last and now and now < last and e and e.grade ~= "empty" then
+            local K = RT.E.count
+            K.calls, K.litres = K.calls + 1, K.litres + (last - now)
+            K.accrual = K.accrual + (last - now) * math.max(0, e.wearFactor - 1)
+                * EE.vehicleWearPerLitre(SandboxVars and SandboxVars.CarGasConsumption)
+        end
+        return r
+    end
+end
+
+function RT.E.restore()
+    local EE = TLG.Domain.EngineEffects
+    if RT.E.wearOrig then
+        TLG.Integration.Vehicles.applyWear = RT.E.wearOrig
+        RT.E.wearOrig = nil
+    end
+    if RT.E.vehicleRate then
+        EE.VEHICLE_WEAR_PER_LITRE = RT.E.vehicleRate
+        RT.E.vehicleRate = nil
+    end
+    if RT.E.genRate then
+        EE.generatorWearPerLitre = RT.E.genRate
+        RT.E.genRate = nil
+    end
+    if SandboxVars and SandboxVars.TheLastGallon then SandboxVars.TheLastGallon.VehicleStalls = true end
+    RT.speed(1)
+end
+
+function RT.E.stalls(on)
+    SandboxVars.TheLastGallon.VehicleStalls = on
+    R:line("OBS  RTE.sandbox VehicleStalls=%s", tostring(SandboxVars.TheLastGallon.VehicleStalls))
+end
+
+-- The tank's record aged in place (fixture), then the fuel as the engine sees it.
+RT.E.ageTank = { name = "rte_age_tank", fn = function()
+    local v = RT.D.car
+    if not v then R:line("SKIP rte_age_tank"); return true end
+    local V = TLG.Integration.Vehicles
+    local rec = V.read(v, true)
+    for id, _ in pairs(rec.deg) do rec.deg[id] = RT.E.staleDeg end
+    V.writeSidecar(v, rec)
+    local e = V.evaluate(v)
+    RT.E.staleEval = e
+    R:line("OBS  RTE.stale tank %s; %s powerFactor=%.6f wearFactor=%.6f", viewText(V.read(v, false), "-"),
+        evaluationText(e), e and e.powerFactor or -1, e and e.wearFactor or -1)
+    R:check("RTE.stale.fuel_costs_power_and_wear", function()
+        return e ~= nil and e.compatible and e.powerFactor < 1 and e.wearFactor > 1,
+            string.format("compatible=%s power %.6f wear %.6f", tostring(e and e.compatible), e and e.powerFactor or -1,
+                e and e.wearFactor or -1)
+    end)
+    return true
+end }
+
+-- Power watched every tick of a leg: the target, when it was reached, and
+-- whether quality, loudness or the power strayed afterwards.
+function RT.E.powerWatch(factorOf)
+    local W = {}
+    function W.onStart(ctx, v, name)
+        local e = ctx.e
+        -- A minute's effects may already have lowered it: its own power is then the mod's base.
+        local engine = v:getPartById("Engine")
+        local st = engine and engine:getModData()[TLG.Integration.Vehicles.POWER_KEY]
+        ctx.pw = { base = (st and st.base) or v:getEnginePower(), q = v:getEngineQuality(), l = v:getEngineLoudness(),
+            h0 = hours(), factor = factorOf(e) }
+        ctx.pw.target = TLG.Domain.EngineEffects.targetPower(ctx.pw.base, ctx.pw.factor)
+        R:line("OBS  %s.power base %d quality %d loudness %d factor %.6f target %d", name, ctx.pw.base, ctx.pw.q,
+            ctx.pw.l, ctx.pw.factor, ctx.pw.target)
+    end
+    function W.onTick(ctx, v)
+        local pw = ctx.pw
+        if not pw then return end
+        local p = v:getEnginePower()
+        if v:getEngineQuality() ~= pw.q or v:getEngineLoudness() ~= pw.l then
+            pw.featuresChanged = pw.featuresChanged or string.format("quality %d loudness %d at %.2f game min",
+                v:getEngineQuality(), v:getEngineLoudness(), (hours() - pw.h0) * 60)
+        end
+        if not pw.reachedAt and p == pw.target then pw.reachedAt = (hours() - pw.h0) * 60 end
+        if pw.reachedAt and p ~= pw.target and v:isEngineRunning() and not ctx.braking then
+            pw.strayed = pw.strayed or string.format("%d at %.2f game min", p, (hours() - pw.h0) * 60)
+        end
+    end
+    function W.onStopped(ctx, v, name)
+        local pw = ctx.pw
+        if not pw then return end
+        R:check(name .. ".power_lowered_while_running", function()
+            return pw.reachedAt ~= nil and pw.reachedAt <= 2.0 and pw.strayed == nil,
+                string.format("%d -> %d after %s game min%s", pw.base, pw.target,
+                    pw.reachedAt and string.format("%.2f", pw.reachedAt) or "never",
+                    pw.strayed and (", then " .. pw.strayed) or ", held")
+        end)
+        R:check(name .. ".quality_and_loudness_kept", function()
+            return pw.featuresChanged == nil, pw.featuresChanged or string.format("quality %d loudness %d", pw.q, pw.l)
+        end)
+        RT.E.lastPower = { v = v, base = pw.base, q = pw.q, l = pw.l, h = hours(), name = name }
+    end
+    return W
+end
+
+-- After a leg: within two game minutes of stopping, the engine's own power back.
+RT.E.powerBack = { name = "rte_power_back", timeout = 6000, fn = function(ctx, ticks)
+    local P = RT.E.lastPower
+    if not P then R:line("SKIP rte_power_back"); return true end
+    if (hours() - P.h) * 60 < 2.0 and ticks < 5000 then return nil end
+    local v = P.v
+    local engine = v:getPartById("Engine")
+    local state = engine and engine:getModData()[TLG.Integration.Vehicles.POWER_KEY]
+    R:check(P.name .. ".power_back_after_the_stop", function()
+        return v:getEnginePower() == P.base and state == nil and v:getEngineQuality() == P.q
+            and v:getEngineLoudness() == P.l,
+            string.format("power %d (own %d) after %.2f game min; quality %d loudness %d; state %s", v:getEnginePower(),
+                P.base, (hours() - P.h) * 60, v:getEngineQuality(), v:getEngineLoudness(), tostring(state))
+    end)
+    RT.E.lastPower = nil
+    return true
+end }
+
+RT.E.staleOpts = RT.E.powerWatch(function(e) return e and e.powerFactor or 1 end)
+RT.E.staleOpts.alsoWears = { "Engine" }
+do
+    local onStart, onStopped = RT.E.staleOpts.onStart, RT.E.staleOpts.onStopped
+    RT.E.staleOpts.beforeStart = function() RT.E.stalls(false) end
+    RT.E.staleOpts.onStart = function(ctx, v, name)
+        local EE = TLG.Domain.EngineEffects
+        RT.E.vehicleRate = RT.E.vehicleRate or EE.VEHICLE_WEAR_PER_LITRE
+        EE.VEHICLE_WEAR_PER_LITRE = RT.E.vehicleRate * RT.E.wearScale
+        RT.E.wrapWear()
+        local engine = v:getPartById("Engine")
+        ctx.cond0 = engine:getCondition()
+        ctx.carry0 = engine:getModData()[TLG.Integration.Vehicles.WEAR_KEY] or 0
+        R:line("OBS  %s.wear rate %.4f per litre at factor 2 (x%d fixture), engine %d", name,
+            EE.VEHICLE_WEAR_PER_LITRE, RT.E.wearScale, ctx.cond0)
+        onStart(ctx, v, name)
+    end
+    RT.E.staleOpts.onStopped = function(ctx, v, name, parts1, runningAtEnd)
+        onStopped(ctx, v, name)
+        local engine = v:getPartById("Engine")
+        local cond1 = engine:getCondition()
+        local carry1 = engine:getModData()[TLG.Integration.Vehicles.WEAR_KEY] or 0
+        local K = RT.E.count or { calls = 0, litres = 0, accrual = 0 }
+        R:line("OBS  %s.wear engine %d -> %d, carry %.6f -> %.6f; counted %d minute(s), %.6f L, %.6f points due", name,
+            ctx.cond0, cond1, ctx.carry0, carry1, K.calls, K.litres, K.accrual)
+        R:check(name .. ".engine_worn_by_the_litres_burned", function()
+            local taken = ctx.cond0 - cond1
+            return K.calls > 0 and taken >= 1 and taken == math.floor(ctx.carry0 + K.accrual + 1e-9)
+                and math.abs((taken + carry1) - (ctx.carry0 + K.accrual)) <= 1e-6,
+                string.format("%d points taken + %.6f carried = %.6f; due %.6f", taken, carry1, taken + carry1,
+                    ctx.carry0 + K.accrual)
+        end)
+        R:check(name .. ".ran_throughout", function()
+            return ctx.stallAt == nil and runningAtEnd, ctx.stallAt and "stopped" or "ran"
+        end)
+        RT.E.restore()
+    end
+end
+
+RT.E.offOpts = RT.E.powerWatch(function() return 0 end)
+RT.E.offOpts.maxTiles = 120
+do
+    local onStopped = RT.E.offOpts.onStopped
+    RT.E.offOpts.beforeStart = function() RT.E.stalls(false) end
+    RT.E.offOpts.onStopped = function(ctx, v, name, parts1, runningAtEnd)
+        onStopped(ctx, v, name)
+        R:check(name .. ".fuel_unfit_for_the_engine", function()
+            return ctx.e ~= nil and ctx.e.compatible == false, evaluationText(ctx.e)
+        end)
+        R:check(name .. ".no_stall_with_the_option_off", function()
+            return ctx.stallAt == nil and runningAtEnd,
+                ctx.stallAt and string.format("stalled at %.1f km/h", ctx.stallAt.speed)
+                    or string.format("ran %.2f game min", (hours() - ctx.h0) * 60)
+        end)
+        RT.E.stalls(true)
+    end
+end
+
+-- The generator, beside the road and the player.
+RT.E.genSetup = { name = "rte_gen_setup", timeout = 1200, fn = function(ctx, ticks)
+    local rt = RT.D.route
+    local x, y = (rt and rt.col or RT.D.road.x1) + 6, RT.D.road.y - 10
+    if not ctx.t0 then
+        pcall(function() if player():getVehicle() then player():getVehicle():exit(player()) end end)
+        player():teleportTo(x, y, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 120 then return nil end
+    local ok, err = pcall(function() RT.E.gen = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(x + 1, y, 0)) end)
+    local g = RT.E.gen
+    R:line("OBS  RTE.gen put down at %d,%d ok=%s err=%s type=%s fuel=%.4f condition=%s oneIn=%s", x + 1, y, tostring(ok),
+        tostring(err), tostring(g and g:getGeneratorItemType()), g and g:getFuel() or -1,
+        tostring(g and g:getCondition()), tostring(g and TLG.Integration.Generators.lowerChanceOneIn(g)))
+    R:check("RTE.gen.item_rate_found", function()
+        local n = g and TLG.Integration.Generators.lowerChanceOneIn(g)
+        return n == 30, "ConditionLowerChanceOneIn " .. tostring(n)
+    end)
+    if g then
+        pcall(function() g:setFuel(0) end)
+        pcall(function() g:setCondition(100) end)
+    end
+    return true
+end }
+
+-- Vanilla's ISAddFuel from a can of `litres`; `before` runs right before the
+-- action is made, `after` right after (ISAddFuel.new charges the wear).
+function RT.E.addFuelStep(name, litres, before, after)
+    return { name = name, timeout = 4000, fn = function(ctx, ticks)
+        local g = RT.E.gen
+        if not g then R:line("SKIP %s", name); return true end
+        if not ctx.queued then
+            local can = giveCan("Base.PetrolCan", { { Fluid.Petrol, litres } })
+            player():setPrimaryHandItem(can)
+            if before then before(ctx, g) end
+            local action = ISAddFuel:new(player(), g, can)
+            if after then after(ctx, g) end
+            ISTimedActionQueue.add(action)
+            ctx.queued, ctx.t1, ctx.fuel0 = true, ticks, g:getFuel()
+            return nil
+        end
+        if ticks - ctx.t1 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+        R:line("OBS  %s fuel %.4f -> %.4f record %s", name, ctx.fuel0, g:getFuel(),
+            viewText(TLG.Integration.Generators.read(g, false), "-"))
+        player():setPrimaryHandItem(nil)
+        return true
+    end }
+end
+
+RT.E.genFirstFuel = RT.E.addFuelStep("rte_gen_fuel", 8.0)
+
+RT.E.genAge = { name = "rte_gen_age", fn = function()
+    local g = RT.E.gen
+    if not g then R:line("SKIP rte_gen_age"); return true end
+    local G = TLG.Integration.Generators
+    local rec = G.read(g, true)
+    for id, _ in pairs(rec.deg) do rec.deg[id] = RT.E.genDeg end
+    G.writeSidecar(g, rec)
+    local e = G.evaluate(g)
+    RT.E.genEval = e
+    R:line("OBS  RTE.gen aged record %s; %s wearFactor=%.6f", viewText(G.read(g, false), "-"), evaluationText(e),
+        e and e.wearFactor or -1)
+    R:check("RTE.gen.fuel_wears", function()
+        return e ~= nil and e.compatible and e.wearFactor > 1, string.format("wear %.6f", e and e.wearFactor or -1)
+    end)
+    return true
+end }
+
+RT.E.genRun = { name = "rte_gen_run", timeout = 30000, fn = function(ctx, ticks)
+    local g = RT.E.gen
+    if not g then R:line("SKIP rte_gen_run"); return true end
+    if not ctx.h0 then
+        g:setConnected(true)
+        g:setActivated(true)
+        ctx.h0, ctx.f0, ctx.c0 = hours(), g:getFuel(), g:getCondition()
+        RT.keepFit()
+        RT.speed(40)
+        return nil
+    end
+    if hours() - ctx.h0 < RT.E.genHours and ticks < 28000 then return nil end
+    RT.speed(1)
+    R:line("OBS  RTE.gen ran %.2f game h activated=%s: fuel %.4f -> %.4f, condition %d -> %d (vanilla's own wear)",
+        hours() - ctx.h0, tostring(g:isActivated()), ctx.f0, g:getFuel(), ctx.c0, g:getCondition())
+    return true
+end }
+
+RT.E.genCharge = RT.E.addFuelStep("rte_gen_charge", 2.0, function(ctx, g)
+    local G, EE = TLG.Integration.Generators, TLG.Domain.EngineEffects
+    RT.E.genRate = RT.E.genRate or EE.generatorWearPerLitre
+    local base = RT.E.genRate
+    EE.generatorWearPerLitre = function(n, c) return RT.E.wearScale * base(n, c) end
+    local side = g:getModData().tlg
+    local written = 0
+    for _, q in pairs(side and side.q or {}) do written = written + q end
+    local w = g:getModData()[G.WEAR_KEY]
+    -- The fuel as the charge sees it: the record aged to now (run 177 used the
+    -- factor from before the 6 hours, 3.0 where the fuel had aged to 3.007).
+    local ambient
+    pcall(function() ambient = getClimateManager():getTemperature() end)
+    local now = TLG.Domain.Aging.advance((G.read(g, false)), TLG.World.now(), TLG.World.env())
+    local e = TLG.Domain.Consumers.evaluate(G.profile(g), now, { ambientC = ambient })
+    R:line("OBS  RTE.gen fuel at the charge: %s wearFactor=%.6f", viewText(now, "aged"), e.wearFactor)
+    ctx.before = { cond = g:getCondition(), fuel = g:getFuel(), written = written,
+        carry = (type(w) == "table" and w.c) or 0,
+        perLitre = EE.generatorWearPerLitre(G.lowerChanceOneIn(g), SandboxVars and SandboxVars.GeneratorFuelConsumption),
+        wear = e.wearFactor }
+end, function(ctx, g)
+    local G = TLG.Integration.Generators
+    local b = ctx.before
+    local w = g:getModData()[G.WEAR_KEY]
+    local cond1, carry1 = g:getCondition(), (type(w) == "table" and w.c) or 0
+    local due = b.carry + (b.written - b.fuel) * (b.wear - 1) * b.perLitre
+    R:line("OBS  RTE.gen charge: %.6f L burned since the record was written, %.4f points a litre at factor 2 (x%d fixture), factor %.6f: %.6f due; condition %d -> %d, carry %.6f -> %.6f",
+        b.written - b.fuel, b.perLitre, RT.E.wearScale, b.wear, due, b.cond, cond1, b.carry, carry1)
+    R:check("RTE.gen.worn_by_the_litres_burned", function()
+        local taken = b.cond - cond1
+        return taken >= 1 and taken == math.floor(due + 1e-9) and math.abs(taken + carry1 - due) <= 1e-6,
+            string.format("%d points taken + %.6f carried; due %.6f", taken, carry1, due)
+    end)
+    ctx.cond1 = cond1
+end)
+
+RT.E.genAgain = { name = "rte_gen_again", fn = function()
+    local g = RT.E.gen
+    if not g then R:line("SKIP rte_gen_again"); return true end
+    local c0 = g:getCondition()
+    local whole = TLG.Integration.Generators.chargeWear(g)
+    R:check("RTE.gen.not_charged_twice", function()
+        return whole == 0 and g:getCondition() == c0, string.format("%d more point(s), condition %d -> %d", whole, c0,
+            g:getCondition())
+    end)
+    pcall(function() g:setActivated(false) end)
+    RT.E.restore()
+    return true
+end }
+
+RT.E.cleanup = { name = "rte_cleanup", fn = function()
+    RT.E.restore()
+    RT.D.releaseEffects()
+    RT.D.hookRemove()
+    return true
+end }
+
+RT.effectsSteps = { RT.waitWorld, RT.D.setup,
+    RT.D.spawnStep("stale"), RT.D.fillStep("stale", function() return { { Fluid.Petrol, 10.0 } } end), RT.E.ageTank,
+    RT.D.driveStep("stale", RT.E.staleOpts), RT.E.powerBack,
+    RT.D.spawnStep("off"), RT.D.fillStep("off", function()
+        return { { Fluid.Petrol, 5.0 }, { Fluid.Get("TLG_Ethanol"), 3.0 } }
+    end), RT.D.driveStep("off", RT.E.offOpts), RT.E.powerBack,
+    RT.E.genSetup, RT.E.genFirstFuel, RT.E.genAge, RT.E.genRun, RT.E.genCharge, RT.E.genAgain,
+    RT.E.cleanup, RT.finish }
+
+------------------------------------------------------------------------------
 -- Model import (requests "sp-rtmi", then "sp-rtmib"; spec section 21, G13):
 -- an original test model drawn by tools/make-test-model.ps1 (model scripts
 -- in TLGHarness_models.txt) is wired to TLG.FermenterVessel through the item
@@ -10193,7 +11154,7 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
-    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
@@ -10229,6 +11190,14 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
+            elseif REQUEST == "sp-rtd" or REQUEST == "sp-rte" then
+                -- Nothing on the road to hit: no parked cars, traffic jams or
+                -- vehicle and zone stories (option 1 is "None"/"Never",
+                -- Translate/EN/Sandbox.json).
+                SandboxVars.CarSpawnRate = 1
+                SandboxVars.TrafficJam = false
+                SandboxVars.VehicleStoryChance = 1
+                SandboxVars.ZoneStoryChance = 1
             end
         end,
         onStart = function()
@@ -10272,6 +11241,12 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtv" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, vehicle steps on " .. RT.V.script)
                 TLGH.Steps.run(R, RT.chassisSteps, H, nil)
+            elseif REQUEST == "sp-rtd" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, fuel burned while driving")
+                TLGH.Steps.run(R, RT.drivingSteps, H, nil)
+            elseif REQUEST == "sp-rte" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, engine effects of poor fuel")
+                TLGH.Steps.run(R, RT.effectsSteps, H, nil)
             elseif REQUEST == "sp-rtmi" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, model import, before the save")
                 TLGH.Steps.run(R, RT.modelSteps, H, nil)

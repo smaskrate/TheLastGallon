@@ -8,11 +8,11 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP: driving burn, station-reservoir pour, pouring from a can on the ground | Not in the harness yet |
+| RT-SP: station-reservoir pour, pouring from a can on the ground; driving another chassis, a converted car or off-road (a standard car on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
-| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container) | Not in the multiplayer harness yet |
+| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); the engine effects of poor fuel (D-031) | Not in the multiplayer harness yet |
 | Performance baseline | Requires a measured client session |
 | Upgrade from an earlier release; install through the Steam Workshop | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12) |
 
@@ -3450,3 +3450,143 @@ exception came from the harness's own deep-recursion probe.
 Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run173_install_rehearsal.txt`,
 and launch 172's partial file,
 `2026-11-03_rt-sp_harness_run172_install_rehearsal_stalled.txt`.
+
+## 2026-11-04 — RT-SP launches 174–176 (driving)
+
+Command: `tools/run-sp-harness.ps1 -Mode driving` (request `sp-rtd`), the
+repository's mod on 42.21.0, about 3 minutes a launch. The world has no
+zombies, parked cars, traffic jams or vehicle and zone stories. The harness
+removes every vehicle the cell holds and drives a `Base.CarNormal` south
+on the main road below Muldraugh (the map's road zone at x 10585–10598
+from y 10800). The lane is chosen nearest the road's middle where it is
+street and clear from 4 tiles behind the car. The car drives itself on
+the game's cruise control at 25 km/h. Every tick the five tiles across
+the car are checked 22 tiles ahead, and it brakes on anything solid, a
+tree, a vehicle, a zombie, a square that is not street or not loaded, or
+a drift of 2.5 tiles. Afterwards no impact (speed lost while not braking)
+and no damaged part may be found; brakes, tires, suspension and muffler
+are left out, as vanilla wears them while driving.
+
+The burn is counted where vanilla writes it: `Vehicles.Update.GasTank`
+ends in `setContainerContentAmount(amount, false, true)`, about once a
+game minute. The engine caches that function, so the harness wraps the
+method in VehiclePart's method table instead (three arguments: vanilla's
+burn; one: anyone else).
+
+Two legs:
+1. **Drive:** E10 (9 L petrol, 1 L ethanol) poured from a can through
+   vanilla's `ISAddGasolineToVehicle`, then up to 350 tiles.
+2. **Stall:** a 37.5 % ethanol blend no stock engine takes, the engine
+   started past the gate. The mod's per-minute effects are held back until
+   the car is moving at 15 km/h and vanilla has burned once; then the
+   engine must stall on the move, burn nothing more and roll to a stop.
+
+Launch 174 (**20/3**): both cars left their lane within ten tiles; the
+drift guard braked them at 25 km/h, and neither hit anything or lost
+condition. The debug spawn faces a car a few degrees off its direction
+(forward vectors 10 and −5 degrees off south). The burns that did happen
+matched vanilla's exactly and reconciled; the drive leg's
+`burn_by_vanilla_only` still failed, on its 0.02 L minimum (12 tiles burned
+0.0077 L, all vanilla's), and its `drove` check on the distance. Since
+then the harness turns the
+car onto the road's line (`setAngles`, measured with `getForwardVector`)
+and centres the lane.
+
+Launch 175 (**22/3**): the drive leg passed everything (352 tiles,
+0.778017 L against launch 176's 0.778136 L, all of it vanilla's burn). The stall leg's engine
+stalled at 15.8 km/h 0.02 game minute after the effects were let go,
+before vanilla's first burn. So the three burn checks had nothing to measure;
+the stall and the coast to a stop passed. Since then the effects also wait
+for one burn.
+
+Launch 176 (**26/0**):
+- **Drive:** 352.1 tiles in 14.09 game minutes, top 25.3 km/h. The tank
+  went 10.000000 → 9.221864 L: 0.778136 L, exactly the 14 vanilla burns,
+  all on the move, and nothing else wrote the tank. The next read was
+  `reconciled`: total 9.2219 = native, the blend 0.9222 L ethanol to
+  8.2996 L petrol (worst deviation 5.6e-16). The engine ran throughout
+  (`startFactor=1`). Vanilla's rate there: 0.055 L per game minute, 0.22 L
+  per 100 tiles at 3500 rpm.
+- **Stall:** released at 25.1 km/h after one burn (0.007796 L,
+  reconciled). The engine stalled at 24.7 km/h 0.78 game minute later
+  (`Stalling`, reason `too_much_ethanol`). The tank stayed at 7.992204 L
+  from the stall to the end, and the car rolled from tile 28 to tile 44
+  and stopped in its lane.
+- **No collision:** no impact in either leg; every part at 100 before and
+  after (wearing parts included). The cars held within 0.04 tiles of their
+  line.
+
+Found, not fixed (code reading; neither is exercised by the harness):
+- `Vehicles.applyEffects` stalls engines without consulting the sandbox
+  option "Bad fuel can stall engines"; only the start gate reads it.
+- The power and wear factors `Consumers.evaluate` computes reach no
+  vehicle or generator, although the player guide says stale, wet or dirty
+  fuel costs power and wears the engine.
+
+Not run: other chassis, a flex-converted car on the move, off-road
+driving, the heater on, towing, multiplayer driving.
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run174_driving.txt`,
+`…_run175_driving.txt` and `…_run176_driving.txt`.
+
+## 2026-11-04 — Domain suite and RT-SP launches 177–179 (engine effects, D-031)
+
+Domain: `tools/run-tests.ps1` 214/214 (14 new cases in
+`tests/domain/test_engine_effects.lua` and
+`tests/integration/test_engine_effects.lua`). They cover the power to run at
+and its floor, the power never lowered twice and given back, a repair
+becoming the base, wear carried as a fraction and normalised by the sandbox
+consumption, the stall option on a running car, and a generator charged
+once per litre since its record was written: a tank run dry, a rewritten
+record, unseen fuel, the item's rate, and no charge on a multiplayer
+client. Compile check 117/0, translations OK.
+
+Command: `tools/run-sp-harness.ps1 -Mode engine-effects` (request `sp-rte`),
+on the driving mode's cleared road with its crash guards (launches
+174–176), about 4 minutes. Fixtures, declared in the harness:
+- The tank's and the generator's records are aged in place, to 2.6 and 3.0.
+- The wear rates run at 100 times their value, so whole points show in 350
+  tiles and 6 hours.
+- Stalls are off for the stale-petrol leg, so a random stall (1.2 % a game
+  minute on that fuel) cannot cut it short.
+
+Launch 177 (**35/1**): everything passed but the generator's wear check,
+whose expectation evaluated the fuel as it was 6 hours before (wear factor
+1.75 at 3.0). The mod charged the fuel aged to the moment of the charge,
+as designed: 3 points and 0.00699 carried. The harness now takes the
+factor as the charge does.
+
+Launch 178, `-Mode driving` on the same code (**26/0**): the E10 drive and
+the stall on the move as in launch 176, the engine effects running every
+minute.
+
+Launch 179 (**36/0**):
+- **Stale petrol** (deg 2.6: power factor 0.851429, wear factor 1.742857):
+  - Power: 4000 → 3406 0.12 game minutes after the cruise began, held for
+    352 tiles. Quality 100 and loudness 40 were kept through
+    `setEngineFeature`. Two game minutes after the stop the power was 4000
+    again, with no state left in the Engine part.
+  - Wear: the 0.778050 L burned in 14 game minutes owed 8.669705 points at
+    100 times the rate. 8 came off the Engine part and 0.669705 was carried.
+  - The burn was vanilla's alone and reconciled, with no impact and no
+    other part damaged.
+- **Stall option off:** a blend no stock engine takes (factor 0) ran 5.27
+  game minutes and 122 tiles at 2000, half power, without a stall, and got
+  4000 back two game minutes after the stop.
+- **Time to 24 km/h:** 0.55 game minutes at full power (launch 178), 0.63 at
+  85 % and 0.76 at half.
+- **Generator** (`Base.Generator`, `ConditionLowerChanceOneIn` 30 read from
+  its script): 8 L through `ISAddFuel`, the record aged to 3.0, switched on
+  for 6 game hours at x40.
+  - It burned 0.012 L, and vanilla took no condition.
+  - At the next `ISAddFuel` the fuel had aged to 3.0093 (factor 1.752328).
+    The charge made in `ISAddFuel.new` took 3 points and carried 0.009094,
+    exactly the 3.009094 due.
+  - Charged again at once, it took nothing.
+
+Not run: multiplayer (the power reaches clients through `transmitEngine`),
+flex-converted engines, other chassis and generator models, a fridge on the
+generator.
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run177_engine_effects.txt`,
+`…_run178_driving.txt` and `…_run179_engine_effects.txt`.

@@ -851,3 +851,76 @@ listed with their replacement.
   on a server (run 151), and so is one taken out of a container (a bin,
   run 167). Not checked live: the refusals for a vessel out of reach or
   on no square.
+
+## D-031 Poor fuel costs a running car power and wears car and generator engines
+* Decision: the adapters apply the power and wear factors that
+  `ConsumerService.evaluate` computes (`TLG/Domain/EngineEffects.lua`, pure;
+  rates in `balance.md`). Before, no adapter applied them, though the player
+  guide said poor fuel costs power and wears the engine, and the vehicle
+  adapter's header said power went through the engine controls.
+  * Power, cars: every game minute on the authority, a running car's
+    engine power is its own times the power factor, never below half
+    (`POWER_FLOOR`). Within a game minute of stopping, or of good fuel, it
+    is the car's own again. The only Lua path is
+    `BaseVehicle.setEngineFeature(quality, loudness, power)`
+    (`VehicleEngine` is not exposed), which stores loudness × 0.37037036
+    (BC `VehicleEngine.setFeatures`). So the stored loudness goes back
+    divided by that, is read back, and the neighbouring values are tried;
+    quality goes back unchanged. `transmitEngine` sends the change to a
+    server's clients. The Engine part's modData `tlgPower = { base, applied }`
+    keeps the bookkeeping. The reduction is the mod's while the power still
+    equals `applied`; any other value was set by the game (a repair, which
+    resets the features, BC `VehiclePart.repair`, or an engine swap) and
+    becomes the base. So a reduction never compounds, and save and load
+    need nothing (the game saves the engine's power, BC `BaseVehicle.save`).
+  * Wear, cars: each game minute while running, the litres the tank lost
+    since the previous minute, times (wearFactor − 1) times 0.15 ÷
+    `CarGasConsumption`, as condition points of the Engine part. The
+    fraction is carried in the part's `tlgWear` until whole points come
+    off (`setCondition`, `transmitPartCondition`). A rise in the tank (a
+    refuel) only moves the reference. Vanilla never wears a car engine for
+    running, so this rate is the mod's own. A tank that leaks (vanilla, gas
+    tank under 70 %) counts as burned.
+  * Wear, generators: per litre burned since the record was last written,
+    (wearFactor − 1) × 1.5 ÷ N ÷ (0.15 × `GeneratorFuelConsumption`), N the
+    item's `ConditionLowerChanceOneIn`. At wearFactor 2 that equals
+    vanilla's own wear at a fridge's load. Lua has no list of the cell's
+    generators (`IsoGenerator.AllGenerators` is private), so the wear is
+    charged when the mod next handles the generator: a refuel
+    (`ISAddFuel.new`, before the tank moves), a pickup, switching it on or
+    off, and the mod's commands (the resolver's `read`). Every litre a
+    generator burns came in through a refuel the mod sees, so none is
+    missed. The record holds the tank's litres as written; the drop since
+    then is what burned. The litres already charged against that record
+    (its total, revision and time) are noted (`tlgWear`, carried with the
+    generator), so none is charged twice. A new record starts again from
+    zero, and fuel coming in unseen is not charged. The fuel evaluated is
+    the record as written, aged to the charge: a tank run dry still tells
+    what it burned.
+  * Stalls: the sandbox option "Bad fuel can stall engines" (`VehicleStalls`)
+    now covers a running car too. Before, only the start gate read it, and
+    cars stalled on bad fuel with the option off. It stays a car option:
+    generators do not stall, and their start gate does not read it.
+* Reason: the user asked on 2026-11-04 ("Fix the 2 problems you found by
+  reading the code") after the driving runs (174–176), which found both by
+  reading the code.
+* Consequences: verified by `tests/domain/test_engine_effects.lua` and
+  `tests/integration/test_engine_effects.lua`, and in game by RT-SP run
+  179 (`-Mode engine-effects`, 36/0). A car on petrol aged to 2.6 ran at
+  3406 of its 4000 power (factor 0.851) from its first game minute, with
+  quality and loudness kept, and had its power back two game minutes after
+  stopping. Its engine lost what its 0.778 L owed, at 100 times the rate
+  (a fixture): 8 points, 0.670 carried. With the option off, a car on fuel
+  it cannot take ran 5.3 game minutes at 2000 without a stall. A generator
+  on petrol aged to 3.0 ran 6 game hours; the next refuel charged it the 3
+  points its 0.012 L owed at 100 times the rate, and once only. The cars
+  reached 24 km/h after 0.55 game minutes at full power (run 178), 0.63 at
+  85 % and 0.76 at half (run 179). Run 177 found one expectation of the harness wrong (it evaluated
+  the generator's fuel before its 6 hours of ageing). The driving mode
+  repeated 26/0 with the change (run 178). Generator wear shows at the next
+  refuel, move or switch, not as it burns. A car saved with its engine
+  running on poor fuel is saved with the lowered power; without the mod,
+  only a repair or an engine swap restores it (`migrations.md`). Not run:
+  multiplayer, where the driver's client applies the power it receives
+  through `setEngineFeature` and so scales the received loudness again
+  (vanilla's own); flex-converted engines; other chassis.
