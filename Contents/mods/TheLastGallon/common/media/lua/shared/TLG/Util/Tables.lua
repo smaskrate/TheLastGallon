@@ -58,6 +58,26 @@ function Tables.sortedKeys(t)
     return Tables.sort(keys)
 end
 
+-- The k-th key of t in Tables.sortedKeys order (nil when t has fewer), in
+-- one pass that keeps the k smallest keys seen: for a small k this is far
+-- cheaper than sorting a large table (docs/performance.md).
+function Tables.kthKey(t, k)
+    if k < 1 then return nil end
+    local best, n = {}, 0
+    for key in pairs(t) do
+        if n < k or keyLess(key, best[n]) then
+            local i = n + 1
+            if n < k then n = n + 1 else i = n end
+            while i > 1 and keyLess(key, best[i - 1]) do
+                best[i] = best[i - 1]
+                i = i - 1
+            end
+            best[i] = key
+        end
+    end
+    return best[k]
+end
+
 function Tables.isEmpty(t)
     for _ in pairs(t) do
         return false

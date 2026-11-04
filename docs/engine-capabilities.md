@@ -1274,6 +1274,31 @@ Lua can roll a parsed list as vanilla's loot stress test does:
 The runs rolled the manual from 7 of its 11 lists, 500 fills each
 (D-026).
 
+## Clocks and frame times from Lua (RT-SP runs 181–182, 2026-11-04)
+
+Used by the performance mode (`docs/performance.md`):
+- `getTimestampMs()` and `getTimeInMillis()` are
+  `System.currentTimeMillis()`, in whole milliseconds (BC
+  `LuaManager$GlobalObject`). Lua gets no finer clock, so short calls are
+  timed in batches.
+- `getCPUTime()` returns the last frame's main-thread step,
+  `GameWindow.updateTime`. That is `System.nanoTime` taken around
+  `frameStep`'s logic, render preparation and queued Lua events.
+  `getGPUTime()` returns the render thread's `RenderThread.renderTime`.
+  Both are divided by 1,000,000, so they come in whole milliseconds (BC).
+  Run 181 divided them again and read 0.
+- `getPerformance():getFramerate()` gives the frame-rate cap: 60 in the
+  harness's client, with vsync off. At the cap, the render thread's time
+  is about the whole frame (16 ms), so it does not show load.
+- A floor item is in its square's objects as well as its world objects:
+  `IsoGridSquare.AddWorldInventoryItem` adds the `IsoWorldInventoryObject`
+  to both lists (BC). A scan of `getObjects()` therefore walks the items on
+  the floor too.
+- The loaded area reaches about 55 tiles from the player (run 176's route
+  scan found the first unloaded square there). Lua references to cars and
+  items in a chunk that unloads go stale, so the performance workloads stay
+  within 45 tiles while the player moves among them.
+
 ## Client harness status
 
 `tools/run-sp-harness.ps1` starts the client with

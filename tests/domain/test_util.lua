@@ -27,6 +27,25 @@ T.case("util: sortedKeys orders numbers before strings deterministically", funct
     T.eq(table.concat({ tostring(keys[1]), tostring(keys[2]), keys[3], keys[4] }, ","), "1,3,a,b")
 end)
 
+T.case("util: kthKey gives the k-th of the sorted keys without sorting", function()
+    local r = Rng.new(TEST_SEED or 20261030)
+    for trial = 1, 300 do
+        local t = {}
+        for _ = 1, r:int(0, 40) do
+            local kind, key = r:int(1, 4), nil
+            if kind == 1 then key = r:int(-50, 50)
+            elseif kind == 2 then key = r:int(0, 1000) + r:next()
+            elseif kind == 3 then key = "k" .. r:int(1, 30)
+            else key = r:int(100, 200) end
+            t[key] = true
+        end
+        local keys = Tables.sortedKeys(t)
+        for k = 0, #keys + 2 do
+            T.eq(Tables.kthKey(t, k), keys[k], string.format("trial %d: key %d of %d", trial, k, #keys))
+        end
+    end
+end)
+
 T.case("util: isEmpty works without next()", function()
     T.ok(Tables.isEmpty({}))
     T.ok(not Tables.isEmpty({ x = false }))

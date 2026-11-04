@@ -1,5 +1,6 @@
 require "support/fixtures"
 require "TLG/Content/Production"
+require "TLG/Util/Rng"
 local Climate, Process = TLG.Domain.Climate, TLG.Domain.Process
 
 -- Origin at midnight so day d covers world hours [24 d, 24 d + 24).
@@ -18,6 +19,43 @@ local function batch(site, temps)
     f.site, f.temps = site, temps
     return f
 end
+
+T.case("sites: segments sort the notes' hours once and give every day exactly its own mean", function()
+    local r = TLG.Rng.new(TEST_SEED or 20261030)
+    local e = env(coldLog(-5, 9.1, 7.2))
+    local days = 0
+    for trial = 1, 40 do
+        local site = { room = r:int(0, 1) == 1, z = r:int(0, 1), temps = {}, fires = {}, from = r:int(0, 40) }
+        for h = 0, 24 * 12 do
+            local roll = r:next()
+            if roll < 0.5 then site.temps[h] = -5 + 30 * r:next() end
+            if roll > 0.3 and r:next() < 0.5 then
+                local kind = r:int(1, 4)
+                if kind == 1 then
+                    site.fires[h] = false
+                elseif kind == 2 then
+                    site.fires[h] = { t = h + r:next(), f = r:int(0, 600), x = r:int(-6, 6), y = r:int(-6, 6),
+                        r = r:int(0, 1) == 1, c = 35 }
+                elseif kind == 3 then
+                    site.fires[h] = { t = h + r:next(), f = r:int(1, 200), x = r:int(-3, 3), y = r:int(-3, 3), r = false,
+                        c = 25, rad = 3 }
+                else
+                    site.fires[h] = { t = h + r:next(), f = r:int(30, 400), x = r:int(-9, 9), y = r:int(-9, 9), r = false,
+                        c = 35, k = "campfire", rmax = 10 }
+                end
+            end
+        end
+        if trial % 5 == 0 then site.fires = nil end
+        local t0, t1 = r:int(0, 100) + r:next(), 24 * 12 - r:int(0, 50) + r:next()
+        for _, seg in ipairs(e:segments(t0, t1, "sheltered", site)) do
+            local day = e:dayIndex(seg.t0)
+            local alone = { room = site.room, z = site.z, temps = site.temps, fires = site.fires, from = site.from }
+            T.eq(seg.tempC, (e:siteDayMean(day, alone, t1)), string.format("trial %d, day %d", trial, day))
+            days = days + 1
+        end
+    end
+    T.ok(days > 300, "days compared: " .. days)
+end)
 
 T.case("sites: room air follows the game's formula", function()
     T.eq(Climate.roomAir(-5, false, 0.5, true), 22, "grid power holds 22 C")

@@ -28,7 +28,11 @@
 -- answered for both players, and on a dedicated server the mod takes the
 -- vessel off the floor into both arms itself (M.takeOnServer, D-030; the
 -- game's own way fails there): its batch was carried on the server and the
--- record reached the player's client with the item.
+-- record reached the player's client with the item. The hourly readings and
+-- ten-minute notes of 32 fermenters were timed in RT-SP runs 181-185
+-- (performance mode). Since D-032 one scan serves every machine a fire
+-- warms, a trim sorts nothing, and a catch-up sorts the notes once, with
+-- the same results (equivalence tests; fireplace mode, run 184).
 --
 --   state store        machine item modData "tlgProc" (TLG.Domain.Process)
 --   processing         only while the item lies on the ground (D-015). The
@@ -192,31 +196,77 @@ end
 -- there, so nothing blocks it; the one with most fuel if several match.
 -- Their fuel is minutes burned one per game minute, also while the area is
 -- not loaded (BC update; a campfire's one per minute event, RT-SP run 34).
-function M.warmingFire(sq, air, now)
+-- `fires`: M.firesNear's list for squares that include this one (the
+-- ten-minute note scans once for all machines); without it, this square's
+-- reach is scanned.
+function M.warmingFire(sq, air, now, fires)
     if air == nil then return nil end
     local t0 = M.unwarmedAt(sq)
     if air <= t0 + M.FIRE_TOL then return nil end
-    local x, y, z, cell, best = sq:getX(), sq:getY(), sq:getZ(), getCell(), nil
+    local x, y, z, best = sq:getX(), sq:getY(), sq:getZ(), nil
     local reach = Climate.FIRE_REACH
-    for dx = -reach, reach do
-        for dy = -reach, reach do
-            local s = dx * dx + dy * dy < reach * reach and cell:getGridSquare(x + dx, y + dy, z) or nil
-            local objs = s and s:getObjects()
-            for i = 0, (objs and objs:size() or 0) - 1 do
-                local fire = M.fireOf(objs:get(i), s)
-                if fire then
-                    local srcRoom = false
-                    pcall(function() srcRoom = s:isInARoom() == true end)
-                    local w = Climate.warmed(t0, dx, dy, fire.radius, srcRoom, fire.c)
-                    if math.abs(w - air) <= M.FIRE_TOL and (best == nil or fire.f > best.f) then
-                        best = { t = now, f = fire.f, x = dx, y = dy, r = srcRoom, c = fire.c, rad = fire.rad,
-                            k = fire.k, rmax = fire.rmax }
-                    end
-                end
+    for _, e in ipairs(fires or M.firesNear({ sq })) do
+        local dx, dy, fire = e.x - x, e.y - y, e.fire
+        if e.z == z and dx * dx + dy * dy < reach * reach then
+            local w = Climate.warmed(t0, dx, dy, fire.radius, e.room, fire.c)
+            if math.abs(w - air) <= M.FIRE_TOL and (best == nil or fire.f > best.f) then
+                best = { t = now, f = fire.f, x = dx, y = dy, r = e.room, c = fire.c, rad = fire.rad,
+                    k = fire.k, rmax = fire.rmax }
             end
         end
     end
     return best
+end
+
+-- Every lit fire (M.fireOf) on the same floor within reach of any of the
+-- given squares: the squares closer than Climate.FIRE_REACH, each visited
+-- once however many of the given squares it is near. 32 fermenters beside
+-- one fire each scanned the same 1,000 squares every ten minutes, 90 ms
+-- (docs/performance.md). Each entry: x, y, z, the object's index i on its
+-- square, fire, and room (its square in a room). Listed in the order a scan
+-- of one square's reach meets them (x, then y, then i), so M.warmingFire
+-- picks the same fire among several that match.
+function M.firesNear(squares)
+    local reach, cell, rows = Climate.FIRE_REACH, getCell(), {}
+    for _, sq in ipairs(squares) do
+        local x, y, z = sq:getX(), sq:getY(), sq:getZ()
+        rows[z] = rows[z] or {}
+        for dy = 1 - reach, reach - 1 do
+            local w = reach
+            while w * w + dy * dy >= reach * reach do w = w - 1 end
+            local row = rows[z][y + dy] or {}
+            rows[z][y + dy] = row
+            row[#row + 1] = { x - w, x + w }
+        end
+    end
+    local out = {}
+    for _, z in ipairs(Tables.sortedKeys(rows)) do
+        for _, y in ipairs(Tables.sortedKeys(rows[z])) do
+            local spans = Tables.sort(rows[z][y], function(a, b) return a[1] < b[1] end)
+            local last
+            for _, span in ipairs(spans) do
+                for x = (last ~= nil and last >= span[1]) and last + 1 or span[1], span[2] do
+                    local s = cell:getGridSquare(x, y, z)
+                    local objs = s and s:getObjects()
+                    for i = 0, (objs and objs:size() or 0) - 1 do
+                        local fire = M.fireOf(objs:get(i), s)
+                        if fire then
+                            local room = false
+                            pcall(function() room = s:isInARoom() == true end)
+                            out[#out + 1] = { x = x, y = y, z = z, i = i, fire = fire, room = room }
+                        end
+                    end
+                end
+                if last == nil or span[2] > last then last = span[2] end
+            end
+        end
+    end
+    return Tables.sort(out, function(a, b)
+        if a.x ~= b.x then return a.x < b.x end
+        if a.y ~= b.y then return a.y < b.y end
+        if a.z ~= b.z then return a.z < b.z end
+        return a.i < b.i
+    end)
 end
 
 -- Readings and fire notes the batch no longer needs: hours before the day it
@@ -226,6 +276,20 @@ end
 -- showed the unheated value, RT-SP run 18), and the latest note before it,
 -- which still governs the unread hours after it; all of them once the batch
 -- is done.
+-- The key from which only `limit` keys of t remain, as Tables.sortedKeys
+-- gives it, or nil when t holds no more than `limit + spare` (keys a prune
+-- would keep anyway). A reading or a note usually puts a record one or two
+-- over, so the key is picked in a pass. Sorting up to 480 keys twice on
+-- every reading and note cost a record left unopened 6 ms each time
+-- (docs/performance.md).
+local function keepFrom(t, limit, spare)
+    local n = Tables.count(t)
+    if n <= limit + (spare or 0) then return nil end
+    local k = n - limit + 1
+    if k <= 8 then return Tables.kthKey(t, k) end
+    return Tables.sortedKeys(t)[k]
+end
+
 function M.trimTemps(rec, env)
     if rec.state ~= "Processing" and rec.state ~= "Paused" then
         rec.temps, rec.fires = nil, nil
@@ -234,13 +298,16 @@ function M.trimTemps(rec, env)
     local cut = math.floor(env:dayStart(env:dayIndex(rec.t))) - 1
     if rec.temps ~= nil then
         Climate.pruneSlots(rec.temps, cut)
-        local keys = Tables.sortedKeys(rec.temps)
-        if #keys > M.MAX_READINGS then Climate.pruneSlots(rec.temps, keys[#keys - M.MAX_READINGS + 1]) end
+        local from = keepFrom(rec.temps, M.MAX_READINGS)
+        if from ~= nil then Climate.pruneSlots(rec.temps, from) end
     end
     if rec.fires ~= nil then
         Climate.pruneNotes(rec.fires, cut)
-        local keys = Tables.sortedKeys(rec.fires)
-        if #keys > M.MAX_READINGS then Climate.pruneNotes(rec.fires, keys[#keys - M.MAX_READINGS + 1]) end
+        -- One note over stays: pruneNotes keeps the latest note below its
+        -- bound, and with one over the bound is the second note. The notes
+        -- of a record left unopened settle there.
+        local from = keepFrom(rec.fires, M.MAX_READINGS, 1)
+        if from ~= nil then Climate.pruneNotes(rec.fires, from) end
     end
 end
 
@@ -379,6 +446,17 @@ local function onSquareById(sq, id)
     return nil
 end
 
+-- The record as stored, for the hourly reading and the ten-minute note: they
+-- change a few fields of it and write it back at once, so the copy M.read
+-- makes for everyone else is spared (with 20 days of readings it cost them
+-- 0.3 ms a machine, docs/performance.md). An older schema comes upgraded, a
+-- new table; a newer schema or none gives nil, as M.read leaves those alone.
+local function stored(item)
+    local raw = M.machineFor(item) and item:getModData()[M.SIDECAR]
+    if raw == nil then return nil end
+    return (TLG.Persistence.Migrations.sidecar("process", raw))
+end
+
 -- Every game hour on the authority, after the climate record: one reading of
 -- the air at each loaded, placed machine with a batch running, filed under
 -- the hour that just ended. Squares not loaded are skipped (their hours use
@@ -399,7 +477,7 @@ function M.sampleSites()
             if item == nil then
                 sites[id] = nil
             else
-                local rec = M.read(item, false)
+                local rec = stored(item)
                 local t = rec and (rec.state == "Processing" or rec.state == "Paused") and M.airAt(sq) or nil
                 if t ~= nil then
                     rec.site, rec.seen = M.siteOf(sq), now
@@ -426,23 +504,33 @@ function M.observeFires()
     if md.v == nil or sites == nil then return end
     local now, env, cell = World.now(), World.env(), getCell()
     local hour = math.floor(now)
+    -- The machines and the air at each first, then one scan for the fires
+    -- near those a heat source warms, then the notes in the same order.
+    local found, warmed = {}, {}
     for _, id in ipairs(Tables.sortedKeys(sites)) do
         local p = sites[id]
         local sq = cell:getGridSquare(p.x, p.y, p.z)
         local item = sq and onSquareById(sq, id)
-        local rec = item and M.read(item, false)
+        local rec = item and stored(item)
         local air = rec and (rec.state == "Processing" or rec.state == "Paused") and M.airAt(sq) or nil
         if air ~= nil then
-            local note = M.warmingFire(sq, air, now) or false
-            local fires = rec.fires or {}
-            if note or fires[hour] ~= false then
-                fires[hour] = note
-                rec.fires = fires
-            end
-            rec.site, rec.seen = M.siteOf(sq), now
-            M.trimTemps(rec, env)
-            M.write(item, rec, true)
+            local warm = air > M.unwarmedAt(sq) + M.FIRE_TOL
+            found[#found + 1] = { sq = sq, item = item, rec = rec, air = air, warm = warm }
+            if warm then warmed[#warmed + 1] = sq end
         end
+    end
+    local near = #warmed > 0 and M.firesNear(warmed) or nil
+    for _, e in ipairs(found) do
+        local rec = e.rec
+        local note = M.warmingFire(e.sq, e.air, now, e.warm and near or nil) or false
+        local fires = rec.fires or {}
+        if note or fires[hour] ~= false then
+            fires[hour] = note
+            rec.fires = fires
+        end
+        rec.site, rec.seen = M.siteOf(e.sq), now
+        M.trimTemps(rec, env)
+        M.write(e.item, rec, true)
     end
 end
 

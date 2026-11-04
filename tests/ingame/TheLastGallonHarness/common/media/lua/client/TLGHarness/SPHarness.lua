@@ -34,6 +34,9 @@
 --             road on cruise control, then one stalling on the move
 --   sp-rte -> engine effects of poor fuel (D-031): a car's power and wear on
 --             stale petrol, no stall with the option off, a generator's wear
+--   sp-rtpf -> performance (gate 11): the mod's timers, catch-up and menus
+--             timed and frames sampled as dormant cans, parked and idling
+--             cars and running fermenters are added on the same road
 --   sp-rtmi -> an original test model wired to the fermenter: placed, turned,
 --             held and photographed, saved and exited to the menu ("sp-rtmib")
 --   sp-rtmib -> main menu continues that save: back in place, photographed
@@ -102,7 +105,7 @@ end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
-    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
+    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
@@ -9358,6 +9361,668 @@ RT.effectsSteps = { RT.waitWorld, RT.D.setup,
     RT.E.cleanup, RT.finish }
 
 ------------------------------------------------------------------------------
+-- Performance (request "sp-rtpf"; release gate 11, spec section 18
+-- "Performance acceptance"): what the mod adds to the game, measured in the
+-- same session as the game without it.
+-- The mod runs no code every frame. Its own work is three timers (the
+-- vehicles' effects every game minute, Vehicles.lua; the machines' fire
+-- notes every ten minutes, and the climate record and the machines' air
+-- readings every hour, Boot.lua) and what a player's action or menu starts.
+-- So the cost is measured where it is spent:
+-- - the timers, called here as they run (PF.minute, PF.tenMinutes and
+--   PF.hour are the handlers' bodies), timed as the first call alone and
+--   then in five batches of at least 200 ms each; getTimestampMs is a
+--   whole-millisecond wall clock, so the median batch's time per call is
+--   the figure. The hour's climate record is put back after its batches;
+--   the machines' readings of the same hour are rewritten in place;
+-- - catch-up: fuel aging and a fermenter's batch brought forward 1, 30 and
+--   365 days (Aging.advance, Machines.advance: the arithmetic of catching
+--   up that long on return), and the machine menu, which brings a batch to
+--   now on every right-click (MachineMenu.controls);
+-- - whole frames, 20 real seconds at speed 1 per workload: the game's own
+--   time for each frame's main-thread step (getCPUTime: GameWindow.updateTime,
+--   System.nanoTime around logic, render preparation and Lua events, given
+--   to Lua in whole milliseconds, BC), its render thread's time (getGPUTime,
+--   whole ms) and the time between frames, as observations: what is sought
+--   is below a frame's noise.
+-- Workloads, each added to the last on the cleared road below Muldraugh
+-- (no zombies, parked cars, traffic jams or stories, as in the driving
+-- test), all within 45 tiles so nothing unloads while the player moves
+-- among them: empty; 400 petrol cans on the road, first without records,
+-- then with them (dormant supplies); 10 and 20 parked cars with tank
+-- records; 8 of them idling on stale petrol; 8 and 32 fermenters loaded
+-- from the menu; all 32 as if a fire warmed them (the air read 5 C above
+-- the unheated value, so each note scans the 18 tiles around it); the same
+-- 32 with 20 days of hourly readings and fire notes, which a machine left
+-- running in a loaded area unopened keeps (Machines.MAX_READINGS).
+-- Stalls are off (sandbox VehicleStalls) so the idling engines keep running.
+-- RT.PF.budgets (ms per call, median, docs/performance.md) are checked at
+-- the end. The fire scan walks every object on the squares it covers, the
+-- cans within reach included (a floor item is in the square's objects, BC
+-- IsoGridSquare.AddWorldInventoryItem).
+------------------------------------------------------------------------------
+RT.PF = { frameSecs = 20, batches = 5, batchMs = 200, cans = 400, idle = 8, stale = 2.6, readingHours = 480,
+    readingC = 22, catchUp = { 24, 720, 8760 },
+    stand = { x = 10600, y = 10831 }, road = { x0 = 10586, x1 = 10597 },
+    carCols = { 10587, 10590, 10593, 10596 }, carRows = { 10812, 10818, 10824, 10830, 10836 },
+    machineRows = { 10842, 10845, 10848 }, canRows = { 10843, 10844, 10846, 10847, 10849, 10850, 10851, 10852, 10853 },
+    results = {}, keys = {}, frameResults = {} }
+
+-- Budgets, ms per call (median), on the reference machine
+-- (docs/performance.md): about three times the medians of the last run of
+-- the code they time. The dormant cans get the empty road's budgets:
+-- records nobody touches must cost nothing. Run 181 set those D-032 left
+-- alone. The machines' notes and readings, the warmed machines, the
+-- 480-reading records and their catch-up (the three findings: run 182, 90,
+-- 192-202 and 60 ms) are timed since D-032. Run 183 set the warmed and
+-- catch-up ones, run 185 the notes and readings (after the notes' saving).
+RT.PF.budgets = {
+    ["empty/minute"] = 0.005, ["empty/ten_minutes"] = 0.005, ["empty/hour"] = 0.03,
+    ["cans_with_records/minute"] = 0.005, ["cans_with_records/ten_minutes"] = 0.005, ["cans_with_records/hour"] = 0.03,
+    ["parked_20/minute"] = 0.1, ["idling_8/minute"] = 3.2,
+    ["machines_32/minute"] = 3.3, ["machines_32/ten_minutes"] = 1.8, ["machines_32/hour"] = 1.7,
+    ["catch_up_fresh/can_8760_h"] = 28, ["catch_up_fresh/tank_8760_h"] = 28, ["catch_up_fresh/fermenter_8760_h"] = 75,
+    ["catch_up_fresh/fuel_menu"] = 0.08, ["catch_up_fresh/machine_menu_fresh"] = 0.8,
+    ["machines_32_warmed/ten_minutes"] = 31, ["machines_32_warmed/fire_scan_one_machine"] = 9,
+    ["machines_32_20_days/ten_minutes"] = 20, ["machines_32_20_days/hour"] = 53,
+    ["catch_up_20_days/fermenter_through_20_days"] = 13, ["catch_up_20_days/machine_menu_20_days"] = 15,
+}
+
+-- The mod's three timers, as their handlers run them (Vehicles.lua V.install,
+-- Boot.lua). The handlers look these functions up at each call.
+function RT.PF.minute()
+    local V = TLG.Integration.Vehicles
+    if not TLG.World.isAuthority() then return end
+    local cell = getCell()
+    if cell == nil then return end
+    for _, vehicle in ipairs(cell:getVehicles():toArray()) do
+        local ok, err = pcall(V.applyEffects, vehicle)
+        if not ok then TLG.Log.debug("vehicle effects: %s", tostring(err)) end
+    end
+end
+
+function RT.PF.tenMinutes()
+    local machines = TLG.Integration.Machines
+    if machines then
+        local ok, err = pcall(machines.observeFires)
+        if not ok then TLG.Log.error("machine fire notes: %s", tostring(err)) end
+    end
+end
+
+function RT.PF.hour()
+    local ok, err = pcall(TLG.World.recordClimate)
+    if not ok then TLG.Log.error("climate log: %s", tostring(err)) end
+    local machines = TLG.Integration.Machines
+    if machines then
+        ok, err = pcall(machines.sampleSites)
+        if not ok then TLG.Log.error("machine air readings: %s", tostring(err)) end
+    end
+end
+
+-- Real time of fn: its first call alone, then batches each running fn until
+-- at least batchMs passed; the median batch's ms per call.
+function RT.PF.bench(fn)
+    local PF = RT.PF
+    local t0 = getTimestampMs()
+    fn()
+    local first = getTimestampMs() - t0
+    local per, calls = {}, 1
+    for _ = 1, PF.batches do
+        local n, s, e = 0, getTimestampMs(), 0
+        repeat
+            fn()
+            n = n + 1
+            e = getTimestampMs() - s
+        until e >= PF.batchMs or n >= 200000
+        per[#per + 1] = e / n
+        calls = calls + n
+    end
+    table.sort(per)
+    return { first = first, med = per[math.floor((#per + 1) / 2)], lo = per[1], hi = per[#per], calls = calls }
+end
+
+function RT.PF.record(label, what, b)
+    local key = label .. "/" .. what
+    RT.PF.results[key] = b
+    RT.PF.keys[#RT.PF.keys + 1] = key
+    R:line("OBS  RTPF.cost %s: first call %.0f ms; median %.4f ms per call (batches %.4f-%.4f ms, %d calls)", key, b.first,
+        b.med, b.lo, b.hi, b.calls)
+end
+
+-- The hour's climate record put back after fn (each call adds a reading).
+function RT.PF.keepClimate(fn)
+    local md = TLG.World.get()
+    local acc, log = TLG.Tables.deepCopy(md.climateAcc), TLG.Tables.deepCopy(md.climateLog)
+    local ok, r = pcall(fn)
+    md.climateAcc, md.climateLog = acc, log
+    if not ok then error(r) end
+    return r
+end
+
+function RT.PF.stats(list)
+    local n = #list
+    if n == 0 then return { n = 0, mean = 0, p50 = 0, p95 = 0, p99 = 0, max = 0 } end
+    local s, sum = {}, 0
+    for i = 1, n do s[i] = list[i]; sum = sum + list[i] end
+    table.sort(s)
+    local function pct(p) return s[math.max(1, math.min(n, math.ceil(p * n)))] end
+    return { n = n, mean = sum / n, p50 = pct(0.5), p95 = pct(0.95), p99 = pct(0.99), max = s[n] }
+end
+
+function RT.PF.free(s)
+    return s ~= nil and s:getFloor() ~= nil and not s:isSolid() and not s:isSolidTrans() and not s:HasTree()
+        and s:getVehicleContainer() == nil
+end
+
+function RT.PF.rowSquares(rows)
+    local PF, out = RT.PF, {}
+    for _, y in ipairs(rows) do
+        for x = PF.road.x0, PF.road.x1 do
+            local s = sq(x, y, 0)
+            if PF.free(s) then out[#out + 1] = s end
+        end
+    end
+    return out
+end
+
+-- A car's footprint (3 by 5 tiles around its square) is clear street.
+function RT.PF.slotClear(col, y)
+    for dx = -1, 1 do
+        for dy = -2, 2 do
+            if RT.D.blocked(sq(col + dx, y + dy, 0), nil) then return false end
+        end
+    end
+    return true
+end
+
+function RT.PF.toStand()
+    player():setPosition(RT.PF.stand.x + 0.5, RT.PF.stand.y + 0.5, 0)
+end
+
+RT.PF.setup = { name = "rtpf_setup", timeout = 2400, fn = function(ctx, ticks)
+    local PF = RT.PF
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        RT.keepFit()
+        PF.stallsWere = SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.VehicleStalls
+        if SandboxVars.TheLastGallon then SandboxVars.TheLastGallon.VehicleStalls = false end
+        p:teleportTo(PF.stand.x, PF.stand.y, 0)
+        RT.speed(1)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 300 then return nil end
+    local removed = 0
+    for _, v in ipairs(getCell():getVehicles():toArray()) do
+        if pcall(function() v:permanentlyRemove() end) then removed = removed + 1 end
+    end
+    local function get(f)
+        local ok, v = pcall(f)
+        return ok and tostring(v) or "?"
+    end
+    R:observe("RTPF.environment", function()
+        return string.format("game=%s screen=%sx%s fullscreen=%s vsync=%s framerate=%s uncapped=%s lockFPS=%s lightingFPS=%s " ..
+            "Zombies=%s CarSpawnRate=%s DayLength=%s VehicleStalls=%s (was %s) hour=%s air=%s C zombies=%s vehicles removed %d",
+            get(function() return getCore():getVersion() end), get(function() return getCore():getScreenWidth() end),
+            get(function() return getCore():getScreenHeight() end), get(function() return getCore():isFullScreen() end),
+            get(function() return getCore():getOptionVSync() end), get(function() return getPerformance():getFramerate() end),
+            get(function() return getPerformance():isFramerateUncapped() end),
+            get(function() return getPerformance():getLockFPS() end),
+            get(function() return getPerformance():getLightingFPS() end), tostring(SandboxVars.Zombies),
+            tostring(SandboxVars.CarSpawnRate), tostring(SandboxVars.DayLength),
+            tostring(SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.VehicleStalls), tostring(PF.stallsWere),
+            get(function() return getGameTime():getHour() end), get(function() return string.format("%.1f", RT.temp()) end),
+            get(function() return getCell():getZombieList():size() end), removed)
+    end)
+    return true
+end }
+
+-- Frames at speed 1 with the player at the stand: each frame's main-thread
+-- step and render time (whole ms from the game) and the gaps between frames.
+function RT.PF.frames(label)
+    return { name = "rtpf_frames_" .. label, timeout = 20000, fn = function(ctx, ticks)
+        local PF = RT.PF
+        if not ctx.settle then
+            RT.speed(1)
+            PF.toStand()
+            ctx.settle = ticks
+            return nil
+        end
+        -- Five seconds for anything the last step started (chunks streaming in
+        -- after the first teleport, cars settling) to finish.
+        if ticks - ctx.settle < 300 then return nil end
+        local now = getTimestampMs()
+        if not ctx.t0 then
+            ctx.t0, ctx.last, ctx.upd, ctx.rnd, ctx.gap = now, now, {}, {}, {}
+            ctx.min0 = math.floor(hours() * 60)
+            return nil
+        end
+        -- Whole milliseconds: GlobalObject.getCPUTime and getGPUTime divide
+        -- the game's nanosecond counters by 1,000,000 (BC; run 181 divided
+        -- again and read 0).
+        local okU, upd = pcall(getCPUTime)
+        local okR, rnd = pcall(getGPUTime)
+        ctx.upd[#ctx.upd + 1] = (okU and type(upd) == "number") and upd or -1
+        ctx.rnd[#ctx.rnd + 1] = (okR and type(rnd) == "number") and rnd or -1
+        ctx.gap[#ctx.gap + 1] = now - ctx.last
+        ctx.last = now
+        if now - ctx.t0 < PF.frameSecs * 1000 then return nil end
+        local secs = (now - ctx.t0) / 1000
+        local u, r, g = PF.stats(ctx.upd), PF.stats(ctx.rnd), PF.stats(ctx.gap)
+        local minutes = math.floor(hours() * 60) - ctx.min0
+        local running = 0
+        for _, c in ipairs(PF.idling or {}) do
+            if c.v:isEngineRunning() then running = running + 1 end
+        end
+        PF.frameResults[label] = { fps = #ctx.gap / secs, upd = u, rnd = r, gap = g, minutes = minutes }
+        R:line("OBS  RTPF.frames %s: %d frames in %.1f s (%.1f a second), %d game minutes, %d engines running; " ..
+            "main-thread step ms mean %.3f p50 %.3f p95 %.3f p99 %.3f max %.3f; render ms mean %.3f p95 %.3f; " ..
+            "between frames ms p50 %.0f p95 %.0f p99 %.0f max %.0f", label, #ctx.gap, secs, #ctx.gap / secs, minutes, running,
+            u.mean, u.p50, u.p95, u.p99, u.max, r.mean, r.p95, g.p50, g.p95, g.p99, g.max)
+        return true
+    end }
+end
+
+-- The three timers under the workload in place, one per tick.
+function RT.PF.timers(label)
+    return { name = "rtpf_timers_" .. label, timeout = 3000, fn = function(ctx, ticks)
+        local PF = RT.PF
+        if ticks < 30 then return nil end
+        ctx.k = (ctx.k or 0) + 1
+        if ctx.k == 1 then
+            PF.record(label, "minute", PF.bench(PF.minute))
+        elseif ctx.k == 2 then
+            PF.record(label, "ten_minutes", PF.bench(PF.tenMinutes))
+        elseif ctx.k == 3 then
+            PF.record(label, "hour", PF.keepClimate(function() return PF.bench(PF.hour) end))
+        else
+            return true
+        end
+        return nil
+    end }
+end
+
+-- Every running machine as if a fire warmed it: the ten-minute note then
+-- scans the 18 tiles around each (Machines.warmingFire); and one such scan.
+function RT.PF.warmedTimers(label)
+    return { name = "rtpf_timers_" .. label, timeout = 3000, fn = function(ctx, ticks)
+        local PF, M = RT.PF, TLG.Integration.Machines
+        if ticks < 30 then return nil end
+        local it = PF.machineList and PF.machineList[1]
+        local s = it and M.square(it)
+        if s == nil then R:line("SKIP rtpf_timers_%s: no machine", label); return true end
+        local orig = M.airAt
+        M.airAt = function(q)
+            local t = M.unwarmedAt(q)
+            if t ~= nil then return t + 5 end
+            return orig(q)
+        end
+        local ok, b = pcall(PF.bench, PF.tenMinutes)
+        local t0, now = M.unwarmedAt(s), TLG.World.now()
+        local ok2, b2 = pcall(PF.bench, function() M.warmingFire(s, t0 + 5, now) end)
+        M.airAt = orig
+        if ok then PF.record(label, "ten_minutes", b) else R:line("OBS  RTPF.cost %s/ten_minutes raised %s", label, tostring(b)) end
+        if ok2 then PF.record(label, "fire_scan_one_machine", b2) else R:line("OBS  RTPF.cost %s/fire_scan raised %s", label, tostring(b2)) end
+        return true
+    end }
+end
+
+RT.PF.placeCans = { name = "rtpf_place_cans", timeout = 1200, fn = function(ctx, ticks)
+    local PF = RT.PF
+    if not ctx.done then
+        PF.canItems = {}
+        local slots, k = PF.rowSquares(PF.canRows), 0
+        for _, s in ipairs(slots) do
+            for j = 1, 4 do
+                if k < PF.cans then
+                    local it = instanceItem("Base.PetrolCan")
+                    local fc = it:getFluidContainer()
+                    fc:Empty()
+                    fc:addFluid(Fluid.Petrol, 10)
+                    s:AddWorldInventoryItem(it, 0.2 * j, 0.5, 0, false)
+                    k = k + 1
+                    PF.canItems[k] = it
+                end
+            end
+        end
+        R:line("OBS  RTPF.cans %d petrol cans of 10 L on the road (%d free squares in the rows)", k, #slots)
+        ctx.done = ticks
+        return nil
+    end
+    return ticks - ctx.done >= 120
+end }
+
+-- Each can's record as the mod's first look or transfer writes it.
+RT.PF.recordCans = { name = "rtpf_record_cans", fn = function()
+    local PF, C = RT.PF, TLG.Integration.Containers
+    local n, t0 = 0, getTimestampMs()
+    for _, it in ipairs(PF.canItems or {}) do
+        local rec = C.read(it, "item", true)
+        if rec and C.commit(it, "item", rec) then n = n + 1 end
+    end
+    local ms = getTimestampMs() - t0
+    local have = 0
+    for _, it in ipairs(PF.canItems or {}) do
+        if it:getModData()[C.SIDECAR] ~= nil then have = have + 1 end
+    end
+    R:line("OBS  RTPF.cans %d records written in %.0f ms (%.3f ms a can, paid once, at its first look or transfer)", n, ms,
+        n > 0 and ms / n or -1)
+    R:check("RTPF.cans_recorded", function()
+        return have == PF.cans, string.format("%d of %d cans hold a record", have, PF.cans)
+    end)
+    return true
+end }
+
+-- Parked cars facing south, repaired, 20 L of petrol and the tank's record.
+function RT.PF.parkStep(upto)
+    return { name = "rtpf_park_" .. upto, timeout = 3000, fn = function(ctx, ticks)
+        local PF, V = RT.PF, TLG.Integration.Vehicles
+        PF.carList = PF.carList or {}
+        if not ctx.spawned then
+            ctx.from = #PF.carList + 1
+            for _, y in ipairs(PF.carRows) do
+                for _, col in ipairs(PF.carCols) do
+                    if #PF.carList < upto and PF.slotClear(col, y) then
+                        local v = addVehicleDebug("Base.CarNormal", IsoDirections.S, nil, sq(col, y, 0))
+                        if v then PF.carList[#PF.carList + 1] = { v = v, col = col, y = y } end
+                    end
+                end
+            end
+            ctx.spawned = ticks
+            return nil
+        end
+        if ticks - ctx.spawned < 300 then return nil end
+        for i = ctx.from, #PF.carList do
+            local v = PF.carList[i].v
+            pcall(function() v:repair() end)
+            local part = V.tank(v)
+            if part then
+                part:setContainerContentAmount(20)
+                part:getModData()[V.SIDECAR] = nil
+                local rec = V.read(v, true)
+                if rec then V.writeSidecar(v, rec) end
+            end
+        end
+        local have = 0
+        for _, c in ipairs(PF.carList) do
+            local part = V.tank(c.v)
+            if part and part:getModData()[V.SIDECAR] ~= nil then have = have + 1 end
+        end
+        local inCell = getCell():getVehicles():size()
+        R:line("OBS  RTPF.cars %d parked with a tank record, %d vehicles in the cell", have, inCell)
+        R:check("RTPF.cars_parked_" .. upto, function()
+            return have == upto and inCell == upto, string.format("%d with records, %d in the cell, %d wanted", have, inCell, upto)
+        end)
+        return true
+    end }
+end
+
+-- The outer columns' cars (their outer side is off the road) idling on
+-- stale petrol: the record aged in place, as the engine-effects test does.
+RT.PF.idleStep = { name = "rtpf_idle", timeout = 9000, fn = function(ctx, ticks)
+    local PF, V = RT.PF, TLG.Integration.Vehicles
+    if not ctx.list then
+        ctx.list = {}
+        for _, c in ipairs(PF.carList or {}) do
+            if c.col == PF.carCols[#PF.carCols] and #ctx.list < PF.idle then ctx.list[#ctx.list + 1] = c end
+        end
+        for _, c in ipairs(PF.carList or {}) do
+            if c.col == PF.carCols[1] and #ctx.list < PF.idle then ctx.list[#ctx.list + 1] = c end
+        end
+        ctx.i, ctx.at = 1, ticks
+        return nil
+    end
+    local c = ctx.list[ctx.i]
+    if c == nil then
+        PF.toStand()
+        PF.idling = ctx.list
+        local running = 0
+        for _, cc in ipairs(ctx.list) do
+            if cc.v:isEngineRunning() then running = running + 1 end
+        end
+        local e = ctx.list[1] and V.evaluate(ctx.list[1].v)
+        R:line("OBS  RTPF.idle %d of %d engines running; the fuel grade=%s powerFactor=%.6f wearFactor=%.6f", running,
+            #ctx.list, tostring(e and e.grade), e and e.powerFactor or -1, e and e.wearFactor or -1)
+        R:check("RTPF.engines_idling", function()
+            return running == PF.idle, string.format("%d running of %d wanted", running, PF.idle)
+        end)
+        return true
+    end
+    local v, dt = c.v, ticks - ctx.at
+    if dt == 1 then
+        local rec = V.read(v, true)
+        if rec then
+            for id in pairs(rec.deg) do rec.deg[id] = PF.stale end
+            V.writeSidecar(v, rec)
+        end
+        local side = (c.col == PF.carCols[1]) and -2 or 2
+        player():setPosition(c.col + 0.5 + side, c.y + 0.5, 0)
+    elseif dt == 10 then
+        pcall(function() v:setHotwired(true) end)
+        c.entered = v:enter(0, player())
+        pcall(function() v:tryStartEngine(true) end)
+    elseif dt == 130 then
+        if not v:isEngineRunning() then pcall(function() v:engineDoStartingSuccess() end) end
+    elseif dt >= 160 then
+        pcall(function() v:exit(player()) end)
+        ctx.i, ctx.at = ctx.i + 1, ticks
+    end
+    return nil
+end }
+
+-- Fermenters loaded from the menu as a player loads them: placed on the
+-- road, the player beside each in turn with 6 kg of sugar, a yeast and 30 L
+-- of water (as the fireplace test loads one).
+function RT.PF.machineStep(upto)
+    return { name = "rtpf_machines_" .. upto, timeout = 9000, fn = function(ctx, ticks)
+        local PF, M = RT.PF, TLG.Integration.Machines
+        PF.machineList = PF.machineList or {}
+        if not ctx.at then
+            local slots = PF.rowSquares(PF.machineRows)
+            ctx.from = #PF.machineList + 1
+            for i = ctx.from, math.min(upto, #slots) do
+                local it = instanceItem("TLG.FermenterVessel")
+                slots[i]:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+                PF.machineList[i] = it
+            end
+            ctx.i, ctx.at, ctx.loaded, ctx.failed = ctx.from, ticks + 60, 0, 0
+            return nil
+        end
+        if ticks < ctx.at then return nil end
+        local it = PF.machineList[ctx.i]
+        if ctx.i > upto or it == nil then
+            PF.toStand()
+            local running = 0
+            for _, m in ipairs(PF.machineList) do
+                local rec = M.read(m, false)
+                if rec and M.running(rec) then running = running + 1 end
+            end
+            local listed = TLG.Tables.count(TLG.World.get().machineSites or {})
+            R:line("OBS  RTPF.machines %d placed, %d loaded in this step (%d refused), %d running, %d in the hourly list",
+                #PF.machineList, ctx.loaded, ctx.failed, running, listed)
+            R:check("RTPF.machines_running_" .. upto, function()
+                return running == upto and listed == upto, string.format("%d running and %d listed of %d", running, listed, upto)
+            end)
+            return true
+        end
+        local s = M.square(it)
+        if not ctx.moved then
+            player():setPosition(s:getX() + 1.5, s:getY() + 0.5, 0)
+            ctx.moved = ticks
+            return nil
+        end
+        if ticks - ctx.moved < 10 then return nil end
+        removeAll("Base.Sugar"); removeAll("Base.Yeast"); removeAll("Base.BucketEmpty")
+        give("Base.Sugar", 6); give("Base.Yeast", 1)
+        for _ = 1, 3 do
+            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, 10)
+        end
+        local r = machineClick("RTPF.load" .. ctx.i, it, "ContextMenu_TLG_LoadFerment")
+        if r.ok == true then ctx.loaded = ctx.loaded + 1 else ctx.failed = ctx.failed + 1 end
+        removeAll("Base.BucketEmpty")
+        ctx.i, ctx.moved = ctx.i + 1, nil
+        return nil
+    end }
+end
+
+-- 20 days of hourly readings and "no fire" notes on every running fermenter:
+-- what one left running in a loaded area and not opened keeps
+-- (Machines.MAX_READINGS). The world is only hours old, so they are dated
+-- over the next 20 days (fixture): the timers' work depends on how many a
+-- record holds, not on their dates, and the catch-up reads them as the
+-- clock passes them.
+RT.PF.oldReadings = { name = "rtpf_old_readings", fn = function()
+    local PF, M = RT.PF, TLG.Integration.Machines
+    local h0 = math.floor(TLG.World.now() - 0.5)
+    local n, full = 0, 0
+    for _, it in ipairs(PF.machineList or {}) do
+        local rec = M.read(it, false)
+        if rec and M.running(rec) then
+            rec.temps, rec.fires = {}, {}
+            for h = h0 + 1, h0 + PF.readingHours do
+                rec.temps[h], rec.fires[h] = PF.readingC, false
+            end
+            M.write(it, rec)
+            n = n + 1
+            local back = M.read(it, false)
+            if TLG.Tables.count(back.temps or {}) == PF.readingHours then full = full + 1 end
+        end
+    end
+    R:line("OBS  RTPF.readings %d running fermenters given %d hourly readings and fire notes (fixture, dated ahead)",
+        n, PF.readingHours)
+    R:check("RTPF.readings_in_place", function()
+        return n == #(PF.machineList or {}) and full == n, string.format("%d of %d with %d readings", full, n, PF.readingHours)
+    end)
+    return true
+end }
+
+-- One bench per tick from a list of { what, fn } made at the first tick.
+function RT.PF.catchStep(label, jobsFn)
+    return { name = "rtpf_" .. label, timeout = 6000, fn = function(ctx, ticks)
+        local PF = RT.PF
+        if not ctx.jobs then
+            ctx.jobs, ctx.k = jobsFn(), 0
+            return nil
+        end
+        ctx.k = ctx.k + 1
+        local j = ctx.jobs[ctx.k]
+        if j == nil then return true end
+        local ok, b = pcall(PF.bench, j.fn)
+        if ok then PF.record(label, j.what, b) else R:line("OBS  RTPF.cost %s/%s raised %s", label, j.what, tostring(b)) end
+        return nil
+    end }
+end
+
+-- A right-click's menu: vanilla's context menu alone, then with the mod's
+-- fuel menu on a can and its machine menu on a fermenter, and the catch-up
+-- the machine menu makes (MachineMenu.controls).
+function RT.PF.menuJobs(fer, tag)
+    local PF = RT.PF
+    local can = PF.canItems and PF.canItems[1]
+    local function menu(fill)
+        return function()
+            local c = ISContextMenu.get(0, 100, 100)
+            if fill then fill(c) end
+            c:setVisible(false)
+        end
+    end
+    local jobs = { { what = "context_menu_alone", fn = menu(nil) } }
+    if can then jobs[#jobs + 1] = { what = "fuel_menu", fn = menu(function(c) TLG.UI.FuelMenu.fill(0, c, { can }) end) } end
+    if fer then
+        jobs[#jobs + 1] = { what = "machine_menu_" .. tag, fn = menu(function(c) TLG.UI.MachineMenu.fill(0, c, { fer }) end) }
+        jobs[#jobs + 1] = { what = "machine_menu_catch_up_" .. tag, fn = function() TLG.UI.MachineMenu.controls(fer) end }
+    end
+    return jobs
+end
+
+function RT.PF.freshJobs()
+    local PF, C, V, M, A = RT.PF, TLG.Integration.Containers, TLG.Integration.Vehicles, TLG.Integration.Machines,
+        TLG.Domain.Aging
+    local env, now = TLG.World.env(), TLG.World.now()
+    local can, car, fer = PF.canItems and PF.canItems[1], nil, PF.machineList and PF.machineList[1]
+    for _, c in ipairs(PF.carList or {}) do
+        if car == nil and c.col ~= PF.carCols[1] and c.col ~= PF.carCols[#PF.carCols] then car = c.v end
+    end
+    local canRec, tankRec, ferRec = can and C.read(can, "item", false), car and V.read(car, false), fer and M.read(fer, false)
+    local jobs = {}
+    for _, h in ipairs(PF.catchUp) do
+        if canRec then jobs[#jobs + 1] = { what = "can_" .. h .. "_h", fn = function() A.advance(canRec, now + h, env) end } end
+        if tankRec then jobs[#jobs + 1] = { what = "tank_" .. h .. "_h", fn = function() A.advance(tankRec, now + h, env) end } end
+        if ferRec then jobs[#jobs + 1] = { what = "fermenter_" .. h .. "_h", fn = function() M.advance(fer, ferRec, now + h, env) end } end
+    end
+    for _, j in ipairs(PF.menuJobs(fer, "fresh")) do jobs[#jobs + 1] = j end
+    return jobs
+end
+
+-- The fermenter with 20 days of readings brought through them, and its menu
+-- opened with the mod's clock read 20 days on (World.now is looked up at
+-- each call), as a player returning to it would open it.
+function RT.PF.oldJobs()
+    local PF, M = RT.PF, TLG.Integration.Machines
+    local fer = PF.machineList and PF.machineList[1]
+    if fer == nil then return {} end
+    local env, now = TLG.World.env(), TLG.World.now()
+    local later = now + PF.readingHours
+    local rec = M.read(fer, false)
+    local function atLater(fn)
+        return function()
+            local orig = TLG.World.now
+            TLG.World.now = function() return later end
+            local ok, err = pcall(fn)
+            TLG.World.now = orig
+            if not ok then error(err) end
+        end
+    end
+    local jobs = { { what = "fermenter_through_20_days", fn = function() M.advance(fer, rec, later, env) end } }
+    for _, j in ipairs(PF.menuJobs(fer, "20_days")) do
+        if j.what ~= "context_menu_alone" and j.what ~= "fuel_menu" then
+            jobs[#jobs + 1] = { what = j.what, fn = atLater(j.fn) }
+        end
+    end
+    return jobs
+end
+
+RT.PF.checkBudgets = { name = "rtpf_budgets", fn = function()
+    local PF = RT.PF
+    for _, key in ipairs(TLG.Tables.sortedKeys(PF.budgets)) do
+        local b, limit = PF.results[key], PF.budgets[key]
+        R:check("RTPF.budget." .. key, function()
+            return b ~= nil and b.med <= limit, string.format("median %s ms per call, budget %.3f ms",
+                b and string.format("%.4f", b.med) or "not measured", limit)
+        end)
+    end
+    return true
+end }
+
+RT.PF.cleanup = { name = "rtpf_cleanup", fn = function()
+    local PF = RT.PF
+    for _, c in ipairs(PF.idling or {}) do
+        pcall(function() c.v:shutOff() end)
+        pcall(function() c.v:engineDoShuttingDown() end)
+    end
+    if SandboxVars.TheLastGallon then SandboxVars.TheLastGallon.VehicleStalls = PF.stallsWere ~= false end
+    RT.speed(1)
+    return true
+end }
+
+RT.perfSteps = { RT.waitWorld, RT.PF.setup,
+    RT.PF.frames("empty"), RT.PF.timers("empty"),
+    RT.PF.placeCans, RT.PF.frames("cans_without_records"), RT.PF.recordCans, RT.PF.frames("cans_with_records"),
+    RT.PF.timers("cans_with_records"),
+    RT.PF.parkStep(10), RT.PF.timers("parked_10"), RT.PF.parkStep(20), RT.PF.timers("parked_20"), RT.PF.frames("parked_20"),
+    RT.PF.idleStep, RT.PF.timers("idling_8"),
+    RT.PF.machineStep(8), RT.PF.timers("machines_8"),
+    RT.PF.machineStep(32), RT.PF.timers("machines_32"), RT.PF.warmedTimers("machines_32_warmed"),
+    RT.PF.frames("machines_32_idling_8"),
+    RT.PF.catchStep("catch_up_fresh", RT.PF.freshJobs),
+    RT.PF.oldReadings, RT.PF.timers("machines_32_20_days"), RT.PF.catchStep("catch_up_20_days", RT.PF.oldJobs),
+    RT.PF.checkBudgets, RT.PF.cleanup, RT.finish }
+
+------------------------------------------------------------------------------
 -- Model import (requests "sp-rtmi", then "sp-rtmib"; spec section 21, G13):
 -- an original test model drawn by tools/make-test-model.ps1 (model scripts
 -- in TLGHarness_models.txt) is wired to TLG.FermenterVessel through the item
@@ -11154,7 +11819,7 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
-    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
@@ -11190,10 +11855,11 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
-            elseif REQUEST == "sp-rtd" or REQUEST == "sp-rte" then
+            elseif REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" then
                 -- Nothing on the road to hit: no parked cars, traffic jams or
                 -- vehicle and zone stories (option 1 is "None"/"Never",
-                -- Translate/EN/Sandbox.json).
+                -- Translate/EN/Sandbox.json). The performance run parks its
+                -- own cars there.
                 SandboxVars.CarSpawnRate = 1
                 SandboxVars.TrafficJam = false
                 SandboxVars.VehicleStoryChance = 1
@@ -11247,6 +11913,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rte" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, engine effects of poor fuel")
                 TLGH.Steps.run(R, RT.effectsSteps, H, nil)
+            elseif REQUEST == "sp-rtpf" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, performance")
+                TLGH.Steps.run(R, RT.perfSteps, H, nil)
             elseif REQUEST == "sp-rtmi" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, model import, before the save")
                 TLGH.Steps.run(R, RT.modelSteps, H, nil)

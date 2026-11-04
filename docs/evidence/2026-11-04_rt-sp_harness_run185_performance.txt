@@ -1,0 +1,153 @@
+# TLG single-player harness, performance
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=9406835403280073473 hours=2.0096 DayLength=4
+STEP rtpf_setup begin
+OBS  RTPF.environment :: game=42.21.0 4a0e9546ec screen=1280x720 fullscreen=false vsync=false framerate=60 uncapped=false lockFPS=? lightingFPS=15 Zombies=6 CarSpawnRate=1 DayLength=4 VehicleStalls=false (was true) hour=9 air=25.5 C zombies=0 vehicles removed 0
+STEP rtpf_frames_empty begin
+OBS  RTPF.frames empty: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.867 p50 2.000 p95 3.000 p99 4.000 max 5.000; render ms mean 16.144 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 20
+STEP rtpf_timers_empty begin
+OBS  RTPF.cost empty/minute: first call 0 ms; median 0.0015 ms per call (batches 0.0015-0.0015 ms, 662701 calls)
+OBS  RTPF.cost empty/ten_minutes: first call 0 ms; median 0.0016 ms per call (batches 0.0016-0.0016 ms, 635040 calls)
+OBS  RTPF.cost empty/hour: first call 0 ms; median 0.0104 ms per call (batches 0.0102-0.0104 ms, 96782 calls)
+STEP rtpf_place_cans begin
+OBS  RTPF.cans 400 petrol cans of 10 L on the road (108 free squares in the rows)
+STEP rtpf_frames_cans_without_records begin
+OBS  RTPF.frames cans_without_records: 1200 frames in 20.0 s (60.0 a second), 6 game minutes, 0 engines running; main-thread step ms mean 1.890 p50 2.000 p95 3.000 p99 4.000 max 6.000; render ms mean 16.157 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 20
+STEP rtpf_record_cans begin
+OBS  RTPF.cans 400 records written in 350 ms (0.875 ms a can, paid once, at its first look or transfer)
+PASS RTPF.cans_recorded :: 400 of 400 cans hold a record
+STEP rtpf_frames_cans_with_records begin
+OBS  RTPF.frames cans_with_records: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.737 p50 2.000 p95 3.000 p99 4.000 max 5.000; render ms mean 16.138 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 20
+STEP rtpf_timers_cans_with_records begin
+OBS  RTPF.cost cans_with_records/minute: first call 0 ms; median 0.0015 ms per call (batches 0.0015-0.0015 ms, 666638 calls)
+OBS  RTPF.cost cans_with_records/ten_minutes: first call 0 ms; median 0.0016 ms per call (batches 0.0016-0.0016 ms, 640735 calls)
+OBS  RTPF.cost cans_with_records/hour: first call 0 ms; median 0.0102 ms per call (batches 0.0102-0.0105 ms, 97188 calls)
+STEP rtpf_park_10 begin
+OBS  RTPF.cars 10 parked with a tank record, 10 vehicles in the cell
+PASS RTPF.cars_parked_10 :: 10 with records, 10 in the cell, 10 wanted
+STEP rtpf_timers_parked_10 begin
+OBS  RTPF.cost parked_10/minute: first call 0 ms; median 0.0176 ms per call (batches 0.0175-0.0178 ms, 56714 calls)
+OBS  RTPF.cost parked_10/ten_minutes: first call 0 ms; median 0.0016 ms per call (batches 0.0016-0.0016 ms, 639397 calls)
+OBS  RTPF.cost parked_10/hour: first call 0 ms; median 0.0101 ms per call (batches 0.0101-0.0102 ms, 98515 calls)
+STEP rtpf_park_20 begin
+OBS  RTPF.cars 20 parked with a tank record, 20 vehicles in the cell
+PASS RTPF.cars_parked_20 :: 20 with records, 20 in the cell, 20 wanted
+STEP rtpf_timers_parked_20 begin
+OBS  RTPF.cost parked_20/minute: first call 0 ms; median 0.0327 ms per call (batches 0.0327-0.0329 ms, 30543 calls)
+OBS  RTPF.cost parked_20/ten_minutes: first call 0 ms; median 0.0016 ms per call (batches 0.0016-0.0016 ms, 642153 calls)
+OBS  RTPF.cost parked_20/hour: first call 0 ms; median 0.0102 ms per call (batches 0.0101-0.0103 ms, 98118 calls)
+STEP rtpf_frames_parked_20 begin
+OBS  RTPF.frames parked_20: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.924 p50 2.000 p95 3.000 p99 4.000 max 6.000; render ms mean 16.148 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 20
+STEP rtpf_idle begin
+OBS  RTPF.idle 8 of 8 engines running; the fuel grade=poor powerFactor=0.851429 wearFactor=1.742857
+PASS RTPF.engines_idling :: 8 running of 8 wanted
+STEP rtpf_timers_idling_8 begin
+OBS  RTPF.cost idling_8/minute: first call 2 ms; median 1.0471 ms per call (batches 1.0417-1.0526 ms, 957 calls)
+OBS  RTPF.cost idling_8/ten_minutes: first call 0 ms; median 0.0016 ms per call (batches 0.0016-0.0016 ms, 634899 calls)
+OBS  RTPF.cost idling_8/hour: first call 0 ms; median 0.0104 ms per call (batches 0.0103-0.0104 ms, 96726 calls)
+STEP rtpf_machines_8 begin
+OBS  RTPF.load1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load3 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load4 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load5 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load6 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load7 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load8 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.machines 8 placed, 8 loaded in this step (0 refused), 8 running, 8 in the hourly list
+PASS RTPF.machines_running_8 :: 8 running and 8 listed of 8
+STEP rtpf_timers_machines_8 begin
+OBS  RTPF.cost machines_8/minute: first call 2 ms; median 1.1050 ms per call (batches 1.0989-1.1173 ms, 904 calls)
+OBS  RTPF.cost machines_8/ten_minutes: first call 0 ms; median 0.1401 ms per call (batches 0.1393-0.1431 ms, 7116 calls)
+OBS  RTPF.cost machines_8/hour: first call 0 ms; median 0.1642 ms per call (batches 0.1394-0.1735 ms, 6445 calls)
+STEP rtpf_machines_32 begin
+OBS  RTPF.load9 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load10 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load11 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load12 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load13 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load14 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load15 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load16 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load17 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load18 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load19 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load20 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load21 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load22 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load23 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load24 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load25 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load26 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load27 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load28 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load29 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load30 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load31 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load32 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.machines 32 placed, 24 loaded in this step (0 refused), 32 running, 32 in the hourly list
+PASS RTPF.machines_running_32 :: 32 running and 32 listed of 32
+STEP rtpf_timers_machines_32 begin
+OBS  RTPF.cost machines_32/minute: first call 1 ms; median 1.1050 ms per call (batches 1.0989-1.1236 ms, 905 calls)
+OBS  RTPF.cost machines_32/ten_minutes: first call 1 ms; median 0.5865 ms per call (batches 0.5831-0.5900 ms, 1706 calls)
+OBS  RTPF.cost machines_32/hour: first call 1 ms; median 0.5464 ms per call (batches 0.5420-0.5495 ms, 1833 calls)
+STEP rtpf_timers_machines_32_warmed begin
+OBS  RTPF.cost machines_32_warmed/ten_minutes: first call 12 ms; median 10.2000 ms per call (batches 10.1500-10.6316 ms, 100 calls)
+OBS  RTPF.cost machines_32_warmed/fire_scan_one_machine: first call 3 ms; median 2.8169 ms per call (batches 2.8056-2.8310 ms, 357 calls)
+STEP rtpf_frames_machines_32_idling_8 begin
+OBS  RTPF.frames machines_32_idling_8: 1200 frames in 20.0 s (60.0 a second), 6 game minutes, 8 engines running; main-thread step ms mean 3.742 p50 3.000 p95 6.000 p99 7.000 max 10.000; render ms mean 16.144 p95 18.000; between frames ms p50 17 p95 19 p99 19 max 21
+STEP rtpf_catch_up_fresh begin
+OBS  RTPF.cost catch_up_fresh/can_24_h: first call 0 ms; median 0.0896 ms per call (batches 0.0890-0.0905 ms, 11148 calls)
+OBS  RTPF.cost catch_up_fresh/tank_24_h: first call 1 ms; median 0.1069 ms per call (batches 0.1064-0.1078 ms, 9349 calls)
+OBS  RTPF.cost catch_up_fresh/fermenter_24_h: first call 0 ms; median 0.1516 ms per call (batches 0.1508-0.1524 ms, 6593 calls)
+OBS  RTPF.cost catch_up_fresh/can_720_h: first call 1 ms; median 0.8230 ms per call (batches 0.8065-0.8403 ms, 1217 calls)
+OBS  RTPF.cost catch_up_fresh/tank_720_h: first call 1 ms; median 0.8130 ms per call (batches 0.8097-0.8264 ms, 1225 calls)
+OBS  RTPF.cost catch_up_fresh/fermenter_720_h: first call 2 ms; median 2.0408 ms per call (batches 2.0202-2.5769 ms, 472 calls)
+OBS  RTPF.cost catch_up_fresh/can_8760_h: first call 9 ms; median 9.0909 ms per call (batches 8.9130-11.2222 ms, 108 calls)
+OBS  RTPF.cost catch_up_fresh/tank_8760_h: first call 9 ms; median 9.0870 ms per call (batches 9.0000-9.9048 ms, 112 calls)
+OBS  RTPF.cost catch_up_fresh/fermenter_8760_h: first call 24 ms; median 23.6667 ms per call (batches 23.4444-24.0000 ms, 46 calls)
+OBS  RTPF.cost catch_up_fresh/context_menu_alone: first call 0 ms; median 0.0246 ms per call (batches 0.0245-0.0253 ms, 40307 calls)
+OBS  RTPF.cost catch_up_fresh/fuel_menu: first call 0 ms; median 0.0266 ms per call (batches 0.0265-0.0272 ms, 37441 calls)
+OBS  RTPF.cost catch_up_fresh/machine_menu_fresh: first call 0 ms; median 0.2691 ms per call (batches 0.2656-0.2699 ms, 3732 calls)
+OBS  RTPF.cost catch_up_fresh/machine_menu_catch_up_fresh: first call 0 ms; median 0.1187 ms per call (batches 0.1181-0.1195 ms, 8428 calls)
+STEP rtpf_old_readings begin
+OBS  RTPF.readings 32 running fermenters given 480 hourly readings and fire notes (fixture, dated ahead)
+PASS RTPF.readings_in_place :: 32 of 32 with 480 readings
+STEP rtpf_timers_machines_32_20_days begin
+OBS  RTPF.cost machines_32_20_days/minute: first call 2 ms; median 1.1173 ms per call (batches 1.1111-1.1173 ms, 898 calls)
+OBS  RTPF.cost machines_32_20_days/ten_minutes: first call 8 ms; median 6.7000 ms per call (batches 6.6667-6.8000 ms, 151 calls)
+OBS  RTPF.cost machines_32_20_days/hour: first call 17 ms; median 17.5833 ms per call (batches 17.3333-18.0000 ms, 61 calls)
+STEP rtpf_catch_up_20_days begin
+OBS  RTPF.cost catch_up_20_days/fermenter_through_20_days: first call 4 ms; median 4.2979 ms per call (batches 4.2553-4.3191 ms, 236 calls)
+OBS  RTPF.cost catch_up_20_days/machine_menu_20_days: first call 5 ms; median 4.9024 ms per call (batches 4.8333-4.9512 ms, 207 calls)
+OBS  RTPF.cost catch_up_20_days/machine_menu_catch_up_20_days: first call 5 ms; median 4.8571 ms per call (batches 4.8095-4.8780 ms, 209 calls)
+STEP rtpf_budgets begin
+PASS RTPF.budget.cans_with_records/hour :: median 0.0102 ms per call, budget 0.030 ms
+PASS RTPF.budget.cans_with_records/minute :: median 0.0015 ms per call, budget 0.005 ms
+PASS RTPF.budget.cans_with_records/ten_minutes :: median 0.0016 ms per call, budget 0.005 ms
+PASS RTPF.budget.catch_up_20_days/fermenter_through_20_days :: median 4.2979 ms per call, budget 13.000 ms
+PASS RTPF.budget.catch_up_20_days/machine_menu_20_days :: median 4.9024 ms per call, budget 15.000 ms
+PASS RTPF.budget.catch_up_fresh/can_8760_h :: median 9.0909 ms per call, budget 28.000 ms
+PASS RTPF.budget.catch_up_fresh/fermenter_8760_h :: median 23.6667 ms per call, budget 75.000 ms
+PASS RTPF.budget.catch_up_fresh/fuel_menu :: median 0.0266 ms per call, budget 0.080 ms
+PASS RTPF.budget.catch_up_fresh/machine_menu_fresh :: median 0.2691 ms per call, budget 0.800 ms
+PASS RTPF.budget.catch_up_fresh/tank_8760_h :: median 9.0870 ms per call, budget 28.000 ms
+PASS RTPF.budget.empty/hour :: median 0.0104 ms per call, budget 0.030 ms
+PASS RTPF.budget.empty/minute :: median 0.0015 ms per call, budget 0.005 ms
+PASS RTPF.budget.empty/ten_minutes :: median 0.0016 ms per call, budget 0.005 ms
+PASS RTPF.budget.idling_8/minute :: median 1.0471 ms per call, budget 3.200 ms
+PASS RTPF.budget.machines_32/hour :: median 0.5464 ms per call, budget 4.700 ms
+PASS RTPF.budget.machines_32/minute :: median 1.1050 ms per call, budget 3.300 ms
+PASS RTPF.budget.machines_32/ten_minutes :: median 0.5865 ms per call, budget 4.500 ms
+PASS RTPF.budget.machines_32_20_days/hour :: median 17.5833 ms per call, budget 83.000 ms
+PASS RTPF.budget.machines_32_20_days/ten_minutes :: median 6.7000 ms per call, budget 52.000 ms
+PASS RTPF.budget.machines_32_warmed/fire_scan_one_machine :: median 2.8169 ms per call, budget 9.000 ms
+PASS RTPF.budget.machines_32_warmed/ten_minutes :: median 10.2000 ms per call, budget 31.000 ms
+PASS RTPF.budget.parked_20/minute :: median 0.0327 ms per call, budget 0.100 ms
+STEP rtpf_cleanup begin
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.81
+SUMMARY pass=29 fail=0
+DONE

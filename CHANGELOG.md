@@ -35,6 +35,13 @@
   it is next refuelled, moved or switched. The sandbox option "Bad fuel can
   stall engines" now also keeps a running car from stalling; before, it
   only stopped refused starts. Checked in game.
+* Shorter pauses with many machines. Fermenters and stills beside a fire,
+  or left running for days without being opened, made the game stop for
+  a moment every ten game minutes and every hour. With 32 such fermenters
+  the pause was 0.09 to 0.2 seconds; it is now 0.007 to 0.018 seconds.
+  Opening the menu of a machine left alone for 20 days took 0.06 seconds;
+  it now takes 0.005. The results are the same. Measured on a fast
+  desktop; a slower one takes proportionally longer.
 * Weather: machines and stored fuel now follow the day's real temperature.
   The mod used to record the season curve, so cold snaps and heat waves
   never reached them; outdoors in a freezing January a fermenter now stops

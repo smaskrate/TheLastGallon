@@ -1,5 +1,6 @@
 require "support/fixtures"
 require "TLG/Integration/Machines"
+require "TLG/Util/Rng"
 local Machines, World, Process = TLG.Integration.Machines, TLG.World, TLG.Domain.Process
 
 -- Stand-ins for the game calls the machine site adapter makes: global ModData,
@@ -321,6 +322,193 @@ T.case("integration: a campfire a player built is noted with its fuel and larges
         g.now = 12.0
         Machines.observeFires()
         T.eq(item:getModData().tlgProc.fires[12], false)
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+-- The fire scan and the trim as they were before docs/performance.md's fix
+-- (each machine's reach scanned on its own; both key sets sorted on every
+-- trim). The fixed code must leave every record exactly as these did.
+local function oldWarmingFire(sq, air, now)
+    local Climate = TLG.Domain.Climate
+    if air == nil then return nil end
+    local t0 = Machines.unwarmedAt(sq)
+    if air <= t0 + Machines.FIRE_TOL then return nil end
+    local x, y, z, cell, best = sq:getX(), sq:getY(), sq:getZ(), getCell(), nil
+    local reach = Climate.FIRE_REACH
+    for dx = -reach, reach do
+        for dy = -reach, reach do
+            local s = dx * dx + dy * dy < reach * reach and cell:getGridSquare(x + dx, y + dy, z) or nil
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local fire = Machines.fireOf(objs:get(i), s)
+                if fire then
+                    local srcRoom = false
+                    pcall(function() srcRoom = s:isInARoom() == true end)
+                    local w = Climate.warmed(t0, dx, dy, fire.radius, srcRoom, fire.c)
+                    if math.abs(w - air) <= Machines.FIRE_TOL and (best == nil or fire.f > best.f) then
+                        best = { t = now, f = fire.f, x = dx, y = dy, r = srcRoom, c = fire.c, rad = fire.rad,
+                            k = fire.k, rmax = fire.rmax }
+                    end
+                end
+            end
+        end
+    end
+    return best
+end
+
+local function oldTrim(rec, env)
+    local Climate, Tables = TLG.Domain.Climate, TLG.Tables
+    if rec.state ~= "Processing" and rec.state ~= "Paused" then
+        rec.temps, rec.fires = nil, nil
+        return
+    end
+    local cut = math.floor(env:dayStart(env:dayIndex(rec.t))) - 1
+    if rec.temps ~= nil then
+        Climate.pruneSlots(rec.temps, cut)
+        local keys = Tables.sortedKeys(rec.temps)
+        if #keys > Machines.MAX_READINGS then Climate.pruneSlots(rec.temps, keys[#keys - Machines.MAX_READINGS + 1]) end
+    end
+    if rec.fires ~= nil then
+        Climate.pruneNotes(rec.fires, cut)
+        local keys = Tables.sortedKeys(rec.fires)
+        if #keys > Machines.MAX_READINGS then Climate.pruneNotes(rec.fires, keys[#keys - Machines.MAX_READINGS + 1]) end
+    end
+end
+
+-- The air a fire on `fsq` gives a machine on `sq` (as Machines.fireOf reads it).
+local function warmthFrom(fsq, sq, t0)
+    local Climate, air = TLG.Domain.Climate, nil
+    local objs = fsq:getObjects()
+    for i = 0, objs:size() - 1 do
+        local f = Machines.fireOf(objs:get(i), fsq)
+        if f then air = Climate.warmed(t0, fsq.x - sq.x, fsq.y - sq.y, f.radius, fsq:isInARoom() == true, f.c) end
+    end
+    return air
+end
+
+T.case("integration: trimming a record keeps exactly the readings and notes sorting them kept", function()
+    local g = fakeGame(2)
+    local ok, err = pcall(function()
+        local r = TLG.Rng.new(TEST_SEED or 20261030)
+        local env = World.env()
+        local over = 0
+        for trial = 1, 80 do
+            local rec = running("R" .. trial, 2)
+            rec.t = 100 + r:int(0, 400) + r:next()
+            rec.state = ({ "Processing", "Paused", "Processing", "OutputReady" })[r:int(1, 4)]
+            rec.temps, rec.fires = {}, {}
+            local back = ({ 0, 0, 0, 30, 300 })[r:int(1, 5)]
+            local step = r:int(1, 2)
+            local h = math.floor(rec.t) - back
+            for _ = 1, ({ 0, 3, 479, 480, 481, 482, 487, 488, 489, 700 })[r:int(1, 10)] do
+                h = h + step
+                rec.temps[h] = r:next() * 30
+            end
+            h = math.floor(rec.t) - back
+            for _ = 1, ({ 0, 2, 480, 481, 482, 483, 488, 489, 600 })[r:int(1, 9)] do
+                h = h + step
+                rec.fires[h] = r:next() < 0.5 and false or { t = h + 0.5, f = r:int(0, 600), x = 1, y = 2, r = false, c = 35 }
+            end
+            if r:int(0, 9) == 0 then rec.fires = nil end
+            if TLG.Tables.count(rec.temps) > Machines.MAX_READINGS then over = over + 1 end
+            local a, b = TLG.Tables.deepCopy(rec), TLG.Tables.deepCopy(rec)
+            oldTrim(a, env)
+            Machines.trimTemps(b, env)
+            T.ok(TLG.Tables.deepEqual(a.temps, b.temps, 0) and TLG.Tables.deepEqual(a.fires, b.fires, 0),
+                string.format("trial %d: %d readings, %d notes left", trial, TLG.Tables.count(a.temps or {}),
+                    TLG.Tables.count(a.fires or {})))
+        end
+        T.ok(over > 10, "records over the limit: " .. over)
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: one scan for all machines notes exactly the fire each machine's own scan found", function()
+    local g = fakeGame(2)
+    local ok, err = pcall(function()
+        local Climate = TLG.Domain.Climate
+        local r = TLG.Rng.new(TEST_SEED or 20261030)
+        local noted, compared = 0, 0
+        for trial = 1, 12 do
+            g.squares = {}
+            World.get().machineSites = {}
+            local fires, machines = {}, {}
+            local function addMachine(x, y, room)
+                local sq = square(g, x, y, 0, room, 0)
+                local item = machine(sq, running("T" .. trial .. "M" .. #machines, 2))
+                Machines.index(item, Machines.read(item, false))
+                machines[#machines + 1] = { item = item, sq = sq }
+                return sq
+            end
+            -- Fires on two floors in a 50-tile square: fireplaces lit and
+            -- not (fuel from 30 to 300 minutes: radius 4 to 8), barbecues,
+            -- campfires a player built.
+            for k = 1, 16 do
+                local z, x, y = (k % 5 == 0) and 1 or 0, r:int(0, 50), r:int(0, 50)
+                local sq = g.squares[x .. "," .. y .. "," .. z] or square(g, x, y, z, r:int(0, 1) == 1, 0)
+                local kind = r:int(1, 4)
+                if kind <= 2 then
+                    fireOn(sq, "IsoFireplace", r:int(0, 5) > 0, ({ 30, 59, 60, 120, 300 })[r:int(1, 5)])
+                elseif kind == 3 then
+                    fireOn(sq, "IsoBarbecue", true, r:int(1, 200))
+                else
+                    campfireOn(sq, r:int(30, 400), r:int(0, 1) == 1, r:int(2, 10))
+                end
+                fires[#fires + 1] = sq
+            end
+            -- Machines among them: warmed by one of the fires, warmer than
+            -- the room by something else, or not warmed.
+            for _ = 1, 10 do
+                local x, y = r:int(0, 50), r:int(0, 50)
+                if g.squares[x .. "," .. y .. ",0"] == nil then
+                    local sq = addMachine(x, y, r:int(0, 1) == 1)
+                    local t0 = Machines.unwarmedAt(sq)
+                    local choice = r:int(1, 3)
+                    sq.air = t0
+                    if choice == 1 then sq.air = warmthFrom(fires[r:int(1, #fires)], sq, t0) or t0 end
+                    if choice == 2 then sq.air = t0 + 5 end
+                end
+            end
+            -- Ties, far from the rest: two lit fireplaces at the same distance
+            -- with 300 and 100 minutes of fuel (both radius 8: the most fuel
+            -- wins), and two with 120 each (the first the scan meets wins).
+            local tie = addMachine(300, 300, false)
+            fireOn(square(g, 302, 303, 0, false, 0), "IsoFireplace", true, 100)
+            local more = square(g, 303, 302, 0, false, 0)
+            fireOn(more, "IsoFireplace", true, 300)
+            tie.air = warmthFrom(more, tie, Machines.unwarmedAt(tie))
+            local even = addMachine(400, 400, false)
+            local first = square(g, 397, 398, 0, false, 0)
+            fireOn(first, "IsoFireplace", true, 120)
+            fireOn(square(g, 398, 397, 0, false, 0), "IsoFireplace", true, 120)
+            even.air = warmthFrom(first, even, Machines.unwarmedAt(even))
+            -- The edge of the reach (17 and 5 tiles off: in; 18 off: not),
+            -- and a fire on the floor above.
+            local edge = addMachine(500, 500, false)
+            local inside = square(g, 517, 505, 0, false, 0)
+            campfireOn(inside, 400, false, 18)
+            campfireOn(square(g, 482, 500, 0, false, 0), 400, false, 18)
+            fireOn(square(g, 500, 501, 1, false, 0), "IsoFireplace", true, 300)
+            edge.air = warmthFrom(inside, edge, Machines.unwarmedAt(edge))
+            g.now = 10.5 + trial
+            local want = {}
+            for i, mm in ipairs(machines) do want[i] = oldWarmingFire(mm.sq, mm.sq.air, g.now) or false end
+            Machines.observeFires()
+            local hour = math.floor(g.now)
+            for i, mm in ipairs(machines) do
+                local got = mm.item:getModData().tlgProc.fires[hour]
+                T.ok(TLG.Tables.deepEqual(got, want[i], 0), string.format("trial %d, machine %d", trial, i))
+                compared = compared + 1
+                if want[i] then noted = noted + 1 end
+            end
+            T.eq(want[#machines - 2].f, 300, "the most fuel wins a tie")
+            T.eq(want[#machines - 1].x, -3, "the first the scan meets wins an even tie")
+            T.eq(want[#machines].x, 17, "17 and 5 tiles off is within reach")
+        end
+        T.ok(noted > 30 and compared > 100, string.format("%d notes of %d machines", noted, compared))
     end)
     g.restore()
     if not ok then error(err, 0) end

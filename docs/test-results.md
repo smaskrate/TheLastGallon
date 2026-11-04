@@ -13,7 +13,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); the engine effects of poor fuel (D-031) | Not in the multiplayer harness yet |
-| Performance baseline | Requires a measured client session |
+| Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`). Electrical networks are not built in game in this build |
 | Upgrade from an earlier release; install through the Steam Workshop | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12) |
 
 ## 2026-10-30 — Kahlua runtime probe
@@ -3611,3 +3611,116 @@ of the full harness; launch 179 tested them. The console's one exception
 came from the harness's own deep-recursion probe.
 
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run180_install_rehearsal.txt`.
+
+## 2026-11-04 — RT-SP launches 181–182 (performance, gate 11)
+
+Command: `tools/run-sp-harness.ps1 -Mode performance` (request `sp-rtpf`),
+the repository's mod on 42.21.0, about 8 minutes a launch. The method, the
+reference machine and every figure are in `docs/performance.md`.
+
+The mod runs nothing every frame. Its three timers (every game minute, ten
+minutes and hour) are called as their handlers call them and timed while
+workloads are added on the driving test's cleared road:
+- 400 petrol cans, first without records, then with them;
+- 10, then 20 parked cars with tank records, 8 of them then idling on
+  stale petrol;
+- 8, then 32 fermenters loaded through the machine menu;
+- the 32 as if a fire warmed each;
+- the 32 with 20 days of hourly readings.
+
+Also timed: fuel and a batch brought forward 1, 30 and 365 days, and the
+fuel and machine menus. Frames were sampled for 20 seconds at each stage.
+
+Launch 181 (**7/0**): every workload was built as intended (400 records,
+20 cars in the cell with records, 8 engines running, 32 fermenters
+running and listed, 480 readings each). Frames held 60 a second at every
+stage. Their main-thread times read 0: `getCPUTime` and `getGPUTime`
+already return whole milliseconds (the game divides its nanosecond counters
+by 1,000,000, BC), and the harness divided again. Fixed before launch 182.
+
+Launch 182 (**23/0**: the 7 again and 16 budgets): every figure within a
+few percent of launch 181.
+- Timers on the empty road: 0.0015, 0.0016 and 0.010 ms. With the 400
+  recorded cans, the same.
+- With 20 parked cars, 0.034 ms a minute; with 8 of them idling on stale
+  petrol, 1.04 ms.
+- With 32 running fermenters, 1.50 ms per ten-minute note and 1.55 ms per
+  hourly reading.
+- A year's catch-up: 9.1 ms for a can, 23.6 ms for a fermenter.
+- Main thread per frame: 1.81 ms mean on the empty road and 1.76 ms with
+  the recorded cans (1.69 without records). With 32 fermenters and 8
+  engines idling, 3.58 ms: the game's work for the engines and models; the
+  mod's timers average about 0.006 ms a frame there.
+
+The budgets are about three times launch 181's medians (`RT.PF.budgets`).
+
+Found, not fixed (open findings in `performance.md`, no budgets yet):
+- **The fire scan.** 32 fermenters as if beside a fire: 92 and 90 ms per
+  ten-minute note. Each note scans about 1,000 squares around each
+  machine (2.85 ms a scan).
+- **Readings kept by machines nobody uses.** The 32 with 480 readings
+  each: 192 ms per note and 193–202 ms per hourly reading.
+- **Catching up through readings.** One fermenter brought through its 20
+  days of readings: 58–60 ms. Its menu costs as much on every right-click.
+
+Not run: several clients sharing storage (multiplayer), other machines.
+Electrical networks are not built in game in this build.
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run181_performance.txt`
+and `…_run182_performance.txt`.
+
+## 2026-11-04 — Domain suite and RT-SP launches 183–185 (the three findings fixed, D-032)
+
+The user asked for the three findings of launches 181–182 to be fixed
+("Yes, fix them"). D-032 makes the same work cheaper, with the same
+results:
+- one fire scan per ten-minute note serves every machine a fire warms;
+- a trim picks the readings and notes to drop without sorting them;
+- a catch-up sorts the notes' hours once for all its days;
+- the notes and readings change the stored record instead of a copy.
+
+Domain: 218/218. The four new cases compare the new code with a copy of
+the old one on random records and fires: the k-th key against the sorted
+keys, every day of `segments` against `siteDayMean` alone, the trim, and
+the notes with ties. They passed under four seeds, and failed when the
+fire list's order was swapped. Compile check 118/0 (the offline profile,
+`tests/support/bench_machine_records.lua`, added), translations OK.
+Offline, a 480-reading record's trim fell from 4.6 to 0.2 ms and its
+catch-up through 20 days from 40 to 3.2 ms.
+
+Launch 183, `-Mode performance` (**23/0**). Every workload as in launches
+181–182, except:
+- the 32 warmed fermenters: 10.3 ms per note (90 before);
+- the 32 with 480 readings: 17.2 ms per note and 27.8 ms per reading
+  (192 and 202);
+- the catch-up through 20 days: 4.3 ms, and its menu 4.9 ms (60 and 59);
+- fresh fermenters, now that the copy is gone: 0.59 and 0.54 ms for 32
+  (1.50 and 1.55).
+
+After it, the trim leaves notes one over the limit alone (a prune there
+removes nothing; the trim test covers the case), and the three findings
+got budgets of about three times these medians.
+
+Launch 184, `-Mode fireplace` (**21/0**, the same 21 checks as launch 23).
+A January fermenter ran beside a map fireplace fed with logs, with a
+12-hour trip away. It noted the fire in all 98 noted hours, with none off.
+The fire's noted fuel covered 6.08 h of the trip, and the work over the
+trip was exact (7.5397 h). The machine's air matched the formula in 96
+hours (worst 0.00000 °C), and the readings and day temperatures matched
+the game's exactly. The batch finished after 108.2 game hours.
+
+Launch 185, `-Mode performance` (**29/0**: the 7 workload checks and 22
+budgets). The ten-minute note on 32 records with 480 readings fell to
+6.7 ms; their hourly reading is 17.6 ms. Everything else measured as in
+launch 183. The budgets for the 32 fermenters' notes and readings, with
+and without readings, are now about three times launch 185's medians.
+
+Not run since D-032:
+- the open fires mode (a campfire and a barbecue; the equivalence tests
+  cover them with stand-ins);
+- multiplayer, where the server runs these timers;
+- a save and reload of records written in place (the install rehearsal's
+  save and continue covers it).
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run183_performance.txt`,
+`…_run184_fireplace.txt` and `…_run185_performance.txt`.

@@ -924,3 +924,61 @@ listed with their replacement.
   multiplayer, where the driver's client applies the power it receives
   through `setEngineFeature` and so scales the received loudness again
   (vanilla's own); flex-converted engines; other chassis.
+
+## D-032 The machines' notes, readings and catch-up do the same work for less
+* Decision: four changes to the machines' timers and catch-up
+  (`Machines.lua`, `Climate.lua`). Every result stays exactly as before.
+  * The ten-minute note first reads every listed machine and the air at
+    it. It then scans once for the fires near the machines a heat source
+    warms (`Machines.firesNear`), and writes the notes in the same order.
+    Each square within reach of any of those machines is visited once. The
+    fires are listed in the order one machine's own scan met them (x, then
+    y, then the object's index on its square), so `warmingFire` picks the
+    same fire when several match: the most fuel, then the first met. A
+    single machine's reach is scanned as before.
+  * `trimTemps` counts the readings and notes. When a record is a few over
+    its limit, it finds the key to keep from in one pass
+    (`Tables.kthKey`), and it sorts only when the record is far over. Notes
+    one over the limit are left alone: `pruneNotes` keeps the latest note
+    below its bound, so a bound at the second note removes nothing. Before,
+    both sets were sorted on every reading and note.
+  * `Climate:segments` sorts the notes' hours once for all the days it
+    averages and passes them to `siteDayMean`, which sorted them for each
+    day.
+  * The hourly reading and the ten-minute note work on the stored record
+    (`stored` in `Machines.lua`) instead of a copy: they change a few fields
+    and write it back at once. Everything else still reads a copy
+    (`Machines.read`).
+* Reason: the user asked on 2026-11-04 ("Yes, fix them") after the
+  performance baseline (runs 181–182, `performance.md`) found three pauses.
+  32 fermenters beside a fire cost 90 ms every ten game minutes. 32 left
+  running unopened for 20 days cost 192–202 ms at every note and hourly
+  reading. Catching one of those up, which its menu does on every
+  right-click, took 60 ms.
+* Consequences: equivalence tests compare the new code with the code
+  before the change, ties included, on random records and fires
+  (`tests/domain/test_util.lua`, `test_sites.lua`,
+  `tests/integration/test_machine_sites.lua`; 218 cases pass). They
+  passed under four seeds, and a swapped scan order failed them. The
+  offline profile (`tests/support/bench_machine_records.lua`) took a
+  480-reading record's trim from 4.6 to 0.2 ms. In game (the performance
+  mode) the three findings fell:
+  * 32 warmed machines: 90 → 10.2 ms per note;
+  * 32 records with 480 readings: 192 → 6.7 ms per note and 202 → 17.6 ms
+    per reading;
+  * the catch-up: 60 → 4.3 ms; the menu: 59 → 4.9 ms.
+
+  Fresh machines also got cheaper: 32 cost 1.50 → 0.59 ms per note and
+  1.55 → 0.55 ms per reading. These are runs 183 (before the notes' saving)
+  and 185 (after it). The fireplace mode (run 184, 21/0, as run 23)
+  noted the fire in all 98 noted hours with none off. It credited the trip
+  away exactly (7.5397 h) and matched the air to 0.00000 °C. Records are
+  the same as before, so `migrations.md` has nothing to add. Not run since
+  the change:
+  * the open fires mode (a campfire and a barbecue), which the equivalence
+    tests cover with their stand-ins;
+  * multiplayer, where the server runs these timers (the record written in
+    place goes out through the same `transmitModData` as before);
+  * a save and reload of records the notes and readings wrote in place.
+    The install rehearsal's save and continue covers it
+    (`machine_records_persist`).

@@ -203,7 +203,10 @@ end
 -- counts from the start of the noted hour while its fuel lasts, computed with
 -- the game's formula from the site's unheated value and the radius at the
 -- fuel left at the start of each hour (D-022).
-function Climate:siteDayMean(day, site, upto)
+-- noteHours: site.fires's hours already in TLG.Tables.sortedKeys order
+-- (Climate:segments sorts them once for every day it averages; sorting 480
+-- of them for each day made a 20-day catch-up take 60 ms, performance.md).
+function Climate:siteDayMean(day, site, upto, noteHours)
     local base, rh = self:siteBase(day, site)
     local from = math.max(self:dayStart(day), site.from or -math.huge)
     local to = math.min(self:dayStart(day + 1), upto or math.huge)
@@ -213,7 +216,7 @@ function Climate:siteDayMean(day, site, upto)
     temps = temps or {}
     local current = math.floor(to)
     local carried = current < to and temps[current] == nil and temps[current - 1] or nil
-    local keys = fires and TLG.Tables.sortedKeys(fires) or {}
+    local keys = fires and (noteHours or TLG.Tables.sortedKeys(fires)) or {}
     local ki, sum, covered = 0, 0, 0
     for s = math.floor(from), math.ceil(to) - 1 do
         local a, b = math.max(from, s), math.min(to, s + 1)
@@ -279,7 +282,7 @@ end
 function Climate:segments(t0, t1, thermal, site)
     local out = {}
     if t1 <= t0 then return out end
-    local siteDays = {}
+    local siteDays, noteHours = {}, nil
     local cuts = {}
     for i = 2, #self.history do
         local f = self.history[i].from
@@ -297,7 +300,8 @@ function Climate:segments(t0, t1, thermal, site)
         if site ~= nil then
             local d = siteDays[day]
             if d == nil then
-                d = { self:siteDayMean(day, site, t1) }
+                if noteHours == nil and site.fires ~= nil then noteHours = TLG.Tables.sortedKeys(site.fires) end
+                d = { self:siteDayMean(day, site, t1, noteHours) }
                 siteDays[day] = d
             end
             temp, rh = d[1], d[2]
