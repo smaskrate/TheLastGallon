@@ -10,12 +10,13 @@ the authority logic are tested on the game's own Lua VM
 computer: single player through the player's menus (the fuel adapters,
 start gates, stalls, poor fuel's effects on engines, the ethanol loop from
 crafting the machines to a converted generator and car running on the
-ethanol, saves and reloads), and a dedicated server with two players on
-this computer (the same paths, carrying the vessel, the machines' timers).
-The zip from `tools/package.ps1` is installed into a fresh game folder and
-played (`tools/rehearse-install.ps1`). A real network, the crafting window
-and the pathways other than ethanol are not tested; `docs/release-checklist.md`
-lists every gate and what is still open. Publishing to the Workshop is a
+ethanol, every recipe made through the crafting window, saves and
+reloads), and a dedicated server with two players on this computer (the
+same paths, carrying the vessel, the machines' timers). The zip from
+`tools/package.ps1` is installed into a fresh game folder and played
+(`tools/rehearse-install.ps1`). A real network and the pathways other than
+ethanol are not tested; `docs/release-checklist.md` lists every gate and
+what is still open. Publishing to the Workshop is a
 manual step, not done by any script here.
 
 Licence: CC BY-NC-SA 4.0, except the supplied machine models and the carry

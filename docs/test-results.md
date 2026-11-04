@@ -9,7 +9,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: station-reservoir pour, pouring from a can on the ground; driving another chassis, a converted car or off-road (a standard car on the road: launches 174–176) | Not in the harness yet |
-| RT-SP: crafting the sampling kit, filter and stabilizer; picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
+| RT-SP: picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188) | Not in the multiplayer harness yet |
@@ -3884,3 +3884,80 @@ files, byte for byte. Only the entries' time stamps differ, set from the
 commit. A second build gave the same bytes. This is the 0.1.0 package.
 
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run190_install_rehearsal.txt`.
+
+## 2026-11-04 — RT-SP launches 191–195 (the crafting window; the recipes' names)
+
+The user asked to test the crafting window ("Yes, test the crafting
+window"), which gate 1 listed as not run: phase A crafts through the
+inventory menu (`OnNewCraft`) and only checks that the window's query
+lists the recipes. New mode `tools/run-sp-harness.ps1 -Mode crafting`
+(request `sp-rtcr`):
+
+* The window is opened with the crafting button beside the equipped items
+  (`ISEquippedItem` "CRAFTING", `forceClick`), standing at the workbench
+  phase A uses (`industry_01_23` at 10619,10630), with a torch when dark.
+* For each of the mod's seven recipes:
+  * the name the window shows (`getTranslationName`);
+  * that name typed in the search box (`onTextChange`);
+  * with the search cleared, its row clicked (the row's `onmousedown`);
+  * made with the Craft button, or for the drying column with a
+    double-click on its row;
+  * the output counted, inputs used, and tools kept.
+* The fermentation vessel is first picked with its nails missing: the
+  Craft button must be disabled and pressing it must start nothing.
+* The sampling kit, the filter and the stabilizer were never crafted in
+  game before.
+
+Launch 191 (3/21) found the defect, along with two of the harness's own
+bugs. Every recipe's row read its id (`TLG_MakeFermenterVessel`, …). The
+harness bugs: a step table overwrote the expected names, and
+`getScriptManager():getCraftRecipe(id)` found none of the recipes. Fixed
+in the harness: the window's own recipe objects, and a wait for the rows
+after the search is cleared.
+
+Launch 192 (11/14), the mod as committed in `5574606`:
+* all seven crafts made through the window, six with the Craft button and
+  the drying column by double-click;
+* the vessel refused without its nails (Craft disabled, nothing queued,
+  nothing made);
+* the 14 failures are the defect alone: seven names that read as ids,
+  and seven searches by name that found nothing.
+
+The mod shipped no `Recipes.json`, and the game names a recipe by its id
+when that file lacks it (BC `Translator.getRecipeName`).
+
+Fix: `Translate/EN/Recipes.json` and `IT/Recipes.json`, in vanilla's style
+("Make Fermentation Vessel", "Crea recipiente di fermentazione").
+`tools/check-translations.ps1` now requires a name for every `craftRecipe`
+in the mod's scripts. Without the files, it lists all seven as missing.
+
+* Launch 193 (**25/0**): all seven names as shipped; each found by typing
+  its name; the refusal; all seven crafts, with the Craft button
+  enabled 2–30 ticks after the materials arrived. No exception in the
+  console.
+* Launch 194 (`-Mode italian`, **5/0**): the Italian mode now reads recipe
+  names as the window does (`Translator.getRecipeName`). It found 247 of
+  247 Italian strings as shipped, the 7 recipe names among them.
+* Launch 195 (`tools/rehearse-install.ps1`): the package rebuilt with the
+  names. 218/218 tests, compile check 118/0, translations OK (247 EN keys,
+  208 referenced). `TheLastGallon-0.1.0.zip` is 127 files, SHA-256
+  `1e3ab9e4…`, 3,991,312 bytes, built from uncommitted changes on
+  `5574606`. Its manifest differs from launch 190's in the two
+  `Recipes.json` and the shipped changelog and player guide. It matched
+  its manifest and was installed into a fresh cache. Phase A **100/0**,
+  phase B **14/0**. The console's one exception came from the harness's
+  deep-recursion probe.
+
+The zip of `1d03a03` (`47be8fd6…`) is no longer the 0.1.0 package;
+nothing had been uploaded.
+
+Not run:
+* the craft menu's option labels, which come from the same names;
+* the crafting window in Italian (the names were checked as the game
+  reads them);
+* the zip of the commit that takes this change (its files should match
+  launch 195's manifest).
+
+Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run191_crafting_window.txt`,
+`…_run192_crafting_window_before.txt`, `…_run193_crafting_window.txt`,
+`…_run194_italian.txt`, `…_run195_install_rehearsal.txt`.

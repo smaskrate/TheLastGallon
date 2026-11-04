@@ -107,7 +107,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -11396,6 +11396,336 @@ if REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
         RT.MN.read, RT.MI.shot("rtmn_page", false), RT.finish }
 end
 
+------------------------------------------------------------------------------
+-- The crafting window (request "sp-rtcr"). Phase A crafts through the
+-- inventory menu (ISInventoryPaneContextMenu.OnNewCraft) and only checks
+-- that the window's query lists the recipes, never the window itself. Here
+-- the window is opened with the button beside the equipped items
+-- (ISEquippedItem "CRAFTING" -> ISEntityUI.OpenHandcraftWindow, query
+-- "InHandCraft;AnySurfaceCraft"), beside a workbench. Each of the mod's
+-- seven recipes: its name as the window shows it, found by typing that
+-- name in the search box, picked from the list (the row's click handler,
+-- ISRecipeScrollingListBox.onMouseDown), made with the Craft button
+-- (ISButton.forceClick, which does nothing on a disabled button, as a
+-- click does not), the drying column by double-clicking its row instead.
+-- The vessel is picked first with its nails missing: Craft must stay
+-- disabled and pressing it must start nothing. Selection never depends on
+-- the search, so a wrong name fails its own checks only.
+RT.CR = {
+    -- English names, vanilla's style ("Make ..."; Translate/EN/Recipes.json).
+    names = {
+        TLG_MakeFermenterVessel = "Make Fermentation Vessel", TLG_MakePotStill = "Make Pot Still",
+        TLG_MakeRefluxStill = "Make Reflux Column Still", TLG_MakeDryingColumn = "Make Ethanol Drying Column",
+        TLG_MakeSampleKit = "Make Fuel Sampling Kit", TLG_MakeFuelFilter = "Make Fuel Filter Cartridge",
+        TLG_MakeFuelStabilizer = "Make Fuel Stabilizer",
+    },
+    -- { type, count, kept }: what is handed over; `uses` items stay but are used.
+    specs = {
+        { recipe = "TLG_MakeFermenterVessel", out = "TLG.FermenterVessel", search = "Fermentation", withhold = "Base.Nails",
+            mats = { { "Base.Hammer", 1, true }, { "Base.Plank", 6 }, { "Base.Nails", 12 }, { "Base.EmptyJar", 1 } } },
+        { recipe = "TLG_MakePotStill", out = "TLG.PotStill", search = "Pot Still", keep = true,
+            mats = { { "Base.Pot", 1 }, { "Base.MetalPipe", 2 }, { "Base.RubberHose", 1 }, { "Base.Screwdriver", 1, true } } },
+        { recipe = "TLG_MakeRefluxStill", out = "TLG.RefluxStill", search = "Reflux", consumes = { "TLG.PotStill" },
+            mats = { { "Base.SheetMetal", 2 }, { "Base.MetalPipe", 3 }, { "Base.BlowTorch", 1, true }, { "Base.WeldingMask", 1, true } } },
+        { recipe = "TLG_MakeDryingColumn", out = "TLG.DryingColumn", search = "Drying", double = true,
+            mats = { { "Base.MetalPipe", 1 }, { "Base.EmptyJar", 1 }, { "Base.Screwdriver", 1, true } } },
+        { recipe = "TLG_MakeSampleKit", out = "TLG.FuelSampleKit", search = "Sampling",
+            mats = { { "Base.EmptyJar", 3 }, { "Base.RubberHose", 1 } } },
+        { recipe = "TLG_MakeFuelFilter", out = "TLG.FuelFilter", search = "Filter",
+            mats = { { "Base.RippedSheets", 2 }, { "Base.Charcoal", 1 }, { "Base.EmptyJar", 1 } } },
+        { recipe = "TLG_MakeFuelStabilizer", out = "TLG.FuelStabilizer", search = "Stabilizer",
+            mats = { { "Base.Charcoal", 2 }, { "Base.EmptyJar", 1 } } },
+    },
+    cleared = { "Base.Hammer", "Base.Plank", "Base.Nails", "Base.EmptyJar", "Base.Pot", "Base.MetalPipe", "Base.RubberHose",
+        "Base.Screwdriver", "Base.SheetMetal", "Base.BlowTorch", "Base.WeldingMask", "Base.RippedSheets", "Base.Charcoal",
+        "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn", "TLG.FuelSampleKit", "TLG.FuelFilter",
+        "TLG.FuelStabilizer" },
+}
+
+function RT.CR.window() return ISEntityUI.GetWindowInstance(0, "HandcraftWindow") end
+function RT.CR.panel() local w = RT.CR.window(); return w and w.handCraftPanel end
+function RT.CR.list()
+    local p = RT.CR.panel()
+    return p and p.recipesPanel and p.recipesPanel.recipeListPanel and p.recipesPanel.recipeListPanel.recipeListPanel
+end
+function RT.CR.control()
+    local p = RT.CR.panel()
+    return p and p.recipePanel and p.recipePanel.craftControl
+end
+-- The recipe objects the window's query holds (run 191:
+-- ScriptManager.getCraftRecipe found none of them by their short names).
+function RT.CR.recipe(name)
+    RT.CR.byName = RT.CR.byName or windowRecipes()
+    return RT.CR.byName[name]
+end
+-- The list's row holding `recipe` (group rows hold none), and its text.
+function RT.CR.row(recipe)
+    local lb = RT.CR.list()
+    for i, it in ipairs(lb and lb.items or {}) do
+        if it.item ~= nil and it.item == recipe then return i, it.text end
+    end
+    return nil, nil
+end
+-- Typing in the search box: its text, then the handler a keystroke calls.
+function RT.CR.search(text)
+    local box = RT.CR.panel().recipesPanel.recipeFilterPanel.searchEntryBox
+    box:setText(text)
+    ISWidgetRecipeFilterPanel.onTextChange(box)
+end
+function RT.CR.state()
+    local p, c = RT.CR.panel(), RT.CR.control()
+    local logic = p and p.logic
+    local sat = "?"
+    pcall(function() sat = tostring(logic:getRecipeData():areAllInputItemsSatisfied()) end)
+    return string.format("selected=%s inputsSatisfied=%s craftEnabled=%s inProgress=%s surface=%s",
+        tostring(logic and logic:getRecipe() and logic:getRecipe():getName()), sat, tostring(c and c.buttonCraft and c.buttonCraft.enable),
+        tostring(logic and logic:isCraftActionInProgress()), tostring(p and p.isoObject ~= nil))
+end
+-- What the game does when a container's contents change (Events.OnContainerUpdate
+-- -> ISInventoryPage.dirtyUI -> refreshBackpacks -> ISHandCraftPanel.drawDirty).
+function RT.CR.handOver(list)
+    for _, m in ipairs(list) do give(m[1], m[2]) end
+    triggerEvent("OnContainerUpdate")
+end
+
+RT.CR.setup = { name = "rtcr_setup", timeout = 1200, fn = function(ctx, ticks)
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        pcall(function() p:setUnlimitedCarry(true) end)
+        p:setPerkLevelDebug(Perks.Woodwork, 2)
+        for _, t in ipairs(RT.CR.cleared) do removeAll(t) end
+        RT.CR.surface, RT.CR.stand = findSurface(10625, 10630, 25)
+        if RT.CR.stand then p:teleportTo(RT.CR.stand:getX(), RT.CR.stand:getY(), RT.CR.stand:getZ()) end
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local spriteName = "?"
+    pcall(function() spriteName = RT.CR.surface:getSprite():getName() end)
+    R:check("RTCR.workbench_found", function()
+        return RT.CR.stand ~= nil, RT.CR.stand and string.format("%s at %d,%d, standing at %d,%d", spriteName,
+            RT.CR.surface:getSquare():getX(), RT.CR.surface:getSquare():getY(), RT.CR.stand:getX(), RT.CR.stand:getY())
+            or "none within 25 tiles"
+    end)
+    -- Crafting needs light (phase A's loop_craft, runs 36-37): a torch in hand.
+    if player():tooDarkToRead() then
+        local here = player():getSquare()
+        RT.CR.torch = player():getInventory():AddItem("Base.HandTorch")
+        RT.CR.torch:setActivated(true)
+        player():setSecondaryHandItem(RT.CR.torch)
+        R:line("OBS  RTCR.dark (light %.2f at %.2f o'clock): a torch switched on in hand, dark now=%s",
+            here and here:getLightLevel(0) or -1, getGameTime():getTimeOfDay(), tostring(player():tooDarkToRead()))
+    end
+    return true
+end }
+
+RT.CR.open = { name = "rtcr_open", timeout = 600, fn = function(ctx, ticks)
+    if ticks == 1 then
+        local pd = getPlayerData(0)
+        local btn = pd and pd.equipped and pd.equipped.craftingBtn
+        R:line("OBS  RTCR.button craftingBtn=%s visible=%s", tostring(btn ~= nil), tostring(btn and btn:getIsVisible()))
+        if btn then btn:forceClick() end
+        return nil
+    end
+    if ticks < 40 then return nil end
+    local w, p = RT.CR.window(), RT.CR.panel()
+    R:check("RTCR.window_opens", function()
+        local n = "?"
+        pcall(function() n = tostring(CraftRecipeManager.queryRecipes(p.recipeQuery):size()) end)
+        return w ~= nil and w:getIsVisible() and p ~= nil, w and string.format(
+            "title=%s query=%s recipes=%s surface=%s listMode=%s", tostring(w.windowHeader and w.windowHeader.titleStr),
+            tostring(p and p.recipeQuery), n, tostring(p and p.isoObject ~= nil),
+            tostring(p and p.recipesPanel and p.recipesPanel.recipeListMode)) or "no window"
+    end)
+    if not p then RT.abort = "the crafting window did not open"; return true end
+    -- The recipes are shown as a list or as a grid of icons; the button
+    -- beside the search box switches, as a player would, to the list.
+    if not p.recipesPanel.recipeListMode then
+        p.recipesPanel.recipeFilterPanel.viewModeButton:forceClick()
+        R:line("OBS  RTCR.view switched to the list: listMode=%s", tostring(p.recipesPanel.recipeListMode))
+    end
+    return true
+end }
+
+-- The names the window shows, read with nothing to craft them from.
+RT.CR.namesStep = { name = "rtcr_names", timeout = 300, fn = function(ctx, ticks)
+    if RT.skip("rtcr_names") then return true end
+    if ticks < 20 then return nil end
+    local listed = windowRecipes()
+    for _, s in ipairs(RT.CR.specs) do
+        local r = listed[s.recipe]
+        local want = RT.CR.names[s.recipe]
+        local shown = r and r:getTranslationName()
+        R:check("RTCR.name_" .. s.recipe, function()
+            return shown == want, string.format("shows '%s', want '%s'", tostring(shown), want)
+        end)
+        local row, text = RT.CR.row(r)
+        local cat
+        pcall(function() cat = r:getCategory() end)
+        R:line("OBS  RTCR.row_without_materials %s row=%s text=%s category=%s", s.recipe, tostring(row), tostring(text),
+            tostring(cat))
+    end
+    return true
+end }
+
+function RT.CR.craft(s)
+    local short = string.match(s.out, "([^%.]+)$")
+    return { name = "rtcr_" .. short, timeout = 9000, fn = function(ctx, ticks)
+        if RT.skip("rtcr_" .. short) then return true end
+        local recipe = RT.CR.recipe(s.recipe)
+        local lb, p = RT.CR.list(), RT.CR.panel()
+        if not (lb and p) then
+            R:check("RTCR.craft_" .. s.out, function() return false, "the crafting window is gone" end)
+            return true
+        end
+        if not ctx.phase then
+            ctx.base = {}
+            for _, m in ipairs(s.mats) do ctx.base[m[1]] = countType(m[1]) end
+            for _, t in ipairs(s.consumes or {}) do ctx.base[t] = countType(t) end
+            ctx.base[s.out] = countType(s.out)
+            local now = {}
+            for _, m in ipairs(s.mats) do if m[1] ~= s.withhold then now[#now + 1] = m end end
+            RT.CR.handOver(now)
+            ctx.phase, ctx.at = "search", ticks
+            return nil
+        end
+        if ctx.phase == "search" then
+            if ticks - ctx.at < 10 then return nil end
+            if not ctx.typed then
+                RT.CR.search(RT.CR.names[s.recipe])
+                ctx.typed, ctx.at = true, ticks
+                return nil
+            end
+            local row, text = RT.CR.row(recipe)
+            R:check("RTCR.found_by_name_" .. short, function()
+                return row ~= nil, string.format("typed '%s': row=%s text=%s rows=%d", RT.CR.names[s.recipe], tostring(row),
+                    tostring(text), lb and #lb.items or -1)
+            end)
+            local row2
+            RT.CR.search(s.search)
+            row2 = RT.CR.row(recipe)
+            R:line("OBS  RTCR.search '%s' row=%s rows=%d", s.search, tostring(row2), lb and #lb.items or -1)
+            RT.CR.search("")
+            ctx.phase, ctx.at = "select", ticks
+            return nil
+        end
+        if ctx.phase == "select" then
+            if ticks - ctx.at < 10 then return nil end
+            local row = RT.CR.row(recipe)
+            if not row and ticks - ctx.at < 300 then return nil end
+            if not row then
+                R:check("RTCR.craft_" .. s.out, function()
+                    return false, string.format("no row for the recipe with the search cleared (recipe=%s, %d rows)",
+                        tostring(recipe ~= nil), #lb.items)
+                end)
+                return true
+            end
+            -- The row's click (ISRecipeScrollingListBox.onMouseDown).
+            lb.selected = row
+            lb.onmousedown(lb.target, lb.items[row].item)
+            ctx.phase, ctx.at = s.withhold and "refuse" or "ready", ticks
+            return nil
+        end
+        if ctx.phase == "refuse" then
+            if ticks - ctx.at < 60 then return nil end
+            if not ctx.pressed then
+                ctx.stateBefore = RT.CR.state()
+                local c = RT.CR.control()
+                if c and c.buttonCraft then c.buttonCraft:forceClick() end
+                ctx.pressed, ctx.at = true, ticks
+                return nil
+            end
+            if ticks - ctx.at < 30 then return nil end
+            local c = RT.CR.control()
+            R:check("RTCR.refused_without_" .. s.withhold, function()
+                return c ~= nil and c.buttonCraft.enable == false and TLGH.Steps.actionsIdle(player())
+                    and countType(s.out) == ctx.base[s.out],
+                    string.format("before the press: %s; after: queued=%s made=%d", ctx.stateBefore,
+                        tostring(not TLGH.Steps.actionsIdle(player())), countType(s.out) - ctx.base[s.out])
+            end)
+            for _, m in ipairs(s.mats) do if m[1] == s.withhold then RT.CR.handOver({ m }) end end
+            ctx.phase, ctx.at = "ready", ticks
+            return nil
+        end
+        if ctx.phase == "ready" then
+            local c = RT.CR.control()
+            local logic = p.logic
+            local ok = logic:getRecipe() == recipe and c ~= nil and c.buttonCraft.enable == true
+            if not ok and ticks - ctx.at < 600 then return nil end
+            R:line("OBS  RTCR.%s ready after %d ticks: %s", short, ticks - ctx.at, RT.CR.state())
+            if s.double then
+                -- A double-click on the row (ISHandCraftPanel.onDoubleClick).
+                local row = RT.CR.row(recipe)
+                lb.onmousedblclick(lb.target, lb.items[row].item)
+            elseif c then
+                c.buttonCraft:forceClick()
+            end
+            ctx.phase, ctx.at = "wait", ticks
+            return nil
+        end
+        if ctx.phase == "wait" then
+            if ticks - ctx.at == 10 then
+                ctx.queued = not TLGH.Steps.actionsIdle(player())
+            end
+            if ticks - ctx.at < 30 then return nil end
+            if (not TLGH.Steps.actionsIdle(player()) or p.logic:isCraftActionInProgress()) and ticks - ctx.at < 8000 then
+                return nil
+            end
+            local made = countType(s.out) - ctx.base[s.out]
+            local wrong = {}
+            for _, m in ipairs(s.mats) do
+                local want = ctx.base[m[1]] + (m[3] and m[2] or 0)
+                if countType(m[1]) ~= want then
+                    wrong[#wrong + 1] = string.format("%s=%d(want %d)", m[1], countType(m[1]), want)
+                end
+            end
+            for _, t in ipairs(s.consumes or {}) do
+                if countType(t) ~= ctx.base[t] - 1 then
+                    wrong[#wrong + 1] = string.format("%s=%d(want %d)", t, countType(t), ctx.base[t] - 1)
+                end
+            end
+            R:check("RTCR.craft_" .. s.out, function()
+                return ctx.queued == true and made == 1 and #wrong == 0,
+                    string.format("via %s: queued=%s made=%d inputs wrong=[%s] took %d ticks; %s",
+                        s.double and "double-click" or "Craft button", tostring(ctx.queued), made, table.concat(wrong, ","),
+                        ticks - ctx.at, RT.CR.state())
+            end)
+            -- Tools and leftovers go; the pot still stays for the reflux still.
+            for _, m in ipairs(s.mats) do removeAll(m[1]) end
+            if not s.keep then removeAll(s.out) end
+            triggerEvent("OnContainerUpdate")
+            return true
+        end
+        return nil
+    end }
+end
+
+RT.CR.close = { name = "rtcr_close", timeout = 300, fn = function(ctx, ticks)
+    if ticks == 1 then
+        local w = RT.CR.window()
+        if w then w:close() end
+        return nil
+    end
+    if ticks < 20 then return nil end
+    R:check("RTCR.window_closes", function()
+        return not ISEntityUI.IsWindowOpen(0, "HandcraftWindow"), "open=" .. tostring(ISEntityUI.IsWindowOpen(0, "HandcraftWindow"))
+    end)
+    if RT.CR.torch then
+        player():setSecondaryHandItem(nil)
+        removeAll("Base.HandTorch")
+    end
+    return true
+end }
+
+if REQUEST == "sp-rtcr" then
+    RT.craftingSteps = { RT.waitWorld, RT.CR.setup, RT.CR.open, RT.CR.namesStep }
+    for _, s in ipairs(RT.CR.specs) do RT.craftingSteps[#RT.craftingSteps + 1] = RT.CR.craft(s) end
+    RT.craftingSteps[#RT.craftingSteps + 1] = RT.CR.close
+    RT.craftingSteps[#RT.craftingSteps + 1] = RT.finish
+end
+
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
 -- character's hand, not even vanilla's water bottle. Run 73 showed why: a
 -- baseball bat (a weapon) is drawn in the idle character's hand, a water
@@ -11750,6 +12080,11 @@ RT.itText = { name = "rti_text", timeout = 600, fn = function(ctx, ticks)
             if cat == "ItemName" then
                 local ok, it = pcall(instanceItem, key)
                 got = ok and it and it:getDisplayName() or "(no item)"
+            elseif cat == "Recipes" then
+                -- Recipe names live in their own table, read by the crafting
+                -- window through CraftRecipe.getTranslationName (run 193).
+                local ok, name = pcall(function() return Translator.getRecipeName(key) end)
+                got = ok and name or "(no recipe name)"
             else
                 got = getText(key)
             end
@@ -11853,7 +12188,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -11973,6 +12308,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, field manual")
                 TLGH.Steps.run(R, RT.manualSteps, H, nil)
+            elseif REQUEST == "sp-rtcr" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the crafting window")
+                TLGH.Steps.run(R, RT.craftingSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)

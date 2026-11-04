@@ -1,0 +1,59 @@
+# TLG single-player harness, the crafting window
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=51525159592312251299 hours=2.0096 DayLength=4
+STEP rtcr_setup begin
+PASS RTCR.workbench_found :: industry_01_23 at 10619,10630, standing at 10619,10629
+STEP rtcr_open begin
+OBS  RTCR.button craftingBtn=true visible=true
+PASS RTCR.window_opens :: title=Crafting on Barrel query=InHandCraft;AnySurfaceCraft recipes=678 surface=true listMode=true
+STEP rtcr_names begin
+FAIL RTCR.name_TLG_MakeFermenterVessel :: ERROR missing argument #3 to 'format' java.lang.RuntimeException
+OBS  RTCR.row_without_materials TLG_MakeFermenterVessel row=296 text=TLG_MakeFermenterVessel category=Carpentry
+FAIL RTCR.name_TLG_MakePotStill :: ERROR missing argument #3 to 'format' java.lang.RuntimeException
+OBS  RTCR.row_without_materials TLG_MakePotStill row=299 text=TLG_MakePotStill category=Metalworking
+FAIL RTCR.name_TLG_MakeRefluxStill :: ERROR missing argument #3 to 'format' java.lang.RuntimeException
+OBS  RTCR.row_without_materials TLG_MakeRefluxStill row=300 text=TLG_MakeRefluxStill category=Welding
+FAIL RTCR.name_TLG_MakeDryingColumn :: ERROR missing argument #3 to 'format' java.lang.RuntimeException
+OBS  RTCR.row_without_materials TLG_MakeDryingColumn row=295 text=TLG_MakeDryingColumn category=Metalworking
+FAIL RTCR.name_TLG_MakeSampleKit :: ERROR missing argument #3 to 'format' java.lang.RuntimeException
+OBS  RTCR.row_without_materials TLG_MakeSampleKit row=301 text=TLG_MakeSampleKit category=Tools
+FAIL RTCR.name_TLG_MakeFuelFilter :: ERROR missing argument #3 to 'format' java.lang.RuntimeException
+OBS  RTCR.row_without_materials TLG_MakeFuelFilter row=297 text=TLG_MakeFuelFilter category=Tools
+FAIL RTCR.name_TLG_MakeFuelStabilizer :: ERROR missing argument #3 to 'format' java.lang.RuntimeException
+OBS  RTCR.row_without_materials TLG_MakeFuelStabilizer row=298 text=TLG_MakeFuelStabilizer category=Cooking
+STEP rtcr_FermenterVessel begin
+FAIL RTCR.found_by_name_FermenterVessel :: ERROR missing argument #2 to 'format' java.lang.RuntimeException
+OBS  RTCR.search 'Fermentation' row=nil rows=0
+FAIL RTCR.craft_TLG.FermenterVessel :: no row for the recipe with the search cleared
+STEP rtcr_PotStill begin
+FAIL RTCR.found_by_name_PotStill :: ERROR missing argument #2 to 'format' java.lang.RuntimeException
+OBS  RTCR.search 'Pot Still' row=nil rows=0
+FAIL RTCR.craft_TLG.PotStill :: no row for the recipe with the search cleared
+STEP rtcr_RefluxStill begin
+FAIL RTCR.found_by_name_RefluxStill :: ERROR missing argument #2 to 'format' java.lang.RuntimeException
+OBS  RTCR.search 'Reflux' row=nil rows=1
+FAIL RTCR.craft_TLG.RefluxStill :: no row for the recipe with the search cleared
+STEP rtcr_DryingColumn begin
+FAIL RTCR.found_by_name_DryingColumn :: ERROR missing argument #2 to 'format' java.lang.RuntimeException
+OBS  RTCR.search 'Drying' row=nil rows=1
+FAIL RTCR.craft_TLG.DryingColumn :: no row for the recipe with the search cleared
+STEP rtcr_FuelSampleKit begin
+FAIL RTCR.found_by_name_FuelSampleKit :: ERROR missing argument #2 to 'format' java.lang.RuntimeException
+OBS  RTCR.search 'Sampling' row=nil rows=0
+FAIL RTCR.craft_TLG.FuelSampleKit :: no row for the recipe with the search cleared
+STEP rtcr_FuelFilter begin
+FAIL RTCR.found_by_name_FuelFilter :: ERROR missing argument #2 to 'format' java.lang.RuntimeException
+OBS  RTCR.search 'Filter' row=nil rows=7
+FAIL RTCR.craft_TLG.FuelFilter :: no row for the recipe with the search cleared
+STEP rtcr_FuelStabilizer begin
+FAIL RTCR.found_by_name_FuelStabilizer :: ERROR missing argument #2 to 'format' java.lang.RuntimeException
+OBS  RTCR.search 'Stabilizer' row=nil rows=1
+FAIL RTCR.craft_TLG.FuelStabilizer :: no row for the recipe with the search cleared
+STEP rtcr_close begin
+PASS RTCR.window_closes :: open=nil
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.04
+SUMMARY pass=3 fail=21
+DONE

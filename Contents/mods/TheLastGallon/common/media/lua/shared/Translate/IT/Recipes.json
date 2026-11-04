@@ -1,0 +1,9 @@
+{
+    "TLG_MakeFermenterVessel": "Crea recipiente di fermentazione",
+    "TLG_MakePotStill": "Crea alambicco discontinuo",
+    "TLG_MakeRefluxStill": "Crea alambicco a colonna di riflusso",
+    "TLG_MakeDryingColumn": "Crea colonna di disidratazione dell'etanolo",
+    "TLG_MakeSampleKit": "Crea kit di campionamento carburante",
+    "TLG_MakeFuelFilter": "Crea cartuccia filtro carburante",
+    "TLG_MakeFuelStabilizer": "Crea stabilizzante per carburante"
+}

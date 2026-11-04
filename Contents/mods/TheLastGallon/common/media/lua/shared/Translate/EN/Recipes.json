@@ -1,0 +1,9 @@
+{
+    "TLG_MakeFermenterVessel": "Make Fermentation Vessel",
+    "TLG_MakePotStill": "Make Pot Still",
+    "TLG_MakeRefluxStill": "Make Reflux Column Still",
+    "TLG_MakeDryingColumn": "Make Ethanol Drying Column",
+    "TLG_MakeSampleKit": "Make Fuel Sampling Kit",
+    "TLG_MakeFuelFilter": "Make Fuel Filter Cartridge",
+    "TLG_MakeFuelStabilizer": "Make Fuel Stabilizer"
+}

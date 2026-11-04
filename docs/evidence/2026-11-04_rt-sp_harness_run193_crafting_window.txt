@@ -1,0 +1,67 @@
+# TLG single-player harness, the crafting window
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=8692830434161728099 hours=2.0096 DayLength=4
+STEP rtcr_setup begin
+PASS RTCR.workbench_found :: industry_01_23 at 10619,10630, standing at 10619,10629
+STEP rtcr_open begin
+OBS  RTCR.button craftingBtn=true visible=true
+PASS RTCR.window_opens :: title=Crafting on Barrel query=InHandCraft;AnySurfaceCraft recipes=678 surface=true listMode=true
+STEP rtcr_names begin
+PASS RTCR.name_TLG_MakeFermenterVessel :: shows 'Make Fermentation Vessel', want 'Make Fermentation Vessel'
+OBS  RTCR.row_without_materials TLG_MakeFermenterVessel row=80 text=Make Fermentation Vessel category=Carpentry
+PASS RTCR.name_TLG_MakePotStill :: shows 'Make Pot Still', want 'Make Pot Still'
+OBS  RTCR.row_without_materials TLG_MakePotStill row=106 text=Make Pot Still category=Metalworking
+PASS RTCR.name_TLG_MakeRefluxStill :: shows 'Make Reflux Column Still', want 'Make Reflux Column Still'
+OBS  RTCR.row_without_materials TLG_MakeRefluxStill row=107 text=Make Reflux Column Still category=Welding
+PASS RTCR.name_TLG_MakeDryingColumn :: shows 'Make Ethanol Drying Column', want 'Make Ethanol Drying Column'
+OBS  RTCR.row_without_materials TLG_MakeDryingColumn row=79 text=Make Ethanol Drying Column category=Metalworking
+PASS RTCR.name_TLG_MakeSampleKit :: shows 'Make Fuel Sampling Kit', want 'Make Fuel Sampling Kit'
+OBS  RTCR.row_without_materials TLG_MakeSampleKit row=83 text=Make Fuel Sampling Kit category=Tools
+PASS RTCR.name_TLG_MakeFuelFilter :: shows 'Make Fuel Filter Cartridge', want 'Make Fuel Filter Cartridge'
+OBS  RTCR.row_without_materials TLG_MakeFuelFilter row=82 text=Make Fuel Filter Cartridge category=Tools
+PASS RTCR.name_TLG_MakeFuelStabilizer :: shows 'Make Fuel Stabilizer', want 'Make Fuel Stabilizer'
+OBS  RTCR.row_without_materials TLG_MakeFuelStabilizer row=84 text=Make Fuel Stabilizer category=Cooking
+STEP rtcr_FermenterVessel begin
+PASS RTCR.found_by_name_FermenterVessel :: typed 'Make Fermentation Vessel': row=1 text=Make Fermentation Vessel rows=1
+OBS  RTCR.search 'Fermentation' row=1 rows=1
+PASS RTCR.refused_without_Base.Nails :: before the press: selected=TLG_MakeFermenterVessel inputsSatisfied=false craftEnabled=false inProgress=false surface=true; after: queued=false made=0
+OBS  RTCR.FermenterVessel ready after 2 ticks: selected=TLG_MakeFermenterVessel inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+PASS RTCR.craft_TLG.FermenterVessel :: via Craft button: queued=true made=1 inputs wrong=[] took 1876 ticks; selected=AddACigarette inputsSatisfied=false craftEnabled=true inProgress=false surface=true
+STEP rtcr_PotStill begin
+PASS RTCR.found_by_name_PotStill :: typed 'Make Pot Still': row=1 text=Make Pot Still rows=1
+OBS  RTCR.search 'Pot Still' row=1 rows=1
+OBS  RTCR.PotStill ready after 28 ticks: selected=TLG_MakePotStill inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+PASS RTCR.craft_TLG.PotStill :: via Craft button: queued=true made=1 inputs wrong=[] took 1251 ticks; selected=AddACigarette inputsSatisfied=false craftEnabled=true inProgress=false surface=true
+STEP rtcr_RefluxStill begin
+PASS RTCR.found_by_name_RefluxStill :: typed 'Make Reflux Column Still': row=1 text=Make Reflux Column Still rows=1
+OBS  RTCR.search 'Reflux' row=1 rows=1
+OBS  RTCR.RefluxStill ready after 26 ticks: selected=TLG_MakeRefluxStill inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+PASS RTCR.craft_TLG.RefluxStill :: via Craft button: queued=true made=1 inputs wrong=[] took 2501 ticks; selected=AddACigarette inputsSatisfied=false craftEnabled=true inProgress=false surface=true
+STEP rtcr_DryingColumn begin
+PASS RTCR.found_by_name_DryingColumn :: typed 'Make Ethanol Drying Column': row=1 text=Make Ethanol Drying Column rows=1
+OBS  RTCR.search 'Drying' row=1 rows=1
+OBS  RTCR.DryingColumn ready after 30 ticks: selected=TLG_MakeDryingColumn inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+PASS RTCR.craft_TLG.DryingColumn :: via double-click: queued=true made=1 inputs wrong=[] took 938 ticks; selected=AddACigarette inputsSatisfied=false craftEnabled=true inProgress=false surface=true
+STEP rtcr_FuelSampleKit begin
+PASS RTCR.found_by_name_FuelSampleKit :: typed 'Make Fuel Sampling Kit': row=1 text=Make Fuel Sampling Kit rows=1
+OBS  RTCR.search 'Sampling' row=1 rows=1
+OBS  RTCR.FuelSampleKit ready after 30 ticks: selected=TLG_MakeSampleKit inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+PASS RTCR.craft_TLG.FuelSampleKit :: via Craft button: queued=true made=1 inputs wrong=[] took 501 ticks; selected=BreakGlass inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+STEP rtcr_FuelFilter begin
+PASS RTCR.found_by_name_FuelFilter :: typed 'Make Fuel Filter Cartridge': row=1 text=Make Fuel Filter Cartridge rows=1
+OBS  RTCR.search 'Filter' row=3 rows=7
+OBS  RTCR.FuelFilter ready after 26 ticks: selected=TLG_MakeFuelFilter inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+PASS RTCR.craft_TLG.FuelFilter :: via Craft button: queued=true made=1 inputs wrong=[] took 501 ticks; selected=AddACigarette inputsSatisfied=false craftEnabled=true inProgress=false surface=true
+STEP rtcr_FuelStabilizer begin
+PASS RTCR.found_by_name_FuelStabilizer :: typed 'Make Fuel Stabilizer': row=1 text=Make Fuel Stabilizer rows=1
+OBS  RTCR.search 'Stabilizer' row=1 rows=1
+OBS  RTCR.FuelStabilizer ready after 26 ticks: selected=TLG_MakeFuelStabilizer inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+PASS RTCR.craft_TLG.FuelStabilizer :: via Craft button: queued=true made=1 inputs wrong=[] took 751 ticks; selected=AddACigarette inputsSatisfied=false craftEnabled=true inProgress=false surface=true
+STEP rtcr_close begin
+PASS RTCR.window_closes :: open=nil
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.68
+SUMMARY pass=25 fail=0
+DONE

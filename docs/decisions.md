@@ -1023,7 +1023,8 @@ listed with their replacement.
 * Consequences: the world record's `modVersion` is only logged
   (`World.lua`), so the bump needs no migration. The tools find the zip
   through `modversion`. The package holds 125 files, four more than
-  before: the poster, the icon, `docs/LICENSE.md` and `preview.png`. The
+  before: the poster, the icon, `docs/LICENSE.md` and `preview.png`
+  (127 since the recipes' names were added, runs 191–195). The
   harness checks what the game read from `mod.info`: the version, the
   category, the description, and the poster and icon as textures
   (`g01_client_mod_info`). The zip, installed into a fresh cache, passed

@@ -47,6 +47,15 @@ foreach ($m in [regex]::Matches((Get-Content (Join-Path $media "scripts\TLG_flui
 foreach ($m in [regex]::Matches(((Get-ChildItem (Join-Path $media "scripts") -Filter "TLG_*.txt" | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"), '(?m)^\s*item\s+([A-Za-z0-9_]+)\s*\r?$')) {
     [void]$referenced.Add("TLG." + $m.Groups[1].Value)
 }
+# A recipe's name in the crafting window and the craft menu is its key in
+# Recipes.json (BC Translator.getRecipeName: the id itself when missing;
+# RT-SP runs 191-192 found every recipe shown by its id).
+$recipeCount = 0
+foreach ($m in [regex]::Matches(((Get-ChildItem (Join-Path $media "scripts") -Filter "TLG_*.txt" | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"), '(?m)^\s*craftRecipe\s+([A-Za-z0-9_]+)\s*\r?$')) {
+    [void]$referenced.Add($m.Groups[1].Value)
+    $recipeCount++
+}
+if ($recipeCount -eq 0) { $problems += "no craftRecipe found in scripts/TLG_*.txt (pattern out of date?)" }
 $sandbox = Get-Content (Join-Path $media "sandbox-options.txt") -Raw
 foreach ($block in [regex]::Matches($sandbox, 'option\s+[\w\.]+\s*\{([^}]*)\}')) {
     $body = $block.Groups[1].Value

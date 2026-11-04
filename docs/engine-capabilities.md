@@ -616,6 +616,46 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `option.onSelect(option.target, option.param1, …)`
   (SRC `ISContextMenu.lua:70`).
 
+### The crafting window (RT-SP runs 191–194, 2026-11-04)
+
+* A recipe's name is its key in `Translate/<LANG>/Recipes.json`
+  (`"TLG_MakeFermenterVessel": "Make Fermentation Vessel"`); a mod's file
+  of that name is merged like vanilla's. BC `Translator.getRecipeName`
+  returns the id itself when there is none, and
+  `CraftRecipe.getTranslationName()` (the window's row text, SRC
+  `ISRecipeScrollingListBox.addGroup`) gives the same. The inventory craft
+  menu labels its options with `Translator.getRecipeName` too (SRC
+  `ISInventoryPaneContextMenu.lua:1238`). Before runs 193–194 the mod
+  shipped no `Recipes.json`, so the window listed `TLG_MakeFermenterVessel`
+  and its search found nothing by the machine's name (runs 191–192).
+  `tools/check-translations.ps1` now requires a name for every
+  `craftRecipe` in the mod's scripts.
+* The crafting button beside the equipped items (`ISEquippedItem`,
+  `internal = "CRAFTING"`) opens `ISHandcraftWindow` through
+  `ISEntityUI.OpenHandcraftWindow(player, nil)`, query
+  `"InHandCraft;AnySurfaceCraft"` (678 recipes in run 193), with a surface
+  found within one tile (the run's title read "Crafting on Barrel" beside
+  the workbench). It opened in list view. Its parts:
+  `handCraftPanel.recipesPanel.recipeFilterPanel.searchEntryBox` (typing
+  calls `ISWidgetRecipeFilterPanel.onTextChange`), the list
+  `handCraftPanel.recipesPanel.recipeListPanel.recipeListPanel` (rows with
+  `item` = the recipe; a click calls `onmousedown(target, recipe)` →
+  `logic:setRecipe`, a double-click `ISHandCraftPanel.onDoubleClick`),
+  and the Craft button `handCraftPanel.recipePanel.craftControl.buttonCraft`,
+  whose `enable` is set every frame from
+  `logic:cachedCanPerformCurrentRecipe()`. `ISButton.forceClick` does
+  nothing on a disabled button, as a click does not.
+* The window refreshes after an inventory change through
+  `Events.OnContainerUpdate` (→ `ISInventoryPage.dirtyUI` →
+  `refreshBackpacks` → `ISHandCraftPanel.drawDirty`). With that event
+  fired after items were added from Lua, the Craft button was enabled 2–30
+  ticks later.
+* After a craft the window's selection moved to another recipe
+  (`AddACigarette`, `BreakGlass`), as `ISHandCraftPanel.onStopCraft`
+  reselects when the current recipe can no longer be made.
+* `getScriptManager():getCraftRecipe("TLG_MakePotStill")` found nothing
+  in run 191; the objects from `CraftRecipeManager.queryRecipes` did.
+
 ## Climate (RT-SP runs 15–19)
 
 * `ClimateManager.getDayMeanTemperature()` is the season curve: it returns

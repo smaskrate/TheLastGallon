@@ -1,0 +1,22 @@
+# TLG single-player harness, the client in Italian
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=52830250254288247487 hours=2.0096 DayLength=4
+STEP rti_setup begin
+STEP rti_text begin
+PASS RTI.language_is_italian :: Translator.getLanguage() = IT
+OBS  RTI.strings ContextMenu 34/34, Fluids 8/8, IG_UI 172/172, ItemName 9/9, Recipes 7/7, Sandbox 17/17; samples: Carburante (The Last Gallon) | Condizioni sconosciute: non ancora campionato. Un carburante sconosciuto non è necessariamente cattivo. | Salvataggi esistenti
+PASS RTI.every_string_as_shipped :: 247 of 247 as shipped, 0 unresolved, 0 garbled; off: none
+PASS RTI.placeholders_filled :: "Carburante principale: Etanolo" | "Condizioni: Buono (stima 0.1, più o meno 0.3)"
+STEP rti_menus begin
+OBS  RTI.look menu "Osserva e annusa" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTI.fuel_menu "Carburante (The Last Gallon)" > Cosa so di questo carburante / Osserva e annusa / Preleva un campione (kit) / Aggiungi stabilizzante / Filtra / Lascia decantare e scarica l'acqua / Apri; Look and smell: Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.0, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+PASS RTI.fuel_menu_italian :: 7 entries; look dialog Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.0, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+OBS  RTI.status menu "Stato" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTI.machine_menu Status: Pronto <LINE> Temperatura qui adesso: 66.5 °F, all'aperto
+PASS RTI.machine_menu_italian :: Pronto <LINE> Temperatura qui adesso: 66.5 °F, all'aperto
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.01
+SUMMARY pass=5 fail=0
+DONE

@@ -7,6 +7,13 @@
   as part of the mod (`LICENSE.md`).
 * The game's mod list shows the mod's poster, its icon (the fermentation
   vessel's) and its category.
+* The crafting window and the craft menu name the mod's recipes ("Make
+  Fermentation Vessel", in Italian "Crea recipiente di fermentazione").
+  They showed their internal ids, such as "TLG_MakeFermenterVessel", so
+  searching for a machine by its name found nothing. Checked in game: all
+  seven recipes found by name in the crafting window and made with its
+  Craft button or a double-click (in English), and the Italian names as
+  the game reads them.
 * Fuel identity, ageing (chemical condition) and contamination (water,
   sediment, microbial) with storage, sealing, stabilizer and climate effects.
 * Inspection with method precision, hysteresis and "unknown" state; filter,

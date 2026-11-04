@@ -93,9 +93,18 @@ read through Inspect.)*
 
 ## Your first sustainable fuel: ethanol
 
-Build the machines from the crafting menu. The fermentation vessel, pot
-still and drying column need a table or counter within two tiles; the reflux
-still is welded in hand.
+Build the machines from the crafting window (the button beside your
+equipped items) or from the craft entry of an ingredient's inventory
+menu. In the window they are listed as *Make Fermentation Vessel*, *Make
+Pot Still*, *Make Reflux Column Still* and *Make Ethanol Drying Column*;
+the search box finds them by name. The fermentation vessel, pot still and
+drying column need a table or counter within two tiles; the reflux still
+is welded in hand. *(Checked in game: all of the mod's recipes found by
+name in the crafting window and made with its Craft button or by
+double-clicking them, the machines and the sampling kit, filter and
+stabilizer alike; with an ingredient missing, Craft stays disabled. The
+window was run in English; the Italian names were checked as the game
+reads them.)*
 
 1. **Fermentation vessel** – six planks, twelve nails, an empty jar and a
    hammer (Carpentry 2). It is carried in both hands, one at a time, like
