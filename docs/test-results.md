@@ -3954,9 +3954,15 @@ nothing had been uploaded.
 Not run:
 * the craft menu's option labels, which come from the same names;
 * the crafting window in Italian (the names were checked as the game
-  reads them);
-* the zip of the commit that takes this change (its files should match
-  launch 195's manifest).
+  reads them).
+
+After the commit (`42b8d3c`, 2026-11-05, on the user's "Yes"):
+`tools/package.ps1` built the zip of the commit, with 218/218 tests,
+compile check 118/0 and translations OK first. It is SHA-256
+`8bf6ba795a6a66f16afa616fed47d883ed848d0ef9d23c21629a09742547c551`,
+3,991,312 bytes. Its manifest is identical to launch 195's: the same 127
+files, byte for byte. Only the entries' time stamps differ, set from the
+commit. A second build gave the same bytes. This is the 0.1.0 package.
 
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run191_crafting_window.txt`,
 `…_run192_crafting_window_before.txt`, `…_run193_crafting_window.txt`,
