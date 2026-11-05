@@ -1,0 +1,10 @@
+[05-11-26 17:56:16.415] LOG  : Lua          f:0 st:102.426.661> [TLG][INFO] field manual added to 11 loot lists: BookstoreBlueCollar, CrateFarming, CrateGenerator, CrateMechanics, FarmerTools, GasStorageMechanics, Homesteading, LibraryMagazines, MechanicShelfBooks, StoreShelfMechanics, ToolStoreBooks.
+[05-11-26 17:56:20.521] LOG  : Lua          f:0 st:102.430.767> [TLG][INFO] vault: started; records with ids before 14 are adopted as found.
+[05-11-26 17:56:20.774] LOG  : Lua          f:0 st:102.431.020> [TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped).
+[05-11-26 17:56:20.774] LOG  : Lua          f:0 st:102.431.021> [TLG][INFO] machine move hooks installed.
+[05-11-26 17:56:20.775] LOG  : Lua          f:0 st:102.431.021> [TLG][INFO] vehicle adapter installed.
+[05-11-26 17:56:20.775] LOG  : Lua          f:0 st:102.431.021> [TLG][INFO] generator adapter installed.
+[05-11-26 17:56:20.775] LOG  : Lua          f:0 st:102.431.021> [TLG][INFO] station adapter installed.
+[05-11-26 17:56:20.775] LOG  : Lua          f:0 st:102.431.021> [TLG][INFO] The Last Gallon 0.1.0 ready (server=true client=false).
+[05-11-26 17:56:48.926] LOG  : Lua          f:63 st:102.459.173> [TLG][INFO] vault: supply S156876190-12 on item:1618576922 adopted (given out before the vault).
+[05-11-26 17:56:54.655] LOG  : Lua          f:121 st:102.464.901> [TLG][INFO] vault: process P156876190-13 on item:346144473 adopted (given out before the vault).

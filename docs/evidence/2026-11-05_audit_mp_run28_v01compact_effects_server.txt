@@ -1,0 +1,251 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlgb: hello role=B
+OBS  MPS.message from tlga: setup_effects role=A tag=effects_site
+OBS  MPS.reply effects_site car=237 cond=100 g1x=10663 g1y=10642 genCond=100 loudness=48 oneIn=30 power=4000 quality=96 role=A tag=effects_site
+OBS  MPS.message from tlga: ef_site car=237 role=A
+OBS  MPS.message from tlgb: ef_ready role=B
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=10 role=A tag=give_effects_can
+OBS  MPS.reply given ids=Base.PetrolCan=1550616956 role=A tag=give_effects_can
+OBS  MPS.message from tlga: effects_age deg=2.6 role=A tag=effects_age
+OBS  MPS.reply effects_age compatible=true grade=poor powerFactor=0.8514285714285714 reasons=aged role=A startFactor=0.712 tag=effects_age tank={cond=1.0000,deg={gasoline=2.6000},id=V186275829-12,mic=0.0000,prov={1={from=S186275829-13,k=in,n=10.0000,t=3.6012}},q={gasoline=10.0000,water=0.0000},rev=1.0000,stab=0.0000,t=3.6012,v=1.0000} tankL=10 wearFactor=1.7428571428571429
+OBS  MPS.message from tlga: effects_arm role=A scale=1000 stalls=false tag=effects_arm_stale
+OBS  MPS.effects sandbox VehicleStalls=false
+OBS  MPS.effects armed: car wear 150.0000 per litre at factor 2 (x1000 fixture); engine 100, carry 0.000000; quality 96 loudness 48 power 4000
+OBS  MPS.reply effects_arm cond=100 loudness=48 power=4000 powerState=nil quality=96 rate=150 role=A running=false state=Idle tag=effects_arm_stale tankL=10 wearCarry=nil
+OBS  MPS.effects minute 10: running false StartingFailed power 4000 quality 96 loudness 48 engine 100 tank 10.0000 power state nil wear carry nil
+OBS  MPS.effects minute 20: running false Idle power 4000 quality 96 loudness 48 engine 100 tank 10.0000 power state nil wear carry nil
+OBS  MPS.effects run 1 seen at minute 27: own power 4000, factor 0.851429, target 3406
+OBS  MPS.effects minute 27: running true Running power 3406 quality 96 loudness 48 engine 100 tank 10.0000 power state {applied=3406.0000,base=4000.0000} wear carry nil
+OBS  MPS.effects minute 28: running true Running power 3406 quality 96 loudness 48 engine 100 tank 10.0000 power state {applied=3406.0000,base=4000.0000} wear carry nil
+OBS  MPS.effects minute 29: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9994 power state {applied=3406.0000,base=4000.0000} wear carry 0.0628
+OBS  MPS.effects minute 30: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9989 power state {applied=3406.0000,base=4000.0000} wear carry 0.1256
+OBS  MPS.effects minute 31: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9983 power state {applied=3406.0000,base=4000.0000} wear carry 0.1884
+OBS  MPS.effects minute 32: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9977 power state {applied=3406.0000,base=4000.0000} wear carry 0.2512
+OBS  MPS.effects minute 33: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9972 power state {applied=3406.0000,base=4000.0000} wear carry 0.3139
+OBS  MPS.effects minute 34: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9966 power state {applied=3406.0000,base=4000.0000} wear carry 0.3766
+OBS  MPS.effects minute 35: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9961 power state {applied=3406.0000,base=4000.0000} wear carry 0.4394
+OBS  MPS.effects minute 36: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9955 power state {applied=3406.0000,base=4000.0000} wear carry 0.5022
+OBS  MPS.effects minute 37: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9955 power state {applied=3406.0000,base=4000.0000} wear carry 0.5022
+OBS  MPS.effects minute 38: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9949 power state {applied=3406.0000,base=4000.0000} wear carry 0.5650
+OBS  MPS.effects minute 39: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9944 power state {applied=3406.0000,base=4000.0000} wear carry 0.6278
+OBS  MPS.effects minute 40: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9938 power state {applied=3406.0000,base=4000.0000} wear carry 0.6906
+OBS  MPS.effects minute 41: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9932 power state {applied=3406.0000,base=4000.0000} wear carry 0.7534
+OBS  MPS.effects minute 42: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9927 power state {applied=3406.0000,base=4000.0000} wear carry 0.8162
+OBS  MPS.effects minute 43: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9921 power state {applied=3406.0000,base=4000.0000} wear carry 0.8790
+OBS  MPS.effects minute 44: running true Running power 3406 quality 96 loudness 48 engine 100 tank 9.9915 power state {applied=3406.0000,base=4000.0000} wear carry 0.9418
+OBS  MPS.effects minute 45: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9910 power state {applied=3406.0000,base=4000.0000} wear carry 0.0046
+OBS  MPS.effects minute 46: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9904 power state {applied=3406.0000,base=4000.0000} wear carry 0.0673
+OBS  MPS.effects minute 47: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9904 power state {applied=3406.0000,base=4000.0000} wear carry 0.0673
+OBS  MPS.effects minute 48: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9899 power state {applied=3406.0000,base=4000.0000} wear carry 0.1301
+OBS  MPS.effects minute 49: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9893 power state {applied=3406.0000,base=4000.0000} wear carry 0.1929
+OBS  MPS.effects minute 50: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9887 power state {applied=3406.0000,base=4000.0000} wear carry 0.2558
+OBS  MPS.effects minute 51: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9882 power state {applied=3406.0000,base=4000.0000} wear carry 0.3186
+OBS  MPS.effects minute 52: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9876 power state {applied=3406.0000,base=4000.0000} wear carry 0.3814
+OBS  MPS.effects minute 53: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9870 power state {applied=3406.0000,base=4000.0000} wear carry 0.4441
+OBS  MPS.effects minute 54: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9865 power state {applied=3406.0000,base=4000.0000} wear carry 0.5068
+OBS  MPS.effects minute 55: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9859 power state {applied=3406.0000,base=4000.0000} wear carry 0.5695
+OBS  MPS.effects minute 56: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9859 power state {applied=3406.0000,base=4000.0000} wear carry 0.5695
+OBS  MPS.effects minute 57: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9854 power state {applied=3406.0000,base=4000.0000} wear carry 0.6323
+OBS  MPS.effects minute 58: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9848 power state {applied=3406.0000,base=4000.0000} wear carry 0.6950
+OBS  MPS.effects minute 59: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9842 power state {applied=3406.0000,base=4000.0000} wear carry 0.7578
+OBS  MPS.effects minute 60: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9837 power state {applied=3406.0000,base=4000.0000} wear carry 0.8206
+OBS  MPS.effects minute 61: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9831 power state {applied=3406.0000,base=4000.0000} wear carry 0.8834
+OBS  MPS.effects minute 62: running true Running power 3406 quality 96 loudness 48 engine 99 tank 9.9825 power state {applied=3406.0000,base=4000.0000} wear carry 0.9462
+OBS  MPS.effects minute 63: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9820 power state {applied=3406.0000,base=4000.0000} wear carry 0.0090
+OBS  MPS.effects minute 64: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9814 power state {applied=3406.0000,base=4000.0000} wear carry 0.0718
+OBS  MPS.effects minute 65: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9808 power state {applied=3406.0000,base=4000.0000} wear carry 0.1345
+OBS  MPS.effects minute 66: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9808 power state {applied=3406.0000,base=4000.0000} wear carry 0.1345
+OBS  MPS.effects minute 67: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9803 power state {applied=3406.0000,base=4000.0000} wear carry 0.1973
+OBS  MPS.effects minute 68: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9797 power state {applied=3406.0000,base=4000.0000} wear carry 0.2601
+OBS  MPS.effects minute 69: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9792 power state {applied=3406.0000,base=4000.0000} wear carry 0.3229
+OBS  MPS.effects minute 70: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9786 power state {applied=3406.0000,base=4000.0000} wear carry 0.3857
+OBS  MPS.effects minute 71: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9780 power state {applied=3406.0000,base=4000.0000} wear carry 0.4485
+OBS  MPS.effects minute 72: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9775 power state {applied=3406.0000,base=4000.0000} wear carry 0.5113
+OBS  MPS.effects minute 73: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9769 power state {applied=3406.0000,base=4000.0000} wear carry 0.5741
+OBS  MPS.effects minute 74: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9763 power state {applied=3406.0000,base=4000.0000} wear carry 0.6369
+OBS  MPS.effects minute 75: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9763 power state {applied=3406.0000,base=4000.0000} wear carry 0.6369
+OBS  MPS.effects minute 76: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9758 power state {applied=3406.0000,base=4000.0000} wear carry 0.6997
+OBS  MPS.effects minute 77: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9752 power state {applied=3406.0000,base=4000.0000} wear carry 0.7625
+OBS  MPS.effects minute 78: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9746 power state {applied=3406.0000,base=4000.0000} wear carry 0.8253
+OBS  MPS.effects minute 79: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9741 power state {applied=3406.0000,base=4000.0000} wear carry 0.8881
+OBS  MPS.effects minute 80: running true Running power 3406 quality 96 loudness 48 engine 98 tank 9.9735 power state {applied=3406.0000,base=4000.0000} wear carry 0.9509
+OBS  MPS.effects minute 81: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9730 power state {applied=3406.0000,base=4000.0000} wear carry 0.0137
+OBS  MPS.effects minute 82: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9724 power state {applied=3406.0000,base=4000.0000} wear carry 0.0765
+OBS  MPS.effects minute 83: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9718 power state {applied=3406.0000,base=4000.0000} wear carry 0.1393
+OBS  MPS.effects minute 84: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9718 power state {applied=3406.0000,base=4000.0000} wear carry 0.1393
+OBS  MPS.effects minute 85: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9713 power state {applied=3406.0000,base=4000.0000} wear carry 0.2021
+OBS  MPS.effects minute 86: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9707 power state {applied=3406.0000,base=4000.0000} wear carry 0.2649
+OBS  MPS.effects minute 87: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9701 power state {applied=3406.0000,base=4000.0000} wear carry 0.3277
+OBS  MPS.effects minute 88: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9696 power state {applied=3406.0000,base=4000.0000} wear carry 0.3906
+OBS  MPS.effects minute 89: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9690 power state {applied=3406.0000,base=4000.0000} wear carry 0.4536
+OBS  MPS.effects minute 90: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9684 power state {applied=3406.0000,base=4000.0000} wear carry 0.5164
+OBS  MPS.effects minute 91: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9679 power state {applied=3406.0000,base=4000.0000} wear carry 0.5792
+OBS  MPS.effects minute 92: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9673 power state {applied=3406.0000,base=4000.0000} wear carry 0.6420
+OBS  MPS.effects minute 93: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9668 power state {applied=3406.0000,base=4000.0000} wear carry 0.7048
+OBS  MPS.effects minute 94: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9668 power state {applied=3406.0000,base=4000.0000} wear carry 0.7048
+OBS  MPS.effects minute 95: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9662 power state {applied=3406.0000,base=4000.0000} wear carry 0.7678
+OBS  MPS.effects minute 96: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9656 power state {applied=3406.0000,base=4000.0000} wear carry 0.8308
+OBS  MPS.effects minute 97: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9651 power state {applied=3406.0000,base=4000.0000} wear carry 0.8938
+OBS  MPS.effects minute 98: running true Running power 3406 quality 96 loudness 48 engine 97 tank 9.9645 power state {applied=3406.0000,base=4000.0000} wear carry 0.9568
+OBS  MPS.effects minute 99: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9639 power state {applied=3406.0000,base=4000.0000} wear carry 0.0199
+OBS  MPS.effects minute 100: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9634 power state {applied=3406.0000,base=4000.0000} wear carry 0.0829
+OBS  MPS.effects minute 101: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9628 power state {applied=3406.0000,base=4000.0000} wear carry 0.1459
+OBS  MPS.effects minute 102: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9622 power state {applied=3406.0000,base=4000.0000} wear carry 0.2090
+OBS  MPS.effects minute 103: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9622 power state {applied=3406.0000,base=4000.0000} wear carry 0.2090
+OBS  MPS.effects minute 104: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9617 power state {applied=3406.0000,base=4000.0000} wear carry 0.2721
+OBS  MPS.effects minute 105: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9611 power state {applied=3406.0000,base=4000.0000} wear carry 0.3353
+OBS  MPS.effects minute 106: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9605 power state {applied=3406.0000,base=4000.0000} wear carry 0.3984
+OBS  MPS.effects minute 107: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9600 power state {applied=3406.0000,base=4000.0000} wear carry 0.4615
+OBS  MPS.effects minute 108: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9594 power state {applied=3406.0000,base=4000.0000} wear carry 0.5246
+OBS  MPS.effects minute 109: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9588 power state {applied=3406.0000,base=4000.0000} wear carry 0.5877
+OBS  MPS.effects minute 110: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9583 power state {applied=3406.0000,base=4000.0000} wear carry 0.6509
+OBS  MPS.effects minute 111: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9577 power state {applied=3406.0000,base=4000.0000} wear carry 0.7140
+OBS  MPS.effects minute 112: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9577 power state {applied=3406.0000,base=4000.0000} wear carry 0.7140
+OBS  MPS.effects minute 113: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9571 power state {applied=3406.0000,base=4000.0000} wear carry 0.7771
+OBS  MPS.effects minute 114: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9566 power state {applied=3406.0000,base=4000.0000} wear carry 0.8402
+OBS  MPS.effects minute 115: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9560 power state {applied=3406.0000,base=4000.0000} wear carry 0.9034
+OBS  MPS.effects minute 116: running true Running power 3406 quality 96 loudness 48 engine 96 tank 9.9554 power state {applied=3406.0000,base=4000.0000} wear carry 0.9665
+OBS  MPS.effects minute 117: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9549 power state {applied=3406.0000,base=4000.0000} wear carry 0.0296
+OBS  MPS.effects minute 118: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9543 power state {applied=3406.0000,base=4000.0000} wear carry 0.0927
+OBS  MPS.effects minute 119: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9537 power state {applied=3406.0000,base=4000.0000} wear carry 0.1558
+OBS  MPS.effects minute 120: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9532 power state {applied=3406.0000,base=4000.0000} wear carry 0.2190
+OBS  MPS.effects minute 121: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9526 power state {applied=3406.0000,base=4000.0000} wear carry 0.2821
+OBS  MPS.effects minute 122: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9526 power state {applied=3406.0000,base=4000.0000} wear carry 0.2821
+OBS  MPS.effects minute 123: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9520 power state {applied=3406.0000,base=4000.0000} wear carry 0.3452
+OBS  MPS.effects minute 124: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9515 power state {applied=3406.0000,base=4000.0000} wear carry 0.4083
+OBS  MPS.effects minute 125: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9509 power state {applied=3406.0000,base=4000.0000} wear carry 0.4715
+OBS  MPS.effects minute 126: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9503 power state {applied=3406.0000,base=4000.0000} wear carry 0.5346
+OBS  MPS.effects minute 127: running true Running power 3406 quality 96 loudness 48 engine 95 tank 9.9498 power state {applied=3406.0000,base=4000.0000} wear carry 0.5977
+OBS  MPS.message from tlga: effects_probe role=A tag=effects_stale_running
+OBS  MPS.reply effects_probe accrual=5.597697666713181 backAt=-1 base=4000 calls=89 carry=0.5976976667131699 carry0=0 cond=95 cond0=100 costMax=1 costMs=29 costN=2413 factor=0.8514285714285714 featuresChanged= l0=48 litres=0.050235748291015625 loudness=48 minute=127 power=3406 powerState={applied=3406.0000,base=4000.0000} q0=96 quality=96 ranFor=100 reachedAt=0 role=A running=true runs=1 state=Running stoppedAfter=-1 strayed= tag=effects_stale_running tankL=9.949764251708984 target=3406 wearCarry=0.5977
+OBS  MPS.message from tlga: ef_mark cond=95 condCheck=0 loudness=48 name=stale_running power=3406 quality=96 role=A running=true
+OBS  MPS.message from tlgb: ef_seen name=stale_running role=B
+OBS  MPS.effects minute 128: running false ShuttingDown power 4000 quality 96 loudness 48 engine 95 tank 9.9492 power state nil wear carry 0.5977
+OBS  MPS.effects minute 130: running false ShuttingDown power 4000 quality 96 loudness 48 engine 95 tank 9.9492 power state nil wear carry 0.5977
+OBS  MPS.effects minute 140: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9492 power state nil wear carry 0.5977
+OBS  MPS.message from tlga: effects_probe role=A tag=effects_stale_stopped
+OBS  MPS.reply effects_probe accrual=5.597697666713181 backAt=0 base=4000 calls=89 carry=0.5976976667131699 carry0=0 cond=95 cond0=100 costMax=1 costMs=29 costN=2755 factor=0.8514285714285714 featuresChanged= l0=48 litres=0.050235748291015625 loudness=48 minute=145 power=4000 powerState=nil q0=96 quality=96 ranFor=101 reachedAt=0 role=A running=false runs=1 state=Idle stoppedAfter=128 strayed= tag=effects_stale_stopped tankL=9.949197769165039 target=3406 wearCarry=0.5977
+OBS  MPS.message from tlga: ef_mark cond=95 condCheck=1 loudness=48 name=stale_stopped power=4000 quality=96 role=A running=false
+OBS  MPS.message from tlgb: ef_seen name=stale_stopped role=B
+OBS  MPS.message from tlga: effects_blend role=A tag=effects_blend
+OBS  MPS.reply effects_blend compatible=false grade=unsuitable powerFactor=0 reasons=aged,too_much_ethanol role=A startFactor=0 tag=effects_blend tank={cond=1.0000,deg={ethanol=0.0000,gasoline=2.6000},id=V186275829-12,mic=0.0000,prov={1={from=S186275829-13,k=in,n=10.0000,t=3.6012}},q={ethanol=3.7309,gasoline=6.2182},rev=2.0000,stab=0.0000,t=3.6012,v=1.0000} wearFactor=1.4642857142857144
+OBS  MPS.message from tlga: effects_arm role=A scale=1 stalls=true tag=effects_arm_unfit
+OBS  MPS.effects sandbox VehicleStalls=true
+OBS  MPS.effects armed: car wear 0.1500 per litre at factor 2 (x1 fixture); engine 95, carry 0.597698; quality 96 loudness 48 power 4000
+OBS  MPS.reply effects_arm cond=95 loudness=48 power=4000 powerState=nil quality=96 rate=0.15 role=A running=false state=Idle tag=effects_arm_unfit tankL=9.949197769165039 wearCarry=0.5977
+OBS  MPS.effects minute 150: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9492 power state nil wear carry 0.5977
+OBS  MPS.effects minute 160: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9492 power state nil wear carry 0.5977
+OBS  MPS.message from tlga: effects_probe role=A tag=effects_unfit_refused
+OBS  MPS.reply effects_probe accrual=0 backAt=-1 base=-1 calls=0 carry=0.5976976667131699 carry0=0.5976976667131699 cond=95 cond0=95 costMax=1 costMs=29 costN=3059 factor=-1 featuresChanged= l0=48 litres=0 loudness=48 minute=161 power=4000 powerState=nil q0=96 quality=96 ranFor=-1 reachedAt=-1 role=A running=false runs=1 state=Idle stoppedAfter=-1 strayed= tag=effects_unfit_refused tankL=9.949197769165039 target=-1 wearCarry=0.5977
+OBS  MPS.message from tlga: ef_mark cond=95 condCheck=0 loudness=48 name=unfit_refused power=4000 quality=96 role=A running=false
+OBS  MPS.message from tlgb: ef_seen name=unfit_refused role=B
+OBS  MPS.message from tlga: effects_stalls on=false role=A tag=effects_stalls_off
+OBS  MPS.effects sandbox VehicleStalls=false
+OBS  MPS.reply effects_stalls minute=162 on=false role=A tag=effects_stalls_off
+OBS  MPS.effects run 2 seen at minute 165: own power 4000, factor 0.000000, target 2000
+OBS  MPS.effects minute 165: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9492 power state {applied=2000.0000,base=4000.0000} wear carry 0.5977
+OBS  MPS.effects minute 166: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9488 power state {applied=2000.0000,base=4000.0000} wear carry 0.5977
+OBS  MPS.effects minute 167: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9483 power state {applied=2000.0000,base=4000.0000} wear carry 0.5978
+OBS  MPS.effects minute 168: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9477 power state {applied=2000.0000,base=4000.0000} wear carry 0.5978
+OBS  MPS.effects minute 169: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9477 power state {applied=2000.0000,base=4000.0000} wear carry 0.5978
+OBS  MPS.effects minute 170: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9471 power state {applied=2000.0000,base=4000.0000} wear carry 0.5978
+OBS  MPS.effects minute 171: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9465 power state {applied=2000.0000,base=4000.0000} wear carry 0.5979
+OBS  MPS.effects minute 172: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9460 power state {applied=2000.0000,base=4000.0000} wear carry 0.5979
+OBS  MPS.effects minute 173: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9454 power state {applied=2000.0000,base=4000.0000} wear carry 0.5980
+OBS  MPS.effects minute 174: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9449 power state {applied=2000.0000,base=4000.0000} wear carry 0.5980
+OBS  MPS.effects minute 175: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9443 power state {applied=2000.0000,base=4000.0000} wear carry 0.5980
+OBS  MPS.effects minute 176: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9437 power state {applied=2000.0000,base=4000.0000} wear carry 0.5981
+OBS  MPS.effects minute 177: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9432 power state {applied=2000.0000,base=4000.0000} wear carry 0.5981
+OBS  MPS.effects minute 178: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9432 power state {applied=2000.0000,base=4000.0000} wear carry 0.5981
+OBS  MPS.effects minute 179: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9426 power state {applied=2000.0000,base=4000.0000} wear carry 0.5982
+OBS  MPS.effects minute 180: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9420 power state {applied=2000.0000,base=4000.0000} wear carry 0.5982
+OBS  MPS.effects minute 181: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9415 power state {applied=2000.0000,base=4000.0000} wear carry 0.5982
+OBS  MPS.effects minute 182: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9409 power state {applied=2000.0000,base=4000.0000} wear carry 0.5983
+OBS  MPS.effects minute 183: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9403 power state {applied=2000.0000,base=4000.0000} wear carry 0.5983
+OBS  MPS.effects minute 184: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9398 power state {applied=2000.0000,base=4000.0000} wear carry 0.5984
+OBS  MPS.effects minute 185: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9392 power state {applied=2000.0000,base=4000.0000} wear carry 0.5984
+OBS  MPS.effects minute 186: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9387 power state {applied=2000.0000,base=4000.0000} wear carry 0.5984
+OBS  MPS.effects minute 187: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9381 power state {applied=2000.0000,base=4000.0000} wear carry 0.5985
+OBS  MPS.effects minute 188: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9381 power state {applied=2000.0000,base=4000.0000} wear carry 0.5985
+OBS  MPS.effects minute 189: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9375 power state {applied=2000.0000,base=4000.0000} wear carry 0.5985
+OBS  MPS.effects minute 190: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9370 power state {applied=2000.0000,base=4000.0000} wear carry 0.5985
+OBS  MPS.effects minute 191: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9364 power state {applied=2000.0000,base=4000.0000} wear carry 0.5986
+OBS  MPS.effects minute 192: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9358 power state {applied=2000.0000,base=4000.0000} wear carry 0.5986
+OBS  MPS.effects minute 193: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9353 power state {applied=2000.0000,base=4000.0000} wear carry 0.5987
+OBS  MPS.effects minute 194: running true Running power 2000 quality 96 loudness 48 engine 95 tank 9.9347 power state {applied=2000.0000,base=4000.0000} wear carry 0.5987
+OBS  MPS.message from tlga: effects_probe role=A tag=effects_unfit_running
+OBS  MPS.reply effects_probe accrual=0.001008735384259905 backAt=-1 base=4000 calls=26 carry=0.598706402097429 carry0=0.5976976667131699 cond=95 cond0=95 costMax=1 costMs=46 costN=3686 factor=0 featuresChanged= l0=48 litres=0.014484405517578125 loudness=48 minute=194 power=2000 powerState={applied=2000.0000,base=4000.0000} q0=96 quality=96 ranFor=29 reachedAt=0 role=A running=true runs=2 state=Running stoppedAfter=-1 strayed= tag=effects_unfit_running tankL=9.934713363647461 target=2000 wearCarry=0.5987
+OBS  MPS.message from tlga: ef_mark cond=95 condCheck=0 loudness=48 name=unfit_running power=2000 quality=96 role=A running=true
+OBS  MPS.message from tlgb: ef_seen name=unfit_running role=B
+OBS  MPS.message from tlga: effects_stalls on=true role=A tag=effects_stalls_on
+OBS  MPS.effects sandbox VehicleStalls=true
+OBS  MPS.reply effects_stalls minute=194 on=true role=A tag=effects_stalls_on
+OBS  MPS.effects minute 195: running false Stalling power 2000 quality 96 loudness 48 engine 95 tank 9.9341 power state {applied=2000.0000,base=4000.0000} wear carry 0.5987
+OBS  MPS.effects minute 200: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 210: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.message from tlga: effects_probe role=A tag=effects_unfit_stalled
+OBS  MPS.reply effects_probe accrual=0.0010479875973292757 backAt=1 base=4000 calls=27 carry=0.5987456543104983 carry0=0.5976976667131699 cond=95 cond0=95 costMax=1 costMs=48 costN=4009 factor=0 featuresChanged= l0=48 litres=0.015048027038574219 loudness=48 minute=211 power=4000 powerState=nil q0=96 quality=96 ranFor=30 reachedAt=0 role=A running=false runs=2 state=Idle stoppedAfter=1 strayed= tag=effects_unfit_stalled tankL=9.934149742126465 target=2000 wearCarry=0.5987
+OBS  MPS.message from tlga: ef_mark cond=95 condCheck=1 loudness=48 name=unfit_stalled power=4000 quality=96 role=A running=false
+OBS  MPS.message from tlgb: ef_seen name=unfit_stalled role=B
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=8 role=A tag=give_generator_can
+OBS  MPS.reply given ids=Base.PetrolCan=156658644 role=A tag=give_generator_can
+OBS  MPS.effects minute 220: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 230: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 240: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.message from tlga: effects_gen_age deg=3 role=A tag=effects_gen_age
+OBS  MPS.reply effects_gen_age compatible=true cond=100 fuel=8 grade=poor hours=7.713415145874023 on=true powerFactor=0.8500000000000001 reasons=aged role=A side={cond=1.0000,deg={gasoline=3.0000},id=G186275829-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S186275829-16,k=in,n=8.0000,t=7.6334}},q={gasoline=8.0000,water=0.0000},rev=1.0000,stab=0.0000,t=7.6334,v=1.0000} startFactor=0.7000000000000001 tag=effects_gen_age wearFactor=1.75
+OBS  MPS.effects minute 250: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 260: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 270: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 280: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 290: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 300: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 310: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 320: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 330: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 340: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 350: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 360: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 370: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 380: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 390: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 400: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 410: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 420: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 430: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 440: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 450: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 460: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 470: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 480: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 490: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 500: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 510: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 520: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 530: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 540: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 550: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 560: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 570: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 580: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 590: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.effects minute 600: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.message from tlga: effects_gen_arm role=A scale=100 tag=effects_gen_arm
+OBS  MPS.reply effects_gen_arm cond=100 fuel=7.9832000732421875 hours=13.712467193603516 role=A side={cond=1.0000,deg={gasoline=3.0000},id=G186275829-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S186275829-16,k=in,n=8.0000,t=7.6334}},q={gasoline=8.0000,water=0.0000},rev=1.0000,stab=0.0000,t=7.6334,v=1.0000} tag=effects_gen_arm
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=2 role=A tag=give_generator_can_2
+OBS  MPS.reply given ids=Base.PetrolCan=1284647190 role=A tag=give_generator_can_2
+OBS  MPS.effects chargeWear 1: written 8.000000 L, fuel 7.983200 L, charged before 0.000000 L, factor 1.752334, 333.3333 points a litre at factor 2: condition 100 -> 96, carry 0.000000 -> 0.213050, 4 taken
+OBS  MPS.effects minute 610: running false Idle power 4000 quality 96 loudness 48 engine 95 tank 9.9341 power state nil wear carry 0.5987
+OBS  MPS.message from tlga: effects_gen_probe role=A tag=effects_gen_probe
+OBS  MPS.effects chargeWear 2: written 9.983200 L, fuel 9.983200 L, charged before 0.016800 L, factor 1.607962, 333.3333 points a litre at factor 2: condition 96 -> 96, carry 0.213050 -> 0.213050, 0 taken
+OBS  MPS.effects sandbox VehicleStalls=true
+OBS  MPS.reply effects_gen_probe again=0 againCond=96 againFrom=96 burned=0.0167999267578125 carry=0 carry1=0.21304954758358186 charges=1 cond=100 cond1=96 condNow=96 due=4.213049547583582 firstIndex=1 fuelNow=9.983200073242188 later=0 perLitre=333.33333333333337 role=A tag=effects_gen_probe wear=1.7523335562682223 whole=4
+OBS  MPS.message from tlga: effects_cleanup role=A tag=effects_cleanup
+OBS  MPS.effects sandbox VehicleStalls=true
+OBS  MPS.reply effects_cleanup role=A stalls=true tag=effects_cleanup
+OBS  MPS.message from tlga: finish role=A

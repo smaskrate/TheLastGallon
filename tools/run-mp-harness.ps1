@@ -59,11 +59,16 @@
   leave to the main menu, the server is saved, stopped and started again
   on the same world, and both join again (each client waits for
   Lua\TLG_harness_mpgo.txt, written once the server is up again).
+.PARAMETER DropVault
+  With -Restart: before the restart the server store is saved without the
+  vault of TLG/Authority/Vault.lua, as the mod saved it before the V-01
+  fix (security audit 2026-11-05), so the restarted server starts a vault
+  on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
     [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit")][string]$Only = "",
     [switch]$NoMod,
-    [switch]$NonAdmin, [switch]$Restart)
+    [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault)
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     Write-Host "The Windows session is locked; unlock the desktop and run again."
@@ -204,7 +209,8 @@ for ($i = 0; $i -lt $Clients; $i++) {
         (Join-Path $lua "TLG_harness_mpgo.txt"), (Join-Path $lua "TLG_harness_mpsnap.txt") -ErrorAction SilentlyContinue
     Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_request.txt") -Value $roles[$i]
     @("ip=127.0.0.1", "port=16361", "user=$($users[$i])", "password=$($cred[$users[$i]])",
-        "serverPassword=$($cred.serverPassword)", "only=$Only", "restart=$(if ($Restart) { '1' } else { '0' })") |
+        "serverPassword=$($cred.serverPassword)", "only=$Only", "restart=$(if ($Restart) { '1' } else { '0' })",
+        "dropVault=$(if ($DropVault) { '1' } else { '0' })") |
         Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_connect.txt")
 }
 $serverLua = Join-Path $serverCache "Lua"

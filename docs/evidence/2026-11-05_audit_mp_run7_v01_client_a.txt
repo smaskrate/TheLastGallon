@@ -1,0 +1,107 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP fuel_site begin
+OBS  MP.fuel site: pump 10636,10622 (6812 units), car 240, generators 10632,10628 and 10630,10628 
+STEP aud_fuel_site_arrives begin
+STEP mp_fuel_site_seen begin
+PASS MP.fuel_site_seen_A :: pump=true car=true tank=0 g1=0 g2=0
+STEP aud_where begin
+OBS  AUD.where: player 10660.5,10645.5 role=user; car 240 at 10639,10625 dist=42.0; pump 10636,10622; g1 10632,10628
+STEP aud_status_vehicle_far begin
+OBS  AUD.status vehicle far: ok=false reason=no_access duplicate=nil state=nil total=nil cap=nil primary=nil sealed=nil rev=nil grade=nil
+PASS MP.AUD1_status_vehicle_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_sample_vehicle_far begin
+OBS  AUD.sample vehicle far: ok=false reason=no_access duplicate=nil state=nil detail=not_at_fuel_cap
+PASS MP.AUD1_sample_vehicle_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_status_pump_far begin
+OBS  AUD.status pump far: ok=false reason=no_access duplicate=nil state=nil total=nil primary=nil
+PASS MP.AUD1_status_pump_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_status_generator_far begin
+OBS  AUD.status generator far: ok=false reason=no_access duplicate=nil state=nil total=nil grade=nil
+PASS MP.AUD1_status_generator_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_status_bogus_vehicle begin
+OBS  AUD.status bogus vehicle id: ok=false reason=unknown_target duplicate=nil state=nil detail=no_vehicle
+STEP aud_spawn_running_vessel begin
+OBS  AUD.spawned vessel id=123594056 at 10665,10640 batch=Processing
+STEP aud_vessel_lands begin
+STEP aud_probe_world begin
+OBS  AUD.server world: store=true seed=156769244 nextId=13 sites={P156769244-12={x=10665.0000,y=10640.0000,z=0.0000}}; record seed=nil nextId=nil sites=nil
+PASS MP.AUD2_server_store_keeps_the_machine_site_A :: store=true hit=true seed=156769244 record seed=nil sites=nil
+STEP aud_request_world begin
+STEP aud_read_world begin
+OBS  AUD.client received world: event=true seed=nil policy=new_world nextId=nil climateAcc=false machineSites=0 {}
+PASS MP.AUD2_world_record_sent_without_server_fields_A :: event=true policy=new_world 0 sites, seed=nil nextId=nil
+STEP aud_transmit_forged_world begin
+OBS  AUD.transmitted a forged world record (nextId=999999, audit=forged) from the client
+STEP aud_world_transmit_settles begin
+STEP aud_probe_world_after begin
+OBS  AUD.server world after the client's transmit: nextId=13 sites={P156769244-12={x=10665.0000,y=10640.0000,z=0.0000}}
+PASS MP.AUD2b_server_world_record_not_overwritten_by_client_A :: nextId=13
+STEP aud_probe_square begin
+OBS  AUD.pump square power: server grid=true elec=false; client grid=true elec=false; ElecShutModifier=14
+STEP aud_give_can begin
+OBS  AUD.given can id=1880496212
+STEP aud_can_arrives begin
+OBS  AUD.can in inventory=true 0.0000 L
+STEP aud_walk_to_pump begin
+STEP aud_status_pump_near begin
+OBS  AUD.status pump in reach: ok=true reason=nil duplicate=nil state=nil total=6812 primary=gasoline
+PASS MP.AUD1_status_pump_in_reach_answered_A :: ok=true reason=nil duplicate=nil state=nil
+STEP aud_transfer_pump_to_can begin
+OBS  AUD.transfer pump->can: ok=true reason=nil duplicate=nil state=nil moved=5 detail=nil (pump units before 6812, power=true)
+STEP aud_after_pump_to_can begin
+OBS  AUD.after transfer pump->can: can 0.0000 -> 5.0000 L; pump units 6812 -> 6807
+PASS MP.AUD3_pump_to_can_without_action_A :: moved=5 can 5.0000 L power=true
+STEP aud_walk_to_tank begin
+STEP aud_transfer_pump_to_car begin
+OBS  AUD.at the filler: inArea=true dist to pump square=4.12
+OBS  AUD.transfer pump->car: ok=false reason=no_access_source duplicate=nil state=nil moved=nil detail=out_of_reach
+STEP aud_probe_fuel_after_transfers begin
+OBS  AUD.server after transfers: pump units=6807 side={cap=10000.0000,cond=1.0000,deg={gasoline=0.1451},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141,sediment=4.9652,water=1.4206},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}; tank 0.0000 L record 0.0000 L; items 1880496212=5.0000 {cond=1.0000,deg={gasoline=0.1451},dirty=0.0000,id=S156769244-15,mic=0.0000,prov={1={from=R156769244-14,k=in,n=5.0000,t=2.1290}},q={gasoline=4.9953,sediment=0.0036,water=0.0010},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1290,v=1.0000}
+OBS  AUD.pump->car not moved (ok=false reason=no_access_source duplicate=nil state=nil): the car's filler is out of the pump's 3.5 tiles here
+STEP aud_look_can begin
+OBS  AUD.look at can: ok=true reason=nil duplicate=nil state=nil
+STEP aud_record_settles begin
+STEP aud_forge_item_sidecar begin
+OBS  AUD.forge item: sidecar before {cond=1.0000,deg={gasoline=0.1451},dirty=0.0000,id=S156769244-15,mic=0.0000,prov={1={from=R156769244-14,k=in,n=5.0000,t=2.1290}},q={gasoline=4.9953,sediment=0.0036,water=0.0010},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1290,v=1.0000}
+STEP aud_item_sync_settles begin
+STEP aud_probe_item_forged begin
+OBS  AUD.server item after client sync: found=true sidecar={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S156769244-15,mic=0.0000,prov={1={from=R156769244-14,k=in,n=5.0000,t=2.1290}},q={gasoline=4.9953,sediment=0.0036,water=0.0010},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1290,v=1.0000} fluid=5.0000
+PASS MP.AUD4_item_sidecar_reaches_server_mod_data_A :: {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S156769244-15,mic=0.0000,prov={1={from=R156769244-14,k=in,n=5.0000,t=2.1290}},q={gasoline=4.9953,sediment=0.0036,water=0.0010},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1290,v=1.0000}
+STEP aud_walk_to_pump begin
+STEP aud_forge_pump_sidecar begin
+OBS  AUD.forge pump: sidecar before {cap=10000.0000,cond=1.0000,deg={gasoline=0.1451},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141,sediment=4.9652,water=1.4206},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}
+STEP aud_forge_generator_conversion begin
+OBS  AUD.forge generator: modData before tlgConv=nil deviceId=nil
+STEP aud_object_sync_settles begin
+STEP aud_probe_fuel_forged begin
+OBS  AUD.server after object syncs: pump side={audit=forged,cap=10000.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}; g1 side=nil
+PASS MP.AUD4_pump_sidecar_reaches_server_mod_data_A :: before {cap=10000.0000,cond=1.0000,deg={gasoline=0.1451},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141,sediment=4.9652,water=1.4206},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}, after {audit=forged,cap=10000.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}
+STEP aud_probe_vault begin
+OBS  AUD.server reads through the vault (active=true): can {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S156769244-15,mic=0.0000,prov={1={from=R156769244-14,k=in,n=5.0000,t=2.1290}},q={gasoline=4.9953,sediment=0.0036,water=0.0010},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1290,v=1.0000} -> deg 0.1451 stab 0.0000 -> {cond=1.0000,deg={gasoline=0.1451},dirty=0.0000,id=S156769244-15,mic=0.0000,prov={1={from=R156769244-14,k=in,n=5.0000,t=2.1290}},q={gasoline=4.9953,sediment=0.0036,water=0.0010},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1290,v=1.0000}
+OBS  AUD.  pump {audit=forged,cap=10000.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000} -> water 1.4206 sediment 4.9652 -> {cap=10000.0000,cond=1.0000,deg={gasoline=0.1451},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141,sediment=4.9652,water=1.4206},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}
+OBS  AUD.  generator project {chassis=Base.Generator,commissionedAt=0.0000,conversion=flex_generator,credit={},delivered={},deviceKey=gen:AUDIT-D,deviceKind=generator,engineId=AUDIT-E,hours={},id=AUDIT-C,originalProfile=generator_si_stock,rev=1.0000,snap={cargoAndWeightImpact={},fuelStorageChanges={},requiredModules={},requiredTools={},reversalAndSalvageRules={},targetConsumerProfile=generator_si_flex,visualConfiguration={},workStages={}},state=Commissioned,t=0.0000,v=1.0000,workers={}} -> profile generator_si_stock -> nil
+PASS MP.AUD4_vault_active_on_server_A :: true
+PASS MP.AUD4_item_record_put_back_A :: deg 0.1451 stab 0.0000, after {cond=1.0000,deg={gasoline=0.1451},dirty=0.0000,id=S156769244-15,mic=0.0000,prov={1={from=R156769244-14,k=in,n=5.0000,t=2.1290}},q={gasoline=4.9953,sediment=0.0036,water=0.0010},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1290,v=1.0000}
+PASS MP.AUD4_pump_record_put_back_A :: before the forgery {cap=10000.0000,cond=1.0000,deg={gasoline=0.1451},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141,sediment=4.9652,water=1.4206},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}, after the read {cap=10000.0000,cond=1.0000,deg={gasoline=0.1451},frac=0.0000,id=R156769244-14,mic=0.0000,prov={},q={gasoline=6800.6141,sediment=4.9652,water=1.4206},rev=1.0000,stab=0.0000,t=2.1290,v=1.0000}
+PASS MP.AUD4_generator_conversion_reaches_server_mod_data_A :: {chassis=Base.Generator,commissionedAt=0.0000,conversion=flex_generator,credit={},delivered={},deviceKey=gen:AUDIT-D,deviceKind=generator,engineId=AUDIT-E,hours={},id=AUDIT-C,originalProfile=generator_si_stock,rev=1.0000,snap={cargoAndWeightImpact={},fuelStorageChanges={},requiredModules={},requiredTools={},reversalAndSalvageRules={},targetConsumerProfile=generator_si_flex,visualConfiguration={},workStages={}},state=Commissioned,t=0.0000,v=1.0000,workers={}}
+PASS MP.AUD4_generator_forged_conversion_dropped_A :: profile generator_si_stock, project after nil
+STEP aud_probe_generator_forged begin
+OBS  AUD.server generator after client sync: found=true profile=generator_si_stock side=nil
+PASS MP.AUD4_generator_forged_conversion_ignored_A :: generator_si_stock
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=19 fail=0
+DONE

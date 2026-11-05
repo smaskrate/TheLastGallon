@@ -1,0 +1,94 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlgb: hello role=B
+OBS  MPS.message from tlga: start role=A
+OBS  MPS.message from tlga: give items=Base.PetrolCan;TLG.FuelStabilizer;TLG.FuelStabilizer petrol=5 role=A tag=give_fuel
+OBS  MPS.reply given ids=Base.PetrolCan=1618576922;TLG.FuelStabilizer=192504208;TLG.FuelStabilizer=630366578 role=A tag=give_fuel
+OBS  MPS.message from tlga: probe_item id=1618576922 role=A tag=probe_can
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000} tag=probe_can
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=spawn_vessel x=10663 y=10642
+OBS  MPS.reply spawned batch=Processing id=346144473 item=TLG.FermenterVessel role=A tag=spawn_vessel x=10663 y=10642
+OBS  MPS.message from tlga: status_please role=A
+OBS  MPS.message from tlgb: status_done role=B
+OBS  MPS.message from tlga: roll_manual fills=100 role=A tag=roll_manual
+OBS  MPS.reply rolled fills=400 id=92112730 manuals=10 printMedia=true role=A tag=roll_manual
+OBS  MPS.message from tlga: probe_read media=TLG_ManualFuelSystems role=A tag=manual_read_on_server
+OBS  MPS.reply probe_read read=true role=A tag=manual_read_on_server
+OBS  MPS.message from tlga: give items=Base.Flier_Nolans role=A tag=give_flier
+OBS  MPS.reply given ids=Base.Flier_Nolans=732801658 role=A tag=give_flier
+OBS  MPS.message from tlga: probe_read media=nolansusedcars role=A tag=flier_read_on_server
+OBS  MPS.reply probe_read read=true role=A tag=flier_read_on_server
+OBS  MPS.message from tlga: give items=TLG.FuelSampleKit;TLG.YeastStarter;TLG.FuelFilter role=A tag=give_floor
+OBS  MPS.reply given ids=TLG.FuelSampleKit=224261243;TLG.YeastStarter=975713908;TLG.FuelFilter=1450052245 role=A tag=give_floor
+OBS  MPS.message from tlga: floor_ready role=A
+OBS  MPS.message from tlgb: probe_floor role=B tag=floor_seen_by_other
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel role=B tag=floor_seen_by_other
+OBS  MPS.message from tlgb: floor_shot role=B
+OBS  MPS.message from tlga: probe_floor role=A tag=floor_seen
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel role=A tag=floor_seen
+OBS  MPS.message from tlga: spawn item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641
+OBS  MPS.reply spawned batch=nil id=1241338792 item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641
+OBS  MPS.take of 346144473 by tlga: true
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=vessel_taken
+OBS  MPS.reply probe_vessel done=0.4842033386230469 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=2.7413549423217773 pause=not_placed role=A seen=2.7324695587158203 site=10663,10642 state=Paused t=2.7324695587158203 tag=vessel_taken takes=tlga:true vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlga: gait name=stand role=A
+OBS  MPS.message from tlgb: gait_shot name=stand role=B
+OBS  MPS.message from tlga: gait name=walk role=A
+OBS  MPS.message from tlgb: gait_shot name=walk role=B
+OBS  MPS.message from tlga: gait name=run role=A
+OBS  MPS.message from tlgb: gait_shot name=run role=B
+OBS  MPS.message from tlga: gait name=sprint role=A
+OBS  MPS.message from tlgb: gait_shot name=sprint role=B
+OBS  MPS.message from tlga: gait name=sneak role=A
+OBS  MPS.message from tlgb: gait_shot name=sneak role=B
+OBS  MPS.message from tlga: gait name=crouch role=A
+OBS  MPS.message from tlgb: gait_shot name=crouch role=B
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=vessel_put_down
+OBS  MPS.reply probe_vessel done=0.4842033386230469 inputs={sugar_eq=6.0000,water=30.0000} listed=10658,10647 now=2.846647262573242 pause=none role=A seen=2.837765693664551 site=10658,10647 state=Processing t=2.837765693664551 tag=vessel_put_down takes=tlga:true vessels=1 where=floor 10658,10647
+OBS  MPS.message from tlga: race_ready role=A x=10658 y=10647
+OBS  MPS.message from tlgb: race_at role=B
+OBS  MPS.message from tlga: race_now role=A
+OBS  MPS.take of 346144473 by tlga: true
+OBS  MPS.take of 346144473 by tlgb: false
+OBS  MPS.message from tlgb: race_done role=B
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=race
+OBS  MPS.reply probe_vessel done=0.5246286392211914 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=2.8915138244628906 pause=not_placed role=A seen=2.8781909942626953 site=10658,10647 state=Paused t=2.8781909942626953 tag=race takes=tlga:true tlga:true tlgb:false vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlga: try_take id=346144473 role=A tag=try_take
+OBS  MPS.take of 346144473 by tlgb: false
+OBS  MPS.reply try_take holder=tlga holderKeeps=true result=false role=A tag=try_take taker=tlgb takerHas=false takes=tlga:true tlga:true tlgb:false tlgb:false
+OBS  MPS.message from tlga: race_drop role=A
+OBS  MPS.message from tlga: give items=TLG.FermenterVessel role=A tag=give_vessel
+OBS  MPS.reply given ids=TLG.FermenterVessel=875339002 role=A tag=give_vessel
+OBS  MPS.take of 875339002 by tlga: nil
+OBS  MPS.message from tlga: probe_vessel id=875339002 role=A tag=probe_own_vessel
+OBS  MPS.reply probe_vessel done=-1 inputs=nil listed=no now=2.919499397277832 pause=none role=A seen=-1 site=none state=none t=-1 tag=probe_own_vessel takes=tlga:true tlga:true tlgb:false tlgb:false tlga:nil vessels=2 where=inventory tlga both hands
+OBS  MPS.message from tlga: probe_item id=1618576922 role=A tag=snap_can
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000} tag=snap_can
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=snap_vessel
+OBS  MPS.reply probe_vessel done=0.5246286392211914 inputs={sugar_eq=6.0000,water=30.0000} listed=10658,10647 now=2.9421586990356445 pause=none role=A seen=2.892401695251465 site=10658,10647 state=Processing t=2.892401695251465 tag=snap_vessel takes=tlga:true tlga:true tlgb:false tlgb:false tlga:nil vessels=2 where=floor 10658,10647
+OBS  MPS.message from tlga: probe_vault_stats role=A tag=snap_vault
+OBS  MPS.reply probe_vault_stats active=true adopted=0 dropped=0 from=1 moved=0 nextId=14 recs=16 restored=0 role=A tag=snap_vault
+OBS  MPS.message from tlga: drop_vault role=A tag=drop_vault
+OBS  MPS.reply drop_vault had=true nextId=14 role=A tag=drop_vault
+OBS  MPS.message from tlga: restarting role=A
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: probe_floor role=A tag=floor_after_restart
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite role=A tag=floor_after_restart
+OBS  MPS.message from tlga: probe_item id=1618576922 role=A tag=after_restart_can
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000} tag=after_restart_can
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=after_restart_vessel
+OBS  MPS.reply probe_vessel done=0.5246286392211914 inputs={sugar_eq=6.0000,water=30.0000} listed=10658,10647 now=2.9745283126831055 pause=none role=A seen=2.892401695251465 site=10658,10647 state=Processing t=2.892401695251465 tag=after_restart_vessel takes= vessels=2 where=floor 10658,10647
+OBS  MPS.message from tlga: probe_vault_stats can=1618576922 role=A tag=after_restart_vault
+OBS  MPS.reply probe_vault_stats active=true adopted=0 canCheck=adopted dropped=0 from=14 moved=0 nextId=25 recs=14 restored=0 role=A tag=after_restart_vault
+OBS  MPS.message from tlgb: probe_floor role=B tag=floor_seen_after_restart
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite role=B tag=floor_seen_after_restart
+OBS  MPS.message from tlga: finish role=A

@@ -4,6 +4,11 @@
 --   composition owner  TLG sidecar (part modData "tlg")
 --   consumption owner  native engine (Java); TLG never subtracts fuel
 --   replication        vehicle:transmitPartModData(part)
+--                      (server only: BaseVehicle.transmitPartModData acts only
+--                      when GameServer.server, BC 42.21; the security audit of
+--                      2026-11-05 found no other way for a client to set a
+--                      part's mod data), so the vault of TLG/Authority/Vault.lua
+--                      does not keep these records (audit V-01)
 --   reconciliation     native decrease (driving, idling, siphoning by code TLG
 --                      did not see) leaves proportionally; unknown increase is
 --                      untracked inflow at the pessimistic baseline, mixed in

@@ -3,6 +3,14 @@ require "TLG/Integration/Machines"
 require "TLG/Util/Rng"
 local Machines, World, Process = TLG.Integration.Machines, TLG.World, TLG.Domain.Process
 
+-- A note has only the fields the vault digests (Vault.NOTE_FIELDS): one with
+-- another would read as forged after every restart (audit V-01).
+local function noteFieldsKnown(note)
+    local known = {}
+    for _, f in ipairs(TLG.Authority.Vault.NOTE_FIELDS) do known[f] = true end
+    for f in pairs(note) do T.ok(known[f], "note field " .. tostring(f) .. " is one the vault digests") end
+end
+
 -- Stand-ins for the game calls the machine site adapter makes: global ModData,
 -- the clock, the cell's squares, the air temperature per square and outdoors,
 -- the daylight, grid power and the fire objects' classes. Installed for one
@@ -235,6 +243,7 @@ T.case("integration: every ten minutes the fire warming a machine is noted with 
         local note = item:getModData().tlgProc.fires[10]
         T.eq(note.f, 365); T.eq(note.x, 1); T.eq(note.y, 2); T.eq(note.r, true); T.eq(note.c, 35)
         T.near(note.t, 10.83, 1e-12); T.ok(note.rad == nil, "a fireplace's radius follows its fuel")
+        noteFieldsKnown(note)
         T.eq(item:getModData().tlgProc.site.room, true)
         -- The hearth out, the barbecue gives the air: its note has a fixed radius.
         hearth.lit = false
@@ -243,6 +252,7 @@ T.case("integration: every ten minutes the fire warming a machine is noted with 
         Machines.observeFires()
         note = item:getModData().tlgProc.fires[11]
         T.eq(note.c, 25); T.eq(note.rad, 3); T.eq(note.f, 100); T.eq(note.r, false); T.eq(note.x, -2)
+        noteFieldsKnown(note)
         -- Nothing warms it: false, the hour's last note wins, noted once an
         -- hour; the time it was found placed is kept every ten minutes.
         bbq.lit = false
@@ -312,6 +322,7 @@ T.case("integration: a campfire a player built is noted with its fuel and larges
         T.eq(note.k, "campfire"); T.eq(note.rmax, 10); T.eq(note.f, 397); T.eq(note.c, 35)
         T.eq(note.x, 9); T.eq(note.y, 0); T.eq(note.r, false)
         T.ok(note.rad == nil, "its radius follows its fuel"); T.near(note.t, 10.5, 1e-12)
+        noteFieldsKnown(note)
         -- Built inside: up to 18 tiles.
         md.exterior = false
         g.now = 11.0

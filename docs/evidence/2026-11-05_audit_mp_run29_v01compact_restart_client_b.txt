@@ -1,0 +1,98 @@
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_stand begin
+STEP mp_hide_ui begin
+STEP mp_hello begin
+STEP mp_wait_start begin
+STEP mp_wait_status_please begin
+STEP mp_walk_to_vessel begin
+STEP status begin
+PASS MP.machine_status_B :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_back begin
+STEP mp_status_done begin
+STEP mp_wait_floor begin
+STEP mp_floor_settle begin
+STEP mp_floor_shot begin
+OBS  MP.screenshot tlg_mpb_floor.png ok=true ; zoom 0.50; player 10661.5,10646.5
+STEP floor_seen_by_other begin
+OBS  MP.floor_seen_by_other this client 10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+OBS  MP.floor_seen_by_other the server  10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+PASS MP.floor_seen_by_other_B :: same as the server=true; missing on the server: none
+STEP mp_floor_shot_done begin
+STEP mp_see_stand begin
+OBS  MP.screenshot tlg_mpb_carry_stand.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry stand on B's screen: A found=true running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_stand_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_walk begin
+OBS  MP.screenshot tlg_mpb_carry_walk.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry walk on B's screen: A found=true running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_walk_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_run begin
+OBS  MP.screenshot tlg_mpb_carry_run.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry run on B's screen: A found=true running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_run_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_sprint begin
+OBS  MP.screenshot tlg_mpb_carry_sprint.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry sprint on B's screen: A found=true running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_sprint_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_sneak begin
+OBS  MP.screenshot tlg_mpb_carry_sneak.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry sneak on B's screen: A found=true running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_sneak_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_crouch begin
+OBS  MP.screenshot tlg_mpb_carry_crouch.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry crouch on B's screen: A found=true running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_crouch_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_wait_race_ready begin
+STEP mp_walk_to_race begin
+STEP mp_race_at begin
+OBS  MP.race B ready: the loot window lists the vessel=true
+STEP mp_race_take begin
+OBS  MP.race B queued at tick 4: ISEquipHeavyItem
+OBS  MP.race B 30 ticks on: ISEquipHeavyItem
+PASS MP.race_one_holder_seen_B :: this player holds it=false, the other=true (found=true)
+STEP mp_race_done begin
+STEP mp_wait_race_drop begin
+STEP mp_race_drop begin
+STEP mp_walk_back_after_race begin
+STEP mp_wait_restarting begin
+OBS  MP.A is leaving for the restart
+STEP mp_leave begin
+OBS  MP.leaving to the main menu for the server's restart
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected B (saved player: true)
+OBS  MP.game_start B again
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10661,10646 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_settle begin
+STEP floor_seen_after_restart begin
+OBS  MP.floor_seen_after_restart this client 10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+OBS  MP.floor_seen_after_restart the server  10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+PASS MP.floor_seen_after_restart_B :: same as the server=true; missing on the server: none
+STEP mp_wait_finish begin
+STEP mp_finish begin
+SUMMARY pass=12 fail=0
+DONE

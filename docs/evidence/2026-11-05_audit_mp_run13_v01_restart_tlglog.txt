@@ -1,0 +1,7 @@
+[05-11-26 17:49:44.155] LOG  : Lua          f:0 st:102.034.401> [TLG][INFO] field manual added to 11 loot lists: BookstoreBlueCollar, CrateFarming, CrateGenerator, CrateMechanics, FarmerTools, GasStorageMechanics, Homesteading, LibraryMagazines, MechanicShelfBooks, StoreShelfMechanics, ToolStoreBooks.
+[05-11-26 17:49:48.824] LOG  : Lua          f:0 st:102.039.070> [TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped).
+[05-11-26 17:49:48.825] LOG  : Lua          f:0 st:102.039.071> [TLG][INFO] machine move hooks installed.
+[05-11-26 17:49:48.825] LOG  : Lua          f:0 st:102.039.071> [TLG][INFO] vehicle adapter installed.
+[05-11-26 17:49:48.825] LOG  : Lua          f:0 st:102.039.071> [TLG][INFO] generator adapter installed.
+[05-11-26 17:49:48.825] LOG  : Lua          f:0 st:102.039.071> [TLG][INFO] station adapter installed.
+[05-11-26 17:49:48.826] LOG  : Lua          f:0 st:102.039.072> [TLG][INFO] The Last Gallon 0.1.0 ready (server=true client=false).

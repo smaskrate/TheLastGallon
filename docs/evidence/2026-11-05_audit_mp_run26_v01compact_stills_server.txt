@@ -1,0 +1,15 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_production role=A tag=production_site
+OBS  MPS.reply production_site dryer=1469189283 fermenter=1370825426 hours=120 outputs={ethanol=11.0000,water=100.0000} pot=1758505999 reflux=376290749 role=A state=OutputReady tag=production_site
+OBS  MPS.message from tlga: give items=Base.Log;Base.Log role=A tag=give_logs_pot
+OBS  MPS.reply given ids=Base.Log=1104414405;Base.Log=436021074 role=A tag=give_logs_pot
+OBS  MPS.message from tlga: give items=Base.Log;Base.Log role=A tag=give_logs_reflux
+OBS  MPS.reply given ids=Base.Log=2124618470;Base.Log=131135066 role=A tag=give_logs_reflux
+OBS  MPS.message from tlga: give items=Base.Log;Base.Log role=A tag=refeed_pot
+OBS  MPS.reply given ids=Base.Log=477610287;Base.Log=1852181843 role=A tag=refeed_pot
+OBS  MPS.message from tlga: finish role=A

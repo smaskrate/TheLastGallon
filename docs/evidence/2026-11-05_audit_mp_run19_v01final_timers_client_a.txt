@@ -1,0 +1,47 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP timers_site begin
+OBS  MP.timers site: campfire 10652,10653 built=true lit=true fuel 480; 32 machines (28 out of reach); by the fire 493709408 at 10653,10653, away 494764466 at 10662,10637 
+PASS MP.timers_campfire_and_machines_on_the_server_A :: lit true, 32 machines
+STEP mp_timers_hours begin
+OBS  MP.timers 3.00 game hours passed
+STEP timers_probe begin
+OBS  MP.timers server: 3 hour(s), 18 ten-minute pass(es), 32 machines; readings matched 96, not 0; notes matched 576, not 0; warmed by the fire: 4 beside it, 0 away; campfire notes by the fire 16; fewest readings on a record 3; campfire fuel 300 lit true
+OBS  MP.timers cost on the server: hour_climate 3 call(s): median 0 ms, mean 0.33 ms, max 1 ms
+OBS  MP.timers cost on the server: hour_readings 3 call(s): median 1 ms, mean 1.00 ms, max 1 ms
+OBS  MP.timers cost on the server: ten_minute_notes 18 call(s): median 4 ms, mean 4.39 ms, max 6 ms
+OBS  MP.timers cost on the server: machine_status none
+PASS MP.timers_hourly_readings_on_the_server_A :: 96 of 96 readings matched the air (3 hours, 32 machines)
+PASS MP.timers_fire_notes_on_the_server_A :: 576 of 576 notes as the air and the campfire give them; warmed 4 beside the fire, 0 away
+STEP mp_walk_to_machine_by_the_fire begin
+STEP timers_status_by_the_fire begin
+OBS  MP.timers status by_the_fire: ok=true reason=nil duplicate=nil state=Processing stage=ferment siteC=29.906148135484305 siteNow=false
+PASS MP.timers_status_by_the_fire_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_to_machine_away begin
+STEP timers_status_away begin
+OBS  MP.timers status away: ok=true reason=nil duplicate=nil state=Processing stage=ferment siteC=25.469397981985672 siteNow=false
+PASS MP.timers_status_away_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP timers_bench begin
+OBS  MP.timers bench on the server hour: first 1 ms; median 0.5970 ms per call (batches 0.5865-0.7194, 1625 calls)
+OBS  MP.timers bench on the server ten: first 3 ms; median 2.8714 ms per call (batches 2.7534-3.1562, 350 calls)
+OBS  MP.timers bench on the server status: first 0 ms; median 0.1131 ms per call (batches 0.1100-0.1217, 8758 calls)
+STEP timers_costs begin
+OBS  MP.timers cost on the server at the end: hour_climate 3 call(s): median 0 ms, mean 0.33 ms, max 1 ms
+OBS  MP.timers cost on the server at the end: hour_readings 3 call(s): median 1 ms, mean 1.00 ms, max 1 ms
+OBS  MP.timers cost on the server at the end: ten_minute_notes 21 call(s): median 4 ms, mean 4.33 ms, max 6 ms
+OBS  MP.timers cost on the server at the end: machine_status 2 call(s): median 0 ms, mean 0.50 ms, max 1 ms
+STEP mp_finish begin
+SUMMARY pass=6 fail=0
+DONE

@@ -1,0 +1,122 @@
+Security audit 2026-11-05, V-01, compact store: Kahlua VM bench (projectzomboid.jar 42.21 Kahlua, tools/run-tests.ps1 -Entry <script>).
+The script is tests/support/bench_machine_records.lua lines 1-79 with isServer switchable, then the part below. Not part of the suite.
+Each timed call is one game hour (reading) or ten minutes (note) later, so every write adds an entry and the trim drops the oldest.
+
+== script, after line 79 of bench_machine_records.lua ==
+local serverMode = false  -- replaces: isServer = function() return false end
+isServer = function() return serverMode end
+ModData.transmit = function() end
+
+local function time(label, fn)
+    local s = os.time()
+    local n = 0
+    repeat
+        fn()
+        n = n + 1
+    until os.time() - s >= 1
+    print(string.format("%-52s %9.4f ms per call (%d calls)", label, (os.time() - s) * 1000 / n, n))
+end
+require "TLG/Authority/Vault"
+local Vault = TLG.Authority.Vault
+md.seed, md.nextId = 12345, 10
+local orig = Tables.deepCopy(rec)
+local fireplace = Tables.deepCopy(rec)
+for h, _ in pairs(fireplace.fires) do
+    fireplace.fires[h] = { t = h + 0.83, f = 300 - (h % 50), x = 2, y = -1, r = false, c = 35 }
+end
+print(string.format("record: %d readings, %d notes", Tables.count(rec.temps), Tables.count(rec.fires)))
+
+-- Each call one game hour (reading) or ten minutes (note) later, so every
+-- write adds an entry and the trim drops the oldest, as in the game.
+-- With the vault on, each pass starts from a record the server wrote.
+local function fresh(start)
+    local r = Tables.deepCopy(start)
+    item:getModData().tlgProc = r
+    if serverMode then Vault.put("process", "item:7", r) end
+end
+local function passes(label, start)
+    fresh(start)
+    g.now = 600
+    time("sampleSites, " .. label, function()
+        g.now = g.now + 1
+        Machines.sampleSites()
+    end)
+    fresh(start)
+    g.now = 600
+    time("observeFires, " .. label, function()
+        g.now = g.now + 1 / 6
+        Machines.observeFires()
+    end)
+end
+
+passes("no vault, no-fire notes", orig)
+passes("no vault, fireplace notes", fireplace)
+serverMode = true
+local store = World.attachServerStore({})
+Vault.attach(store, false)
+local function withVault(label, start)
+    passes("vault, " .. label, start)
+end
+withVault("no-fire notes", orig)
+withVault("fireplace notes", fireplace)
+local pr = item:getModData().tlgProc
+print("after: state", tostring(pr and pr.state), "readings", Tables.count(pr and pr.temps or {}), "notes",
+    Tables.count(item:getModData().tlgProc.fires or {}), "restored", Vault.stats.restored,
+    "cleared", Vault.stats.cleared, "dropped", Vault.stats.dropped)
+
+-- The first read after a load: another table, equal; digests computed whole.
+local raw = Tables.deepCopy(fireplace)
+raw.id = "P1"
+item:getModData().tlgProc = raw
+Vault.put("process", "item:7", raw)
+time("deepCopy of the record (subtracted below)", function() Tables.deepCopy(raw) end)
+time("first read after a load, fireplace notes", function()
+    local _, status = Vault.check("process", "item:7", Tables.deepCopy(raw))
+    if status ~= "ok" then error("status " .. tostring(status)) end
+end)
+time("Vault.check, the table written", function() Vault.check("process", "item:7", raw) end)
+
+-- Sizes as saved.
+local e = store.vault.recs["process:P1"]
+print("bytes: record with fireplace notes", Vault.bytes(raw, 1e9), "vault entry", Vault.bytes(e, 1e9),
+    "store", Vault.bytes(store, 1e9))
+local full = Tables.deepCopy(raw)
+print("bytes: as the first version saved it (record in the entry)", Vault.bytes({ r = full, h = "item:7" }, 1e9))
+print("machines in 10 MB: compact", math.floor(10485760 / (Vault.bytes(e, 1e9) + 40)),
+    "first version", math.floor(10485760 / (Vault.bytes({ r = full, h = "item:7" }, 1e9) + 40)))
+
+== run 1 ==
+record: 480 readings, 480 notes
+sampleSites, no vault, no-fire notes                    0.4460 ms per call (2242 calls)
+observeFires, no vault, no-fire notes                   0.2022 ms per call (4946 calls)
+sampleSites, no vault, fireplace notes                  0.3702 ms per call (2701 calls)
+observeFires, no vault, fireplace notes                 0.1988 ms per call (5030 calls)
+sampleSites, vault, no-fire notes                       0.6386 ms per call (1566 calls)
+observeFires, vault, no-fire notes                      0.3500 ms per call (2857 calls)
+sampleSites, vault, fireplace notes                     0.5893 ms per call (1697 calls)
+observeFires, vault, fireplace notes                    0.3512 ms per call (2847 calls)
+after: state	Processing	readings	480	notes	481	restored	0	cleared	0	dropped	0
+deepCopy of the record (subtracted below)               1.1933 ms per call (838 calls)
+first read after a load, fireplace notes                4.5963 ms per call (218 calls)
+Vault.check, the table written                          0.0025 ms per call (398560 calls)
+bytes: record with fireplace notes	50562	vault entry	1161	store	1589
+bytes: as the first version saved it (record in the entry)	50584
+machines in 10 MB: compact	8730	first version	207
+
+== run 2 ==
+record: 480 readings, 480 notes
+sampleSites, no vault, no-fire notes                    0.4604 ms per call (2172 calls)
+observeFires, no vault, no-fire notes                   0.2139 ms per call (4675 calls)
+sampleSites, no vault, fireplace notes                  0.3893 ms per call (2569 calls)
+observeFires, no vault, fireplace notes                 0.2073 ms per call (4824 calls)
+sampleSites, vault, no-fire notes                       0.6845 ms per call (1461 calls)
+observeFires, vault, no-fire notes                      0.3695 ms per call (2706 calls)
+sampleSites, vault, fireplace notes                     0.6177 ms per call (1619 calls)
+observeFires, vault, fireplace notes                    0.3726 ms per call (2684 calls)
+after: state	Processing	readings	480	notes	481	restored	0	cleared	0	dropped	0
+deepCopy of the record (subtracted below)               1.1820 ms per call (846 calls)
+first read after a load, fireplace notes                4.5591 ms per call (220 calls)
+Vault.check, the table written                          0.0025 ms per call (408113 calls)
+bytes: record with fireplace notes	50562	vault entry	1161	store	1589
+bytes: as the first version saved it (record in the entry)	50584
+machines in 10 MB: compact	8730	first version	207

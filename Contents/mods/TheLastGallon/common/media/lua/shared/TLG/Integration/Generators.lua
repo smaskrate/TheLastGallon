@@ -25,9 +25,14 @@
 --                      the fuel burned since the record was last written,
 --                      charged when the mod next handles the generator
 --                      (refuel, pickup, switching, its commands; D-031)
+--   server copy        the record, the conversion project and the wear are
+--                      checked against the vault on a server (TLG/Authority/
+--                      Vault.lua, holder "gen:x,y,z" or the carried item;
+--                      audit V-01)
 require "TLG/Integration/Containers"
 require "TLG/Domain/EngineEffects"
 require "TLG/Boot"
+require "TLG/Authority/Vault"
 
 TLG.Integration.Generators = TLG.Integration.Generators or {}
 local G = TLG.Integration.Generators
@@ -36,6 +41,7 @@ local Supply, Mixing, Aging, Tx, Consumers = TLG.Domain.Supply, TLG.Domain.Mixin
     TLG.Authority.Transactions, TLG.Domain.Consumers
 local Tables = TLG.Tables
 local EngineEffects = TLG.Domain.EngineEffects
+local Vault = TLG.Authority.Vault
 
 G.DEFAULT_PROFILE = "generator_si_stock"
 G.ITEM_TYPES = { ["Base.Generator"] = true, ["Base.Generator_Old"] = true, ["Base.Generator_Yellow"] = true,
@@ -46,17 +52,29 @@ function G.keyOf(gen)
     return string.format("gen:%d,%d,%d", sq and sq:getX() or -1, sq and sq:getY() or -1, sq and sq:getZ() or -1)
 end
 
+local function sendFn(gen)
+    return function() gen:transmitModData() end
+end
+
+-- The object's fuel record, checked against the vault on a server.
+local function sidecarIn(gen)
+    return Vault.guard("supply", function() return G.keyOf(gen) end, gen:getModData(), "tlg", sendFn(gen))
+end
+
 function G.baseProfile(gen)
-    local side = gen:getModData().tlg
+    local side = sidecarIn(gen)
     return (side and side.profile) or G.DEFAULT_PROFILE
 end
 
 -- Effective profile: a Commissioned conversion wins (see ConversionDevices).
 function G.profile(gen)
     local CD = TLG.Integration.ConversionDevices
-    if CD and gen:getModData()[CD.KEY] then
-        local p = CD.effective(gen:getModData(), CD.describeGenerator(gen, false))
-        if p then return p end
+    if CD then
+        local md, holder = gen:getModData(), function() return G.keyOf(gen) end
+        if CD.project(md, holder, sendFn(gen)) then
+            local p = CD.effective(md, CD.describeGenerator(gen, false), holder)
+            if p then return p end
+        end
     end
     return G.baseProfile(gen)
 end
@@ -79,7 +97,7 @@ end
 function G.read(gen, persist)
     local fuel = gen:getFuel()
     local cap = math.max(gen:getMaxFuel(), fuel)
-    local raw = gen:getModData().tlg
+    local raw = sidecarIn(gen)
     local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", raw)
     if raw ~= nil and side == nil then return nil, schemaStatus end
     if side == nil then
@@ -111,7 +129,9 @@ local function sidecarOf(rec, profile)
 end
 
 function G.writeSidecar(gen, rec)
-    gen:getModData().tlg = sidecarOf(rec, G.baseProfile(gen))
+    local side = sidecarOf(rec, G.baseProfile(gen))
+    gen:getModData().tlg = side
+    Vault.put("supply", function() return G.keyOf(gen) end, side)
     gen:transmitModData()
 end
 
@@ -146,13 +166,15 @@ end
 function G.chargeWear(gen)
     if not World.isAuthority() then return 0 end
     local md = gen:getModData()
-    local side = md.tlg
+    local side = sidecarIn(gen)
     if type(side) ~= "table" or side.q == nil then return 0 end
     local fuel = gen:getFuel()
     local rec = fromSidecar(side, math.max(gen:getMaxFuel(), fuel))
     local written = Supply.total(rec)
     local key = string.format("%.6f|%s|%s", written, tostring(side.rev), tostring(side.t))
-    local w = md[G.WEAR_KEY]
+    -- Kept in the vault under the record's id; one the vault does not know
+    -- yet (a save from before it) is taken as found once.
+    local w = Vault.guardKeyed("wear", side.id, md, G.WEAR_KEY, sendFn(gen))
     if type(w) ~= "table" then w = { c = 0 } end
     if w.k ~= key then w.k, w.charged = key, 0 end
     local burned = written - fuel
@@ -173,6 +195,7 @@ function G.chargeWear(gen)
         if whole > 0 then gen:setCondition(math.max(0, gen:getCondition() - whole)) end
     end
     md[G.WEAR_KEY] = w
+    Vault.putKeyed("wear", side.id, w)
     return whole
 end
 
@@ -232,13 +255,20 @@ end
 -- Pickup: object sidecar -> item sidecar.
 local function installPickup()
     wrap(ISTakeGenerator, "complete", function(orig, self)
-        local side
+        local side, from
         if World.isAuthority() then
             pcall(function()
                 G.chargeWear(self.generator)
                 local rec = Aging.advance((G.read(self.generator, true)), World.now(), World.env())
                 side = sidecarOf(rec, G.baseProfile(self.generator))
                 local omd = self.generator:getModData()
+                -- Taken before the generator leaves its square.
+                from = Vault.active() and G.keyOf(self.generator) or nil
+                -- The project and the wear as the vault has them (they are
+                -- put back in omd when they differ).
+                local CD = TLG.Integration.ConversionDevices
+                if CD then CD.project(omd, from, sendFn(self.generator)) end
+                Vault.guardKeyed("wear", rec.id, omd, G.WEAR_KEY, sendFn(self.generator))
                 for _, k in ipairs(G.CARRIED_KEYS) do side[k] = TLG.Tables.deepCopy(omd[k]) end
             end)
         end
@@ -261,8 +291,12 @@ local function installPickup()
             end
             if it then
                 it:getModData().tlg = side
+                Vault.put("supply", Vault.itemHolder(it), side)
                 it:syncItemFields()
             end
+            -- The records travel with the item; the tile keeps none.
+            Vault.release("supply", from)
+            Vault.release("project", from)
         end
         return r
     end)
@@ -276,13 +310,23 @@ local function attach(obj, side)
         copy[k] = nil
     end
     omd.tlg = copy
+    local holder = function() return G.keyOf(obj) end
+    Vault.put("supply", holder, copy)
+    if omd.tlgConv ~= nil then Vault.put("project", holder, omd.tlgConv) else Vault.release("project", holder) end
+    if omd[G.WEAR_KEY] ~= nil then Vault.putKeyed("wear", copy.id, omd[G.WEAR_KEY]) end
+end
+
+-- A carried generator's record, checked against the vault on a server.
+local function itemSidecar(item)
+    return Vault.guard("supply", function() return Vault.itemHolder(item) end, item:getModData(), "tlg",
+        function() item:syncItemFields() end)
 end
 
 -- Item sidecar -> object sidecar: the generator converted from `item` is the
 -- one within `radius` squares that has no sidecar, the item's type (or none)
 -- and the item's fuel (setInfoFromItem copies both, BC).
 function G.attachNear(square, item, radius)
-    local side = item and item:getModData().tlg
+    local side = item and itemSidecar(item)
     if square == nil or side == nil or side.kind ~= "generator" then return false end
     local fuel = tonumber(item:getModData().fuel) or 0
     local r = radius or 0
@@ -382,9 +426,8 @@ local function installPlacement()
         local origNew = IsoGenerator.new
         IsoGenerator.new = function(item, cell, square)
             local g = origNew(item, cell, square)
-            if g and item and item:getModData().tlg and item:getModData().tlg.kind == "generator" then
-                attach(g, item:getModData().tlg)
-            end
+            local side = g and item and item:getModData().tlg and itemSidecar(item)
+            if side and side.kind == "generator" then attach(g, side) end
             return g
         end
     end

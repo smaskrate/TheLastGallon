@@ -1,0 +1,20 @@
+[05-11-26 18:51:48.205] LOG  : Lua          f:0 st:105.758.451> [TLG][INFO] field manual added to 11 loot lists: BookstoreBlueCollar, CrateFarming, CrateGenerator, CrateMechanics, FarmerTools, GasStorageMechanics, Homesteading, LibraryMagazines, MechanicShelfBooks, StoreShelfMechanics, ToolStoreBooks.
+[05-11-26 18:51:52.083] LOG  : Lua          f:0 st:105.762.330> [TLG][INFO] vault: started; records with ids before 14 are adopted as found.
+[05-11-26 18:51:52.345] LOG  : Lua          f:0 st:105.762.591> [TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped).
+[05-11-26 18:51:52.345] LOG  : Lua          f:0 st:105.762.591> [TLG][INFO] machine move hooks installed.
+[05-11-26 18:51:52.345] LOG  : Lua          f:0 st:105.762.591> [TLG][INFO] vehicle adapter installed.
+[05-11-26 18:51:52.345] LOG  : Lua          f:0 st:105.762.591> [TLG][INFO] generator adapter installed.
+[05-11-26 18:51:52.345] LOG  : Lua          f:0 st:105.762.591> [TLG][INFO] station adapter installed.
+[05-11-26 18:51:52.345] LOG  : Lua          f:0 st:105.762.592> [TLG][INFO] The Last Gallon 0.1.0 ready (server=true client=false).
+[05-11-26 18:52:20.780] LOG  : Lua          f:64 st:105.791.026> [TLG][INFO] vault: supply S185090862-12 on item:2127019816 adopted (given out before the vault).
+[05-11-26 18:52:26.363] LOG  : Lua          f:120 st:105.796.610> [TLG][INFO] vault: process P185090862-13 on item:2145043884 adopted (given out before the vault).
+[05-11-26 18:46:42.872] LOG  : Lua          f:0 st:105.453.119> [TLG][INFO] field manual added to 11 loot lists: BookstoreBlueCollar, CrateFarming, CrateGenerator, CrateMechanics, FarmerTools, GasStorageMechanics, Homesteading, LibraryMagazines, MechanicShelfBooks, StoreShelfMechanics, ToolStoreBooks.
+[05-11-26 18:46:44.036] LOG  : Lua          f:0 st:105.454.282> [TLG][INFO] world fuel history created: policy=new_world seed=185090862 epoch=0.00 installedAt=2.00 newGame=true.
+[05-11-26 18:46:45.911] LOG  : Lua          f:0 st:105.456.157> [TLG][INFO] world record: seed,nextId moved to the server store.
+[05-11-26 18:46:45.911] LOG  : Lua          f:0 st:105.456.157> [TLG][INFO] vault: started; records with ids before 1 are adopted as found.
+[05-11-26 18:46:46.155] LOG  : Lua          f:0 st:105.456.402> [TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped).
+[05-11-26 18:46:46.156] LOG  : Lua          f:0 st:105.456.402> [TLG][INFO] machine move hooks installed.
+[05-11-26 18:46:46.156] LOG  : Lua          f:0 st:105.456.402> [TLG][INFO] vehicle adapter installed.
+[05-11-26 18:46:46.156] LOG  : Lua          f:0 st:105.456.403> [TLG][INFO] generator adapter installed.
+[05-11-26 18:46:46.156] LOG  : Lua          f:0 st:105.456.403> [TLG][INFO] station adapter installed.
+[05-11-26 18:46:46.156] LOG  : Lua          f:0 st:105.456.403> [TLG][INFO] The Last Gallon 0.1.0 ready (server=true client=false).

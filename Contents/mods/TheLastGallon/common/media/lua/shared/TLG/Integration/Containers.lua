@@ -10,6 +10,9 @@
 --   replication        item: syncItemFields (a can's record the same on the
 --                      client as on the server, RT-MP runs 145-171); object:
 --                      transmitModData
+--   server copy        on a server every read is checked against the vault
+--                      (TLG/Authority/Vault.lua; audit V-01): clients can
+--                      rewrite both mod data stores there
 --   reconciliation     on every read: native decreases leave proportionally,
 --                      unknown increases mix in at the world baseline when
 --                      found, into the record advanced to then (D-006)
@@ -22,12 +25,14 @@ require "TLG/Integration/World"
 require "TLG/Authority/Transactions"
 require "TLG/Content/Containers"
 require "TLG/Persistence/Migrations"
+require "TLG/Authority/Vault"
 
 TLG.Integration.Containers = TLG.Integration.Containers or {}
 local C = TLG.Integration.Containers
 local Native, World = TLG.Integration.Native, TLG.World
 local Supply, Mixing, Aging, Tx = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging, TLG.Authority.Transactions
 local Tables = TLG.Tables
+local Vault = TLG.Authority.Vault
 
 C.SIDECAR = "tlg"
 C.SCHEMA = 1
@@ -70,6 +75,21 @@ function C.keyOf(owner, kind)
         tostring(owner:getObjectIndex()))
 end
 
+-- The vault's holder: the item, or the tile of the world object.
+function C.holderOf(owner, kind)
+    if kind == "item" then return Vault.itemHolder(owner) end
+    local sq = owner:getSquare()
+    return string.format("obj:%d,%d,%d", sq and sq:getX() or -1, sq and sq:getY() or -1, sq and sq:getZ() or -1)
+end
+
+local function send(owner, kind)
+    if kind == "object" then
+        owner:transmitModData()
+    elseif owner.syncItemFields then
+        owner:syncItemFields()
+    end
+end
+
 local function storageFor(owner, kind)
     if kind == "item" then return TLG.ContainerProfiles.forItem(owner) end
     return TLG.ContainerProfiles.forObject(owner)
@@ -92,10 +112,11 @@ function C.read(owner, kind, persist)
     if fc == nil then return nil, "no_fluid_container" end
     local comp, foreign = Native.readComposition(fc)
     if foreign > 1e-6 then return nil, "foreign_fluid" end
-    local md = owner:getModData()
+    local raw = Vault.guard("supply", function() return C.holderOf(owner, kind) end, owner:getModData(), C.SIDECAR,
+        function() send(owner, kind) end)
     -- Newer (unknown) schemas stay untouched and read-only (docs/migrations.md).
-    local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", md[C.SIDECAR])
-    if md[C.SIDECAR] ~= nil and side == nil then return nil, schemaStatus end
+    local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", raw)
+    if raw ~= nil and side == nil then return nil, schemaStatus end
     local storage = storageFor(owner, kind)
     local cap = fc:getCapacity()
     if side == nil then
@@ -159,11 +180,8 @@ function C.writeSidecar(owner, kind, rec)
     local side = { v = C.SCHEMA }
     for _, f in ipairs(SIDECAR_FIELDS) do side[f] = Tables.deepCopy(rec[f]) end
     owner:getModData()[C.SIDECAR] = side
-    if kind == "object" then
-        owner:transmitModData()
-    elseif owner.syncItemFields then
-        owner:syncItemFields()
-    end
+    Vault.put("supply", function() return C.holderOf(owner, kind) end, side)
+    send(owner, kind)
 end
 
 -- Writes the record and sets the container's fluids to its composition

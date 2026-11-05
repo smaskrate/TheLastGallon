@@ -1,0 +1,90 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1
+server started (shell pid 47016)
+server up after 27 s
+server: LOG  : General      f:0 st:99.691.292> command entered via server console (System.in): "adduser "tlga" "********""
+server: LOG  : General      f:0 st:99.693.003> command entered via server console (System.in): "setaccesslevel "tlga" "admin""
+server: LOG  : General      f:0 st:99.693.090> User tlga is now admin
+server: LOG  : General      f:0 st:99.695.014> command entered via server console (System.in): "adduser "tlgb" "********""
+server: LOG  : General      f:0 st:99.697.024> command entered via server console (System.in): "setaccesslevel "tlgb" "admin""
+server: LOG  : General      f:0 st:99.697.091> User tlgb is now admin
+client mp-a started, pid 47836
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP conversion_site begin
+OBS  MP.conversion generator at 10663,10642; the server's player: Mechanics 4, Electricity 2
+STEP mp_train begin
+STEP mp_conversion_items_arrive begin
+STEP mp_walk_to_conversion begin
+STEP conversion_begin begin
+OBS  MP.conversion_begin reply: ok=true reason=nil duplicate=nil state=InProgress stage=inspect missing=nil consumed=nil done=0/7.5
+PASS MP.conversion_begun_A :: ok=true reason=nil duplicate=nil state=InProgress
+STEP conversion_deliver begin
+OBS  MP.conversion_deliver reply: ok=true reason=nil duplicate=nil state=InProgress stage=inspect missing=nil consumed={Base.ElectricWire=1.0000,Base.RubberHose=1.0000,Base.Screws=4.0000} done=0/7.5
+PASS MP.conversion_parts_handed_over_A :: ok=true reason=nil duplicate=nil state=InProgress
+STEP mp_conversion_work begin
+OBS  MP.conversion work queued: ISTLGConversionWork
+OBS  MP.work reply 1: ok=true reason=nil duplicate=nil state=InProgress stage=inspect done=0/7.5 credited=nil
+OBS  MP.work reply 2: ok=true reason=nil duplicate=nil state=InProgress stage=inspect done=0.25047874450683594/7.5 credited=0.25047874450683594
+OBS  MP.work reply 3: ok=true reason=nil duplicate=nil state=InProgress stage=prepare done=0.5009670257568359/7.5 credited=0.25048828125
+OBS  MP.work reply 31: ok=true reason=nil duplicate=nil state=Commissioned stage=nil done=nil/nil credited=0.24784564971923828
+OBS  MP.conversion work ended after 16895 ticks, 31 replies, the last: ok=true reason=nil duplicate=nil state=Commissioned
+STEP conversion_status begin
+OBS  MP.conversion_status reply: ok=true reason=nil duplicate=nil state=Commissioned stage=nil missing=nil consumed=nil done=nil/nil
+PASS MP.conversion_commissioned_A :: ok=true reason=nil duplicate=nil state=Commissioned
+STEP converted_generator begin
+OBS  MP.converted_generator server: profile=generator_si_flex fuel=0.0000 on=false nil
+PASS MP.generator_converted_to_flex_A :: profile=generator_si_flex
+STEP give_conversion_ethanol begin
+STEP mp_cvCan_arrives begin
+OBS  MP.cvCan in the inventory=true, 3.0000 L
+STEP mp_pour_ethanol_into_flex begin
+OBS  MP.pour_ethanol_into_flex queued: ISTLGPourFuel
+STEP flex_after_pour begin
+OBS  MP.flex_after_pour server: profile=generator_si_flex fuel=3.0000 on=false {cond=1.0000,deg={ethanol=0.0382},id=G156799831-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156799831-15,k=in,n=3.0000,t=9.8221}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=9.8221,v=1.0000}
+OBS  MP.pour_ethanol_into_flex result on the player's client: ok=true reason=nil duplicate=nil state=nil
+PASS MP.flex_generator_takes_ethanol_unconfirmed_A :: generator 3.0000 L; can 0.0000 L
+STEP mp_start_flex_generator begin
+OBS  MP.start_flex_generator queued: ISActivateGenerator
+STEP flex_after_start begin
+OBS  MP.flex_after_start server: profile=generator_si_flex fuel=2.9912 on=true {cond=1.0000,deg={ethanol=0.0382},id=G156799831-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156799831-15,k=in,n=3.0000,t=9.8221}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=9.8221,v=1.0000}
+PASS MP.flex_generator_starts_on_ethanol_A :: on=true
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=7 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_conversion role=A tag=conversion_site
+OBS  MPS.reply conversion_site electricity=2 mechanics=4 role=A tag=conversion_site x=10663 y=10642
+OBS  MPS.message from tlga: probe_generator role=A tag=converted_generator x=10663 y=10642
+OBS  MPS.reply probe_generator found=true fuel=0 on=false profile=generator_si_flex role=A side=nil tag=converted_generator
+OBS  MPS.message from tlga: give fill=TLG_Ethanol items=Base.PetrolCan litres=3 role=A tag=give_conversion_ethanol
+OBS  MPS.reply given ids=Base.PetrolCan=1447185414 role=A tag=give_conversion_ethanol
+OBS  MPS.message from tlga: probe_generator role=A tag=flex_after_pour x=10663 y=10642
+OBS  MPS.reply probe_generator found=true fuel=3 on=false profile=generator_si_flex role=A side={cond=1.0000,deg={ethanol=0.0382},id=G156799831-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156799831-15,k=in,n=3.0000,t=9.8221}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=9.8221,v=1.0000} tag=flex_after_pour
+OBS  MPS.message from tlga: probe_generator role=A tag=flex_after_start x=10663 y=10642
+OBS  MPS.reply probe_generator found=true fuel=2.9911999702453613 on=true profile=generator_si_flex role=A side={cond=1.0000,deg={ethanol=0.0382},id=G156799831-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156799831-15,k=in,n=3.0000,t=9.8221}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=9.8221,v=1.0000} tag=flex_after_start
+OBS  MPS.message from tlga: finish role=A
+exit=0

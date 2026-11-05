@@ -61,6 +61,9 @@ local function setPhase(p) TLGH.writeFile("TLG_harness_mpstate.txt", { "phase=" 
 -- -Restart: the server is saved, stopped and started again while both
 -- clients wait at the main menu (tools/run-mp-harness.ps1).
 MP.restart = TLGH.readKeyValues("TLG_harness_connect.txt").restart == "1"
+-- -Restart -DropVault: the server store is saved without the vault before
+-- the restart, as the mod saved it before the V-01 fix (TLG/Authority/Vault.lua).
+MP.dropVault = TLGH.readKeyValues("TLG_harness_connect.txt").dropVault == "1"
 
 ------------------------------------------------------------------------------
 -- Main menu: join, then make the character.
@@ -1015,6 +1018,90 @@ A.snapVessel = call("snap_vessel", "probe_vessel", function() return { id = A.ve
         TLGH.writeFile(SNAP, A.snap)
         report():line("OBS  MP.before the restart: can %s; vessel %s", tostring(m and A.snap[1]), vesselText(m))
     end)
+-- The vault (V-01) before the restart, and after it: kept, or with -DropVault
+-- started again on the saved world, the records from before adopted.
+-- The vessel's record first gets the largest history the mod keeps (480
+-- hours of readings and fire notes, written by the server), so the restart
+-- carries it through the vault's digests (the compact store).
+A.fillHistory = call("fill_history", "fill_history", function() return { id = A.vesselId } end, "fill_history",
+    function(m)
+        report():line("OBS  MP.vessel history written by the server: found=%s record=%s readings=%s notes=%s",
+            tostring(m.found), tostring(m.record), tostring(m.temps), tostring(m.fires))
+    end)
+A.snapVault = call("snap_vault", "probe_vault_stats", function() return { vessel = A.vesselId } end,
+    "probe_vault_stats", function(m)
+    A.snap[#A.snap + 1] = "vaultFrom=" .. tostring(m.from)
+    A.snap[#A.snap + 1] = "nextId=" .. tostring(m.nextId)
+    A.snap[#A.snap + 1] = "vesselTemps=" .. tostring(m.vesselTemps)
+    A.snap[#A.snap + 1] = "vesselFires=" .. tostring(m.vesselFires)
+    TLGH.writeFile(SNAP, A.snap)
+    report():line("OBS  MP.vault before the restart: active=%s from=%s nextId=%s copies=%s store=%s bytes;"
+        .. " vessel %s, readings=%s notes=%s, record %s bytes, in the vault %s bytes, compact=%s", tostring(m.active),
+        tostring(m.from), tostring(m.nextId), tostring(m.recs), tostring(m.storeBytes), tostring(m.vesselCheck),
+        tostring(m.vesselTemps), tostring(m.vesselFires), tostring(m.vesselBytes), tostring(m.entryBytes),
+        tostring(m.vesselCompact))
+    check("vessel_history_written_before_the_restart", function()
+        return (tonumber(m.vesselTemps) or 0) >= 480 and (tonumber(m.vesselFires) or 0) >= 480,
+            string.format("readings %s, notes %s", tostring(m.vesselTemps), tostring(m.vesselFires))
+    end)
+    check("vault_keeps_the_vessel_compact", function()
+        return m.vesselCompact == "true" and (tonumber(m.entryBytes) or math.huge) < 2048,
+            string.format("compact %s, %s bytes in the vault, record %s bytes", tostring(m.vesselCompact),
+                tostring(m.entryBytes), tostring(m.vesselBytes))
+    end)
+end)
+A.dropVault = call("drop_vault", "drop_vault", function() return {} end, "drop_vault", function(m)
+    report():line("OBS  MP.vault dropped before the restart (had=%s, nextId=%s)", tostring(m.had), tostring(m.nextId))
+end)
+A.afterVault = call("after_restart_vault", "probe_vault_stats", function()
+    local snap = TLGH.readKeyValues(SNAP)
+    return { can = snap.canId, vessel = snap.vesselId }
+end, "probe_vault_stats", function(m)
+    local snap = TLGH.readKeyValues(SNAP)
+    report():line("OBS  MP.vault after the restart: active=%s from=%s nextId=%s copies=%s store=%s bytes can=%s"
+        .. " moved=%s adopted=%s restored=%s cleared=%s dropped=%s", tostring(m.active), tostring(m.from),
+        tostring(m.nextId), tostring(m.recs), tostring(m.storeBytes), tostring(m.canCheck), tostring(m.moved),
+        tostring(m.adopted), tostring(m.restored), tostring(m.cleared), tostring(m.dropped))
+    report():line("OBS  MP.vessel after the restart: %s, readings=%s notes=%s (before %s, %s), record %s bytes,"
+        .. " in the vault %s bytes, compact=%s", tostring(m.vesselCheck), tostring(m.vesselTemps),
+        tostring(m.vesselFires), tostring(snap.vesselTemps), tostring(snap.vesselFires), tostring(m.vesselBytes),
+        tostring(m.entryBytes), tostring(m.vesselCompact))
+    check("vault_in_use_after_the_restart", function() return m.active == "true", tostring(m.active) end)
+    -- The history read back as the server wrote it: the digests saved in the
+    -- store match the record the engine loaded with the item. (The hourly
+    -- reading may file one more hour and trim the oldest meanwhile.)
+    check("vessel_history_read_back_after_the_restart", function()
+        local okCheck = m.vesselCheck == "ok" or (MP.dropVault and m.vesselCheck == "adopted")
+        local t, f = tonumber(m.vesselTemps) or 0, tonumber(m.vesselFires) or 0
+        local t0, f0 = tonumber(snap.vesselTemps) or 0, tonumber(snap.vesselFires) or 0
+        return okCheck and t >= 480 and f >= 480 and math.abs(t - t0) <= 2 and math.abs(f - f0) <= 2,
+            string.format("%s, readings %d (before %d), notes %d (before %d)", tostring(m.vesselCheck), t, t0, f, f0)
+    end)
+    check("vault_keeps_the_vessel_compact_after_the_restart", function()
+        return m.vesselCompact == "true", string.format("compact %s, %s bytes", tostring(m.vesselCompact),
+            tostring(m.entryBytes))
+    end)
+    if MP.dropVault then
+        check("vault_started_on_the_saved_world", function()
+            return tonumber(m.from) ~= nil and tonumber(m.from) >= (tonumber(snap.nextId) or math.huge),
+                string.format("from %s, next id before the restart %s", tostring(m.from), tostring(snap.nextId))
+        end)
+        check("can_record_adopted_from_before_the_vault", function()
+            return m.canCheck == "adopted" or (m.canCheck == "ok" and (tonumber(m.adopted) or 0) >= 1),
+                string.format("can %s, adopted %s", tostring(m.canCheck), tostring(m.adopted))
+        end)
+    else
+        check("vault_kept_over_the_restart", function()
+            return m.from == snap.vaultFrom and m.canCheck == "ok",
+                string.format("from %s (before %s), can %s", tostring(m.from), tostring(snap.vaultFrom), tostring(m.canCheck))
+        end)
+    end
+    check("no_record_dropped_put_back_or_cleared_after_the_restart", function()
+        return m.dropped == "0" and m.restored == "0" and m.cleared == "0",
+            string.format("dropped %s, restored %s, cleared %s", tostring(m.dropped), tostring(m.restored),
+                tostring(m.cleared))
+    end)
+end)
 A.afterCan = call("after_restart_can", "probe_item", function()
     return { id = TLGH.readKeyValues(SNAP).canId }
 end, "probe_item", function(m)
@@ -1083,8 +1170,11 @@ for _, s in ipairs(carrySteps()) do table.insert(MP.stepsA, s) end
 for _, s in ipairs(raceStepsA()) do table.insert(MP.stepsA, s) end
 table.insert(MP.stepsA, walkTo("mp_walk_back_end", bx0, by0))
 if MP.restart then
+    table.insert(MP.stepsA, A.fillHistory)
     table.insert(MP.stepsA, A.snapCan)
     table.insert(MP.stepsA, A.snapVessel)
+    table.insert(MP.stepsA, A.snapVault)
+    if MP.dropVault then table.insert(MP.stepsA, A.dropVault) end
 end
 table.insert(MP.stepsA, A.leave)
 
@@ -1122,7 +1212,7 @@ MP.stepsRejoined = {
 if MP.restart then
     MP.stepsRejoined = MP.role == "A" and {
         MP.waitWorld, zoomTo("mp_zoom", 0.5), wait("mp_settle", 120),
-        compareFloor("floor_after_restart"), A.afterCan, A.afterVessel,
+        compareFloor("floor_after_restart"), A.afterCan, A.afterVessel, A.afterVault,
         { name = "mp_wait_b_back", timeout = 6000, fn = function(ctx, ticks)
             if otherPlayer() == nil then return nil end
             ctx.seen = ctx.seen or ticks

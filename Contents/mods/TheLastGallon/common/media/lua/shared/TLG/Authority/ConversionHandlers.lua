@@ -34,7 +34,7 @@ local function openDevice(player, ref)
         local sq = getCell():getGridSquare(ref.x, ref.y, ref.z)
         local gen = sq:getObjects():get(ref.index)
         local device, md = CD.describeGenerator(gen, true)
-        return { device = device, md = md, holder = gen }
+        return { device = device, md = md, holder = gen, vaultHolder = function() return CD.generatorHolder(gen) end }
     end
     return nil, fail("malformed_device")
 end
@@ -71,14 +71,14 @@ local function run(player, args, fn)
     local d, err = openDevice(player, args.device)
     if d == nil then return err end
     -- Never overwrite a project written by a newer build.
-    local project, status = CD.project(d.md)
+    local project, status = CD.project(d.md, d.vaultHolder)
     if d.md[CD.KEY] ~= nil and project == nil then return fail(status) end
     local actor = CD.actor(player, project, args.conversion)
     local req = { now = World.now(), expectedRev = args.expectedRevision, leave = args.leave,
         workerTimeoutHours = CD.WORKER_TIMEOUT_HOURS }
     local r = fn(project, actor, d.device, req, d)
     if not r.ok then return fail(r.reason, { missing = r.missing, rev = r.rev, state = r.state }) end
-    if not r.unchanged then CD.store(d.md, d.holder, r.project) end
+    if not r.unchanged then CD.store(d.md, d.holder, r.project, d.vaultHolder) end
     takeItems(player, r.consumed)
     giveItems(player, r.returned)
     local s = CS.status(r.project, actor, d.device)
@@ -129,7 +129,7 @@ H.commands["conversion.status"] = function(player, args)
     if bad then return bad end
     local d, err = openDevice(player, args.device)
     if d == nil then return err end
-    local project, status = CD.project(d.md)
+    local project, status = CD.project(d.md, d.vaultHolder)
     if d.md[CD.KEY] ~= nil and project == nil then return fail(status) end
     local options = {}
     for _, row in ipairs(CS.matrix()) do

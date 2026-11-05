@@ -1,0 +1,136 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_wait_b begin
+STEP effects_site begin
+OBS  MP.effects site: car 237, generator 10663,10642 (condition 100, one in 30); engine power 4000 quality 100 loudness 32 condition 100
+STEP mp_effects_see_car begin
+OBS  MP.effects car 237 on A's client: power 4000 quality 100 loudness 32 engine 100
+OBS  MP.effects tick 1 on A's client: power 4000 quality 100 loudness 32 running false engine 100
+STEP mp_wait_b_sees_car begin
+STEP give_effects_can begin
+STEP mp_efCan_arrives begin
+OBS  MP.efCan in the inventory=true, 10.0000 L
+STEP mp_can_to_car begin
+OBS  MP.can_to_car queued: ISPathFindAction, ISEquipWeaponAction, ISAddGasolineToVehicle
+STEP effects_age begin
+OBS  MP.effects stale tank 10.0000 L {cond=1.0000,deg={gasoline=2.6000},id=V156841250-12,mic=0.0000,prov={1={from=S156841250-13,k=in,n=10.0000,t=3.6000}},q={gasoline=10.0000,water=0.0000},rev=1.0000,stab=0.0000,t=3.6000,v=1.0000}; compatible=true grade=poor powerFactor=0.851429 wearFactor=1.742857
+PASS MP.effects_stale_fuel_costs_power_and_wear_A :: 10.0000 L, compatible=true power 0.851429 wear 1.742857
+STEP effects_arm_stale begin
+OBS  MP.effects armed stale: stalls false, car wear 150.0000 a litre at factor 2 (x1000 fixture); engine 100 quality 100 loudness 32 power 4000 running false
+STEP mp_enter_car begin
+OBS  MP.enter_car queued: ISPathFindAction, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP mp_start_car begin
+OBS  MP.effects tick 952 on A's client: power 4000 quality 100 loudness 11 running false engine 100
+OBS  MP.effects tick 1054 on A's client: power 4000 quality 100 loudness 11 running true engine 100
+OBS  MP.effects tick 1078 on A's client: power 3406 quality 100 loudness 11 running true engine 100
+OBS  MP.start_car running=true after 1 attempt(s)
+STEP mp_effects_idle begin
+OBS  MP.effects tick 1756 on A's client: power 3406 quality 100 loudness 11 running true engine 99
+OBS  MP.effects tick 2428 on A's client: power 3406 quality 100 loudness 11 running true engine 98
+OBS  MP.effects tick 3070 on A's client: power 3406 quality 100 loudness 11 running true engine 97
+OBS  MP.effects tick 3742 on A's client: power 3406 quality 100 loudness 11 running true engine 96
+OBS  MP.effects tick 4420 on A's client: power 3406 quality 100 loudness 11 running true engine 95
+STEP effects_stale_running begin
+OBS  MP.effects stale_running server: running true Running power 3406 (own 4000, factor 0.851429, target 3406, reached after 0 minute pass(es); ran 100, stopped -1 pass(es) after the last option change, own power back after -1) quality 100 loudness 32 engine 95 carry 0.646580; minute 111, runs 1; wear counted 90 minute(s) 0.050674 L 5.646580 points from engine 100 carry 0.000000; quality and loudness as armed; the mod's pass 2109 call(s) 24 ms, max 1 ms
+PASS MP.effects_stale_power_lowered_on_the_server_A :: 4000 -> 3406 (factor 0.851429) after 0 minute pass(es), held, now 3406
+PASS MP.effects_stale_quality_and_loudness_kept_on_the_server_A :: quality 100 loudness 32
+OBS  MP.effects stale_running on A's client: power 3406 quality 100 loudness 11 running true engine 95; the server's power 3406 quality 100 loudness 32 running true engine 95
+PASS MP.effects_stale_running_engine_seen_A :: power 3406 (server 3406) quality 100 (server 100) running true (server true)
+STEP mp_effects_seen_stale_running begin
+STEP mp_effects_shut_off begin
+OBS  MP.effects_shut_off queued: ISShutOffVehicleEngine
+OBS  MP.effects tick 4858 on A's client: power 3406 quality 100 loudness 11 running false engine 95
+OBS  MP.effects tick 4870 on A's client: power 4000 quality 100 loudness 11 running false engine 95
+STEP effects_stale_stopped begin
+OBS  MP.effects stale_stopped server: running false Idle power 4000 (own 4000, factor 0.851429, target 3406, reached after 0 minute pass(es); ran 101, stopped 112 pass(es) after the last option change, own power back after 0) quality 100 loudness 32 engine 95 carry 0.646580; minute 129, runs 1; wear counted 90 minute(s) 0.050674 L 5.646580 points from engine 100 carry 0.000000; quality and loudness as armed; the mod's pass 2451 call(s) 24 ms, max 1 ms
+PASS MP.effects_stale_power_back_after_the_stop_A :: power 4000 (own 4000) 0 minute pass(es) after the stop; state nil
+PASS MP.effects_stale_engine_worn_by_the_litres_burned_A :: 5 points taken + 0.646580 carried = 5.646580; due 5.646580 (90 minute(s), 0.050674 L)
+OBS  MP.effects stale_stopped on A's client: power 4000 quality 100 loudness 11 running false engine 95; the server's power 4000 quality 100 loudness 32 running false engine 95
+PASS MP.effects_stale_stopped_engine_seen_A :: power 4000 (server 4000) quality 100 (server 100) running false (server false)
+PASS MP.effects_stale_stopped_engine_condition_seen_A :: 95 (server 95)
+STEP mp_effects_seen_stale_stopped begin
+STEP effects_blend begin
+OBS  MP.effects unfit blend {cond=1.0000,deg={ethanol=0.0000,gasoline=2.6000},id=V156841250-12,mic=0.0000,prov={1={from=S156841250-13,k=in,n=10.0000,t=3.6000}},q={ethanol=3.7310,gasoline=6.2183},rev=2.0000,stab=0.0000,t=3.6000,v=1.0000}; compatible=false powerFactor=0.000000 reasons aged,too_much_ethanol
+PASS MP.effects_blend_unfit_for_the_engine_A :: compatible=false aged,too_much_ethanol
+STEP effects_arm_unfit begin
+OBS  MP.effects armed unfit: stalls true, car wear 0.1500 a litre at factor 2 (x1 fixture); engine 95 quality 100 loudness 32 power 4000 running false
+STEP mp_effects_start_refused begin
+OBS  MP.effects start queued: ISStartVehicleEngine
+OBS  MP.effects start on the unfit blend: running=false state=Idle on A's client
+STEP effects_unfit_refused begin
+OBS  MP.effects unfit_refused server: running false Idle power 4000 (own -1, factor -1.000000, target -1, reached after -1 minute pass(es); ran -1, stopped -1 pass(es) after the last option change, own power back after -1) quality 100 loudness 32 engine 95 carry 0.646580; minute 145, runs 1; wear counted 0 minute(s) 0.000000 L 0.000000 points from engine 95 carry 0.646580; quality and loudness as armed; the mod's pass 2755 call(s) 24 ms, max 1 ms
+PASS MP.effects_start_refused_on_the_unfit_blend_A :: running false, runs 1 (before 1)
+OBS  MP.effects unfit_refused on A's client: power 4000 quality 100 loudness 11 running false engine 95; the server's power 4000 quality 100 loudness 32 running false engine 95
+PASS MP.effects_unfit_refused_engine_seen_A :: power 4000 (server 4000) quality 100 (server 100) running false (server false)
+STEP mp_effects_seen_unfit_refused begin
+STEP effects_stalls_off begin
+OBS  MP.effects stalls false on the server at minute 145
+STEP mp_start_car begin
+OBS  MP.effects tick 6244 on A's client: power 4000 quality 100 loudness 11 running true engine 95
+OBS  MP.effects tick 6256 on A's client: power 2000 quality 100 loudness 11 running true engine 95
+OBS  MP.start_car running=true after 1 attempt(s)
+STEP mp_effects_unfit_idle begin
+STEP effects_unfit_running begin
+OBS  MP.effects unfit_running server: running true Running power 2000 (own 4000, factor 0.000000, target 2000, reached after 0 minute pass(es); ran 28, stopped -1 pass(es) after the last option change, own power back after -1) quality 100 loudness 32 engine 95 carry 0.647559; minute 177, runs 2; wear counted 25 minute(s) 0.014057 L 0.000979 points from engine 95 carry 0.646580; quality and loudness as armed; the mod's pass 3363 call(s) 38 ms, max 1 ms
+PASS MP.effects_unfit_runs_at_the_floor_with_stalls_off_A :: power 2000 (own 4000, target 2000) after 0 pass(es); ran 28 minute(s) without a stall
+OBS  MP.effects unfit_running on A's client: power 2000 quality 100 loudness 11 running true engine 95; the server's power 2000 quality 100 loudness 32 running true engine 95
+PASS MP.effects_unfit_running_engine_seen_A :: power 2000 (server 2000) quality 100 (server 100) running true (server true)
+STEP mp_effects_seen_unfit_running begin
+STEP effects_stalls_on begin
+OBS  MP.effects stalls true on the server at minute 178
+STEP mp_effects_wait_stall begin
+OBS  MP.effects tick 7384 on A's client: power 2000 quality 100 loudness 11 running false engine 95
+OBS  MP.effects tick 7420 on A's client: power 4000 quality 100 loudness 11 running false engine 95
+OBS  MP.effects A's client: running=false 40 ticks after stalls went on
+STEP effects_unfit_stalled begin
+OBS  MP.effects unfit_stalled server: running false Idle power 4000 (own 4000, factor 0.000000, target 2000, reached after 0 minute pass(es); ran 30, stopped 1 pass(es) after the last option change, own power back after 1) quality 100 loudness 32 engine 95 carry 0.647638; minute 195, runs 2; wear counted 27 minute(s) 0.015192 L 0.001058 points from engine 95 carry 0.646580; quality and loudness as armed; the mod's pass 3705 call(s) 41 ms, max 1 ms
+PASS MP.effects_unfit_stalls_with_the_option_on_A :: stopped 1 minute pass(es) after stalls went on; power 4000 (own 4000) 1 pass(es) later
+OBS  MP.effects unfit_stalled on A's client: power 4000 quality 100 loudness 11 running false engine 95; the server's power 4000 quality 100 loudness 32 running false engine 95
+PASS MP.effects_unfit_stalled_engine_seen_A :: power 4000 (server 4000) quality 100 (server 100) running false (server false)
+PASS MP.effects_unfit_stalled_engine_condition_seen_A :: 95 (server 95)
+STEP mp_effects_seen_unfit_stalled begin
+STEP mp_effects_loudness begin
+OBS  MP.effects loudness on A's client: 32 before the engine first ran, 11 at its first running tick, changed since: no; the server's 32 (x0.37037036 = 11)
+PASS MP.effects_loudness_kept_after_the_engine_first_ran_A :: held at 11
+STEP mp_effects_exit begin
+OBS  MP.effects_exit queued: ISOpenVehicleDoor, ISExitVehicle, ISCloseVehicleDoor
+STEP give_generator_can begin
+STEP mp_genCan1_arrives begin
+OBS  MP.genCan1 in the inventory=true, 8.0000 L
+STEP mp_effects_gen_fuel begin
+OBS  MP.effects_gen_fuel queued: ISWalkToTimedAction, ISEquipWeaponAction, ISAddFuel
+STEP effects_gen_age begin
+OBS  MP.effects generator 8.0000 L, condition 100, on true, record {cond=1.0000,deg={gasoline=3.0000},id=G156841250-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156841250-16,k=in,n=8.0000,t=7.3684}},q={gasoline=8.0000,water=0.0000},rev=1.0000,stab=0.0000,t=7.3684,v=1.0000}; compatible=true wearFactor=1.750000
+PASS MP.effects_gen_fuel_wears_A :: on true, 8.0000 L, wear 1.750000
+STEP mp_effects_generator_runs begin
+OBS  MP.effects generator ran 6.00 game h: fuel 7.9652 L, condition 100 on A's client
+STEP effects_gen_arm begin
+OBS  MP.effects generator armed (wear x100 fixture): 7.9652 L, condition 100, record {cond=1.0000,deg={gasoline=3.0000},id=G156841250-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156841250-16,k=in,n=8.0000,t=7.3684}},q={gasoline=8.0000,water=0.0000},rev=1.0000,stab=0.0000,t=7.3684,v=1.0000}
+STEP give_generator_can_2 begin
+STEP mp_genCan2_arrives begin
+OBS  MP.genCan2 in the inventory=true, 2.0000 L
+STEP mp_effects_gen_charge begin
+OBS  MP.effects_gen_charge queued: ISEquipWeaponAction, ISAddFuel
+STEP effects_gen_probe begin
+OBS  MP.effects generator charge (call 1 of 1): 0.034799 L burned at factor 1.752065, 333.3333 points a litre at factor 2: 8.723606 due; condition 100 -> 92, carry 0.000000 -> 0.723606; charged again: 0 (condition 92 -> 92), later calls 0; now 9.9652 L, condition 92; A's client 92
+PASS MP.effects_gen_worn_by_the_litres_burned_A :: 8 points taken + 0.723606 carried; due 8.723606
+PASS MP.effects_gen_not_charged_twice_A :: again 0, later calls 0
+PASS MP.effects_gen_condition_seen_A :: 92 (server 92)
+STEP effects_cleanup begin
+OBS  MP.effects fixtures undone; stalls true
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=22 fail=0
+DONE

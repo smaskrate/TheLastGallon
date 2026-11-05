@@ -172,6 +172,57 @@ function services.probe_vessel(player, args)
         now = TLG.World.now(), inputs = S.text(rec and rec.inputs) })
 end
 
+-- The vessel `id` on the floor around the spawn point or in an online
+-- player's inventory, as probe_vessel finds it.
+local function vesselById(id)
+    for x = S.CX - S.R, S.CX + S.R do
+        for y = S.CY - S.R, S.CY + S.R do
+            local sq = getCell():getGridSquare(x, y, 0)
+            local objs = sq and sq:getWorldObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local it = objs:get(i):getItem()
+                if it and it:getID() == id then return it end
+            end
+        end
+    end
+    local list = getOnlinePlayers()
+    for i = 0, (list and list:size() or 0) - 1 do
+        local it = list:get(i):getInventory():getItemWithIDRecursiv(id)
+        if it then return it end
+    end
+    return nil
+end
+
+-- -Restart: the vessel's record given, by the authority, the largest history
+-- the mod keeps: 480 hours of readings and fire notes (Machines.MAX_READINGS),
+-- for the hours to come so the trim keeps them. The restart then carries it
+-- through the vault's digests (audit V-01, the compact store) and the
+-- engine's save and load.
+function services.fill_history(player, args)
+    local M = TLG.Integration.Machines
+    local item = vesselById(tonumber(args.id))
+    local rec = item and M.stored(item)
+    local out = { found = tostring(item ~= nil), record = tostring(rec ~= nil) }
+    if rec then
+        local now = math.floor(TLG.World.now())
+        rec.temps, rec.fires = rec.temps or {}, rec.fires or {}
+        for h = now + 1, now + M.MAX_READINGS do
+            rec.temps[h] = 17 + (h % 11) * 0.137
+            if h % 4 == 0 then
+                rec.fires[h] = false
+            else
+                rec.fires[h] = { t = h + 0.83, f = 900 - h % 300, x = 1, y = 2, r = false, c = 35 }
+            end
+        end
+        -- The mod's own trim: what the passes keep from now on (the
+        -- readings filed so far are the oldest and go).
+        M.trimTemps(rec, TLG.World.env())
+        M.write(item, rec, true)
+        out.temps, out.fires = TLG.Tables.count(rec.temps), TLG.Tables.count(rec.fires)
+    end
+    reply("fill_history", args, out)
+end
+
 -- The fuel case's site at the Muldraugh Gas2Go (SPHarness.lua's STATION):
 -- the first pump with stock, a car with an empty tank three squares off it
 -- (as the single-player chain parks it) and two empty generators,
@@ -203,6 +254,11 @@ local function emptyGenerator(x, y)
     local g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), getCell():getGridSquare(x, y, 0))
     g:setFuel(0)
     g:getModData().tlg = nil
+    -- A new generator: the vault forgets what an earlier one on this tile had
+    -- (TLG/Authority/Vault.lua), so the record is not put back.
+    local holder = TLG.Integration.Generators.keyOf(g)
+    TLG.Authority.Vault.release("supply", holder)
+    TLG.Authority.Vault.release("project", holder)
     g:setConnected(true)
     g:sync()
     g:transmitModData()
@@ -1238,4 +1294,76 @@ function services.probe_world(player, args)
         nextId = tostring(srv.nextId), policy = tostring(md.policy), sites = S.text(srv.machineSites or {}),
         siteHit = tostring(hit), pubSeed = tostring(md.seed), pubNextId = tostring(md.nextId),
         pubSites = md.machineSites and S.text(md.machineSites) or "nil" })
+end
+
+-- Security audit V-01 (AuditCases.lua): the mod's own reads of the forged
+-- can, pump and generator on the server, through the vault (TLG/Authority/
+-- Vault.lua), with each store as it was before the read and after it.
+function services.probe_vault(player, args)
+    local V = TLG.Authority.Vault
+    local out = { active = tostring(V.active()) }
+    local item = player:getInventory():getItemWithID(tonumber(args.id))
+    if item then
+        out.canBefore = S.sidecar(item)
+        local rec = TLG.Integration.Containers.read(item, "item", true)
+        out.canDeg = string.format("%.4f", rec and rec.deg and rec.deg.gasoline or -1)
+        out.canStab = string.format("%.4f", rec and rec.stab or -1)
+        out.canAfter = S.sidecar(item)
+    end
+    local pump = pumpAt(tonumber(args.px), tonumber(args.py))
+    if pump then
+        out.pumpBefore = S.text(pump:getModData().tlg)
+        local rec = TLG.Integration.Stations.read(pump, true)
+        out.pumpWater = string.format("%.4f", rec and rec.q.water or 0)
+        out.pumpSediment = string.format("%.4f", rec and rec.q.sediment or 0)
+        out.pumpAfter = S.text(pump:getModData().tlg)
+    end
+    local g = generatorAt(tonumber(args.gx), tonumber(args.gy))
+    if g then
+        out.genConvBefore = S.text(g:getModData().tlgConv)
+        out.genProfile = tostring(TLG.Integration.Generators.profile(g))
+        out.genConvAfter = S.text(g:getModData().tlgConv)
+    end
+    reply("probe_vault", args, out)
+end
+
+-- The vault's state on the server (V-01): whether it is in use, where its
+-- own ids start, how many copies it holds, what its checks did since this
+-- server started, the size of the server store as saved (Vault.bytes), and
+-- the check of the given can and vessel now: for the vessel also its
+-- readings and notes, and whether the vault keeps it compact (without them,
+-- with their digests).
+function services.probe_vault_stats(player, args)
+    local V = TLG.Authority.Vault
+    local store = TLG.World.store
+    local v = store and store.vault
+    local out = { active = tostring(V.active()), from = tostring(v and v.from), nextId = tostring(store and store.nextId),
+        recs = tostring(v and TLG.Tables.count(v.recs or {})), storeBytes = tostring(store and V.bytes(store, 1e9)) }
+    for k, n in pairs(V.stats) do out[k] = tostring(n) end
+    local can = args.can and player:getInventory():getItemWithIDRecursiv(tonumber(args.can))
+    if can then out.canCheck = select(2, V.check("supply", V.itemHolder(can), can:getModData().tlg)) end
+    local vessel = args.vessel and vesselById(tonumber(args.vessel))
+    if vessel then
+        local raw = vessel:getModData().tlgProc
+        out.vesselCheck = select(2, V.check("process", V.itemHolder(vessel), raw))
+        out.vesselTemps = tostring(raw and raw.temps and TLG.Tables.count(raw.temps) or 0)
+        out.vesselFires = tostring(raw and raw.fires and TLG.Tables.count(raw.fires) or 0)
+        out.vesselBytes = tostring(raw and V.bytes(raw, 1e9))
+        local e = v and raw and type(raw.id) == "string" and v.recs["process:" .. raw.id]
+        out.entryBytes = tostring(e and V.bytes(e, 1e9))
+        out.vesselCompact = tostring(e ~= nil and e ~= false and type(e.r) == "table" and e.r.temps == nil
+            and e.r.fires == nil and type(e.d) == "table" and type(e.d.temps) == "number"
+            and type(e.d.fires) == "number")
+    end
+    reply("probe_vault_stats", args, out)
+end
+
+-- -Restart -DropVault: the server store is saved without the vault, as the
+-- mod saved it before the V-01 fix (commit fe50875), so the restarted
+-- server starts a vault on a world that already has records.
+function services.drop_vault(player, args)
+    local store = TLG.World.store
+    local had = store ~= nil and store.vault ~= nil
+    if store then store.vault = nil end
+    reply("drop_vault", args, { had = tostring(had), nextId = tostring(store and store.nextId) })
 end

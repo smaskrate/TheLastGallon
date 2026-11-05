@@ -1,0 +1,35 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_timers far=28 fuel=480 role=A tag=timers_site
+OBS  MPS.timers site: campfire 10652,10653 built=true  lit=true fuel 480 exterior true radius 10; beside it 380039687@10653,10653 569716218@10651,10653 1348190715@10652,10654 1161961488@10652,10652; 28 out of reach
+OBS  MPS.reply timers_site built=true far=28 farId=536933259 farX=10662 farY=10637 fuel=480 fx=10652 fy=10653 h0=2.05731201171875 lit=true machines=32 nearId=380039687 nearX=10653 nearY=10653 role=A tag=timers_site
+OBS  MPS.timers ten minutes 1 (hour 2): 4 machine(s) warm; campfire fuel 474 lit true; machine 1 air 29.5894 unwarmed 25.0894 note {c=35.0000,f=474.0000,k=campfire,r=false,rmax=10.0000,t=2.1682,x=-1.0000,y=0.0000}
+OBS  MPS.timers ten minutes 2 (hour 2): 4 machine(s) warm; campfire fuel 464 lit true; machine 1 air 29.8448 unwarmed 25.3448 note {c=35.0000,f=464.0000,k=campfire,r=false,rmax=10.0000,t=2.3359,x=-1.0000,y=0.0000}
+OBS  MPS.timers ten minutes 3 (hour 2): 4 machine(s) warm; campfire fuel 454 lit true; machine 1 air 30.0922 unwarmed 25.5922 note {c=35.0000,f=454.0000,k=campfire,r=false,rmax=10.0000,t=2.5011,x=-1.0000,y=0.0000}
+OBS  MPS.timers hour 1 (slot 2) checked
+OBS  MPS.timers ten minutes 6 (hour 3): 4 machine(s) warm; campfire fuel 424 lit true; machine 1 air 30.7228 unwarmed 26.2228 note {c=35.0000,f=424.0000,k=campfire,r=false,rmax=10.0000,t=3.0021,x=-1.0000,y=0.0000}
+OBS  MPS.timers hour 2 (slot 3) checked
+OBS  MPS.timers ten minutes 12 (hour 4): 4 machine(s) warm; campfire fuel 364 lit true; machine 1 air 31.3210 unwarmed 26.8210 note {c=35.0000,f=364.0000,k=campfire,r=false,rmax=10.0000,t=4.0014,x=-1.0000,y=0.0000}
+OBS  MPS.timers hour 3 (slot 4) checked
+OBS  MPS.timers ten minutes 18 (hour 5): 4 machine(s) warm; campfire fuel 304 lit true; machine 1 air 31.3990 unwarmed 27.0240 note {c=35.0000,f=304.0000,k=campfire,r=false,rmax=10.0000,t=5.0005,x=-1.0000,y=0.0000}
+OBS  MPS.message from tlga: probe_timers role=A tag=timers_probe
+OBS  MPS.timers cost hour_climate 3 call(s): median 0 ms, mean 0.33 ms, max 1 ms
+OBS  MPS.timers cost hour_readings 3 call(s): median 3 ms, mean 3.00 ms, max 3 ms
+OBS  MPS.timers cost ten_minute_notes 18 call(s): median 6 ms, mean 5.94 ms, max 9 ms
+OBS  MPS.timers cost machine_status none
+OBS  MPS.reply probe_timers badNotes=0 badReadings=0 cost_hour_climate=hour_climate 3 call(s): median 0 ms, mean 0.33 ms, max 1 ms cost_hour_readings=hour_readings 3 call(s): median 3 ms, mean 3.00 ms, max 3 ms cost_machine_status=machine_status none cost_ten_minute_notes=ten_minute_notes 18 call(s): median 6 ms, mean 5.94 ms, max 9 ms fuel=300 goodNotes=576 hours=3 lit=true machines=32 nearCampfireHours=16 now=5.059079170227051 readings=96 role=A slotsMin=3 tag=timers_probe tens=18 warmFar=0 warmNear=4
+OBS  MPS.message from tlga: bench_timers role=A tag=timers_bench
+OBS  MPS.timers bench hour: first 3 ms; median 2.2727 ms per call (batches 2.2333-4.4667, 386 calls)
+OBS  MPS.timers bench ten: first 5 ms; median 7.6296 ms per call (batches 7.4074-8.8696, 132 calls)
+OBS  MPS.timers bench status: first 1 ms; median 0.1667 ms per call (batches 0.1441-0.2433, 5650 calls)
+OBS  MPS.reply bench_timers hour=2.272727272727273 hourText=first 3 ms; median 2.2727 ms per call (batches 2.2333-4.4667, 386 calls) role=A status=0.16666666666666666 statusText=first 1 ms; median 0.1667 ms per call (batches 0.1441-0.2433, 5650 calls) tag=timers_bench ten=7.62962962962963 tenText=first 5 ms; median 7.6296 ms per call (batches 7.4074-8.8696, 132 calls)
+OBS  MPS.message from tlga: probe_timers role=A tag=timers_costs
+OBS  MPS.timers cost hour_climate 3 call(s): median 0 ms, mean 0.33 ms, max 1 ms
+OBS  MPS.timers cost hour_readings 3 call(s): median 3 ms, mean 3.00 ms, max 3 ms
+OBS  MPS.timers cost ten_minute_notes 21 call(s): median 6 ms, mean 5.86 ms, max 9 ms
+OBS  MPS.timers cost machine_status 2 call(s): median 0 ms, mean 0.50 ms, max 1 ms
+OBS  MPS.reply probe_timers badNotes=0 badReadings=0 cost_hour_climate=hour_climate 3 call(s): median 0 ms, mean 0.33 ms, max 1 ms cost_hour_readings=hour_readings 3 call(s): median 3 ms, mean 3.00 ms, max 3 ms cost_machine_status=machine_status 2 call(s): median 0 ms, mean 0.50 ms, max 1 ms cost_ten_minute_notes=ten_minute_notes 21 call(s): median 6 ms, mean 5.86 ms, max 9 ms fuel=273 goodNotes=672 hours=3 lit=true machines=32 nearCampfireHours=16 now=5.506793975830078 readings=96 role=A slotsMin=4 tag=timers_costs tens=21 warmFar=0 warmNear=4

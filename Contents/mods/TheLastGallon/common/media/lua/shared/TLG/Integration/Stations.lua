@@ -16,15 +16,19 @@
 --   infinite sandbox   quantity is not corrected (pumps never run out) but the
 --                      reservoir still ages and carries contamination
 --   replication        transmitModData (vanilla setter does the same)
+--   server copy        reads checked against the vault on a server (TLG/Authority/
+--                      Vault.lua, holder "pump:x,y,z"; audit V-01)
 require "TLG/Integration/Containers"
 require "TLG/Integration/Vehicles"
 require "TLG/Boot"
+require "TLG/Authority/Vault"
 
 TLG.Integration.Stations = TLG.Integration.Stations or {}
 local S = TLG.Integration.Stations
 local C, V, World = TLG.Integration.Containers, TLG.Integration.Vehicles, TLG.World
 local Supply, Mixing, Aging, WorldInit = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging, TLG.Domain.WorldInit
 local Tables = TLG.Tables
+local Vault = TLG.Authority.Vault
 
 S.LITRES_PER_UNIT = 1.0
 
@@ -56,7 +60,8 @@ end
 -- Reservoir record; initialises original station fuel on first contact.
 function S.read(obj, persist)
     local units = obj:getPipedFuelAmount()
-    local raw = obj:getModData().tlg
+    local raw = Vault.guard("supply", function() return S.keyOf(obj) end, obj:getModData(), "tlg",
+        function() obj:transmitModData() end)
     local side, schemaStatus = TLG.Persistence.Migrations.sidecar("supply", raw)
     if raw ~= nil and side == nil then return nil, schemaStatus end
     local litres = units * S.LITRES_PER_UNIT + ((side and side.frac) or 0)
@@ -107,6 +112,7 @@ function S.writeSidecar(obj, rec)
         side[f] = Tables.deepCopy(rec[f])
     end
     obj:getModData().tlg = side
+    Vault.put("supply", function() return S.keyOf(obj) end, side)
     obj:transmitModData()
 end
 

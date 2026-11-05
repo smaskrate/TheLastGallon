@@ -1,0 +1,427 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient2
+caches: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1; C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2
+server started (shell pid 43184)
+server up after 24 s
+server: LOG  : General      f:0 st:102.128.339> command entered via server console (System.in): "adduser "tlga" "********""
+server: LOG  : General      f:0 st:102.128.339> command entered via server console (System.in): "setaccesslevel "tlga" "admin""
+server: LOG  : General      f:0 st:102.128.633> User tlga is now admin
+server: LOG  : General      f:0 st:102.129.847> command entered via server console (System.in): "adduser "tlgb" "********""
+server: LOG  : General      f:0 st:102.131.900> command entered via server console (System.in): "setaccesslevel "tlgb" "admin""
+server: LOG  : General      f:0 st:102.131.933> User tlgb is now admin
+client mp-a started, pid 40888
+client mp-b started, pid 36376
+all clients left: restarting the server
+server started (shell pid 42056)
+server up after 27 s
+click-to-start clicks sent: 3
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_stand begin
+STEP mp_wait_b begin
+STEP give_fuel begin
+STEP mp_have_fuel begin
+PASS MP.items_from_server_A :: can 1618576922 (5 L), stabilizers 2
+STEP sample begin
+PASS MP.sample_A :: ok=true reason=nil duplicate=nil state=nil
+STEP treat begin
+PASS MP.stabilize_A :: ok=true reason=nil duplicate=nil state=nil
+STEP mp_after_treat begin
+PASS MP.stabilizer_used_once_A :: stabilizers left 1
+STEP mp_retry begin
+PASS MP.retry_answered_from_ledger_A :: ok=true reason=nil duplicate=true state=nil stabilizers left 1
+STEP probe_can begin
+OBS  MP.can_record client {cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000}
+OBS  MP.can_record server {cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000} (fluid 5.0000)
+PASS MP.can_record_same_on_client_A :: see the two records above
+STEP spawn_vessel begin
+OBS  MP.vessel 346144473 spawned with its batch Processing
+STEP mp_vessel_lands begin
+STEP mp_walk_to_vessel begin
+STEP status begin
+PASS MP.machine_status_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_back begin
+STEP mp_status_please begin
+STEP mp_wait_status_b begin
+STEP roll_manual begin
+PASS MP.manual_in_server_loot_A :: 10 manuals in 400 containers filled on the server; printMedia=true
+STEP manual begin
+PASS MP.manual_offers_inspect_A :: TLG.ManualFuelSystems printMedia on the client: TLG_ManualFuelSystems
+OBS  MP.manual read on this client: isPrintMediaRead(TLG_ManualFuelSystems) when the read ended=false, 5 s later=false
+STEP manual_read_on_server begin
+PASS MP.manual_read_on_server_A :: server isPrintMediaRead=true
+STEP give_flier begin
+STEP flier begin
+PASS MP.flier_offers_inspect_A :: Base.Flier_Nolans printMedia on the client: nolansusedcars
+OBS  MP.flier read on this client: isPrintMediaRead(nolansusedcars) when the read ended=false, 5 s later=false
+STEP flier_read_on_server begin
+PASS MP.flier_read_on_server_A :: server isPrintMediaRead=true
+STEP manual_read_kept_like_vanilla begin
+PASS MP.manual_read_kept_like_vanilla_A :: manual: server true, client false; flier: server true, client false
+STEP give_floor begin
+STEP mp_floor_items_arrive begin
+STEP mp_walk_drop_1 begin
+STEP mp_drop_TLG.FuelSampleKit begin
+STEP mp_dropped_1 begin
+STEP mp_walk_drop_2 begin
+STEP mp_drop_TLG.YeastStarter begin
+STEP mp_dropped_2 begin
+STEP mp_walk_drop_3 begin
+STEP mp_drop_TLG.FuelStabilizer begin
+STEP mp_dropped_3 begin
+STEP mp_walk_drop_4 begin
+STEP mp_drop_TLG.ManualFuelSystems begin
+STEP mp_dropped_4 begin
+STEP mp_walk_drop_5 begin
+STEP mp_drop_TLG.FuelFilter begin
+STEP mp_dropped_5 begin
+STEP mp_walk_floor_view begin
+STEP mp_floor_ready begin
+STEP mp_shot_floor begin
+OBS  MP.screenshot tlg_mpa_floor.png ok=true ; zoom 0.50; player 10659.5,10644.5
+STEP mp_wait_floor_b begin
+STEP floor_seen begin
+OBS  MP.floor_seen this client 10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+OBS  MP.floor_seen the server  10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+PASS MP.floor_seen_A :: same as the server=true; missing on the server: none
+STEP spawn_meteorite begin
+STEP mp_meteorite_lands begin
+STEP mp_walk_onto_meteorite begin
+STEP mp_take_meteorite begin
+OBS  MP.meteorite on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.meteorite pickup queued: ISEquipHeavyItem
+OBS  MP.meteorite pickup 30 ticks on: ISEquipHeavyItem
+PASS MP.meteorite_left_on_floor_by_the_game_A :: primary=nil secondary=nil; still on its square=true
+STEP mp_drop_heavy begin
+STEP mp_walk_onto_vessel begin
+STEP mp_take_vessel begin
+OBS  MP.vessel on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.vessel pickup queued: ISEquipHeavyItem
+OBS  MP.vessel pickup 30 ticks on: ISEquipHeavyItem
+PASS MP.vessel_from_floor_A :: primary=TLG.FermenterVessel secondary=TLG.FermenterVessel; still on its square=false
+STEP vessel_taken begin
+OBS  MP.vessel_taken server: where=inventory tlga both hands vessels=1 state=Paused pause=not_placed site=10663,10642 listed=no takes=tlga:true
+PASS MP.vessel_taken_on_server_A :: see the server's line above
+STEP mp_carried_record begin
+PASS MP.vessel_record_carried_on_client_A :: state=Paused pause=not_placed
+STEP mp_hold_vessel begin
+PASS MP.vessel_in_both_hands_A :: taken off the floor; primary=TLG.FermenterVessel RightHandMask=tlgcarryvessel
+STEP mp_walk_carry_start begin
+STEP mp_gait_stand begin
+OBS  MP.screenshot tlg_mpa_carry_stand.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry stand on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_walk begin
+OBS  MP.screenshot tlg_mpa_carry_walk.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry walk on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_run begin
+OBS  MP.screenshot tlg_mpa_carry_run.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry run on A's own screen: running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sprint begin
+OBS  MP.screenshot tlg_mpa_carry_sprint.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry sprint on A's own screen: running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sneak begin
+OBS  MP.screenshot tlg_mpa_carry_sneak.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry sneak on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_crouch begin
+OBS  MP.screenshot tlg_mpa_carry_crouch.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry crouch on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_put_down begin
+OBS  MP.vessel put down: in the hands nil
+STEP vessel_put_down begin
+OBS  MP.vessel_put_down server: where=floor 10658,10647 vessels=1 state=Processing pause=none site=10658,10647 listed=10658,10647 takes=tlga:true
+PASS MP.vessel_put_down_on_server_A :: see the server's line above
+STEP mp_race_ready begin
+OBS  MP.race A ready: the loot window lists the vessel=true
+STEP mp_wait_race_at begin
+STEP mp_race_take begin
+OBS  MP.race A queued at tick 1: ISEquipHeavyItem
+OBS  MP.race A 30 ticks on: ISEquipHeavyItem
+PASS MP.race_one_holder_seen_A :: this player holds it=true, the other=false (found=true)
+STEP mp_wait_race_done begin
+STEP race begin
+OBS  MP.race server: where=inventory tlga both hands vessels=1 state=Paused pause=not_placed site=10658,10647 listed=no takes=tlga:true tlga:true tlgb:false
+OBS  MP.race the server's takes since the put-down: tlga:true tlgb:false; the second action was refused on the server
+PASS MP.race_one_vessel_one_holder_on_server_A :: see the server's line above
+STEP try_take begin
+OBS  MP.try_take holder=tlga taker=tlgb result=false holder keeps it=true taker has it=false takes=tlga:true tlga:true tlgb:false tlgb:false
+PASS MP.take_of_a_held_vessel_refused_on_server_A :: see the line above
+STEP mp_race_drop_please begin
+STEP mp_race_drop begin
+STEP give_vessel begin
+STEP mp_equip_own_vessel begin
+OBS  MP.own vessel 875339002 queued: ISEquipHeavyItem
+PASS MP.own_vessel_equipped_A :: primary=TLG.FermenterVessel id=875339002
+STEP probe_own_vessel begin
+OBS  MP.own vessel server: where=inventory tlga both hands; the server's takes since: tlga:nil
+PASS MP.own_vessel_left_to_the_game_on_server_A :: see the line above
+STEP mp_race_drop begin
+STEP mp_walk_back_end begin
+STEP snap_can begin
+STEP snap_vessel begin
+OBS  MP.before the restart: can can={cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000}; vessel state=Processing pause=none site=10658,10647 listed=10658,10647 inputs={sugar_eq=6.0000,water=30.0000} done=0.5246
+STEP snap_vault begin
+OBS  MP.vault before the restart: active=true from=1 nextId=14 copies=16
+STEP drop_vault begin
+OBS  MP.vault dropped before the restart (had=true, nextId=14)
+STEP mp_leave begin
+OBS  MP.leaving to the main menu for the server's restart
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: true)
+OBS  MP.game_start A again
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10659,10644 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_settle begin
+STEP floor_after_restart begin
+OBS  MP.floor_after_restart this client 10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+OBS  MP.floor_after_restart the server  10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+PASS MP.floor_after_restart_A :: same as the server=true; missing on the server: none
+STEP after_restart_can begin
+PASS MP.can_record_kept_over_the_restart_A :: before {cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000}; after {cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000}
+STEP after_restart_vessel begin
+PASS MP.vessel_record_kept_over_the_restart_A :: before state=Processing pause=none site=10658,10647 listed=10658,10647 inputs={sugar_eq=6.0000,water=30.0000} done=0.5246; after state=Processing pause=none site=10658,10647 listed=10658,10647 inputs={sugar_eq=6.0000,water=30.0000} done=0.5246
+STEP after_restart_vault begin
+OBS  MP.vault after the restart: active=true from=14 nextId=25 copies=14 can=adopted moved=0 adopted=0 restored=0 dropped=0
+PASS MP.vault_in_use_after_the_restart_A :: true
+PASS MP.vault_started_on_the_saved_world_A :: from 14, next id before the restart 14
+PASS MP.can_record_adopted_from_before_the_vault_A :: can adopted, adopted 0
+PASS MP.no_record_dropped_or_put_back_after_the_restart_A :: dropped 0, restored 0
+STEP mp_wait_b_back begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=34 fail=0
+DONE
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Screenshots\tlg_mpa_carry_crouch.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Screenshots\tlg_mpa_carry_run.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Screenshots\tlg_mpa_carry_sneak.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Screenshots\tlg_mpa_carry_sprint.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Screenshots\tlg_mpa_carry_stand.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Screenshots\tlg_mpa_carry_walk.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Screenshots\tlg_mpa_floor.png
+===== client mp-b: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_stand begin
+STEP mp_hide_ui begin
+STEP mp_hello begin
+STEP mp_wait_start begin
+STEP mp_wait_status_please begin
+STEP mp_walk_to_vessel begin
+STEP status begin
+PASS MP.machine_status_B :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_back begin
+STEP mp_status_done begin
+STEP mp_wait_floor begin
+STEP mp_floor_settle begin
+STEP mp_floor_shot begin
+OBS  MP.screenshot tlg_mpb_floor.png ok=true ; zoom 0.50; player 10661.5,10646.5
+STEP floor_seen_by_other begin
+OBS  MP.floor_seen_by_other this client 10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+OBS  MP.floor_seen_by_other the server  10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+PASS MP.floor_seen_by_other_B :: same as the server=true; missing on the server: none
+STEP mp_floor_shot_done begin
+STEP mp_see_stand begin
+OBS  MP.screenshot tlg_mpb_carry_stand.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry stand on B's screen: A found=true running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_stand_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_walk begin
+OBS  MP.screenshot tlg_mpb_carry_walk.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry walk on B's screen: A found=true running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_walk_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_run begin
+OBS  MP.screenshot tlg_mpb_carry_run.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry run on B's screen: A found=true running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_run_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_sprint begin
+OBS  MP.screenshot tlg_mpb_carry_sprint.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry sprint on B's screen: A found=true running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_sprint_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_sneak begin
+OBS  MP.screenshot tlg_mpb_carry_sneak.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry sneak on B's screen: A found=true running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_sneak_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_see_crouch begin
+OBS  MP.screenshot tlg_mpb_carry_crouch.png ok=true ; zoom 0.50; player 10661.5,10646.5
+OBS  MP.carry crouch on B's screen: A found=true running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel secondary=TLG.FermenterVessel
+PASS MP.carry_seen_crouch_B :: RightHandMask=tlgcarryvessel primary=TLG.FermenterVessel
+STEP mp_wait_race_ready begin
+STEP mp_walk_to_race begin
+STEP mp_race_at begin
+OBS  MP.race B ready: the loot window lists the vessel=true
+STEP mp_race_take begin
+OBS  MP.race B queued at tick 5: ISEquipHeavyItem
+OBS  MP.race B 30 ticks on: ISEquipHeavyItem
+PASS MP.race_one_holder_seen_B :: this player holds it=false, the other=true (found=true)
+STEP mp_race_done begin
+STEP mp_wait_race_drop begin
+STEP mp_race_drop begin
+STEP mp_walk_back_after_race begin
+STEP mp_wait_restarting begin
+OBS  MP.A is leaving for the restart
+STEP mp_leave begin
+OBS  MP.leaving to the main menu for the server's restart
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected B (saved player: true)
+OBS  MP.game_start B again
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10661,10646 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_settle begin
+STEP floor_seen_after_restart begin
+OBS  MP.floor_seen_after_restart this client 10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+OBS  MP.floor_seen_after_restart the server  10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+PASS MP.floor_seen_after_restart_B :: same as the server=true; missing on the server: none
+STEP mp_wait_finish begin
+STEP mp_finish begin
+SUMMARY pass=12 fail=0
+DONE
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Screenshots\tlg_mpb_carry_crouch.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Screenshots\tlg_mpb_carry_run.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Screenshots\tlg_mpb_carry_sneak.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Screenshots\tlg_mpb_carry_sprint.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Screenshots\tlg_mpb_carry_stand.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Screenshots\tlg_mpb_carry_walk.png
+screenshot: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient2\Screenshots\tlg_mpb_floor.png
+===== server: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlgb: hello role=B
+OBS  MPS.message from tlga: start role=A
+OBS  MPS.message from tlga: give items=Base.PetrolCan;TLG.FuelStabilizer;TLG.FuelStabilizer petrol=5 role=A tag=give_fuel
+OBS  MPS.reply given ids=Base.PetrolCan=1618576922;TLG.FuelStabilizer=192504208;TLG.FuelStabilizer=630366578 role=A tag=give_fuel
+OBS  MPS.message from tlga: probe_item id=1618576922 role=A tag=probe_can
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000} tag=probe_can
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=spawn_vessel x=10663 y=10642
+OBS  MPS.reply spawned batch=Processing id=346144473 item=TLG.FermenterVessel role=A tag=spawn_vessel x=10663 y=10642
+OBS  MPS.message from tlga: status_please role=A
+OBS  MPS.message from tlgb: status_done role=B
+OBS  MPS.message from tlga: roll_manual fills=100 role=A tag=roll_manual
+OBS  MPS.reply rolled fills=400 id=92112730 manuals=10 printMedia=true role=A tag=roll_manual
+OBS  MPS.message from tlga: probe_read media=TLG_ManualFuelSystems role=A tag=manual_read_on_server
+OBS  MPS.reply probe_read read=true role=A tag=manual_read_on_server
+OBS  MPS.message from tlga: give items=Base.Flier_Nolans role=A tag=give_flier
+OBS  MPS.reply given ids=Base.Flier_Nolans=732801658 role=A tag=give_flier
+OBS  MPS.message from tlga: probe_read media=nolansusedcars role=A tag=flier_read_on_server
+OBS  MPS.reply probe_read read=true role=A tag=flier_read_on_server
+OBS  MPS.message from tlga: give items=TLG.FuelSampleKit;TLG.YeastStarter;TLG.FuelFilter role=A tag=give_floor
+OBS  MPS.reply given ids=TLG.FuelSampleKit=224261243;TLG.YeastStarter=975713908;TLG.FuelFilter=1450052245 role=A tag=give_floor
+OBS  MPS.message from tlga: floor_ready role=A
+OBS  MPS.message from tlgb: probe_floor role=B tag=floor_seen_by_other
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel role=B tag=floor_seen_by_other
+OBS  MPS.message from tlgb: floor_shot role=B
+OBS  MPS.message from tlga: probe_floor role=A tag=floor_seen
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel role=A tag=floor_seen
+OBS  MPS.message from tlga: spawn item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641
+OBS  MPS.reply spawned batch=nil id=1241338792 item=Base.LargeMeteorite role=A tag=spawn_meteorite x=10664 y=10641
+OBS  MPS.take of 346144473 by tlga: true
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=vessel_taken
+OBS  MPS.reply probe_vessel done=0.4842033386230469 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=2.7413549423217773 pause=not_placed role=A seen=2.7324695587158203 site=10663,10642 state=Paused t=2.7324695587158203 tag=vessel_taken takes=tlga:true vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlga: gait name=stand role=A
+OBS  MPS.message from tlgb: gait_shot name=stand role=B
+OBS  MPS.message from tlga: gait name=walk role=A
+OBS  MPS.message from tlgb: gait_shot name=walk role=B
+OBS  MPS.message from tlga: gait name=run role=A
+OBS  MPS.message from tlgb: gait_shot name=run role=B
+OBS  MPS.message from tlga: gait name=sprint role=A
+OBS  MPS.message from tlgb: gait_shot name=sprint role=B
+OBS  MPS.message from tlga: gait name=sneak role=A
+OBS  MPS.message from tlgb: gait_shot name=sneak role=B
+OBS  MPS.message from tlga: gait name=crouch role=A
+OBS  MPS.message from tlgb: gait_shot name=crouch role=B
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=vessel_put_down
+OBS  MPS.reply probe_vessel done=0.4842033386230469 inputs={sugar_eq=6.0000,water=30.0000} listed=10658,10647 now=2.846647262573242 pause=none role=A seen=2.837765693664551 site=10658,10647 state=Processing t=2.837765693664551 tag=vessel_put_down takes=tlga:true vessels=1 where=floor 10658,10647
+OBS  MPS.message from tlga: race_ready role=A x=10658 y=10647
+OBS  MPS.message from tlgb: race_at role=B
+OBS  MPS.message from tlga: race_now role=A
+OBS  MPS.take of 346144473 by tlga: true
+OBS  MPS.take of 346144473 by tlgb: false
+OBS  MPS.message from tlgb: race_done role=B
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=race
+OBS  MPS.reply probe_vessel done=0.5246286392211914 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=2.8915138244628906 pause=not_placed role=A seen=2.8781909942626953 site=10658,10647 state=Paused t=2.8781909942626953 tag=race takes=tlga:true tlga:true tlgb:false vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlga: try_take id=346144473 role=A tag=try_take
+OBS  MPS.take of 346144473 by tlgb: false
+OBS  MPS.reply try_take holder=tlga holderKeeps=true result=false role=A tag=try_take taker=tlgb takerHas=false takes=tlga:true tlga:true tlgb:false tlgb:false
+OBS  MPS.message from tlga: race_drop role=A
+OBS  MPS.message from tlga: give items=TLG.FermenterVessel role=A tag=give_vessel
+OBS  MPS.reply given ids=TLG.FermenterVessel=875339002 role=A tag=give_vessel
+OBS  MPS.take of 875339002 by tlga: nil
+OBS  MPS.message from tlga: probe_vessel id=875339002 role=A tag=probe_own_vessel
+OBS  MPS.reply probe_vessel done=-1 inputs=nil listed=no now=2.919499397277832 pause=none role=A seen=-1 site=none state=none t=-1 tag=probe_own_vessel takes=tlga:true tlga:true tlgb:false tlgb:false tlga:nil vessels=2 where=inventory tlga both hands
+OBS  MPS.message from tlga: probe_item id=1618576922 role=A tag=snap_can
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000} tag=snap_can
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=snap_vessel
+OBS  MPS.reply probe_vessel done=0.5246286392211914 inputs={sugar_eq=6.0000,water=30.0000} listed=10658,10647 now=2.9421586990356445 pause=none role=A seen=2.892401695251465 site=10658,10647 state=Processing t=2.892401695251465 tag=snap_vessel takes=tlga:true tlga:true tlgb:false tlgb:false tlga:nil vessels=2 where=floor 10658,10647
+OBS  MPS.message from tlga: probe_vault_stats role=A tag=snap_vault
+OBS  MPS.reply probe_vault_stats active=true adopted=0 dropped=0 from=1 moved=0 nextId=14 recs=16 restored=0 role=A tag=snap_vault
+OBS  MPS.message from tlga: drop_vault role=A tag=drop_vault
+OBS  MPS.reply drop_vault had=true nextId=14 role=A tag=drop_vault
+OBS  MPS.message from tlga: restarting role=A
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: probe_floor role=A tag=floor_after_restart
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite role=A tag=floor_after_restart
+OBS  MPS.message from tlga: probe_item id=1618576922 role=A tag=after_restart_can
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={cond=1.0000,deg={gasoline=0.0106},dirty=0.0000,id=S156876190-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2301,v=1.0000} tag=after_restart_can
+OBS  MPS.message from tlga: probe_vessel id=346144473 role=A tag=after_restart_vessel
+OBS  MPS.reply probe_vessel done=0.5246286392211914 inputs={sugar_eq=6.0000,water=30.0000} listed=10658,10647 now=2.9745283126831055 pause=none role=A seen=2.892401695251465 site=10658,10647 state=Processing t=2.892401695251465 tag=after_restart_vessel takes= vessels=2 where=floor 10658,10647
+OBS  MPS.message from tlga: probe_vault_stats can=1618576922 role=A tag=after_restart_vault
+OBS  MPS.reply probe_vault_stats active=true adopted=0 canCheck=adopted dropped=0 from=14 moved=0 nextId=25 recs=14 restored=0 role=A tag=after_restart_vault
+OBS  MPS.message from tlgb: probe_floor role=B tag=floor_seen_after_restart
+OBS  MPS.reply probe_floor floor=10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite role=B tag=floor_seen_after_restart
+OBS  MPS.message from tlga: finish role=A
+exit=0

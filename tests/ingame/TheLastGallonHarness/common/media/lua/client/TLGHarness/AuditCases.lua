@@ -305,7 +305,9 @@ end)
 
 ------------------------------------------------------------------------------
 -- AUD-4: the engine applies mod data a client sends for items and objects
--- (SyncItemFields, ObjectModData): the mod's records can be rewritten.
+-- (SyncItemFields, ObjectModData), so a client still rewrites the stores on
+-- the server; since the V-01 fix the mod's own reads there put its records
+-- back from the vault (TLG/Authority/Vault.lua) and drop forged ones.
 ------------------------------------------------------------------------------
 AU.lookCan = request("aud_look_can", "sample", function()
     return { target = { kind = "item", id = AU.can }, method = "visual" }
@@ -335,7 +337,7 @@ AU.probeItem = call("aud_probe_item_forged", "probe_item", function() return { i
     function(m)
     obs("server item after client sync: found=%s sidecar=%s fluid=%s", tostring(m.found), tostring(m.sidecar),
         tostring(m.fluid))
-    check("AUD4_item_sidecar_rewritten_by_client", function()
+    check("AUD4_item_sidecar_reaches_server_mod_data", function()
         return AU.forgedItem == true and string.find(tostring(m.sidecar), "audit=forged", 1, true) ~= nil
             and string.find(tostring(m.sidecar), "7.7777", 1, true) ~= nil, tostring(m.sidecar)
     end)
@@ -383,9 +385,43 @@ AU.probeForged = call("aud_probe_fuel_forged", "probe_fuel", function()
         ids = tostring(AU.can) }
 end, "probe_fuel", function(m)
     obs("server after object syncs: pump side=%s; g1 side=%s", tostring(m.pumpSide), tostring(m.g1Side))
-    check("AUD4_pump_sidecar_rewritten_by_client", function()
+    check("AUD4_pump_sidecar_reaches_server_mod_data", function()
         return AU.forgedPump == true and string.find(tostring(m.pumpSide), "audit=forged", 1, true) ~= nil,
             string.format("before %s, after %s", tostring(AU.pumpSide0), tostring(m.pumpSide))
+    end)
+end)
+
+-- The mod's own reads on the server, through the vault.
+AU.probeVault = call("aud_probe_vault", "probe_vault", function()
+    local s = FU.site or {}
+    return { id = AU.can, px = s.px, py = s.py, gx = s.g1x, gy = s.g1y }
+end, "probe_vault", function(m)
+    obs("server reads through the vault (active=%s): can %s -> deg %s stab %s -> %s", tostring(m.active),
+        tostring(m.canBefore), tostring(m.canDeg), tostring(m.canStab), tostring(m.canAfter))
+    obs("  pump %s -> water %s sediment %s -> %s", tostring(m.pumpBefore), tostring(m.pumpWater),
+        tostring(m.pumpSediment), tostring(m.pumpAfter))
+    obs("  generator project %s -> profile %s -> %s", tostring(m.genConvBefore), tostring(m.genProfile),
+        tostring(m.genConvAfter))
+    check("AUD4_vault_active_on_server", function() return m.active == "true", tostring(m.active) end)
+    check("AUD4_item_record_put_back", function()
+        return AU.forgedItem == true and tonumber(m.canDeg) ~= nil and math.abs(tonumber(m.canDeg) - 7.7777) > 1e-3
+            and math.abs((tonumber(m.canStab) or 1.5) - 1.5) > 1e-3
+            and string.find(tostring(m.canAfter), "audit=forged", 1, true) == nil,
+            string.format("deg %s stab %s, after %s", tostring(m.canDeg), tostring(m.canStab), tostring(m.canAfter))
+    end)
+    check("AUD4_pump_record_put_back", function()
+        return AU.forgedPump == true and string.find(tostring(m.pumpAfter), "audit=forged", 1, true) == nil
+            and (tonumber(m.pumpWater) or 0) + (tonumber(m.pumpSediment) or 0) > 0
+            and tostring(m.pumpAfter) == tostring(AU.pumpSide0),
+            string.format("before the forgery %s, after the read %s", tostring(AU.pumpSide0), tostring(m.pumpAfter))
+    end)
+    check("AUD4_generator_conversion_reaches_server_mod_data", function()
+        return AU.forgedGen == true and string.find(tostring(m.genConvBefore), "AUDIT-C", 1, true) ~= nil,
+            tostring(m.genConvBefore)
+    end)
+    check("AUD4_generator_forged_conversion_dropped", function()
+        return m.genProfile == "generator_si_stock" and string.find(tostring(m.genConvAfter), "AUDIT-C", 1, true) == nil,
+            string.format("profile %s, project after %s", tostring(m.genProfile), tostring(m.genConvAfter))
     end)
 end)
 
@@ -394,8 +430,8 @@ AU.probeGenerator = call("aud_probe_generator_forged", "probe_generator", functi
 end, "probe_generator", function(m)
     obs("server generator after client sync: found=%s profile=%s side=%s", tostring(m.found), tostring(m.profile),
         tostring(m.side))
-    check("AUD4_generator_conversion_forged_by_client", function()
-        return AU.forgedGen == true and m.profile == "generator_si_flex", tostring(m.profile)
+    check("AUD4_generator_forged_conversion_ignored", function()
+        return AU.forgedGen == true and m.profile == "generator_si_stock", tostring(m.profile)
     end)
 end)
 
@@ -411,7 +447,7 @@ MP.stepsA = {
     AU.walkToTank, AU.pumpToCar, AU.afterPumpToCar,
     AU.lookCan, wait("aud_record_settles", 120), AU.forgeItem, wait("aud_item_sync_settles", 180), AU.probeItem,
     AU.walkToPump, AU.forgePump, AU.forgeGenerator, wait("aud_object_sync_settles", 180), AU.probeForged,
-    AU.probeGenerator,
+    AU.probeVault, AU.probeGenerator,
     once("mp_finish_b", function() send("finish", {}) end), MP.finish,
 }
 MP.stepsB = { MP.waitWorld, h.waitFrom("mp_wait_finish", "finish"), MP.finish }

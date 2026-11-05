@@ -15,14 +15,22 @@
 --                   itemType), so the adapter stamps "tlgEngineId" once
 --   effects         V.profile / G.profile resolve through effectiveProfile, so
 --                   a conversion only changes the engine when Commissioned
+--   server copy     a generator's project is checked against the vault on a
+--                   server (TLG/Authority/Vault.lua; audit V-01): clients can
+--                   rewrite an object's mod data there, not an Engine
+--                   part's (BaseVehicle.transmitPartModData acts only on
+--                   the server, and the audit found no other way), so a
+--                   vehicle's project is read as stored
 require "TLG/Domain/Conversions/Project"
 require "TLG/Content/Conversions"
 require "TLG/Integration/World"
 require "TLG/Persistence/Migrations"
+require "TLG/Authority/Vault"
 
 TLG.Integration.ConversionDevices = TLG.Integration.ConversionDevices or {}
 local CD = TLG.Integration.ConversionDevices
 local CS, World, Tables = TLG.Domain.ConversionService, TLG.World, TLG.Tables
+local Vault = TLG.Authority.Vault
 
 CD.KEY = "tlgConv"
 -- Work is the timed action ISTLGConversionWork: it reports every
@@ -59,6 +67,13 @@ function CD.describeVehicle(vehicle, withProject)
     }, md, engine
 end
 
+-- The vault's holder for a placed generator ("gen:x,y,z", as the generator
+-- adapter keys it).
+function CD.generatorHolder(gen)
+    local G = TLG.Integration.Generators
+    return G and G.keyOf and G.keyOf(gen) or nil
+end
+
 function CD.describeGenerator(gen, withProject)
     local md = gen:getModData()
     return {
@@ -70,21 +85,26 @@ function CD.describeGenerator(gen, withProject)
         tankAmount = gen:getFuel(),
         destroyed = false,
         available = not gen:isActivated(),
-        project = withProject and md[CD.KEY] or nil,
+        project = withProject and (CD.project(md, function() return CD.generatorHolder(gen) end,
+            function() gen:transmitModData() end)) or nil,
     }, md
 end
 
 -- Stored project after the schema check: nil plus "future_schema" or
 -- "invalid_schema" means the record must be left untouched (docs/migrations.md).
-function CD.project(md)
-    local raw = md and md[CD.KEY]
+-- `holder` (a generator's "gen:x,y,z") has it checked against the vault
+-- first; `sync` sends a project put back.
+function CD.project(md, holder, sync)
+    if md == nil then return nil, "absent" end
+    local raw = md[CD.KEY]
+    if holder ~= nil then raw = Vault.guard("project", holder, md, CD.KEY, sync) end
     if raw == nil then return nil, "absent" end
     return TLG.Persistence.Migrations.sidecar("project", raw)
 end
 
 -- Effective profile for a stored project (nil unless Commissioned and valid).
-function CD.effective(md, device)
-    local p = CD.project(md)
+function CD.effective(md, device, holder)
+    local p = CD.project(md, holder)
     if p == nil then return nil end
     local ok, profile = pcall(CS.effectiveProfile, p, device)
     if ok then return profile end
@@ -126,8 +146,10 @@ function CD.actor(player, project, conversion)
     return actor
 end
 
-function CD.store(md, holder, project)
+-- `vaultHolder`: a generator's "gen:x,y,z", whose project the vault keeps.
+function CD.store(md, holder, project, vaultHolder)
     md[CD.KEY] = project
+    if vaultHolder ~= nil then Vault.put("project", vaultHolder, project) end
     if holder and holder.getVehicle then
         holder:getVehicle():transmitPartModData(holder)
     elseif holder and holder.transmitModData then

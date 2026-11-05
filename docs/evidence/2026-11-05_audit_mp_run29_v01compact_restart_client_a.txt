@@ -1,0 +1,202 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_stand begin
+STEP mp_wait_b begin
+STEP give_fuel begin
+STEP mp_have_fuel begin
+PASS MP.items_from_server_A :: can 1714512988 (5 L), stabilizers 2
+STEP sample begin
+PASS MP.sample_A :: ok=true reason=nil duplicate=nil state=nil
+STEP treat begin
+PASS MP.stabilize_A :: ok=true reason=nil duplicate=nil state=nil
+STEP mp_after_treat begin
+PASS MP.stabilizer_used_once_A :: stabilizers left 1
+STEP mp_retry begin
+PASS MP.retry_answered_from_ledger_A :: ok=true reason=nil duplicate=true state=nil stabilizers left 1
+STEP probe_can begin
+OBS  MP.can_record client {cond=1.0000,deg={gasoline=0.1080},dirty=0.0000,id=S186306480-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2308,v=1.0000}
+OBS  MP.can_record server {cond=1.0000,deg={gasoline=0.1080},dirty=0.0000,id=S186306480-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2308,v=1.0000} (fluid 5.0000)
+PASS MP.can_record_same_on_client_A :: see the two records above
+STEP spawn_vessel begin
+OBS  MP.vessel 1660742418 spawned with its batch Processing
+STEP mp_vessel_lands begin
+STEP mp_walk_to_vessel begin
+STEP status begin
+PASS MP.machine_status_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_back begin
+STEP mp_status_please begin
+STEP mp_wait_status_b begin
+STEP roll_manual begin
+PASS MP.manual_in_server_loot_A :: 6 manuals in 400 containers filled on the server; printMedia=true
+STEP manual begin
+PASS MP.manual_offers_inspect_A :: TLG.ManualFuelSystems printMedia on the client: TLG_ManualFuelSystems
+OBS  MP.manual read on this client: isPrintMediaRead(TLG_ManualFuelSystems) when the read ended=false, 5 s later=false
+STEP manual_read_on_server begin
+PASS MP.manual_read_on_server_A :: server isPrintMediaRead=true
+STEP give_flier begin
+STEP flier begin
+PASS MP.flier_offers_inspect_A :: Base.Flier_Nolans printMedia on the client: nolansusedcars
+OBS  MP.flier read on this client: isPrintMediaRead(nolansusedcars) when the read ended=false, 5 s later=false
+STEP flier_read_on_server begin
+PASS MP.flier_read_on_server_A :: server isPrintMediaRead=true
+STEP manual_read_kept_like_vanilla begin
+PASS MP.manual_read_kept_like_vanilla_A :: manual: server true, client false; flier: server true, client false
+STEP give_floor begin
+STEP mp_floor_items_arrive begin
+STEP mp_walk_drop_1 begin
+STEP mp_drop_TLG.FuelSampleKit begin
+STEP mp_dropped_1 begin
+STEP mp_walk_drop_2 begin
+STEP mp_drop_TLG.YeastStarter begin
+STEP mp_dropped_2 begin
+STEP mp_walk_drop_3 begin
+STEP mp_drop_TLG.FuelStabilizer begin
+STEP mp_dropped_3 begin
+STEP mp_walk_drop_4 begin
+STEP mp_drop_TLG.ManualFuelSystems begin
+STEP mp_dropped_4 begin
+STEP mp_walk_drop_5 begin
+STEP mp_drop_TLG.FuelFilter begin
+STEP mp_dropped_5 begin
+STEP mp_walk_floor_view begin
+STEP mp_floor_ready begin
+STEP mp_shot_floor begin
+OBS  MP.screenshot tlg_mpa_floor.png ok=true ; zoom 0.50; player 10659.5,10644.5
+STEP mp_wait_floor_b begin
+STEP floor_seen begin
+OBS  MP.floor_seen this client 10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+OBS  MP.floor_seen the server  10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10663,10642:TLG.FermenterVessel
+PASS MP.floor_seen_A :: same as the server=true; missing on the server: none
+STEP spawn_meteorite begin
+STEP mp_meteorite_lands begin
+STEP mp_walk_onto_meteorite begin
+STEP mp_take_meteorite begin
+OBS  MP.meteorite on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.meteorite pickup queued: ISEquipHeavyItem
+OBS  MP.meteorite pickup 30 ticks on: ISEquipHeavyItem
+PASS MP.meteorite_left_on_floor_by_the_game_A :: primary=nil secondary=nil; still on its square=true
+STEP mp_drop_heavy begin
+STEP mp_walk_onto_vessel begin
+STEP mp_take_vessel begin
+OBS  MP.vessel on its square=true; the loot window's floor (floor) lists it=true, the same object=true
+OBS  MP.vessel pickup queued: ISEquipHeavyItem
+OBS  MP.vessel pickup 30 ticks on: ISEquipHeavyItem
+PASS MP.vessel_from_floor_A :: primary=TLG.FermenterVessel secondary=TLG.FermenterVessel; still on its square=false
+STEP vessel_taken begin
+OBS  MP.vessel_taken server: where=inventory tlga both hands vessels=1 state=Paused pause=not_placed site=10663,10642 listed=no takes=tlga:true
+PASS MP.vessel_taken_on_server_A :: see the server's line above
+STEP mp_carried_record begin
+PASS MP.vessel_record_carried_on_client_A :: state=Paused pause=not_placed
+STEP mp_hold_vessel begin
+PASS MP.vessel_in_both_hands_A :: taken off the floor; primary=TLG.FermenterVessel RightHandMask=tlgcarryvessel
+STEP mp_walk_carry_start begin
+STEP mp_gait_stand begin
+OBS  MP.screenshot tlg_mpa_carry_stand.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry stand on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_walk begin
+OBS  MP.screenshot tlg_mpa_carry_walk.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry walk on A's own screen: running=false sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_run begin
+OBS  MP.screenshot tlg_mpa_carry_run.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry run on A's own screen: running=true sprinting=false sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sprint begin
+OBS  MP.screenshot tlg_mpa_carry_sprint.png ok=true ; zoom 0.50; player 10660.3,10645.7
+OBS  MP.carry sprint on A's own screen: running=false sprinting=true sneaking=false RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_sneak begin
+OBS  MP.screenshot tlg_mpa_carry_sneak.png ok=true ; zoom 0.50; player 10660.7,10645.3
+OBS  MP.carry sneak on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_gait_crouch begin
+OBS  MP.screenshot tlg_mpa_carry_crouch.png ok=true ; zoom 0.50; player 10658.5,10647.5
+OBS  MP.carry crouch on A's own screen: running=false sprinting=false sneaking=true RightHandMask=tlgcarryvessel both hands=true
+STEP mp_put_down begin
+OBS  MP.vessel put down: in the hands nil
+STEP vessel_put_down begin
+OBS  MP.vessel_put_down server: where=floor 10658,10647 vessels=1 state=Processing pause=none site=10658,10647 listed=10658,10647 takes=tlga:true
+PASS MP.vessel_put_down_on_server_A :: see the server's line above
+STEP mp_race_ready begin
+OBS  MP.race A ready: the loot window lists the vessel=true
+STEP mp_wait_race_at begin
+STEP mp_race_take begin
+OBS  MP.race A queued at tick 1: ISEquipHeavyItem
+OBS  MP.race A 30 ticks on: ISEquipHeavyItem
+PASS MP.race_one_holder_seen_A :: this player holds it=true, the other=false (found=true)
+STEP mp_wait_race_done begin
+STEP race begin
+OBS  MP.race server: where=inventory tlga both hands vessels=1 state=Paused pause=not_placed site=10658,10647 listed=no takes=tlga:true tlga:true tlgb:false
+OBS  MP.race the server's takes since the put-down: tlga:true tlgb:false; the second action was refused on the server
+PASS MP.race_one_vessel_one_holder_on_server_A :: see the server's line above
+STEP try_take begin
+OBS  MP.try_take holder=tlga taker=tlgb result=false holder keeps it=true taker has it=false takes=tlga:true tlga:true tlgb:false tlgb:false
+PASS MP.take_of_a_held_vessel_refused_on_server_A :: see the line above
+STEP mp_race_drop_please begin
+STEP mp_race_drop begin
+STEP give_vessel begin
+STEP mp_equip_own_vessel begin
+OBS  MP.own vessel 1084380894 queued: ISEquipHeavyItem
+PASS MP.own_vessel_equipped_A :: primary=TLG.FermenterVessel id=1084380894
+STEP probe_own_vessel begin
+OBS  MP.own vessel server: where=inventory tlga both hands; the server's takes since: tlga:nil
+PASS MP.own_vessel_left_to_the_game_on_server_A :: see the line above
+STEP mp_race_drop begin
+STEP mp_walk_back_end begin
+STEP fill_history begin
+OBS  MP.vessel history written by the server: found=true record=true readings=480 notes=481
+STEP snap_can begin
+STEP snap_vessel begin
+OBS  MP.before the restart: can can={cond=1.0000,deg={gasoline=0.1080},dirty=0.0000,id=S186306480-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2308,v=1.0000}; vessel state=Processing pause=none site=10658,10647 listed=10658,10647 inputs={sugar_eq=6.0000,water=30.0000} done=0.5084
+STEP snap_vault begin
+OBS  MP.vault before the restart: active=true from=1 nextId=14 copies=16 store=7944 bytes; vessel ok, readings=480 notes=481, record 41704 bytes, in the vault 1181 bytes, compact=true
+PASS MP.vessel_history_written_before_the_restart_A :: readings 480, notes 481
+PASS MP.vault_keeps_the_vessel_compact_A :: compact true, 1181 bytes in the vault, record 41704 bytes
+STEP mp_leave begin
+OBS  MP.leaving to the main menu for the server's restart
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: true)
+OBS  MP.game_start A again
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10659,10644 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_settle begin
+STEP floor_after_restart begin
+OBS  MP.floor_after_restart this client 10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+OBS  MP.floor_after_restart the server  10658,10647:TLG.FermenterVessel;10658,10647:TLG.FermenterVessel;10658,10647:TLG.FuelSampleKit;10659,10646:TLG.YeastStarter;10660,10645:TLG.FuelStabilizer;10661,10644:TLG.ManualFuelSystems;10662,10643:TLG.FuelFilter;10664,10641:Base.LargeMeteorite
+PASS MP.floor_after_restart_A :: same as the server=true; missing on the server: none
+STEP after_restart_can begin
+PASS MP.can_record_kept_over_the_restart_A :: before {cond=1.0000,deg={gasoline=0.1080},dirty=0.0000,id=S186306480-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2308,v=1.0000}; after {cond=1.0000,deg={gasoline=0.1080},dirty=0.0000,id=S186306480-12,mic=0.0000,prov={},q={gasoline=5.0000},rev=1.0000,sealed=true,stab=2.0000,storage=gascan_plastic,t=2.2308,v=1.0000}
+STEP after_restart_vessel begin
+PASS MP.vessel_record_kept_over_the_restart_A :: before state=Processing pause=none site=10658,10647 listed=10658,10647 inputs={sugar_eq=6.0000,water=30.0000} done=0.5084; after state=Processing pause=none site=10658,10647 listed=10658,10647 inputs={sugar_eq=6.0000,water=30.0000} done=0.5084
+STEP after_restart_vault begin
+OBS  MP.vault after the restart: active=true from=1 nextId=25 copies=27 store=13026 bytes can=ok moved=0 adopted=0 restored=0 cleared=0 dropped=0
+OBS  MP.vessel after the restart: ok, readings=480 notes=481 (before 480, 481), record 41704 bytes, in the vault 1181 bytes, compact=true
+PASS MP.vault_in_use_after_the_restart_A :: true
+PASS MP.vessel_history_read_back_after_the_restart_A :: ok, readings 480 (before 480), notes 481 (before 481)
+PASS MP.vault_keeps_the_vessel_compact_after_the_restart_A :: compact true, 1181 bytes
+PASS MP.vault_kept_over_the_restart_A :: from 1 (before 1), can ok
+PASS MP.no_record_dropped_put_back_or_cleared_after_the_restart_A :: dropped 0, restored 0, cleared 0
+STEP mp_wait_b_back begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=37 fail=0
+DONE

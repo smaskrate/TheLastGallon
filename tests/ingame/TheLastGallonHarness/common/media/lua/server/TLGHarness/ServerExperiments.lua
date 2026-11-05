@@ -18,6 +18,14 @@ local function fluidNames(fc)
     return table.concat(parts, ",")
 end
 
+-- A record set up by hand on the server, kept as the authority keeps what it
+-- writes: on a server the vault holds a copy (TLG/Authority/Vault.lua) and
+-- would drop a record it never saw.
+local function setSidecar(item, side)
+    item:getModData().tlg = side
+    TLG.Authority.Vault.put("supply", TLG.Authority.Vault.itemHolder(item), side)
+end
+
 local function newEmptyCan(fullType)
     local item = instanceItem(fullType)
     local fc = item:getFluidContainer()
@@ -197,9 +205,9 @@ local function runAdapter(r)
         fcA:addFluid(Fluid.Petrol, 6.0)
         fcA:addFluid(eth, 2.0)
         local now = World.now()
-        canA:getModData().tlg = { v = 1, id = "TEST-A", rev = 5, t = now, storage = "jerrycan_steel", sealed = true,
+        setSidecar(canA, { v = 1, id = "TEST-A", rev = 5, t = now, storage = "jerrycan_steel", sealed = true,
             cond = 1, dirty = 0, stab = 0.5, mic = 0, deg = { gasoline = 1.2, ethanol = 0.3 },
-            q = { gasoline = 6.0, ethanol = 2.0 }, prov = {} }
+            q = { gasoline = 6.0, ethanol = 2.0 }, prov = {} })
         local canB, fcB = newEmptyCan("Base.PetrolCan")
         FluidContainer.Transfer(fcA, fcB, 4.0)
         local sb = canB:getModData().tlg
@@ -212,8 +220,8 @@ local function runAdapter(r)
     r:check("M2.untracked_inflow_never_fresh", function()
         local can, fc = newEmptyCan("Base.JerryCan")
         fc:addFluid(Fluid.Petrol, 5.0)
-        can:getModData().tlg = { v = 1, id = "TEST-U", rev = 0, t = World.now(), storage = "jerrycan_steel", sealed = true,
-            cond = 1, dirty = 0, stab = 0, mic = 0, deg = { gasoline = 0.0 }, q = { gasoline = 5.0 }, prov = {} }
+        setSidecar(can, { v = 1, id = "TEST-U", rev = 0, t = World.now(), storage = "jerrycan_steel", sealed = true,
+            cond = 1, dirty = 0, stab = 0, mic = 0, deg = { gasoline = 0.0 }, q = { gasoline = 5.0 }, prov = {} })
         fc:addFluid(Fluid.Petrol, 5.0)
         local rec, status = C.read(can, "item", false)
         local base = C.untrackedDeg()
@@ -223,8 +231,8 @@ local function runAdapter(r)
     r:check("M2.many_small_hooked_transfers_conserve", function()
         local canA, fcA = newEmptyCan("Base.JerryCan")
         fcA:addFluid(Fluid.Petrol, 10.0)
-        canA:getModData().tlg = { v = 1, id = "TEST-S", rev = 0, t = World.now(), storage = "jerrycan_steel", sealed = true,
-            cond = 1, dirty = 0, stab = 0, mic = 0, deg = { gasoline = 2.0 }, q = { gasoline = 10.0 }, prov = {} }
+        setSidecar(canA, { v = 1, id = "TEST-S", rev = 0, t = World.now(), storage = "jerrycan_steel", sealed = true,
+            cond = 1, dirty = 0, stab = 0, mic = 0, deg = { gasoline = 2.0 }, q = { gasoline = 10.0 }, prov = {} })
         local canB, fcB = newEmptyCan("Base.JerryCan")
         for _ = 1, 200 do FluidContainer.Transfer(fcA, fcB, 0.01) end
         local sb = canB:getModData().tlg

@@ -1,0 +1,17 @@
+[05-11-26 21:46:30.152] LOG  : Lua          f:0 st:116.240.399> [TLG][INFO] field manual added to 11 loot lists: BookstoreBlueCollar, CrateFarming, CrateGenerator, CrateMechanics, FarmerTools, GasStorageMechanics, Homesteading, LibraryMagazines, MechanicShelfBooks, StoreShelfMechanics, ToolStoreBooks.
+[05-11-26 21:46:34.505] LOG  : Lua          f:0 st:116.244.751> [TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped).
+[05-11-26 21:46:34.505] LOG  : Lua          f:0 st:116.244.751> [TLG][INFO] machine move hooks installed.
+[05-11-26 21:46:34.505] LOG  : Lua          f:0 st:116.244.752> [TLG][INFO] vehicle adapter installed.
+[05-11-26 21:46:34.505] LOG  : Lua          f:0 st:116.244.752> [TLG][INFO] generator adapter installed.
+[05-11-26 21:46:34.505] LOG  : Lua          f:0 st:116.244.752> [TLG][INFO] station adapter installed.
+[05-11-26 21:46:34.506] LOG  : Lua          f:0 st:116.244.752> [TLG][INFO] The Last Gallon 0.1.0 ready (server=true client=false).
+[05-11-26 21:41:29.880] LOG  : Lua          f:0 st:115.940.126> [TLG][INFO] field manual added to 11 loot lists: BookstoreBlueCollar, CrateFarming, CrateGenerator, CrateMechanics, FarmerTools, GasStorageMechanics, Homesteading, LibraryMagazines, MechanicShelfBooks, StoreShelfMechanics, ToolStoreBooks.
+[05-11-26 21:41:31.233] LOG  : Lua          f:0 st:115.941.479> [TLG][INFO] world fuel history created: policy=new_world seed=186306480 epoch=0.00 installedAt=2.00 newGame=true.
+[05-11-26 21:41:33.652] LOG  : Lua          f:0 st:115.943.898> [TLG][INFO] world record: seed,nextId moved to the server store.
+[05-11-26 21:41:33.652] LOG  : Lua          f:0 st:115.943.898> [TLG][INFO] vault: started; records with ids before 1 are adopted as found.
+[05-11-26 21:41:33.914] LOG  : Lua          f:0 st:115.944.161> [TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped).
+[05-11-26 21:41:33.915] LOG  : Lua          f:0 st:115.944.161> [TLG][INFO] machine move hooks installed.
+[05-11-26 21:41:33.915] LOG  : Lua          f:0 st:115.944.162> [TLG][INFO] vehicle adapter installed.
+[05-11-26 21:41:33.915] LOG  : Lua          f:0 st:115.944.162> [TLG][INFO] generator adapter installed.
+[05-11-26 21:41:33.915] LOG  : Lua          f:0 st:115.944.162> [TLG][INFO] station adapter installed.
+[05-11-26 21:41:33.915] LOG  : Lua          f:0 st:115.944.162> [TLG][INFO] The Last Gallon 0.1.0 ready (server=true client=false).

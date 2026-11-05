@@ -1,0 +1,153 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1
+server started (shell pid 24816)
+server up after 24 s
+server: LOG  : General      f:0 st:113.420.316> command entered via server console (System.in): "adduser "tlga" "********""
+server: LOG  : General      f:0 st:113.420.316> command entered via server console (System.in): "setaccesslevel "tlga" "user""
+server: LOG  : General      f:0 st:113.420.611> User tlga is now user
+server: LOG  : General      f:0 st:113.422.026> command entered via server console (System.in): "adduser "tlgb" "********""
+server: LOG  : General      f:0 st:113.424.035> command entered via server console (System.in): "setaccesslevel "tlgb" "user""
+server: LOG  : General      f:0 st:113.424.118> User tlgb is now user
+client mp-a started, pid 616
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP fuel_site begin
+OBS  MP.fuel site: pump 10636,10623 (12349 units), car 241, generators 10632,10629 and 10630,10629 
+STEP aud_fuel_site_arrives begin
+STEP mp_fuel_site_seen begin
+PASS MP.fuel_site_seen_A :: pump=true car=true tank=0 g1=0 g2=0
+STEP aud_where begin
+OBS  AUD.where: player 10660.5,10645.5 role=user; car 241 at 10639,10626 dist=41.0; pump 10636,10623; g1 10632,10629
+STEP aud_status_vehicle_far begin
+OBS  AUD.status vehicle far: ok=false reason=no_access duplicate=nil state=nil total=nil cap=nil primary=nil sealed=nil rev=nil grade=nil
+PASS MP.AUD1_status_vehicle_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_sample_vehicle_far begin
+OBS  AUD.sample vehicle far: ok=false reason=no_access duplicate=nil state=nil detail=not_at_fuel_cap
+PASS MP.AUD1_sample_vehicle_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_status_pump_far begin
+OBS  AUD.status pump far: ok=false reason=no_access duplicate=nil state=nil total=nil primary=nil
+PASS MP.AUD1_status_pump_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_status_generator_far begin
+OBS  AUD.status generator far: ok=false reason=no_access duplicate=nil state=nil total=nil grade=nil
+PASS MP.AUD1_status_generator_out_of_reach_refused_A :: ok=false reason=no_access duplicate=nil state=nil
+STEP aud_status_bogus_vehicle begin
+OBS  AUD.status bogus vehicle id: ok=false reason=unknown_target duplicate=nil state=nil detail=no_vehicle
+STEP aud_spawn_running_vessel begin
+OBS  AUD.spawned vessel id=111870635 at 10665,10640 batch=Processing
+STEP aud_vessel_lands begin
+STEP aud_probe_world begin
+OBS  AUD.server world: store=true seed=185377467 nextId=13 sites={P185377467-12={x=10665.0000,y=10640.0000,z=0.0000}}; record seed=nil nextId=nil sites=nil
+PASS MP.AUD2_server_store_keeps_the_machine_site_A :: store=true hit=true seed=185377467 record seed=nil sites=nil
+STEP aud_request_world begin
+STEP aud_read_world begin
+OBS  AUD.client received world: event=true seed=nil policy=new_world nextId=nil climateAcc=false machineSites=0 {}
+PASS MP.AUD2_world_record_sent_without_server_fields_A :: event=true policy=new_world 0 sites, seed=nil nextId=nil
+STEP aud_transmit_forged_world begin
+OBS  AUD.transmitted a forged world record (nextId=999999, audit=forged) from the client
+STEP aud_world_transmit_settles begin
+STEP aud_probe_world_after begin
+OBS  AUD.server world after the client's transmit: nextId=13 sites={P185377467-12={x=10665.0000,y=10640.0000,z=0.0000}}
+PASS MP.AUD2b_server_world_record_not_overwritten_by_client_A :: nextId=13
+STEP aud_probe_square begin
+OBS  AUD.pump square power: server grid=true elec=false; client grid=true elec=false; ElecShutModifier=14
+STEP aud_give_can begin
+OBS  AUD.given can id=1057999377
+STEP aud_can_arrives begin
+OBS  AUD.can in inventory=true 0.0000 L
+STEP aud_walk_to_pump begin
+STEP aud_status_pump_near begin
+OBS  AUD.status pump in reach: ok=true reason=nil duplicate=nil state=nil total=12349 primary=gasoline
+PASS MP.AUD1_status_pump_in_reach_answered_A :: ok=true reason=nil duplicate=nil state=nil
+STEP aud_transfer_pump_to_can begin
+OBS  AUD.transfer pump->can: ok=true reason=nil duplicate=nil state=nil moved=5 detail=nil (pump units before 12349, power=true)
+STEP aud_after_pump_to_can begin
+OBS  AUD.after transfer pump->can: can 0.0000 -> 5.0000 L; pump units 12349 -> 12344
+PASS MP.AUD3_pump_to_can_without_action_A :: moved=5 can 5.0000 L power=true
+STEP aud_walk_to_tank begin
+STEP aud_transfer_pump_to_car begin
+OBS  AUD.at the filler: inArea=true dist to pump square=3.16
+OBS  AUD.transfer pump->car: ok=true reason=nil duplicate=nil state=nil moved=10 detail=nil
+STEP aud_probe_fuel_after_transfers begin
+OBS  AUD.server after transfers: pump units=12334 side={cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}; tank 10.0000 L record 10.0000 L; items 1057999377=5.0000 {cond=1.0000,deg={gasoline=0.3717},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1284,v=1.0000}
+PASS MP.AUD3_pump_to_car_without_action_A :: tank 0.0000 -> 10.0000 L
+STEP aud_look_can begin
+OBS  AUD.look at can: ok=true reason=nil duplicate=nil state=nil
+STEP aud_record_settles begin
+STEP aud_forge_item_sidecar begin
+OBS  AUD.forge item: sidecar before {cond=1.0000,deg={gasoline=0.3717},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1284,v=1.0000}
+STEP aud_item_sync_settles begin
+STEP aud_probe_item_forged begin
+OBS  AUD.server item after client sync: found=true sidecar={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1284,v=1.0000} fluid=5.0000
+PASS MP.AUD4_item_sidecar_reaches_server_mod_data_A :: {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1284,v=1.0000}
+STEP aud_walk_to_pump begin
+STEP aud_forge_pump_sidecar begin
+OBS  AUD.forge pump: sidecar before {cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}
+STEP aud_forge_generator_conversion begin
+OBS  AUD.forge generator: modData before tlgConv=nil deviceId=nil
+STEP aud_object_sync_settles begin
+STEP aud_probe_fuel_forged begin
+OBS  AUD.server after object syncs: pump side={audit=forged,cap=12349.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}; g1 side=nil
+PASS MP.AUD4_pump_sidecar_reaches_server_mod_data_A :: before {cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}, after {audit=forged,cap=12349.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}
+STEP aud_probe_vault begin
+OBS  AUD.server reads through the vault (active=true): can {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1284,v=1.0000} -> deg 0.3717 stab 0.0000 -> {cond=1.0000,deg={gasoline=0.3717},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1284,v=1.0000}
+OBS  AUD.  pump {audit=forged,cap=12349.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000} -> water 15.1140 sediment 11.8777 -> {cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}
+OBS  AUD.  generator project {chassis=Base.Generator,commissionedAt=0.0000,conversion=flex_generator,credit={},delivered={},deviceKey=gen:AUDIT-D,deviceKind=generator,engineId=AUDIT-E,hours={},id=AUDIT-C,originalProfile=generator_si_stock,rev=1.0000,snap={cargoAndWeightImpact={},fuelStorageChanges={},requiredModules={},requiredTools={},reversalAndSalvageRules={},targetConsumerProfile=generator_si_flex,visualConfiguration={},workStages={}},state=Commissioned,t=0.0000,v=1.0000,workers={}} -> profile generator_si_stock -> nil
+PASS MP.AUD4_vault_active_on_server_A :: true
+PASS MP.AUD4_item_record_put_back_A :: deg 0.3717 stab 0.0000, after {cond=1.0000,deg={gasoline=0.3717},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1284,v=1.0000}
+PASS MP.AUD4_pump_record_put_back_A :: before the forgery {cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}, after the read {cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000}
+PASS MP.AUD4_generator_conversion_reaches_server_mod_data_A :: {chassis=Base.Generator,commissionedAt=0.0000,conversion=flex_generator,credit={},delivered={},deviceKey=gen:AUDIT-D,deviceKind=generator,engineId=AUDIT-E,hours={},id=AUDIT-C,originalProfile=generator_si_stock,rev=1.0000,snap={cargoAndWeightImpact={},fuelStorageChanges={},requiredModules={},requiredTools={},reversalAndSalvageRules={},targetConsumerProfile=generator_si_flex,visualConfiguration={},workStages={}},state=Commissioned,t=0.0000,v=1.0000,workers={}}
+PASS MP.AUD4_generator_forged_conversion_dropped_A :: profile generator_si_stock, project after nil
+STEP aud_probe_generator_forged begin
+OBS  AUD.server generator after client sync: found=true profile=generator_si_stock side=nil
+PASS MP.AUD4_generator_forged_conversion_ignored_A :: generator_si_stock
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=20 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_fuel role=A tag=fuel_site
+OBS  MPS.reply fuel_site car=241 g1x=10632 g1y=10629 g2x=10630 g2y=10629 px=10636 py=10623 role=A tag=fuel_site units=12349
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.reply spawned batch=Processing id=111870635 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.message from tlga: probe_world role=A tag=aud_probe_world x=10665 y=10640
+OBS  MPS.reply probe_world nextId=13 policy=new_world pubNextId=nil pubSeed=nil pubSites=nil role=A seed=185377467 siteHit=true sites={P185377467-12={x=10665.0000,y=10640.0000,z=0.0000}} store=true tag=aud_probe_world
+OBS  MPS.message from tlga: probe_world role=A tag=aud_probe_world_after
+OBS  MPS.reply probe_world nextId=13 policy=new_world pubNextId=nil pubSeed=nil pubSites=nil role=A seed=185377467 siteHit=false sites={P185377467-12={x=10665.0000,y=10640.0000,z=0.0000}} store=true tag=aud_probe_world_after
+OBS  MPS.message from tlga: probe_square role=A tag=aud_probe_square x=10636 y=10623
+OBS  MPS.reply probe_square elec=false found=true grid=true level=user role=A tag=aud_probe_square user=tlga
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=0 role=A tag=aud_give_can
+OBS  MPS.reply given ids=Base.PetrolCan=1057999377 role=A tag=aud_give_can
+OBS  MPS.message from tlga: probe_fuel car=241 g1x=10632 g1y=10629 g2x=10630 g2y=10629 ids=1057999377 px=10636 py=10623 role=A tag=aud_probe_fuel_after_transfers
+OBS  MPS.reply probe_fuel engine=false g1Fuel=0 g1On=false g1RecL=0 g1Side=nil g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1057999377=5.0000 {cond=1.0000,deg={gasoline=0.3717},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1284,v=1.0000} pumpSide={cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000} pumpUnits=12334 recL1057999377=4.999999999999999 role=A tag=aud_probe_fuel_after_transfers tankL=10 tankRecL=10 tankSide={cond=1.0000,deg={gasoline=0.3717},id=V185377467-16,mic=0.0000,prov={1={from=R185377467-14,k=in,n=10.0000,t=2.1511}},q={gasoline=9.9781,sediment=0.0096,water=0.0123},rev=1.0000,stab=0.0000,t=2.1511,v=1.0000}
+OBS  MPS.message from tlga: probe_item id=1057999377 role=A tag=aud_probe_item_forged
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1284,v=1.0000} tag=aud_probe_item_forged
+OBS  MPS.message from tlga: probe_fuel car=241 g1x=10632 g1y=10629 g2x=10630 g2y=10629 ids=1057999377 px=10636 py=10623 role=A tag=aud_probe_fuel_forged
+OBS  MPS.reply probe_fuel engine=false g1Fuel=0 g1On=false g1RecL=0 g1Side=nil g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1057999377=5.0000 {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1284,v=1.0000} pumpSide={audit=forged,cap=12349.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000} pumpUnits=12334 recL1057999377=4.999999999999999 role=A tag=aud_probe_fuel_forged tankL=10 tankRecL=10 tankSide={cond=1.0000,deg={gasoline=0.3717},id=V185377467-16,mic=0.0000,prov={1={from=R185377467-14,k=in,n=10.0000,t=2.1511}},q={gasoline=9.9781,sediment=0.0096,water=0.0123},rev=1.0000,stab=0.0000,t=2.1511,v=1.0000}
+OBS  MPS.message from tlga: probe_vault gx=10632 gy=10629 id=1057999377 px=10636 py=10623 role=A tag=aud_probe_vault
+OBS  MPS.reply probe_vault active=true canAfter={cond=1.0000,deg={gasoline=0.3717},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1284,v=1.0000} canBefore={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S185377467-15,mic=0.0000,prov={1={from=R185377467-14,k=in,n=5.0000,t=2.1284}},q={gasoline=4.9891,sediment=0.0048,water=0.0061},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1284,v=1.0000} canDeg=0.3717 canStab=0.0000 genConvAfter=nil genConvBefore={chassis=Base.Generator,commissionedAt=0.0000,conversion=flex_generator,credit={},delivered={},deviceKey=gen:AUDIT-D,deviceKind=generator,engineId=AUDIT-E,hours={},id=AUDIT-C,originalProfile=generator_si_stock,rev=1.0000,snap={cargoAndWeightImpact={},fuelStorageChanges={},requiredModules={},requiredTools={},reversalAndSalvageRules={},targetConsumerProfile=generator_si_flex,visualConfiguration={},workStages={}},state=Commissioned,t=0.0000,v=1.0000,workers={}} genProfile=generator_si_stock pumpAfter={cap=12349.0000,cond=1.0000,deg={gasoline=0.3717},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083,sediment=11.8777,water=15.1140},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000} pumpBefore={audit=forged,cap=12349.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R185377467-14,mic=0.0000,prov={},q={gasoline=12307.0083},rev=2.0000,stab=0.0000,t=2.1511,v=1.0000} pumpSediment=11.8777 pumpWater=15.1140 role=A tag=aud_probe_vault
+OBS  MPS.message from tlga: probe_generator role=A tag=aud_probe_generator_forged x=10632 y=10629
+OBS  MPS.reply probe_generator found=true fuel=0 on=false profile=generator_si_stock role=A side=nil tag=aud_probe_generator_forged
+OBS  MPS.message from tlga: finish role=A
+exit=0

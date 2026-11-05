@@ -546,6 +546,38 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   (`GameServer.main`) and in single player (`GameLoadingState`). The mod
   keeps its world record's private fields there (docs/migrations.md, world
   server store).
+* A client can still rewrite, on the server, an item's mod data
+  (`SyncItemFieldsPacket`, `SyncItemModDataPacket`: the item is found by
+  its id and its mod data loaded in `parse`) and a world object's
+  (`ObjectModDataPacket`), with no capability checked (security audit
+  2026-11-05, V-01); a vehicle part's goes only from the server
+  (`BaseVehicle.transmitPartModData` acts when `GameServer.server`). The
+  mod keeps its records there a second time on the server, in the vault
+  (`TLG/Authority/Vault.lua`, docs/migrations.md). It names an item by its id: `InventoryItem.save`
+  writes the `id` field and `load` reads it back (BC 42.21), so the id
+  survives saves. `IsoWorldInventoryObject.swapItem` also calls `setID` on
+  an item (which id it sets not read). The one path found that copies an
+  item's mod data to a new id is the debug menu's Clone
+  (`createCloneItem`, debug builds; `copyModData` callers not searched).
+  A packet never edits a table already in the mod data: `KahluaTableImpl.load(ByteBuffer, int)` wipes the
+  table and builds a new one for every value that is a table (BC 42.21), and
+  the three packets above load the mod data that way (or wipe it).
+  So a table the server wrote stays as written until server Lua changes it,
+  and the vault holds that table rather than a copy.
+* A dedicated server saves the world with no Lua event first:
+  `ServerMap.QueuedSaveAll` calls `SaveAll`, then the players, the chunks,
+  `SGlobalObjects.save` (each system's file through the shared 10 MB
+  `SliceY.SliceBuffer`, the file opened and so truncated before the buffer
+  is filled), `GlobalModData.save` and the rest (BC 42.21). `OnSave` fires
+  only in `GameWindow.save` (single player and the host's own save). So
+  what a global object system saves has to be right at every moment; the
+  vault keeps a machine's digests current on every write
+  (`TLG/Authority/Vault.lua`).
+* Kahlua's `%` computes `a - int(a / b) * b` with the quotient cast to a
+  32-bit int: `x % 1` for x near 1e15 returns x - 2147483647 (Kahlua run,
+  2026-11-05). It is the exact modulo only for quotients below 2^31; the
+  mod uses `math.floor` (Java's, exact for doubles) or keeps quotients
+  small (the vault's digests: below 2^26).
 * NOT RUN: chunk unload/reload, MP reconnect.
 
 ## Production machines and conversions (RT-SP runs 7–8)

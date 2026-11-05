@@ -15,6 +15,7 @@ if isClient() then return end
 
 require "Map/SGlobalObjectSystem"
 require "TLG/Integration/World"
+require "TLG/Authority/Vault"
 
 if SGlobalObjectSystem == nil then return end
 
@@ -30,7 +31,10 @@ function STLGWorldStore:initSystem()
     self.system:setModDataKeys({ "tlg" })
     self.system:setObjectModDataKeys({})
     if type(self.tlg) ~= "table" then self.tlg = {} end
-    TLG.World.attachServerStore(self.tlg)
+    local store, regenerated = TLG.World.attachServerStore(self.tlg)
+    -- The server copies of the records in client-writable mod data
+    -- (TLG/Authority/Vault.lua; audit V-01) live in the same table.
+    TLG.Authority.Vault.attach(store, regenerated)
 end
 
 -- Clients get nothing of this system (the base class's default, kept explicit).

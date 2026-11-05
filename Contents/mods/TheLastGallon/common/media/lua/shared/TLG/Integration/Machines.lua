@@ -59,14 +59,22 @@
 --                      that gives each such machine its air, with its fuel;
 --                      hours the area is not loaded keep that fire's warmth
 --                      while the fuel noted last would last (D-022).
+-- On a server every read of a record is checked against the vault
+-- (TLG/Authority/Vault.lua, holder the machine item; audit V-01): a client
+-- can rewrite an item's mod data there. The vault saves the readings and
+-- fire notes only as digests (Vault.DIGESTED), so a note keeps to the
+-- fields in Vault.NOTE_FIELDS, or after a restart it reads as forged and the
+-- notes are dropped.
 require "TLG/Domain/Production/Process"
 require "TLG/Persistence/Migrations"
 require "TLG/Integration/World"
 require "TLG/Content/Production"
+require "TLG/Authority/Vault"
 
 TLG.Integration.Machines = TLG.Integration.Machines or {}
 local M = TLG.Integration.Machines
 local Process, World, Tables, Climate = TLG.Domain.Process, TLG.World, TLG.Tables, TLG.Domain.Climate
+local Vault = TLG.Authority.Vault
 
 M.SIDECAR = "tlgProc"
 -- Placed machines the hourly reading visits, at most.
@@ -98,12 +106,24 @@ function M.square(item)
     return wi and wi:getSquare() or nil
 end
 
+local function send(item)
+    if item.syncItemFields then item:syncItemFields() end
+    local wi = item:getWorldItem()
+    if wi and wi.transmitModData then pcall(function() wi:transmitModData() end) end
+end
+
+-- The record in the item's mod data as stored, checked against the vault on
+-- a server (put back there when it differs).
+function M.stored(item)
+    return Vault.guard("process", Vault.itemHolder(item), item:getModData(), M.SIDECAR, function() send(item) end)
+end
+
 -- Committed process record for a machine item (nil for non-machines or
 -- unknown future schemas, which stay untouched).
 function M.read(item, persist)
     local machine = M.machineFor(item)
     if machine == nil then return nil, "not_a_machine" end
-    local raw = item:getModData()[M.SIDECAR]
+    local raw = M.stored(item)
     local rec, status = TLG.Persistence.Migrations.sidecar("process", raw)
     if raw ~= nil and rec == nil then return nil, status end
     if rec == nil then
@@ -454,7 +474,7 @@ end
 -- 0.3 ms a machine, docs/performance.md). An older schema comes upgraded, a
 -- new table; a newer schema or none gives nil, as M.read leaves those alone.
 local function stored(item)
-    local raw = M.machineFor(item) and item:getModData()[M.SIDECAR]
+    local raw = M.machineFor(item) and M.stored(item)
     if raw == nil then return nil end
     return (TLG.Persistence.Migrations.sidecar("process", raw))
 end
@@ -539,10 +559,9 @@ end
 -- quiet: kept on the authority, not sent to clients (fire notes).
 function M.write(item, rec, quiet)
     item:getModData()[M.SIDECAR] = rec
+    Vault.put("process", Vault.itemHolder(item), rec)
     if quiet then return end
-    if item.syncItemFields then item:syncItemFields() end
-    local wi = item:getWorldItem()
-    if wi and wi.transmitModData then pcall(function() wi:transmitModData() end) end
+    send(item)
 end
 
 -- Machine items within reach of a square (for still <- fermenter loading).

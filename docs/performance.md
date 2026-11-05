@@ -253,6 +253,34 @@ gave 0.55 ms per reading and 0.59 ms per note for 32 fresh fermenters
 (run 185). The server's note pass costs more here because four machines
 stand by a fire: each pass scans the squares within reach of them.
 
+Since the security audit's V-01 fix (2026-11-05), every read and write of
+a record on a server also goes through the vault (`TLG/Authority/Vault.lua`,
+docs/security-audit-2026-11-05.md §7.3). The same timers mode with it
+(the audit's run 19): hourly pass 0.60 ms, note pass 2.87 ms, a status
+0.11 ms, against 0.40, 4.39 and 0.17 ms without it (the audit's run 5),
+within what two unchanged runs differ by here. The first read of a record
+after the world loads compares it field by field once: about 0.3 ms for a
+machine with 480 readings (Kahlua). Single player does not use the vault.
+Since the vault keeps a machine's readings and fire notes as digests
+(2026-11-05, the compact store), every write of a machine record also
+brings its digests up to date, recomputing only the entries that changed.
+Kahlua, one fermenter with 480 readings and 480 notes, every call one hour
+(or ten minutes) later so each write adds an entry and the trim drops the
+oldest: the hourly reading 0.45 ms without the vault and 0.64-0.68 ms with
+it (0.37 and 0.59-0.62 ms with a fireplace note every hour), the ten-minute
+note 0.20-0.21 and 0.35-0.37 ms. With 256 such machines that adds about
+50 ms to the hourly pass and 40 ms to the ten-minute pass. The first read
+after a load, of the world or of the machine's chunk (the item's mod data
+comes back as new tables), computes the digests whole: about 3.4 ms for
+that fermenter with fireplace notes, against about 0.3 ms for the field
+comparison alone before. In game (the audit's run 27, the timers mode, 32
+fermenters with a few hours of history) the hourly pass took 0.76 ms
+against 0.60 ms with the uncompacted vault (run 19), the note pass 2.91
+against 2.87 ms, a status 0.10 against 0.11 ms. To recompute only what changed, the server keeps in
+memory (not saved), per machine, each reading's and note's value and term:
+about 1,900 table entries for a machine with 480 of each, on top of the
+record itself.
+
 ## Not measured
 
 - **Multiple electrical networks:** no network is built in game in this

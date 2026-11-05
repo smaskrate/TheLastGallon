@@ -39,7 +39,8 @@ end
 
 -- Attaches the server store's table and moves the server fields out of the
 -- world record (a world created this session, or a save from before the
--- store). The store's own values win; the next id never goes back.
+-- store). The store's own values win; the next id never goes back. Also
+-- returns whether the store was lost (a new seed was drawn).
 function World.attachServerStore(tbl)
     local md = ModData.getOrCreate(World.KEY)
     if tbl.v == nil then tbl.v = World.SERVER_STORE_SCHEMA end
@@ -58,7 +59,8 @@ function World.attachServerStore(tbl)
     end
     World.store = tbl
     -- A world whose store was lost: a new seed keeps new ids distinct.
-    if md.v ~= nil and tbl.seed == nil then
+    local regenerated = md.v ~= nil and tbl.seed == nil
+    if regenerated then
         tbl.seed = Rng.hash(tostring(getWorld():getWorld()) .. ":" .. tostring(getTimestamp()))
         tbl.nextId = tbl.nextId or 1
         TLG.Log.warn("world record: server store had no seed; new seed %d", tbl.seed)
@@ -67,7 +69,7 @@ function World.attachServerStore(tbl)
         TLG.Log.info("world record: %s moved to the server store", table.concat(moved, ","))
         World.transmit()
     end
-    return tbl
+    return tbl, regenerated
 end
 
 function World.isAuthority()

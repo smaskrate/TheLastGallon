@@ -1,0 +1,10 @@
+[05-11-26 21:13:48.393] LOG  : Lua          f:0 st:114.278.639> [TLG][INFO] field manual added to 11 loot lists: BookstoreBlueCollar, CrateFarming, CrateGenerator, CrateMechanics, FarmerTools, GasStorageMechanics, Homesteading, LibraryMagazines, MechanicShelfBooks, StoreShelfMechanics, ToolStoreBooks.
+[05-11-26 21:13:49.662] LOG  : Lua          f:0 st:114.279.909> [TLG][INFO] world fuel history created: policy=new_world seed=185412188 epoch=0.00 installedAt=2.00 newGame=true.
+[05-11-26 21:13:51.857] LOG  : Lua          f:0 st:114.282.104> [TLG][INFO] world record: seed,nextId moved to the server store.
+[05-11-26 21:13:51.858] LOG  : Lua          f:0 st:114.282.104> [TLG][INFO] vault: started; records with ids before 1 are adopted as found.
+[05-11-26 21:13:52.130] LOG  : Lua          f:0 st:114.282.377> [TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped).
+[05-11-26 21:13:52.130] LOG  : Lua          f:0 st:114.282.377> [TLG][INFO] machine move hooks installed.
+[05-11-26 21:13:52.131] LOG  : Lua          f:0 st:114.282.377> [TLG][INFO] vehicle adapter installed.
+[05-11-26 21:13:52.131] LOG  : Lua          f:0 st:114.282.377> [TLG][INFO] generator adapter installed.
+[05-11-26 21:13:52.131] LOG  : Lua          f:0 st:114.282.377> [TLG][INFO] station adapter installed.
+[05-11-26 21:13:52.131] LOG  : Lua          f:0 st:114.282.378> [TLG][INFO] The Last Gallon 0.1.0 ready (server=true client=false).

@@ -1,0 +1,17 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_conversion role=A tag=conversion_site
+OBS  MPS.reply conversion_site electricity=2 mechanics=4 role=A tag=conversion_site x=10663 y=10642
+OBS  MPS.message from tlga: probe_generator role=A tag=converted_generator x=10663 y=10642
+OBS  MPS.reply probe_generator found=true fuel=0 on=false profile=generator_si_flex role=A side=nil tag=converted_generator
+OBS  MPS.message from tlga: give fill=TLG_Ethanol items=Base.PetrolCan litres=3 role=A tag=give_conversion_ethanol
+OBS  MPS.reply given ids=Base.PetrolCan=1447185414 role=A tag=give_conversion_ethanol
+OBS  MPS.message from tlga: probe_generator role=A tag=flex_after_pour x=10663 y=10642
+OBS  MPS.reply probe_generator found=true fuel=3 on=false profile=generator_si_flex role=A side={cond=1.0000,deg={ethanol=0.0382},id=G156799831-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156799831-15,k=in,n=3.0000,t=9.8221}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=9.8221,v=1.0000} tag=flex_after_pour
+OBS  MPS.message from tlga: probe_generator role=A tag=flex_after_start x=10663 y=10642
+OBS  MPS.reply probe_generator found=true fuel=2.9911999702453613 on=true profile=generator_si_flex role=A side={cond=1.0000,deg={ethanol=0.0382},id=G156799831-16,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S156799831-15,k=in,n=3.0000,t=9.8221}},q={ethanol=2.9998,water=0.0002},rev=1.0000,stab=0.0000,t=9.8221,v=1.0000} tag=flex_after_start
+OBS  MPS.message from tlga: finish role=A

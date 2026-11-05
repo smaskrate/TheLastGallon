@@ -1,0 +1,53 @@
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_walk_to_watch begin
+STEP mp_hello begin
+STEP mp_wait_effects_site begin
+STEP mp_effects_see_car begin
+OBS  MP.effects car 232 on B's client: power 4000 quality 96 loudness 32 engine 100
+OBS  MP.effects tick 1 on B's client: power 4000 quality 96 loudness 32 running false engine 100
+STEP mp_effects_ready begin
+STEP mp_effects_watch_marks begin
+OBS  MP.effects tick 965 on B's client: power 4000 quality 96 loudness 11 running false engine 100
+OBS  MP.effects tick 1367 on B's client: power 4000 quality 96 loudness 11 running true engine 100
+OBS  MP.effects tick 1379 on B's client: power 3406 quality 96 loudness 11 running true engine 100
+OBS  MP.effects tick 2093 on B's client: power 3406 quality 96 loudness 11 running true engine 99
+OBS  MP.effects tick 2765 on B's client: power 3406 quality 96 loudness 11 running true engine 98
+OBS  MP.effects tick 3443 on B's client: power 3406 quality 96 loudness 11 running true engine 97
+OBS  MP.effects tick 4079 on B's client: power 3406 quality 96 loudness 11 running true engine 96
+OBS  MP.effects tick 4343 on B's client: power 3406 quality 96 loudness 11 running true engine 95
+OBS  MP.effects tick 4679 on B's client: power 3406 quality 96 loudness 11 running true engine 94
+OBS  MP.effects stale_running on B's client: power 3406 quality 96 loudness 11 running true engine 94; the server's power 3406 quality 96 loudness 32 running true engine 94
+PASS MP.effects_stale_running_engine_seen_B :: power 3406 (server 3406) quality 96 (server 96) running true (server true)
+OBS  MP.effects tick 5171 on B's client: power 3406 quality 96 loudness 11 running false engine 94
+OBS  MP.effects tick 5207 on B's client: power 4000 quality 96 loudness 11 running false engine 94
+OBS  MP.effects stale_stopped on B's client: power 4000 quality 96 loudness 11 running false engine 94; the server's power 4000 quality 96 loudness 32 running false engine 94
+PASS MP.effects_stale_stopped_engine_seen_B :: power 4000 (server 4000) quality 96 (server 96) running false (server false)
+PASS MP.effects_stale_stopped_engine_condition_seen_B :: 94 (server 94)
+OBS  MP.effects unfit_refused on B's client: power 4000 quality 96 loudness 11 running false engine 94; the server's power 4000 quality 96 loudness 32 running false engine 94
+PASS MP.effects_unfit_refused_engine_seen_B :: power 4000 (server 4000) quality 96 (server 96) running false (server false)
+OBS  MP.effects tick 6557 on B's client: power 2000 quality 96 loudness 11 running true engine 94
+OBS  MP.effects unfit_running on B's client: power 2000 quality 96 loudness 11 running true engine 94; the server's power 2000 quality 96 loudness 32 running true engine 94
+PASS MP.effects_unfit_running_engine_seen_B :: power 2000 (server 2000) quality 96 (server 96) running true (server true)
+OBS  MP.effects tick 7679 on B's client: power 2000 quality 96 loudness 11 running false engine 94
+OBS  MP.effects tick 7721 on B's client: power 4000 quality 96 loudness 11 running false engine 94
+OBS  MP.effects unfit_stalled on B's client: power 4000 quality 96 loudness 11 running false engine 94; the server's power 4000 quality 96 loudness 32 running false engine 94
+PASS MP.effects_unfit_stalled_engine_seen_B :: power 4000 (server 4000) quality 96 (server 96) running false (server false)
+PASS MP.effects_unfit_stalled_engine_condition_seen_B :: 94 (server 94)
+OBS  MP.effects loudness on B's client: 32 before the engine first ran, 11 at its first running tick, changed since: no; the server's 32 (x0.37037036 = 11)
+PASS MP.effects_loudness_kept_after_the_engine_first_ran_B :: held at 11
+STEP mp_finish begin
+SUMMARY pass=9 fail=0
+DONE

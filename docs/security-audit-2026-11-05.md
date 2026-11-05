@@ -13,6 +13,16 @@ proprietario sono state applicate le correzioni di V-02 e V-03. V-03 è
 corretta in modo diverso da quanto proposto nella prima versione, che non
 avrebbe protetto nulla (errata in §7, V-03 punto 7). Le prove delle
 correzioni sono in §7.2.
+Poi, sempre su richiesta, è stata applicata la correzione di V-01: una copia
+dei record nello store privato del server, rimessa a ogni lettura (§7, V-01
+punto 7; prove in §7.3). Lavorandoci è emerso che V-03 lascia leggibile il
+seed negli id dei record (§7, V-03 punto 10; non ancora corretto).
+Infine, su richiesta, lo store è stato ridotto: il vault salva i record
+delle macchine senza letture orarie e note dei fuochi, con un'impronta che
+le controlla, e circa 1.2 KB per macchina invece di fino a 50 KB. Il limite
+dei 10 MB del buffer di salvataggio (§7, V-01 punto 7, limite (i)) arriva
+così intorno a 8 000 macchine o 32 000 record di carburante (§7.3, "Store
+compatto").
 
 ## 1. Sintesi dei rischi e priorità d'intervento
 
@@ -27,8 +37,8 @@ conto.
 
 | Priorità | ID | Rischio | Stato della prova |
 | --- | --- | --- | --- |
-| 1 | V-01 | Gli store in cui il mod tiene lo stato autoritativo (modData di item, oggetti del mondo, progetti di conversione) sono riscrivibili da qualunque client: il motore 42.21 applica sul server i pacchetti `SyncItemFields` e `ObjectModData` inviati dai client. Un client modificato riscrive condizione e composizione del carburante, forgia conversioni "Commissioned", stati macchina e usura. | **Dimostrata nel runtime** (run 1 e 2, giocatore con ruolo `user`): sidecar della tanica, record della pompa e progetto di conversione del generatore riscritti sul server; bytecode dei pacchetti (§3) |
-| 2 | V-03 | Il record mondo `TLG_World` è inviato a ogni client che lo chiede e contiene `machineSites`: le coordinate di ogni macchina con un lotto in corso (fino a 256), più il seed del mondo. Su un server PvP rivela le basi. | **Dimostrata nel runtime** (run 1). **Corretta** dopo la consegna: i campi privati sono nello store del server (§7.2) |
+| 1 | V-01 | Gli store in cui il mod tiene lo stato autoritativo (modData di item, oggetti del mondo, progetti di conversione) sono riscrivibili da qualunque client: il motore 42.21 applica sul server i pacchetti `SyncItemFields` e `ObjectModData` inviati dai client. Un client modificato riscrive condizione e composizione del carburante, forgia conversioni "Commissioned", stati macchina e usura. | **Dimostrata nel runtime** (run 1 e 2, giocatore con ruolo `user`): sidecar della tanica, record della pompa e progetto di conversione del generatore riscritti sul server; bytecode dei pacchetti (§3). **Corretta** dopo la consegna sui server: il mod rimette i propri record a ogni lettura (§7.3); limiti in §7, V-01 punto 7 |
+| 2 | V-03 | Il record mondo `TLG_World` è inviato a ogni client che lo chiede e contiene `machineSites`: le coordinate di ogni macchina con un lotto in corso (fino a 256), più il seed del mondo. Su un server PvP rivela le basi. | **Dimostrata nel runtime** (run 1). **Corretta** dopo la consegna: i campi privati sono nello store del server (§7.2), ma il seed resta leggibile negli id dei record (§7, V-03 punto 10) |
 | 3 | V-02 | Il comando `status` non applica il controllo di portata: un client legge livello, composizione e valutazione del carburante di qualunque veicolo, pompa o generatore caricato, ed enumera gli id dei veicoli. | **Dimostrata nel runtime** (run 2: auto a 35 tile, pompa e generatore a ~25 tile) e nei test Kahlua. **Corretta** dopo la consegna, tranne l'enumerazione degli id (§7.2) |
 | 4 | V-09 | I comandi non considerano le safehouse né chi ha avviato un lavoro: `conversion.cancel` e `conversion.remove` consegnano al richiedente le parti che un altro giocatore aveva fornito; `machine.collect`, `machine.abort`, `machine.loadWash` agiscono sulle macchine di chiunque entro 2–2.5 tile, anche attraverso un muro. | Analisi statica; test Kahlua per il recupero parti |
 | 5 | V-05 | Con l'opzione sandbox `FuelStationGasInfinite` il record del serbatoio si svuota mentre la pompa resta infinita; da quel momento ogni erogazione vanilla a quella pompa viene annullata dal wrapper del mod (il carburante erogato sparisce). Raggiungibile dal gioco normale, non solo da un client modificato. | Test Kahlua con il wrapper reale del mod su oggetti mock; runtime NOT RUN |
@@ -37,7 +47,7 @@ conto.
 | 8 | V-10 | Il mod di sviluppo `TheLastGallonHarness` espone comandi server senza controllo di privilegio (item, livelli, veicoli). Non è nel pacchetto (verificato), ma va tenuto fuori da qualsiasi server pubblico. | Verifica del pacchetto e del launcher |
 
 Interventi consigliati, in ordine: (1) copia autoritativa server-only dei
-record e dei progetti con riconciliazione alla lettura (V-01, V-07);
+record e dei progetti con riconciliazione alla lettura (V-01 fatto; V-07 no);
 (2) separare dal record mondo trasmesso ciò che serve solo al server (V-03,
 fatto); (3) controllo di portata in `status` (V-02, fatto); (4) proprietà/safehouse per
 cancel/remove e per i comandi macchina, parti restituite al proprietario
@@ -125,7 +135,7 @@ ai litri. Il server non esegue `isValid` delle azioni Lua dei client
 | `conversion.*` (7 comandi) | `ConversionHandlers` → `run` | validateRequest, ledger, device risolto e in portata (4 tile veicolo, 2.5 generatore), attore (abilità, ricette, inventario) letto sul server, macchina a stati del dominio, revisioni | `cancel`/`remove` di chiunque, parti restituite al richiedente (V-09); `args.conversion` validato solo dal registro (ok) |
 | Azioni a tempo in MP | `ISTLGPourFuel.complete` (server), `ISTLGConversionWork` (solo report) | la pour ridispaccia `transfer` con gli stessi controlli; il lavoro accredita al massimo 1 h per report (`WORKER_TIMEOUT_HOURS`), tempo letto sul server | — |
 | ModData globale | `ModData.request/transmit` (motore) | il server ignora le tabelle ricevute; risponde però a una richiesta per qualunque chiave | `TLG_World` intero inviato ai client (V-03, corretta: i campi privati sono ora nello store del server, `gos_tlgworld.bin`) |
-| modData di item/oggetti | `SyncItemFields`, `SyncItemModData`, `ObjectModData` (motore) | nessuno del mod: i record sono letti e creduti (`Migrations.sidecar` controlla solo `v`) | V-01, V-07 |
+| modData di item/oggetti | `SyncItemFields`, `SyncItemModData`, `ObjectModData` (motore) | prima della correzione nessuno: i record erano letti e creduti (`Migrations.sidecar` controlla solo `v`); ora, sui server, ogni lettura li confronta con la copia del server (`Vault.guard`) | V-01 (corretta, §7.3), V-07 |
 | Wrapper di azioni vanilla | `ISTakeFuel`, `ISRefuelFromGasPump`, `ISAddGasolineToVehicle`, `ISTakeGasolineFromVehicle`, `ISAddFuel`, `ISTakeGenerator`, drop/unequip, `FluidContainer.Transfer` | tutto in `pcall`, solo sull'autorità | V-05 (stazione infinita) |
 | Eventi periodici (server) | `EveryHours` (clima + `sampleSites` ≤256 siti), `EveryTenMinutes` (`observeFires`), `EveryOneMinute` (veicoli nella cella) | limiti espliciti, `pcall` | — |
 | Script di gioco | `TLG_items.txt`, `TLG_machines.txt`, `TLG_fluids.txt` | ricette con input vanilla verificati; `OnCreate` del manuale imposta solo `printMedia` | — |
@@ -144,7 +154,7 @@ stampati).
 | Scenario | Capacità necessarie | Cosa aggiunge il mod |
 | --- | --- | --- |
 | A. Giocatore senza privilegi con client modificato (invia comandi `TLG` arbitrari) | account sul server; nessun admin | V-02 (lettura a distanza; corretta, §7.2), V-04 (trasferimenti istantanei e combinazioni non previste), V-09 (lavori e macchine altrui), V-08 (`experimental`) |
-| B. Lo stesso client usa i pacchetti di sync del motore (`syncItemFields`, `transmitModData`) | come A; il motore 42.21 li applica senza controlli | V-01: non è un'escalation oltre ciò che il motore già concede (il client può già riempire una tanica di qualunque fluido), ma rende carta straccia le garanzie del livello di autorità e abilita abusi silenziosi (conversioni gratis, carburante perfetto, output macchina) |
+| B. Lo stesso client usa i pacchetti di sync del motore (`syncItemFields`, `transmitModData`) | come A; il motore 42.21 li applica senza controlli | V-01: non è un'escalation oltre ciò che il motore già concede (il client può già riempire una tanica di qualunque fluido), ma rende carta straccia le garanzie del livello di autorità e abilita abusi silenziosi (conversioni gratis, carburante perfetto, output macchina). Dopo la correzione i pacchetti arrivano ancora, ma il mod rimette i propri record alla lettura successiva (§7.3) |
 | C. Giocatore onesto | nessuna | V-05 (server con pompe infinite), V-03 (riceveva le coordinate delle macchine altrui senza fare nulla; corretta, §7.2) |
 | D. Salvataggi o modData manipolati | accesso ai file del server, oppure B | V-06, V-07 |
 | E. Server malevolo verso i client | nessuna | nessuna superficie rilevante: le risposte sono dati mostrati in finestre di testo; i gestori client sono in `pcall` |
@@ -154,8 +164,8 @@ stampati).
 
 | ID | Titolo | Gravità | Sfruttabilità | Confidenza | Stato |
 | --- | --- | --- | --- | --- | --- |
-| V-01 | Stato autoritativo in store riscrivibili dal client (item e oggetti) | Media (integrità MP; alta rispetto al modello dichiarato) | alta: un client modificato, nessun privilegio | alta (runtime item, pompa e generatore; bytecode) | dimostrata nel runtime |
-| V-03 | `machineSites` e seed inviati a ogni client | Media su PvP, bassa su coop | alta: `ModData.request` o il solo avvio del gioco | alta | dimostrata nel runtime; corretta (§7.2) |
+| V-01 | Stato autoritativo in store riscrivibili dal client (item e oggetti) | Media (integrità MP; alta rispetto al modello dichiarato) | alta: un client modificato, nessun privilegio | alta (runtime item, pompa e generatore; bytecode) | dimostrata nel runtime; corretta sui server (§7.3) |
+| V-03 | `machineSites` e seed inviati a ogni client | Media su PvP, bassa su coop | alta: `ModData.request` o il solo avvio del gioco | alta | dimostrata nel runtime; corretta (§7.2), salvo il seed negli id (§7, V-03 punto 10) |
 | V-02 | `status` senza controllo di portata | Media-bassa (riservatezza) | alta | alta | dimostrata nel runtime (run 2) e in Kahlua; corretta (§7.2) |
 | V-09 | Nessuna proprietà/safehouse; salvataggio delle parti al richiedente | Media (furto/griefing MP) | media: abilità e attrezzi del lavoro; vicinanza | alta (statica) | supportata dall'analisi statica |
 | V-05 | Record del serbatoio svuotato con pompa infinita → erogazioni annullate | Media (disponibilità; solo con `FuelStationGasInfinite=true`) | alta, anche senza attaccante | media (mock + wrapper reale; runtime NOT RUN) | supportata dall'analisi; verifica in gioco necessaria |
@@ -173,7 +183,7 @@ stampati).
    runtime per gli item (run 1 e 2) e per gli oggetti del mondo, pompa e
    generatore (run 2), da un giocatore con ruolo `user`; il bytecode dei
    pacchetti spiega il meccanismo (§3).
-2. **File.** `TLG/Integration/Containers.lua:90-136` (`C.read` crede il
+2. **File** (righe prima della correzione). `TLG/Integration/Containers.lua:90-136` (`C.read` crede il
    sidecar `tlg` di item e oggetti), `Stations.lua:57-90` (`S.read`),
    `Generators.lua:79-103` (`G.read`), `ConversionDevices.lua:80-92`
    (`CD.project`/`CD.effective` da `md.tlgConv`), `Machines.lua:104-113`
@@ -246,6 +256,134 @@ stampati).
    quindi un record con id ignoto al vault è per definizione forgiato.
    Nota: la copia server-only vive nel save del server (`GlobalModData`), che
    la versione corrente già usa per `TLG_World`.
+
+   **Errata della prima versione.** Lo schema sopra tiene le copie in una
+   chiave di ModData globale (`TLG_Vault`). Come per V-03 (punto 7), il
+   server manda qualunque chiave di ModData globale a chi la chiede: un
+   client avrebbe letto ogni record del mondo, comprese le macchine con il
+   loro quadrato. Il confronto per id e contenuto, poi, non basta: un client
+   può copiare un record vero (id e contenuto) da una tanica a un'altra. E
+   "un id ignoto al vault è forgiato" vale solo per gli id dati dopo la
+   nascita del vault: nei salvataggi esistenti ogni record è ignoto.
+
+   **Applicata** (2026-11-05, su richiesta del proprietario) in
+   `shared/TLG/Authority/Vault.lua`. Il vault sta nello store privato di
+   V-03 (chiave `vault` della tabella salvata in `gos_tlgworld.bin`), che il
+   server non invia. Per ogni record il server tiene la tabella che
+   l'autorità ha scritto l'ultima volta nel modData, e il suo detentore. Non
+   serve una copia: un pacchetto non modifica mai una tabella già presente
+   nel modData. Il motore svuota il modData e costruisce una tabella nuova
+   per ogni valore (`KahluaTableImpl.load`; i tre pacchetti usano questo
+   percorso, bytecode 42.21). Un record falsificato è quindi sempre un'altra
+   tabella. Se la lettura trova la tabella del vault, basta un confronto di
+   identità; un'altra tabella viene confrontata campo per campo. Record coperti: `tlg` di
+   taniche, contenitori del mondo, pompe e generatori; `tlgProc` delle
+   macchine; `tlgConv` dei generatori; `tlgWear` dei generatori (sotto l'id
+   del loro record del carburante). Detentori: l'item (`item:<id>`; il
+   motore conserva l'id tra i salvataggi, `InventoryItem.save` e `load`
+   scrivono e rileggono il campo `id`) o il quadrato (`pump:x,y,z`,
+   `gen:x,y,z`, `obj:x,y,z`). Ogni lettura dell'autorità passa da
+   `Vault.guard`:
+   * stesso id, contenuto diverso: torna il record del server, riscritto nel modData e
+     ritrasmessa ai client;
+   * record rimosso: torna il record del detentore;
+   * id che il server non ha mai dato: il record è scartato, e l'oggetto si
+     legge come carburante non tracciato (baseline del mondo) o come
+     macchina senza lotto;
+   * id di un altro detentore: se l'oggetto ha un record suo, torna il suo;
+     se non ne ha mai avuto, il record si sposta lì (uno spostamento che
+     nessun Lua ha visto) e l'oggetto di prima lo perde.
+   Gli spostamenti che il mod vede (generatore raccolto e posato) aggiornano
+   il detentore negli hook di `Generators.lua`. I record dei salvataggi
+   esistenti: un id con il seed del mondo e numero inferiore a `from`
+   (il `nextId` alla nascita del vault) è adottato com'è alla prima lettura;
+   se lo store era andato perso (seed rigenerato), sono adottati gli id con
+   un altro seed. Solo su server (dedicato o processo server dell'host): in
+   single player nessun altro client scrive, il vault non è usato e un
+   mondo caricato lì lo scarta (le copie invecchierebbero). Senza store i
+   record si leggono come prima. Le parti dei veicoli restano fuori (§3).
+
+   **Store compatto** (dopo, su richiesta). Il record di una macchina porta
+   anche le letture orarie e le note dei fuochi (`temps`, `fires`: fino a
+   480 ore ciascuna, circa 50 KB come salvato). Il vault non lo salva più
+   per intero: salva il record senza quei due campi e, per ciascuno,
+   un'impronta (`Vault.DIGESTED`). La tabella scritta resta solo nello stato
+   Lua del server, per il confronto d'identità. L'impronta di un campo è la
+   somma, modulo un primo sotto 2^26, dei termini `enc(x) / (h + w)` per
+   ogni ora `h`: `enc` codifica la lettura o la nota (ogni campo della nota
+   con un peso per nome) e `w`, le basi e i pesi sono chiavi estratte a
+   caso alla nascita del vault (`ZombRand`), salvate solo nello store del
+   server. Per chiavi casuali, due campi diversi danno la stessa somma con
+   probabilità di circa (voci diverse + 20) / 6.7·10^7 (una funzione
+   razionale non nulla delle chiavi che si annulla; Schwartz-Zippel). La
+   somma non dipende dall'ordine di `pairs`, che un caricamento non
+   conserva. Un record letto con letture o note diverse da quelle scritte
+   le perde (stato `cleared`): per quelle ore il lotto usa il valore non
+   riscaldato del sito, e chi falsifica non guadagna nulla. Il resto del
+   record è controllato e rimesso come prima. Un salvataggio non passa da
+   Lua (`ServerMap.QueuedSaveAll` chiama `SGlobalObjects.save` senza eventi,
+   bytecode 42.21), quindi ogni scrittura aggiorna subito l'impronta: il
+   server tiene per ogni campo i termini delle sue voci e ricalcola solo
+   quelle cambiate. Un vault salvato dalla prima versione, con i record
+   interi, è compattato al caricamento. Un record preso com'è (id dei
+   salvataggi, usura sconosciuta) oltre 8 192 byte come salvato, o con
+   letture e note che il mod non scrive, è scartato.
+
+   **Limiti che restano.** (a) Adozione: su un mondo aggiornato un client
+   può forgiare un id `S<seed>-<n>` con `n < from` che il server non ha
+   ancora letto; il seed è leggibile dagli id (residuo di V-03, punto 10).
+   (b) Spostamento: copiando un record su un oggetto che non ne aveva mai
+   avuto, il record si sposta e l'oggetto di partenza torna a baseline. Il
+   guadagno massimo è quello di rimuovere un record: riportare un carburante
+   peggiore della baseline (più vecchio, con microbi) alla condizione del
+   mondo. Nessun record raddoppia. (c) Un `tlgWear` che il vault non conosce
+   ancora è preso com'è una volta (salvataggi esistenti), con il limite di
+   una finestra di carburante bruciato. (d) `tlgDeviceId` e `tlgEngineId`
+   non sono protetti: cambiarli rompe solo la conversione del generatore
+   del client stesso. (e) Il pacchetto arriva comunque: tra la scrittura
+   del client e la lettura successiva del server, il modData del server, e
+   ciò che il motore ritrasmette ai vicini, contengono la versione forgiata;
+   nessuna decisione del mod la usa. (f) I record non escono mai dal vault:
+   quello di un item distrutto resta nello store. (g) Costo: una lettura
+   che trova la tabella del vault costa un confronto di identità; un'altra
+   tabella, come alla prima lettura dopo il caricamento della partita o
+   del chunk dell'oggetto, un confronto campo per campo e, per una
+   macchina, il calcolo delle impronte: circa 3.4 ms con 480 letture e una
+   nota di camino ogni ora, contro circa 0.3 ms del solo confronto della
+   versione precedente. Una base con macchine dalla storia lunga lo paga
+   ogni volta che i giocatori tornano e il chunk si ricarica.
+   Ogni scrittura di una macchina aggiorna le impronte: con 480 ore di
+   storia +0.2 ms per la lettura oraria e +0.15 ms per la nota dei dieci
+   minuti (misure in §7.3). (h) Crash: il salvataggio
+   del mondo non è un passaggio unico. Se il server si chiude male dopo
+   aver salvato un chunk o un giocatore e prima dello store, un record
+   salvato là è più nuovo della copia nel vault, e la lettura successiva
+   rimette quella più vecchia: un trattamento o una raccolta fatti tra i
+   due salvataggi tornano indietro (i litri si riconciliano con D-006).
+   Per una macchina, se le letture o le note salvate nel chunk non sono
+   quelle dell'impronta, si perdono invece di tornare indietro.
+   L'ordine inverso non fa danni. `-Restart` prova solo una chiusura
+   pulita. (i) Dimensione: lo store si salva nel buffer condiviso
+   `SliceY.SliceBuffer` di 10 485 760 byte. `SGlobalObjectSystem.save()`
+   apre il file, e quindi lo tronca, prima di riempire il buffer; se il
+   buffer trabocca, l'eccezione finisce nel log e il file resta vuoto
+   (bytecode 42.21). Alla ripresa lo store riparte da capo: seed nuovo,
+   vault nuovo che adotta gli id del seed vecchio, siti delle macchine da
+   ricostruire. Con lo store compatto una macchina pesa circa 1.2-1.3 KB
+   qualunque sia la sua storia (la voce del vault: 1 161 byte con 480
+   letture e 480 note di camino, contro 50 584 della prima versione), e un
+   record di carburante circa 330 byte. Il limite arriva intorno a 8 000
+   macchine o 32 000 record di carburante; la prima versione ci arrivava
+   con circa 200 macchine con venti giorni di storia. Poiché i record non
+   escono dal vault (f), su un server con molti anni di gioco contano
+   tutti quelli creati, non solo quelli in uso. (j) Impronte: proteggono
+   letture e note dalle falsificazioni ma non le conservano. Un record
+   rimesso dopo un riavvio (rimosso dal client o sostituito con quello di
+   un altro oggetto, prima che il server lo rilegga) torna senza letture né
+   note, perché la tabella scritta non c'è più nello stato Lua. Le chiavi
+   vengono da `ZombRand` (`java.util.Random`), non da una sorgente
+   crittografica; il client non le legge, e ogni tentativo sbagliato costa
+   a chi lo fa la storia della macchina e una riga nel log del server.
 8. **Test di regressione.** (a) Kahlua: `tests/audit/test_audit.lua` "forged
    in item mod data" deve diventare "il record riletto è quello del vault"
    (deg invariato, `stab` invariato). (b) Harness: `AuditCases.lua` AUD-4
@@ -254,9 +392,28 @@ stampati).
    suite esistente (`run_all.lua`) e i casi MP `fuel`, `conversion`,
    `stills` devono restare verdi: pour, sample, stabilize, conversioni,
    collect.
+   **Eseguiti** (§7.3): i due casi Kahlua di prima restano, con il nome
+   "(no server copy)", e descrivono il single player; sei casi nuovi "V-01
+   fixed" girano da server con lo store. AUD-4 controlla ora due cose: che
+   il pacchetto arrivi ancora al modData del server (fatto del motore) e
+   che la lettura del mod rimetta tanica e pompa e scarti il progetto.
+   Si aggiungono i casi MP `fuel`, `conversion`, `stills`, `timers`,
+   `effects`, il riavvio del server (`-Restart`) e il riavvio con lo store
+   salvato senza vault (`-Restart -DropVault`). Per lo store compatto,
+   quattro casi Kahlua "V-01 compact", un controllo nei test d'integrazione
+   che le note dei fuochi abbiano solo i campi che il vault codifica, e nel
+   riavvio MP una storia di 480 ore scritta dal server prima del riavvio e
+   riletta dopo.
 9. **Dipendenze.** Build 42.21.0 (bytecode); un cambiamento del motore nei
-   pacchetti di sync la renderebbe irrilevante. Mod terzi che scrivono i
-   modData non sono coinvolti.
+   pacchetti di sync la renderebbe irrilevante. Il confronto per identità
+   dipende da come il motore carica i pacchetti: se una build futura li
+   caricasse dentro le tabelle esistenti, una falsificazione con la stessa
+   tabella passerebbe; va ricontrollato a ogni aggiornamento del gioco. Le
+   impronte dipendono dall'aritmetica di Kahlua: il suo `%` calcola
+   `a - int(a / b) * b` con il quoziente convertito a intero a 32 bit, ed è
+   esatto solo con quozienti sotto 2^31 (il codice resta sotto 2^26). Mod terzi che scrivono i
+   modData non sono coinvolti; un mod terzo che scrivesse i record del mod
+   sul server vedrebbe le sue modifiche rimesse alla lettura successiva.
 
 ### V-02 — `status` senza controllo di portata
 
@@ -390,6 +547,19 @@ stampati).
    §7.2.
 9. Nessuna dipendenza dalla build; usa la classe Lua vanilla
    `SGlobalObjectSystem` (`server/Map/SGlobalObjectSystem.lua` di 42.21).
+10. **Residuo, trovato durante la correzione di V-01: il seed è negli id.**
+   `WorldInit.newId` compone gli id come `<lettera><seed>-<n>`
+   (`S155582228-12`). Ogni record che un client riceve, per esempio il
+   sidecar di una tanica nel suo inventario o quello di una pompa vicina,
+   porta quindi il seed in chiaro. La correzione sopra toglie il seed da
+   `TLG_World`, ma non lo rende segreto: con il seed un client calcola in
+   anticipo la contaminazione di ogni stazione. `machineSites`, `nextId` e
+   `climateAcc` restano privati. Correzione proposta, non applicata: per gli
+   id nuovi un'etichetta casuale indipendente dal seed, tenuta nello store
+   (gli id già dati restano validi e `nextId` continua a contare, quindi
+   nessun id si ripete); i mondi già giocati hanno esposto il seed a chi ha
+   visto un record. Il vault di V-01 riconosce gli id dei salvataggi per
+   etichetta e numero: con un'etichetta nuova va aggiornato insieme.
 
 ### V-04 — `transfer` generico, istantaneo, senza tubo né corrente
 
@@ -513,6 +683,9 @@ stampati).
 3. Serve V-01 (modData forgiato con `t` molto negativo) o un salvataggio
    manipolato. Un giocatore onesto non lo provoca: `t` nasce da
    `getWorldAgeHours()` e dalle basi (`start - preAge`, ≤ 75 giorni).
+   Dopo la correzione di V-01, su un server un record forgiato viene
+   rimesso alla lettura successiva, prima di essere avanzato; restano un id
+   dei salvataggi adottato (V-01, limite (a)) e i salvataggi manipolati.
 4. Ogni lettura del record (ogni comando, ogni wrapper, ogni lettura oraria
    per le macchine) costruisce `(now - t)/24` tabelle: t = -1e6 h → 41 667
    segmenti (misurato: la lettura resta nell'ordine del decimo di secondo);
@@ -556,6 +729,8 @@ stampati).
 5. Impatto: oggetto inutilizzabile e rumore nei log; con V-01 un giocatore
    può rendere "incommandabile" la pompa di una stazione per tutti (ogni
    `S.read` fallisce finché il modData non è pulito).
+   Dopo la correzione di V-01, su un server la pompa torna al suo record
+   alla lettura successiva (§7.3).
 6. Prova: statica (il test Kahlua "malformed references…" copre gli input di
    rete, non i record; da aggiungere).
 7. Correzione: in `Migrations.sidecar` (o in un `Supply.sanitize`) applicare
@@ -801,6 +976,259 @@ stesso di un mondo nuovo (i campi sono in `TLG_World` quando lo store si
 aggancia), e l'unione è coperta da Kahlua. Un host cooperativo: il server
 è un processo separato, come il dedicato.
 
+### 7.3 Correzione applicata (V-01) e verifica
+
+Applicata dopo la consegna, su richiesta del proprietario. File del
+pacchetto toccati:
+
+| File | Modifica |
+| --- | --- |
+| `shared/TLG/Authority/Vault.lua` (nuovo) | il vault: `active`, `attach`, `check`, `guard`, `put`, `release`, `guardKeyed`, `putKeyed` (§7, V-01 punto 7) |
+| `server/TLG/Server/WorldStore.lua` | dopo l'aggancio dello store chiama `Vault.attach`: crea il vault su un server, lo scarta in single player |
+| `shared/TLG/Integration/World.lua` | `attachServerStore` restituisce anche se lo store era perso (seed rigenerato) |
+| `shared/TLG/Integration/Containers.lua` | `C.read` legge il sidecar da `Vault.guard`, `C.writeSidecar` chiama `Vault.put`; detentore `item:<id>` o `obj:x,y,z` |
+| `shared/TLG/Integration/Stations.lua` | lo stesso per le pompe (`pump:x,y,z`) |
+| `shared/TLG/Integration/Generators.lua` | record, profilo, usura (`tlgWear`, sotto l'id del record) e progetto passano dal vault (`gen:x,y,z`). La raccolta sposta il detentore sull'item e libera il quadrato; la posa lo riporta sull'oggetto. Il record dell'item portato è controllato prima di essere copiato sull'oggetto |
+| `shared/TLG/Integration/ConversionDevices.lua`, `shared/TLG/Authority/ConversionHandlers.lua` | il progetto di un generatore passa dal vault (`CD.project` con il detentore, `CD.store` con `Vault.put`); quello di un veicolo no |
+| `shared/TLG/Integration/Machines.lua` | `M.read` e la lettura delle passate orarie e dei dieci minuti (`M.stored`) passano dal vault, `M.write` lo aggiorna |
+| `shared/TLG/Integration/Vehicles.lua` | solo un commento: le parti dei veicoli restano fuori |
+
+Nell'harness: AUD-4 controlla ora che il pacchetto arrivi ancora al
+modData del server e che la lettura del mod rimetta i record (sonda
+`probe_vault`). `MPServer.lua` ha le sonde `probe_vault_stats` e
+`drop_vault`, e il reset dei generatori libera il quadrato nel vault.
+`ServerExperiments.lua` registra nel vault i record che scrive a mano.
+`MPHarness.lua`, con `-Restart`, fotografa il vault prima del riavvio e lo
+controlla dopo. `run-mp-harness.ps1` ha l'opzione `-DropVault`, che salva
+lo store senza vault prima del riavvio, come lo salvava `fe50875`.
+Documenti: `docs/migrations.md` (riga del vault) e
+`docs/engine-capabilities.md` (pacchetti di sync, id degli item,
+`KahluaTableImpl.load`).
+
+**Kahlua** (`tools\run-tests.ps1 -Entry tests/audit/run_audit.lua`):
+`audit cases=19 passed=19 failed=0 assertions=147`. I due casi V-01 di
+prima restano e descrivono il single player ("no server copy"). Sei casi
+nuovi girano da server con lo store attaccato:
+* tanica riscritta, sostituita da un id mai dato e rimossa: torna il
+  record del server, riscritto e ritrasmesso; una tabella uguale ma
+  separata, come dopo un caricamento, è presa senza ripristino;
+* record copiato su un'altra tanica: si sposta, e la tanica di partenza
+  si legge come carburante non tracciato;
+* adozione degli id dei salvataggi: `n < from` adottato e poi protetto;
+  `n ≥ from` e un altro seed scartati; con lo store perso adottati;
+* pompa (acqua della stazione), profilo del generatore, progetto
+  `Commissioned` forgiato (scartato), progetto riscritto (rimesso), usura;
+* stato e output di una macchina, scritture silenziose comprese;
+* single player: nessun vault, e quello di un server viene scartato.
+
+Suite di dominio: `modules=26 cases=218 passed=218 failed=0`.
+Compilazione: `compiled=125 errors=0`.
+
+**Prima versione e costo.** La prima versione teneva copie profonde dei
+record e li confrontava campo per campo a ogni accesso. Ha passato gli
+stessi casi multiplayer (run 7-14, evidenze `…_run{7..14}_v01_*`), ma
+costava molto con le macchine. Nel run 11 (`timers`, 32 fermentatori) il
+benchmark del server dava 2.27 ms per la passata oraria (0.40 ms senza
+vault, run 5) e 7.63 ms per quella dei dieci minuti (4.39 ms). Nella VM
+Kahlua, una macchina con 480 letture e 480 note passava da 0.19 a 1.29 ms
+per lettura oraria e da 0.16 a 1.24 ms per nota: circa 330 ms a passata
+con 256 macchine. Dal bytecode, i tre pacchetti caricano il modData con
+`KahluaTableImpl.load`, che svuota la tabella e ne crea di nuove. Per
+questo il vault tiene ora la tabella scritta e la confronta per identità.
+Nella stessa VM, con la versione finale, la lettura oraria costa 0.26 ms e
+la nota 0.24 ms per macchina. La prima lettura dopo un caricamento della
+partita confronta campo per campo una volta per record (circa 0.3 ms per
+una macchina con 480 letture).
+
+**Run 15-22** (codice finale; mondo nuovo per ogni run). Evidenze:
+`docs/evidence/2026-11-05_audit_mp_run{15..22}_v01final_*`, con le righe
+`[TLG]` del log del server in `…_tlglog.txt` (le sole righe del mod,
+nessun comando della console).
+
+| Run | Caso | Esito | Vault nel log del server |
+| --- | --- | --- | --- |
+| 15 | `audit -NonAdmin` | 19/0 | tre ripristini, le tre falsificazioni del caso: tanica e pompa `restored (content differs)`, progetto del generatore `dropped (unknown id)` |
+| 16 | `fuel` | 20/0 | nessun intervento: pour, rifornimenti, sifone, generatore raccolto e riposato, auto |
+| 17 | `conversion` | 7/0 | nessun intervento |
+| 18 | `stills` | 13/0 | nessun intervento |
+| 19 | `timers` | 6/0 | nessun intervento; store di 52 818 byte con 32 macchine |
+| 20 | `effects` (due client) | A 22/0, B 9/0 | nessun intervento; usura del generatore al rifornimento |
+| 21 | `-Restart` (due client) | A 33/0, B 12/0 | il vault nasce al primo avvio (`from=1`); dopo il riavvio si ricarica dallo store: `from=1`, 16 record prima e 27 dopo, la tanica letta dal vault `ok`, nessun record scartato o rimesso, nessun avviso nel log dei due avvii. La tanica è trovata dal suo detentore `item:<id>`: l'id dell'item è sopravvissuto al riavvio |
+| 22 | `-Restart -DropVault` (due client) | A 34/0, B 12/0 | prima del riavvio lo store è salvato senza vault, come lo salvava `fe50875`; il server riavviato crea il vault con `from=14` (il `nextId` salvato) e adotta alla prima lettura la tanica (`S…-12`) e il fermentatore in lavorazione (`P…-13`); nessun record scartato o rimesso; i record della tanica e del fermentatore uguali a prima del riavvio |
+
+AUD-4 nel run 15, nel dettaglio. Il client `user` scrive nella tanica
+`deg=7.7777`, `stab=1.5`, `audit=forged` e chiama `syncItemFields()`; la
+sonda del server legge il modData e lo trova così: il pacchetto arriva
+ancora. La lettura del mod restituisce `deg=0.1092`, `stab=0`, e dopo la
+lettura il modData non ha più `audit=forged`. La pompa riscritta (acqua e
+sedimento tolti, `deg=0`) torna identica al record di prima della
+falsificazione: `water=3.8587`, `sediment=0.9397`, `deg=0.1092`. Il progetto `Commissioned` con id `AUDIT-C` viene
+scartato: profilo `generator_si_stock`, nessun `tlgConv` dopo la lettura.
+
+Costo sul server (run 19, benchmark dell'harness, 32 fermentatori,
+quattro accanto a un falò; run 5 senza vault, run 11 con la prima
+versione):
+
+| Passata | Run 5 | Run 11 | Run 19 |
+| --- | --- | --- | --- |
+| oraria (clima e letture) | 0.40 ms | 2.27 ms | 0.60 ms |
+| dieci minuti (note dei fuochi) | 4.39 ms | 7.63 ms | 2.87 ms |
+| stato di una macchina | 0.17 ms | 0.17 ms | 0.11 ms |
+
+Le passate dei run 5 e 19 differiscono quanto due run senza modifiche: il
+server e i client girano sulla stessa macchina e l'orologio conta
+millisecondi interi.
+
+**Single player** (vault spento, codice finale): `tools\run-sp-harness.ps1
+-Mode engine-effects` `SUMMARY pass=36 fail=0`, come nel run 179 del
+progetto (profilo e usura dei generatori, potenza del motore); `-Mode
+fireplace-reload` fase 1 `pass=8 fail=0`, fase 2 `pass=20 fail=0`
+(fermentatore salvato a metà lotto e ripreso). Nei log del client nessuna
+riga del vault e nessun errore del mod. Evidenze:
+`docs/evidence/2026-11-05_audit_sp_v01_{engine_effects,fire_reload}.txt`.
+
+**Non verificato in gioco.** Un host cooperativo (il server è un processo
+separato, come il dedicato). Un salvataggio creato davvero con `fe50875`:
+il run 22 lo simula salvando lo store senza vault, cioè con lo stesso
+contenuto che scriveva `fe50875`. Le 256 macchine con 480 letture: il
+costo è stimato dalla VM Kahlua. Una falsificazione con un id dei
+salvataggi mai letto (limite (a)): il caso Kahlua mostra che viene
+adottato, come previsto. Una chiusura non pulita del server (limite (h)).
+Uno store oltre i 10 MB del buffer di salvataggio (limite (i)): solo
+stimato.
+
+**Store compatto** (dopo, su richiesta del proprietario; §7, V-01 punto 7).
+File toccati: `shared/TLG/Authority/Vault.lua` (record `process` salvati
+senza `temps` e `fires`, con le loro impronte; chiavi `dk`; stato
+`cleared`; limite di 8 192 byte per i record presi com'è). Test:
+`tests/audit/test_audit.lua` (quattro casi "V-01 compact") e
+`tests/integration/test_machine_sites.lua` (le note dei fuochi scritte dal
+mod hanno solo i campi `Vault.NOTE_FIELDS`). Harness: `MPServer.lua`
+(servizio `fill_history`; `probe_vault_stats` riporta la dimensione dello
+store e controlla il fermentatore) e `MPHarness.lua` (con `-Restart` il
+server scrive nel fermentatore 480 ore di letture e note prima del
+riavvio, e dopo le rilegge). Documenti: `docs/migrations.md`,
+`docs/performance.md`, `docs/engine-capabilities.md` (nessun evento Lua
+prima del salvataggio del server dedicato; il `%` di Kahlua).
+
+**Kahlua**: `audit cases=23 passed=23 failed=0 assertions=187`; dominio
+`modules=26 cases=218 passed=218 failed=0` (21 asserzioni in più, i campi
+delle note); compilazione `compiled=125 errors=0`. I quattro casi nuovi:
+* letture e note salvate come impronte: la voce del vault sta sotto i
+  2 KB, il record con due giorni di storia è oltre tre volte tanto. Una
+  lettura alzata di 5 °C e un'altra abbassata di 5 °C (la somma non
+  cambia, l'impronta sì): letture perse, note e stato intatti, modData
+  ripulito subito. Una nota con un campo che il mod non scrive: note
+  perse, letture intatte. Un altro campo riscritto con la storia intatta:
+  record rimesso con letture e note. Una lettura in un'ora futura, e una
+  in un'ora non intera: perse. Le scritture delle passate (stessa tabella,
+  un'ora in più e la più vecchia tolta, tredici volte) tengono l'impronta
+  aggiornata: il record scritto, ricaricato, si legge senza interventi;
+* riavvio simulato, con store e modData ricostruiti in tabelle nuove
+  riempite in ordine inverso: tre fermentatori e una tanica si leggono
+  come scritti, senza ripristini; una lettura falsificata dopo il riavvio
+  è scoperta; un record rimosso prima di essere riletto torna senza
+  storia;
+* un vault salvato con i record interi (la prima versione) è compattato
+  al caricamento, e il record si legge senza interventi;
+* record presi com'è: una tanica dei salvataggi oltre 8 192 byte è
+  scartata; un fermentatore dei salvataggi con una lettura in un'ora
+  impossibile è scartato, uno scritto come li scrive il mod è adottato e
+  poi controllato; un'usura sconosciuta oltre il limite è scartata.
+
+Durante lo sviluppo, una prima codifica arrotondava i numeri con `y % 1`:
+in Kahlua dava un risultato sbagliato per y vicino a 10^15 (quoziente
+convertito a intero a 32 bit) e le impronte non vedevano più le letture
+falsificate. Tre dei casi sopra fallivano; ora l'arrotondamento usa
+`math.floor`.
+
+**Costo e dimensione** (VM Kahlua, un fermentatore con 480 letture e 480
+note; ogni chiamata un'ora o dieci minuti dopo, così ogni scrittura
+aggiunge una voce e il taglio toglie la più vecchia; due esecuzioni;
+`docs/evidence/2026-11-05_audit_kahlua_v01compact_bench.txt`):
+
+| Misura | Senza vault | Vault compatto |
+| --- | --- | --- |
+| lettura oraria, note "nessun fuoco" | 0.45-0.46 ms | 0.64-0.68 ms |
+| lettura oraria, una nota di camino ogni ora | 0.37-0.39 ms | 0.59-0.62 ms |
+| nota dei dieci minuti | 0.20-0.21 ms | 0.35-0.37 ms |
+| prima lettura dopo un caricamento (note di camino) | | circa 3.4 ms |
+| controllo della tabella scritta | | 0.0025 ms |
+| voce del vault | | 1 161 byte (prima versione: 50 584) |
+
+Questo benchmark fa avanzare l'orologio a ogni chiamata, quello della
+versione per identità no: i tempi delle due misure non si confrontano. Con
+256 macchine così il vault compatto aggiunge circa 50 ms alla passata
+oraria e 40 ms a quella dei dieci minuti. Un record di carburante occupa
+circa 330 byte nello store (50 taniche nella VM: 326.5 byte ciascuna).
+
+**Run 23-30** (vault compatto; stessa serie dei run 15-22, mondo nuovo per
+ogni run). Evidenze: `docs/evidence/2026-11-05_audit_mp_run{23..30}_v01compact_*`.
+La colonna "store" è la dimensione di `gos_tlgworld.bin` alla fine del run.
+
+| Run | Caso | Esito | Store | Vault nel log del server |
+| --- | --- | --- | --- | --- |
+| 23 | `audit -NonAdmin` | 20/0 | 8 420 byte | le tre falsificazioni del caso: tanica e pompa `restored (content differs)`, progetto del generatore `dropped (unknown id)`. Un controllo in più del run 15 (`AUD3_pump_to_car_without_action`): là il bocchettone dell'auto era a 4.12 tile, fuori portata, e il controllo non era partito |
+| 24 | `fuel` | 20/0 | 8 869 byte | nessun intervento |
+| 25 | `conversion` | 7/0 | 9 600 byte | nessun intervento |
+| 26 | `stills` | 13/0 | 10 241 byte | nessun intervento |
+| 27 | `timers` | 6/0 | 48 208 byte | nessun intervento; 32 macchine con poche ore di storia (run 19: 52 818 byte) |
+| 28 | `effects` (due client) | A 22/0, B 9/0 | 6 937 byte | nessun intervento |
+| 29 | `-Restart` (due client) | A 37/0, B 12/0 | 13 164 byte | nessun intervento nei due avvii; i dettagli sotto |
+| 30 | `-Restart -DropVault` (due client) | A 38/0, B 12/0 | 8 113 byte | dopo il riavvio il vault nasce con `from=14` e adotta la tanica e il fermentatore, con le sue 480 ore di storia |
+
+Nei log `[TLG]` del server dei run 24-30 nessun avviso e nessun errore.
+
+**Il riavvio con 480 ore di storia** (run 29). Prima del riavvio il server
+scrive nel fermentatore in lavorazione 480 ore di letture e note
+(`fill_history`; tre note su quattro di camino, una "nessun fuoco"). Sono
+ore a venire, perché il taglio del mod le conservi: il lotto non ha
+davvero venti giorni, la prova riguarda le impronte di un record di quella
+dimensione attraverso il salvataggio e il caricamento del motore. Il
+record pesa 41 704 byte come salvato, la sua voce nel vault 1 181 byte
+(`compact=true`), lo store intero 7 944 byte. Il server si chiude, salva
+chunk e store, e riparte. Dopo il riavvio il vault si ricarica dallo store
+(`from=1`, 27 record) e il controllo del fermentatore dà `ok`: le impronte
+calcolate sul record caricato con l'item coincidono con quelle salvate
+nello store. Letture e note sono 480 e 481, come prima, e nessun record è
+stato scartato, rimesso o ripulito (`dropped=0 restored=0 cleared=0`).
+Il record del fermentatore (stato, sito, ingressi, ore di lavoro) è uguale
+a prima, e così quello della tanica. Con la prima versione il vault
+avrebbe salvato il record intero, più di 41 KB.
+Nel run 30 lo store è salvato senza vault prima del riavvio, come lo
+salvava `fe50875`. Il server riavviato adotta il fermentatore con la sua
+storia (`adopted`, 480 letture e 481 note, voce compatta di 1 181 byte).
+
+Costo sul server (run 27, benchmark dell'harness, 32 fermentatori con
+poche ore di storia): passata oraria 0.76 ms (lotti 0.71-0.80; run 19
+0.60, run 5 senza vault 0.40), dieci minuti 2.91 ms (run 19 2.87), stato
+di una macchina 0.10 ms (run 19 0.11). La passata oraria cresce di circa
+0.16 ms, entro quanto differiscono qui due run senza modifiche (i lotti
+dei run 19 e 27 si toccano); a ogni scrittura il vault copia i campi del
+record e aggiorna le impronte.
+
+Dopo i run 23-30, la revisione ha spostato in `admissible` il controllo
+della dimensione prima del calcolo delle impronte, e un record dei
+salvataggi scartato non lascia più i termini delle sue letture in memoria.
+Riverificato solo in Kahlua (23/23, 187 asserzioni): il percorso tocca solo
+i record presi com'è.
+
+**Single player.** Non rieseguito. Fuori da un server il vault è spento:
+`Vault.attach` lo scarta, `Vault.guard` e `Vault.put` non fanno nulla, come
+prima. La modifica tocca solo `Vault.lua` e un commento in
+`Machines.lua`, e il caso Kahlua "single player keeps no copies" passa.
+
+**Non verificato in gioco (store compatto).** Le 256 macchine con 480 ore
+di storia ciascuna: costo e memoria sono stimati dalla VM Kahlua. Uno
+store vicino ai 10 MB: con le misure sopra servono circa 8 000 macchine o
+32 000 record di carburante, non riprodotti. Una chiusura non pulita con
+una macchina dalla storia lunga (limite (h)). La compattazione al
+caricamento di un vault salvato dalla prima versione, con i record interi:
+solo Kahlua (nessun salvataggio così esiste fuori da questa sessione di
+lavoro). Il ricaricamento di un chunk con macchine dalla storia lunga
+(limite (g)): il costo è quello della prima lettura dopo un caricamento,
+misurato nella VM.
+
 ## 8. Ipotesi non confermate, hardening, bug funzionali
 
 **Ipotesi smentite durante l'audit.**
@@ -897,7 +1325,7 @@ nessun adapter; esclusi dall'analisi delle vulnerabilità.
 **Non esaminato.** Gli asset binari (`.fbx`, `.x`, `.png`) e i file
 `AnimSets/*.xml` (solo verificato che `package.ps1` li validi come XML);
 `tools/blender/*.py` e gli script di generazione icone (non distribuiti, non
-eseguiti dal gioco); `SPHarness.lua`, `ServerExperiments.lua`, `LuaProbe.lua`,
+eseguiti dal gioco); `SPHarness.lua`, `ServerExperiments.lua` (toccato per V-01 solo per registrare nel vault i record che scrive a mano), `LuaProbe.lua`,
 `Driver.lua` dell'harness (solo sviluppo).
 
 **Verifiche non eseguibili o non eseguite.** V-05 in gioco (server con pompe
@@ -912,8 +1340,10 @@ macchina, come per il resto del progetto).
 
 * Test Kahlua: `tools\run-tests.ps1 -Entry tests/audit/run_audit.lua`
   (12 casi e 63 asserzioni alla consegna; 13 casi e 101 asserzioni dopo le
-  correzioni di V-02 e V-03; `tests/audit/mocks.lua` definisce i mock del
-  gioco, `tests/audit/test_audit.lua` i casi).
+  correzioni di V-02 e V-03; 19 casi e 147 asserzioni dopo quella di V-01;
+  23 casi e 187 asserzioni con lo store compatto;
+  `tests/audit/mocks.lua` definisce i mock del gioco,
+  `tests/audit/test_audit.lua` i casi).
 * Harness MP: `tools\run-mp-harness.ps1 -Clients 1 -Only audit -NonAdmin`
   (circa 4 minuti; caso in `TLGHarness/AuditCases.lua`; sonde `probe_square`
   e `probe_world` in `MPServer.lua`); risultati in
@@ -923,11 +1353,29 @@ macchina, come per il resto del progetto).
   `…_run3_fixes_*` (`audit`, 14/0), `…_run4_fuel_*` (`fuel`, 18/2 per una
   stazione "cattiva" del seed casuale), `…_run5_timers_*` (`timers`, 6/0),
   `…_run6_fuel_*` (`fuel` ripetuto, 20/0); single player
-  `2026-11-05_audit_sp_fire_reload.txt` (8/0 e 20/0).
+  `2026-11-05_audit_sp_fire_reload.txt` (8/0 e 20/0). Dopo la correzione
+  di V-01 (§7.3): `…_run{7..14}_v01_*` (prima versione, con copie: tutti
+  verdi; il run 11 misura il costo che ha portato alla versione finale) e
+  `…_run{15..22}_v01final_*` (codice finale: `audit`, `fuel`,
+  `conversion`, `stills`, `timers`, `effects`, `-Restart`,
+  `-Restart -DropVault`), ciascuno con `…_tlglog.txt`, le righe `[TLG]`
+  del log del server; single player `2026-11-05_audit_sp_v01_*.txt`.
 * Modifiche per le correzioni di V-02 e V-03 (§7.2): sei file del pacchetto
   runtime; nell'harness, `TLGH.worldRecord()` in `Steps.lua` e le letture di
   `SPHarness.lua` e `MPServer.lua` spostate sullo store (`machineSites`,
   seed, `nextId`, `climateAcc`).
+* Modifiche per la correzione di V-01 (§7.3): `Authority/Vault.lua` nuovo
+  e nove file del pacchetto; nell'harness le sonde `probe_vault`,
+  `probe_vault_stats` e `drop_vault`, i controlli del vault prima e dopo il
+  riavvio in `MPHarness.lua`, AUD-4 rovesciato in `AuditCases.lua`, i
+  record scritti a mano registrati in `ServerExperiments.lua`, l'opzione
+  `-DropVault` del launcher.
+* Store compatto (§7.3, "Store compatto"): `Authority/Vault.lua`; il
+  servizio `fill_history` e la sonda `probe_vault_stats` estesa in
+  `MPServer.lua`, i controlli del fermentatore prima e dopo il riavvio in
+  `MPHarness.lua`; il benchmark Kahlua con lo script in
+  `docs/evidence/2026-11-05_audit_kahlua_v01compact_bench.txt`; i run
+  multiplayer `…_run{23..30}_v01compact_*`.
 * Modifiche ai file di test e di sviluppo fatte per questo audit (nessuna
   al pacchetto runtime): `tests/audit/{mocks,test_audit,run_audit}.lua`
   (nuovi), `TLGHarness/AuditCases.lua` (nuovo), `MPServer.lua` (due sonde

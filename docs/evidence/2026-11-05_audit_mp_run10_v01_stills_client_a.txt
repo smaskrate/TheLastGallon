@@ -1,0 +1,68 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.94
+PASS MP.joined_A :: isClient=true user=tlga
+STEP production_site begin
+OBS  MP.production fermenter 1831218724 (OutputReady after 120 h, outputs {ethanol=11.0000,water=100.0000}), pot still 1531730310, reflux still 1187883771, drying column 537071639
+STEP mp_production_site_arrives begin
+STEP fermenter_status begin
+OBS  MP.fermenter_status reply: ok=true reason=nil duplicate=nil state=OutputReady pause=nil stage=nil outputs={ethanol=11.0000,water=100.0000} firebox=0 washL=nil
+PASS MP.fermenter_done_A :: ok=true reason=nil duplicate=nil state=OutputReady
+STEP give_logs_pot begin
+STEP mp_logs_pot_arrive begin
+STEP pot_firewood begin
+OBS  MP.pot_firewood reply: ok=true reason=nil duplicate=nil state=Ready pause=nil stage=nil outputs={} firebox=18 washL=nil
+PASS MP.pot_firewood_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP pot_wash begin
+OBS  MP.pot_wash reply: ok=true reason=nil duplicate=nil state=Processing pause=nil stage=nil outputs={} firebox=18 washL=60
+PASS MP.pot_wash_A :: ok=true reason=nil duplicate=nil state=Processing washL=60
+STEP give_logs_reflux begin
+STEP mp_logs_reflux_arrive begin
+STEP reflux_firewood begin
+OBS  MP.reflux_firewood reply: ok=true reason=nil duplicate=nil state=Ready pause=nil stage=nil outputs={} firebox=18 washL=nil
+PASS MP.reflux_firewood_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP reflux_wash begin
+OBS  MP.reflux_wash reply: ok=true reason=nil duplicate=nil state=Processing pause=nil stage=nil outputs={} firebox=18 washL=51
+PASS MP.reflux_wash_A :: ok=true reason=nil duplicate=nil state=Processing washL=51
+STEP mp_stills_distil begin
+OBS  MP.stills_distil pot stopped for heat after 12903 ticks: two more logs
+OBS  MP.stills_distil pot fed again: ok=true reason=nil duplicate=nil state=Paused firebox=18
+OBS  MP.stills_distil all done after 19503 ticks
+STEP pot_collect begin
+OBS  MP.pot_collect reply: ok=true reason=nil duplicate=nil state=Ready pause=nil stage=nil outputs={} firebox=9.015873015873026 washL=nil
+PASS MP.pot_collect_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP reflux_collect begin
+OBS  MP.reflux_collect reply: ok=true reason=nil duplicate=nil state=Ready pause=nil stage=nil outputs={} firebox=4.363636363636367 washL=nil
+PASS MP.reflux_collect_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP mp_runs_arrive begin
+STEP mp_stills_cans begin
+OBS  MP.pot still's run in can 883345178: 6.5405 L, ethanol 5.2324, water 1.3081
+PASS MP.pot_still_run_bottled_A :: 6.5405 L: ethanol 5.2324, water 1.3081
+OBS  MP.reflux still's run in can 970530780: 4.9465 L, ethanol 4.6497, water 0.2968
+PASS MP.reflux_still_run_bottled_A :: 4.9465 L: ethanol 4.6497, water 0.2968
+STEP dry_load begin
+OBS  MP.dry_load reply: ok=true reason=nil duplicate=nil state=Processing pause=nil stage=nil outputs={} firebox=0 washL=nil
+PASS MP.dry_loaded_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_drying begin
+OBS  MP.drying all done after 27303 ticks
+STEP dry_collect begin
+OBS  MP.dry_collect reply: ok=true reason=nil duplicate=nil state=Ready pause=nil stage=nil outputs={} firebox=0 washL=nil
+PASS MP.dry_collect_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP mp_dried_arrives begin
+STEP mp_dried_can begin
+OBS  MP.dried ethanol in can 1728535792: 4.6730 L, ethanol 4.6497, water 0.0232
+PASS MP.dried_ethanol_bottled_A :: 4.6730 L: ethanol 4.6497, water 0.0232
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=13 fail=0
+DONE
