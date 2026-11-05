@@ -1,0 +1,42 @@
+OBS  AUD.forge generator: modData before tlgConv=nil deviceId=nil
+STEP aud_object_sync_settles begin
+STEP aud_probe_fuel_forged begin
+OBS  AUD.server after object syncs: pump side={audit=forged,cap=10000.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R155582228-14,mic=0.0000,prov={},q={gasoline=8057.3624},rev=1.0000,stab=0.0000,t=2.1288,v=1.0000}; g1 side=nil
+PASS MP.AUD4_pump_sidecar_rewritten_by_client_A :: before {cap=10000.0000,cond=1.0000,deg={gasoline=0.1629},frac=0.0000,id=R155582228-14,mic=0.0000,prov={},q={gasoline=8057.3624,sediment=3.7027,water=1.9349},rev=1.0000,stab=0.0000,t=2.1288,v=1.0000}, after {audit=forged,cap=10000.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R155582228-14,mic=0.0000,prov={},q={gasoline=8057.3624},rev=1.0000,stab=0.0000,t=2.1288,v=1.0000}
+STEP aud_probe_generator_forged begin
+OBS  AUD.server generator after client sync: found=true profile=generator_si_flex side=nil
+PASS MP.AUD4_generator_conversion_forged_by_client_A :: generator_si_flex
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=14 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_fuel role=A tag=fuel_site
+OBS  MPS.reply fuel_site car=238 g1x=10632 g1y=10628 g2x=10630 g2y=10628 px=10636 py=10622 role=A tag=fuel_site units=8068
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.reply spawned batch=Processing id=970625093 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.message from tlga: probe_world role=A tag=aud_probe_world x=10665 y=10640
+OBS  MPS.reply probe_world nextId=13 policy=new_world pubNextId=nil pubSeed=nil pubSites=nil role=A seed=155582228 siteHit=true sites={P155582228-12={x=10665.0000,y=10640.0000,z=0.0000}} store=true tag=aud_probe_world
+OBS  MPS.message from tlga: probe_world role=A tag=aud_probe_world_after
+OBS  MPS.reply probe_world nextId=13 policy=new_world pubNextId=nil pubSeed=nil pubSites=nil role=A seed=155582228 siteHit=false sites={P155582228-12={x=10665.0000,y=10640.0000,z=0.0000}} store=true tag=aud_probe_world_after
+OBS  MPS.message from tlga: probe_square role=A tag=aud_probe_square x=10636 y=10622
+OBS  MPS.reply probe_square elec=false found=true grid=true level=user role=A tag=aud_probe_square user=tlga
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=0 role=A tag=aud_give_can
+OBS  MPS.reply given ids=Base.PetrolCan=1251080195 role=A tag=aud_give_can
+OBS  MPS.message from tlga: probe_fuel car=238 g1x=10632 g1y=10628 g2x=10630 g2y=10628 ids=1251080195 px=10636 py=10622 role=A tag=aud_probe_fuel_after_transfers
+OBS  MPS.reply probe_fuel engine=false g1Fuel=0 g1On=false g1RecL=0 g1Side=nil g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1251080195=5.0000 {cond=1.0000,deg={gasoline=0.1629},dirty=0.0000,id=S155582228-15,mic=0.0000,prov={1={from=R155582228-14,k=in,n=5.0000,t=2.1288}},q={gasoline=4.9965,sediment=0.0023,water=0.0012},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.1288,v=1.0000} pumpSide={cap=10000.0000,cond=1.0000,deg={gasoline=0.1629},frac=0.0000,id=R155582228-14,mic=0.0000,prov={},q={gasoline=8057.3624,sediment=3.7027,water=1.9349},rev=1.0000,stab=0.0000,t=2.1288,v=1.0000} pumpUnits=8063 recL1251080195=5 role=A tag=aud_probe_fuel_after_transfers tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_item id=1251080195 role=A tag=aud_probe_item_forged
+OBS  MPS.reply probe_item fluid=5.0000 found=true role=A sidecar={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S155582228-15,mic=0.0000,prov={1={from=R155582228-14,k=in,n=5.0000,t=2.1288}},q={gasoline=4.9965,sediment=0.0023,water=0.0012},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1288,v=1.0000} tag=aud_probe_item_forged
+OBS  MPS.message from tlga: probe_fuel car=238 g1x=10632 g1y=10628 g2x=10630 g2y=10628 ids=1251080195 px=10636 py=10622 role=A tag=aud_probe_fuel_forged
+OBS  MPS.reply probe_fuel engine=false g1Fuel=0 g1On=false g1RecL=0 g1Side=nil g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1251080195=5.0000 {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S155582228-15,mic=0.0000,prov={1={from=R155582228-14,k=in,n=5.0000,t=2.1288}},q={gasoline=4.9965,sediment=0.0023,water=0.0012},rev=1.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.1288,v=1.0000} pumpSide={audit=forged,cap=10000.0000,cond=1.0000,deg={gasoline=0.0000},frac=0.0000,id=R155582228-14,mic=0.0000,prov={},q={gasoline=8057.3624},rev=1.0000,stab=0.0000,t=2.1288,v=1.0000} pumpUnits=8063 recL1251080195=5 role=A tag=aud_probe_fuel_forged tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_generator role=A tag=aud_probe_generator_forged x=10632 y=10628
+OBS  MPS.reply probe_generator found=true fuel=0 on=false profile=generator_si_flex role=A side=nil tag=aud_probe_generator_forged
+OBS  MPS.message from tlga: finish role=A
+
+[exited with code 0]

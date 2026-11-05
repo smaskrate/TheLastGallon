@@ -531,6 +531,21 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   `C.FLOAT_TOLERANCE` (1e-4 L) is adopted from the native composition at
   the next read; larger ones (older worlds, bigger containers) go through
   reconciliation. Not observed beyond that.
+* Global ModData is not private on a server (BC 42.21, security audit
+  2026-11-05): `GlobalModData.receiveRequest` reads the key a client names
+  and sends that whole table back, for any key; a table a client transmits
+  only fires `OnReceiveGlobalModData` on the server and is not stored
+  (audit run 2). `GameTime.getModData()` is not private either:
+  `GameTime.saveToPacket` sends it (all but the keys `camping`, `farming`,
+  `trapping`). A server-side global object system's mod data is: the
+  engine saves the keys named in `setModDataKeys` to `gos_<name>.bin` in
+  the save and sends a client only what its Lua `getInitialStateForClient`
+  returns (`CGlobalObjects.loadInitialState` keeps nothing for a system the
+  client does not have). Systems load in `SGlobalObjects.initSystems`, after
+  `IsoWorld.init` (and so after `OnInitGlobalModData`) on a dedicated server
+  (`GameServer.main`) and in single player (`GameLoadingState`). The mod
+  keeps its world record's private fields there (docs/migrations.md, world
+  server store).
 * NOT RUN: chunk unload/reload, MP reconnect.
 
 ## Production machines and conversions (RT-SP runs 7–8)

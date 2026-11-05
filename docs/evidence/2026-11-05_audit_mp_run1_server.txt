@@ -1,0 +1,25 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_fuel role=A tag=fuel_site
+OBS  MPS.reply fuel_site error=no pump with stock role=A tag=fuel_site
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.reply spawned batch=Processing id=584306783 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.message from tlga: probe_world role=A tag=aud_probe_world
+OBS  MPS.reply probe_world nextId=13 policy=new_world role=A seed=152207548 sites={P152207548-12={x=10665.0000,y=10640.0000,z=0.0000}} tag=aud_probe_world
+OBS  MPS.message from tlga: probe_square role=A tag=aud_probe_square
+OBS  MPS.reply probe_square elec=nil found=false grid=nil level=user role=A tag=aud_probe_square user=tlga
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=0 role=A tag=aud_give_can
+OBS  MPS.reply given ids=Base.PetrolCan=1995640183 role=A tag=aud_give_can
+OBS  MPS.message from tlga: probe_fuel ids=1995640183 role=A tag=aud_probe_fuel_after_transfers
+OBS  MPS.reply probe_fuel engine=nil g1Fuel=-1 g1On=nil g1RecL=0 g1Side=nil g2Fuel=-1 g2On=nil g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1995640183=0.0000 no-sidecar pumpSide=nil pumpUnits=-1 recL1995640183=0 role=A tag=aud_probe_fuel_after_transfers tankL=-1 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_item id=1995640183 role=A tag=aud_probe_item_forged
+OBS  MPS.reply probe_item fluid=0.0000 found=true role=A sidecar={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S152207548-13,mic=0.0000,prov={},q={},rev=0.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.0530,v=1.0000} tag=aud_probe_item_forged
+OBS  MPS.message from tlga: probe_fuel ids=1995640183 role=A tag=aud_probe_fuel_forged
+OBS  MPS.reply probe_fuel engine=nil g1Fuel=-1 g1On=nil g1RecL=0 g1Side=nil g2Fuel=-1 g2On=nil g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1995640183=0.0000 {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S152207548-13,mic=0.0000,prov={},q={},rev=0.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.0530,v=1.0000} pumpSide=nil pumpUnits=-1 recL1995640183=0 role=A tag=aud_probe_fuel_forged tankL=-1 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_generator role=A tag=aud_probe_generator_forged
+OBS  MPS.reply probe_generator found=false fuel=-1 on=nil profile=nil role=A side=nil tag=aud_probe_generator_forged
+OBS  MPS.message from tlga: finish role=A

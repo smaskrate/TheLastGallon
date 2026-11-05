@@ -61,7 +61,7 @@
   Lua\TLG_harness_mpgo.txt, written once the server is up again).
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart)
 $ErrorActionPreference = "Stop"
@@ -165,6 +165,10 @@ end
 # the fuel case's generator and car burn enough there to be seen (run 156
 # read none in half a minute on the default day).
 $dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers") -contains $Only) { "`n    DayLength = 1," } else { "" }
+# The audit case (AuditCases.lua) runs with the grid on: without power
+# IsoObject.getPipedFuelAmount reports no fuel at all (BC 42.21; audit run 1
+# found "no pump with stock" with ElecShutModifier = 0), so the pumps' case
+# needs a powered station.
 @"
 SandboxVars = {
     VERSION = 6,$dayLength

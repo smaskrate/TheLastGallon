@@ -122,6 +122,11 @@ function V.endpoint(vehicle)
         if part and player and vehicle:isInArea(part:getArea(), player) then return true end
         return false, "not_at_fuel_cap"
     end
+    -- Reading the status (H.status): at the fuel cap, or seated in the car.
+    function ep:canObserve(player)
+        if player and player.getVehicle and player:getVehicle() == vehicle then return true end
+        return self:canAccess(player)
+    end
     function ep:read()
         local rec, status = V.read(vehicle, true)
         self.readStatus = status

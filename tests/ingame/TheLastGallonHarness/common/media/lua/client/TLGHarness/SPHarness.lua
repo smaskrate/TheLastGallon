@@ -4068,7 +4068,7 @@ RT.fireReload = { name = "rtfb_reload", timeout = 3000, fn = function(ctx, ticks
             tostring(rec.site and rec.site.room), tostring(rec.site and rec.site.z))
     end)
     R:check("RTFB.hourly_list_survives", function()
-        local s = (TLG.World.get().machineSites or {})[rec.id]
+        local s = (TLG.World.server().machineSites or {})[rec.id]
         return s ~= nil and s.x == F.home.x and s.y == F.home.y and s.z == 0, brief(s)
     end)
     local fp = F.fireplace()
@@ -4274,7 +4274,7 @@ function RT.P.onHour()
 end
 
 function RT.P.listed(ctx)
-    local sites = TLG.World.get().machineSites or {}
+    local sites = TLG.World.server().machineSites or {}
     local out = {}
     for i, name in ipairs(RT.P.names) do out[i] = name .. " " .. tostring(sites[ctx.pid[i]] ~= nil) end
     return sites, table.concat(out, ", ")
@@ -4562,7 +4562,7 @@ function RT.P.phases.dropped(ctx)
     end
     -- A and B start again from the put-down, the work they had kept, listed
     -- at their new tiles at once.
-    local sites = TLG.World.get().machineSites or {}
+    local sites = TLG.World.server().machineSites or {}
     for _, i in ipairs({ 1, 2 }) do
         local p = P.items[i]:getModData().tlgProc
         R:check("RTP.put_down_resumes_" .. P.names[i], function()
@@ -4753,7 +4753,7 @@ function RT.P.phases.dropC(ctx)
     if it then P.items[3] = it end
     local s = it and M.square(it)
     local p = it and it:getModData().tlgProc or {}
-    local e = (TLG.World.get().machineSites or {})[ctx.pid[3]]
+    local e = (TLG.World.server().machineSites or {})[ctx.pid[3]]
     R:line("OBS  RTP.drop_C forceDropHeavyItems ok=%s %s at %.4f game h; on %s", tostring(ok), ok and "" or tostring(err),
         ctx.tDropC, s and (s:getX() .. "," .. s:getY()) or "-")
     R:check("RTP.heavy_C_dropped_at_the_feet", function()
@@ -4856,7 +4856,7 @@ function RT.P.phases.dropC2(ctx, ticks)
     if it then P.items[3] = it end
     local s = it and M.square(it)
     local p = ctx.recC2 or {}
-    local e = (TLG.World.get().machineSites or {})[ctx.pid[3]]
+    local e = (TLG.World.server().machineSites or {})[ctx.pid[3]]
     R:line("OBS  RTP.drop_C2 the meteorite listed in the loot window=%s; queued %s; C on %s at %s game h", tostring(ctx.rockListed),
         tostring(ctx.queuedC2), s and (s:getX() .. "," .. s:getY()) or "-", tostring(ctx.tDropC2))
     R:check("RTP.heavy_C_unequipped_at_the_feet", function()
@@ -5966,7 +5966,7 @@ function RT.S.phases.carried(ctx)
     R:check("RTS.unseen_pickup_changes_nothing_yet", function()
         return P.sameBatch(ctx.pre[4], reflux:getModData().tlgProc, P.WHOLE)
     end)
-    local sites = TLG.World.get().machineSites or {}
+    local sites = TLG.World.server().machineSites or {}
     R:check("RTS.hourly_list_at_pickup", function()
         return sites[ctx.pid[3]] == nil and sites[ctx.pid[5]] == nil and sites[ctx.pid[4]] ~= nil,
             string.format("listed: pot still %s, reflux still %s, column %s", tostring(sites[ctx.pid[3]] ~= nil),
@@ -6017,7 +6017,7 @@ function RT.S.phases.carry(ctx)
     RT.speed(RT.waitSpeed)
     -- The first hourly reading after the lift finds the reflux still's tile empty.
     if not ctx.listChecked and hours() >= math.floor(ctx.tLift) + 1.05 then
-        local sites = TLG.World.get().machineSites or {}
+        local sites = TLG.World.server().machineSites or {}
         R:check("RTS.hourly_list_drops_unseen_machine", function()
             return sites[ctx.pid[4]] == nil, "reflux still listed: " .. tostring(sites[ctx.pid[4]] ~= nil)
         end)
@@ -6059,7 +6059,7 @@ end
 -- numbers exactly).
 function RT.S.writeExpect(ctx)
     local S = RT.S
-    local spots, sites = {}, TLG.World.get().machineSites or {}
+    local spots, sites = {}, TLG.World.server().machineSites or {}
     for _, p in ipairs(S.spots) do spots[#spots + 1] = p.x .. "," .. p.y end
     local listed = string.format("%s,%s,%s", tostring(sites[ctx.pid[3]] ~= nil), tostring(sites[ctx.pid[4]] ~= nil),
         tostring(sites[ctx.pid[5]] ~= nil))
@@ -6133,7 +6133,7 @@ function RT.S.phases.dropped(ctx)
         RT.abort = "a machine was not put down"
         return true
     end
-    local sites = TLG.World.get().machineSites or {}
+    local sites = TLG.World.server().machineSites or {}
     local function listedAt(i)
         local e = sites[ctx.pid[i]]
         return e ~= nil and e.x == tile[i]:getX() and e.y == tile[i]:getY()
@@ -6310,7 +6310,7 @@ RT.stillReload = { name = "rtsb_reload", timeout = 3000, fn = function(ctx, tick
             tostring(S.items[3] ~= nil), tostring(S.items[4] ~= nil), tostring(S.items[5] ~= nil))
     end)
     R:check("RTSB.records_survive_the_save", function() return same, table.concat(parts, "; ") end)
-    local sites = TLG.World.get().machineSites or {}
+    local sites = TLG.World.server().machineSites or {}
     local listed = string.format("%s,%s,%s", tostring(sites[r.pid[3]] ~= nil), tostring(sites[r.pid[4]] ~= nil),
         tostring(sites[r.pid[5]] ~= nil))
     R:check("RTSB.hourly_list_as_saved", function()
@@ -7552,7 +7552,7 @@ function RT.X.pourFirst(item)
     into:getFluidContainer():Empty()
     local t = TLG.World.now()
     FluidContainer.Transfer(fc, into:getFluidContainer(), 1.0)
-    local want, aged, full, w = RT.X.expected(TLG.World.get(), "item:" .. tostring(item:getID()), spec, t)
+    local want, aged, full, w = RT.X.expected(TLG.World.facts(), "item:" .. tostring(item:getID()), spec, t)
     return { side = item:getModData().tlg, t = t, want = want, aged = aged, full = full, w = w }
 end
 
@@ -7577,7 +7577,7 @@ RT.X.setup = { name = "rtx_setup", timeout = 600, fn = function(ctx, ticks)
 end }
 
 RT.X.load = { name = "rtx_load", timeout = 600, fn = function(ctx, ticks)
-    local X, md = RT.X, TLG.World.get()
+    local X, md = RT.X, TLGH.worldRecord()
     X.e = TLGH.readKeyValues("TLG_existing_expect.txt")
     local e, world = X.e, tostring(getWorld():getWorld())
     R:check("RTX.same_world_continued", function()
@@ -7639,7 +7639,7 @@ RT.X.look = { name = "rtx_look", timeout = 600, fn = function(ctx, ticks)
     end)
     -- A look that records the can is its first contact (D-024).
     if side then
-        local want, aged, full, w = X.expected(TLG.World.get(), "item:" .. tostring(a:getID()), spec, t)
+        local want, aged, full, w = X.expected(TLG.World.facts(), "item:" .. tostring(a:getID()), spec, t)
         X.firstA = { side = TLG.Tables.deepCopy(side), t = t, want = want, aged = aged, full = full, w = w,
             by = "Look and smell" }
     end
@@ -7710,7 +7710,7 @@ RT.X.discover = { name = "rtx_discover", timeout = 3000, fn = function(ctx, tick
     local _, before = S.read(pump, false)
     local key, units = S.keyOf(pump), pump:getPipedFuelAmount()
     local litres = units * S.LITRES_PER_UNIT
-    local c = WI.stationContamination(TLG.World.get(), key, litres)
+    local c = WI.stationContamination(TLG.World.facts(), key, litres)
     local spec = { storage = "station_ust", cap = math.max(10000, litres), preAgeMax = WI.MAX_STATION_PRE_AGE,
         q = { gasoline = litres - c.water - c.sediment, water = c.water, sediment = c.sediment } }
     local can = player():getInventory():AddItem("Base.PetrolCan")
@@ -7718,7 +7718,7 @@ RT.X.discover = { name = "rtx_discover", timeout = 3000, fn = function(ctx, tick
     local t = TLG.World.now()
     local r = ask("RTX.pump_to_can", "transfer", { source = TLG.Authority.Resolver.refForObject(pump, "pump"),
         destination = { kind = "item", id = can:getID() }, amount = 2 })
-    local want, aged, full, w = X.expected(TLG.World.get(), key, spec, t)
+    local want, aged, full, w = X.expected(TLG.World.facts(), key, spec, t)
     local rec, status = S.read(pump, false)
     X.firstP = { side = pump:getModData().tlg, t = t, want = want, aged = aged, full = full, w = w }
     R:check("RTX.pump_found_at_installation_is_fresh", function()
@@ -7783,7 +7783,7 @@ end }
 RT.X.saveExit = { name = "rtx_save_and_exit", timeout = 1200, fn = function(ctx, ticks)
     if not ctx.saved then
         RT.speed(1)
-        local X, md = RT.X, TLG.World.get()
+        local X, md = RT.X, TLGH.worldRecord()
         local e = X.e or {}
         TLGH.writeFile("TLG_existing_expect2.txt", {
             "seed=" .. tostring(md.seed),
@@ -7821,7 +7821,7 @@ RT.X.reload = { name = "rtx_reload", timeout = 3000, fn = function(ctx, ticks)
     p:setGodMod(true)
     p:setInvisible(true)
     captureDialogs(true)
-    local e2, md = TLGH.readKeyValues("TLG_existing_expect2.txt"), TLG.World.get()
+    local e2, md = TLGH.readKeyValues("TLG_existing_expect2.txt"), TLGH.worldRecord()
     R:check("RTX.record_kept_after_reload", function()
         return tostring(md.seed) == e2.seed and string.format("%.6f", md.installedAt or -1) == e2.installedAt
             and md.policy == e2.policy and tostring(md.epoch) == e2.epoch and md.createdAsNewGame == false,
@@ -7913,7 +7913,7 @@ function RT.N.spec(item)
 end
 
 RT.N.start = { name = "rtn_start", timeout = 600, fn = function(ctx, ticks)
-    local N, md = RT.N, TLG.World.get()
+    local N, md = RT.N, TLGH.worldRecord()
     if RT.skip("rtn_start") then return true end
     R:check("RTN.world_record_of_a_new_game", function()
         return md.v == 1 and md.createdAsNewGame == true and md.policy == "new_world" and md.epoch == 0,
@@ -7994,7 +7994,7 @@ RT.N.late = { name = "rtn_late", timeout = 3000, fn = function(ctx, ticks)
         -- The early can, its record brought to now.
         local e = RT.X.groundItem(N.cans[1].x, N.cans[1].y, N.cans[1].id)
         local v = e and tlgView("item", e)
-        local _, _, want = RT.X.expected(TLG.World.get(), "item:" .. tostring(N.cans[1].id), N.earlySpec, TLG.World.now())
+        local _, _, want = RT.X.expected(TLG.World.facts(), "item:" .. tostring(N.cans[1].id), N.earlySpec, TLG.World.now())
         R:check("RTN.found_early_aged_like_found_late", function()
             local deg = v and v.deg and v.deg.gasoline
             return deg ~= nil and math.abs(deg - want) <= N.pathTol * want,
@@ -8013,7 +8013,7 @@ RT.N.late = { name = "rtn_late", timeout = 3000, fn = function(ctx, ticks)
     local _, before = S.read(pump, false)
     local key, units = S.keyOf(pump), pump:getPipedFuelAmount()
     local litres = units * S.LITRES_PER_UNIT
-    local c = WI.stationContamination(TLG.World.get(), key, litres)
+    local c = WI.stationContamination(TLG.World.facts(), key, litres)
     local spec = { storage = "station_ust", cap = math.max(10000, litres), preAgeMax = WI.MAX_STATION_PRE_AGE,
         q = { gasoline = litres - c.water - c.sediment, water = c.water, sediment = c.sediment } }
     local can = player():getInventory():AddItem("Base.PetrolCan")
@@ -8021,7 +8021,7 @@ RT.N.late = { name = "rtn_late", timeout = 3000, fn = function(ctx, ticks)
     local t = TLG.World.now()
     local r = ask("RTN.pump_to_can", "transfer", { source = TLG.Authority.Resolver.refForObject(pump, "pump"),
         destination = { kind = "item", id = can:getID() }, amount = 2 })
-    local want, aged, full, w = RT.X.expected(TLG.World.get(), key, spec, t)
+    local want, aged, full, w = RT.X.expected(TLG.World.facts(), key, spec, t)
     local rec, status = S.read(pump, false)
     local f = { side = pump:getModData().tlg, t = t, want = want, aged = aged, full = full, w = w }
     local floor = N.fromEpoch(spec, t)
@@ -8144,7 +8144,7 @@ RT.M.stock = { name = "rtm_stock", timeout = 3000, fn = function(ctx, ticks)
             M.litres(M.cans.P), M.litres(M.cans.Q), M.litres(M.cans.E), tostring(recorded), M.fTile:getX(), M.fTile:getY(),
             tostring(frec.state), tostring(frec.startedAt))
     end)
-    local md = TLG.World.get()
+    local md = TLGH.worldRecord()
     local lines = { "seed=" .. tostring(md.seed), "installedAt=" .. tostring(md.installedAt), "policy=" .. tostring(md.policy),
         "epoch=" .. tostring(md.epoch), "nextId=" .. tostring(md.nextId), "hours=" .. tostring(hours()),
         "f.x=" .. M.fTile:getX(), "f.y=" .. M.fTile:getY(), "pidF=" .. tostring(frec.id),
@@ -8193,7 +8193,7 @@ RT.M.back = { name = "rtm_back", timeout = 3000, fn = function(ctx, ticks)
             M.litres(cans[k]))
     end
     R:check("RTM.records_survive_the_mod_away", function() return kept, table.concat(parts, "; ") end)
-    local md = TLG.World.get()
+    local md = TLGH.worldRecord()
     R:check("RTM.world_record_the_same_one", function()
         return tostring(md.seed) == e.seed and tostring(md.installedAt) == e.installedAt and tostring(md.policy) == e.policy
             and tostring(md.epoch) == e.epoch and (md.nextId or 0) >= (tonumber(e.nextId) or math.huge),
@@ -9524,10 +9524,11 @@ end
 
 -- The hour's climate record put back after fn (each call adds a reading).
 function RT.PF.keepClimate(fn)
-    local md = TLG.World.get()
-    local acc, log = TLG.Tables.deepCopy(md.climateAcc), TLG.Tables.deepCopy(md.climateLog)
+    -- Today's sums are in the server store since the 2026-11-05 audit.
+    local md, srv = TLG.World.get(), TLG.World.server()
+    local acc, log = TLG.Tables.deepCopy(srv.climateAcc), TLG.Tables.deepCopy(md.climateLog)
     local ok, r = pcall(fn)
-    md.climateAcc, md.climateLog = acc, log
+    srv.climateAcc, md.climateLog = acc, log
     if not ok then error(r) end
     return r
 end
@@ -9872,7 +9873,7 @@ function RT.PF.machineStep(upto)
                 local rec = M.read(m, false)
                 if rec and M.running(rec) then running = running + 1 end
             end
-            local listed = TLG.Tables.count(TLG.World.get().machineSites or {})
+            local listed = TLG.Tables.count(TLG.World.server().machineSites or {})
             R:line("OBS  RTPF.machines %d placed, %d loaded in this step (%d refused), %d running, %d in the hourly list",
                 #PF.machineList, ctx.loaded, ctx.failed, running, listed)
             R:check("RTPF.machines_running_" .. upto, function()

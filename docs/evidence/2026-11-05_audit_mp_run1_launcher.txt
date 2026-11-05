@@ -1,0 +1,136 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver; 
+C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1
+server started (shell pid 46664)
+server up after 27 s
+server: LOG  : General      f:0 st:64.397.561> command entered via server console (System.in): "adduser "tlga" 
+"********""
+server: LOG  : General      f:0 st:64.398.868> command entered via server console (System.in): "setaccesslevel "tlga" 
+"user""
+server: LOG  : General      f:0 st:64.398.962> User tlga is now user
+server: LOG  : General      f:0 st:64.400.879> command entered via server console (System.in): "adduser "tlgb" 
+"********""
+server: LOG  : General      f:0 st:64.402.890> command entered via server console (System.in): "setaccesslevel "tlgb" 
+"user""
+server: LOG  : General      f:0 st:64.402.961> User tlgb is now user
+client mp-a started, pid 45332
+click-to-start clicks sent: 0
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpclient1
+\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP fuel_site begin
+OBS  MP.fuel site: pump nil,nil (nil units), car nil, generators nil,nil and nil,nil no pump with stock
+STEP aud_fuel_site_arrives begin
+STEP mp_fuel_site_seen begin
+FAIL MP.fuel_site_seen_A :: pump=false car=false tank=nil g1=nil g2=nil
+STEP aud_where begin
+OBS  AUD.where: player 10660.5,10645.5 role=user; car nil at nil,nil dist=-1.0; pump nil,nil; g1 nil,nil
+STEP aud_status_vehicle_far begin
+OBS  AUD.status vehicle far: ok=false reason=unknown_target duplicate=nil state=nil total=nil cap=nil primary=nil sealed=nil rev=nil grade=nil
+FAIL MP.AUD1_status_vehicle_out_of_reach_answered_A :: ok=false reason=unknown_target duplicate=nil state=nil
+STEP aud_sample_vehicle_far begin
+OBS  AUD.sample vehicle far: ok=false reason=unknown_target duplicate=nil state=nil detail=malformed_ref
+FAIL MP.AUD1_sample_vehicle_out_of_reach_refused_A :: ok=false reason=unknown_target duplicate=nil state=nil
+STEP aud_status_pump_far begin
+STEPERR aud_status_pump_far :: attempted index: getSquare of non-table: null java.lang.RuntimeException
+STEP aud_status_generator_far begin
+STEPERR aud_status_generator_far :: attempted index: getSquare of non-table: null java.lang.RuntimeException
+STEP aud_status_bogus_vehicle begin
+OBS  AUD.status bogus vehicle id: ok=false reason=unknown_target duplicate=nil state=nil detail=no_vehicle
+STEP aud_spawn_running_vessel begin
+OBS  AUD.spawned vessel id=584306783 at 10665,10640 batch=Processing
+STEP aud_vessel_lands begin
+STEP aud_probe_world begin
+OBS  AUD.server world: seed=152207548 nextId=13 sites={P152207548-12={x=10665.0000,y=10640.0000,z=0.0000}}
+STEP aud_request_world begin
+STEP aud_read_world begin
+OBS  AUD.client received world: event=true seed=152207548 policy=new_world nextId=13 machineSites=1 {P152207548-12={x=10665.0000,y=10640.0000,z=0.0000}}
+PASS MP.AUD2_machine_sites_received_by_plain_client_A :: 1 sites, spawned vessel's tile listed=true
+STEP aud_probe_square begin
+OBS  AUD.pump square power: server grid=nil elec=nil; client grid=nil elec=nil; ElecShutModifier=0
+STEP aud_give_can begin
+OBS  AUD.given can id=1995640183
+STEP aud_can_arrives begin
+OBS  AUD.can in inventory=true 0.0000 L
+STEP aud_walk_to_pump begin
+FAIL AUD.walk_to_pump_queued :: attempted index: getSquare of non-table: null java.lang.RuntimeException
+STEP aud_transfer_pump_to_can begin
+STEPERR aud_transfer_pump_to_can :: attempted index: getPipedFuelAmount of non-table: null java.lang.RuntimeException
+STEP aud_after_pump_to_can begin
+STEPERR aud_after_pump_to_can :: attempted index: getPipedFuelAmount of non-table: null java.lang.RuntimeException
+STEP aud_walk_to_tank begin
+FAIL AUD.walk_to_tank_queued :: attempted index: getPartById of non-table: null java.lang.RuntimeException
+STEP aud_transfer_pump_to_car begin
+STEPERR aud_transfer_pump_to_car :: attempted index: getPartById of non-table: null java.lang.RuntimeException
+STEP aud_probe_fuel_after_transfers begin
+OBS  AUD.server after transfers: pump units=-1 side=nil; tank -1.0000 L record 0.0000 L; items 1995640183=0.0000 no-sidecar
+OBS  AUD.pump->car not moved (ok=nil reason=nil duplicate=nil state=nil): the car's filler is out of the pump's 3.5 tiles here
+STEP aud_look_can begin
+OBS  AUD.look at can: ok=true reason=nil duplicate=nil state=nil
+STEP aud_record_settles begin
+STEP aud_forge_item_sidecar begin
+OBS  AUD.forge item: sidecar before {cond=1.0000,deg={},dirty=0.0000,id=S152207548-13,mic=0.0000,prov={},q={},rev=0.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.0530,v=1.0000}
+STEP aud_item_sync_settles begin
+STEP aud_probe_item_forged begin
+OBS  AUD.server item after client sync: found=true sidecar={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S152207548-13,mic=0.0000,prov={},q={},rev=0.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.0530,v=1.0000} fluid=0.0000
+PASS MP.AUD4_item_sidecar_rewritten_by_client_A :: {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S152207548-13,mic=0.0000,prov={},q={},rev=0.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.0530,v=1.0000}
+STEP aud_walk_to_pump begin
+FAIL AUD.walk_to_pump_queued :: attempted index: getSquare of non-table: null java.lang.RuntimeException
+STEP aud_forge_pump_sidecar begin
+STEPERR aud_forge_pump_sidecar :: attempted index: getModData of non-table: null java.lang.RuntimeException
+STEP aud_forge_generator_conversion begin
+STEPERR aud_forge_generator_conversion :: attempted index: getModData of non-table: null java.lang.RuntimeException
+STEP aud_object_sync_settles begin
+STEP aud_probe_fuel_forged begin
+OBS  AUD.server after object syncs: pump side=nil; g1 side=nil
+FAIL MP.AUD4_pump_sidecar_rewritten_by_client_A :: before nil, after nil
+STEP aud_probe_generator_forged begin
+OBS  AUD.server generator after client sync: found=false profile=nil side=nil
+FAIL MP.AUD4_generator_conversion_forged_by_client_A :: nil
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=3 fail=5
+DONE
+===== server: C:\Users\Manuel\AppData\Local\Packages\Claude_pzs8sxrjxfjjc\LocalCache\Local\TheLastGallon\mpserver\Lua\T
+LG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlga: setup_fuel role=A tag=fuel_site
+OBS  MPS.reply fuel_site error=no pump with stock role=A tag=fuel_site
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.reply spawned batch=Processing id=584306783 item=TLG.FermenterVessel role=A tag=aud_spawn_running_vessel x=10665 y=10640
+OBS  MPS.message from tlga: probe_world role=A tag=aud_probe_world
+OBS  MPS.reply probe_world nextId=13 policy=new_world role=A seed=152207548 sites={P152207548-12={x=10665.0000,y=10640.0000,z=0.0000}} tag=aud_probe_world
+OBS  MPS.message from tlga: probe_square role=A tag=aud_probe_square
+OBS  MPS.reply probe_square elec=nil found=false grid=nil level=user role=A tag=aud_probe_square user=tlga
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=0 role=A tag=aud_give_can
+OBS  MPS.reply given ids=Base.PetrolCan=1995640183 role=A tag=aud_give_can
+OBS  MPS.message from tlga: probe_fuel ids=1995640183 role=A tag=aud_probe_fuel_after_transfers
+OBS  MPS.reply probe_fuel engine=nil g1Fuel=-1 g1On=nil g1RecL=0 g1Side=nil g2Fuel=-1 g2On=nil g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1995640183=0.0000 no-sidecar pumpSide=nil pumpUnits=-1 recL1995640183=0 role=A tag=aud_probe_fuel_after_transfers tankL=-1 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_item id=1995640183 role=A tag=aud_probe_item_forged
+OBS  MPS.reply probe_item fluid=0.0000 found=true role=A sidecar={audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S152207548-13,mic=0.0000,prov={},q={},rev=0.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.0530,v=1.0000} tag=aud_probe_item_forged
+OBS  MPS.message from tlga: probe_fuel ids=1995640183 role=A tag=aud_probe_fuel_forged
+OBS  MPS.reply probe_fuel engine=nil g1Fuel=-1 g1On=nil g1RecL=0 g1Side=nil g2Fuel=-1 g2On=nil g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1995640183=0.0000 {audit=forged,cond=1.0000,deg={gasoline=7.7777},dirty=0.0000,id=S152207548-13,mic=0.0000,prov={},q={},rev=0.0000,sealed=true,stab=1.5000,storage=gascan_plastic,t=2.0530,v=1.0000} pumpSide=nil pumpUnits=-1 recL1995640183=0 role=A tag=aud_probe_fuel_forged tankL=-1 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_generator role=A tag=aud_probe_generator_forged
+OBS  MPS.reply probe_generator found=false fuel=-1 on=nil profile=nil role=A side=nil tag=aud_probe_generator_forged
+OBS  MPS.message from tlga: finish role=A
+exit=0

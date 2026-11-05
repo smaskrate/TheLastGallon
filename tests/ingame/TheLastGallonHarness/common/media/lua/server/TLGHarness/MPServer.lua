@@ -162,7 +162,7 @@ function services.probe_vessel(player, args)
         end
     end
     local rec = item and item:getModData().tlgProc
-    local sites = TLG.World.get().machineSites or {}
+    local sites = TLG.World.server().machineSites or {}
     local listed = rec and rec.id and sites[rec.id]
     reply("probe_vessel", args, { where = #places > 0 and table.concat(places, "; ") or "nowhere", vessels = count,
         state = tostring(rec and rec.state or "none"), pause = tostring(rec and rec.pause or "none"),
@@ -1210,3 +1210,32 @@ Events.OnClientCommand.Add(function(module, command, player, args)
     end)
     if not ok then report():line("STEPERR MPS.%s :: %s", tostring(command), tostring(err)) end
 end)
+
+------------------------------------------------------------------------------
+-- Security audit probes (2026-11-05 audit, AuditCases.lua): what the server
+-- holds, read-only. probe_square: a square's power as the server sees it;
+-- probe_world: the mod's world record and its server store (seed, next id,
+-- the hourly reading's machine list; V-03), and whether the store lists a
+-- machine at args x, y.
+------------------------------------------------------------------------------
+function services.probe_square(player, args)
+    local sq = getCell():getGridSquare(tonumber(args.x), tonumber(args.y), 0)
+    local grid, elec
+    pcall(function() grid = sq:hasGridPower() end)
+    pcall(function() elec = sq:haveElectricity() end)
+    reply("probe_square", args, { found = tostring(sq ~= nil), grid = tostring(grid), elec = tostring(elec),
+        user = tostring(player:getUsername()),
+        level = tostring(select(2, pcall(function() return player:getRole():getName() end))) })
+end
+
+function services.probe_world(player, args)
+    local md, srv = TLG.World.get(), TLG.World.server()
+    local hit = false
+    for _, p in pairs(srv.machineSites or {}) do
+        if type(p) == "table" and p.x == tonumber(args.x) and p.y == tonumber(args.y) then hit = true end
+    end
+    reply("probe_world", args, { store = tostring(TLG.World.store ~= nil and srv ~= md), seed = tostring(srv.seed),
+        nextId = tostring(srv.nextId), policy = tostring(md.policy), sites = S.text(srv.machineSites or {}),
+        siteHit = tostring(hit), pubSeed = tostring(md.seed), pubNextId = tostring(md.nextId),
+        pubSites = md.machineSites and S.text(md.machineSites) or "nil" })
+end

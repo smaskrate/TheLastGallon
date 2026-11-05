@@ -7,7 +7,8 @@
 | Supply sidecar | 1 | item/object/part modData `tlg` | `v`, id, rev, deg, stab, mic, t, storage, sealed, cond, dirty, label, prov, q (+ `frac`, `cap` for pumps; `kind`, `profile` for generators) |
 | Process (machine) | 1 | machine item modData `tlgProc` | includes recipe snapshot `{ id, version, fp, params }`; optional `site` `{ room, z }`, `temps` (hourly air readings by world hour) and `startedAt` (D-021), and `fires` (by world hour, the hour's last note of the fire warming the machine `{ t, f, x, y, r, c, rad }` or `false`; D-022; a campfire's note has `k = "campfire"` and `rmax`, its largest radius, instead of `rad`, and notes without `k` keep their meaning); `site` also keeps its tile `x`, `y`, and optional `seen` is the last world hour the authority found the machine placed with a batch running (D-015). Records without them cannot tell a move no Lua saw and credit nothing past their last access. Optional `stoppedEarly` (boolean) marks output an abort kept (D-023); collecting the last of it, or a second abort, clears it; records without it behave as before |
 | Conversion project | 1 | vehicle/generator modData | see `TLG/Domain/Conversions/Project.lua` |
-| World record | 1 | global ModData `TLG_World` | seed, epoch, policy, installedAt, transitionHours, nextId, calendar, climateLog (days carry optional room means `r0`, `r1`; D-021), climateAcc (today's running climate sums, optional; D-020), machineSites (placed machines for the hourly air reading, optional; D-021), balanceHistory, createdAsNewGame |
+| World record | 1 | global ModData `TLG_World` | epoch, policy, installedAt, transitionHours, calendar, climateLog (days carry optional room means `r0`, `r1`; D-021), balanceHistory, createdAsNewGame, modVersion. Sent to clients (the server answers `ModData.request` for any key), so it holds nothing private |
+| World server store | 1 | modData key `tlg` of the server-side global object system `tlgworld` (file `gos_tlgworld.bin` in the save; `server/TLG/Server/WorldStore.lua`) | `v`, seed, nextId, climateAcc (today's running climate sums, optional; D-020), machineSites (placed machines for the hourly air reading, optional; D-021). Never sent to clients (security audit 2026-11-05, V-03). Saves from before it kept these four fields in `TLG_World`: on load they move here and leave the world record (the store's values win; `nextId` takes the larger). A store lost with its world record kept gets a new seed, so new ids stay distinct. Until the store loads (it loads after `OnInitGlobalModData`), and if it cannot load, the fields stay in `TLG_World`. Going back to a version from before the store is not supported: that version reads the seed and next id from `TLG_World`, finds none, and fails at its first new record id (the world record's `v` stayed 1, as no version reads it to decide) |
 | Recipe definitions | per recipe `version` + content fingerprint | registry | active batches keep their snapshot |
 | Consumer/adapter definitions | registry fingerprints | registry | `TLG.SCHEMA.adapter` = 1 |
 | Balance profile | `Balance.REVISION` = 1 | code + dated history | changes apply from the change time only |
@@ -34,7 +35,8 @@ The world record is created once by the authority on `OnInitGlobalModData`:
      converging on world-age condition by the end of the period.
   2. **Age from world start**: as if the mod had always been installed.
   3. **Start ageing at installation**.
-* The policy, seed and epoch persist in global ModData; reconnecting,
+* The policy and epoch persist in global ModData, the seed in the world
+  server store (above); reconnecting,
   reinstalling or changing sandbox options later never re-grants fresh
   reserves. Fuel discovered late is aged as of discovery (no fresh fuel for
   late exploration).

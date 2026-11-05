@@ -420,14 +420,16 @@ function M.siteTemp(item, rec, now, env)
     return M.airAt(sq), true, kind
 end
 
--- The hourly reading's list of placed machines: world record machineSites,
+-- The hourly reading's list of placed machines: machineSites in the server
+-- store (World.server(), never sent to clients; audit V-03),
 -- { [process id] = { x, y, z } }, written on every authority access.
 function M.index(item, rec)
     if rec == nil or rec.id == nil or not World.isAuthority() then return end
     local md = World.get()
     if md.v == nil then return end
-    local sites = md.machineSites or {}
-    md.machineSites = sites
+    local srv = World.server()
+    local sites = srv.machineSites or {}
+    srv.machineSites = sites
     local sq = M.square(item)
     if sq == nil then
         sites[rec.id] = nil
@@ -465,7 +467,7 @@ end
 function M.sampleSites()
     if not World.isAuthority() then return end
     local md = World.get()
-    local sites = md.machineSites
+    local sites = World.server().machineSites
     if md.v == nil or sites == nil then return end
     local now, env, cell = World.now(), World.env(), getCell()
     local slot = math.floor(now - 0.5)
@@ -500,7 +502,7 @@ end
 function M.observeFires()
     if not World.isAuthority() then return end
     local md = World.get()
-    local sites = md.machineSites
+    local sites = World.server().machineSites
     if md.v == nil or sites == nil then return end
     local now, env, cell = World.now(), World.env(), getCell()
     local hour = math.floor(now)

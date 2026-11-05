@@ -94,7 +94,7 @@ function H.sample(player, args)
     if state.ep.readStatus == "initialized" and state.ep.record then state.ep:record(state.rec) end
     local skill = 0
     pcall(function() skill = player:getPerkLevel(Perks.Mechanics) / 10 end)
-    local seed = Rng.hash(args.requestId .. ":" .. tostring(state.rec.id), World.get().seed or 1)
+    local seed = Rng.hash(args.requestId .. ":" .. tostring(state.rec.id), World.server().seed or 1)
     local obs = Inspection.sample(state.rec, method, skill, Rng.new(seed))
     obs.supplyId = state.rec.id
     local know = player:getModData().tlgKnowledge or {}
@@ -140,13 +140,18 @@ function H.treat(player, args)
         rev = rec.rev, total = Supply.total(rec) })
 end
 
--- Read-only status for UI (no ledger; current authoritative view).
+-- Read-only status for UI (no ledger; current authoritative view). Only for
+-- what the player could look at: within reach as for sample and treat, or,
+-- for a vehicle, from a seat in it (the dashboard). Before, any loaded
+-- vehicle, pump or generator answered from anywhere (audit 2026-11-05, V-02).
 function H.status(player, args)
     local bad = Tx.validateRequest(args, { "target" })
     if bad then return bad end
     local ctx = H.context(player)
     local ep, why = ctx.resolve(args.target, ctx)
     if ep == nil then return { ok = false, reason = "unknown_target", detail = why, requestId = args.requestId } end
+    local ok, reason = (ep.canObserve or ep.canAccess)(ep, player)
+    if not ok then return { ok = false, reason = "no_access", detail = reason, requestId = args.requestId } end
     local rec = Aging.advance(ep:read(), ctx.now, ctx.env)
     local eval
     if ep.consumer then eval = TLG.Domain.Consumers.evaluate(ep.consumer, rec, { ambientC = ctx.ambientC }) end

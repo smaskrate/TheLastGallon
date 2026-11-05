@@ -79,3 +79,21 @@ function TLGH.fluidSummary(fc)
     s:release()
     return string.format("total=%.4f [%s]", fc:getAmount(), table.concat(parts, ","))
 end
+
+-- The mod's world record as one table for the harness's checks: the public
+-- record (global ModData "TLG_World") with the fields the authority keeps in
+-- its server store since the 2026-11-05 security audit (TLG.World.SERVER_FIELDS:
+-- seed, nextId, machineSites, climateAcc). A shallow copy, for reading.
+function TLGH.worldRecord()
+    local W = TLG and TLG.World
+    if not W then return {} end
+    local out = {}
+    for k, v in pairs(W.get()) do out[k] = v end
+    if W.server then
+        local srv = W.server()
+        for _, f in ipairs(W.SERVER_FIELDS or {}) do
+            if srv[f] ~= nil then out[f] = srv[f] end
+        end
+    end
+    return out
+end

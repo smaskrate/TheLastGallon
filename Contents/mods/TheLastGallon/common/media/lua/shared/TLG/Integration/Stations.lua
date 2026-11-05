@@ -64,7 +64,7 @@ function S.read(obj, persist)
         local key = S.keyOf(obj)
         local q = { gasoline = litres }
         if contaminationEnabled() then
-            local c = WorldInit.stationContamination(World.get(), key, litres)
+            local c = WorldInit.stationContamination(World.facts(), key, litres)
             q.gasoline = litres - c.water - c.sediment
             q.water, q.sediment = c.water, c.sediment
         end
