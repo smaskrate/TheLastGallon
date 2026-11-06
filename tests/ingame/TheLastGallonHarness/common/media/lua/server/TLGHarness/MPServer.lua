@@ -131,11 +131,18 @@ local function workDone(rec)
 end
 
 -- Where the server holds the vessel `id` (on the floor around the spawn
--- point, in an online player's inventory, in both hands), how many vessels
--- lie there or are carried in all, its batch, the hourly reading's entry for
--- it and the takes so far.
+-- point, in a dead body's inventory there, in an online player's inventory,
+-- in both hands), how many vessels lie there or are carried in all, its
+-- batch, the hourly reading's entry for it and the takes so far. With `pid`
+-- a vessel holding that batch record counts as it too (an item may come
+-- back under another id).
 function services.probe_vessel(player, args)
-    local id, places, item, count = tonumber(args.id), {}, nil, 0
+    local id, pid, places, item, count = tonumber(args.id), args.pid, {}, nil, 0
+    local function same(it)
+        if it:getID() == id then return true end
+        local rec = pid and it:getModData().tlgProc
+        return type(rec) == "table" and rec.id == pid
+    end
     for x = S.CX - S.R, S.CX + S.R do
         for y = S.CY - S.R, S.CY + S.R do
             local sq = getCell():getGridSquare(x, y, 0)
@@ -143,9 +150,23 @@ function services.probe_vessel(player, args)
             for i = 0, (objs and objs:size() or 0) - 1 do
                 local it = objs:get(i):getItem()
                 if it and it:getFullType() == "TLG.FermenterVessel" then count = count + 1 end
-                if it and it:getID() == id then
+                if it and same(it) then
                     places[#places + 1] = "floor " .. x .. "," .. y
                     item = it
+                end
+            end
+            local movs = sq and sq:getStaticMovingObjects()
+            for i = 0, (movs and movs:size() or 0) - 1 do
+                local o = movs:get(i)
+                local c = instanceof(o, "IsoDeadBody") and o:getContainer() or nil
+                local items = c and c:getItems()
+                for j = 0, (items and items:size() or 0) - 1 do
+                    local it = items:get(j)
+                    if it:getFullType() == "TLG.FermenterVessel" then count = count + 1 end
+                    if same(it) then
+                        places[#places + 1] = "body " .. x .. "," .. y
+                        item = it
+                    end
                 end
             end
         end
@@ -155,6 +176,10 @@ function services.probe_vessel(player, args)
         local p = list:get(i)
         count = count + p:getInventory():getCountTypeRecurse("TLG.FermenterVessel")
         local it = p:getInventory():getItemWithIDRecursiv(id)
+        if it == nil and pid then
+            local found = p:getInventory():getAllEvalRecurse(function(x) return same(x) end)
+            it = found and found:size() > 0 and found:get(0) or nil
+        end
         if it then
             local both = p:getPrimaryHandItem() == it and p:getSecondaryHandItem() == it
             places[#places + 1] = "inventory " .. p:getUsername() .. (both and " both hands" or "")
@@ -1229,6 +1254,40 @@ function services.bench_timers(player, args)
     end
     if out.error then report():line("STEPERR MPS.bench_timers :: %s", out.error) end
     reply("bench_timers", args, out)
+end
+
+-- The death case (MPHarnessCases.lua, -Only death): the sender killed by the
+-- server, should its own client's kill not take.
+function services.kill(player, args)
+    local ok, err = pcall(function()
+        player:setGodMod(false)
+        player:Kill(nil)
+    end)
+    reply("killed", args, { ok = tostring(ok), err = tostring(err), dead = tostring(player:isDead()) })
+end
+
+-- Whether a player's death fires these events on the server, what the
+-- server's character then holds and where it stands, and how many machines
+-- the mod watches land (Machines.onDeath, D-015 amendment).
+local function deathSeen(event, c)
+    if not instanceof(c, "IsoPlayer") then return end
+    local p, s, sq = c:getPrimaryHandItem(), c:getSecondaryHandItem(), c:getSquare()
+    local landing = TLG and TLG.Integration and TLG.Integration.Machines and TLG.Integration.Machines.landing
+    report():line("OBS  MPS.%s %s at %s; hands %s/%s; machines watched to land %d", event, tostring(c:getUsername()),
+        sq and (sq:getX() .. "," .. sq:getY()) or "nowhere", tostring(p and p:getFullType()), tostring(s and s:getFullType()),
+        landing and #landing or -1)
+end
+if Events.OnPlayerDeath then
+    Events.OnPlayerDeath.Add(function(c)
+        local ok, err = pcall(deathSeen, "OnPlayerDeath", c)
+        if not ok then report():line("STEPERR MPS.OnPlayerDeath :: %s", tostring(err)) end
+    end)
+end
+if Events.OnCharacterDeath then
+    Events.OnCharacterDeath.Add(function(c)
+        local ok, err = pcall(deathSeen, "OnCharacterDeath", c)
+        if not ok then report():line("STEPERR MPS.OnCharacterDeath :: %s", tostring(err)) end
+    end)
 end
 
 Events.OnServerStarted.Add(function()

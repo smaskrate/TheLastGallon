@@ -1739,4 +1739,245 @@ elseif MP.only == "knowledge" then
     MP.stepsA = { MP.waitWorld, KN.give, KN.have, KN.kit, KN.look, KN.known, KN.unseal, wait("mp_kn_unseal_settles", 60),
         KN.knownOpen, MP.finish }
     MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+
+    -- With -Restart: the can stays sealed; after both tests A notes the
+    -- can's id, its record id and the kit's composition line (the file
+    -- outlives the Lua), leaves, the server is saved, stopped and started
+    -- again, and A joins again. What the server knows of the player must
+    -- come back: both tests, neither changed, the can sealed; and the
+    -- dialog as a player reads it.
+    if MP.restart then
+        local SNAP = "TLG_harness_mpsnap.txt"
+        local function kitLine(text)
+            local label = string.gsub(getText("IGUI_TLG_Composition", ""), "%s+$", "")
+            local s, i = text or "", 1
+            while i <= #s do
+                local a, b = string.find(s, " <LINE> ", i, true)
+                local part = string.sub(s, i, (a or #s + 1) - 1)
+                if has(part, label) then return part end
+                if not a then break end
+                i = b + 1
+            end
+            return ""
+        end
+        KN.snap = knownDialog("known_before_restart", function(text)
+            local side = KN.can:getModData().tlg
+            KN.line = kitLine(text)
+            TLGH.writeFile(SNAP, { "canId=" .. tostring(KN.can:getID()), "rec=" .. tostring(side and side.id),
+                "kitLine=" .. KN.line })
+            report():line("OBS  MP.kn_before_restart can %s, record %s, the kit's line '%s'", tostring(KN.can:getID()),
+                tostring(side and side.id), KN.line)
+            check("kn_before_restart_both_tests", function()
+                return has(text, getText("IGUI_TLG_TestName_kit")) and has(text, getText("IGUI_TLG_TestName_visual"))
+                    and KN.line ~= "", text
+            end)
+        end)
+        KN.leave = { name = "mp_kn_leave", timeout = 600, fn = function(ctx, ticks)
+            if ticks < 60 then return nil end
+            h.setPhase("restart_wait")
+            report():line("OBS  MP.leaving to the main menu for the server's restart")
+            setGameSpeed(1)
+            getCore():quit()
+            return true
+        end }
+        KN.back = { name = "mp_kn_can_back", timeout = 1200, fn = function(ctx, ticks)
+            local e = TLGH.readKeyValues(SNAP)
+            KN.can = inventoryItem(tonumber(e.canId))
+            if not KN.can and ticks < 600 then return nil end
+            KN.line = e.kitLine or ""
+            local side = KN.can and KN.can:getModData().tlg
+            check("kn_can_back_after_restart", function()
+                return KN.can ~= nil and side ~= nil and tostring(side.id) == e.rec, string.format("can %s found=%s, record %s"
+                    .. " (before %s)", tostring(e.canId), tostring(KN.can ~= nil), tostring(side and side.id), tostring(e.rec))
+            end)
+            return true
+        end }
+        KN.direct = request("kn_known_after_restart", "known", function() return canRef() end, function(r)
+            local parts = {}
+            for _, t in ipairs(r.tests or {}) do
+                parts[#parts + 1] = string.format("%s age=%.3f changed=%s", tostring(t.method), tonumber(t.ageHours) or -1,
+                    tostring(t.changed))
+            end
+            report():line("OBS  MP.kn_known_after_restart reply ok=%s sealed=%s tests: %s", tostring(r.ok), tostring(r.sealed),
+                table.concat(parts, "; "))
+            check("kn_server_knows_both_tests_after_restart", function()
+                local t = r.tests or {}
+                return r.ok == true and #t == 2 and t[1].method == "kit" and t[2].method == "visual"
+                    and t[1].changed == false and t[2].changed == false and r.sealed == true, "see the reply above"
+            end)
+        end)
+        KN.dialogAfter = knownDialog("known_after_restart", function(text)
+            check("kn_dialog_after_restart", function()
+                return has(text, getText("IGUI_TLG_TestName_kit")) and has(text, getText("IGUI_TLG_TestName_visual"))
+                    and KN.line ~= "" and has(text, KN.line) and not has(text, getText("IGUI_TLG_KnownChanged"))
+                    and not has(text, getText("IGUI_TLG_KnownOpen")), text
+            end)
+        end)
+        MP.stepsA = { MP.waitWorld, KN.give, KN.have, KN.kit, KN.look, KN.known, KN.snap, KN.leave }
+        MP.stepsRejoined = { MP.waitWorld, wait("mp_kn_settle", 120), KN.back, KN.direct, KN.dialogAfter, MP.finish }
+    end
+end
+
+------------------------------------------------------------------------------
+-- death (2026-11-06, two clients): a carrier dies on a server. A takes a
+-- running vessel off the floor into both hands (the mod's take on the
+-- server, D-030), carries it two squares and dies. B, alive, asks the server
+-- where the vessel is and what its record says right before the death and
+-- once it has landed: put down where it fell from the moment of the death
+-- (the D-015 amendment), or still carried until someone next reads it.
+-- Then B walks to it, the record is read after a while (machine.status, as
+-- the menu asks) and its work since the put-down is compared with the game
+-- time since. The server's harness logs whether OnPlayerDeath and
+-- OnCharacterDeath fire there (MPServer.lua).
+------------------------------------------------------------------------------
+if MP.only == "death" then
+    local DE = {}
+    local function dId() return DE.id end
+    local function line(name, m)
+        report():line("OBS  MP.%s server: where=%s state=%s pause=%s site=%s listed=%s t=%.4f done=%.4f now=%.4f vessels=%s",
+            name, tostring(m.where), tostring(m.state), tostring(m.pause), tostring(m.site), tostring(m.listed),
+            tonumber(m.t) or -1, tonumber(m.done) or -1, tonumber(m.now) or -1, tostring(m.vessels))
+    end
+    local function probeDeath(name, judge)
+        return call(name, "probe_vessel", function() return { id = DE.id, pid = DE.pid } end, "probe_vessel", function(m)
+            line(name, m)
+            judge(m)
+        end)
+    end
+    DE.spawn = call("spawn_death_vessel", "spawn", function()
+        local x, y = S.spot(3)
+        return { item = V, x = x, y = y, batch = "1" }
+    end, "spawned", function(m)
+        DE.id = tonumber(m.id)
+        report():line("OBS  MP.death vessel %s spawned with its batch %s", tostring(m.id), tostring(m.batch))
+    end)
+    -- Taken off the floor as a double-click in the loot window takes it
+    -- (MPHarness.lua takeHeavy): A stands on its square.
+    DE.take = { name = "mp_death_take", timeout = 2400, fn = function(ctx, ticks)
+        local p = player()
+        if ticks == 1 then
+            pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+            return nil
+        end
+        if ticks == 60 then
+            pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+            local x, y = S.spot(3)
+            local _, listed = h.floorListing(V)
+            local item = listed or floorItem(x, y, V)
+            if not item then
+                report():line("FAIL MP.death_take_%s :: no vessel on its square", MP.role)
+                return true
+            end
+            ISInventoryPaneContextMenu.equipHeavyItem(p, item)
+            ctx.queued = ticks
+            return nil
+        end
+        if not ctx.queued then return nil end
+        if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+        ctx.idle = ctx.idle or ticks
+        if ticks - ctx.idle < 120 then return nil end
+        local held = p:getPrimaryHandItem()
+        DE.pid = held and held:getModData().tlgProc and held:getModData().tlgProc.id
+        check("death_vessel_in_both_hands", function()
+            return h.inBothHands(p, V), string.format("primary=%s record %s", tostring(held and held:getFullType()),
+                tostring(DE.pid))
+        end)
+        return true
+    end }
+    DE.carried = probeDeath("death_carried", function(m)
+        check("death_vessel_carried_on_server", function()
+            return m.where == "inventory tlga both hands" and m.state == "Paused" and m.pause == "not_placed",
+                "see the server's line above"
+        end)
+    end)
+    -- A tells B where it stands, then dies (Kill, as the single-player
+    -- successor run; the server kills it if the client's kill does not take).
+    DE.die = { name = "mp_death_die", timeout = 3600, fn = function(ctx, ticks)
+        local p = player()
+        if ticks == 1 then
+            local sq = p:getSquare()
+            DE.x, DE.y = sq:getX(), sq:getY()
+            send("dying", { id = DE.id, pid = DE.pid, x = DE.x, y = DE.y })
+            return nil
+        end
+        if ticks == 120 then
+            local held = p:getPrimaryHandItem()
+            report():line("OBS  MP.death A dies at %d,%d carrying %s", DE.x, DE.y, tostring(held and held:getFullType()))
+            p:setGodMod(false)
+            local ok, err = pcall(function() p:Kill(nil) end)
+            if not ok then
+                report():line("OBS  MP.death Kill(nil) failed (%s); health set to 0", tostring(err))
+                p:setHealth(0)
+            end
+            ctx.killed = ticks
+            return nil
+        end
+        if not ctx.killed then return nil end
+        if not p:isDead() and ticks - ctx.killed == 600 then
+            report():line("OBS  MP.death not dead 600 ticks after the client's kill: the server is asked")
+            send("kill", { tag = "kill" })
+        end
+        if not p:isDead() and ticks - ctx.killed < 1800 then return nil end
+        report():line("OBS  MP.death A dead=%s %d ticks after the kill; post-death screen=%s", tostring(p:isDead()),
+            ticks - ctx.killed, tostring(ISPostDeathUI.instance ~= nil and ISPostDeathUI.instance[0] ~= nil))
+        check("death_a_died", function() return p:isDead(), "dead=" .. tostring(p:isDead()) end)
+        return true
+    end }
+    MP.stepsA = {
+        MP.waitWorld, waitFrom("mp_wait_b", "hello"), DE.spawn, wait("mp_death_vessel_lands", 120),
+        walkTo("mp_walk_onto_vessel", S.spot(3)), DE.take, DE.carried, walkTo("mp_walk_carrying", S.spot(1)),
+        wait("mp_carried_a_while", 300), DE.die, waitFrom("mp_wait_finish", "finish", nil, 36000), MP.finish,
+    }
+
+    -- B: watches from three squares off the row.
+    DE.atDeath = probeDeath("death_right_before", function(m)
+        DE.now0 = tonumber(m.now)
+        check("death_carried_before_the_death", function()
+            return m.state == "Paused" and m.pause == "not_placed", "see the server's line above"
+        end)
+    end)
+    DE.landed = probeDeath("death_landed", function(m)
+        DE.site, DE.t1, DE.done1 = m.site, tonumber(m.t), tonumber(m.done)
+        local since = (DE.t1 or -1) - (DE.now0 or 0)
+        report():line("OBS  MP.death the record's time %.4f game h after the probe right before the death", since)
+        -- Run 209 compared the floor with the record's site, which the
+        -- put-down moves: a vessel on the floor with a carried record failed
+        -- both checks. The site belongs to the put-down's.
+        check("death_vessel_on_the_floor", function()
+            return string.find(m.where or "", "^floor ") ~= nil, "where=" .. tostring(m.where)
+        end)
+        check("death_put_down_from_the_death", function()
+            return m.state == "Processing" and m.pause == "none" and m.where == "floor " .. tostring(m.site)
+                and m.listed == m.site and since >= 0 and since <= 0.25,
+                string.format("state=%s pause=%s site=%s listed=%s; record time %.4f h after the probe before the death",
+                    tostring(m.state), tostring(m.pause), tostring(m.site), tostring(m.listed), since)
+        end)
+    end)
+    DE.status = status("death_status", dId, function(r)
+        check("death_status_processing", function() return r.ok == true and r.state == "Processing", "see the reply above" end)
+    end)
+    -- Work since the death (the probe right before it), against the game
+    -- time from the death to this read.
+    DE.worked = probeDeath("death_worked", function(m)
+        local dt = (tonumber(m.t) or 0) - (DE.now0 or 0)
+        local dw = (tonumber(m.done) or 0) - (DE.done1 or 0)
+        check("death_batch_works_from_the_death", function()
+            return m.state == "Processing" and dt > 0.2 and dw >= 0.5 * dt and dw <= dt + 0.002,
+                string.format("%.4f h of work over the %.4f game h from the death to this read", dw, dt)
+        end)
+    end)
+    MP.stepsB = {
+        MP.waitWorld, walkTo("mp_walk_to_watch", S.CX - 2, S.CY + 3), once("mp_hello", function() send("hello", {}) end),
+        waitFrom("mp_wait_dying", "dying", function(m)
+            DE.id, DE.pid, DE.x, DE.y = tonumber(m.id), m.pid, tonumber(m.x), tonumber(m.y)
+        end),
+        DE.atDeath, wait("mp_death_lands", 900), DE.landed,
+        walkTo("mp_walk_to_vessel", function()
+            local x, y = string.match(DE.site or "", "^(%-?%d+),(%-?%d+)$")
+            x, y = tonumber(x) or DE.x, tonumber(y) or DE.y
+            return x - 1, y + 1
+        end),
+        wait("mp_death_vessel_works", 1800), DE.status, DE.worked,
+        once("mp_finish_a", function() send("finish", {}) end), MP.finish,
+    }
 end

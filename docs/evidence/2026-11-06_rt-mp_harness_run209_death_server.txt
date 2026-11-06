@@ -1,0 +1,20 @@
+# TLG multiplayer harness, server
+game=42.21.0 4a0e9546ec
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.message from tlgb: hello role=B
+OBS  MPS.message from tlga: spawn batch=1 item=TLG.FermenterVessel role=A tag=spawn_death_vessel x=10663 y=10642
+OBS  MPS.reply spawned batch=Processing id=259618044 item=TLG.FermenterVessel role=A tag=spawn_death_vessel x=10663 y=10642
+OBS  MPS.take of 259618044 by tlga: true
+OBS  MPS.message from tlga: probe_vessel id=259618044 pid=P190011257-12 role=A tag=death_carried
+OBS  MPS.reply probe_vessel done=0.22920799255371094 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=3.7670822143554688 pause=not_placed role=A seen=3.713773727416992 site=10663,10642 state=Paused t=3.713773727416992 tag=death_carried takes=tlga:true vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlga: dying id=259618044 pid=P190011257-12 role=A x=10661 y=10644
+OBS  MPS.message from tlgb: probe_vessel id=259618044 pid=P190011257-12 role=B tag=death_right_before
+OBS  MPS.reply probe_vessel done=0.22920799255371094 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=3.980325698852539 pause=not_placed role=B seen=3.713773727416992 site=10663,10642 state=Paused t=3.713773727416992 tag=death_right_before takes=tlga:true vessels=1 where=inventory tlga both hands
+OBS  MPS.message from tlgb: probe_vessel id=259618044 pid=P190011257-12 role=B tag=death_landed
+OBS  MPS.reply probe_vessel done=0.22920799255371094 inputs={sugar_eq=6.0000,water=30.0000} listed=no now=4.380187034606934 pause=not_placed role=B seen=3.713773727416992 site=10663,10642 state=Paused t=3.713773727416992 tag=death_landed takes=tlga:true vessels=1 where=floor 10661,10644
+OBS  MPS.message from tlgb: probe_vessel id=259618044 pid=P190011257-12 role=B tag=death_worked
+OBS  MPS.reply probe_vessel done=0.22920799255371094 inputs={sugar_eq=6.0000,water=30.0000} listed=10661,10644 now=5.310279846191406 pause=none role=B seen=5.307618141174316 site=10661,10644 state=Processing t=5.307618141174316 tag=death_worked takes=tlga:true vessels=1 where=floor 10661,10644
+OBS  MPS.message from tlgb: finish role=B

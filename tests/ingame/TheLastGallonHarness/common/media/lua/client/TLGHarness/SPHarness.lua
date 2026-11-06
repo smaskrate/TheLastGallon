@@ -107,7 +107,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -12263,6 +12263,115 @@ RT.KN.oldEntry = { name = "rtkn_old_entry", timeout = 600, fn = function(ctx, ti
     return true
 end }
 
+------------------------------------------------------------------------------
+-- What I know across a save (requests "sp-rtkns", then "sp-rtknb"): the
+-- same can tested with the kit and, two game hours later, looked at, then
+-- saved and exited to the menu, sealed and untouched since the look. The
+-- expectations file holds the can's record id and revision, both tests'
+-- times and readings, and the kit's composition line. Phase 2 continues the
+-- save: the character's knowledge must come back as saved and the can's
+-- record at the same revision, before any read; then What I know about it
+-- must list both tests with the kit's composition line, the kit's age gone
+-- on from the test, the look's under an hour, no note that the fuel changed
+-- (the load must not write the record) and no open note.
+local function knownEntry(id)
+    local know = player():getModData().tlgKnowledge or {}
+    return know[tostring(id)]
+end
+
+local function obsText(obs)
+    if type(obs) ~= "table" then return "none" end
+    return string.format("%s@%s deg=%s err=%s", tostring(obs.method), tostring(obs.sampledAt), tostring(obs.observedDeg),
+        tostring(obs.degError))
+end
+
+RT.KN.writeExpect = { name = "rtkns_expect", timeout = 300, fn = function(ctx, ticks)
+    local side = RT.KN.can:getModData().tlg
+    local entry = side and knownEntry(side.id)
+    local label = string.gsub(getText("IGUI_TLG_Composition", ""), "%s+$", "")
+    local kitLine = ""
+    for _, l in ipairs(RT.KN.lines(RT.KN.kitText)) do
+        if has(l, label) then kitLine = l end
+    end
+    local kit, look = obsText(entry and entry.kit), obsText(entry and entry.visual)
+    TLGH.writeFile(EXPECT, { "rtkn.id=" .. tostring(side and side.id), "rtkn.rev=" .. tostring(side and side.rev),
+        "rtkn.hours=" .. tostring(hours()), "rtkn.t0=" .. tostring(RT.KN.t0), "rtkn.kit=" .. kit, "rtkn.look=" .. look,
+        "rtkn.kitLine=" .. kitLine })
+    R:line("OBS  RTKNS.saving at world hour %.4f: can %s at revision %s; kit %s; look %s; the kit's line '%s'", hours(),
+        tostring(side and side.id), tostring(side and side.rev), kit, look, kitLine)
+    R:check("RTKNS.both_tests_known_before_the_save", function()
+        return kit ~= "none" and look ~= "none" and kitLine ~= "", string.format("kit %s; look %s", kit, look)
+    end)
+    return true
+end }
+
+RT.KN.reload = { name = "rtknb_reload", timeout = 3000, fn = function(ctx, ticks)
+    if not (player() and ticks > 120) then return nil end
+    local e = TLGH.readKeyValues(EXPECT)
+    if e["rtkn.id"] == nil then
+        RT.abort = "no expectations from phase 1"
+        R:line("OBS  RTKNB.%s", RT.abort)
+        return true
+    end
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    captureDialogs(true)
+    local list = p:getInventory():getAllEvalRecurse(function(it)
+        local s = it:getModData().tlg
+        return type(s) == "table" and tostring(s.id) == e["rtkn.id"]
+    end)
+    RT.KN.can = list:size() > 0 and list:get(0) or nil
+    R:line("OBS  RTKNB.continued at world hour %.4f (saved at %s); the can %s found=%s", hours(), tostring(e["rtkn.hours"]),
+        e["rtkn.id"], tostring(RT.KN.can ~= nil))
+    R:check("RTKNB.can_found", function() return RT.KN.can ~= nil, "by its record id " .. e["rtkn.id"] end)
+    if RT.KN.can == nil then
+        RT.abort = "the can did not come back"
+        return true
+    end
+    -- Before any read: the character's knowledge and the can's revision.
+    local entry = knownEntry(e["rtkn.id"])
+    local kit, look = obsText(entry and entry.kit), obsText(entry and entry.visual)
+    R:check("RTKNB.knowledge_as_saved", function()
+        return kit == e["rtkn.kit"] and look == e["rtkn.look"],
+            string.format("kit %s (saved %s); look %s (saved %s)", kit, tostring(e["rtkn.kit"]), look, tostring(e["rtkn.look"]))
+    end)
+    local rev = tostring(RT.KN.can:getModData().tlg.rev)
+    R:check("RTKNB.can_revision_as_saved", function()
+        return rev == e["rtkn.rev"], string.format("revision %s (saved %s)", rev, tostring(e["rtkn.rev"]))
+    end)
+    local known = RT.KN.known("after_reload")
+    R:check("RTKNB.both_tests_listed", function()
+        return has(known, getText("IGUI_TLG_TestName_kit")) and has(known, getText("IGUI_TLG_TestName_visual")), known
+    end)
+    R:check("RTKNB.kit_result_kept", function()
+        return e["rtkn.kitLine"] ~= "" and has(known, e["rtkn.kitLine"]), "the kit's line " .. tostring(e["rtkn.kitLine"])
+    end)
+    -- The kit was done two game hours before the look: its age goes on.
+    local kitAge = TLG.UI.Format.ago(hours() - tonumber(e["rtkn.t0"]))
+    R:check("RTKNB.kit_age_goes_on", function()
+        return has(known, getText("IGUI_TLG_KnownTest", getText("IGUI_TLG_TestName_kit"), kitAge)),
+            string.format("want '%s' for the kit", kitAge)
+    end)
+    local fresh = { getText("IGUI_TLG_Ago_Now"), getText("IGUI_TLG_Ago_Minute") }
+    for m = 2, 59 do fresh[#fresh + 1] = getText("IGUI_TLG_Ago_Minutes", tostring(m)) end
+    local lookFresh = false
+    for _, a in ipairs(fresh) do
+        if has(known, getText("IGUI_TLG_KnownTest", getText("IGUI_TLG_TestName_visual"), a)) then lookFresh = true end
+    end
+    R:check("RTKNB.look_under_an_hour_ago", function()
+        return lookFresh, string.format("saved %.4f game h after the look's hour", hours() - tonumber(e["rtkn.hours"]))
+    end)
+    R:check("RTKNB.no_changed_note", function() return not has(known, getText("IGUI_TLG_KnownChanged")), known end)
+    R:check("RTKNB.no_open_note", function() return not has(known, getText("IGUI_TLG_KnownOpen")), known end)
+    closeDialogs()
+    return true
+end }
+
+RT.knowledgeSaveSteps = { RT.waitWorld, RT.KN.setup, RT.KN.kit, RT.KN.wait, RT.KN.look, RT.KN.writeExpect,
+    RT.saveAndExitAs("rtkns_save_and_exit", "sp-rtknb") }
+RT.knowledgeReloadSteps = { RT.KN.reload, RT.finish }
+
 if REQUEST == "sp-rtkn" then
     RT.knowledgeSteps = { RT.waitWorld, RT.KN.setup, RT.KN.kit, RT.KN.wait, RT.KN.look, RT.KN.open, RT.KN.pour,
         RT.KN.oldEntry, RT.finish }
@@ -12742,7 +12851,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -12879,6 +12988,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtkn" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel")
                 TLGH.Steps.run(R, RT.knowledgeSteps, H, nil)
+            elseif REQUEST == "sp-rtkns" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel, before the save")
+                TLGH.Steps.run(R, RT.knowledgeSaveSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)
@@ -12913,7 +13025,7 @@ if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQU
 end
 
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" then
+    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -12944,6 +13056,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "sp-rtmfb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, the fermenter's model, after the reload", true)
             TLGH.Steps.run(R, RT.fermenterReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtknb" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel, after the save", true)
+            TLGH.Steps.run(R, RT.knowledgeReloadSteps, H, nil)
         else
             R = TLGH.Report.new(RESULTS, "TLG single-player harness phase B", true)
             TLGH.Steps.run(R, stepsB, H, nil)

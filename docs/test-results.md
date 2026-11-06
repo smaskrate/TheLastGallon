@@ -12,7 +12,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
-| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188); a player's death and successor (single player: launches 199 and 202) | Not in the multiplayer harness yet |
+| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launch 209) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
 | Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12); uploading is the user's manual step, not taken |
 
@@ -4128,3 +4128,71 @@ Evidence: `docs/evidence/2026-11-06_rt-sp_harness_run200_knowledge_before.txt`,
 `…_run206_install_rehearsal.txt`;
 `2026-11-06_rt-mp_harness_run203_knowledge_before_client_a.txt` and
 `_server.txt`, `…_run204_knowledge_client_a.txt` and `_server.txt`.
+
+## 2026-11-06 — RT-SP launch 207, RT-MP launches 208–209 (knowledge across a save; death on a server)
+
+The user asked to test the two things launches 200–206 left out ("Yes,
+test those"): What I know about it across a save and reload, and a
+carrier's death in multiplayer. The mod as committed in `d9cd9aa`; only
+the harness changed. New modes:
+* `tools/run-sp-harness.ps1 -Mode knowledge-save` (`sp-rtkns`, then
+  `sp-rtknb`);
+* `tools/run-mp-harness.ps1 -Clients 1 -Only knowledge -Restart`;
+* `tools/run-mp-harness.ps1 -Clients 2 -Only death`.
+
+The server's harness now also finds a vessel in a dead body's inventory
+and by its batch record, and logs `OnPlayerDeath` and `OnCharacterDeath`
+if they fire on the server.
+
+* Launch 207 (`-Mode knowledge-save`, single player, **7/0** before the
+  save, **9/0** after). A kit sample and, two game hours later, a look at
+  a sealed petrol can; then saved and exited to the menu, and the save
+  continued. Before any read, the character's knowledge came back exactly
+  as saved (both tests' times and readings) and the can's record at the
+  same revision (0). The menu then listed "Sampling kit, 2 hours ago" with
+  "Composition: Gasoline 100.0%" and "Look and smell, 1 minute ago", with
+  no changed note and no open note.
+* Launch 208 (RT-MP, one client, `-Restart`, **11/0**). A kit sample and
+  a look answered by the server, both listed by the menu; then the player
+  left, the server was saved, stopped and started again on the same
+  world, and the player joined again ("saved player: true"). The can came
+  back with the same record (`S190009910-12`). The server's `known` reply
+  listed the kit, then the look, neither changed, the can sealed. The
+  menu read "Sampling kit, 1 minute ago" with its composition and "Look
+  and smell, 1 minute ago", no notes. So what the server writes into its
+  copy of the player is saved by the server and outlives the client's
+  copy, which never had it.
+* Launch 209 (RT-MP, two clients, `-Only death`, on the shortest day; A
+  **4/0**, B **3/3**). A took a running vessel off the floor into both
+  arms (the mod's take on the server), carried it two squares and was
+  killed (`Kill`, the post-death screen up at once). B watched from three
+  squares away and asked the server:
+  * right before the death: in A's hands, the batch carried (paused,
+    `not_placed`), at game hour 3.9803;
+  * 900 ticks after: the vessel lay on the floor where A died
+    (10661,10644), with the same item id, but its record still said
+    carried, off the hourly list;
+  * the server's harness logged no `OnPlayerDeath` and no
+    `OnCharacterDeath`: neither fires in a dedicated server's Lua for a
+    client's death, so the mod's death hook (D-015 amendment) never ran;
+  * at 5.3076 B asked for Status from beside it: the batch ran again from
+    then (the move no Lua saw), with no work for the 1.3 game h since the
+    death.
+
+  Of B's three failures, two are this finding: the record not put down
+  at the death, and no work from it. The third is the harness's own: its
+  floor check compared the square with the record's site, which only a
+  put-down moves, so it failed with the vessel on the floor. That check
+  now asks only for the floor (the site is the put-down check's), and the
+  work check now measures from the death rather than from the pickup.
+
+Not run:
+* the fix for the death on a server (none made: the finding is reported
+  to the user first);
+* a successor in multiplayer;
+* a pump's, vehicle's or generator's knowledge through a menu.
+
+Evidence: `docs/evidence/2026-11-06_rt-sp_harness_run207_knowledge_save.txt`;
+`2026-11-06_rt-mp_harness_run208_knowledge_restart_client_a.txt` and
+`_server.txt`; `…_run209_death_client_a.txt`, `_client_b.txt` and
+`_server.txt`.

@@ -305,9 +305,15 @@ listed with their replacement.
 
   Run 202 (18/0): the dropped fermenter worked 0.0356 h over the 0.0356
   game h from the death, as the placed one did. The watch branch is
-  covered by `tests/integration/test_machine_sites.lua` only. Not run:
-  death in multiplayer (whether a dedicated server fires the event for a
-  client's player was not looked at).
+  covered by `tests/integration/test_machine_sites.lua` only.
+
+  On a dedicated server the hook does nothing (RT-MP run 209): a client's
+  player died carrying a running vessel, the vessel fell on the floor
+  where the player died, and neither `OnPlayerDeath` nor
+  `OnCharacterDeath` fired in the server's Lua. The record stayed
+  carried; a Status about 1.3 game h later restarted the batch from then,
+  the hours between lost, as before the hook. The fix holds in single
+  player only.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`
@@ -1111,6 +1117,12 @@ listed with their replacement.
     before it, gives the record its read builds an id that is never
     written: the world's next id moves by one (Containers endpoint read,
     `persist` true; audit suite, 2026-11-06). Left as it was.
-  * Not run: a save and reload of the new knowledge (player modData, saved
-    by the game); the knowledge of a pump, vehicle or generator through
-    the menu (the Fuel menu is for cans).
+  * The knowledge outlives a save. Run 207 (single player, 7/0 and 9/0):
+    saved and exited to the menu after both tests, then continued; the
+    knowledge and the can's record (same revision) came back as saved,
+    and the menu listed both tests, their ages gone on, with no notes.
+    Run 208 (on a server, 11/0): the player left, the server was saved,
+    stopped and started again, and the player joined again; the server
+    still knew both tests, unchanged, the can sealed.
+  * Not run: the knowledge of a pump, vehicle or generator through the
+    menu (the Fuel menu is for cans).

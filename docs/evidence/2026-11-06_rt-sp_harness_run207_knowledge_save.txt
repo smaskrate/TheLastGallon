@@ -1,0 +1,50 @@
+# TLG single-player harness, what I know about a fuel, before the save
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=8085610164338073860 hours=2.0098 DayLength=4
+STEP rtkn_setup begin
+OBS  RTKN.can 6.000 L, water 0.000 L
+OBS  RTKN.before_any_test menu "What I know about it" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTKN.before_any_test What I know: What I know about this fuel <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+PASS RTKN.unknown_before_any_test :: What I know about this fuel <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+STEP rtkn_kit begin
+OBS  RTKN.kit menu "Take a sample (kit)" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTKN.kit result: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> Method: sampling kit
+PASS RTKN.kit_sample_answers :: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> Method: sampling kit
+STEP rtkn_wait begin
+STEP rtkn_look begin
+OBS  RTKN.look menu "Look and smell" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTKN.look result: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough)
+OBS  RTKN.after_both menu "What I know about it" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTKN.after_both What I know: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected
+PASS RTKN.kit_result_kept_after_a_look :: the kit's line Composition: Gasoline 100.0%
+PASS RTKN.both_tests_named :: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected
+PASS RTKN.when_each_test_was_done :: want '2 hours ago' (the kit) and 'just now' (the look)
+PASS RTKN.no_open_note_while_sealed :: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected
+STEP rtkns_expect begin
+OBS  RTKNS.saving at world hour 4.0182: can S413382477-2 at revision 0; kit kit@2.012147903442383 deg=0 err=0.4800000000000001; look visual@4.01811408996582 deg=0 err=1.1199999999999999; the kit's line 'Composition: Gasoline 100.0%'
+PASS RTKNS.both_tests_known_before_the_save :: kit kit@2.012147903442383 deg=0 err=0.4800000000000001; look visual@4.01811408996582 deg=0 err=1.1199999999999999
+STEP rtkns_save_and_exit begin
+SUMMARY pass=7 fail=0
+EXIT phase 1 -> main menu
+# TLG single-player harness, what I know about a fuel, after the save
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rtknb_reload begin
+OBS  RTKNB.continued at world hour 4.0413 (saved at 4.018204689025879); the can S413382477-2 found=true
+PASS RTKNB.can_found :: by its record id S413382477-2
+PASS RTKNB.knowledge_as_saved :: kit kit@2.012147903442383 deg=0 err=0.4800000000000001 (saved kit@2.012147903442383 deg=0 err=0.4800000000000001); look visual@4.01811408996582 deg=0 err=1.1199999999999999 (saved visual@4.01811408996582 deg=0 err=1.1199999999999999)
+PASS RTKNB.can_revision_as_saved :: revision 0 (saved 0)
+OBS  RTKN.after_reload menu "What I know about it" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTKN.after_reload What I know: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, 1 minute ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected
+PASS RTKNB.both_tests_listed :: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, 1 minute ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected
+PASS RTKNB.kit_result_kept :: the kit's line Composition: Gasoline 100.0%
+PASS RTKNB.kit_age_goes_on :: want '2 hours ago' for the kit
+PASS RTKNB.look_under_an_hour_ago :: saved 0.0231 game h after the look's hour
+PASS RTKNB.no_changed_note :: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, 1 minute ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected
+PASS RTKNB.no_open_note :: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, 1 minute ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 4.04
+SUMMARY pass=9 fail=0
+DONE

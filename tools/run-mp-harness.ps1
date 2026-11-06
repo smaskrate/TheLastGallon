@@ -50,7 +50,12 @@
   what each timer costs there (one client). Both on the shortest day.
   knowledge: What I know about it, read from the Fuel menu on a client after
   a kit sample and a look answered by the server, then after the can is
-  opened (one client).
+  opened (one client). With -Restart the can stays sealed: after both
+  tests the player leaves, the server is saved, stopped and started again,
+  and the player joins again and reads it once more. death: A carries a
+  running vessel and dies; B asks the server where the vessel is and what
+  its record says, then reads it a while later (two clients, on the
+  shortest day).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -69,7 +74,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault)
 $ErrorActionPreference = "Stop"
@@ -172,7 +177,7 @@ end
 # shortest day (DayLength 1: 15 minutes, Sandbox_DayLength_option1), and
 # the fuel case's generator and car burn enough there to be seen (run 156
 # read none in half a minute on the default day).
-$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers") -contains $Only) { "`n    DayLength = 1," } else { "" }
+$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers", "death") -contains $Only) { "`n    DayLength = 1," } else { "" }
 # The audit case (AuditCases.lua) runs with the grid on: without power
 # IsoObject.getPipedFuelAmount reports no fuel at all (BC 42.21; audit run 1
 # found "no pump with stock" with ElecShutModifier = 0), so the pumps' case

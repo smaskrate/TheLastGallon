@@ -735,8 +735,17 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   vessel already on the floor at the feet ("0 machine(s) in the hands, 1
   already at the feet"). The mod handles both orders (`Machines.onDeath`,
   D-015 amendment).
+* On a dedicated server (RT-MP run 209, 2026-11-06), a client's player
+  killed while carrying the vessel: the vessel fell on the floor on the
+  square where the player died, keeping its item id. Neither
+  `Events.OnPlayerDeath` nor `Events.OnCharacterDeath` fired in the
+  server's Lua (the server's harness listened for both and logged
+  nothing), so nothing on the server saw the death or the drop. The
+  client's `OnPlayerDeath` fires (vanilla's post-death screen hangs on
+  it). Vanilla's own Lua uses `OnPlayerDeath` only on clients
+  (`ISPerkLog.lua` registers it when `isClient()`).
 
-### Player mod data in multiplayer (RT-MP runs 203–204, 2026-11-06)
+### Player mod data in multiplayer (RT-MP runs 203–204 and 208, 2026-11-06)
 
 * A server's write to `player:getModData()` (its own `IsoPlayer` for a
   connected client) does not reach that client's `IsoPlayer`. After a kit
@@ -746,6 +755,12 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   client's copy still holds none. The menu now asks the server (`known`,
   D-034), and the server's answer arrives with nested tables intact
   (`tests[i].observation.composition`).
+* What the server writes there is saved by the server (RT-MP run 208):
+  after the player left to the main menu and the server was saved,
+  stopped and started again on the same world, the player joined again
+  ("saved player: true") and the server still held both tests in its
+  copy, as written. The client's copy, which never had them, did not
+  overwrite it.
 
 ## Climate (RT-SP runs 15–19)
 
