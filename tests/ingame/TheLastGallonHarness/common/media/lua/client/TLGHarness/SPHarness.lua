@@ -79,6 +79,9 @@
 --   sp-rtman -> the field manual: its loot lists, manuals rolled from them,
 --             one read through the inventory menu (sp-rtmanit: in Italian)
 --   sp-rtof -> the January world: fermenters beside a campfire and a barbecue
+--   sp-rtds -> the player guide's screenshots: the Fuel, Machine and
+--              Workshop menus and their dialogs, and the crafting window,
+--              shown and photographed
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -107,7 +110,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -12389,6 +12392,579 @@ if REQUEST == "sp-rtcr" then
     RT.craftingSteps[#RT.craftingSteps + 1] = RT.finish
 end
 
+------------------------------------------------------------------------------
+-- The player guide's screenshots (request "sp-rtds"). The other modes hide
+-- each menu as soon as it is built and close each dialog at once; here each
+-- stays on screen until it is photographed. Summer with the grid on. A
+-- Fermentation Vessel is placed on a room tile and loaded from its menu.
+-- On a tile with no pump or generator within the Fuel menu's two tiles (so
+-- it has no pour entries), the character carries a petrol can holding
+-- 0.3 % of the mod's water (a kit finds it, a look does not), an empty
+-- petrol can, a sampling kit, a stabilizer and a filter cartridge (so no
+-- entry is greyed). Photographed in turn:
+--   * the Fuel submenu on the full can (sealed: Open) and on the empty one
+--     (Clean empty container);
+--   * the kit's result; two game hours later the look's result and What I
+--     know about it;
+--   * the vessel's Machine submenu and its Status;
+--   * a generator's Workshop submenu and, once a project is started and its
+--     parts handed over, Project status;
+--   * at a workbench, the crafting window searched for "Make", the vessel's
+--     recipe picked with its materials carried.
+-- Menus come from the game's right-click builders, built as a player's game
+-- builds them (RT.DS.asPlayer), with the mod's entry held as under the
+-- mouse, which opens its submenu. The crafting window is built and drawn
+-- with isDebugEnabled answering false (RT.DS.playerView). The debug console
+-- covers the lower left, where the centred dialogs reach: it is hidden and
+-- moved off screen for each shot, and the collapsed inventory and loot
+-- windows, whose title bars run behind the menus, are hidden too. Each shot
+-- logs the rectangles of what it shows, for cropping. No save. Run 211's
+-- workshop menu still had the game's debug rows (Tile Report, Room Report,
+-- Seed) and its crafting window the recipe's id, each row's tags and a
+-- Force Action button.
+------------------------------------------------------------------------------
+RT.DS = { x = 700, y = 40, settle = 45, hold = 30 }
+
+-- Hides the game's debug console (UIManager.getDebugConsole, a
+-- UIDebugConsole) or puts it back where it was.
+function RT.DS.console(visible)
+    local D = RT.DS
+    pcall(function()
+        local c = UIManager.getDebugConsole()
+        if c == nil then return end
+        if not visible then
+            if D.consoleAt == nil then D.consoleAt = { c:getX(), c:getY() } end
+            c:setVisible(false)
+            c:setX(-5000)
+        elseif D.consoleAt then
+            c:setX(D.consoleAt[1])
+            c:setY(D.consoleAt[2])
+            c:setVisible(true)
+            D.consoleAt = nil
+        end
+    end)
+end
+
+-- Hides the player's inventory and loot windows or shows them again. Not
+-- used for the crafting window, whose containers come from those windows'
+-- lists (ISInventoryPaneContextMenu.getContainers).
+function RT.DS.windows(visible)
+    for _, get in ipairs({ getPlayerInventory, getPlayerLoot }) do
+        pcall(function()
+            local w = get(0)
+            if w then w:setVisible(visible) end
+        end)
+    end
+end
+
+function RT.DS.consoleText()
+    local s = "none"
+    pcall(function()
+        local c = UIManager.getDebugConsole()
+        if c then s = string.format("visible=%s x=%d", tostring(c:isVisible()), math.floor(c:getX())) end
+    end)
+    return s
+end
+
+-- "x,y wxh" of a UI element.
+function RT.DS.rect(ui)
+    if ui == nil then return "none" end
+    local ok, s = pcall(function()
+        return string.format("%d,%d %dx%d", math.floor(ui:getX()), math.floor(ui:getY()), math.floor(ui:getWidth()),
+            math.floor(ui:getHeight()))
+    end)
+    return ok and s or "?"
+end
+
+-- A menu's entries as "a | b (greyed) | c".
+function RT.DS.names(menu)
+    local out = {}
+    for _, o in ipairs(menu and menu.options or {}) do
+        out[#out + 1] = tostring(o.name) .. ((o.notAvailable or o.isDisabled) and " (greyed)" or "")
+    end
+    return table.concat(out, " | ")
+end
+
+-- Entries ISContextMenu:addDebugOption added (it gives them this icon).
+function RT.DS.debugRows(menu)
+    local bug, n = getTexture("media/textures/Item_Plumpabug_Left.png"), 0
+    for _, o in ipairs(menu and menu.options or {}) do
+        if bug ~= nil and o.iconTexture == bug then n = n + 1 end
+    end
+    return n
+end
+
+function RT.DS.index(menu, name)
+    for i, o in ipairs(menu and menu.options or {}) do
+        if o.name == name then return i end
+    end
+    return nil
+end
+
+-- A text's part before its first argument ("Free water detected (about ").
+function RT.DS.lead(key)
+    local t = getText(key, "\1")
+    local i = string.find(t, "\1", 1, true)
+    return i and string.sub(t, 1, i - 1) or t
+end
+
+function RT.DS.shot(name)
+    local file = "tlg_rtds_" .. name .. ".png"
+    local ok, err = pcall(function() getCore():TakeFullScreenshot(file) end)
+    R:line("OBS  RTDS.screenshot %s ok=%s%s; console %s", file, tostring(ok), ok and "" or (" " .. tostring(err)),
+        RT.DS.consoleText())
+    return ok
+end
+
+-- Runs a right-click builder as a player's game runs it, without the debug
+-- entries: the Debug submenu and the debug Delete entries need
+-- isDebugEnabled, and ISContextMenu:addDebugOption (the world menu's Tile
+-- Report, Room Report, Seed) drops its entry when the debug option
+-- UI.HideDebugContextMenuOptions is on.
+function RT.DS.asPlayer(fn)
+    local orig, opts = isDebugEnabled, getDebugOptions()
+    local hide = opts:getBoolean("UI.HideDebugContextMenuOptions")
+    isDebugEnabled = function() return false end
+    opts:setBoolean("UI.HideDebugContextMenuOptions", true)
+    local ok, err = pcall(fn)
+    opts:setBoolean("UI.HideDebugContextMenuOptions", hide)
+    isDebugEnabled = orig
+    return ok, err
+end
+
+-- The crafting window's debug details (the recipe's id under its name, each
+-- row's tags, the Force Action button) need isDebugEnabled, read while the
+-- window is built and while it is drawn: it answers false from before the
+-- window opens until after its shot.
+function RT.DS.playerView(on)
+    return { name = on and "rtds_player_view_on" or "rtds_player_view_off", timeout = 60, fn = function()
+        local D = RT.DS
+        if on and not D.realDebug then
+            D.realDebug = isDebugEnabled
+            isDebugEnabled = function() return false end
+        elseif not on and D.realDebug then
+            isDebugEnabled, D.realDebug = D.realDebug, nil
+        end
+        R:line("OBS  RTDS.isDebugEnabled answers %s", tostring(isDebugEnabled()))
+        return true
+    end }
+end
+
+-- A right-click menu with the mod's entry `rootKey` held as under the mouse,
+-- photographed and closed. build(x, y) runs the game's builder at (spec.x
+-- or RT.DS.x, RT.DS.y); fill(context) adds the mod's entries alone, used if
+-- the builder fails or leaves the entry out (logged). want() lists submenu
+-- entries that must show; noGreyed: none of them may be greyed.
+function RT.DS.menuShot(spec)
+    local step = "rtds_menu_" .. spec.name
+    return { name = step, timeout = 900, fn = function(ctx, ticks)
+        local D = RT.DS
+        if RT.skip(step) then return true end
+        if ticks == 1 then
+            D.console(false)
+            D.windows(false)
+            local x = spec.x or D.x
+            ctx.root = getText(spec.rootKey)
+            ctx.how = "the game's right-click builder"
+            local ok, err = D.asPlayer(function() spec.build(x, D.y) end)
+            ctx.menu = getPlayerContextMenu(0)
+            ctx.idx = ok and D.index(ctx.menu, ctx.root) or nil
+            if ctx.idx == nil then
+                R:line("OBS  RTDS.%s the game's builder ok=%s %s; no \"%s\" in: %s", spec.name, tostring(ok), tostring(err or ""),
+                    ctx.root, D.names(ctx.menu))
+                ctx.how = "the mod's entries alone"
+                ctx.menu = ISContextMenu.get(0, x, D.y)
+                spec.fill(ctx.menu)
+                ctx.idx = D.index(ctx.menu, ctx.root)
+            end
+            if ctx.idx == nil then
+                R:check("RTDS.menu_" .. spec.name, function() return false, "no entry " .. ctx.root end)
+                ctx.menu:hideAndChildren()
+                D.console(true)
+                D.windows(true)
+                return true
+            end
+            return nil
+        end
+        -- Every tick: prerender takes the real pointer's row while the menu
+        -- slides in, or while the pointer is over it.
+        ctx.menu.mouseOver = ctx.idx
+        if ticks == D.settle then
+            local opt = ctx.menu.options[ctx.idx]
+            local sub = opt and opt.subOption and ctx.menu:getSubMenu(opt.subOption)
+            local shown = sub ~= nil and sub:getIsVisible() == true
+            local subNames = D.names(sub)
+            R:line("OBS  RTDS.%s menu (%s) at %s: %s", spec.name, ctx.how, D.rect(ctx.menu), D.names(ctx.menu))
+            R:line("OBS  RTDS.%s submenu at %s, visible=%s: %s", spec.name, D.rect(sub), tostring(shown), subNames)
+            local shot = D.shot(spec.name)
+            local missing = {}
+            for _, w in ipairs(spec.want()) do
+                if not has(subNames, w) then missing[#missing + 1] = w end
+            end
+            local greyed = spec.noGreyed and has(subNames, "(greyed)")
+            local debugRows = D.debugRows(ctx.menu) + D.debugRows(sub)
+            R:check("RTDS.menu_" .. spec.name, function()
+                return shot and shown and #missing == 0 and not greyed and debugRows == 0,
+                    string.format("%s; submenu visible=%s; missing: %s; greyed entries: %s; debug entries: %d", ctx.how,
+                        tostring(shown), #missing > 0 and table.concat(missing, ", ") or "none",
+                        tostring(has(subNames, "(greyed)")), debugRows)
+            end)
+            return nil
+        end
+        if ticks < D.settle + D.hold then return nil end
+        ctx.menu:hideAndChildren()
+        D.console(true)
+        D.windows(true)
+        return true
+    end }
+end
+
+-- A menu entry chosen as menuClick chooses it (choose() returns the reply);
+-- the dialog it opens is photographed once ISModalRichText:update has grown
+-- it to its text, then closed. want() lists texts the dialog must hold.
+function RT.DS.dialogShot(spec)
+    local step = "rtds_dialog_" .. spec.name
+    return { name = step, timeout = 900, fn = function(ctx, ticks)
+        local D = RT.DS
+        if RT.skip(step) then return true end
+        if ticks == 1 then
+            D.console(false)
+            ctx.n = #H.dialogs.texts
+            ctx.reply = spec.choose() or {}
+            ctx.text = H.dialogs.texts[ctx.n + 1]
+            ctx.dlg = #H.dialogs.texts > ctx.n and H.dialogs.open[#H.dialogs.open] or nil
+            return nil
+        end
+        if ticks == D.settle then
+            R:line("OBS  RTDS.%s dialog at %s: %s", spec.name, D.rect(ctx.dlg), tostring(ctx.text))
+            local shot = D.shot(spec.name)
+            local missing = {}
+            for _, w in ipairs(spec.want()) do
+                if not has(ctx.text, w) then missing[#missing + 1] = w end
+            end
+            R:check("RTDS.dialog_" .. spec.name, function()
+                return shot and ctx.dlg ~= nil and #missing == 0,
+                    string.format("reply ok=%s reason=%s; missing: %s", tostring(ctx.reply.ok), tostring(ctx.reply.reason),
+                        #missing > 0 and table.concat(missing, ", ") or "none")
+            end)
+            return nil
+        end
+        if ticks < D.settle + D.hold then return nil end
+        closeDialogs()
+        D.console(true)
+        return true
+    end }
+end
+
+-- Nothing the Fuel menu pours into within its two tiles: no pump, no
+-- generator.
+function RT.DS.nothingNear(s)
+    for dx = -2, 2 do
+        for dy = -2, 2 do
+            local n = sq(s:getX() + dx, s:getY() + dy, s:getZ())
+            local objs = n and n:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                if instanceof(o, "IsoGenerator") or TLG.Integration.Stations.isPump(o) then return false end
+            end
+        end
+    end
+    return true
+end
+
+RT.DS.setup = { name = "rtds_setup", timeout = 1200, fn = function(ctx, ticks)
+    local D = RT.DS
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        pcall(function() p:setUnlimitedCarry(true) end)
+        p:setPerkLevelDebug(Perks.Mechanics, 4)
+        p:setPerkLevelDebug(Perks.Electricity, 2)
+        p:setPerkLevelDebug(Perks.Woodwork, 2)
+        p:getKnownRecipes():add("Generator")
+        captureDialogs(true)
+        -- The character's window (Info, Skills, Health...) stood open at the
+        -- upper left in the machine-models screenshots of 2026-11-03.
+        local info, open = nil, false
+        pcall(function() info = getPlayerInfoPanel(0) end)
+        pcall(function() open = info ~= nil and info:getIsVisible() == true end)
+        if open then pcall(function() info:setVisible(false) end) end
+        R:line("OBS  RTDS.screen %dx%d; the character's window open=%s (closed if so)", getCore():getScreenWidth(),
+            getCore():getScreenHeight(), tostring(open))
+        local here = p:getSquare()
+        D.spots = RT.P.findSpots(here:getX(), here:getY())
+        if D.spots == nil then
+            RT.abort = "no free room tile with free room neighbours nearby"
+            R:line("OBS  RTDS.spots none found")
+            return true
+        end
+        D.vessel = instanceItem("TLG.FermenterVessel")
+        D.spots[2]:AddWorldInventoryItem(D.vessel, 0.5, 0.5, 0, false)
+        p:teleportTo(D.spots[1]:getX() + 0.5, D.spots[1]:getY() + 0.5, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    give("Base.Sugar", 6)
+    give("Base.Yeast", 1)
+    for _ = 1, 3 do
+        local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+        fc:Empty()
+        fc:addFluid(Fluid.Water, 10)
+    end
+    local r = machineClick("RTDS.load_mash", D.vessel, "ContextMenu_TLG_LoadFerment")
+    closeDialogs()
+    removeAll("Base.BucketEmpty")
+    local power
+    pcall(function() power = getWorld():isHydroPowerOn() end)
+    R:line("OBS  RTDS.spots character %d,%d; vessel %d,%d; grid power=%s; game hour %.2f", D.spots[1]:getX(),
+        D.spots[1]:getY(), D.spots[2]:getX(), D.spots[2]:getY(), tostring(power), getGameTime():getTimeOfDay())
+    R:check("RTDS.vessel_loaded", function()
+        return r.ok == true, string.format("reason=%s sugar=%s kg water=%s L", tostring(r.reason), tostring(r.sugarKg),
+            tostring(r.waterL))
+    end)
+    return true
+end }
+
+RT.DS.fuelSpot = { name = "rtds_fuel_spot", timeout = 600, fn = function(ctx, ticks)
+    local D = RT.DS
+    if RT.skip("rtds_fuel_spot") then return true end
+    if ticks == 1 then
+        local s = D.spots[1]
+        if not D.nothingNear(s) then
+            s = nil
+            local x0, y0 = D.spots[1]:getX(), D.spots[1]:getY()
+            for r = 1, 40 do
+                for dx = -r, r do
+                    for dy = -r, r do
+                        local n = not s and math.max(math.abs(dx), math.abs(dy)) == r and sq(x0 + dx, y0 + dy, 0) or nil
+                        if n and RT.W.free(n) and D.nothingNear(n) then s = n end
+                    end
+                end
+            end
+            if s then player():teleportTo(s:getX() + 0.5, s:getY() + 0.5, 0) end
+        end
+        D.fuelAt = s
+        for _, t in ipairs({ "TLG.FuelSampleKit", "TLG.FuelStabilizer", "TLG.FuelFilter" }) do
+            removeAll(t)
+            give(t, 1)
+        end
+        D.full = giveCan("Base.PetrolCan", { { Fluid.Petrol, 6 }, { Fluid.Get("TLG_FuelWater"), 0.02 } })
+        D.empty = giveCan("Base.PetrolCan", {})
+        return nil
+    end
+    if ticks < 40 then return nil end
+    local fc = D.full:getFluidContainer()
+    local water = -1
+    pcall(function() water = fc:getSpecificFluidAmount(Fluid.Get("TLG_FuelWater")) end)
+    R:line("OBS  RTDS.fuel shots at %s (the vessel's room tile: %s); full can %.3f L, water %.4f L; empty can %.3f L",
+        D.fuelAt and string.format("%d,%d", D.fuelAt:getX(), D.fuelAt:getY()) or "none", tostring(D.fuelAt == D.spots[1]),
+        fc:getAmount(), water, D.empty:getFluidContainer():getAmount())
+    R:check("RTDS.nothing_to_pour_into", function()
+        return D.fuelAt ~= nil, D.fuelAt and "no pump or generator within two tiles" or "no such tile within 40"
+    end)
+    return true
+end }
+
+function RT.DS.fuelMenu(name, which)
+    return RT.DS.menuShot({ name = name, rootKey = "ContextMenu_TLG_Fuel", noGreyed = true,
+        build = function(x, y) ISInventoryPaneContextMenu.createMenu(0, true, { RT.DS[which] }, x, y) end,
+        fill = function(c) TLG.UI.FuelMenu.fill(0, c, { RT.DS[which] }) end,
+        want = function()
+            local w = {}
+            for _, k in ipairs({ "ContextMenu_TLG_ShowKnown", "ContextMenu_TLG_Look", "ContextMenu_TLG_SampleKit",
+                "ContextMenu_TLG_Stabilize", "ContextMenu_TLG_Filter", "ContextMenu_TLG_DrainWater", "ContextMenu_TLG_Unseal" }) do
+                w[#w + 1] = getText(k)
+            end
+            if which == "empty" then w[#w + 1] = getText("ContextMenu_TLG_Clean") end
+            return w
+        end })
+end
+
+function RT.DS.fuelChoice(label, key)
+    return function()
+        local can = RT.DS.full
+        return menuClick("RTDS." .. label, function(c) TLG.UI.FuelMenu.fill(0, c, { can }) end, getText("ContextMenu_TLG_Fuel"),
+            getText(key))
+    end
+end
+
+RT.DS.kit = RT.DS.dialogShot({ name = "kit_result",
+    choose = function()
+        RT.DS.kitAt = hours()
+        return RT.DS.fuelChoice("kit", "ContextMenu_TLG_SampleKit")()
+    end,
+    want = function() return { getText("IGUI_TLG_InspectionTitle"), RT.DS.lead("IGUI_TLG_WaterDetected"),
+        getText("IGUI_TLG_Method_kit") } end })
+
+RT.DS.wait = { name = "rtds_wait", timeout = 30000, fn = function(ctx, ticks)
+    local D = RT.DS
+    if RT.skip("rtds_wait") then return true end
+    D.kitAt = D.kitAt or hours()
+    RT.speed(RT.waitSpeed)
+    if ticks % 30 == 0 then RT.keepFit() end
+    if hours() - D.kitAt < 2 then return nil end
+    RT.speed(1)
+    R:line("OBS  RTDS.waited %.2f game h since the kit sample", hours() - D.kitAt)
+    return true
+end }
+
+RT.DS.look = RT.DS.dialogShot({ name = "look_result", choose = RT.DS.fuelChoice("look", "ContextMenu_TLG_Look"),
+    want = function() return { getText("IGUI_TLG_InspectionTitle"), getText("IGUI_TLG_WaterNotDetected"),
+        getText("IGUI_TLG_Method_visual") } end })
+
+RT.DS.known = RT.DS.dialogShot({ name = "what_i_know", choose = RT.DS.fuelChoice("known", "ContextMenu_TLG_ShowKnown"),
+    want = function() return { getText("IGUI_TLG_KnownTitle"), getText("IGUI_TLG_TestName_kit"),
+        getText("IGUI_TLG_TestName_visual"), RT.DS.lead("IGUI_TLG_WaterDetected") } end })
+
+RT.DS.toVessel = { name = "rtds_to_vessel", timeout = 300, fn = function(ctx, ticks)
+    if RT.skip("rtds_to_vessel") then return true end
+    local s = RT.DS.spots[1]
+    if ticks == 1 then player():teleportTo(s:getX() + 0.5, s:getY() + 0.5, 0) end
+    return ticks >= 40 or nil
+end }
+
+RT.DS.machineMenu = RT.DS.menuShot({ name = "machine_menu", rootKey = "ContextMenu_TLG_Machine",
+    build = function(x, y) ISInventoryPaneContextMenu.createMenu(0, false, { RT.DS.vessel }, x, y) end,
+    fill = function(c) TLG.UI.MachineMenu.fill(0, c, { RT.DS.vessel }) end,
+    want = function() return { getText("ContextMenu_TLG_MachineStatus"), getText("ContextMenu_TLG_LoadFerment"),
+        getText("ContextMenu_TLG_Pause"), getText("ContextMenu_TLG_Abort") } end })
+
+RT.DS.status = RT.DS.dialogShot({ name = "vessel_status",
+    choose = function() return machineClick("RTDS.status", RT.DS.vessel, "ContextMenu_TLG_MachineStatus") end,
+    want = function() return { getText("IGUI_TLG_MachineState_Processing"), getText("IGUI_TLG_Site_room") } end })
+
+-- A generator on the free room tile beside the character, out of fuel, with
+-- the tools and parts its conversion takes.
+RT.DS.generator = { name = "rtds_generator", timeout = 600, fn = function(ctx, ticks)
+    local D = RT.DS
+    if RT.skip("rtds_generator") then return true end
+    if ticks == 1 then
+        local ok, err = pcall(function() D.gen = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), D.spots[3]) end)
+        if D.gen then
+            D.gen:setFuel(0)
+            D.gen:getModData().tlg = nil
+        end
+        ctx.err = not ok and tostring(err) or nil
+        for _, t in ipairs({ { "Base.Screwdriver", 1 }, { "Base.Wrench", 1 }, { "Base.Pliers", 1 }, { "Base.RubberHose", 2 },
+            { "Base.Screws", 6 }, { "Base.ElectricWire", 2 } }) do give(t[1], t[2]) end
+        return nil
+    end
+    if ticks < 40 then return nil end
+    R:check("RTDS.generator_placed", function()
+        return D.gen ~= nil, D.gen and string.format("at %d,%d", D.spots[3]:getX(), D.spots[3]:getY()) or tostring(ctx.err)
+    end)
+    return true
+end }
+
+-- The world menu as a right-click on the generator's square builds it, far
+-- enough left for its submenu to open on the right, as the others do (run
+-- 211's, built at x 700, opened on the left).
+RT.DS.workshopMenu = RT.DS.menuShot({ name = "workshop_menu", rootKey = GEN_MENU, x = 560,
+    build = function(x, y)
+        local objs, list = {}, RT.DS.gen:getSquare():getObjects()
+        for i = 0, list:size() - 1 do objs[#objs + 1] = list:get(i) end
+        ISWorldObjectContextMenu.createMenu(0, objs, x, y)
+    end,
+    fill = function(c) TLG.UI.WorkshopMenu.fill(0, c, {}, false) end,
+    want = function() return { getText("ContextMenu_TLG_ConvStatus"), startText("flex_generator"),
+        getText("ContextMenu_TLG_ConvDeliver"), getText("ContextMenu_TLG_ConvJoin"), getText("ContextMenu_TLG_ConvCancel"),
+        getText("ContextMenu_TLG_ConvRemove") } end })
+
+-- Start and Hand over parts, as the menu chooses them, so Project status
+-- has a project to show.
+RT.DS.project = { name = "rtds_project", timeout = 300, fn = function(ctx, ticks)
+    if RT.skip("rtds_project") then return true end
+    if ticks < 10 then return nil end
+    local b = workshopClick("RTDS.gen_begin", GEN_MENU, startText("flex_generator"))
+    local d = workshopClick("RTDS.gen_deliver", GEN_MENU, getText("ContextMenu_TLG_ConvDeliver"))
+    closeDialogs()
+    R:check("RTDS.project_started", function()
+        return b.ok == true and d.ok == true, string.format("begin ok=%s reason=%s; deliver ok=%s reason=%s consumed=%s",
+            tostring(b.ok), tostring(b.reason), tostring(d.ok), tostring(d.reason), brief(d.consumed))
+    end)
+    return true
+end }
+
+RT.DS.projectStatus = RT.DS.dialogShot({ name = "project_status",
+    choose = function() return workshopClick("RTDS.project_status", GEN_MENU, getText("ContextMenu_TLG_ConvStatus")) end,
+    want = function() return { getText("IGUI_TLG_ConvState_InProgress"), getText("IGUI_TLG_Conversion_flex_generator"),
+        RT.DS.lead("IGUI_TLG_ConvStage") } end })
+
+-- The crafting window (opened by RT.CR.open) searched for "Make" as a player
+-- types it; the vessel's row picked as a click picks it, with its materials
+-- carried, and the list scrolled to the first of the mod's rows.
+RT.DS.crafting = { name = "rtds_crafting", timeout = 1200, fn = function(ctx, ticks)
+    local D = RT.DS
+    if RT.skip("rtds_crafting") then return true end
+    local w, lb = RT.CR.window(), RT.CR.list()
+    if not (w and lb) then
+        R:check("RTDS.crafting_window", function() return false, "the crafting window is not open" end)
+        D.console(true)
+        return true
+    end
+    if ticks == 1 then
+        D.console(false)
+        RT.CR.handOver(RT.CR.specs[1].mats)
+        return nil
+    end
+    if ticks == 30 then
+        RT.CR.search("Make")
+        return nil
+    end
+    if ticks == 60 then
+        local first
+        for _, s in ipairs(RT.CR.specs) do
+            local row = RT.CR.row(RT.CR.recipe(s.recipe))
+            if row and (first == nil or row < first) then first = row end
+        end
+        ctx.vessel = RT.CR.row(RT.CR.recipe("TLG_MakeFermenterVessel"))
+        if ctx.vessel then
+            lb.selected = ctx.vessel
+            lb.onmousedown(lb.target, lb.items[ctx.vessel].item)
+        end
+        if first then
+            local maxY = math.max(0, lb:getScrollHeight() - lb:getHeight())
+            lb.smoothScrollY = lb:getYScroll()
+            lb.smoothScrollTargetY = -math.min(lb:topOfItem(first), maxY)
+        end
+        ctx.first = first
+        return nil
+    end
+    if ticks == 60 + D.settle then
+        local rows, found = {}, 0
+        for i, it in ipairs(lb.items) do rows[#rows + 1] = i .. "=" .. tostring(it.text) end
+        for _, s in ipairs(RT.CR.specs) do
+            if RT.CR.row(RT.CR.recipe(s.recipe)) then found = found + 1 end
+        end
+        R:line("OBS  RTDS.crafting window at %s, list at %s scrolled to %.0f; the mod's first row %s, the vessel's %s; %s",
+            D.rect(w), D.rect(lb), lb:getYScroll(), tostring(ctx.first), tostring(ctx.vessel), RT.CR.state())
+        R:line("OBS  RTDS.crafting rows for \"Make\": %s", table.concat(rows, " | "))
+        local shot = D.shot("crafting_window")
+        local c = RT.CR.control()
+        R:check("RTDS.crafting_window", function()
+            return shot and found == #RT.CR.specs and ctx.vessel ~= nil and c ~= nil and c.buttonCraft.enable == true
+                and c.buttonForceCraft == nil,
+                string.format("%d of the mod's %d recipes listed; the vessel's picked=%s; Craft enabled=%s; Force Action=%s",
+                    found, #RT.CR.specs, tostring(ctx.vessel ~= nil), tostring(c and c.buttonCraft.enable),
+                    tostring(c ~= nil and c.buttonForceCraft ~= nil))
+        end)
+        return nil
+    end
+    if ticks < 60 + D.settle + D.hold then return nil end
+    RT.CR.search("")
+    D.console(true)
+    return true
+end }
+
+if REQUEST == "sp-rtds" then
+    RT.docsSteps = { RT.waitWorld, RT.DS.setup, RT.DS.fuelSpot, RT.DS.fuelMenu("fuel_menu", "full"),
+        RT.DS.fuelMenu("fuel_menu_empty_can", "empty"), RT.DS.kit, RT.DS.wait, RT.DS.look, RT.DS.known, RT.DS.toVessel,
+        RT.DS.machineMenu, RT.DS.status, RT.DS.generator, RT.DS.workshopMenu, RT.DS.project, RT.DS.projectStatus,
+        RT.CR.setup, RT.DS.playerView(true), RT.CR.open, RT.DS.crafting, RT.CR.close, RT.DS.playerView(false), RT.finish }
+end
+
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
 -- character's hand, not even vanilla's water bottle. Run 73 showed why: a
 -- baseball bat (a weapon) is drawn in the idle character's hand, a water
@@ -12851,7 +13427,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -12882,7 +13458,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
             elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts"
-                or REQUEST == "sp-rtss" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" then
+                or REQUEST == "sp-rtss" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtds" then
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
@@ -12991,6 +13567,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtkns" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel, before the save")
                 TLGH.Steps.run(R, RT.knowledgeSaveSteps, H, nil)
+            elseif REQUEST == "sp-rtds" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the player guide's screenshots")
+                TLGH.Steps.run(R, RT.docsSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)

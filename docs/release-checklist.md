@@ -572,6 +572,7 @@ tools\run-sp-harness.ps1 -Mode knowledge                        # What I know ab
 tools\run-sp-harness.ps1 -Mode knowledge-save                   # the kit sample and the look, saved and exited with the can sealed, the save continued; both must come back as saved
 tools\run-sp-harness.ps1 -Mode fires -TimeoutMinutes 60      # a campfire and a barbecue lit from their menus, a fermenter beside each, a trip away
 tools\run-sp-harness.ps1 -Mode italian -TimeoutMinutes 20    # the client in Italian: every Italian string, the Fuel and machine menus
+tools\run-sp-harness.ps1 -Mode docs-shots                       # the player guide's screenshots: the Fuel, Machine and Workshop menus open, their dialogs, the crafting window; no save; ~1 min
 tools\dev-server-controller.ps1       # then connect two clients to 127.0.0.1:16361
 tools\run-mp-harness.ps1 -Clients 2   # the TLGDev server and two harness clients on this machine, unattended
 tools\run-mp-harness.ps1 -Clients 2 -Restart        # the full run; both clients leave, the server is saved, stopped and started on the same world, both join again

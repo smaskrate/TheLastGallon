@@ -192,6 +192,17 @@
   the mod, then that save continued with it.
   italian: the client in Italian; every Italian string the mod ships must
   come back exactly as shipped, and the Fuel and machine menus read Italian.
+  docs-shots: the player guide's screenshots, summer with the grid on,
+  temperatures in degrees Celsius. The Fuel submenu on a full and an empty
+  petrol can, the results of a kit sample and, two game hours later, a
+  look, and What I know about it; a loaded fermentation vessel's Machine
+  submenu and Status; a generator's Workshop submenu and, with a project
+  started, Project status; the crafting window searched for "Make" with the
+  vessel's recipe picked. Menus and the crafting window are built as a
+  player's game builds them, without the debug entries; each menu stays
+  open and each dialog on screen until photographed, the debug console
+  hidden meanwhile. The rectangles of what each shot shows are in the
+  results, for cropping; no save.
 .PARAMETER ModSource
   Folder deployed as the mod (default: the repository's; see setup-devenv.ps1).
 .PARAMETER ActiveMods
@@ -201,7 +212,7 @@ param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
-        "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "italian")][string]$Mode = "full",
+        "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "italian", "docs-shots")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -239,6 +250,9 @@ if (Test-Path $userOptions) {
     }
 }
 if ($Mode -eq "italian" -or $Mode -eq "manual-italian") { $opts["language"] = "IT" }
+# The player guide gives temperatures in degrees Celsius; the game reads the
+# unit from this key (BC Temperature.getTemperatureString) and has no setter.
+if ($Mode -eq "docs-shots") { $opts["temperatureDisplayCelsius"] = "true" }
 ($opts.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) | Set-Content -Encoding ascii (Join-Path $DevCache "options.ini")
 
 $luaDir = Join-Path $DevCache "Lua"
@@ -260,7 +274,7 @@ if ($Mode -eq "italian") {
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } default { "sp-a" } }
+    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

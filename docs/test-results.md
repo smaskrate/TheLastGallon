@@ -11,7 +11,7 @@ runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP: **Pour into the station reservoir**; pouring from a can on the ground; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
-| RT-SP: the workshop menu's **Project status**, **Cancel the project** and **Remove the conversion**; the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
+| RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
@@ -4514,3 +4514,105 @@ Evidence:
 [2026-11-06_rt-mp_harness_run210_death_client_b.txt](evidence/2026-11-06_rt-mp_harness_run210_death_client_b.txt)
 and
 [2026-11-06_rt-mp_harness_run210_death_server.txt](evidence/2026-11-06_rt-mp_harness_run210_death_server.txt).
+
+## 2026-11-06 — RT-SP launches 211–212 (the player guide's screenshots)
+
+The player guide had no picture of a menu or dialog: the harness hides
+each menu as soon as it is built and closes each dialog at once. New mode
+`tools/run-sp-harness.ps1 -Mode docs-shots` (`sp-rtds`), summer with the
+grid on, no save. The mod was as committed in `82b948e`; only the harness
+changed. The mode:
+* builds each menu with the game's own right-click builder
+  (`ISInventoryPaneContextMenu.createMenu` for the cans and the placed
+  vessel, `ISWorldObjectContextMenu.createMenu` for the generator's
+  square) and holds the mod's entry as under the mouse, which opens its
+  submenu;
+* chooses entries as the other modes do and leaves each dialog on screen
+  until its shot;
+* hides the debug console (moved off screen) for each shot, and the
+  collapsed inventory and loot windows behind the menus;
+* logs the rectangle of each menu, submenu, dialog and of the crafting
+  window. The crops in `docs/images` were cut from these rectangles.
+
+The scene: a Fermentation Vessel on a room tile of the Gas2Go
+(10670,10630), loaded from its menu with 6 kg of sugar and 30 L of water;
+carried, a petrol can holding 6 L of petrol and 0.02 L of the mod's water
+(0.3 %), an empty petrol can, a sampling kit, a stabilizer and a filter
+cartridge, with no pump or generator within two tiles; later a generator
+beside the vessel, and for the crafting window a workbench (an orange
+barrel at 10619,10630).
+
+* Launch 211 (**17/0**, about 70 s from start to quit). All ten shots
+  were taken; two showed what only a debug client shows. The generator's
+  menu had the game's Tile Report, Room Report and Seed rows, which
+  `ISContextMenu:addDebugOption` keeps unless the debug option
+  `UI.HideDebugContextMenuOptions` is on. The crafting window showed the
+  recipe's id under its name, each row's tags and a **Force Action**
+  button, all behind `isDebugEnabled`, which the window reads while it is
+  built and drawn. Status gave the temperature in °F, the client's
+  default. The harness now turns that debug option on while it builds a
+  menu, has `isDebugEnabled` answer false from before the crafting window
+  opens until after its shot, and sets `temperatureDisplayCelsius` for the
+  mode. The generator's menu is built further left, so its submenu opens
+  on the right as the others do; at x 700 it opened on the left.
+* Launch 212 (**17/0**, about 60 s); its screenshots are the guide's:
+  * the full can's menu: the game's Equip Primary, Equip Secondary,
+    Fluid, Drop, Place Item, Put in Container (Cupboard) and More, then
+    **Fuel (The Last Gallon)** with What I know about it, Look and smell,
+    Take a sample (kit), Add stabilizer, Filter, Let settle and drain
+    water and Open, all available; on the empty can, Clean empty container
+    too;
+  * the kit sample: "Condition: Good (estimate 0.2, give or take 0.3)",
+    "Free water detected (about 0.3%)", "Composition: Gasoline 100.0%";
+  * two game hours later, the look: "Condition: Good (estimate 0.3, give
+    or take 1.0)", "No free water detected";
+  * What I know about it: "Sampling kit, 2 hours ago" with the kit's
+    lines, then "Look and smell, just now" with the look's;
+  * the vessel's **Machine (The Last Gallon)**: Status, Load mash and
+    start fermenting, Pause and Abort batch; Status: "Working", "Stage:
+    fermenting", "Temperature here today: 22.0 °C, in a room";
+  * the generator's menu: Generator, Sit on ground, Walk to and
+    **Workshop: convert this generator**, with Project status, Start:
+    Flex-fuel generator conversion, Start: Gas generator conversion, Hand
+    over parts, Work on it, Cancel the project and Remove the conversion.
+    No menu had a debug entry;
+  * after Start and Hand over parts (an electric wire, a rubber hose and
+    4 screws taken), **Project status**: "Conversion in progress",
+    "Flex-fuel generator conversion", "Stage: inspect", "Engine now: stock
+    gasoline generator";
+  * the crafting window searched for "Make", with the vessel's
+    ingredients carried: the vessel's recipe listed first and picked, all
+    seven of the mod's recipes in the list, **Craft** available, no
+    **Force Action**.
+
+Not run:
+* the menus and dialogs in Italian;
+* a vehicle's Workshop menu, and the Fuel menu's pour and drain entries
+  (beside a vehicle, a generator or a pump).
+
+Evidence:
+[2026-11-06_rt-sp_harness_run211_docs_shots.txt](evidence/2026-11-06_rt-sp_harness_run211_docs_shots.txt)
+and
+[2026-11-06_rt-sp_harness_run212_docs_shots.txt](evidence/2026-11-06_rt-sp_harness_run212_docs_shots.txt).
+Launch 211's screenshots (stored as JPEG):
+[fuel menu](evidence/2026-11-06_run211_fuel_menu.jpg),
+[empty can](evidence/2026-11-06_run211_fuel_menu_empty_can.jpg),
+[kit](evidence/2026-11-06_run211_kit_result.jpg),
+[look](evidence/2026-11-06_run211_look_result.jpg),
+[What I know](evidence/2026-11-06_run211_what_i_know.jpg),
+[machine menu](evidence/2026-11-06_run211_machine_menu.jpg),
+[Status](evidence/2026-11-06_run211_vessel_status.jpg),
+[workshop menu](evidence/2026-11-06_run211_workshop_menu.jpg),
+[Project status](evidence/2026-11-06_run211_project_status.jpg),
+[crafting window](evidence/2026-11-06_run211_crafting_window.jpg).
+Launch 212's:
+[fuel menu](evidence/2026-11-06_run212_fuel_menu.jpg),
+[empty can](evidence/2026-11-06_run212_fuel_menu_empty_can.jpg),
+[kit](evidence/2026-11-06_run212_kit_result.jpg),
+[look](evidence/2026-11-06_run212_look_result.jpg),
+[What I know](evidence/2026-11-06_run212_what_i_know.jpg),
+[machine menu](evidence/2026-11-06_run212_machine_menu.jpg),
+[Status](evidence/2026-11-06_run212_vessel_status.jpg),
+[workshop menu](evidence/2026-11-06_run212_workshop_menu.jpg),
+[Project status](evidence/2026-11-06_run212_project_status.jpg),
+[crafting window](evidence/2026-11-06_run212_crafting_window.jpg).

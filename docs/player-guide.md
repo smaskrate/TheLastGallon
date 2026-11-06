@@ -62,6 +62,22 @@ Right-click a fuel can and open **Fuel (The Last Gallon)**:
   when the container is open, it warns that the fuel may have changed, so
   its actual condition may differ.
 
+![A petrol can's menu with Fuel (The Last Gallon) open: What I know about it, Look and smell, Take a sample (kit), Add stabilizer, Filter, Let settle and drain water, Open](images/fuel-menu.jpg)
+
+*The menu of a sealed petrol can, with a kit, a stabilizer and a filter cartridge carried.*
+
+![Take a sample (kit) result: gasoline, condition good, free water about 0.3 %, composition gasoline 100 %](images/kit-sample-result.jpg)
+
+*A kit sample of petrol holding 0.3 % water: the kit finds the water and gives the blend.*
+
+![Look and smell result for the same can: condition good, no free water detected](images/look-and-smell-result.jpg)
+
+*A look at the same can two game hours later: a rougher estimate, and the water is missed.*
+
+![What I know about it, listing the kit sample of 2 hours ago, then the look of just now](images/what-i-know.jpg)
+
+*What I know about it after both tests: the kit's result first, each test with its age.*
+
 "Condition unknown" means the fuel has not been sampled yet, not that it
 is bad. What you know belongs to your character: a new survivor starts
 knowing nothing.
@@ -85,6 +101,10 @@ These are in the same **Fuel (The Last Gallon)** menu:
   moisture.
 * **Clean empty container** removes old residue, so it cannot spoil new
   fuel.
+
+![The Fuel (The Last Gallon) menu of an empty petrol can, ending with Clean empty container](images/fuel-menu-empty-can.jpg)
+
+*On an empty can the menu adds Clean empty container.*
 
 ## Pouring into engines and tanks
 
@@ -169,6 +189,10 @@ menu. The crafting window lists them as **Make Fermentation Vessel**,
 **Make Pot Still**, **Make Reflux Column Still** and **Make Ethanol
 Drying Column**, and its search box finds them by name.
 
+![The crafting window searched for "Make", with Make Fermentation Vessel picked: a claw hammer, six planks, twelve nails and a jar present, and the Craft button](images/crafting-window.jpg)
+
+*The crafting window searched for "Make", the vessel picked with its ingredients carried.*
+
 | Machine | Ingredients and tools | Where you make it |
 | --- | --- | --- |
 | Fermentation Vessel | six planks, twelve nails, an empty jar; a hammer; Carpentry 2 | a table or counter within two tiles |
@@ -185,6 +209,14 @@ Column Still.*
 Every machine works only while it stands on the ground. Right-click it and
 open **Machine (The Last Gallon)** for its options; **Status** shows what
 it is doing and the temperature at the machine.
+
+![A placed Fermentation Vessel's menu with Machine (The Last Gallon) open: Status, Load mash and start fermenting, Pause, Abort batch](images/machine-menu.jpg)
+
+*The menu of a placed vessel with a batch running.*
+
+![Status of the vessel: Working, Stage: fermenting, Temperature here today: 22.0 °C, in a room](images/vessel-status.jpg)
+
+*Its Status: fermenting in a room at 22 °C, with the power grid on.*
 
 **Checked in game:** every recipe of the mod (the machines, the sampling
 kit, the filter cartridge and the stabilizer) found by name in the
@@ -353,6 +385,14 @@ this generator** (or **Workshop: convert this vehicle**):
    has reached. When it reads **Converted and commissioned**, the engine
    is flex.
 
+![A generator's menu with Workshop: convert this generator open: Project status, Start: Flex-fuel generator conversion, Start: Gas generator conversion, Hand over parts, Work on it, Cancel the project, Remove the conversion](images/workshop-menu.jpg)
+
+*A basic generator's menu; this guide covers its flex-fuel conversion.*
+
+![Project status of the generator: Conversion in progress, Flex-fuel generator conversion, Stage: inspect, Engine now: stock gasoline generator](images/project-status.jpg)
+
+*Project status after Start and Hand over parts: the work is at its first stage.*
+
 | | Generator | Standard car |
 | --- | --- | --- |
 | Skills | Mechanics 2, Electrical 2 | Mechanics 4 |
@@ -368,7 +408,8 @@ own conversions.
 **Checked in game:** a standard car and the basic generator converted
 from this menu, with the walk to the engine, the work stopping once the
 character was out of reach and ending when a tool was missing; both then
-ran on ethanol.
+ran on ethanol. **Project status** read on a generator with a project
+started.
 
 **Not checked in game:** cancelling, removing, and the other models.
 
