@@ -1,0 +1,35 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_wait_b begin
+STEP spawn_death_vessel begin
+OBS  MP.death vessel 1448783971 spawned with its batch Processing
+STEP mp_death_vessel_lands begin
+STEP mp_walk_onto_vessel begin
+STEP mp_death_take begin
+PASS MP.death_vessel_in_both_hands_A :: primary=TLG.FermenterVessel record P190084056-12
+STEP death_carried begin
+OBS  MP.death_carried server: where=inventory tlga both hands state=Paused pause=not_placed site=10663,10642 listed=no t=3.8487 done=0.2292 now=3.9019 vessels=1 held=tlga landing=0
+PASS MP.death_vessel_carried_on_server_A :: see the server's line above
+PASS MP.death_mod_knows_the_vessel_in_hand_A :: held=tlga
+STEP mp_walk_carrying begin
+STEP mp_carried_a_while begin
+STEP mp_death_die begin
+OBS  MP.death A dies at 10661,10644 carrying TLG.FermenterVessel
+OBS  MP.death A dead=true 1 ticks after the kill; post-death screen=true
+PASS MP.death_a_died_A :: dead=true
+STEP mp_wait_finish begin
+STEP mp_finish begin
+SUMMARY pass=5 fail=0
+DONE

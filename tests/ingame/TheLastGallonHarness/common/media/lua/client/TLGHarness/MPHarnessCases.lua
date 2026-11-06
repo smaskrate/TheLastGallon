@@ -1834,9 +1834,10 @@ if MP.only == "death" then
     local DE = {}
     local function dId() return DE.id end
     local function line(name, m)
-        report():line("OBS  MP.%s server: where=%s state=%s pause=%s site=%s listed=%s t=%.4f done=%.4f now=%.4f vessels=%s",
+        report():line("OBS  MP.%s server: where=%s state=%s pause=%s site=%s listed=%s t=%.4f done=%.4f now=%.4f vessels=%s held=%s landing=%s",
             name, tostring(m.where), tostring(m.state), tostring(m.pause), tostring(m.site), tostring(m.listed),
-            tonumber(m.t) or -1, tonumber(m.done) or -1, tonumber(m.now) or -1, tostring(m.vessels))
+            tonumber(m.t) or -1, tonumber(m.done) or -1, tonumber(m.now) or -1, tostring(m.vessels), tostring(m.held),
+            tostring(m.landing))
     end
     local function probeDeath(name, judge)
         return call(name, "probe_vessel", function() return { id = DE.id, pid = DE.pid } end, "probe_vessel", function(m)
@@ -1889,6 +1890,8 @@ if MP.only == "death" then
             return m.where == "inventory tlga both hands" and m.state == "Paused" and m.pause == "not_placed",
                 "see the server's line above"
         end)
+        -- The server's equip events told the mod (Machines.onHands).
+        check("death_mod_knows_the_vessel_in_hand", function() return m.held == "tlga", "held=" .. tostring(m.held) end)
     end)
     -- A tells B where it stands, then dies (Kill, as the single-player
     -- successor run; the server kills it if the client's kill does not take).

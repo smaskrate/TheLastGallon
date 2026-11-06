@@ -12,10 +12,21 @@ which D-032 removed; runs 183 and 185 measured the fix. Evidence:
 
 ## What the mod runs on its own
 
-- **Nothing every frame.** The mod registers no per-frame handler: no
-  `OnTick`, no `OnPlayerUpdate`, no render event. The vanilla functions it
+- **Nothing every frame in steady play.** The mod keeps no per-frame
+  handler: no `OnPlayerUpdate`, no render event, and `OnTick` only for a
+  few seconds at a time. When a machine leaves a character's hands, the
+  authority looks at it once a tick until it lies on the ground, for at
+  most 300 ticks (about 5 seconds at 60 frames a second; a dedicated
+  server ticked about 4 times a second at its start in RT-MP run 210, so
+  there up to about 80 seconds): one engine call a tick per machine, then
+  the put-down if it landed where no hook saw it (`Machines.watchLanding`,
+  D-015 amendment). A drop lands within the tick, so the watch usually
+  ends on the first. The vanilla functions it
   wraps run once per player action: a refuel, a transfer, an equip, the
-  start of a timed action.
+  start of a timed action. So do the two equip events it listens to
+  (`OnEquipPrimary`, `OnEquipSecondary`, `Machines.onHands`): a look at
+  whether the item is a machine with a record and, while one is held, at
+  the holder's hands. Not timed: a few engine calls.
 - **Three timers**, run by the authority (the game in single player, the
   server in multiplayer):
   - every game minute, the engine effects of every vehicle in the loaded
@@ -24,7 +35,9 @@ which D-032 removed; runs 183 and 185 measured the fix. Evidence:
     applied;
   - every ten game minutes, a note of the fire warming each running machine
     in the hourly list (`Machines.observeFires`). The list holds at most 256
-    machines (`MAX_INDEXED`);
+    machines (`MAX_INDEXED`). Then a look at the hands of the characters in
+    the game, two engine calls each (`Machines.censusHands`, since
+    2026-11-06; not timed);
   - every game hour, the day's climate record and an air reading at each
     running machine (`Machines.sampleSites`).
 - **On demand:** the fuel and machine menus, the requests they send, and

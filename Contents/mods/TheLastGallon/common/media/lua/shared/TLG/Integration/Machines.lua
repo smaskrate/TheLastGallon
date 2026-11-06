@@ -28,7 +28,11 @@
 -- answered for both players, and on a dedicated server the mod takes the
 -- vessel off the floor into both arms itself (M.takeOnServer, D-030; the
 -- game's own way fails there): its batch was carried on the server and the
--- record reached the player's client with the item. The hourly readings and
+-- record reached the player's client with the item. A carrier's death drops
+-- the vessel where no Lua sees it: in single player the death event puts it
+-- down (run 202); a server fires none, and the hands' events do it there
+-- (M.onHands, RT-MP run 210: put down where the player died, from the
+-- death). The hourly readings and
 -- ten-minute notes of 32 fermenters were timed in RT-SP runs 181-185
 -- (performance mode). Since D-032 one scan serves every machine a fire
 -- warms, a trim sorts nothing, and a catch-up sorts the notes once, with
@@ -637,23 +641,31 @@ local function account(fn, item)
     if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
 end
 
--- A carrier's death. The game drops a heavy item at the body's feet where
--- no Lua hook sees it (RT-SP runs 198-199), and the batch stayed paused
--- until the vessel was next read, losing the time between (D-015
--- amendment). The machines in the dying character's hands are watched for
--- a few seconds until they land, then put down from that moment; one that
--- went into the body's inventory stays carried. Should the drop come
--- before the event, a machine at the feet whose record still says carried
--- is put down the same way.
+-- The landing watch: a machine that left a character's hands where no Lua
+-- hook saw where it went (a death, a climb) is looked at every tick until
+-- it lies on the ground, then put down from that tick; after LANDING_TICKS
+-- it is given up (it went into a container, a body's among them, and stays
+-- carried). A hook that saw the move put it down already: its record no
+-- longer says carried and its site is this tile, so nothing is written
+-- twice.
 M.landing = M.landing or {}
 M.LANDING_TICKS = 300
+
+local function landed(item, now)
+    local rec, sq = M.read(item, false), M.square(item)
+    if rec == nil or sq == nil then return end
+    if rec.pause == "not_placed" or rec.site == nil or M.movedFrom(rec, sq) then M.putDown(item, now) end
+end
 
 local function watchLandings()
     local keep = {}
     for _, w in ipairs(M.landing) do
         w.ticks = w.ticks + 1
-        if M.isPlaced(w.item) then
-            account(M.putDown, w.item)
+        local ok, placed = pcall(M.isPlaced, w.item)
+        if not ok then
+            TLG.Log.error("machine move: %s", tostring(placed))
+        elseif placed then
+            account(landed, w.item)
         elseif w.ticks < M.LANDING_TICKS then
             keep[#keep + 1] = w
         end
@@ -665,6 +677,30 @@ local function watchLandings()
     end
 end
 
+-- Watches a machine until it lands (from the start again if already watched).
+function M.watchLanding(item)
+    for _, w in ipairs(M.landing) do
+        if w.item == item then
+            w.ticks = 0
+            return
+        end
+    end
+    M.landing[#M.landing + 1] = { item = item, ticks = 0 }
+    if not M.watching then
+        M.watching = true
+        Events.OnTick.Add(watchLandings)
+    end
+end
+
+-- A carrier's death in single player. The game drops a heavy item at the
+-- body's feet where no Lua hook sees it (RT-SP runs 198-199), and the batch
+-- stayed paused until the vessel was next read, losing the time between
+-- (D-015 amendment). The machines in the dying character's hands are
+-- watched until they land; should the drop come before the event (as
+-- 42.21 does it, run 202), a machine at the feet whose record still says
+-- carried is put down from the death. A dedicated server fires no death
+-- event for a client's player (RT-MP run 209): there M.onHands sees the
+-- drop.
 function M.onDeath(character)
     if character == nil or not World.isAuthority() then return end
     local primary, secondary = character:getPrimaryHandItem(), character:getSecondaryHandItem()
@@ -675,7 +711,7 @@ function M.onDeath(character)
         if M.isPlaced(it) then
             account(M.putDown, it)
         else
-            M.landing[#M.landing + 1] = { item = it, ticks = 0 }
+            M.watchLanding(it)
         end
     end
     local sq = character:getSquare()
@@ -701,9 +737,82 @@ function M.onDeath(character)
     if #held > 0 or atFeet > 0 then
         TLG.Log.info("a carrier died: %d machine(s) in the hands, %d already at the feet", #held, atFeet)
     end
-    if #M.landing > 0 and not M.watching then
-        M.watching = true
-        Events.OnTick.Add(watchLandings)
+end
+
+-- Machines in characters' hands, on the authority: { [item] = character }.
+-- On a dedicated server a client's player dies in Java, and no Lua event
+-- tells the death, the body or the drop (RT-MP run 209; BC 42.21:
+-- IsoPlayer.OnDeath returns at once on a server, IsoDeadBody fires
+-- OnDeadBodySpawn only off one); IsoGameCharacter.die puts what the hands
+-- held on the floor (dropHeldItems). What the server's Lua does see is the
+-- hands emptying: setPrimaryHandItem and setSecondaryHandItem fire
+-- OnEquipPrimary and OnEquipSecondary wherever they run, and every drop
+-- empties the hands through them (dropHeldItems, dropHeavyItems,
+-- removeFromHands). So the authority remembers a machine that enters a
+-- hand, and one that has left both is watched until it lands. That also
+-- covers a climb's drop (over a wall, through a window, on a sheet rope):
+-- dropHeavyItems in single player, and on a server the dropHeldItems a
+-- client's PlayerDropHeldItems asks for.
+M.inHands = M.inHands or {}
+
+function M.onHands(character, item)
+    if character == nil or not World.isAuthority() then return end
+    local tracked = M.tracked(item)
+    if not tracked and Tables.isEmpty(M.inHands) then return end
+    local primary, secondary = character:getPrimaryHandItem(), character:getSecondaryHandItem()
+    local left = {}
+    for held, who in pairs(M.inHands) do
+        if who == character and held ~= primary and held ~= secondary then left[#left + 1] = held end
+    end
+    for _, held in ipairs(left) do
+        M.inHands[held] = nil
+        M.watchLanding(held)
+    end
+    if tracked and (item == primary or item == secondary) then M.inHands[item] = character end
+end
+
+-- The characters in the game: a server's connected players, else the local
+-- ones.
+local function charactersInGame()
+    local out = {}
+    if isServer() then
+        local list = getOnlinePlayers()
+        for i = 0, (list and list:size() or 0) - 1 do out[#out + 1] = list:get(i) end
+    elseif getSpecificPlayer then
+        for i = 0, (getNumActivePlayers and getNumActivePlayers() or 1) - 1 do
+            local p = getSpecificPlayer(i)
+            if p ~= nil then out[#out + 1] = p end
+        end
+    end
+    return out
+end
+
+-- Every ten game minutes on the authority: the machines in the hands of the
+-- characters in the game, for a hold no equip event told (a player loaded
+-- holding one: IsoGameCharacter.load sets the hands directly, BC). One no
+-- longer in its holder's hands is watched until it lands; one whose holder
+-- left the server is forgotten.
+function M.censusHands()
+    if not World.isAuthority() then return end
+    local present = {}
+    for _, p in ipairs(charactersInGame()) do
+        present[p] = true
+        local primary, secondary = p:getPrimaryHandItem(), p:getSecondaryHandItem()
+        if M.tracked(primary) then M.inHands[primary] = p end
+        if M.tracked(secondary) then M.inHands[secondary] = p end
+    end
+    local gone, left = {}, {}
+    for item, who in pairs(M.inHands) do
+        if isServer() and not present[who] then
+            gone[#gone + 1] = item
+        elseif who:getPrimaryHandItem() ~= item and who:getSecondaryHandItem() ~= item then
+            left[#left + 1] = item
+        end
+    end
+    for _, item in ipairs(gone) do M.inHands[item] = nil end
+    for _, item in ipairs(left) do
+        M.inHands[item] = nil
+        M.watchLanding(item)
     end
 end
 
@@ -875,6 +984,13 @@ function M.install()
         end
     end
     if Events and Events.OnPlayerDeath then Events.OnPlayerDeath.Add(M.onDeath) end
+    -- The hands, for the drops no hook above sees (M.onHands).
+    local function onHands(character, item)
+        local ok, err = pcall(M.onHands, character, item)
+        if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
+    end
+    if Events and Events.OnEquipPrimary then Events.OnEquipPrimary.Add(onHands) end
+    if Events and Events.OnEquipSecondary then Events.OnEquipSecondary.Add(onHands) end
     -- Derived actions look the method up at call time.
     wrap(ISBaseTimedAction, "setActionAnim", function(orig, self, ...)
         local ok, err = pcall(function()

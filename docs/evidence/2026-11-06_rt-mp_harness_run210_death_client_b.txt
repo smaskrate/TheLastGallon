@@ -1,0 +1,38 @@
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_walk_to_watch begin
+STEP mp_hello begin
+STEP mp_wait_dying begin
+STEP death_right_before begin
+OBS  MP.death_right_before server: where=inventory tlga both hands state=Paused pause=not_placed site=10663,10642 listed=no t=3.8487 done=0.2292 now=4.1151 vessels=1 held=tlga landing=0
+PASS MP.death_carried_before_the_death_B :: see the server's line above
+STEP mp_death_lands begin
+STEP death_landed begin
+OBS  MP.death_landed server: where=floor 10661,10644 state=Processing pause=none site=10661,10644 listed=10661,10644 t=4.1684 done=0.2292 now=4.5176 vessels=1 held=no landing=0
+OBS  MP.death the record's time 0.0533 game h after the probe right before the death
+PASS MP.death_vessel_on_the_floor_B :: where=floor 10661,10644
+PASS MP.death_put_down_from_the_death_B :: state=Processing pause=none site=10661,10644 listed=10661,10644; record time 0.0533 h after the probe before the death
+STEP mp_walk_to_vessel begin
+STEP mp_death_vessel_works begin
+STEP death_status begin
+OBS  MP.death_status reply: ok=true reason=nil duplicate=nil state=Processing pause=nil stage=ferment rev=0
+PASS MP.death_status_processing_B :: see the reply above
+STEP death_worked begin
+OBS  MP.death_worked server: where=floor 10661,10644 state=Processing pause=none site=10661,10644 listed=10661,10644 t=5.4077 done=1.1874 now=5.4077 vessels=1 held=no landing=0
+PASS MP.death_batch_works_from_the_death_B :: 0.9582 h of work over the 1.2926 game h from the death to this read
+STEP mp_finish_a begin
+STEP mp_finish begin
+SUMMARY pass=6 fail=0
+DONE

@@ -12,7 +12,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
-| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launch 209) | Not in the multiplayer harness yet |
+| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
 | Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12); uploading is the user's manual step, not taken |
 
@@ -4196,3 +4196,66 @@ Evidence: `docs/evidence/2026-11-06_rt-sp_harness_run207_knowledge_save.txt`;
 `2026-11-06_rt-mp_harness_run208_knowledge_restart_client_a.txt` and
 `_server.txt`; `…_run209_death_client_a.txt`, `_client_b.txt` and
 `_server.txt`.
+
+## 2026-11-06 — RT-MP launch 210 (a carrier's death on a server, the hands followed)
+
+The user asked for the fix of launch 209's finding ("Fix it here"). The
+game's code says why nothing on the server saw the death (BC 42.21,
+engine capabilities): `IsoPlayer.OnDeath` returns at once on a server,
+and the server drops a dead client player's hand items in Java
+(`IsoGameCharacter.die` → `dropHeldItems`). Every drop empties the hands
+through `setPrimaryHandItem` and `setSecondaryHandItem`, which fire
+`OnEquipPrimary` and `OnEquipSecondary` there too. So the mod now follows
+the hands on the authority (`Machines.onHands`, D-015 amendment): a
+machine with a record that enters a hand is remembered, and one that has
+left both is looked at every tick until it lands, then put down from that
+tick. Every ten game minutes the hands of the players in the game are
+looked at again (a player who joins holding a machine fires no equip
+event).
+
+Before the launch: tests 225/225 (two new cases: a server's drop in
+42.21's order, a machine in one hand, an unequip into the inventory, a
+hook's own drop written once, a client, a failing look; the ten-minute
+look: a player loaded holding the vessel, hands emptied with no event, a
+holder who left, single player) and the compile check 125/0. The
+harness's server now logs whether `OnTick` fires there and each put-down
+the mod makes, with where and when. Its vessel probe says whether the mod
+holds the vessel as in someone's hands (`held`) and how many machines it
+watches land; A checks that the mod knew the vessel in its hands.
+
+Command: `tools/run-mp-harness.ps1 -Clients 2 -Only death`, the mod and
+the harness as in the working tree on `e3ca43b` (about 4 minutes).
+Result: A **5/0**, B **6/0**.
+
+* `OnTick` fires on the dedicated server: 300 ticks in 78.8 s from its
+  start, before anyone joined (about 3.8 a second).
+* A took the running vessel off the floor into both arms (the mod's take
+  on the server). The server's probe then found it in A's hands, the
+  batch carried, and the mod holding it as A's (`held=tlga`): the equip
+  events reach the server's Lua.
+* A carried it two squares and was killed. B asked the server right
+  before (game hour 4.1151: in A's hands, carried) and 900 ticks after:
+  * the vessel lay on the floor where A died (10661,10644);
+  * its record was `Processing` there, from 4.1684, 0.0533 game h after
+    B's probe. A died 120 ticks (two seconds, 0.053 game h on this day)
+    after B's probe, so the put-down came at the death;
+  * it was on the hourly list at once, at that tile;
+  * the mod held nothing in hands and watched nothing any more;
+  * the server's log has one put-down: "1448783971 at 10661,10644 from
+    t=4.1684: pause not_placed -> none, state Processing".
+* B walked to it and, 1,800 ticks later, asked for Status: `Processing`,
+  now in the fermenting stage. The probe after it: 0.958 h of work over
+  the 1.293 game h from the probe before the death, about 1.24 h of it
+  placed. No second vessel and no duplicate.
+
+Not run:
+* a climb's drop (over a wall, through a window, on a sheet rope), in
+  single player or on a server, which the same watch covers;
+* a player who joins holding a machine and then dies (the ten-minute
+  look, unit tests only);
+* single player again: `OnPlayerDeath` still comes first there, inside
+  the death, so run 202's path is unchanged (unit tests);
+* a successor in multiplayer.
+
+Evidence: `docs/evidence/2026-11-06_rt-mp_harness_run210_death_client_a.txt`,
+`_client_b.txt` and `_server.txt`.

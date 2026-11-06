@@ -307,13 +307,51 @@ listed with their replacement.
   game h from the death, as the placed one did. The watch branch is
   covered by `tests/integration/test_machine_sites.lua` only.
 
-  On a dedicated server the hook does nothing (RT-MP run 209): a client's
+  On a dedicated server the hook did nothing (RT-MP run 209): a client's
   player died carrying a running vessel, the vessel fell on the floor
   where the player died, and neither `OnPlayerDeath` nor
   `OnCharacterDeath` fired in the server's Lua. The record stayed
   carried; a Status about 1.3 game h later restarted the batch from then,
-  the hours between lost, as before the hook. The fix holds in single
-  player only.
+  the hours between lost, as before the hook. The game's code says why
+  (BC 42.21, engine capabilities): `IsoPlayer.OnDeath` returns at once on
+  a server, and the server drops the dead player's hand items in Java
+  (`IsoGameCharacter.die` → `dropHeldItems` → `AddWorldInventoryItem`).
+* Since 2026-11-06 the mod follows the hands on the authority
+  (`Machines.onHands`; the user asked for it, "Fix it here"). Every drop
+  empties the hands through `setPrimaryHandItem` and
+  `setSecondaryHandItem`, and those fire `OnEquipPrimary` and
+  `OnEquipSecondary` wherever they run, a server included:
+  * a machine with a record that enters a hand is remembered with its
+    holder;
+  * one that has left both hands is looked at every tick until it lies on
+    the ground (at most 300 ticks), then put down from that tick. One that
+    never lands (unequipped into the inventory) stays carried;
+  * a drop a hook sees (`forceDropHeavyItems`, the menus' unequip, a
+    transfer) is put down by that hook. The watch then finds the record no
+    longer carried, at that tile, and writes nothing;
+  * every ten game minutes the hands of the characters in the game are
+    looked at again (`Machines.censusHands`). A player who joined or
+    continued holding a machine is remembered: the game's load sets the
+    hands with no event. One who left the server is forgotten.
+
+  The same covers a climb's drop (over a wall, through a window, on a
+  sheet rope): `dropHeavyItems` in single player, the server's
+  `dropHeldItems` for a client. NOT RUN. In single player `OnPlayerDeath`
+  still comes first: it fires inside the death, before the next tick, so
+  run 202's put-down and its log line are unchanged, and the watch then
+  finds nothing to do. Covered by `tests/integration/test_machine_sites.lua`
+  (the server's drop in 42.21's order, a machine in one hand, an unequip
+  into the inventory, a hook's own drop written once, a client, the
+  ten-minute look).
+
+  RT-MP run 210 (A 5/0, B 6/0), run 209's case again: the server's mod
+  held the vessel as in A's hands from the take (the equip events reach
+  the server's Lua). A died at 10661,10644, and the vessel landed there.
+  The server put it down from 4.1684, 0.0533 game h after B's probe right
+  before the death, which is when A died (two seconds later, its 120
+  ticks). The vessel was on the hourly list at once and worked from then:
+  0.958 h of work by B's read 1.29 game h after that probe. `OnTick` fires
+  on the server (300 ticks in 78.8 s at its start), which the watch needs.
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`

@@ -1103,3 +1103,270 @@ T.case("integration: a carrier's death puts the dropped machine down where it la
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+-- The game's events as lists the cases fire by hand: OnTick, and the two a
+-- character's hand setters fire.
+local function fakeEvents()
+    local ev = { handlers = {} }
+    local function event(name)
+        local list = {}
+        ev.handlers[name] = list
+        return {
+            Add = function(fn) list[#list + 1] = fn end,
+            Remove = function(fn)
+                for i = #list, 1, -1 do if list[i] == fn then table.remove(list, i) end end
+            end,
+        }
+    end
+    Events = { OnTick = event("OnTick"), OnEquipPrimary = event("OnEquipPrimary"),
+        OnEquipSecondary = event("OnEquipSecondary") }
+    function ev.fire(name, a, b)
+        local now = {}
+        for i, fn in ipairs(ev.handlers[name]) do now[i] = fn end
+        for _, fn in ipairs(now) do fn(a, b) end
+    end
+    function ev.tick() ev.fire("OnTick") end
+    function ev.watching() return #ev.handlers.OnTick end
+    return ev
+end
+
+-- A character's hands as 42.21 sets them (BC): setPrimaryHandItem and
+-- setSecondaryHandItem fire OnEquipPrimary and OnEquipSecondary when the
+-- hand changes, on a server too; removeFromHands empties them through the
+-- two.
+local function handsOf(at, ev)
+    local p = { at = at, hands = {} }
+    function p:getPrimaryHandItem() return self.hands.primary end
+    function p:getSecondaryHandItem() return self.hands.secondary end
+    function p:getSquare() return self.at end
+    function p:getCurrentSquare() return self.at end
+    function p:setPrimaryHandItem(it)
+        if self.hands.primary == it then return end
+        self.hands.primary = it
+        ev.fire("OnEquipPrimary", self, it)
+    end
+    function p:setSecondaryHandItem(it)
+        if self.hands.secondary == it then return end
+        self.hands.secondary = it
+        ev.fire("OnEquipSecondary", self, it)
+    end
+    function p:removeFromHands(it)
+        if self.hands.primary == it then self:setPrimaryHandItem(nil) end
+        if self.hands.secondary == it then self:setSecondaryHandItem(nil) end
+    end
+    return p
+end
+
+-- What a server does with a client's dying player's hands (BC 42.21,
+-- IsoGameCharacter.die -> dropHeldItems): the primary hand emptied and its
+-- item put on the floor, then the secondary hand emptied and its item put
+-- there too unless it is the same.
+local function dropHeldItems(p)
+    local primary, secondary = p.hands.primary, p.hands.secondary
+    if primary then
+        p:setPrimaryHandItem(nil)
+        place(primary, p.at)
+    end
+    if secondary then
+        p:setSecondaryHandItem(nil)
+        if secondary ~= primary then place(secondary, p.at) end
+    end
+end
+
+T.case("integration: on a server a machine that leaves the hands where no hook sees it is put down where it lands", function()
+    local g = fakeGame(2)
+    local savedEvents, savedDrop, savedWrite = Events, forceDropHeavyItems, Machines.write
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        isServer = function() return true end
+        Machines.landing, Machines.watching, Machines.inHands = {}, false, {}
+        local ev = fakeEvents()
+        -- Vanilla's (SRC ISEquipWeaponAction.lua:75): onto the floor, then
+        -- out of the hands.
+        forceDropHeavyItems = function(chr)
+            local it = chr:getPrimaryHandItem()
+            if it then
+                place(it, chr:getCurrentSquare())
+                chr:removeFromHands(it)
+            end
+        end
+        Machines.install()
+        local writes = 0
+        Machines.write = function(...)
+            writes = writes + 1
+            return savedWrite(...)
+        end
+        local a, b, c = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22), square(g, 6, 1, 0, false, 22)
+        local item = startedOn(a, "P31", env)
+        local ann = handsOf(a, ev)
+        -- Taken into both arms on the server (M.takeOnServer: the batch
+        -- counted to the pickup, then the hands set).
+        g.now = 4
+        lift(item)
+        Machines.pickedUp(item, 4)
+        ann:setPrimaryHandItem(item)
+        ann:setSecondaryHandItem(item)
+        T.ok(Machines.inHands[item] == ann, "remembered in her hands")
+        -- She dies two squares on: the server drops it in Java, no death
+        -- event; the hands empty around the drop.
+        ann.at = b
+        g.now = 4.5
+        dropHeldItems(ann)
+        T.ok(item.on == b, "on the floor where she died")
+        T.eq(item:getModData().tlgProc.pause, "not_placed", "nothing written at the events themselves")
+        T.ok(Machines.inHands[item] == nil, "out of her hands"); T.eq(ev.watching(), 1, "watched until it lands")
+        g.now = 4.502
+        ev.tick()
+        local rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.ok(rec.pause == nil)
+        T.near(rec.t, 4.502, 1e-9, "put down from the tick it was found on the floor"); T.eq(rec.site.x, 4)
+        T.eq(World.get().machineSites.P31.x, 4, "listed for the hourly reading at once")
+        T.eq(ev.watching(), 0, "the watch ends")
+        local later = Machines.advance(item, Machines.read(item, false), 6.502, env)
+        T.near(work(later), 4, 1e-9, "2 h before the pickup and 2 h since it landed, none of the carried half hour")
+        -- A machine in one hand: the one event comes before it lands, and
+        -- the next tick finds it on the floor.
+        local still = startedOn(c, "P32", env)
+        function still:getFullType() return "TLG.PotStill" end
+        function still:getID() return 8 end
+        g.now = 7
+        lift(still)
+        Machines.pickedUp(still, 7)
+        local ben = handsOf(c, ev)
+        ben:setPrimaryHandItem(still)
+        g.now = 8
+        dropHeldItems(ben)
+        T.eq(still:getModData().tlgProc.pause, "not_placed"); T.eq(ev.watching(), 1)
+        ev.tick()
+        rec = still:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 8, "put down where he dropped it"); T.eq(rec.site.x, 6)
+        -- Into the inventory (an unequip): never lands, given up, still
+        -- carried, nothing written.
+        lift(item)
+        Machines.write(item, later)
+        Machines.pickedUp(item, 9)
+        ann:setPrimaryHandItem(item)
+        ann:setSecondaryHandItem(item)
+        writes = 0
+        ann:setPrimaryHandItem(nil)
+        ann:setSecondaryHandItem(nil)
+        for _ = 1, Machines.LANDING_TICKS do ev.tick() end
+        T.eq(ev.watching(), 0, "the watch gave up")
+        T.eq(item:getModData().tlgProc.pause, "not_placed", "still carried"); T.eq(writes, 0, "nothing written")
+        -- A drop a hook sees (forceDropHeavyItems: a vehicle entered) is put
+        -- down by that hook, once: the watch finds it done.
+        ann:setPrimaryHandItem(item)
+        ann:setSecondaryHandItem(item)
+        ann.at = a
+        g.now = 10
+        forceDropHeavyItems(ann)
+        T.eq(item:getModData().tlgProc.t, 10, "put down by the hook"); T.eq(writes, 1)
+        T.eq(ev.watching(), 1)
+        g.now = 10.01
+        ev.tick()
+        T.eq(ev.watching(), 0); T.eq(writes, 1, "not written again"); T.eq(item:getModData().tlgProc.t, 10)
+        -- A machine that is not tracked, and other items, are not remembered.
+        local bare = machine(nil, nil)
+        ann:setPrimaryHandItem(bare)
+        ann:setPrimaryHandItem({ getFullType = function() return "Base.BaseballBat" end })
+        T.ok(TLG.Tables.isEmpty(Machines.inHands), "nothing remembered")
+        -- A client leaves it all to the server.
+        isServer = function() return false end
+        isClient = function() return true end
+        lift(item)
+        ann:setPrimaryHandItem(item)
+        T.ok(TLG.Tables.isEmpty(Machines.inHands), "not on a client")
+        isServer = function() return true end
+        isClient = function() return false end
+        -- A failing look at the hands is logged; the game's setter goes on.
+        local log, logged = TLG.Log.error, nil
+        TLG.Log.error = function(fmt, ...) logged = string.format(fmt, ...) end
+        ev.fire("OnEquipPrimary", { getPrimaryHandItem = function() error("no hands") end }, item)
+        TLG.Log.error = log
+        T.ok(logged ~= nil and string.find(logged, "machine move:", 1, true) == 1, "logged")
+    end)
+    Events, forceDropHeavyItems, Machines.write = savedEvents, savedDrop, savedWrite
+    Machines.landing, Machines.watching, Machines.inHands = {}, false, {}
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: every ten game minutes the hands of the characters in the game are looked at again", function()
+    local g = fakeGame(2)
+    local names = { "Events", "getOnlinePlayers", "getSpecificPlayer", "getNumActivePlayers" }
+    local saved = {}
+    for _, k in ipairs(names) do saved[k] = _G[k] end
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        isServer = function() return true end
+        Machines.landing, Machines.watching, Machines.inHands = {}, false, {}
+        local ev = fakeEvents()
+        Machines.install()
+        local online = {}
+        getOnlinePlayers = function()
+            local list = {}
+            function list:size() return #online end
+            function list:get(i) return online[i + 1] end
+            return list
+        end
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        local item = startedOn(a, "P33", env)
+        g.now = 4
+        lift(item)
+        Machines.pickedUp(item, 4)
+        -- Ben was saved carrying the vessel and joined again: the game's
+        -- load sets his hands directly, with no event.
+        local ben = handsOf(b, ev)
+        ben.hands.primary, ben.hands.secondary = item, item
+        online = { ben }
+        T.ok(Machines.inHands[item] == nil, "no event told it")
+        Machines.censusHands()
+        T.ok(Machines.inHands[item] == ben, "found in his hands")
+        -- He dies: put down where he fell.
+        g.now = 5
+        dropHeldItems(ben)
+        ev.tick()
+        local rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 5); T.eq(rec.site.x, 4)
+        -- Hands emptied with no event (no path 42.21 has): the next look
+        -- finds it gone from them and watches it land.
+        lift(item)
+        Machines.pickedUp(item, 6)
+        ben.hands.primary, ben.hands.secondary = item, item
+        Machines.censusHands()
+        ben.hands.primary, ben.hands.secondary = nil, nil
+        place(item, a)
+        g.now = 7
+        Machines.censusHands()
+        T.ok(Machines.inHands[item] == nil); T.eq(ev.watching(), 1)
+        ev.tick()
+        rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 7); T.eq(rec.site.x, 1)
+        -- A holder who left the server is forgotten: the vessel went with
+        -- him, carried, in his saved inventory.
+        lift(item)
+        Machines.pickedUp(item, 8)
+        ben:setPrimaryHandItem(item)
+        ben:setSecondaryHandItem(item)
+        T.ok(Machines.inHands[item] == ben)
+        online = {}
+        Machines.censusHands()
+        T.ok(Machines.inHands[item] == nil, "forgotten with him"); T.eq(ev.watching(), 0, "nothing to watch")
+        T.eq(item:getModData().tlgProc.pause, "not_placed")
+        -- In single player the local players are looked at, and nobody is
+        -- forgotten for being off a server's list.
+        isServer = function() return false end
+        getOnlinePlayers = nil
+        getNumActivePlayers = function() return 1 end
+        getSpecificPlayer = function(i) return i == 0 and ben or nil end
+        Machines.censusHands()
+        T.ok(Machines.inHands[item] == ben, "found in the local player's hands")
+        getSpecificPlayer = function() return nil end
+        Machines.censusHands()
+        T.ok(Machines.inHands[item] == ben, "kept while still in his hands")
+    end)
+    for _, k in ipairs(names) do _G[k] = saved[k] end
+    Machines.landing, Machines.watching, Machines.inHands = {}, false, {}
+    g.restore()
+    if not ok then error(err, 0) end
+end)

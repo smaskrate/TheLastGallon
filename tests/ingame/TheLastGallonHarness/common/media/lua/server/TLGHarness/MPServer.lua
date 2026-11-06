@@ -12,8 +12,10 @@
 -- - roll_manual: containers filled from the manual's loot lists as the
 --   game fills them (ItemPickerJava.doRollItem), the first manual given.
 -- It also logs every take of a machine off the floor the mod makes on the
--- server (Machines.takeOnServer, D-030) with its result, and holds the
--- fixtures and watches of the effects and timers cases (below).
+-- server (Machines.takeOnServer, D-030) with its result, every put-down
+-- (Machines.putDown) with where and when, whether OnTick fires on the
+-- server, and holds the fixtures and watches of the effects and timers
+-- cases (below).
 -- Results: <cachedir>/Lua/TLG_harness_mpserver.txt.
 require "TLGHarness/Report"
 require "TLGHarness/MPShared"
@@ -189,7 +191,13 @@ function services.probe_vessel(player, args)
     local rec = item and item:getModData().tlgProc
     local sites = TLG.World.server().machineSites or {}
     local listed = rec and rec.id and sites[rec.id]
+    -- The mod's view of the hands (Machines.onHands): whether it holds the
+    -- vessel as in someone's hands, and how many machines it watches land.
+    local Machines = TLG.Integration.Machines
+    local inHands = Machines.inHands or {}
+    local holder = item and inHands[item]
     reply("probe_vessel", args, { where = #places > 0 and table.concat(places, "; ") or "nowhere", vessels = count,
+        held = holder and tostring(holder:getUsername()) or "no", landing = #(Machines.landing or {}),
         state = tostring(rec and rec.state or "none"), pause = tostring(rec and rec.pause or "none"),
         site = rec and rec.site and rec.site.x and (rec.site.x .. "," .. rec.site.y) or "none",
         listed = listed and (listed.x .. "," .. listed.y) or "no", takes = table.concat(M.takes, " "),
@@ -543,6 +551,44 @@ local function watchTakes()
         if not ok then error(r, 0) end
         return r
     end
+end
+
+-- Wraps the mod's put-down (looked up at call time by its move hooks and
+-- its landing watch) to log each one the server makes: the machine, its
+-- square, the time it was put down from, and its record's pause before and
+-- after. The death case reads from it when the vessel a dead carrier
+-- dropped was put down (D-015 amendment).
+local function watchPutDowns()
+    local Machines = TLG and TLG.Integration and TLG.Integration.Machines
+    if M.putDownsWatched or not (Machines and Machines.putDown) then return end
+    M.putDownsWatched = true
+    local orig = Machines.putDown
+    Machines.putDown = function(item, now)
+        local before = item and item:getModData().tlgProc
+        local was = tostring(before and before.pause or "none")
+        local ok, r = pcall(orig, item, now)
+        local sq = item and Machines.square(item)
+        local rec = item and item:getModData().tlgProc
+        report():line("OBS  MPS.put_down of %s at %s from t=%.4f: pause %s -> %s, state %s%s", tostring(item and item:getID()),
+            sq and (sq:getX() .. "," .. sq:getY()) or "nowhere", tonumber(now) or -1, was,
+            tostring(rec and rec.pause or "none"), tostring(rec and rec.state), ok and "" or (" error " .. tostring(r)))
+        if not ok then error(r, 0) end
+        return r
+    end
+end
+
+-- Whether OnTick fires on a dedicated server, where the mod's landing watch
+-- runs on it (Machines.watchLanding): the first 300 ticks timed.
+local function countTicks()
+    local n, t0 = 0, getTimestampMs()
+    local function tick()
+        n = n + 1
+        if n == 300 then
+            Events.OnTick.Remove(tick)
+            report():line("OBS  MPS.ticks 300 OnTick events in %d ms", getTimestampMs() - t0)
+        end
+    end
+    Events.OnTick.Add(tick)
 end
 
 function services.probe_item(player, args)
@@ -1308,6 +1354,9 @@ Events.OnServerStarted.Add(function()
         R:line("OBS  MPS.fog intensity %.2f when the override was set", before)
         watchTakes()
         R:line("OBS  MPS.takes watched=%s", tostring(M.takesWatched == true))
+        watchPutDowns()
+        R:line("OBS  MPS.put_downs watched=%s", tostring(M.putDownsWatched == true))
+        countTicks()
     end)
     if not ok then print("[TLGH] mp server report failed: " .. tostring(err)) end
 end)

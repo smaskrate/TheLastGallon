@@ -78,6 +78,9 @@ Events.EveryTenMinutes.Add(function()
     if machines then
         local ok, err = pcall(machines.observeFires)
         if not ok then TLG.Log.error("machine fire notes: %s", tostring(err)) end
+        -- The machines in characters' hands (Machines.censusHands).
+        ok, err = pcall(machines.censusHands)
+        if not ok then TLG.Log.error("machine hands: %s", tostring(err)) end
     end
 end)
 

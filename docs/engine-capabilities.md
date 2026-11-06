@@ -744,6 +744,44 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
   client's `OnPlayerDeath` fires (vanilla's post-death screen hangs on
   it). Vanilla's own Lua uses `OnPlayerDeath` only on clients
   (`ISPerkLog.lua` registers it when `isClient()`).
+* Why, in the game's code (BC 42.21, read 2026-11-06):
+  * `IsoPlayer.OnDeath` returns right after `IsoLivingCharacter.OnDeath`
+    when `GameServer.server`: no `dropHandItems` there. Elsewhere it fires
+    `OnPlayerDeath` only for a local player.
+  * The server's `IsoGameCharacter.die` drops what the hands hold with
+    `dropHeldItems(x, y, z, false, false)`, then makes the body
+    (`becomeCorpse`). The primary hand is emptied
+    (`setPrimaryHandItem(nil)`) and its item taken out of the inventory
+    (`DoRemoveItem`, `sendRemoveItemFromContainer`) and put on the floor
+    (`AddWorldInventoryItem`, the same item object). Then the secondary
+    hand is emptied, and its item dropped too unless it is the same one.
+    No Lua event names the drop.
+  * The body's constructor fires `OnContainerUpdate` and `OnDeadBodySpawn`
+    only when not `GameServer.server`.
+  * A client's own drop of a heavy item (climbing over a wall, through a
+    window or frame, on a sheet rope; a fall: `dropHeavyItems`) empties its
+    hands and sends `PlayerDropHeldItems`. The server's
+    `PlayerDropHeldItemsPacket.processServer` calls the same
+    `dropHeldItems`, for heavy items only. In single player
+    `dropHeavyItems` drops the item itself and fires `OnContainerUpdate`
+    and `onItemFall`.
+  * `setPrimaryHandItem` and `setSecondaryHandItem` fire `OnEquipPrimary`
+    and `OnEquipSecondary` (the character, the new item) whenever the hand
+    changes, with no server or client guard. `removeFromHands` (vanilla's
+    `forceDropHeavyItems`) and the server's `EquipPacket` go through them.
+    Only `IsoGameCharacter.load` and `IsoPlayer.load` set the hands
+    directly, so a player who joins or continues holding an item fires no
+    equip event.
+  * `LuaEventManager.triggerEvent` queues an event raised off the main
+    thread and fires it on the main thread later.
+  * A dedicated server runs `IngameState.update` on every pass of its main
+    loop until it shuts down (`GameServer.main`), and `updateInternal`
+    fires `OnTick` with no server guard. Seen in RT-MP run 210: 300
+    `OnTick` events in 78.8 s from the server's start, before anyone
+    joined (about 3.8 a second, against a client's 60).
+
+  The mod follows the hands for that reason (`Machines.onHands`, D-015
+  amendment).
 
 ### Player mod data in multiplayer (RT-MP runs 203–204 and 208, 2026-11-06)
 

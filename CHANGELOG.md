@@ -18,9 +18,12 @@
   had learned, but the menu read the client's own copy, which never had
   it. Checked in game, in single player and on a server.
 * A fermentation vessel carried when the character dies now falls at the
-  body's feet with its batch going on. Before, the batch waited until
-  someone opened the vessel's menu, losing the time in between. Checked in
-  game.
+  body's feet with its batch going on, in single player and on a server.
+  Before, the batch waited until someone opened the vessel's menu, losing
+  the time in between. A server tells the mod nothing about a player's
+  death, so there the mod watches the vessel leave the player's hands
+  instead. That also covers a vessel dropped when climbing (not checked
+  in game). Checked in game, in single player and on a server.
 * The crafting window and the craft menu name the mod's recipes ("Make
   Fermentation Vessel", in Italian "Crea recipiente di fermentazione").
   They showed their internal ids, such as "TLG_MakeFermenterVessel", so
