@@ -203,6 +203,14 @@
   open and each dialog on screen until photographed, the debug console
   hidden meanwhile. The rectangles of what each shot shows are in the
   results, for cropping; no save.
+  transfer-liquid: the game's Transfer Liquid window, used as a player uses
+  it: Fluid > Transfer Liquid on a can of aged, stabilized petrol with
+  ethanol, water and sediment, an empty can picked from the target box's
+  menu, the slider at half and Pour clicked; then that can taken away and
+  the rest poured into a can of fresh petrol. The first must hold the
+  source's fuel in its condition, the second the blend the mixing rules
+  give; the window's preview must write no record. One screenshot of the
+  window; no save.
 .PARAMETER ModSource
   Folder deployed as the mod (default: the repository's; see setup-devenv.ps1).
 .PARAMETER ActiveMods
@@ -212,7 +220,7 @@ param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
-        "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "italian", "docs-shots")][string]$Mode = "full",
+        "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
@@ -274,7 +282,7 @@ if ($Mode -eq "italian") {
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
     "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
-    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } default { "sp-a" } }
+    "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } "transfer-liquid" { "sp-rttl" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json

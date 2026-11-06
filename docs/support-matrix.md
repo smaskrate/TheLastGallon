@@ -20,8 +20,8 @@ Evidence levels:
 
 | Path | Mechanism | Condition carried | Quantity owner | Evidence |
 | --- | --- | --- | --- | --- |
-| Item ↔ item pour (`ISFluidTransferAction`) | wrapped `FluidContainer.Transfer` | yes | native | **Verified RT-DS** (adapter calls without a character action); vanilla action itself NOT RUN |
-| Any Lua code calling `FluidContainer.Transfer` | same wrapper | yes | native | **Verified RT-DS** |
+| Item ↔ item pour (the game's **Transfer Liquid** window, `ISFluidTransferAction`) | wrapped `FluidContainer.Transfer`, once per slice of about 0.02 L | yes, except a small share of water and sediment (below) | native | **Verified RT-SP** (run 213: ageing, stabilizer and blend carried; water and sediment lost) |
+| Any Lua code calling `FluidContainer.Transfer` | same wrapper | yes, except a component under 0.0002 L per call that the target lacks (below) | native | **Verified RT-DS** |
 | Java-side fluid moves (not via Lua) | none | no → reconciled as untracked inflow at baseline | native | SRC/BC reasoning |
 | Pump → can (`ISTakeFuel`) | action wrap; pump corrected (1 L/unit, no duplicate increment); can fluids set to reservoir blend | yes, incl. water/sediment | pump: TLG-corrected native units | **Verified RT-SP** (runs 3–5: 10 L = −10 units) |
 | Can → vehicle (`ISAddGasolineToVehicle`) | action wrap (new/complete/stop/serverStop) | yes | native | **Verified RT-SP** (station fuel; E25 blend 8 L) |
@@ -41,6 +41,19 @@ Evidence levels:
 Vanilla refuses a `FluidContainer.Transfer` between items while the player's
 inventory is full (BC `FluidContainer.CanTransfer`, seen in run 10); TLG
 follows whatever vanilla moves, so nothing is moved and nothing recorded.
+
+Every call through the wrapper follows its own parcel. When the mod writes
+the target's record and fluids, a component under 0.0002 L is added to
+the target's largest one (`Native.holdable`). So a call that brings less
+than 0.0002 L of a component the target lacks loses that component from
+the record; by the same code (`Containers.commit`) the target's fluids are
+set to the record, which turns it into the main fuel there too. The
+**Transfer Liquid** window makes this common: it pours in slices of about
+0.02 L (run 213: 3.79 L in 190 calls), so into a target with no water or
+sediment, fuel with less than about 1 % of either arrives without it. Run
+213's two pours lost all the 0.08 L of water and sediment the source can
+held; the source keeps its own share until it is poured. Known defect,
+not fixed.
 
 Vanilla's refuel menus offer only containers that hold `Petrol`
 (`contains(Fluid.Petrol)`): a station can with water and sediment is still

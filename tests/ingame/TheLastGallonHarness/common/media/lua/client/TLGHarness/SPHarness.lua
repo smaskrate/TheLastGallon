@@ -82,6 +82,8 @@
 --   sp-rtds -> the player guide's screenshots: the Fuel, Machine and
 --              Workshop menus and their dialogs, and the crafting window,
 --              shown and photographed
+--   sp-rttl -> the game's Transfer Liquid window: aged, stabilized fuel
+--              poured into an empty can, then into a can of fresh petrol
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -110,7 +112,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -12380,6 +12382,339 @@ if REQUEST == "sp-rtkn" then
         RT.KN.oldEntry, RT.finish }
 end
 
+------------------------------------------------------------------------------
+-- Transfer Liquid (request "sp-rttl"): the game's own window, used as a
+-- player uses it. The inventory menu's Fluid > Transfer Liquid on can A
+-- (SRC ISFluidContainerMenu.lua:16) opens the window with A as the source;
+-- the target is picked from the target box's own menu (what a click on the
+-- box opens, SRC ISFluidContainerPanel.lua:61), the slider set and Pour
+-- clicked. ISFluidTransferAction then pours a slice per update through
+-- FluidContainer.Transfer (SRC ISFluidTransferAction.lua:29,73), which the
+-- mod wraps. A holds aged petrol with some of the mod's ethanol, water and
+-- sediment, and stabilizer (a fixture on its record).
+--   pour1: half of A into empty can B. B must hold A's fuel in A's
+--          condition, stabilizer included, and A keep its own.
+--   pour2: B taken away, can C with 4 L of fresh petrol given, the rest of
+--          A poured into it. C must hold the blend the mod's mixing rules
+--          give (deg weighted by each component's litres, stabilizer by fuel
+--          litres, microbial growth by all litres), worked out here from
+--          both records rather than with the mod's own blend function.
+-- While the window previews a pour (a Transfer into a copy of the target,
+-- SRC ISFluidTransferUI.lua:410), neither can's record may change. Every
+-- FluidContainer.Transfer call is counted on its way in, and the mod's
+-- error log is watched for the whole run.
+------------------------------------------------------------------------------
+RT.TL = { calls = { preview = 0, cans = 0, other = 0 }, errors = {} }
+
+function RT.TL.ui()
+    local slot = ISFluidTransferUI.players and ISFluidTransferUI.players[0]
+    return slot and slot.instance or nil
+end
+
+-- Counts FluidContainer.Transfer calls by what they move between (into a
+-- container with no owner: the window's preview copy) and keeps the mod's
+-- error lines, until switched off.
+function RT.TL.watch(on)
+    local TL = RT.TL
+    if on and not TL.origTransfer then
+        TL.origTransfer = FluidContainer.Transfer
+        FluidContainer.Transfer = function(a, b, amount, ...)
+            local ok, ao, bo = pcall(function()
+                local C = TLG.Integration.Containers
+                return (C.ownerOf(a)), (C.ownerOf(b))
+            end)
+            local k = "other"
+            if ok and bo == nil then k = "preview" elseif ok and ao ~= nil then k = "cans" end
+            TL.calls[k] = TL.calls[k] + 1
+            return TL.origTransfer(a, b, amount, ...)
+        end
+        TL.origError = TLG.Log.error
+        TLG.Log.error = function(fmt, ...)
+            local ok, msg = pcall(string.format, fmt, ...)
+            TL.errors[#TL.errors + 1] = ok and msg or tostring(fmt)
+            return TL.origError(fmt, ...)
+        end
+    elseif not on and TL.origTransfer then
+        FluidContainer.Transfer, TL.origTransfer = TL.origTransfer, nil
+        TLG.Log.error, TL.origError = TL.origError, nil
+    end
+end
+
+function RT.TL.callsText()
+    local c = RT.TL.calls
+    return string.format("%d preview, %d can to can, %d other", c.preview, c.cans, c.other)
+end
+
+-- The inventory menu on a can, as a right-click builds it, and its Fluid >
+-- Transfer Liquid entry chosen. Returns whether the entry was there.
+function RT.TL.open(label, can)
+    local context = ISInventoryPaneContextMenu.createMenu(0, true, { can }, 100, 100)
+    local root = context and context:getOptionFromName(getText("ContextMenu_Fluid"))
+    local sub = root and root.subOption and context:getSubMenu(root.subOption)
+    local opt = sub and sub:getOptionFromName(getText("Fluid_Transfer_Fluids"))
+    if context then context:setVisible(false) end
+    local usable = opt ~= nil and not opt.notAvailable
+    R:line("OBS  %s menu %s=%s > %s=%s", label, getText("ContextMenu_Fluid"), tostring(root ~= nil),
+        getText("Fluid_Transfer_Fluids"), tostring(usable))
+    if usable then opt.onSelect(opt.target, opt.param1, opt.param2) end
+    return usable
+end
+
+-- The target box's own menu (the carried containers the window accepts, by
+-- name and content) and `can` chosen from it.
+function RT.TL.target(label, ui, can)
+    local box = ui.panelRight.itemDropBox
+    local valid = box:getValidItems()
+    local accepted = false
+    for _, it in ipairs(valid) do
+        if it == can then accepted = true end
+    end
+    local pick, names = nil, {}
+    if #valid > 0 then
+        box:onMouseDown(0, 0)
+        local menu = getPlayerContextMenu(0)
+        for _, o in ipairs(menu and menu.options or {}) do
+            names[#names + 1] = tostring(o.name)
+            if o.param1 == can then pick = o end
+        end
+        if menu then menu:setVisible(false) end
+    end
+    R:line("OBS  %s target box: %d container(s) accepted, its menu [%s]", label, #valid, table.concat(names, " | "))
+    if pick then pick.onSelect(pick.target, pick.param1) end
+    return accepted and pick ~= nil
+end
+
+function RT.TL.shot(name)
+    local file = "tlg_rttl_" .. name .. ".png"
+    local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+    R:line("OBS  RTTL.screenshot %s ok=%s", file, tostring(ok))
+end
+
+-- What the mixing rules give when `litres` of `src` go into `dst`, both
+-- advanced to the same hour: the composition, deg, stab and mic.
+function RT.TL.blend(src, dst, litres)
+    local Defs, Reg = TLG.Domain.FuelDefs, TLG.Registry
+    local total = TLG.Domain.Supply.total(src)
+    local keys = {}
+    for k in pairs(src.q) do keys[k] = true end
+    for k in pairs(dst.q) do keys[k] = true end
+    local q, deg = {}, {}
+    local parcelFuel, parcelAll, dstFuel, dstAll = 0, 0, 0, 0
+    for _, k in ipairs(TLG.Tables.sortedKeys(keys)) do
+        local p = (src.q[k] or 0) / total * litres
+        local d = dst.q[k] or 0
+        q[k] = d + p
+        parcelAll, dstAll = parcelAll + p, dstAll + d
+        if not Defs.isContaminant(k) then parcelFuel, dstFuel = parcelFuel + p, dstFuel + d end
+        local def = Reg.get("fuel", k)
+        if def and def.aging and q[k] > 0 then
+            deg[k] = ((dst.deg[k] or 0) * d + (src.deg[k] or 0) * p) / q[k]
+        end
+    end
+    local stab = ((dst.stab or 0) * dstFuel + (src.stab or 0) * parcelFuel) / (dstFuel + parcelFuel)
+    local mic = ((dst.mic or 0) * dstAll + (src.mic or 0) * parcelAll) / (dstAll + parcelAll)
+    return q, deg, stab, mic
+end
+
+RT.TL.setup = { name = "rttl_setup", timeout = 600, fn = function(ctx, ticks)
+    local TL = RT.TL
+    if ticks == 1 then
+        player():setGodMod(true)
+        player():setInvisible(true)
+        TL.watch(true)
+        removeAll("Base.PetrolCan")
+        TL.a = giveCan("Base.PetrolCan", { { Fluid.Petrol, 6 }, { Fluid.Get("TLG_Ethanol"), 1.5 },
+            { Fluid.Get("TLG_FuelWater"), 0.06 }, { Fluid.Get("TLG_FuelSediment"), 0.02 } })
+        TL.b = giveCan("Base.PetrolCan", {})
+        return nil
+    end
+    if ticks < 30 then return nil end
+    -- Fixture: an ageing history and stabilizer on A's record (fuel the mod
+    -- finds new has neither).
+    local C = TLG.Integration.Containers
+    local rec = C.read(TL.a, "item", true)
+    if rec then
+        for _, k in ipairs(TLG.Tables.sortedKeys(rec.q)) do
+            local def = TLG.Registry.get("fuel", k)
+            if def and def.aging then rec.deg[k] = (k == "gasoline") and 0.3 or 0.15 end
+        end
+        rec.stab = 0.6
+        C.writeSidecar(TL.a, "item", rec)
+    end
+    local v = tlgView("item", TL.a)
+    R:line("OBS  RTTL.can_a fluids %s; record %s", TLGH.fluidSummary(TL.a:getFluidContainer()), viewText(v, "a"))
+    R:line("OBS  RTTL.can_b fluids %s; sidecar %s", TLGH.fluidSummary(TL.b:getFluidContainer()), sidecar(TL.b:getModData()))
+    R:check("RTTL.can_a_aged_and_stabilized", function()
+        return v ~= nil and (v.deg.gasoline or 0) > 0.2 and (v.stab or 0) > 0.5 and (v.q.ethanol or 0) > 1
+            and (v.q.water or 0) > 0 and (v.q.sediment or 0) > 0, viewText(v, "a")
+    end)
+    return true
+end }
+
+-- One pour through the window: `slider` is the share of the most the window
+-- allows; `afterPour(ctx, moved, dstView)` adds the pour's own checks.
+function RT.TL.pourStep(name, getSrc, getDst, slider, emptyDestination, afterPour)
+    return { name = "rttl_" .. name, timeout = 6000, fn = function(ctx, ticks)
+        local TL = RT.TL
+        local label = "RTTL." .. name
+        if ticks == 1 then
+            ctx.a, ctx.b = getSrc(), getDst()
+            if ctx.a == nil or ctx.b == nil then
+                R:line("SKIP %s: a can is missing", label)
+                return true
+            end
+            local fa, fb = ctx.a:getFluidContainer(), ctx.b:getFluidContainer()
+            R:line("OBS  %s %s canTransfer=%s", label, loadText(), tostring(FluidContainer.CanTransfer(fa, fb)))
+            hopBegin(ctx, label, "item", ctx.a, canAmount(fa), "item", ctx.b, canAmount(fb))
+            ctx.side0 = sidecar(ctx.a:getModData()) .. " / " .. sidecar(ctx.b:getModData())
+            TL.calls.preview, TL.calls.cans, TL.calls.other = 0, 0, 0
+            local opened = TL.open(label, ctx.a)
+            R:check(label .. ".menu_offers_transfer_liquid", function() return opened, tostring(opened) end)
+            if not opened then return true end
+            ctx.phase = "opening"
+            return nil
+        end
+        if ctx.phase == "opening" then
+            local ui = TL.ui()
+            if ui == nil or not TLGH.Steps.actionsIdle(player()) then return nil end
+            ctx.ui = ui
+            R:check(label .. ".window_opens_with_the_can_as_source", function()
+                return ui.panelLeft:getContainerOwner() == ctx.a and ui.panelRight:getContainerOwner() == nil,
+                    string.format("source=%s target=%s", tostring(ui.panelLeft:getContainerOwner()),
+                        tostring(ui.panelRight:getContainerOwner()))
+            end)
+            local picked = TL.target(label, ui, ctx.b)
+            R:check(label .. ".target_box_offers_the_can", function() return picked, tostring(picked) end)
+            if not picked then return true end
+            ui.slider:setCurrentValue(slider)
+            ctx.phase, ctx.t0 = "set", ticks
+            return nil
+        end
+        local ui = ctx.ui
+        if ctx.phase == "set" then
+            if ticks - ctx.t0 == 30 and name == "pour1" then TL.shot(name) end
+            if ticks - ctx.t0 < 40 then return nil end
+            local side1 = sidecar(ctx.a:getModData()) .. " / " .. sidecar(ctx.b:getModData())
+            ctx.planned = ui.info.transferring or 0
+            R:line("OBS  %s window open=%s: most %.4f L, pouring %.4f L (slider %.2f); Transfer calls so far: %s",
+                label, tostring(TL.ui() == ui), ui.info.maxTransfer or -1, ctx.planned, ui.slider:getCurrentValue(),
+                TL.callsText())
+            R:check(label .. ".preview_writes_no_record", function()
+                return side1 == ctx.side0 and TL.calls.cans == 0,
+                    string.format("before: %s; after: %s; can-to-can calls %d", ctx.side0, side1, TL.calls.cans)
+            end)
+            local enabled = ui.btnTransfer.enable == true and ctx.planned > 0
+            R:check(label .. ".pour_enabled", function()
+                return enabled, string.format("enable=%s pouring=%.4f message=%s", tostring(ui.btnTransfer.enable),
+                    ctx.planned, tostring(ui.errorLabel and ui.errorLabel.name))
+            end)
+            if not enabled then return true end
+            ui.btnTransfer:forceClick()
+            local act = ui.action
+            R:line("OBS  %s Pour clicked: action=%s amount=%s maxTime=%s instant=%s", label,
+                tostring(act and act.Type), tostring(act and act.amount), tostring(act and act.maxTime),
+                tostring(player():isTimedActionInstant()))
+            ctx.phase, ctx.t0 = "pouring", ticks
+            return nil
+        end
+        if ctx.phase == "pouring" then
+            if ticks - ctx.t0 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+            R:line("OBS  %s poured in %d ticks; Transfer calls: %s; mod errors so far %d", label, ticks - ctx.t0,
+                TL.callsText(), #TL.errors)
+            local moved, dv = hopEnd(ctx, emptyDestination)
+            R:line("OBS  %s.after fluids src %s dst %s", label, TLGH.fluidSummary(ctx.a:getFluidContainer()),
+                TLGH.fluidSummary(ctx.b:getFluidContainer()))
+            R:check(label .. ".moved_what_the_window_showed", function()
+                return math.abs(moved - ctx.planned) <= 1e-3, string.format("moved=%.4f window=%.4f", moved, ctx.planned)
+            end)
+            R:check(label .. ".poured_through_the_wrapped_call", function()
+                return TL.calls.cans > 0, TL.callsText()
+            end)
+            afterPour(ctx, moved, dv)
+            if TL.ui() then TL.ui():close() end
+            return true
+        end
+        return nil
+    end }
+end
+
+function RT.TL.afterPour1(ctx, moved, dv)
+    local now, env = TLG.World.now(), TLG.World.env()
+    local s0 = TLG.Domain.Aging.advance(ctx.srcView, now, env)
+    local sv = tlgView("item", ctx.a)
+    R:check("RTTL.pour1.source_keeps_its_condition", function()
+        if sv == nil then return false, "no view of the source" end
+        local same, detail = sameFuel(s0, sv, 1e-3)
+        return same and math.abs((sv.stab or 0) - (s0.stab or 0)) <= 1e-3,
+            string.format("%s; stab %.4f -> %.4f", detail, s0.stab or 0, sv.stab or 0)
+    end)
+    R:check("RTTL.pour1.stabilizer_carried", function()
+        if dv == nil then return false, "no view of the target" end
+        return (s0.stab or 0) > 0 and math.abs((dv.stab or 0) - (s0.stab or 0)) <= 1e-3,
+            string.format("source %.4f target %.4f", s0.stab or 0, dv.stab or 0)
+    end)
+end
+
+function RT.TL.afterPour2(ctx, moved, dv)
+    local now, env = TLG.World.now(), TLG.World.env()
+    local src = TLG.Domain.Aging.advance(ctx.srcView, now, env)
+    local dst = TLG.Domain.Aging.advance(ctx.dstView0, now, env)
+    local q, deg, stab, mic = RT.TL.blend(src, dst, moved)
+    local parts = {}
+    for _, k in ipairs(TLG.Tables.sortedKeys(q)) do
+        parts[#parts + 1] = string.format("%s=%.4f deg=%s", k, q[k], deg[k] and string.format("%.4f", deg[k]) or "-")
+    end
+    R:line("OBS  RTTL.pour2 expected by the rules: %s stab=%.4f mic=%.4f", table.concat(parts, ", "), stab, mic)
+    R:check("RTTL.pour2.blend_by_the_mixing_rules", function()
+        if dv == nil then return false, "no view of the target" end
+        local worst, where = math.abs((dv.stab or 0) - stab), "stab"
+        if math.abs((dv.mic or 0) - mic) > worst then worst, where = math.abs((dv.mic or 0) - mic), "mic" end
+        for _, k in ipairs(TLG.Tables.sortedKeys(q)) do
+            local d = math.abs((dv.q[k] or 0) - q[k])
+            if d > worst then worst, where = d, "q:" .. k end
+            if deg[k] then
+                d = math.abs((dv.deg[k] or 0) - deg[k])
+                if d > worst then worst, where = d, "deg:" .. k end
+            end
+        end
+        return worst <= 1e-3, string.format("worst=%.2e at %s", worst, where)
+    end)
+end
+
+-- B taken away (two cans carried per pour), C given with fresh petrol and
+-- recorded as a first look records it.
+RT.TL.swap = { name = "rttl_swap", timeout = 600, fn = function(ctx, ticks)
+    local TL = RT.TL
+    if ticks == 1 then
+        if TL.b and TL.b:getContainer() then TL.b:getContainer():Remove(TL.b) end
+        TL.c = giveCan("Base.PetrolCan", { { Fluid.Petrol, 4 } })
+        return nil
+    end
+    if ticks < 30 then return nil end
+    local C = TLG.Integration.Containers
+    local rec = C.read(TL.c, "item", true)
+    if rec then C.commit(TL.c, "item", rec) end
+    R:line("OBS  RTTL.can_c fluids %s; record %s", TLGH.fluidSummary(TL.c:getFluidContainer()),
+        viewText(tlgView("item", TL.c), "c"))
+    return true
+end }
+
+RT.TL.close = { name = "rttl_close", timeout = 300, fn = function(ctx, ticks)
+    local TL = RT.TL
+    if TL.ui() then TL.ui():close() end
+    R:check("RTTL.no_mod_errors", function() return #TL.errors == 0, table.concat(TL.errors, " | ") end)
+    TL.watch(false)
+    return true
+end }
+
+if REQUEST == "sp-rttl" then
+    RT.transferSteps = { RT.waitWorld, RT.TL.setup,
+        RT.TL.pourStep("pour1", function() return RT.TL.a end, function() return RT.TL.b end, 0.5, true, RT.TL.afterPour1),
+        RT.TL.swap,
+        RT.TL.pourStep("pour2", function() return RT.TL.a end, function() return RT.TL.c end, 1.0, false, RT.TL.afterPour2),
+        RT.TL.close, RT.finish }
+end
+
 if REQUEST == "sp-rtsu" then
     RT.successorSteps = { RT.waitWorld, RT.SU.setup, RT.SU.carry, RT.SU.die, RT.SU.respawn, RT.SU.arrive, RT.SU.can,
         RT.SU.vessel, RT.SU.after, RT.finish }
@@ -13427,7 +13762,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -13564,6 +13899,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtkn" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel")
                 TLGH.Steps.run(R, RT.knowledgeSteps, H, nil)
+            elseif REQUEST == "sp-rttl" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the game's Transfer Liquid window")
+                TLGH.Steps.run(R, RT.transferSteps, H, nil)
             elseif REQUEST == "sp-rtkns" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel, before the save")
                 TLGH.Steps.run(R, RT.knowledgeSaveSteps, H, nil)

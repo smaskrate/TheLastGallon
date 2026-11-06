@@ -4616,3 +4616,69 @@ Launch 212's:
 [workshop menu](evidence/2026-11-06_run212_workshop_menu.jpg),
 [Project status](evidence/2026-11-06_run212_project_status.jpg),
 [crafting window](evidence/2026-11-06_run212_crafting_window.jpg).
+
+## 2026-11-06 — RT-SP launch 213 (the game's Transfer Liquid window)
+
+The user asked whether the game's **Transfer Liquid** works with the mod,
+then to check it in game ("Yes, check it"). Until now only the call the
+window ends in, `FluidContainer.Transfer`, had been tested, called from Lua
+(RT-DS boot 3). New mode `tools/run-sp-harness.ps1 -Mode transfer-liquid`
+(`sp-rttl`), no save. The mod's code was as committed in `82b948e`; only
+the harness changed. The mode uses the window as a player does:
+* it builds the can's inventory menu with the game's right-click builder
+  (`ISInventoryPaneContextMenu.createMenu`) and chooses **Fluid** >
+  **Transfer Liquid**; the window opens after the game's panel action,
+  with the can as the source;
+* it picks the target from the menu the target box opens when clicked,
+  sets the slider and clicks **Pour** (`forceClick`, what a click runs);
+* it counts every `FluidContainer.Transfer` call on its way in (a call
+  into a container with no owner is the window's preview) and watches the
+  mod's error log.
+
+Can A held 6 L of petrol, 1.5 L of the mod's ethanol, 0.06 L of its water
+and 0.02 L of its sediment (7.58 L). A fixture on its record set the
+gasoline's degradation to 0.3, the ethanol's to 0.15 and the stabilizer
+to 0.6.
+
+* Launch 213 (**22/2**). Both failures have one cause, below.
+  * Pour 1, half of A into an empty petrol can B. The target box offered
+    "Empty Gas Can (0 mL)"; the window showed "Max Pour: 7.58 L" and
+    "Pouring: 3.79 L". `ISFluidTransferAction` (151.6 ticks of work)
+    poured in 189 ticks through 190 calls of the wrapped
+    `FluidContainer.Transfer`, about 0.02 L each; 3.79 L left A and
+    reached B. The window's two previews before Pour wrote no record. A kept its
+    condition and proportions. B got A's degradation, its stabilizer (0.6)
+    and the ethanol's share, but no water or sediment: B's record held
+    3.04 L of gasoline and 0.75 L of ethanol, where A's proportions give
+    3.00 L of gasoline, 0.75 L of ethanol, 0.03 L of water and 0.01 L of
+    sediment.
+  * Pour 2, the rest of A (3.79 L) into a can C holding 4 L of petrol the
+    mod had just recorded at the world's baseline (degradation 0.1543).
+    The litres were kept and A emptied. C's gasoline degradation came to
+    0.2166, where the mixing rules, worked out in the harness from both
+    records, give 0.2167. C again got no water or sediment: 7.04 L of
+    gasoline where the rules give 7.00 L, 0.03 L of water and 0.01 L of
+    sediment. Its stabilizer, 0.2897 against 0.2903, is lower because
+    those 0.04 L count as fuel.
+  * The mod logged no error.
+
+Cause, read in the code after the run: a slice of 0.02 L of A carries
+0.00016 L of water and 0.00005 L of sediment. The mod writes a record with
+any component under 0.0002 L (`Native.MIN_FLUID`) added to the largest
+one (`Native.holdable`, D-007 amendment, runs 57–59), then sets the can's
+fluids to the record (`Containers.commit`). A target with no water or
+sediment of its own never holds 0.0002 L of either, so each slice's water
+and sediment became gasoline. The run did not log B's and C's fluids by
+type; by the same code they were set to the records. At 0.02 L a slice, a
+share of water or sediment under 1 % does not reach the target, and a
+larger one does (the first slice already holds 0.0002 L).
+
+Not run:
+* the fix (none made: the finding is reported to the user first);
+* world containers (rain barrels, the FuelPump entity) and multiplayer;
+* a pour stopped part-way.
+
+Evidence:
+[2026-11-06_rt-sp_harness_run213_transfer_liquid.txt](evidence/2026-11-06_rt-sp_harness_run213_transfer_liquid.txt);
+the window before Pour 1 (stored as JPEG):
+[Transfer Liquid](evidence/2026-11-06_run213_transfer_liquid_window.jpg).

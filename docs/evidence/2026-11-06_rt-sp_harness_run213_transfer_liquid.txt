@@ -1,0 +1,65 @@
+# TLG single-player harness, the game's Transfer Liquid window
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=29690810234797487669 hours=2.0096 DayLength=4
+STEP rttl_setup begin
+OBS  RTTL.can_a fluids total=7.5800 [Petrol=6.0000,TLG_Ethanol=1.5000,TLG_FuelWater=0.0600,TLG_FuelSediment=0.0200]; record a id=S755955948-1 rev=0 total=7.5800 q[ethanol=1.5000,gasoline=6.0000,sediment=0.0200,water=0.0600] deg[ethanol=0.1500,gasoline=0.3000] mic=0 stab=0.5999892654633122
+OBS  RTTL.can_b fluids total=0.0000 []; sidecar no-sidecar
+PASS RTTL.can_a_aged_and_stabilized :: a id=S755955948-1 rev=0 total=7.5800 q[ethanol=1.5000,gasoline=6.0000,sediment=0.0200,water=0.0600] deg[ethanol=0.1500,gasoline=0.3000] mic=0 stab=0.5999892654633122
+STEP rttl_pour1 begin
+OBS  RTTL.pour1 load=0.0/12.0 full=false canTransfer=true
+OBS  RTTL.pour1.before src reconciled id=S755955948-1 rev=0 total=7.5800 q[ethanol=1.5000,gasoline=6.0000,sediment=0.0200,water=0.0600] deg[ethanol=0.1500,gasoline=0.3000] mic=0 stab=0.5999892654633122
+OBS  RTTL.pour1.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTTL.pour1 menu Fluid=true > Transfer Liquid=true
+PASS RTTL.pour1.menu_offers_transfer_liquid :: true
+PASS RTTL.pour1.window_opens_with_the_can_as_source :: source=Base.PetrolCan:zombie.inventory.types.ComboItem@51cf7ddb target=nil
+OBS  RTTL.pour1 target box: 1 container(s) accepted, its menu [Empty Gas Can (0 mL)]
+PASS RTTL.pour1.target_box_offers_the_can :: true
+OBS  RTTL.screenshot tlg_rttl_pour1.png ok=true
+OBS  RTTL.pour1 window open=true: most 7.5800 L, pouring 3.7900 L (slider 0.50); Transfer calls so far: 2 preview, 0 can to can, 0 other
+PASS RTTL.pour1.preview_writes_no_record :: before: id=S755955948-1 rev=0 q[ethanol=1.5000,gasoline=5.9999,sediment=0.0200,water=0.0601] deg[ethanol=0.1500,gasoline=0.3000] t=2.01 / no-sidecar; after: id=S755955948-1 rev=0 q[ethanol=1.5000,gasoline=5.9999,sediment=0.0200,water=0.0601] deg[ethanol=0.1500,gasoline=0.3000] t=2.01 / no-sidecar; can-to-can calls 0
+PASS RTTL.pour1.pour_enabled :: enable=true pouring=3.7900 message=
+OBS  RTTL.pour1 Pour clicked: action=ISFluidTransferAction amount=3.7899999618530273 maxTime=151.5999984741211 instant=false
+OBS  RTTL.pour1 poured in 189 ticks; Transfer calls: 3 preview, 190 can to can, 0 other; mod errors so far 0
+OBS  RTTL.pour1 litres src 7.5800->3.7900 dst 0.0000->3.7900
+OBS  RTTL.pour1.after src ok id=S755955948-1 rev=189 total=3.7900 q[ethanol=0.7500,gasoline=3.0000,sediment=0.0100,water=0.0300] deg[ethanol=0.1500,gasoline=0.3000] mic=0 stab=0.5999892654633108
+OBS  RTTL.pour1.after dst ok id=S755955948-2 rev=189 total=3.7900 q[ethanol=0.7500,gasoline=3.0400] deg[ethanol=0.1500,gasoline=0.3000] mic=0 stab=0.5999892654633109
+PASS RTTL.pour1.litres_conserved :: out=3.79000 in=3.79000
+PASS RTTL.pour1.tlg_total_matches_native :: tlg=3.79000 native=3.79000 status=ok
+FAIL RTTL.pour1.fuel_state_carried :: worst=1.06e-02 at fraction:gasoline
+PASS RTTL.pour1.moved_what_the_window_showed :: moved=3.7900 window=3.7900
+PASS RTTL.pour1.poured_through_the_wrapped_call :: 3 preview, 190 can to can, 0 other
+PASS RTTL.pour1.source_keeps_its_condition :: worst=3.36e-09 at fraction:gasoline; stab 0.6000 -> 0.6000
+PASS RTTL.pour1.stabilizer_carried :: source 0.6000 target 0.6000
+STEP rttl_swap begin
+OBS  RTTL.can_c fluids total=4.0000 [Petrol=4.0000]; record c id=S755955948-3 rev=0 total=4.0000 q[gasoline=4.0000] deg[gasoline=0.1543] mic=0 stab=0
+STEP rttl_pour2 begin
+OBS  RTTL.pour2 load=0.0/12.0 full=false canTransfer=true
+OBS  RTTL.pour2.before src ok id=S755955948-1 rev=189 total=3.7900 q[ethanol=0.7500,gasoline=3.0000,sediment=0.0100,water=0.0300] deg[ethanol=0.1500,gasoline=0.3000] mic=0 stab=0.5999892654633108
+OBS  RTTL.pour2.before dst - id=S755955948-3 rev=0 total=4.0000 q[gasoline=4.0000] deg[gasoline=0.1543] mic=0 stab=0
+OBS  RTTL.pour2 menu Fluid=true > Transfer Liquid=true
+PASS RTTL.pour2.menu_offers_transfer_liquid :: true
+PASS RTTL.pour2.window_opens_with_the_can_as_source :: source=Base.PetrolCan:zombie.inventory.types.ComboItem@51cf7ddb target=nil
+OBS  RTTL.pour2 target box: 1 container(s) accepted, its menu [Gasoline (Gas Can) (4000 mL)]
+PASS RTTL.pour2.target_box_offers_the_can :: true
+OBS  RTTL.pour2 window open=true: most 3.7900 L, pouring 3.7900 L (slider 1.00); Transfer calls so far: 2 preview, 0 can to can, 0 other
+PASS RTTL.pour2.preview_writes_no_record :: before: id=S755955948-1 rev=189 q[ethanol=0.7500,gasoline=3.0000,sediment=0.0100,water=0.0300] deg[ethanol=0.1500,gasoline=0.3000] t=2.03 / id=S755955948-3 rev=0 q[gasoline=4.0000] deg[gasoline=0.1543] t=2.03; after: id=S755955948-1 rev=189 q[ethanol=0.7500,gasoline=3.0000,sediment=0.0100,water=0.0300] deg[ethanol=0.1500,gasoline=0.3000] t=2.03 / id=S755955948-3 rev=0 q[gasoline=4.0000] deg[gasoline=0.1543] t=2.03; can-to-can calls 0
+PASS RTTL.pour2.pour_enabled :: enable=true pouring=3.7900 message=
+OBS  RTTL.pour2 Pour clicked: action=ISFluidTransferAction amount=3.7899999618530273 maxTime=151.5999984741211 instant=false
+OBS  RTTL.pour2 poured in 189 ticks; Transfer calls: 3 preview, 190 can to can, 0 other; mod errors so far 0
+OBS  RTTL.pour2 litres src 3.7900->0.0000 dst 4.0000->7.7900
+OBS  RTTL.pour2.after src ok id=S755955948-1 rev=378 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTTL.pour2.after dst ok id=S755955948-3 rev=189 total=7.7900 q[ethanol=0.7500,gasoline=7.0400] deg[ethanol=0.1500,gasoline=0.2166] mic=0 stab=0.2897493642900738
+PASS RTTL.pour2.litres_conserved :: out=3.79000 in=3.78999
+PASS RTTL.pour2.tlg_total_matches_native :: tlg=7.78999 native=7.78999 status=ok
+PASS RTTL.pour2.moved_what_the_window_showed :: moved=3.7900 window=3.7900
+PASS RTTL.pour2.poured_through_the_wrapped_call :: 3 preview, 190 can to can, 0 other
+OBS  RTTL.pour2 expected by the rules: ethanol=0.7500 deg=0.1500, gasoline=7.0000 deg=0.2167, sediment=0.0100 deg=-, water=0.0300 deg=- stab=0.2903 mic=0.0000
+FAIL RTTL.pour2.blend_by_the_mixing_rules :: worst=4.00e-02 at q:gasoline
+STEP rttl_close begin
+PASS RTTL.no_mod_errors :: 
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.05
+SUMMARY pass=22 fail=2
+DONE

@@ -27,7 +27,7 @@ alternative), **NOT RUN**.
 | Gate | Question | Status | Evidence / result |
 | --- | --- | --- | --- |
 | G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), in English and in Italian (runs 43–44), not on the DS |
-| G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); a can on the ground keeps its fluid on the world object after reload |
+| G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); the **Transfer Liquid** window loses water and sediment under about 1 % (run 213); a can on the ground keeps its fluid on the world object after reload |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP + MP)** idle, start gate, stall, power and wear; driving SP | Vanilla burns the fuel, idling and driving, and the mod reconciles it proportionally; the mod never subtracts. Refuel, siphon, start gate, stall and poor fuel's power and wear (D-031): SP runs 3–6 and 179, MP runs 160, 165, 169 and 188. Driving burn (0.778 L over 352 tiles at 25 km/h) and a stall on the move: SP run 176. See G03 below |
 | G04 Generator consumption | Extend fuel/burn? | **PASS (SP + MP)** burn and start gate | Native burn reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 (SP runs 3–6; MP runs 160, 162) |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP + MP)** with adapter | Pickup, the drop action, `forceDropHeavyItems`, the menus' unequip and a drag to the floor carry the record (SP runs 3–6 and 85); taken and put back on a server (MP run 160) |
@@ -213,8 +213,16 @@ RT-DS results (`TLG_harness_server.txt`):
   (`status=ok`). This is the container-ownership fix of 2026-10-31;
   before it, the adapter took such a container for a world object
   (storage `drum_steel`) and wrote the record there (run 4).
-* NOT RUN: world-object containers (rain barrels, FuelPump entity), the
-  vanilla `ISFluidTransferAction` driven by a character.
+* RT-SP run 213: the game's **Transfer Liquid** window, driven as a player
+  drives it. `ISFluidTransferAction` poured 3.79 L in 189 ticks through
+  190 calls of `FluidContainer.Transfer` (one per update and one in
+  `complete()`), about 0.02 L each, and the wrapper followed each one.
+  The window's preview (SRC `ISFluidTransferUI.lua:410`) calls the same
+  function into a copy of the target that has no owner, so the wrapper
+  leaves it alone: no record was written before **Pour**. Ageing,
+  stabilizer and the blend followed; a small share of water and sediment
+  did not (`support-matrix.md`, transfer paths).
+* NOT RUN: world-object containers (rain barrels, FuelPump entity).
 
 ## G03 Vehicle fuel — PASS (SP + MP); driving SP only
 
