@@ -4111,13 +4111,17 @@ player's tests, and a read on a can nobody tested writing no record
   It matched its manifest and was installed into a fresh cache: phase A
   **100/0**, phase B **14/0**. The console's one exception came from the
   harness's own deep-recursion probe.
+* The zip of commit `d9cd9aa`, which took this change: SHA-256
+  `e3c075f9b6af3e917065ddcc6218e0ace22a1376013081ff54a25eddf387928b`,
+  4,008,919 bytes; two builds gave the same bytes. Its 129 files match
+  launch 206's manifest byte for byte; only the entries' time stamps
+  differ, set from the commit. Offline before it: 223/223, audit 25/25,
+  compile 125/0, translations OK.
 
 Not run:
 * death in multiplayer;
 * the new knowledge across a save and reload;
-* a pump's, vehicle's or generator's knowledge through a menu;
-* the zip of the commit that takes this change (its files should match
-  launch 206's manifest).
+* a pump's, vehicle's or generator's knowledge through a menu.
 
 Evidence: `docs/evidence/2026-11-06_rt-sp_harness_run200_knowledge_before.txt`,
 `…_run201_knowledge.txt`, `…_run202_successor.txt`, `…_run205_italian.txt`,
