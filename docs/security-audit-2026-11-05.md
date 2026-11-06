@@ -1286,7 +1286,12 @@ misurato nella VM.
 * `tlgKnowledge` nel modData del giocatore: in MP il server lo scrive ma il
   client lo legge dal proprio modData (`FuelContextMenu.lua:63`); il
   trasporto è implicito (l'harness verifica la risposta, non la voce
-  "What I know"): da verificare.
+  "What I know"): da verificare. **Verificato e corretto il 2026-11-06
+  (D-034):** il client non riceveva nulla e il menu diceva "sconosciuto"
+  dopo un campione e un'osservazione (RT-MP run 203); ora il menu chiede
+  al server il nuovo comando `known`, in sola lettura e con la stessa
+  portata di `status` (caso audit in `tests/audit/test_audit.lua`; run 204,
+  8/0).
 * Pacchetto: `workshop.txt` con `visibility=private` e manifesto SHA-256
   sono buone pratiche già presenti; aggiungere al rilascio un controllo che
   `dist/` non contenga `.devcache` o credenziali (oggi vero).

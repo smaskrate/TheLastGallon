@@ -286,6 +286,28 @@ listed with their replacement.
   credited up to the last time it was found placed, and nothing more
   counted while carried. The inventory's Drop was seen: the batch ran
   again at once where the vessel landed.
+* When its carrier dies (RT-SP runs 198–199, 2026-11-05): the game drops
+  the carried vessel at the body's feet, and no Lua hook sees that drop.
+  As with any put-down the mod does not see, the batch stayed paused
+  until the mod next found the vessel placed, at a Status or a take
+  (0.04 game h lost in run 199). A successor coming back days later would
+  have lost those days of fermenting.
+* Since 2026-11-06 the mod listens for the death (`Machines.onDeath` on
+  `Events.OnPlayerDeath`, on the authority; the user asked for it, "Yes,
+  fix it"):
+  * a machine still in the dying character's hands is watched for 300
+    ticks until it lands, then put down from that moment;
+  * one that went into the body stays carried;
+  * one already at the feet when the event comes, its record still
+    saying carried, is put down at the death. This is what 42.21 does in
+    single player: run 202's log reads "0 machine(s) in the hands, 1
+    already at the feet".
+
+  Run 202 (18/0): the dropped fermenter worked 0.0356 h over the 0.0356
+  game h from the death, as the placed one did. The watch branch is
+  covered by `tests/integration/test_machine_sites.lua` only. Not run:
+  death in multiplayer (whether a dedicated server fires the event for a
+  client's player was not looked at).
 
 ## D-016 UI feedback through rich-text dialogs
 * Decision: inspection and machine results are shown in `ISModalRichText`
@@ -1034,3 +1056,61 @@ listed with their replacement.
   Workshop banner and screenshots (R04). Not run: the mod list panel
   itself (the checks read what it draws from), and the uploader's own
   checks, since nothing was uploaded.
+
+## D-034 What I know about it: each test's latest result, answered by the authority
+* Decision:
+  * A player's knowledge of a fuel record keeps the latest observation of
+    each test (`{ kit = obs, visual = obs }`, `Inspection.remember`). A new
+    result replaces only the same test's last one.
+  * A new read-only command, `known`, answers What I know about it from
+    the authority's player object (`H.known`). It needs the same reach as
+    `status` (no ledger).
+  * Its reply lists each test, the more precise first (`Inspection.known`,
+    `Inspection.ORDER`), with:
+    * its observation;
+    * its age in game hours;
+    * whether the record's revision moved since it.
+
+    It also gives the seal state.
+  * The menu shows the reply (`Format.known`): per test, its name and
+    "how long ago" (`Format.ago`: just now, minutes, hours, days) above
+    its findings; under a test whose fuel changed since, "Since this
+    test, fuel was poured in or out or treated, or the container opened
+    or closed"; and, for an open container, "The container is open: the
+    fuel may have aged or taken up water since, so its actual condition
+    may differ".
+  * Knowledge saved before (the last observation alone) reads as that
+    test's (`Inspection.tests`; `migrations.md`).
+* Reason: the user found that What I know about it did not show what they
+  knew ("Shouldn't it show what I actually know about the smell and kit
+  tests? ... which tests have been done and how long ago ... If a
+  container is not sealed it should say that the actual results may
+  vary"). Confirmed in game before the fix:
+  * Run 200: after a kit sample and, two game hours later, a look, the
+    menu showed the look alone; the kit's composition was gone. It named
+    no test, gave no age, and gave no note after the can was opened or a
+    litre poured out. The player guide's "results go stale when the fuel
+    changes" was never shown, though `Inspection.knowledge` computed it.
+  * Run 203: on a dedicated server the menu said "unknown" after both
+    tests. The server wrote the knowledge into its own player object, and
+    the client read its own copy, which never had it. The security audit
+    of 2026-11-05 had listed this as to be verified.
+* Consequences:
+  * The revision moves with every write to the record, so opening or
+    closing the container counts as a change since a test; the note says
+    so. Ageing alone does not move it: an open container's ageing is what
+    the open note is for.
+  * Run 201 (10/0) and run 204 (on a server, 8/0) show the menu with both
+    tests, their ages, the changed and open notes, an old entry read, and
+    a new look current again.
+  * Run 205: 261 of 261 Italian strings as shipped.
+  * Domain tests: `test_treatment_inspection.lua`, `test_sample.lua`.
+    Audit cases: `known` refuses out of reach and tells one player nothing
+    of another's tests; on a can nobody tested it writes no record.
+  * Asked about fuel the mod has not recorded, `known`, like `status`
+    before it, gives the record its read builds an id that is never
+    written: the world's next id moves by one (Containers endpoint read,
+    `persist` true; audit suite, 2026-11-06). Left as it was.
+  * Not run: a save and reload of the new knowledge (player modData, saved
+    by the game); the knowledge of a pump, vehicle or generator through
+    the menu (the Fuel menu is for cans).

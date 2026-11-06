@@ -1,0 +1,35 @@
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.21.0 4a0e9546ec
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP give_knowledge_items begin
+STEP mp_kn_have begin
+PASS MP.kn_items_A :: can 1592054072, kits 1
+STEP kn_kit begin
+PASS MP.kn_kit_A :: ok=true reason=nil duplicate=nil state=nil
+STEP kn_look begin
+PASS MP.kn_look_A :: ok=true reason=nil duplicate=nil state=nil
+OBS  MP.kn_client_copy_A the client's own player mod data: knowledge none; the can's record id S186562231-12
+STEP mp_kn_known begin
+OBS  MP.kn_known_A menu entry=true; dialog: Fuel inspection <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+FAIL MP.kn_known_lists_both_tests_A :: Fuel inspection <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+PASS MP.kn_known_sealed_no_note_A :: Fuel inspection <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+STEP kn_unseal begin
+PASS MP.kn_unseal_A :: ok=true reason=nil duplicate=nil state=nil
+STEP mp_kn_unseal_settles begin
+STEP mp_kn_known_open begin
+OBS  MP.kn_known_open_A menu entry=true; dialog: Fuel inspection <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+FAIL MP.kn_known_open_note_A :: Fuel inspection <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+STEP mp_finish begin
+SUMMARY pass=6 fail=2
+DONE

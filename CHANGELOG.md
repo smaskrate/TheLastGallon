@@ -7,6 +7,20 @@
   as part of the mod (`LICENSE.md`).
 * The game's mod list shows the mod's poster, its icon (the fermentation
   vessel's) and its category.
+* What I know about it lists each test done on the fuel, the more precise
+  first: the latest kit sample and the latest look, each with how long ago
+  it was done and what it found. It says when fuel was poured in or out or
+  treated, or the container opened or closed, since a test, and when the
+  container is open, that the actual condition may differ. Before, it
+  showed only the last result, so a look replaced what a kit had found,
+  and the guide's "results go stale when the fuel changes" was never shown.
+  In multiplayer it always said "unknown": the server kept what the player
+  had learned, but the menu read the client's own copy, which never had
+  it. Checked in game, in single player and on a server.
+* A fermentation vessel carried when the character dies now falls at the
+  body's feet with its batch going on. Before, the batch waited until
+  someone opened the vessel's menu, losing the time in between. Checked in
+  game.
 * The crafting window and the craft menu name the mod's recipes ("Make
   Fermentation Vessel", in Italian "Crea recipiente di fermentazione").
   They showed their internal ids, such as "TLG_MakeFermenterVessel", so

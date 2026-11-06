@@ -98,7 +98,8 @@ function H.sample(player, args)
     local obs = Inspection.sample(state.rec, method, skill, Rng.new(seed))
     obs.supplyId = state.rec.id
     local know = player:getModData().tlgKnowledge or {}
-    know[tostring(state.rec.id)] = obs
+    -- The latest result of each test (a look keeps what a kit found).
+    know[tostring(state.rec.id)] = Inspection.remember(know[tostring(state.rec.id)], obs)
     player:getModData().tlgKnowledge = know
     return remember(state, player, args, { ok = true, requestId = args.requestId, observation = obs })
 end
@@ -159,7 +160,28 @@ function H.status(player, args)
         sealed = rec.sealed, primary = Supply.primary(rec), evaluation = eval }
 end
 
-H.commands = { transfer = H.transfer, sample = H.sample, treat = H.treat, status = H.status }
+-- What the asking player knows about a fuel (read-only, no ledger): each
+-- test's latest result, how long ago it was made and whether the fuel
+-- changed since, and whether the container is open. Answered by the
+-- authority, which keeps the knowledge in its own player object: before,
+-- the menu read the player's mod data where it stood, and a multiplayer
+-- client's copy never received what the server wrote (audit 2026-11-05,
+-- open item). Same reach as status.
+function H.known(player, args)
+    local bad = Tx.validateRequest(args, { "target" })
+    if bad then return bad end
+    local ctx = H.context(player)
+    local ep, why = ctx.resolve(args.target, ctx)
+    if ep == nil then return { ok = false, reason = "unknown_target", detail = why, requestId = args.requestId } end
+    local ok, reason = (ep.canObserve or ep.canAccess)(ep, player)
+    if not ok then return { ok = false, reason = "no_access", detail = reason, requestId = args.requestId } end
+    local rec = Aging.advance(ep:read(), ctx.now, ctx.env)
+    local know = player:getModData().tlgKnowledge or {}
+    local entry = rec.id ~= nil and know[tostring(rec.id)] or nil
+    return { ok = true, requestId = args.requestId, tests = Inspection.known(rec, entry), sealed = rec.sealed == true }
+end
+
+H.commands = { transfer = H.transfer, sample = H.sample, treat = H.treat, status = H.status, known = H.known }
 
 function H.dispatch(player, command, args)
     local fn = H.commands[command]

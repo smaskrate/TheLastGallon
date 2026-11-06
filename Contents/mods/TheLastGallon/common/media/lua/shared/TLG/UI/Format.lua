@@ -34,7 +34,47 @@ function Fmt.componentName(id)
     return tr("IGUI_TLG_Fuel_" .. id)
 end
 
-function Fmt.observation(obs)
+-- How long ago, in game time: "just now", minutes, hours, then days.
+function Fmt.ago(hours)
+    local h = math.max(0, hours or 0)
+    if h < 1 / 60 then return tr("IGUI_TLG_Ago_Now") end
+    if h < 1 then
+        local m = math.floor(h * 60)
+        return m == 1 and tr("IGUI_TLG_Ago_Minute") or tr("IGUI_TLG_Ago_Minutes", tostring(m))
+    end
+    if h < 24 then
+        local n = math.floor(h)
+        return n == 1 and tr("IGUI_TLG_Ago_Hour") or tr("IGUI_TLG_Ago_Hours", tostring(n))
+    end
+    local d = math.floor(h / 24)
+    return d == 1 and tr("IGUI_TLG_Ago_Day") or tr("IGUI_TLG_Ago_Days", tostring(d))
+end
+
+-- What I know about it: each test done on this fuel, most precise first,
+-- with when it was done, what it found and whether the fuel changed since;
+-- a note when the container is open. `reply` is the authority's answer to
+-- the known command: { tests = { { method, observation, ageHours, changed } },
+-- sealed }.
+function Fmt.known(reply)
+    local parts = { tr("IGUI_TLG_KnownTitle") }
+    local tests = reply and reply.tests or {}
+    if #tests == 0 then
+        parts[#parts + 1] = tr("IGUI_TLG_ConditionUnknown")
+        return table.concat(parts, " <LINE> <LINE> ")
+    end
+    for _, t in ipairs(tests) do
+        local lines = { tr("IGUI_TLG_KnownTest", tr("IGUI_TLG_TestName_" .. t.method), Fmt.ago(t.ageHours)) }
+        lines[#lines + 1] = Fmt.observation(t.observation, true)
+        if t.changed then lines[#lines + 1] = tr("IGUI_TLG_KnownChanged") end
+        parts[#parts + 1] = table.concat(lines, " <LINE> ")
+    end
+    if not reply.sealed then parts[#parts + 1] = tr("IGUI_TLG_KnownOpen") end
+    return table.concat(parts, " <LINE> <LINE> ")
+end
+
+-- One observation's findings; `noMethod` leaves out the method line (What I
+-- know about it names the test above them).
+function Fmt.observation(obs, noMethod)
     if obs == nil then
         return tr("IGUI_TLG_ConditionUnknown")
     end
@@ -54,7 +94,7 @@ function Fmt.observation(obs)
         end
         lines[#lines + 1] = tr("IGUI_TLG_Composition", table.concat(parts, ", "))
     end
-    lines[#lines + 1] = tr("IGUI_TLG_Method_" .. (obs.method or "visual"))
+    if not noMethod then lines[#lines + 1] = tr("IGUI_TLG_Method_" .. (obs.method or "visual")) end
     return table.concat(lines, " <LINE> ")
 end
 

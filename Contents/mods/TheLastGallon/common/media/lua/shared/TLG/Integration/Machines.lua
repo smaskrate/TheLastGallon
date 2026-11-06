@@ -637,6 +637,76 @@ local function account(fn, item)
     if not ok then TLG.Log.error("machine move: %s", tostring(err)) end
 end
 
+-- A carrier's death. The game drops a heavy item at the body's feet where
+-- no Lua hook sees it (RT-SP runs 198-199), and the batch stayed paused
+-- until the vessel was next read, losing the time between (D-015
+-- amendment). The machines in the dying character's hands are watched for
+-- a few seconds until they land, then put down from that moment; one that
+-- went into the body's inventory stays carried. Should the drop come
+-- before the event, a machine at the feet whose record still says carried
+-- is put down the same way.
+M.landing = M.landing or {}
+M.LANDING_TICKS = 300
+
+local function watchLandings()
+    local keep = {}
+    for _, w in ipairs(M.landing) do
+        w.ticks = w.ticks + 1
+        if M.isPlaced(w.item) then
+            account(M.putDown, w.item)
+        elseif w.ticks < M.LANDING_TICKS then
+            keep[#keep + 1] = w
+        end
+    end
+    M.landing = keep
+    if #keep == 0 then
+        Events.OnTick.Remove(watchLandings)
+        M.watching = false
+    end
+end
+
+function M.onDeath(character)
+    if character == nil or not World.isAuthority() then return end
+    local primary, secondary = character:getPrimaryHandItem(), character:getSecondaryHandItem()
+    local held = {}
+    if M.tracked(primary) then held[#held + 1] = primary end
+    if secondary ~= primary and M.tracked(secondary) then held[#held + 1] = secondary end
+    for _, it in ipairs(held) do
+        if M.isPlaced(it) then
+            account(M.putDown, it)
+        else
+            M.landing[#M.landing + 1] = { item = it, ticks = 0 }
+        end
+    end
+    local sq = character:getSquare()
+    local atFeet = 0
+    if #held == 0 and sq ~= nil and getCell then
+        for dx = -1, 1 do
+            for dy = -1, 1 do
+                local s = getCell():getGridSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
+                local objs = s and s:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if M.tracked(it) then
+                        local rec = M.read(it, false)
+                        if rec and rec.pause == "not_placed" then
+                            account(M.putDown, it)
+                            atFeet = atFeet + 1
+                        end
+                    end
+                end
+            end
+        end
+    end
+    if #held > 0 or atFeet > 0 then
+        TLG.Log.info("a carrier died: %d machine(s) in the hands, %d already at the feet", #held, atFeet)
+    end
+    if #M.landing > 0 and not M.watching then
+        M.watching = true
+        Events.OnTick.Add(watchLandings)
+    end
+end
+
 -- The machine carried in both arms (the fermentation vessel, drawn there
 -- by its own carry pose, D-025), or nil.
 function M.carriedInArms(character)
@@ -804,6 +874,7 @@ function M.install()
             return r
         end
     end
+    if Events and Events.OnPlayerDeath then Events.OnPlayerDeath.Add(M.onDeath) end
     -- Derived actions look the method up at call time.
     wrap(ISBaseTimedAction, "setActionAnim", function(orig, self, ...)
         local ok, err = pcall(function()

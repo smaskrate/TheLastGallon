@@ -1,0 +1,43 @@
+# TLG single-player harness, death and a successor
+game=42.21.0 4a0e9546ec
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=26348642267975576090 hours=2.0096 DayLength=4
+STEP rtsu_setup begin
+OBS  RTSU.load_F1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTSU.loaded_F1 :: sugar=6 water=30 reason=nil
+OBS  RTSU.load_F2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTSU.loaded_F2 :: sugar=6 water=30 reason=nil
+OBS  RTSU.a_look menu "Look and smell" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+PASS RTSU.a_knows_the_can :: can S587310259-3; look: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.6, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough)
+STEP rtsu_carry begin
+PASS RTSU.a_carries_F2 :: both hands=true state=Paused pause=not_placed done=1.517 h
+STEP rtsu_die begin
+OBS  RTSU.before_death seed=587310259 epoch=0 installedAt=2 policy=new_world; F1 done 1.5168 h, F2 done 1.5166 h (carried); can id=S587310259-3 rev=0 q[gasoline=6.0000] deg[gasoline=0.2030] t=2.02; A at 10661,10646
+PASS RTSU.a_died :: dead=true post-death screen=true
+OBS  RTSU.after_death body=true; can in container inventorymale of a dead body; F2 on the floor at 10661,10646, its record Processing/nil from 3.5331459045410156; F1 on the floor at 10661,10645
+STEP rtsu_respawn begin
+PASS RTSU.successor_made :: screens: Respawn > occupation Next > character Play; B at 10721,10630
+STEP rtsu_arrive begin
+PASS RTSU.world_record_kept :: seed=587310259 epoch=0 installedAt=2 policy=new_world (before: seed=587310259 epoch=0 installedAt=2 policy=new_world)
+PASS RTSU.successor_is_another_character :: B Abel, A dead=true
+PASS RTSU.successor_knows_nothing_yet :: 0 observations
+PASS RTSU.left_items_found :: F1 on the floor at 10661,10645; F2 on the floor at 10661,10646; can in container inventorymale of a dead body
+PASS RTSU.can_record_as_left :: id=S587310259-3 rev=0 q[gasoline=6.0000] deg[gasoline=0.2030] t=2.02 (before: id=S587310259-3 rev=0 q[gasoline=6.0000] deg[gasoline=0.2030] t=2.02)
+PASS RTSU.dropped_F2_works_from_the_death :: on the floor at 10661,10646; before Status Processing/nil (put down at 3.5331, died at 3.5331); over 0.0356 game h since the death: F2 0.0356 h of work, F1 0.0356 h
+PASS RTSU.placed_F1_answers_the_successor :: status ok=true state=Processing; done 1.5524 h (at death 1.5168, 0.0356 game h since)
+STEP rtsu_can begin
+PASS RTSU.successor_took_the_can :: in container none of IsoPlayer{  Name:null,  ID:32 }; id=S587310259-3 rev=0 q[gasoline=6.0000] deg[gasoline=0.2030] t=2.02
+OBS  RTSU.b_look menu "Look and smell" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTSU.b_what_i_know menu "What I know about it" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+PASS RTSU.successor_knows_after_a_look :: look: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.8, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough) | what I know: What I know about this fuel <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.8, give or take 1.1) <LINE> No free water detected
+STEP rtsu_vessel begin
+OBS  RTSU.b_takes_F2 from on the floor at 10661,10646
+PASS RTSU.successor_carries_F2 :: in container none of IsoPlayer{  Name:null,  ID:32 }
+PASS RTSU.F2_put_down_works_again :: on the floor at 10661,10646; status ok=true state=Processing pause=nil; done 1.5713 h
+STEP rtsu_after begin
+PASS RTSU.both_work_on :: over 1.000 game h: F1 1.0192 h of work, F2 1.0001 h
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 4.59
+SUMMARY pass=18 fail=0
+DONE

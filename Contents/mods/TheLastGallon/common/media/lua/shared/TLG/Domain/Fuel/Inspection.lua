@@ -78,6 +78,48 @@ function Inspection.grade(deg, previous)
     return raw
 end
 
+-- The order What I know about it lists the tests in: the most precise first.
+Inspection.ORDER = { "lab", "kit", "visual" }
+
+-- A player's knowledge of one fuel record: the latest observation of each
+-- test, { kit = obs, visual = obs }. Knowledge saved before 0.1.0 kept the
+-- last observation alone, of whichever test, as the entry itself; it reads
+-- as that test's (migrations.md).
+function Inspection.tests(entry)
+    if type(entry) ~= "table" then return {} end
+    if entry.observedDeg ~= nil then return { [entry.method or "visual"] = entry } end
+    local out = {}
+    for _, m in ipairs(Inspection.ORDER) do
+        if type(entry[m]) == "table" then out[m] = entry[m] end
+    end
+    return out
+end
+
+-- The entry after a new observation: it replaces that test's last result
+-- only. A look no longer erases what a kit found (RT-SP run 200).
+function Inspection.remember(entry, obs)
+    local out = Inspection.tests(entry)
+    out[obs.method or "visual"] = obs
+    return out
+end
+
+-- What a player knows of a supply, test by test, most precise first: each
+-- test's latest observation, how many game hours ago it was made, and
+-- whether the fuel changed since (poured in or out, or treated: its
+-- revision moved; ageing alone does not move it).
+function Inspection.known(s, entry)
+    local tests, out = Inspection.tests(entry), {}
+    for _, m in ipairs(Inspection.ORDER) do
+        local obs = tests[m]
+        if obs then
+            local age = (s.t ~= nil and obs.sampledAt ~= nil) and (s.t - obs.sampledAt) or 0
+            out[#out + 1] = { method = m, observation = obs, ageHours = math.max(0, age),
+                changed = obs.sampledRev ~= s.rev }
+        end
+    end
+    return out
+end
+
 -- What the player knows: "unknown" until sampled; stale samples are flagged
 -- when the supply changed after sampling (revision differs).
 function Inspection.knowledge(s, obs, previousGrade)

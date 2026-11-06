@@ -73,7 +73,7 @@ foreach ($id in "gasoline","ethanol","diesel","biodiesel","water","sediment","pl
     [void]$referenced.Add("IGUI_TLG_Fuel_$id")
 }
 foreach ($op in "stabilize","filter","separate","seal","unseal","clean") { [void]$referenced.Add("IGUI_TLG_TreatDone_$op") }
-foreach ($m in "visual","kit","lab") { [void]$referenced.Add("IGUI_TLG_Method_$m") }
+foreach ($m in "visual","kit","lab") { [void]$referenced.Add("IGUI_TLG_Method_$m"); [void]$referenced.Add("IGUI_TLG_TestName_$m") }
 foreach ($s in "Ready","InputsReserved","Processing","Paused","OutputReady","Faulted","Maintenance","Decommissioned") { [void]$referenced.Add("IGUI_TLG_MachineState_$s") }
 foreach ($s in "OutputReady_fermenter","OutputReady_still","OutputReady_dryer","OutputReady_stopped","OutputReady_stopped_fermenter") { [void]$referenced.Add("IGUI_TLG_MachineState_$s") }
 foreach ($s in "sugar_eq","stillage","spent_lime","quicklime_kg","yeast_starter") { [void]$referenced.Add("IGUI_TLG_Fuel_$s") }

@@ -107,7 +107,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -11720,6 +11720,559 @@ RT.CR.close = { name = "rtcr_close", timeout = 300, fn = function(ctx, ticks)
     return true
 end }
 
+------------------------------------------------------------------------------
+-- Death and a successor (request "sp-rtsu"). Survivor A loads two
+-- fermenters at the station, takes a petrol can and looks at it (Look and
+-- smell: A's knowledge, player modData tlgKnowledge), and takes the second
+-- fermenter into both arms (the loot window's double-click way). A is
+-- killed (IsoGameCharacter.Kill) and the game's own screens make survivor B
+-- in the same world: the post-death Respawn button, then Next through the
+-- spawn region, the occupation and the character (ISPostDeathUI,
+-- CoopCharacterCreation), as a player clicks them. B is then brought to
+-- the body and checked against what A left:
+--   * the world record (seed, epoch, installation) unchanged;
+--   * B knows nothing of A's fuel (knowledge belongs to a character);
+--   * the placed fermenter worked on through the death;
+--   * the can and the carried fermenter are found with A's body (or on the
+--     floor), their records as A left them, the carried one not worked;
+--   * B takes the can from the body, looks at it, and knows it then;
+--   * B takes the fermenter from the body into both arms and puts it down;
+--     it works again from then, and both fermenters work an hour later.
+-- Items are found again by their record ids after B arrives: the area may
+-- have been unloaded while B spawned elsewhere (RT.refind's reason).
+RT.SU = { x = START.x, y = START.y }
+
+function RT.SU.side(it)
+    return it and sidecar(it:getModData()) or "none"
+end
+
+-- Every item of the scene by its record id: on the floor around (x, y)
+-- and in any body's container there.
+function RT.SU.find()
+    local U, found = RT.SU, {}
+    local function look(it)
+        local p = it:getModData().tlgProc
+        if p and p.id then found[p.id] = it end
+        local s = it:getModData().tlg
+        if s and s.id then found[s.id] = it end
+    end
+    for dx = -4, 4 do
+        for dy = -4, 4 do
+            local s = sq(U.x + dx, U.y + dy, 0)
+            local objs = s and s:getWorldObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local it = objs:get(i):getItem()
+                if it then look(it) end
+            end
+            local bodies
+            pcall(function() bodies = s and s:getDeadBodys() end)
+            for i = 0, (bodies and bodies:size() or 0) - 1 do
+                local c = bodies:get(i):getContainer()
+                local items = c and c:getItems()
+                for j = 0, (items and items:size() or 0) - 1 do look(items:get(j)) end
+                U.body = U.body or bodies:get(i)
+            end
+        end
+    end
+    return found
+end
+
+function RT.SU.where(it)
+    if not it then return "missing" end
+    if it:getWorldItem() then
+        local s = it:getWorldItem():getSquare()
+        return string.format("on the floor at %d,%d", s:getX(), s:getY())
+    end
+    local c = it:getContainer()
+    local parent = c and c:getParent()
+    return string.format("in container %s of %s", tostring(c and c:getType()),
+        tostring(parent and (instanceof(parent, "IsoDeadBody") and "a dead body" or tostring(parent))))
+end
+
+RT.SU.setup = { name = "rtsu_setup", timeout = 3000, fn = function(ctx, ticks)
+    local U = RT.SU
+    if not ctx.t0 then
+        local p = player()
+        U.a = p
+        p:setGodMod(false)
+        p:setInvisible(true)
+        captureDialogs(true)
+        p:teleportTo(U.x + 1, U.y + 1, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    if not ctx.placed then
+        U.items = {}
+        for i = 1, 2 do
+            local it = instanceItem("TLG.FermenterVessel")
+            sq(U.x + i, U.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            U.items[i] = it
+        end
+        ctx.placed = ticks
+        return nil
+    end
+    if ticks - ctx.placed < 30 then return nil end
+    for i, it in ipairs(U.items) do
+        give("Base.Sugar", 6); give("Base.Yeast", 1)
+        for _ = 1, 3 do
+            local fc = player():getInventory():AddItem("Base.BucketEmpty"):getFluidContainer()
+            fc:Empty()
+            fc:addFluid(Fluid.Water, 10)
+        end
+        local r = machineClick("RTSU.load_F" .. i, it, "ContextMenu_TLG_LoadFerment")
+        R:check("RTSU.loaded_F" .. i, function()
+            return r.ok == true, string.format("sugar=%s water=%s reason=%s", tostring(r.sugarKg), tostring(r.waterL), tostring(r.reason))
+        end)
+    end
+    closeDialogs()
+    U.pid = { U.items[1]:getModData().tlgProc.id, U.items[2]:getModData().tlgProc.id }
+    -- A's can, recorded and looked at.
+    U.can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 6 } })
+    local fill = function(c) TLG.UI.FuelMenu.fill(0, c, { U.can }) end
+    local n = #H.dialogs.texts
+    menuClick("RTSU.a_look", fill, getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_Look"))
+    local look = H.dialogs.texts[n + 1]
+    closeDialogs()
+    U.canId = U.can:getModData().tlg and U.can:getModData().tlg.id
+    local know = player():getModData().tlgKnowledge or {}
+    R:check("RTSU.a_knows_the_can", function()
+        return U.canId ~= nil and know[tostring(U.canId)] ~= nil, string.format("can %s; look: %s", tostring(U.canId), tostring(look))
+    end)
+    U.h0 = hours()
+    return true
+end }
+
+-- An hour and a half on the clock, then A takes F2 into both arms.
+RT.SU.carry = { name = "rtsu_carry", timeout = 30000, fn = function(ctx, ticks)
+    local U = RT.SU
+    if not ctx.waited then
+        RT.speed(RT.waitSpeed)
+        if hours() - U.h0 < 1.5 then return nil end
+        RT.speed(1)
+        ctx.waited = ticks
+        return nil
+    end
+    local F2 = U.items[2]
+    if not ctx.queued then
+        -- Records catch up when read: Status brings both up to now.
+        if not ctx.read then
+            RT.statusOf(U.items[1])
+            RT.statusOf(F2)
+            U.carryFrom = RT.doneHours(F2)
+            ctx.read = true
+        end
+        -- The loot window lists the floor items beside the character; the
+        -- double-click takes from that list (run 197: F2 two tiles away had
+        -- no container and the take failed).
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        if F2:getContainer() == nil and ticks - ctx.waited < 120 then return nil end
+        ISInventoryPaneContextMenu.equipHeavyItem(player(), F2)
+        ctx.queued = ticks
+        return nil
+    end
+    if ticks - ctx.queued < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+    local p, pl = F2:getModData().tlgProc or {}, player()
+    R:check("RTSU.a_carries_F2", function()
+        return pl:getPrimaryHandItem() == F2 and pl:getSecondaryHandItem() == F2 and p.state == "Paused",
+            string.format("both hands=%s state=%s pause=%s done=%.3f h", tostring(pl:getPrimaryHandItem() == F2
+                and pl:getSecondaryHandItem() == F2), tostring(p.state), tostring(p.pause), RT.doneHours(F2))
+    end)
+    return true
+end }
+
+RT.SU.die = { name = "rtsu_die", timeout = 2400, fn = function(ctx, ticks)
+    local U = RT.SU
+    if not ctx.killed then
+        RT.statusOf(U.items[1])
+        RT.statusOf(U.items[2])
+        local w = TLGH.worldRecord()
+        U.world = string.format("seed=%s epoch=%s installedAt=%s policy=%s", tostring(w.seed), tostring(w.epoch),
+            tostring(w.installedAt), tostring(w.policy))
+        U.before = { F1 = RT.doneHours(U.items[1]), F2 = RT.doneHours(U.items[2]), can = U.side(U.can),
+            F2rec = TLG.Tables.deepCopy(U.items[2]:getModData().tlgProc), at = hours() }
+        local s = U.a:getSquare()
+        U.deathAt = { x = s:getX(), y = s:getY() }
+        R:line("OBS  RTSU.before_death %s; F1 done %.4f h, F2 done %.4f h (carried); can %s; A at %d,%d",
+            U.world, U.before.F1, U.before.F2, U.before.can, U.deathAt.x, U.deathAt.y)
+        U.a:setGodMod(false)
+        local ok, err = pcall(function() U.a:Kill(nil) end)
+        if not ok then
+            R:line("OBS  RTSU.kill Kill(nil) failed (%s); health set to 0 instead", tostring(err))
+            U.a:setHealth(0)
+        end
+        ctx.killed = ticks
+        return nil
+    end
+    if ticks - ctx.killed < 30 then return nil end
+    local ui = ISPostDeathUI.instance and ISPostDeathUI.instance[0]
+    if not (U.a:isDead() and ui) and ticks - ctx.killed < 600 then return nil end
+    -- The body comes some moments after the death (run 197: none after 30 ticks).
+    if not U.body then U.find() end
+    if not U.body and ticks - ctx.killed < 1800 then return nil end
+    R:check("RTSU.a_died", function()
+        return U.a:isDead(), string.format("dead=%s post-death screen=%s", tostring(U.a:isDead()), tostring(ui ~= nil))
+    end)
+    local found = U.find()
+    local f2 = found[U.pid[2]]
+    local p = f2 and f2:getModData().tlgProc or {}
+    R:line("OBS  RTSU.after_death body=%s; can %s; F2 %s, its record %s/%s from %s; F1 %s", tostring(U.body ~= nil),
+        U.where(found[U.canId]), U.where(f2), tostring(p.state), tostring(p.pause), tostring(p.t), U.where(found[U.pid[1]]))
+    return true
+end }
+
+-- The game's own screens, clicked as a player does.
+RT.SU.respawn = { name = "rtsu_respawn", timeout = 6000, fn = function(ctx, ticks)
+    local U = RT.SU
+    ctx.clicks = ctx.clicks or {}
+    local b = getPlayer()
+    if b and b ~= U.a and not b:isDead() then
+        if not ctx.spawned then
+            ctx.spawned = ticks
+            return nil
+        end
+        if ticks - ctx.spawned < 60 then return nil end
+        U.b = b
+        R:check("RTSU.successor_made", function()
+            return true, string.format("screens: %s; B at %d,%d", table.concat(ctx.clicks, " > "), b:getSquare():getX(),
+                b:getSquare():getY())
+        end)
+        return true
+    end
+    if ctx.last and ticks - ctx.last < 30 then return nil end
+    local ui = ISPostDeathUI.instance and ISPostDeathUI.instance[0]
+    local cc = CoopCharacterCreation.instance
+    if cc then
+        if cc.mapSpawnSelect:getIsVisible() then
+            cc.mapSpawnSelect:clickNext()
+            ctx.clicks[#ctx.clicks + 1] = "spawn region Next"
+        elseif cc.charCreationProfession:getIsVisible() then
+            cc.charCreationProfession.playButton:forceClick()
+            ctx.clicks[#ctx.clicks + 1] = "occupation Next"
+        elseif cc.charCreationMain:getIsVisible() then
+            cc.charCreationMain.playButton:forceClick()
+            ctx.clicks[#ctx.clicks + 1] = "character Play"
+        end
+    elseif ui and ui.buttonRespawn and ui.buttonRespawn:getIsVisible() then
+        ui.buttonRespawn:forceClick()
+        ctx.clicks[#ctx.clicks + 1] = "Respawn"
+    end
+    ctx.last = ticks
+    return nil
+end }
+
+RT.SU.arrive = { name = "rtsu_arrive", timeout = 1200, fn = function(ctx, ticks)
+    local U = RT.SU
+    if not ctx.t0 then
+        captureDialogs(true)
+        U.b:setInvisible(true)
+        U.b:teleportTo(U.x + 1, U.y + 1, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 120 then return nil end
+    local found = U.find()
+    U.F1, U.F2, U.can = found[U.pid[1]], found[U.pid[2]], found[U.canId]
+    local w = TLGH.worldRecord()
+    local world = string.format("seed=%s epoch=%s installedAt=%s policy=%s", tostring(w.seed), tostring(w.epoch),
+        tostring(w.installedAt), tostring(w.policy))
+    R:check("RTSU.world_record_kept", function() return world == U.world, world .. " (before: " .. U.world .. ")" end)
+    R:check("RTSU.successor_is_another_character", function()
+        return U.b ~= U.a and not U.b:isDead() and U.a:isDead(), string.format("B %s, A dead=%s",
+            tostring(U.b:getDescriptor() and U.b:getDescriptor():getForename()), tostring(U.a:isDead()))
+    end)
+    R:check("RTSU.successor_knows_nothing_yet", function()
+        local know = U.b:getModData().tlgKnowledge
+        local n = 0
+        for _ in pairs(know or {}) do n = n + 1 end
+        return n == 0, string.format("%d observations", n)
+    end)
+    R:check("RTSU.left_items_found", function()
+        return U.F1 ~= nil and U.F2 ~= nil and U.can ~= nil, string.format("F1 %s; F2 %s; can %s", U.where(U.F1),
+            U.where(U.F2), U.where(U.can))
+    end)
+    if not (U.F1 and U.F2 and U.can) then RT.abort = "items left by A not found"; return true end
+    R:check("RTSU.can_record_as_left", function()
+        return U.side(U.can) == U.before.can, U.side(U.can) .. " (before: " .. U.before.can .. ")"
+    end)
+    -- The game drops a heavy item at the feet when its carrier dies (run 198:
+    -- F2 on the floor at A's square, the can in the body), where no Lua sees
+    -- it. Runs 198-199: the batch stayed paused until the mod next found it
+    -- placed, the time before uncredited. Since the death hook (Machines
+    -- onDeath, D-015 amendment) it is put down when it lands: it works from
+    -- the death, as F1 does over the same time.
+    local p1 = TLG.Tables.deepCopy(U.F2:getModData().tlgProc or {})
+    local st2 = RT.statusOf(U.F2)
+    local st1 = RT.statusOf(U.F1)
+    local p2 = U.F2:getModData().tlgProc or {}
+    local w2, w1 = RT.doneHours(U.F2) - U.before.F2, RT.doneHours(U.F1) - U.before.F1
+    local dt = hours() - U.before.at
+    R:check("RTSU.dropped_F2_works_from_the_death", function()
+        return U.F2:getWorldItem() ~= nil and p1.state == "Processing" and p1.pause == nil and st2.ok == true
+            and st1.ok == true and p2.state == "Processing" and w2 > 0 and math.abs(w2 - w1) <= 0.002 + 0.05 * dt,
+            string.format("%s; before Status %s/%s (put down at %.4f, died at %.4f); over %.4f game h since the death: F2 %.4f h of work, F1 %.4f h",
+                U.where(U.F2), tostring(p1.state), tostring(p1.pause), p1.t or -1, U.before.at, dt, w2, w1)
+    end)
+    local st = RT.statusOf(U.F1)
+    R:check("RTSU.placed_F1_answers_the_successor", function()
+        return st.ok == true and RT.doneHours(U.F1) >= U.before.F1, string.format("status ok=%s state=%s; done %.4f h (at death %.4f, %.4f game h since)",
+            tostring(st.ok), tostring(st.state), RT.doneHours(U.F1), U.before.F1, hours() - U.before.at)
+    end)
+    return true
+end }
+
+-- B takes the can out of the body (the loot window's transfer) and looks.
+RT.SU.can = { name = "rtsu_can", timeout = 1200, fn = function(ctx, ticks)
+    local U = RT.SU
+    if RT.skip("rtsu_can") then return true end
+    if not ctx.queued then
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(U.b, U.can, U.can:getContainer(), U.b:getInventory()))
+        ctx.queued = ticks
+        return nil
+    end
+    if ticks - ctx.queued < 10 or not TLGH.Steps.actionsIdle(U.b) then return nil end
+    R:check("RTSU.successor_took_the_can", function()
+        return U.can:getContainer() == U.b:getInventory() and U.side(U.can) == U.before.can, U.where(U.can) .. "; " .. U.side(U.can)
+    end)
+    local fill = function(c) TLG.UI.FuelMenu.fill(0, c, { U.can }) end
+    local n = #H.dialogs.texts
+    menuClick("RTSU.b_look", fill, getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_Look"))
+    local look = H.dialogs.texts[n + 1]
+    closeDialogs()
+    n = #H.dialogs.texts
+    menuClick("RTSU.b_what_i_know", fill, getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_ShowKnown"))
+    local shown = H.dialogs.texts[n + 1]
+    closeDialogs()
+    local know = U.b:getModData().tlgKnowledge or {}
+    R:check("RTSU.successor_knows_after_a_look", function()
+        return has(look, getText("IGUI_TLG_InspectionTitle")) and know[tostring(U.canId)] ~= nil,
+            string.format("look: %s | what I know: %s", tostring(look), tostring(shown))
+    end)
+    return true
+end }
+
+-- B takes F2 out of the body into both arms, then puts it down.
+RT.SU.vessel = { name = "rtsu_vessel", timeout = 3000, fn = function(ctx, ticks)
+    local U = RT.SU
+    if RT.skip("rtsu_vessel") then return true end
+    if not ctx.queued then
+        ctx.t0 = ctx.t0 or ticks
+        pcall(function() getPlayerLoot(0):refreshBackpacks() end)
+        if U.F2:getContainer() == nil and ticks - ctx.t0 < 120 then return nil end
+        R:line("OBS  RTSU.b_takes_F2 from %s", U.where(U.F2))
+        ISInventoryPaneContextMenu.equipHeavyItem(U.b, U.F2)
+        ctx.queued = ticks
+        return nil
+    end
+    if not ctx.held then
+        if ticks - ctx.queued < 10 or not TLGH.Steps.actionsIdle(U.b) then return nil end
+        R:check("RTSU.successor_carries_F2", function()
+            return U.b:getPrimaryHandItem() == U.F2 and U.b:getSecondaryHandItem() == U.F2, U.where(U.F2)
+        end)
+        forceDropHeavyItems(U.b)
+        ctx.held = ticks
+        return nil
+    end
+    if ticks - ctx.held < 30 then return nil end
+    local st = RT.statusOf(U.F2)
+    local p = U.F2:getModData().tlgProc or {}
+    U.downAt, U.downDone = hours(), RT.doneHours(U.F2)
+    R:check("RTSU.F2_put_down_works_again", function()
+        return U.F2:getWorldItem() ~= nil and st.ok == true and p.state ~= "Paused",
+            string.format("%s; status ok=%s state=%s pause=%s; done %.4f h", U.where(U.F2), tostring(st.ok), tostring(p.state),
+                tostring(p.pause), U.downDone)
+    end)
+    U.h1, U.f1At = hours(), RT.doneHours(U.F1)
+    return true
+end }
+
+RT.SU.after = { name = "rtsu_after", timeout = 30000, fn = function(ctx, ticks)
+    local U = RT.SU
+    if RT.skip("rtsu_after") then return true end
+    RT.speed(RT.waitSpeed)
+    if hours() - U.h1 < 1 then return nil end
+    RT.speed(1)
+    RT.statusOf(U.F1)
+    RT.statusOf(U.F2)
+    local dh = hours() - U.h1
+    local w1, w2 = RT.doneHours(U.F1) - U.f1At, RT.doneHours(U.F2) - U.downDone
+    R:check("RTSU.both_work_on", function()
+        return w1 > 0.5 * dh and w2 > 0.5 * dh and math.abs(w1 - w2) < 0.05 * dh + 1e-6,
+            string.format("over %.3f game h: F1 %.4f h of work, F2 %.4f h", dh, w1, w2)
+    end)
+    return true
+end }
+
+------------------------------------------------------------------------------
+-- What I know about a fuel (request "sp-rtkn"), as the Fuel menu shows it. A
+-- petrol can with a little water (0.8 %: a kit finds it, a look does not)
+-- is tested with the sampling kit and, two game hours later, looked at.
+-- What I know about it is read before any test, after both, after the can
+-- is opened from the Fuel menu, after a litre is poured out of it, after a
+-- new look, and from an entry in the shape knowledge had before (the last
+-- observation alone). Run 200 read it before the fix.
+RT.KN = {}
+
+function RT.KN.menu(label, key)
+    local can = RT.KN.can
+    local fill = function(c) TLG.UI.FuelMenu.fill(0, c, { can }) end
+    local n = #H.dialogs.texts
+    local r = menuClick(label, fill, getText("ContextMenu_TLG_Fuel"), getText(key))
+    local text = H.dialogs.texts[n + 1]
+    closeDialogs()
+    return text, r
+end
+
+function RT.KN.known(label)
+    local text = RT.KN.menu("RTKN." .. label, "ContextMenu_TLG_ShowKnown")
+    R:line("OBS  RTKN.%s What I know: %s", label, tostring(text))
+    return text or ""
+end
+
+-- A dialog's lines (rich text " <LINE> " separators).
+function RT.KN.lines(text)
+    local out, s, i = {}, text or "", 1
+    while true do
+        local a, b = string.find(s, " <LINE> ", i, true)
+        if not a then out[#out + 1] = string.sub(s, i); break end
+        out[#out + 1] = string.sub(s, i, a - 1)
+        i = b + 1
+    end
+    return out
+end
+
+function RT.KN.count(text, part)
+    local n, i = 0, 1
+    while true do
+        local a, b = string.find(text or "", part, i, true)
+        if not a then return n end
+        n, i = n + 1, b + 1
+    end
+end
+
+RT.KN.setup = { name = "rtkn_setup", timeout = 600, fn = function(ctx, ticks)
+    if ticks == 1 then
+        player():setGodMod(true)
+        player():setInvisible(true)
+        captureDialogs(true)
+        removeAll("TLG.FuelSampleKit")
+        give("TLG.FuelSampleKit", 1)
+        RT.KN.can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 6 }, { Fluid.Water, 0.05 } })
+        RT.KN.empty = giveCan("Base.PetrolCan", {})
+        return nil
+    end
+    if ticks < 30 then return nil end
+    local fc = RT.KN.can:getFluidContainer()
+    local water = -1
+    pcall(function() water = fc:getSpecificFluidAmount(Fluid.Water) end)
+    R:line("OBS  RTKN.can %.3f L, water %.3f L", fc:getAmount(), water)
+    local text = RT.KN.known("before_any_test")
+    R:check("RTKN.unknown_before_any_test", function()
+        return has(text, getText("IGUI_TLG_ConditionUnknown")), text
+    end)
+    return true
+end }
+
+RT.KN.kit = { name = "rtkn_kit", timeout = 600, fn = function(ctx, ticks)
+    local text = RT.KN.menu("RTKN.kit", "ContextMenu_TLG_SampleKit")
+    RT.KN.kitText = text or ""
+    R:line("OBS  RTKN.kit result: %s", tostring(text))
+    R:check("RTKN.kit_sample_answers", function()
+        return has(text, getText("IGUI_TLG_InspectionTitle")), tostring(text)
+    end)
+    RT.KN.t0 = hours()
+    return true
+end }
+
+RT.KN.wait = { name = "rtkn_wait", timeout = 30000, fn = function(ctx, ticks)
+    RT.speed(RT.waitSpeed)
+    if hours() - RT.KN.t0 < 2 then return nil end
+    RT.speed(1)
+    return true
+end }
+
+RT.KN.look = { name = "rtkn_look", timeout = 600, fn = function(ctx, ticks)
+    local text = RT.KN.menu("RTKN.look", "ContextMenu_TLG_Look")
+    R:line("OBS  RTKN.look result: %s", tostring(text))
+    local known = RT.KN.known("after_both")
+    -- The kit's own composition line (a look tells no composition).
+    local label = string.gsub(getText("IGUI_TLG_Composition", ""), "%s+$", "")
+    local kitLine
+    for _, l in ipairs(RT.KN.lines(RT.KN.kitText)) do
+        if has(l, label) then kitLine = l end
+    end
+    R:check("RTKN.kit_result_kept_after_a_look", function()
+        return kitLine ~= nil and has(known, kitLine), string.format("the kit's line %s", tostring(kitLine))
+    end)
+    R:check("RTKN.both_tests_named", function()
+        return has(known, getText("IGUI_TLG_TestName_kit")) and has(known, getText("IGUI_TLG_TestName_visual")), known
+    end)
+    local h = tostring(math.floor(hours() - RT.KN.t0))
+    R:check("RTKN.when_each_test_was_done", function()
+        return has(known, getText("IGUI_TLG_Ago_Hours", h)) and has(known, getText("IGUI_TLG_Ago_Now")),
+            string.format("want '%s' (the kit) and '%s' (the look)", getText("IGUI_TLG_Ago_Hours", h),
+                getText("IGUI_TLG_Ago_Now"))
+    end)
+    R:check("RTKN.no_open_note_while_sealed", function() return not has(known, getText("IGUI_TLG_KnownOpen")), known end)
+    return true
+end }
+
+RT.KN.open = { name = "rtkn_open", timeout = 600, fn = function(ctx, ticks)
+    local _, r = RT.KN.menu("RTKN.unseal", "ContextMenu_TLG_Unseal")
+    local side = RT.KN.can:getModData().tlg
+    local known = RT.KN.known("opened")
+    R:check("RTKN.open_note", function()
+        return side ~= nil and side.sealed == false and has(known, getText("IGUI_TLG_KnownOpen")),
+            string.format("sealed=%s; %s", tostring(side and side.sealed), known)
+    end)
+    return true
+end }
+
+RT.KN.pour = { name = "rtkn_pour", timeout = 600, fn = function(ctx, ticks)
+    if ticks == 1 then
+        FluidContainer.Transfer(RT.KN.can:getFluidContainer(), RT.KN.empty:getFluidContainer(), 1.0)
+        return nil
+    end
+    if ticks < 20 then return nil end
+    local known = RT.KN.known("poured")
+    local note = getText("IGUI_TLG_KnownChanged")
+    R:check("RTKN.changed_since_both_tests", function()
+        return RT.KN.count(known, note) == 2, string.format("%d notes; %s", RT.KN.count(known, note), known)
+    end)
+    RT.KN.menu("RTKN.look_again", "ContextMenu_TLG_Look")
+    local again = RT.KN.known("looked_again")
+    R:check("RTKN.a_new_look_is_current", function()
+        return RT.KN.count(again, note) == 1, string.format("%d notes (the kit's only); %s", RT.KN.count(again, note), again)
+    end)
+    return true
+end }
+
+-- Knowledge saved before the fix held the last observation alone.
+RT.KN.oldEntry = { name = "rtkn_old_entry", timeout = 600, fn = function(ctx, ticks)
+    local side = RT.KN.can:getModData().tlg
+    local know = player():getModData().tlgKnowledge or {}
+    local entry = side and know[tostring(side.id)]
+    local kitObs = entry and (entry.kit or (entry.method == "kit" and entry) or nil)
+    if side then know[tostring(side.id)] = kitObs end
+    local known = RT.KN.known("old_entry")
+    R:check("RTKN.reads_knowledge_saved_before", function()
+        return kitObs ~= nil and has(known, getText("IGUI_TLG_TestName_kit"))
+            and not has(known, getText("IGUI_TLG_TestName_visual")), known
+    end)
+    closeDialogs()
+    return true
+end }
+
+if REQUEST == "sp-rtkn" then
+    RT.knowledgeSteps = { RT.waitWorld, RT.KN.setup, RT.KN.kit, RT.KN.wait, RT.KN.look, RT.KN.open, RT.KN.pour,
+        RT.KN.oldEntry, RT.finish }
+end
+
+if REQUEST == "sp-rtsu" then
+    RT.successorSteps = { RT.waitWorld, RT.SU.setup, RT.SU.carry, RT.SU.die, RT.SU.respawn, RT.SU.arrive, RT.SU.can,
+        RT.SU.vessel, RT.SU.after, RT.finish }
+end
+
 if REQUEST == "sp-rtcr" then
     RT.craftingSteps = { RT.waitWorld, RT.CR.setup, RT.CR.open, RT.CR.namesStep }
     for _, s in ipairs(RT.CR.specs) do RT.craftingSteps[#RT.craftingSteps + 1] = RT.CR.craft(s) end
@@ -12189,7 +12742,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
-    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" then
+    or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
     debugScenarios.TLGHarnessA = {
@@ -12236,6 +12789,14 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             end
         end,
         onStart = function()
+            -- Vanilla calls this on Events.OnNewGame (SRC DebugScenarios.lua:100),
+            -- which fires again for a survivor made after a death: run 196
+            -- started the steps a second time beside the first.
+            if H.scenarioStarted then
+                print("[TLGH] scenario onStart again (a new survivor); the run already started")
+                return
+            end
+            H.scenarioStarted = true
             if REQUEST == "sp-rt" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock")
                 TLGH.Steps.run(R, stepsRT, H, nil)
@@ -12312,6 +12873,12 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtcr" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the crafting window")
                 TLGH.Steps.run(R, RT.craftingSteps, H, nil)
+            elseif REQUEST == "sp-rtsu" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, death and a successor")
+                TLGH.Steps.run(R, RT.successorSteps, H, nil)
+            elseif REQUEST == "sp-rtkn" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel")
+                TLGH.Steps.run(R, RT.knowledgeSteps, H, nil)
             elseif REQUEST == "sp-rtsc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, controls on running stills")
                 TLGH.Steps.run(R, RT.stillControlSteps, H, nil)

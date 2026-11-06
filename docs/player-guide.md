@@ -39,8 +39,16 @@ Right-click a fuel can → **Fuel (The Last Gallon)**:
 * **Take a sample (kit)** – needs a *Fuel Sampling Kit* (3 empty jars +
   rubber hose). Better estimate, finds smaller amounts of water, shows the
   blend composition. Mechanics skill improves precision.
-* **What I know about it** – your last result. "Unknown" means *not
-  sampled*, not *bad*. Results go stale when the fuel changes.
+* **What I know about it** – each test you have done on this fuel, the
+  more precise first: your latest kit sample and your latest look and
+  smell, each with how long ago you did it and what it found (a look no
+  longer replaces what a kit found). Under a test it says when fuel was
+  poured in or out or treated, or the container opened or closed, since
+  then; and when the container is open, that the fuel may have changed
+  since, so its actual condition may differ. "Unknown" means *not
+  sampled*, not *bad*. What you know belongs to your character: a new
+  survivor starts knowing nothing. *(Checked in game, in single player
+  and on a server.)*
 
 ## Treatments
 
@@ -112,7 +120,8 @@ reads them.)*
    it in the loot window to pick it up, and it goes down at your feet when
    you get into a vehicle, take another heavy item or equip a weapon, and
    before anything with its own animation, such as looting, eating or
-   dressing. Place it on the
+   dressing. If you die carrying it, it falls at your feet and its batch
+   goes on there (checked in game). Place it on the
    ground, carry feedstock (sugar, corn, potatoes, sugar beets, pumpkins,
    watermelons, fruit), clean water
    and yeast, choose **Load mash and start fermenting**: it takes 5 L of

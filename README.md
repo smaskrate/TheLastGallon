@@ -10,8 +10,8 @@ the authority logic are tested on the game's own Lua VM
 computer: single player through the player's menus (the fuel adapters,
 start gates, stalls, poor fuel's effects on engines, the ethanol loop from
 crafting the machines to a converted generator and car running on the
-ethanol, every recipe made through the crafting window, saves and
-reloads), and a dedicated server with two players on this computer (the
+ethanol, every recipe made through the crafting window, a death and a
+new survivor in the same world, saves and reloads), and a dedicated server with two players on this computer (the
 same paths, carrying the vessel, the machines' timers). The zip from
 `tools/package.ps1` is installed into a fresh game folder and played
 (`tools/rehearse-install.ps1`). A real network and the pathways other than

@@ -821,3 +821,37 @@ T.case("audit V-01 fixed: single player keeps no copies and drops a server's", f
     for _, f in ipairs(World.SERVER_FIELDS) do md[f] = saved[f] end
     if not ok then error(err, 0) end
 end)
+
+------------------------------------------------------------------------------
+-- The known command (What I know about it, 2026-11-06): read-only, answered
+-- by the authority from its own player object, with status's reach. A
+-- player out of reach gets no_access and nothing about the fuel.
+------------------------------------------------------------------------------
+T.case("audit: what I know needs the same reach as status, and tells only the asking player's own tests", function()
+    M.vehicle(27, 400, 400, 40, 20)
+    local far = M.player("knowfar", M.square(450, 450, 0))
+    local r = H.dispatch(far, "known", { requestId = rid(), target = { kind = "vehicle", id = 27 } })
+    T.eq(r.ok, false); T.eq(r.reason, "no_access")
+    T.eq(r.tests, nil, "no knowledge in a refusal")
+    local near = M.player("knownear", M.square(401, 400, 0))
+    T.ok(H.dispatch(near, "sample", { requestId = rid(), target = { kind = "vehicle", id = 27 }, method = "visual" }).ok)
+    local k = H.dispatch(near, "known", { requestId = rid(), target = { kind = "vehicle", id = 27 } })
+    T.ok(k.ok, "known at the cap: " .. tostring(k.reason))
+    T.eq(#k.tests, 1); T.eq(k.tests[1].method, "visual")
+    -- Another player at the same cap knows nothing of the first one's look.
+    local other = M.player("knowother", M.square(401, 400, 0))
+    local o = H.dispatch(other, "known", { requestId = rid(), target = { kind = "vehicle", id = 27 } })
+    T.ok(o.ok); T.eq(#o.tests, 0, "knowledge belongs to the player who tested")
+end)
+
+T.case("audit: what I know about a can nobody tested writes no record", function()
+    local p = M.player("knowfresh", M.square(500, 500, 0))
+    local can = p.inv:AddItem(M.item("Base.PetrolCan", 10, { Petrol = 4 }))
+    local k = H.dispatch(p, "known", { requestId = rid(), target = { kind = "item", id = can:getID() } })
+    T.ok(k.ok, "known on a fresh can: " .. tostring(k.reason))
+    T.eq(#k.tests, 0, "nothing known")
+    T.eq(can:getModData().tlg, nil, "no record written on the can")
+    -- Not asserted: the read gives the record it builds an id (nextId moves
+    -- by one), as status has always done (Containers endpoint read, persist
+    -- true); the id is never written. Noted in D-034.
+end)

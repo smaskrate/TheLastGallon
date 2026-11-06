@@ -23,7 +23,9 @@ local function onReply(reply)
         show(Fmt.failure(reply))
         return
     end
-    if reply.observation then
+    if reply.command == "known" then
+        show(Fmt.known(reply))
+    elseif reply.observation then
         show(getText("IGUI_TLG_InspectionTitle") .. " <LINE> <LINE> " .. Fmt.observation(reply.observation))
     elseif reply.command == "status" and reply.evaluation then
         show(Fmt.evaluation(reply.evaluation))
@@ -60,12 +62,10 @@ function Menu.fill(playerNum, context, items)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
     local ref = itemRef(item)
-    local know = player:getModData().tlgKnowledge
     local side = item:getModData().tlg
-    local known = side and know and know[tostring(side.id)]
-    sub:addOption(getText("ContextMenu_TLG_ShowKnown"), nil, function()
-        show(getText("IGUI_TLG_InspectionTitle") .. " <LINE> <LINE> " .. Fmt.observation(known))
-    end)
+    -- Asked of the authority, which keeps the knowledge (in multiplayer the
+    -- client's own copy of the player never had it).
+    sub:addOption(getText("ContextMenu_TLG_ShowKnown"), nil, function() request("known", { target = ref }) end)
     sub:addOption(getText("ContextMenu_TLG_Look"), nil, function() request("sample", { target = ref, method = "visual" }) end)
     local kit = sub:addOption(getText("ContextMenu_TLG_SampleKit"), nil,
         function() request("sample", { target = ref, method = "kit" }) end)

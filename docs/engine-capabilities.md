@@ -703,6 +703,50 @@ B42 timed actions run `update()` on the client in SP; on MP the server drives
 * `getScriptManager():getCraftRecipe("TLG_MakePotStill")` found nothing
   in run 191; the objects from `CraftRecipeManager.queryRecipes` did.
 
+### Death and a successor (RT-SP runs 196–199, 2026-11-05)
+
+* `IsoGameCharacter.Kill(nil)` kills the player (god mode off). The body
+  (an `IsoDeadBody`, its container `inventoryfemale` or `inventorymale`)
+  appears some moments later: none was found 30 ticks after the death in
+  run 197. It holds the inventory: the petrol can and its record. A heavy
+  item carried in both arms is dropped on the floor at the feet instead:
+  the vessel in runs 198–199. No Lua hook runs for that drop.
+* SRC `ISPostDeathUI`: its Respawn button shows 3 seconds after the death
+  in single player (any game mode but the tutorial). It calls
+  `CoopCharacterCreation:newPlayerMouse()`, the in-game character
+  creation, in the same game session. In the harness's world the
+  spawn-region screen was skipped (`CoopMapSpawnSelect:hasChoices()`
+  false: in single player respawning beside oneself needs a second local
+  player). The screens were the occupation's Next, then the character's
+  Play (`CoopCharacterCreation:accept`). The new survivor appeared at a
+  spawn point of the region, far from the body (10770,10271 and
+  10819,9437, about 400–1200 tiles away).
+* The new survivor is a new `IsoPlayer` with its own, empty player
+  modData: the mod's `tlgKnowledge` starts empty. `getPlayer()` returns
+  it.
+* `Events.OnNewGame` fires again for the new survivor. The debug
+  scenario's `onStart` hangs on it (SRC `DebugScenarios.lua:100`), and in
+  run 196 it started the harness's steps a second time. The mod uses no
+  `OnNewGame`; its hooks install once per Lua state (`Boot.install`).
+* The world's global modData (the mod's world record) is untouched by
+  the death and the respawn.
+* `Events.OnPlayerDeath(player)` fires after the heavy item has left the
+  hands: in run 202 the mod's handler found both hands empty and the
+  vessel already on the floor at the feet ("0 machine(s) in the hands, 1
+  already at the feet"). The mod handles both orders (`Machines.onDeath`,
+  D-015 amendment).
+
+### Player mod data in multiplayer (RT-MP runs 203–204, 2026-11-06)
+
+* A server's write to `player:getModData()` (its own `IsoPlayer` for a
+  connected client) does not reach that client's `IsoPlayer`. After a kit
+  sample and a look answered by the server, the client's copy of the
+  player's mod data held no `tlgKnowledge` (run 203), and the old menu,
+  which read it, said "unknown". Run 204, the same after the fix: the
+  client's copy still holds none. The menu now asks the server (`known`,
+  D-034), and the server's answer arrives with nested tables intact
+  (`tests[i].observation.composition`).
+
 ## Climate (RT-SP runs 15–19)
 
 * `ClimateManager.getDayMeanTemperature()` is the season curve: it returns

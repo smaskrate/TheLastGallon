@@ -48,6 +48,9 @@
   watches). timers: the machines' hourly readings and ten-minute notes on
   the server (D-032), beside a campfire the server builds and lights, and
   what each timer costs there (one client). Both on the shortest day.
+  knowledge: What I know about it, read from the Fuel menu on a client after
+  a kit sample and a look answered by the server, then after the can is
+  opened (one client).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -66,7 +69,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault)
 $ErrorActionPreference = "Stop"

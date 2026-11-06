@@ -12,7 +12,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 | RT-SP: picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
 | RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
-| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188) | Not in the multiplayer harness yet |
+| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188); a player's death and successor (single player: launches 199 and 202) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
 | Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12); uploading is the user's manual step, not taken |
 
@@ -3967,3 +3967,160 @@ commit. A second build gave the same bytes. This is the 0.1.0 package.
 Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run191_crafting_window.txt`,
 `…_run192_crafting_window_before.txt`, `…_run193_crafting_window.txt`,
 `…_run194_italian.txt`, `…_run195_install_rehearsal.txt`.
+
+## 2026-11-05 — RT-SP launches 196–199 (death and a successor)
+
+The user asked to test what happens when the character dies and play
+continues as a new survivor ("Yes, test that"). New mode
+`tools/run-sp-harness.ps1 -Mode successor` (request `sp-rtsu`). The scene,
+beside the station:
+
+* survivor A loads two fermenters (F1 and F2), takes a petrol can and
+  looks at it (Look and smell);
+* an hour and a half later, A takes F2 into both arms the loot window's
+  double-click way;
+* A is killed (`Kill(nil)`);
+* the game's own screens make survivor B: Respawn, then the occupation's
+  Next, then the character's Play (`ISPostDeathUI`,
+  `CoopCharacterCreation`). They are clicked with `forceClick` as a
+  player would, unattended;
+* B is brought to the body and takes back the can (the loot window's
+  transfer) and F2 (double-click, then put down).
+
+Launches 196–198 were the harness's own:
+* 196: the game fires `OnNewGame` again for the new survivor, and the
+  debug scenario's `onStart` hangs on it, so the steps started a second
+  time beside the first. The harness now starts once. Also, a summary
+  helper was given the wrong argument.
+* 197: F2 was two tiles away, too far for the loot window, so the take
+  had no container. The records were read before they had caught up. The
+  body was looked for before it existed.
+* 198 (17/1): the whole scenario ran. Its one failure was the harness's
+  expectation that F2 would be with the body. The game drops a carried
+  heavy item at the feet when its carrier dies, and that drop is one no
+  Lua sees. D-015 then holds: the batch works from when the mod next
+  finds it placed.
+
+Launch 199: **18/0**, no exception in the console. In order:
+* A loaded both fermenters, knew the can after a look, and carried F2
+  (paused, not placed, 1.51 h done).
+* A died; the body held the can; F2 lay on the floor at A's feet.
+* The screens made B (Joni) at 10819,9437, far from the body.
+* The world record (seed, epoch, installation, policy) was unchanged.
+* B was another character, and knew nothing of the can (0 observations).
+* The can's record in the body was as A left it.
+* F2 was still paused until B's Status found it on the floor; it then
+  worked, with the 0.04 game h before that not credited.
+* F1, placed, worked on through the death (1.5097 → 1.5481 h) and
+  answered B's Status.
+* B took the can out of the body (record unchanged), looked, and then
+  knew it.
+* B took F2 from the floor into both arms and put it down; it worked
+  again.
+* Over the next game hour: F1 1.0192 h of work, F2 1.0001 h.
+
+Nothing shipped changed: the 0.1.0 package (`8bf6ba79…`) stands.
+
+Not run:
+* death in multiplayer;
+* the successor after a save and reload;
+* a vessel carried at death and found days later (by D-015 those days
+  are not credited);
+* the spawn-region screen (this world offered none).
+
+Evidence: `docs/evidence/2026-11-05_rt-sp_harness_run196_successor.txt`
+to `…_run199_successor.txt` (196's interleaves the two runs).
+
+## 2026-11-06 — RT-SP launches 200–202 and 205–206, RT-MP launches 203–204 (What I know about it; death fixed)
+
+The user reported that What I know about it did not show what they knew
+from their looks and kit samples. They asked for it to show which tests
+were done, how long ago, with their results, and a note when the
+container is not sealed. They also asked to fix the vessel left unworked
+after a death ("Yes, fix it"). New modes:
+`tools/run-sp-harness.ps1 -Mode knowledge` (`sp-rtkn`) and
+`tools/run-mp-harness.ps1 -Clients 1 -Only knowledge`. Both read What I
+know about it from the Fuel menu, as a player opens it, and check the
+dialog's text.
+
+Launch 200 (3/7), the mod as committed in `e9f1e87` (single player),
+confirmed the report:
+* a kit sample, then, two game hours later, a look: What I know about it
+  showed the look alone ("Method: look and smell (rough)"), and the kit's
+  "Composition: Gasoline 100.0%" was gone;
+* no test was named and no age given;
+* after the can was opened from the menu, and after a litre was poured
+  out, it showed the same text, with no note.
+
+Launch 203 (RT-MP, one client, 6/2), the same mod exported to a folder
+(`-ModSource`): after a kit sample and a look answered by the server,
+the client's menu said "Condition unknown: not sampled yet", before and
+after the can was opened. The client's own copy of the player's mod data
+held no knowledge.
+
+Fix (D-034): knowledge keeps each test's latest result; the menu asks the
+authority (`known`, same reach as `status`). The authority answers each
+test, most precise first, with its age, whether the fuel changed since,
+and the seal. The menu shows each test's name and age above its findings,
+a note under a test the fuel changed since, and a note for an open
+container. Old entries read as their test. Death (D-015 amendment):
+`Machines.onDeath` puts down a machine the dying character carried.
+
+Domain 223/223, the five new cases included:
+* knowledge per test, and the list with ages and changes;
+* the menu text with a stub translator;
+* the `known` handler;
+* the death hook's three cases.
+
+Audit 25/25, the new cases being `known` out of reach and another
+player's tests, and a read on a can nobody tested writing no record
+(it still moves the next id by one, as status does; D-034). Compile
+125/0. Translations OK (261 EN keys).
+
+* Launch 201 (**10/0**), single player: the menu shows "Sampling kit, 2
+  hours ago" with its composition and "Look and smell, just now". Once
+  the can is opened, both results carry the changed note ("Since this
+  test, fuel was poured in or out or treated, or the container opened or
+  closed") and the open note follows them. After a litre is poured out,
+  the same; after a new look, the look is current again and only the kit
+  keeps the note. An entry in the old shape (a kit observation alone)
+  reads as the kit's.
+* Launch 202 (`-Mode successor`, **18/0**): the dying survivor's
+  fermenter lay at the feet with its record already working from the
+  death (3.5331, the death 3.5331). Over the 0.0356 game h to the
+  successor's Status it worked 0.0356 h, as the placed one did. The
+  mod's log: "a carrier died: 0 machine(s) in the hands, 1 already at
+  the feet" (the drop comes before the event in 42.21).
+* Launch 204 (RT-MP, **8/0**): the client's menu lists both tests,
+  answered by the server, and, once the can is opened, the changed and
+  open notes. The client's own copy of the player's mod data still holds
+  none.
+* Launch 205 (`-Mode italian`, **5/0**): 261 of 261 Italian strings as
+  shipped, IG_UI 186 of 186.
+* Launch 206 (`tools/rehearse-install.ps1`): the package rebuilt, with
+  218+5 tests, compile check and translations first.
+  `TheLastGallon-0.1.0.zip`: 129 files, SHA-256 `8ef1dd31…`, 4,008,919
+  bytes, built from uncommitted changes on `e9f1e87`. It differs from
+  launch 195's in:
+  * the security audit's commits: the new `Vault.lua` and
+    `WorldStore.lua`, and changes to the handlers, adapters and
+    `World.lua`;
+  * this change;
+  * the shipped changelog, player guide and migrations notes.
+
+  It matched its manifest and was installed into a fresh cache: phase A
+  **100/0**, phase B **14/0**. The console's one exception came from the
+  harness's own deep-recursion probe.
+
+Not run:
+* death in multiplayer;
+* the new knowledge across a save and reload;
+* a pump's, vehicle's or generator's knowledge through a menu;
+* the zip of the commit that takes this change (its files should match
+  launch 206's manifest).
+
+Evidence: `docs/evidence/2026-11-06_rt-sp_harness_run200_knowledge_before.txt`,
+`…_run201_knowledge.txt`, `…_run202_successor.txt`, `…_run205_italian.txt`,
+`…_run206_install_rehearsal.txt`;
+`2026-11-06_rt-mp_harness_run203_knowledge_before_client_a.txt` and
+`_server.txt`, `…_run204_knowledge_client_a.txt` and `_server.txt`.

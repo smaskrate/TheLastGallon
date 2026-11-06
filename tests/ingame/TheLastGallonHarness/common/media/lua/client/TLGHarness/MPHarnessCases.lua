@@ -1653,4 +1653,90 @@ elseif MP.only == "timers" then
         TM.bench, TM.costs, MP.finish,
     }
     MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+elseif MP.only == "knowledge" then
+    -- What I know about it on a server (2026-11-06). A tests a petrol can
+    -- with the sampling kit and with a look (both answered by the server,
+    -- which keeps the knowledge in its player object), then opens What I
+    -- know about it from the Fuel menu as a player does: the dialog's text
+    -- is what the player reads. Then the can is opened (the unseal
+    -- treatment) and the menu read again. Before the fix the menu read the
+    -- client's own copy of the player's mod data, which nothing filled.
+    local KN = {}
+    local function has(text, part) return text ~= nil and string.find(text, part, 1, true) ~= nil end
+    local function fuelMenuOption(key)
+        local context = ISContextMenu.get(0, 100, 100)
+        TLG.UI.FuelMenu.fill(0, context, { KN.can })
+        local root = context:getOptionFromName(getText("ContextMenu_TLG_Fuel"))
+        local sub = root and root.subOption and context:getSubMenu(root.subOption)
+        local opt = sub and sub:getOptionFromName(getText(key))
+        context:setVisible(false)
+        return opt
+    end
+    -- Fuel > What I know about it, the dialog it opens (ISModalRichText) caught.
+    local function knownDialog(name, judge)
+        return { name = "mp_kn_" .. name, timeout = 1200, fn = function(ctx, ticks)
+            if ticks == 1 then
+                ctx.orig = ISModalRichText.new
+                ISModalRichText.new = function(self, x, y, w, hh, text, ...)
+                    local o = ctx.orig(self, x, y, w, hh, text, ...)
+                    ctx.text, ctx.dialog = tostring(text), o
+                    return o
+                end
+                local opt = fuelMenuOption("ContextMenu_TLG_ShowKnown")
+                if opt then opt.onSelect(opt.target, opt.param1, opt.param2) end
+                ctx.clicked = opt ~= nil
+                return nil
+            end
+            if not ctx.text and ticks < 900 then return nil end
+            ISModalRichText.new = ctx.orig
+            if ctx.dialog then pcall(function() ctx.dialog:removeFromUIManager() end) end
+            report():line("OBS  MP.kn_%s_%s menu entry=%s; dialog: %s", name, MP.role, tostring(ctx.clicked), tostring(ctx.text))
+            judge(ctx.text or "")
+            return true
+        end }
+    end
+    KN.give = call("give_knowledge_items", "give", { items = "Base.PetrolCan;TLG.FuelSampleKit", petrol = "5" }, "given",
+        function(m) KN.ids = ids(m.ids) end)
+    KN.have = { name = "mp_kn_have", timeout = 900, fn = function(ctx, ticks)
+        KN.can = inventoryItem(KN.ids and KN.ids["Base.PetrolCan"] and KN.ids["Base.PetrolCan"][1])
+        if not (KN.can and countType("TLG.FuelSampleKit") >= 1) and ticks < 600 then return nil end
+        check("kn_items", function()
+            return KN.can ~= nil and countType("TLG.FuelSampleKit") >= 1, string.format("can %s, kits %d",
+                tostring(KN.can and KN.can:getID()), countType("TLG.FuelSampleKit"))
+        end)
+        return true
+    end }
+    local function canRef() return KN.can and { target = { kind = "item", id = KN.can:getID() } } end
+    KN.kit = request("kn_kit", "sample", function()
+        local a = canRef(); if a then a.method = "kit" end; return a
+    end, function(r)
+        check("kn_kit", function() return r.ok == true and r.observation ~= nil and r.observation.method == "kit", brief(r) end)
+    end)
+    KN.look = request("kn_look", "sample", function()
+        local a = canRef(); if a then a.method = "visual" end; return a
+    end, function(r)
+        check("kn_look", function() return r.ok == true and r.observation ~= nil, brief(r) end)
+        local know = player():getModData().tlgKnowledge
+        local side = KN.can:getModData().tlg
+        report():line("OBS  MP.kn_client_copy_%s the client's own player mod data: knowledge %s; the can's record id %s",
+            MP.role, know == nil and "none" or "present", tostring(side and side.id))
+    end)
+    KN.known = knownDialog("known", function(text)
+        check("kn_known_lists_both_tests", function()
+            return has(text, getText("IGUI_TLG_KnownTitle")) and has(text, getText("IGUI_TLG_TestName_kit"))
+                and has(text, getText("IGUI_TLG_TestName_visual")) and has(text, getText("IGUI_TLG_Ago_Now")), text
+        end)
+        check("kn_known_sealed_no_note", function() return not has(text, getText("IGUI_TLG_KnownOpen")), text end)
+    end)
+    KN.unseal = request("kn_unseal", "treat", function()
+        local a = canRef(); if a then a.op = "unseal" end; return a
+    end, function(r)
+        check("kn_unseal", function() return r.ok == true, brief(r) end)
+    end)
+    KN.knownOpen = knownDialog("known_open", function(text)
+        check("kn_known_open_note", function() return has(text, getText("IGUI_TLG_KnownOpen")), text end)
+    end)
+    MP.stepsA = { MP.waitWorld, KN.give, KN.have, KN.kit, KN.look, KN.known, KN.unseal, wait("mp_kn_unseal_settles", 60),
+        KN.knownOpen, MP.finish }
+    MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
 end

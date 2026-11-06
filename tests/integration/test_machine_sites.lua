@@ -1032,3 +1032,74 @@ T.case("integration: a machine carried in both arms goes down at the feet when a
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+T.case("integration: a carrier's death puts the dropped machine down where it lands; one in the body stays carried", function()
+    local g = fakeGame(2)
+    local savedEvents = Events
+    local ok, err = pcall(function()
+        local env = warmDay(g)
+        local a, b = square(g, 1, 1, 0, false, 22), square(g, 4, 1, 0, false, 22)
+        -- The tick event as a list the case runs by hand.
+        local ticks = {}
+        Events = { OnTick = {
+            Add = function(fn) ticks[#ticks + 1] = fn end,
+            Remove = function(fn)
+                for i = #ticks, 1, -1 do if ticks[i] == fn then table.remove(ticks, i) end end
+            end,
+        } }
+        local function tick()
+            local now = {}
+            for i, fn in ipairs(ticks) do now[i] = fn end
+            for _, fn in ipairs(now) do fn() end
+        end
+        local item = startedOn(a, "P21", env)
+        lift(item)
+        Machines.pickedUp(item, 4)
+        local hands = { primary = item, secondary = item }
+        local character = {
+            getPrimaryHandItem = function() return hands.primary end,
+            getSecondaryHandItem = function() return hands.secondary end,
+            getSquare = function() return b end,
+        }
+        -- Dead, still holding it: watched until it lands.
+        g.now = 4
+        Machines.onDeath(character)
+        T.eq(#ticks, 1, "a watch for the landing")
+        tick()
+        T.eq(item:getModData().tlgProc.pause, "not_placed", "not landed yet: still carried")
+        g.now = 4.01
+        place(item, b)
+        tick()
+        local rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.ok(rec.pause == nil)
+        T.near(rec.t, 4.01, 1e-9, "put down when it landed"); T.eq(rec.site.x, 4, "at the body's feet")
+        T.eq(#ticks, 0, "the watch ends")
+        T.eq(World.get().machineSites.P21.x, 4, "listed for the hourly reading at once")
+        local later = Machines.advance(item, Machines.read(item, false), 6, env)
+        T.near(work(later), 3.99, 1e-6, "2 h before the pickup and 1.99 h since it landed")
+        -- Into the body's inventory instead: the watch gives up, still carried.
+        lift(item)
+        Machines.write(item, later)
+        Machines.pickedUp(item, 6)
+        hands.primary, hands.secondary = item, item
+        Machines.onDeath(character)
+        for _ = 1, Machines.LANDING_TICKS do tick() end
+        T.eq(#ticks, 0, "the watch gave up")
+        T.eq(item:getModData().tlgProc.pause, "not_placed", "in the body: still carried, nothing counts")
+        -- Already at the feet when the event comes: put down from the event.
+        hands.primary, hands.secondary = nil, nil
+        place(item, b)
+        g.now = 7
+        Machines.onDeath(character)
+        rec = item:getModData().tlgProc
+        T.eq(rec.state, "Processing"); T.eq(rec.t, 7, "put down at the death")
+        T.eq(#ticks, 0, "nothing to watch")
+        -- A death with nothing carried changes nothing.
+        g.now = 8
+        Machines.onDeath(character)
+        T.eq(item:getModData().tlgProc.t, 7)
+    end)
+    Events = savedEvents
+    g.restore()
+    if not ok then error(err, 0) end
+end)

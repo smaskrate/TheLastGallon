@@ -162,3 +162,84 @@ T.case("consumers: wood gas derates a gas generator, propane does not", function
     T.near(C.evaluate("generator_gas", wood).powerFactor, 0.6, 1e-12)
     T.near(C.evaluate("generator_gas", propane).powerFactor, 1.0, 1e-12)
 end)
+T.case("inspection: knowledge keeps each test's latest result; a look does not erase a kit's", function()
+    local s = F.supply({ storage = "jerrycan_steel", q = { gasoline = 20, ethanol = 2 }, deg = { gasoline = 0.4 }, t = 10 })
+    local kit = Inspection.sample(s, "kit", 0, TLG.Rng.new(2))
+    local entry = Inspection.remember(nil, kit)
+    T.ok(entry.kit == kit and entry.visual == nil)
+    s.t = 13
+    local look = Inspection.sample(s, "visual", 0, TLG.Rng.new(3))
+    entry = Inspection.remember(entry, look)
+    T.ok(entry.kit == kit and entry.visual == look, "both kept")
+    local look2 = Inspection.sample(s, "visual", 0, TLG.Rng.new(4))
+    entry = Inspection.remember(entry, look2)
+    T.ok(entry.kit == kit and entry.visual == look2, "a new look replaces the old look only")
+    -- Knowledge saved before held the last observation alone: it reads as
+    -- that test's, and the next result adds to it.
+    local old = Inspection.tests(kit)
+    T.ok(old.kit == kit and old.visual == nil, "an old entry reads as its test")
+    local merged = Inspection.remember(kit, look)
+    T.ok(merged.kit == kit and merged.visual == look, "an old entry keeps its result when a new one comes")
+    local function size(t) local n = 0; for _ in pairs(t) do n = n + 1 end; return n end
+    T.eq(size(Inspection.tests(nil)), 0); T.eq(size(Inspection.tests("junk")), 0)
+end)
+
+T.case("inspection: what I know lists the tests most precise first, with their age and whether the fuel changed", function()
+    local s = F.supply({ storage = "jerrycan_steel", q = { gasoline = 20 }, deg = { gasoline = 0.4 }, t = 10 })
+    local entry = Inspection.remember(nil, Inspection.sample(s, "visual", 0, TLG.Rng.new(5)))
+    s.t = 12
+    entry = Inspection.remember(entry, Inspection.sample(s, "kit", 0, TLG.Rng.new(6)))
+    s.t = 15.5
+    local k = Inspection.known(s, entry)
+    T.eq(#k, 2); T.eq(k[1].method, "kit"); T.eq(k[2].method, "visual")
+    T.near(k[1].ageHours, 3.5, 1e-9); T.near(k[2].ageHours, 5.5, 1e-9)
+    T.ok(not k[1].changed and not k[2].changed, "ageing alone changes nothing")
+    s.rev = s.rev + 1
+    k = Inspection.known(s, entry)
+    T.ok(k[1].changed and k[2].changed, "poured or treated since: both")
+    T.eq(#Inspection.known(s, nil), 0, "nothing known")
+end)
+
+T.case("format: what I know names each test, how long ago, its findings, and notes a change and an open container", function()
+    require "TLG/UI/Format"
+    local Fmt = TLG.UI.Format
+    local saved = Fmt.translate
+    Fmt.translate = function(key, ...)
+        local args = { ... }
+        if #args == 0 then return "<" .. key .. ">" end
+        return "<" .. key .. ":" .. table.concat(args, "|") .. ">"
+    end
+    local ok, err = pcall(function()
+        T.eq(Fmt.ago(0), "<IGUI_TLG_Ago_Now>")
+        T.eq(Fmt.ago(1 / 60 + 1e-9), "<IGUI_TLG_Ago_Minute>")
+        T.eq(Fmt.ago(0.5), "<IGUI_TLG_Ago_Minutes:30>")
+        T.eq(Fmt.ago(1.2), "<IGUI_TLG_Ago_Hour>")
+        T.eq(Fmt.ago(5.9), "<IGUI_TLG_Ago_Hours:5>")
+        T.eq(Fmt.ago(24), "<IGUI_TLG_Ago_Day>")
+        T.eq(Fmt.ago(24 * 9 + 3), "<IGUI_TLG_Ago_Days:9>")
+        local s = F.supply({ storage = "jerrycan_steel", q = { gasoline = 20 }, deg = { gasoline = 0.4 }, t = 10 })
+        local kit = Inspection.sample(s, "kit", 0, TLG.Rng.new(7))
+        local look = Inspection.sample(s, "visual", 0, TLG.Rng.new(8))
+        local text = Fmt.known({ sealed = true, tests = {
+            { method = "kit", observation = kit, ageHours = 3, changed = true },
+            { method = "visual", observation = look, ageHours = 0, changed = false } } })
+        T.ok(string.find(text, "<IGUI_TLG_KnownTitle>", 1, true) == 1, "the title first")
+        local kitAt = string.find(text, "<IGUI_TLG_KnownTest:<IGUI_TLG_TestName_kit>|<IGUI_TLG_Ago_Hours:3>>", 1, true)
+        local lookAt = string.find(text, "<IGUI_TLG_KnownTest:<IGUI_TLG_TestName_visual>|<IGUI_TLG_Ago_Now>>", 1, true)
+        T.ok(kitAt ~= nil and lookAt ~= nil and kitAt < lookAt, "the kit, then the look, each with its age")
+        T.ok(string.find(text, "IGUI_TLG_Composition", 1, true) ~= nil, "the kit's composition is shown")
+        local _, changes = string.gsub(text, "IGUI_TLG_KnownChanged", "")
+        T.eq(changes, 1, "changed since the kit only")
+        T.ok(string.find(text, "IGUI_TLG_Method_", 1, true) == nil, "the test is named above its findings")
+        T.ok(string.find(text, "IGUI_TLG_KnownOpen", 1, true) == nil, "sealed: no note")
+        local open = Fmt.known({ sealed = false, tests = { { method = "visual", observation = look, ageHours = 30 } } })
+        T.ok(string.find(open, "<IGUI_TLG_KnownOpen>", 1, true) ~= nil, "open: the note")
+        local none = Fmt.known({ sealed = false, tests = {} })
+        T.ok(string.find(none, "<IGUI_TLG_ConditionUnknown>", 1, true) ~= nil, "nothing known: unknown")
+        T.ok(string.find(none, "IGUI_TLG_KnownOpen", 1, true) == nil, "no note on nothing")
+        -- The result of a single test, as Look and smell shows it, keeps its method line.
+        T.ok(string.find(Fmt.observation(look), "<IGUI_TLG_Method_visual>", 1, true) ~= nil)
+    end)
+    Fmt.translate = saved
+    if not ok then error(err, 0) end
+end)
