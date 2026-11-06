@@ -45,6 +45,10 @@ New-Item -ItemType Directory -Force $docsOut | Out-Null
 foreach ($doc in "player-guide.md", "support-matrix.md", "migrations.md") {
     Copy-Item (Join-Path $repo "docs\$doc") $docsOut
 }
+# The pictures the player guide shows. Developer documents link
+# docs/evidence instead, which does not ship.
+robocopy (Join-Path $repo "docs\images") (Join-Path $docsOut "images") /MIR /NFL /NDL /NJH /NJS /NP | Out-Null
+if ($LASTEXITCODE -ge 8) { throw "robocopy failed for docs/images" }
 # README.md is the developers' (its commands do not ship); the player guide
 # says how to install.
 foreach ($doc in "CHANGELOG.md", "NOTICE.md", "LICENSE.md") {
@@ -52,7 +56,7 @@ foreach ($doc in "CHANGELOG.md", "NOTICE.md", "LICENSE.md") {
 }
 
 # Content rules.
-$allowed = @(".lua", ".txt", ".json", ".info", ".png", ".md", ".ogg", ".x", ".fbx", ".xml")
+$allowed = @(".lua", ".txt", ".json", ".info", ".png", ".jpg", ".md", ".ogg", ".x", ".fbx", ".xml")
 $bad = Get-ChildItem -Recurse -File $modOut | Where-Object {
     ($allowed -notcontains $_.Extension.ToLower()) -or ($_.FullName -match 'TLGHarness|\\tests\\|\\tools\\')
 }
@@ -119,8 +123,8 @@ Get-ChildItem -Recurse -File $item | Sort-Object FullName | ForEach-Object {
 # packaged too, and then the zip belongs to no commit: say so.
 $zip = Join-Path $dist "TheLastGallon-$version.zip"
 if (Test-Path $zip) { Remove-Item $zip }
-$shipped = @("Contents", "docs/player-guide.md", "docs/support-matrix.md", "docs/migrations.md", "CHANGELOG.md",
-    "NOTICE.md", "LICENSE.md", "art-src/preview.png", "tools/package.ps1")
+$shipped = @("Contents", "docs/player-guide.md", "docs/support-matrix.md", "docs/migrations.md", "docs/images",
+    "CHANGELOG.md", "NOTICE.md", "LICENSE.md", "art-src/preview.png", "tools/package.ps1")
 $stamp = [DateTimeOffset]::Parse((& git -C $repo log -1 --format=%cI -- $shipped))
 $commit = (& git -C $repo rev-parse --short HEAD)
 $dirty = @(& git -C $repo status --porcelain -- $shipped).Count -gt 0

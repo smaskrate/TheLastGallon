@@ -272,7 +272,7 @@ Define stable, validated registries for:
 - SiteDefinition.
 - AssetDefinition.
 
-Validate duplicate IDs, undefined references, invalid capacities, negative yields and impossible recipes before running a development build.
+Check for duplicate IDs, undefined references, invalid capacities, negative yields and impossible recipes before running a development build.
 
 ## 5. Canonical data model
 
@@ -542,7 +542,7 @@ At least one early pathway must be startable with attainable manual preparation 
 
 ## 11. Persistent workshop conversions
 
-### Definition
+### Conversion definition
 
 ~~~text
 supportedChassis
@@ -606,7 +606,7 @@ For each interval:
 
 Use hysteresis and minimum operating periods to prevent on/off oscillation.
 
-Native appliance support is gated by verified control capability. Start with mod-owned equipment where necessary. Do not show a priority setting that cannot affect the actual consumer.
+Support a native appliance only where the ability to control it has been verified. Start with mod-owned equipment where necessary. Do not show a priority setting that cannot affect the actual consumer.
 
 Generation models:
 
@@ -693,7 +693,7 @@ Version separately:
 
 - Persistent schema.
 - Recipes.
-- Consumer/adaptor definitions.
+- Consumer/adapter definitions.
 - Balance profiles.
 - Assets/content.
 
@@ -990,7 +990,7 @@ The coding agent can implement UI, registry-driven labels, import tooling, local
 
 Prefer narrow adapters to broad replacements.
 
-For each integration record:
+For each integration, record:
 - Tested version.
 - Feature ownership.
 - Quantity/consumption ownership.

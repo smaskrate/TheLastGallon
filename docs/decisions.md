@@ -1,7 +1,9 @@
 # Architecture decisions
 
-Each entry: decision, reason, evidence, consequences. Superseded decisions stay
-listed with their replacement.
+Each entry gives the decision, its reason, the evidence and the consequences.
+An amended entry opens with its current rule; the decision as first taken and
+its amendments follow in date order. Superseded decisions stay listed with
+their replacement.
 
 ## D-001 Pin one build (42.21.0)
 * Decision: support exactly 42.21.0 (`4a0e9546ec`). `mod.info` uses
@@ -12,10 +14,10 @@ listed with their replacement.
 * Evidence: `environment.md`.
 
 ## D-002 Repository and package layout
-* Decision: repository root = `<game>/mods/TheLastGallon` (chosen by the
-  user). Runtime package = `Contents/mods/TheLastGallon/{42,common}` (Workshop
-  layout). Development experiments live in a separate mod
-  `tests/ingame/TheLastGallonHarness` that is never packaged.
+* Decision: the repository root is `<game>/mods/TheLastGallon` (chosen by
+  the user). The runtime package is `Contents/mods/TheLastGallon/{42,common}`
+  (Workshop layout). Development experiments live in a separate mod,
+  `tests/ingame/TheLastGallonHarness`, that is never packaged.
 * Reason: the spec keeps tests, tools and art sources out of the package.
 * Evidence: BC `getAllModFoldersAux` / `getModVersionDirName` (G01).
 
@@ -41,6 +43,10 @@ listed with their replacement.
 * Evidence: runtime probes (engine-capabilities, "Lua runtime").
 
 ## D-006 Quantity, composition and consumption ownership per adapter
+* Current rule (amended 2026-11-02): the ownership below holds. Untracked
+  inflow mixes in when it is found, at that moment's baseline, and changes
+  are measured against the record as last written (amendment).
+
 | Adapter | Quantity owner | Composition owner | Consumption owner | Sidecar store |
 | --- | --- | --- | --- | --- |
 | Item fluid container | native `FluidContainer` | native fluids (TLG fluids for alternatives and contaminants) | native (any vanilla use) | item modData `tlg` |
@@ -69,6 +75,10 @@ listed with their replacement.
   exactly, 0.313571525, where the old order gives 0.319523279.
 
 ## D-007 Native fluids for alternative fuels and contaminants
+* Current rule (amended 2026-11-02): the fluids below. Every write of a
+  native container's record also sets its fluids to the record's
+  composition where a component differs by more than 1e-5 L, the litres
+  unchanged (amendment).
 * Decision: script fluids `TLG_Ethanol`, `TLG_Diesel`, `TLG_Biodiesel` (and,
   for contamination, `TLG_FuelWater`, `TLG_FuelSediment`) in category `Fuel`
   with a Fuel blend whitelist.
@@ -82,17 +92,17 @@ listed with their replacement.
   its fluids to the record's composition where any component differs by
   more than 1e-5 L, the litres unchanged (`Containers.commit`). That covers
   a pour the mod follows (both cans), a first look (D-024), siphoning and
-  pump-to-can, as the mod's own transfers, treatments and machines already
-  did. Aging turns fuel into water. Written to the record alone, that water
-  was dropped by the next read, which takes the fluids as they are, so an
-  opened can never kept what it took up past its next vanilla pour (an
-  opened can of ethanol lost 0.0075 L over 60 days in a test with a faked
-  game). The tolerance sits below the read's 1e-4 L, which would drop what
-  it skips, and above the float precision of native amounts.
+  pump-to-can; the mod's own transfers, treatments and machines already
+  did it. Aging turns fuel into water. Written to the record alone, that
+  water was dropped by the next read, which takes the fluids as they are,
+  so an opened can never kept what it took up past its next vanilla pour
+  (an opened can of ethanol lost 0.0075 L over 60 days in a test with a
+  faked game). The tolerance sits below the read's 1e-4 L, which would
+  drop what it skips, and above the float precision of native amounts.
 * Writing the fluids (BC 42.21 `FluidContainer`): the game drops a fluid
-  under 1e-4 L, and within 0.001 L of capacity a container reads as full
-  and `addFluid` refuses a new fluid (`adjustSpecificFluidAmount` has no
-  such check). `Native.writeComposition` therefore holds the largest fluid
+  under 1e-4 L. Within 0.001 L of capacity a container reads as full, and
+  `addFluid` refuses a new fluid (`adjustSpecificFluidAmount` has no such
+  check). `Native.writeComposition` therefore holds the largest fluid
   already there low while new ones go in, smallest first, then sets it.
   A component under 2e-4 L goes to the largest, in the record and in the
   fluids alike (`Native.holdable`), so the litres are kept; the record
@@ -132,11 +142,11 @@ listed with their replacement.
   `ISTakeFuel`/`ISRefuelFromGasPump` are intercepted for managed pumps.
 * Reason: vanilla paths disagree on units (1 L vs 1.25 L per unit) and
   `ISTakeFuel:complete()` duplicates the final increment (G06, SRC).
-* Status: implemented in `TLG/Integration/Stations.lua` (both vanilla paths
-  are settled after the fact: pump set to reservoir − litres delivered, can
-  fluids set to the reservoir blend; fractional remainder kept). Verified
-  RT-SP 2026-10-31: 10 L into a can = −10 units, 59 L into a car = −59 units,
-  composition and degradation carried.
+* Status: implemented in `TLG/Integration/Stations.lua`. Both vanilla paths
+  are settled after the fact: the pump is set to reservoir − litres
+  delivered and the can's fluids to the reservoir blend, with the fractional
+  remainder kept. Verified RT-SP 2026-10-31: 10 L into a can = −10 units,
+  59 L into a car = −59 units, composition and degradation carried.
 
 ## D-011 Electrical priorities only where control exists
 * Decision: dispatch priorities apply to TLG-owned consumers (chargers,
@@ -157,20 +167,23 @@ listed with their replacement.
 
 ## D-013 Generator sidecar carried through pickup/placement
 * Decision: wrap `ISTakeGenerator.complete` (object → item modData), every
-  Lua path that drops a generator item (item → object: Java converts a
-  dropped generator item in `IsoGridSquare.AddWorldInventoryItem`, BC) and
-  `IsoGenerator.new` (Lua placement paths). The drop paths are
-  `ISDropWorldItemAction.complete` (place/drop), `ISUnequipAction.complete`
-  (the menus unequip a carried generator before another generator or heavy
-  item is taken or a weapon equipped, and the unequip drops a heavy item at
-  the feet itself; added 2026-11-02), the global `forceDropHeavyItems` (a
-  carried generator is dropped at the character's feet when a vehicle is
-  entered, an animal handled, a trap set, and inside the takes; 17 vanilla
-  callers) and `ISTransferAction:transferItem` to the floor container
-  (inventory drag).
-  After the drop the sidecar goes to the generator within one square that has
-  no sidecar, the item's `generatorFullType` and the item's fuel. Device
-  identity and conversion projects (`tlgDeviceId`, `tlgEngineId`,
+  Lua path that drops a generator item (item → object) and
+  `IsoGenerator.new` (Lua placement paths). Java converts a dropped
+  generator item in `IsoGridSquare.AddWorldInventoryItem` (BC). The drop
+  paths are:
+  * `ISDropWorldItemAction.complete` (place/drop);
+  * `ISUnequipAction.complete` (added 2026-11-02): the menus unequip a
+    carried generator before another generator or heavy item is taken or a
+    weapon equipped, and the unequip drops a heavy item at the feet itself;
+  * the global `forceDropHeavyItems` (17 vanilla callers): a carried
+    generator is dropped at the character's feet when a vehicle is entered,
+    an animal handled, a trap set, and inside the takes;
+  * `ISTransferAction:transferItem` to the floor container (inventory
+    drag).
+
+  After the drop the sidecar goes to the generator within one square that
+  has no sidecar and has the item's `generatorFullType` and the item's fuel.
+  Device identity and conversion projects (`tlgDeviceId`, `tlgEngineId`,
   `tlgConv`) travel the same way.
 * Evidence: SRC `ISTakeGenerator.lua:41-53`, `ISDropWorldItemAction.lua:81`,
   `ISEquipWeaponAction.lua:75-98`, `ISTransferAction.lua:95-112`;
@@ -182,12 +195,34 @@ listed with their replacement.
   action, `forceDropHeavyItems` (taking a second generator while carrying
   one, the action queued directly), drag to the floor and
   `IsoGenerator.new` all carry the record. The menus' unequip was missed
-  until 2026-11-02: in run 83 a generator put down by a bat equipped from
-  the inventory menu lost its record; with the `ISUnequipAction` wrap, run
-  85 (8/0) kept both records, of one put down by taking a second generator
-  from the world menu and of one put down by equipping the bat.
+  until 2026-11-02. In run 83 a generator put down by a bat equipped from
+  the inventory menu lost its record. With the `ISUnequipAction` wrap, run
+  85 (8/0) kept both records: one put down by taking a second generator
+  from the world menu, and one put down by equipping the bat.
 
 ## D-015 Production machines are placeable items
+* Current rule (amended 2026-11-06): the fermentation vessel, the stills
+  and the drying column are inventory items placed on the ground. The
+  process record lives in item modData (`tlgProc`) and travels with the
+  item; a batch works only while its machine is placed.
+  * The mod follows the moves the game's Lua makes: the world menu's
+    **Grab**, transfers to and from the floor, the place action, and the
+    take and drops of a heavy item (`ISEquipHeavyItem`, `ISUnequipAction`,
+    `forceDropHeavyItems`). A pickup brings the batch to that moment and
+    marks it carried; a put-down starts it again from that moment (runs
+    27, 45, 79 and 81).
+  * A move no Lua sees, such as the world menu's **Grab** in multiplayer,
+    is found at the next access or put-down. The batch then counts up to
+    `seen`, the last time the authority found the machine placed (runs 27
+    and 155).
+  * A carried machine answers **Status** only (run 46).
+  * The vessel is a heavy item carried in both hands; on a dedicated
+    server the mod takes it off the floor itself (D-030).
+  * The authority also follows the hands (`Machines.onHands`): a machine
+    with a record that leaves both hands and lands on the ground within
+    300 ticks is put down from the tick it lands. A vessel dropped at its
+    carrier's death works from the death, in single player (run 202,
+    through `Machines.onDeath`) and on a dedicated server (run 210).
 * Decision: fermenter, stills and drying column are inventory items placed on
   the ground; the process record lives in item modData (`tlgProc`) and
   processing only advances while placed. B42 `entity` world objects were
@@ -199,78 +234,87 @@ listed with their replacement.
 * Consequence: picking a running machine up pauses it on next access without
   crediting the carried time (conservative). A placed fermenter, reflux still
   and drying column each ran a batch in game and kept their records across
-  save and reload (RT-SP 2026-10-31, runs 7 and 12); on the game clock a
+  save and reload (RT-SP 2026-10-31, runs 7 and 12). On the game clock a
   fermenter whose chunk was unloaded for 24 game hours caught up exactly on
   the next access (runs 13–14).
-* As first built, this rule did not hold (RT-SP run 26, 3 FAIL). The
-  adapter saw a move only at the next access, so it could not tell placed
-  hours from carried ones: an access while carried paused the batch from
-  the previous access, dropping the hours it stood placed before the
-  pickup; the first access after it was put down started it from that
-  access, dropping the hours since; with no access while carried, the
-  carried hours counted as if it had stood at its new place. The record
-  itself travelled with the item through both pickup paths and both
-  put-down paths of the run.
-* Fix: the adapter wraps the moves the game's Lua makes (the world menu's
-  Grab, every transfer to or from the floor, the place action) and brings
-  the batch to the moment of the pickup at its site, then marks it carried;
-  putting it down starts it again from that moment and lists it for the
-  hourly reading at once. The site keeps its tile and the record the last
-  time the authority found it placed (`seen`, every access, hourly reading
-  and ten-minute note). A move no Lua sees (in multiplayer the server grabs
-  in a Java item transaction) is found at the next access or put-down: the
-  batch counts up to `seen`, at most ten minutes short while the area is
-  loaded, and not past it. Verified RT-SP run 27 (34/0): fermenters picked
-  up with the Grab and the loot window and put down with the place action
-  and Drop did the work of their placed hours exactly; one lifted with the
-  grab's own calls outside its Lua (standing in for multiplayer) was
-  credited up to 0.10 h before the grab. Verified on the stills and the
-  drying column in RT-SP run 45 (41/0). A pot still picked up while
-  distilling, a reflux still while heating up (grabbed unseen) and a drying
-  column were carried two hours and put down again. Each then finished its
-  remaining stage hours with exactly the wood and spirit of its
-  definitions: no wood burned and no paused hours counted while carried.
-  The unseen grab lost the 0.15 h since the last note. A move in
-  multiplayer itself is NOT RUN.
-* Amendment (2026-11-01): a carried machine answers Status only. Until
+* As first built (2026-11-01), this rule did not hold (RT-SP run 26, 3 FAIL).
+  The adapter saw a move only at the next access, so it could not tell
+  placed hours from carried ones:
+  * an access while carried paused the batch from the previous access,
+    dropping the hours it stood placed before the pickup;
+  * the first access after it was put down started it from that access,
+    dropping the hours since;
+  * with no access while carried, the carried hours counted as if it had
+    stood at its new place.
+
+  The record itself travelled with the item through both pickup paths and
+  both put-down paths of the run.
+* Fix (2026-11-01): the adapter wraps the moves the game's Lua makes: the
+  world menu's **Grab**, every transfer to or from the floor, and the place
+  action. A pickup brings the batch to that moment at its site, then marks
+  it carried. Putting it down starts it again from that moment and lists it
+  for the hourly reading at once. The record keeps the site's tile and the
+  last time the authority found the machine placed (`seen`, stamped at
+  every access, hourly reading and ten-minute note). A move no Lua sees (in
+  multiplayer the server grabs in a Java item transaction) is found at the
+  next access or put-down: the batch counts up to `seen`, at most ten
+  minutes short while the area is loaded, and not past it.
+
+  Verified RT-SP run 27 (34/0): fermenters picked up with the **Grab** and
+  the loot window and put down with the place action and **Drop** did the
+  work of their placed hours exactly. One lifted with the grab's own calls
+  outside its Lua (standing in for multiplayer) was credited up to 0.10 h
+  before the grab. Verified on the stills and the drying column in RT-SP
+  run 45 (41/0). A pot still picked up while distilling, a reflux still
+  while heating up (grabbed unseen) and a drying column were carried two
+  hours and put down again. Each then finished its remaining stage hours
+  with exactly the wood and spirit of its definitions: no wood burned and
+  no paused hours counted while carried. The unseen grab lost the 0.15 h
+  since the last note. A move in multiplayer itself is NOT RUN.
+* Amendment (2026-11-01): a carried machine answers **Status** only. Until
   then the authority refused loading a carried machine but took Feed the
   firebox, Collect, Pause, Resume and Abort batch, which the menu hides
   while it is carried (found reading the handlers after run 45). A Resume
-  sent for a carried machine made the batch count from that moment.
-  Put back on the tile it came from, the machine then counted its carried
+  sent for a carried machine made the batch count from that moment. Put
+  back on the tile it came from, the machine then counted its carried
   hours as work and burned wood for them (shown against the old handler:
   4 h of work for 2 h placed). All five now return `not_placed`. Verified
   by `tests/authority/test_machine_commands.lua` and RT-SP run 46 (46/0):
   the five, sent as requests for a carried pot still and drying column,
   were refused and the records left untouched.
-* Across a save (RT-SP run 48, 29/0 and 24/0): a pot still, a reflux
-  still grabbed unseen and a drying column were saved and exited to the
-  menu while carried, and the save was continued. Their records came back
-  from the inventory exactly as saved, still marked carried, or for the
-  unseen one, unchanged. After another carried hour and the put-downs,
+* Across a save (2026-11-01, RT-SP run 48, 29/0 and 24/0): a pot still, a
+  reflux still grabbed unseen and a drying column were saved and exited to
+  the menu while carried, and the save was continued. Their records came
+  back from the inventory exactly as saved: still marked carried, or, for
+  the unseen one, unchanged. After another carried hour and the put-downs,
   each finished at its due time with exactly its wood and spirit.
-* Amended 2026-11-02, the fermentation vessel is carried in both hands
+* Amendment (2026-11-02): the fermentation vessel is carried in both hands
   (the user's request). It is scripted as vanilla's heavy items are
   (`Tags = base:heavyitem`, `RequiresEquippedBothHands = true`, as
   `Base.LargeMeteorite` and the anvils; BC
-  `InventoryItem.isForceDropHeavyItem`): a double-click or drag in the
+  `InventoryItem.isForceDropHeavyItem`). A double-click or drag in the
   loot window takes it into both hands (`ISEquipHeavyItem`), one heavy
   item at a time. It goes down at the character's feet when another heavy
   item is taken or a weapon equipped from the menus, which unequip the
   hands first (`ISUnequipAction` drops a heavy item itself, SRC
-  `ISUnequipAction.lua:134`), and when a vehicle is entered, an animal
-  handled or a trap set (`forceDropHeavyItems`). `Machines.install`
-  follows all three, as it follows Grab, transfers and the place action.
+  `ISUnequipAction.lua:134`). It also goes down there when a vehicle is
+  entered, an animal handled or a trap set (`forceDropHeavyItems`).
+  `Machines.install` follows all three (`ISEquipHeavyItem`,
+  `ISUnequipAction`, `forceDropHeavyItems`), as it follows **Grab**,
+  transfers and the place action.
+
   42.21 leaves a heavy item's world object on the square when
   `ISEquipHeavyItem` takes it off the floor in single player (vanilla's
   meteorite too, RT-SP run 78: `sendRemoveItemFromContainer` acts only in
   multiplayer), so the item would be carried and still standing. For the
   mod's machines the hook then takes the world object off as the floor
   transfer does (`ISTransferAction.lua:131-158`); vanilla's own heavy
-  items are left as vanilla leaves them. The loot window's Grab button
+  items are left as vanilla leaves them. The loot window's **Grab** button
   stays a plain transfer into the inventory: vanilla does not check it
   for heavy items. An idle character draws no carried item but a weapon,
-  vanilla's heavy items included (runs 73–75), so the carry has no pose.
+  vanilla's heavy items included (runs 73–75), so the carry has no pose
+  (until D-025).
+
   Verified by `tests/integration/test_machine_sites.lua` and RT-SP runs
   79 (39/0: a running vessel taken the double-click way, carried an hour
   and dropped by `forceDropHeavyItems`, its carried hour not counted) and
@@ -280,20 +324,20 @@ listed with their replacement.
   the mod followed only `forceDropHeavyItems`, which the menus' take
   reaches with the hands already empty (found by reading
   `equipHeavyItem`).
-* In multiplayer (RT-MP run 155): the world menu's Grab of a running
-  vessel is the move no Lua sees, as foreseen. The record still said
-  `Processing` after it. The first status while it was carried paused it,
-  credited up to the last time it was found placed, and nothing more
-  counted while carried. The inventory's Drop was seen: the batch ran
-  again at once where the vessel landed.
-* When its carrier dies (RT-SP runs 198–199, 2026-11-05): the game drops
+* In multiplayer (2026-11-03, RT-MP run 155): the world menu's **Grab** of
+  a running vessel is the move no Lua sees, as foreseen. The record still
+  said `Processing` after it. The first **Status** while it was carried
+  paused it, credited up to the last time it was found placed, and nothing
+  more counted while carried. The inventory's **Drop** was seen: the batch
+  ran again at once where the vessel landed.
+* When its carrier dies (2026-11-05, RT-SP runs 198–199): the game drops
   the carried vessel at the body's feet, and no Lua hook sees that drop.
   As with any put-down the mod does not see, the batch stayed paused
-  until the mod next found the vessel placed, at a Status or a take
+  until the mod next found the vessel placed, at a **Status** or a take
   (0.04 game h lost in run 199). A successor coming back days later would
   have lost those days of fermenting.
-* Since 2026-11-06 the mod listens for the death (`Machines.onDeath` on
-  `Events.OnPlayerDeath`, on the authority; the user asked for it, "Yes,
+* Amendment (2026-11-06): the mod listens for the death (`Machines.onDeath`
+  on `Events.OnPlayerDeath`, on the authority; the user asked for it, "Yes,
   fix it"):
   * a machine still in the dying character's hands is watched for 300
     ticks until it lands, then put down from that moment;
@@ -306,20 +350,19 @@ listed with their replacement.
   Run 202 (18/0): the dropped fermenter worked 0.0356 h over the 0.0356
   game h from the death, as the placed one did. The watch branch is
   covered by `tests/integration/test_machine_sites.lua` only.
-
-  On a dedicated server the hook did nothing (RT-MP run 209): a client's
-  player died carrying a running vessel, the vessel fell on the floor
-  where the player died, and neither `OnPlayerDeath` nor
-  `OnCharacterDeath` fired in the server's Lua. The record stayed
-  carried; a Status about 1.3 game h later restarted the batch from then,
-  the hours between lost, as before the hook. The game's code says why
-  (BC 42.21, engine capabilities): `IsoPlayer.OnDeath` returns at once on
-  a server, and the server drops the dead player's hand items in Java
+* On a dedicated server (2026-11-06, RT-MP run 209) the hook did nothing.
+  A client's player died carrying a running vessel, and the vessel fell on
+  the floor where the player died. Neither `OnPlayerDeath` nor
+  `OnCharacterDeath` fired in the server's Lua. The record stayed carried;
+  a **Status** about 1.3 game h later restarted the batch from then, and
+  the hours between were lost, as before the hook. The game's code says
+  why (BC 42.21, engine capabilities): `IsoPlayer.OnDeath` returns at once
+  on a server, and the server drops the dead player's hand items in Java
   (`IsoGameCharacter.die` → `dropHeldItems` → `AddWorldInventoryItem`).
-* Since 2026-11-06 the mod follows the hands on the authority
+* Amendment (2026-11-06): the mod follows the hands on the authority
   (`Machines.onHands`; the user asked for it, "Fix it here"). Every drop
   empties the hands through `setPrimaryHandItem` and
-  `setSecondaryHandItem`, and those fire `OnEquipPrimary` and
+  `setSecondaryHandItem`, which fire `OnEquipPrimary` and
   `OnEquipSecondary` wherever they run, a server included:
   * a machine with a record that enters a hand is remembered with its
     holder;
@@ -344,13 +387,13 @@ listed with their replacement.
   into the inventory, a hook's own drop written once, a client, the
   ten-minute look).
 
-  RT-MP run 210 (A 5/0, B 6/0), run 209's case again: the server's mod
-  held the vessel as in A's hands from the take (the equip events reach
-  the server's Lua). A died at 10661,10644, and the vessel landed there.
+  RT-MP run 210 (A 5/0, B 6/0) repeated run 209's case. The server's mod
+  held the vessel as in A's hands from the take: the equip events reach
+  the server's Lua. A died at 10661,10644, and the vessel landed there.
   The server put it down from 4.1684, 0.0533 game h after B's probe right
-  before the death, which is when A died (two seconds later, its 120
-  ticks). The vessel was on the hourly list at once and worked from then:
-  0.958 h of work by B's read 1.29 game h after that probe. `OnTick` fires
+  before the death. That is when A died, two seconds (120 ticks) after the
+  probe. The vessel was on the hourly list at once and worked from then:
+  0.958 h of work by B's read, 1.29 game h after that probe. `OnTick` fires
   on the server (300 ticks in 78.8 s at its start), which the watch needs.
 
 ## D-016 UI feedback through rich-text dialogs
@@ -379,16 +422,16 @@ listed with their replacement.
   water; no schema change.
 
 ## D-018 Conversion work is a timed action at the device
-* Decision: "Work on it" queues the timed action `ISTLGConversionWork`. The
+* Decision: **Work on it** queues the timed action `ISTLGConversionWork`. The
   character walks to the engine area or next to the generator, joins the
   project (which forfeits any unreported gap) and reports every 15 minutes
   of world time while staying in reach (4 tiles from a vehicle, 2.5 tiles
   from a generator). Leaving stops the action with a final report. The menu
-  no longer offers "Report progress" or "Stop working". The authority passes
-  a 1 h worker timeout with every request
+  no longer offers **Report progress** or **Stop working**. The authority
+  passes a 1 h worker timeout with every request
   (`ConversionDevices.WORKER_TIMEOUT_HOURS`), so a report after a longer gap
   credits at most 1 h and ends the assignment.
-* Reason: "Report progress" credited all the time since the previous report
+* Reason: **Report progress** credited all the time since the previous report
   (up to 12 h) as long as the player stood in reach at that moment, so a
   player could start the work, leave and collect the hours later; the domain
   assumed an hourly adapter report that nothing sent. Found reading the code
@@ -399,19 +442,22 @@ listed with their replacement.
   A modified client sending bare reports gains at most 1 h per visit and has
   to be in reach when it reports. The action shows no progress bar:
   `setJobDelta` on an open-ended action makes vanilla's queue drop it as
-  stalled (BC `BaseAction`, found in run 11); "Project status" shows the
+  stalled (BC `BaseAction`, found in run 11); **Project status** shows the
   stage reached. Verified RT-SP (2026-10-31): a bare report after 3 h credited
   1 h; leaving reach stopped the action through `isValid()`; time away was
   not credited (run 9); from the menu, the walk to the engine area, a
   refused start and the ending on a missing tool (run 12).
 
 ## D-019 Where each TLG recipe is crafted
-* Decision: every TLG craft recipe carries vanilla's place tags. The
-  fermentation vessel `AnySurfaceCraft;Carpentry` (as vanilla
-  `MakeOilPress`), the pot still and drying column `AnySurfaceCraft` (as the
-  screwdriver assemblies in `recipes_electrical`/`recipes_radio`), the
-  reflux still `InHandCraft;Welding` (as `MakeMetalSheet`), the sampling kit
-  and filter `InHandCraft`, the stabilizer `InHandCraft;Cooking`.
+* Decision: every TLG craft recipe carries vanilla's place tags:
+  * the fermentation vessel `AnySurfaceCraft;Carpentry` (as vanilla
+    `MakeOilPress`);
+  * the pot still and drying column `AnySurfaceCraft` (as the screwdriver
+    assemblies in `recipes_electrical`/`recipes_radio`);
+  * the reflux still `InHandCraft;Welding` (as `MakeMetalSheet`);
+  * the sampling kit and filter `InHandCraft`;
+  * the stabilizer `InHandCraft;Cooking`.
+
   `AnySurfaceCraft` needs a table or counter within two tiles. Pot and jar
   inputs say `mode:destroy`.
 * Reason: the crafting window and the inventory "craft" menu only list
@@ -421,9 +467,13 @@ listed with their replacement.
   crafts handed the pot and jars back (RT-SP run 11).
 * Consequence: verified RT-SP 2026-10-31 (run 12) for the four machine
   recipes through the inventory craft menu; the sampling kit, filter and
-  stabilizer are listed but were not crafted in game.
+  stabilizer are listed but were not crafted in game. (All seven recipes
+  were crafted through the crafting window in runs 192–193, 2026-11-04.)
 
 ## D-020 The recorded day temperature is the mean of the air, weather included
+* Superseded in part by D-021: a placed machine now takes the temperature
+  of where it stands, so the sentence on placement under Consequences no
+  longer holds.
 * Decision: every game hour the authority records today's temperature and
   humidity as the running mean of `ClimateManager.getTemperature()` and
   `getHumidity()` (`World.recordClimate`, accumulator `climateAcc` in the
@@ -445,10 +495,10 @@ listed with their replacement.
   slightly for that day (the exact G12 catch-up of runs 13–14 was in July,
   at full rate, where the temperature did not matter). Days recorded before
   the change keep their season values; no migration.
-* Superseded in part by D-021: a placed machine now takes the temperature
-  of where it stands; the sentence above on placement no longer holds.
 
 ## D-021 A machine's temperature is the air where it stands
+* Superseded in part by D-022: a fire's noted fuel now counts while away,
+  so the hours away no longer all take the unheated value (Consequences).
 * Decision: a placed machine's day temperature is the mean air temperature
   at its tile over the day's hours of the batch. While its area is loaded
   the authority reads the game's own value there every game hour
@@ -466,69 +516,74 @@ listed with their replacement.
   status said "too cold here". The game already computes a temperature per
   tile for its characters; using it makes rooms, the grid and fires matter
   the way a player expects.
-* The game's formula (BC 42.21): outdoors `getTemperature()` (a tile gets
-  no wind chill); in a room (`IsoGridSquare.isInARoom()`, map rooms and
-  player-built rooms) 22 °C while `IsoWorld.isHydroPowerOn()`, otherwise
-  T + (22 − T) × (0.4 + 0.2 × lagged daylight) on the ground floor, 0.85 of
-  that pull above it, mirrored above 22 °C; then the hottest heat source
-  within its radius R in clear line of sight raises it to
-  T + (1 − d/R) × (T_source + clamp(T − 30, −7, 7) − T) (outdoor sources
-  clamp to −15..5): `IsoFire` 35 °C with its light radius, `IsoFireplace`
-  35 °C, `IsoBarbecue` 25 °C with radius 3.
+* The game's formula (BC 42.21):
+  * outdoors, `getTemperature()` (a tile gets no wind chill);
+  * in a room (`IsoGridSquare.isInARoom()`, map rooms and player-built
+    rooms), 22 °C while `IsoWorld.isHydroPowerOn()`; otherwise
+    T + (22 − T) × (0.4 + 0.2 × lagged daylight) on the ground floor, 0.85
+    of that pull above it, mirrored above 22 °C;
+  * then the hottest heat source within its radius R in clear line of
+    sight raises it to T + (1 − d/R) × (T_source + clamp(T − 30, −7, 7) − T)
+    (outdoor sources clamp to −15..5): `IsoFire` 35 °C with its light
+    radius, `IsoFireplace` 35 °C, `IsoBarbecue` 25 °C with radius 3.
 * Consequences: an unheated ground-floor room pulls the outdoor air
   0.4–0.6 of the way to 22 °C with the daylight, 0.435 on January days, so
   a fermenter there stops below about −3 °C outdoor day mean in January
-  and slows below about 15 °C; outdoors it slows below 18 °C and stops
-  below 8 °C; with the grid on, or warmed by a fire, it can run at full
+  and slows below about 15 °C. Outdoors it slows below 18 °C and stops
+  below 8 °C. With the grid on, or warmed by a fire, it can run at full
   rate. In three January runs a room alone was not enough (4.5–11.4 °C at
   the machine; the batch spoiled each time) and a warmed tile was. Heat
   counts only while the area is loaded: hours away take the unheated
-  value (until D-022: a fire's noted fuel now counts while away). The day mean averages its hours, so a few warm hours lift the
-  whole day (the batch has a day's thermal mass); the hour in progress
-  takes the previous hour's reading, otherwise a warmed machine paused
-  after every midnight (run 17). A moved machine counts where it stood up
-  to the pickup and at its new place from the put-down (D-015). Within the
-  current day
-  the value moves as readings arrive (as in D-020).
+  value (until D-022). The day mean averages its hours, so a few warm
+  hours lift the whole day (the batch has a day's thermal mass). The hour
+  in progress takes the previous hour's reading; otherwise a warmed
+  machine paused after every midnight (run 17). A moved machine counts
+  where it stood up to the pickup and at its new place from the put-down
+  (D-015). Within the current day the value moves as readings arrive (as
+  in D-020).
 * Verified RT-SP 2026-10-31 runs 17–19: the room formula matched the
-  game's own room value exactly over 94–96 hours per run; the readings
-  filed, the day temperatures reported and the hourly work matched the
-  harness exactly in run 19. Run 21 (2026-11-01) did the same beside a
+  game's own room value exactly over 94–96 hours per run. In run 19 the
+  readings filed, the day temperatures reported and the hourly work
+  matched the harness exactly. Run 21 (2026-11-01) did the same beside a
   fireplace of the map, tended with logs: the heat formula matched every
   tile around it at four fuel levels and the machine's air every hour,
   and the batch finished in January (20.7 °C or more at 2.24 tiles from
   the fire). A 12 hour absence cost it about 17 hours: the hours away took
   the unheated room value, and the fire, which burns its fuel during an
-  absence all the same (vanilla), was out on the return. Superseded in
-  part by D-022 (a fire's fuel now counts while away).
+  absence all the same (vanilla), was out on the return.
 
 ## D-022 A fire left burning keeps warming a machine while its fuel lasts
 * Decision: every ten game minutes the authority notes, for each loaded,
   placed machine with a batch running, the fire that gives its tile its
-  air: a lit fireplace (any `IsoFireplace`: fireplace, wood stove, the
-  map's campfire tiles, brazier, barrel oven), barbecue (`IsoBarbecue`) or
-  campfire a player built (an `SCampfireSystem` campfire: the permanent
-  `IsoFire` it keeps lit, its fuel read from the "Campfire" object's mod
-  data) on the same floor within 18 tiles whose heat by the game's formula
-  is the air read there, with its fuel, its offset and whether its tile is
-  in a room (the one with most fuel if several match). Notes are kept per
-  hour, the hour's last one standing, "none" when no fire warms the
-  machine. An hour without a reading (its area was not loaded) takes the
-  warmth of the fire in the last note before it, from the start of the
-  noted hour until that fuel would have burned out at one minute a minute:
-  the formula applied to the site's unheated day value (D-021's value for
-  unread hours), with the radius at the fuel left at the start of each
-  hour (a campfire's max(2, R × min(fuel, 360) / 360) truncated, R 10
-  outdoors and 18 inside). After that the unheated value.
-* Reason: vanilla burns a fire's fuel while its area is not loaded: on
+  air. That is the fire on the same floor within 18 tiles whose heat by
+  the game's formula is the air read there (the one with most fuel if
+  several match): a lit fireplace, barbecue or campfire a player built.
+  * Fireplace: any `IsoFireplace` (fireplace, wood stove, the map's
+    campfire tiles, brazier, barrel oven).
+  * Barbecue: `IsoBarbecue`.
+  * Campfire a player built: an `SCampfireSystem` campfire, the permanent
+    `IsoFire` it keeps lit, its fuel read from the "Campfire" object's mod
+    data.
+
+  The note holds the fire's fuel, its offset and whether its tile is in a
+  room. Notes are kept per hour, the hour's last one standing, "none" when
+  no fire warms the machine. An hour without a reading (its area was not
+  loaded) takes the warmth of the fire in the last note before it, from
+  the start of the noted hour until that fuel would have burned out at one
+  minute a minute. That warmth is the formula applied to the site's
+  unheated day value (D-021's value for unread hours), with the radius at
+  the fuel left at the start of each hour (a campfire's
+  max(2, R × min(fuel, 360) / 360) truncated, R 10 outdoors and 18
+  inside). After that the hour takes the unheated value.
+* Reason: vanilla burns a fire's fuel while its area is not loaded. On
   reload `IsoFireplace.update` and `IsoBarbecue.update` use up every
   minute since their saved `lastUpdateTime` in one step (BC 42.21), and
   `SCampfireSystem` takes a minute off every lit campfire per minute
-  event, loaded or not (SRC 42.21). In run
-  21 a fire left with 365 minutes was out on the return while the machine
-  had been counted unheated for all 12 hours, and the batch lost about 17
-  hours. Crediting the warmth for the minutes the game spends the fuel
-  keeps the two accounts the same.
+  event, loaded or not (SRC 42.21). In run 21 a fire left with 365 minutes
+  was out on the return while the machine had been counted unheated for
+  all 12 hours, and the batch lost about 17 hours. Crediting the warmth
+  for the minutes the game spends the fuel keeps the two accounts the
+  same.
 * Consequences: with the default cap of 8 hours of fuel, a fire fed before
   leaving keeps a machine warm for up to 8 hours away; longer absences cool
   it as before. Fuel added after the last note (at most ten minutes old) is
@@ -541,19 +596,23 @@ listed with their replacement.
   more than a game minute (fast speeds) a campfire outlasts its noted
   minutes: the credit can then fall short of the warmth, never exceed it.
   Notes stay on the authority and are not sent to clients.
-* Verified RT-SP 2026-11-01 run 23 (21/0), beside run 21's fireplace: the
-  notes the mod took matched the harness's in all 99 hours, none was taken
-  while the area was unloaded, the last note before a 12 hour trip (365
-  minutes) covered 6.08 hours of it, and the work over the trip matched the
-  rule fed by the credited day temperatures exactly. The batch finished
-  after 109.2 game hours (run 21, without the credit and in a colder
-  January: 114.3). A barbecue as the noted fire was covered by unit tests
-  only until runs 34–35 (below). A `false` note survives a save: item mod data saves boolean values
-  (BC `KahluaTableImpl.save`), and in run 25 a record saved with two "no
-  fire" notes came back from save, exit and continue unchanged; the credit
+* Verified RT-SP 2026-11-01 run 23 (21/0), beside run 21's fireplace:
+  * the notes the mod took matched the harness's in all 99 hours, and none
+    was taken while the area was unloaded;
+  * the last note before a 12 hour trip (365 minutes) covered 6.08 hours
+    of it;
+  * the work over the trip matched the rule fed by the credited day
+    temperatures exactly.
+
+  The batch finished after 109.2 game hours (run 21, without the credit
+  and in a colder January: 114.3). A barbecue as the noted fire was
+  covered by unit tests only until runs 34–35 (below). A `false` note
+  survives a save: item mod data saves boolean values (BC
+  `KahluaTableImpl.save`). In run 25 a record saved with two "no fire"
+  notes came back from save, exit and continue unchanged, and the credit
   then worked as before (a 424 minute note covered 7.07 hours of a trip).
-* Campfires (RT-SP 2026-11-01, runs 34–35). Run 34 (35/4) found the
-  campfire a player builds never noted. It is not an `IsoFireplace` but a
+* Campfires (RT-SP 2026-11-01, runs 34–35): run 34 (35/4) found that the
+  campfire a player builds was never noted. It is not an `IsoFireplace` but a
   Lua global object (`SCampfireSystem`) whose warmth comes from a
   permanent `IsoFire`: 35 °C, radius the fire's light radius,
   max(2, 10 × min(fuel, 360) / 360) truncated outdoors. A fermenter one
@@ -568,6 +627,10 @@ listed with their replacement.
   so there it warms nothing (not run).
 
 ## D-023 Abort batch keeps what the batch made
+* Current rule (amended 2026-11-01): as decided below, with what a batch
+  made counted as the share done of the stages its recipe marks as making
+  its result (`makes`); a recipe snapshot that marks none still counts
+  every stage (amendment).
 * Decision: aborting a running or paused batch keeps what it made so far in
   the machine as output to collect, marked stopped early: a fermenter's
   wash, weaker and with its unfermented sugar, for a still; a still's
@@ -576,14 +639,15 @@ listed with their replacement.
   reports it as `rest`) and every byproduct (stillage, spent lime). Kept
   plus thrown away account for the whole batch. A second Abort throws the
   kept output away; Abort also empties a spoiled batch. A finished batch's
-  output is collected, not aborted. The menu offers Pause while a batch
-  works, Resume while it is paused by hand, and Abort while a batch runs,
-  was stopped early or has spoiled, judged on the record brought to now.
+  output is collected, not aborted. The menu offers **Pause** while a batch
+  works, **Resume** while it is paused by hand, and **Abort batch** while a
+  batch runs, was stopped early or has spoiled, judged on the record
+  brought to now.
 * Reason: until run 31 the handler only reported the partial result, so
   an abort lost the whole batch without a word (4 L of ethanol from a
-  drying column in that run), and a spoiled fermenter could be neither
-  aborted nor loaded again: a dead machine, while the winter design makes
-  spoiling routine (runs 16-19 each spoiled one).
+  drying column in that run). A spoiled fermenter could be neither aborted
+  nor loaded again: a dead machine, while the winter design makes spoiling
+  routine (runs 16-19 each spoiled one).
 * Consequences: a misclicked Abort keeps the output; losing it takes a
   second Abort. A fermenter stopped early holds its wash until a still
   takes it or a second Abort throws it away. An aborted batch hands out no
@@ -607,7 +671,11 @@ listed with their replacement.
   making no ethanol.
 
 ## D-024 A first look records the fuel it looks at
-* Decision: Look and smell (and a sample with the kit) on fuel the mod
+* Current rule (amended 2026-11-02): a first look writes the fuel's record
+  (below); in a can or other native container it also sets the fluids to
+  that record's composition where they differ, the litres unchanged
+  (amendment).
+* Decision: **Look and smell** (and a sample with the kit) on fuel the mod
   has not recorded yet writes the fuel's record: the baseline its policy
   gives at that moment, with the id the observation is filed under. Only
   the record is written (each endpoint's `record`), never the fuel
@@ -615,28 +683,36 @@ listed with their replacement.
   already recorded, or one refused (no kit), writes nothing.
 * Reason: runs 39–40 found that a look read the baseline and allocated
   an id without writing it, so the observation was filed under an id the
-  fuel never got: What I know about it said "unknown" right after a look,
-  and every later look allocated another id. In a world the mod has just
-  joined, nearly all fuel is unrecorded.
+  fuel never got: **What I know about it** said "unknown" right after a
+  look, and every later look allocated another id. In a world the mod has
+  just joined, nearly all fuel is unrecorded.
 * Consequences: a look counts as the first contact for the existing-save
-  policy (docs/migrations.md), like a pour or refuel. Looking first fixes
+  policy (`docs/migrations.md`), like a pour or refuel. Looking first fixes
   the fuel's condition at that moment; the transition no longer applies
   to it later. Verified RT-SP 2026-11-01 run 41 (17/0, an existing save
   gaining the packaged mod): the look recorded a can that the mod had not
-  recorded, What I know about it found the observation under its id, the
-  can's condition was exactly the transition rule at the moment of the
-  look, and a later pour and a save with reload kept that record. A look
-  with the sample kit (the same path past the kit check) and looks at
+  recorded, and **What I know about it** found the observation under its
+  id. The can's condition was exactly the transition rule at the moment of
+  the look, and a later pour and a save with reload kept that record. A
+  look with the sample kit (the same path past the kit check) and looks at
   vehicles, pumps or generators (no menu sends one) are not run in game.
 * Amendment (2026-11-02): in a can or other native container, the record
   a look writes also sets the fluids to its composition where they
   differ (D-007 amendment); the litres stay the same, so the look still
   moves and creates no fuel. The baseline can hold water the fuel took up
-  before it was found, and written to the record alone that water was
-  dropped by the next read. Vehicle tanks, pumps and generators keep their
+  before it was found. Written to the record alone, that water was dropped
+  by the next read. Vehicle tanks, pumps and generators keep their
   composition in the record only (D-006) and are unchanged.
 
 ## D-025 The fermentation vessel is shown carried in both arms
+* Current rule (amended 2026-11-03): pose files of the mod's own draw the
+  vessel carried in both arms. The standing pose (the decision below) also
+  plays walking and running. A pose while crouched, one while crouched and
+  still (second amendment) and one while sprinting, crouched or not (third
+  amendment) take over at those gaits. A Lua action that plays its own
+  animation and is not about the vessel first puts it down at the
+  character's feet (amendment of 2026-11-02). In multiplayer the other
+  player's client draws the carry pose at every gait (runs 142–145).
 * Decision: the vessel's script names a hold pose of the mod's own
   (`primaryAnimMask = tlgcarryvessel`). Its pose file
   `AnimSets/player/maskingright/tlgcarryvessel.xml` plays the clip
@@ -663,12 +739,17 @@ listed with their replacement.
   the vessel as its hand model during "Loot" showed the barrel on the
   action's prop bone, tilted up beside the head (see the amendment).
   Placing the vessel plays no animation and keeps the pose. Running,
-  sprinting and sneaking keep it too (run 108), but crouched the barrel
-  tipped forward and the torso sank into it (see the second amendment),
-  and running and sprinting tilt it with the lean (see the third).
-  Multiplayer is not run. The clip ships with Mixamo's terms recorded
-  (`art-src/carry/PROVENANCE.md`); the source FBX files, which hold
-  Mixamo's character, stay out of the repository and the package.
+  sprinting and sneaking keep it too (run 108). Crouched, though, the
+  barrel tipped forward and the torso sank into it (see the second
+  amendment), and running and sprinting tilt it with the lean (see the
+  third). Multiplayer is not run. The clip ships with Mixamo's terms
+  recorded (`art-src/carry/PROVENANCE.md`); the source FBX files, which
+  hold Mixamo's character, stay out of the repository and the package.
+
+  ![Run 96: the shipped vessel carried in both arms, from the front, from the side and walking, and tilted up beside the head during the harness's Loot action](evidence/2026-11-02_run96_vessel_carry_sheet.jpg)
+
+  The fourth picture is the harness action described above (see the
+  amendment of 2026-11-02).
 * Amendment (2026-11-02, run 99): an action that plays its own animation
   first puts the vessel down at the character's feet. The user asked for
   it to be dropped on the ground, as they expected of a generator. Every
@@ -715,12 +796,13 @@ listed with their replacement.
   from four candidates (run 116): keyed for one frame, the barrel swung
   through the stride; keyed per key, it stayed steady. At 0.06 down its
   rim reached the chin; at 0.10 the lid sat below it. Verified with the
-  gait mode, now also sprinting crouched (run 117), where the body plays
-  the standing sprint, and again from the package's item tree after the
-  zip of `2e0d80d` installed clean (runs 118–119). Running keeps the
-  standing clip, and its pictures
-  (run 117) show the barrel tilting and swinging with the run's lean,
-  which run 108's note had missed.
+  gait mode (run 117), which now also sprints crouched; there the body
+  plays the standing sprint. Verified again from the package's item tree
+  after the zip of `2e0d80d` installed clean (runs 118–119). Running keeps
+  the standing clip; run 117's pictures show the barrel tilting and
+  swinging with the run's lean, which run 108's note had missed.
+
+  ![Run 117: the vessel at each gait with its poses: sprinting, sprinting crouched, walking, running, crouched and still, sneaking, and running crouched](evidence/2026-11-03_run117_vessel_gaits_sheet.jpg)
 * Amendment (2026-11-03, RT-MP runs 142–145): in multiplayer the other
   player's client draws the carry pose at every gait (it holds the
   vessel's `RightHandMask` on the carrier). On a dedicated server the
@@ -735,7 +817,7 @@ listed with their replacement.
   (`TLG.Integration.Manual.onCreate`) gives every new manual the mod data
   the game gives its own print media (`printMedia` with id, title, page
   and text keys, and `literatureTitle`). The inventory menu then offers
-  Inspect, and reading it shows one page in the game's print media
+  **Inspect**, and reading it shows one page in the game's print media
   window: start-up, fuel compatibility and troubleshooting of the
   ethanol loop, in three columns, EN and IT. The window's notebook button
   shows the same text in larger print. The manual is added on
@@ -755,22 +837,33 @@ listed with their replacement.
 * Consequences: verified RT-SP runs 101–103. The lists held it after the
   merge. The game's loot roller filled containers with it from seven of
   the lists (137, 154 and 147 manuals in 3500 fills), each one already
-  print media. Inspect read it and the game recorded it read, in EN and IT. A
-  manual made before this change has no page (none could be obtained).
-  Its icon and cover are still vanilla placeholders (A29, I03).
+  print media. **Inspect** read it and the game recorded it read, in EN
+  and IT. A manual made before this change has no page (none could be
+  obtained). Its icon and cover are still vanilla placeholders (A29, I03).
+  (Since D-028 the manual has its own icon, I03, and since D-029 its own
+  floor model, A29.)
+
+  ![Runs 102 and 103: the field manual's page in the game's print media window, in English after Inspect and in Italian after Ispeziona, with start-up, compatibility and troubleshooting in three columns](evidence/2026-11-02_runs102-103_manual_pages_sheet.jpg)
 
 ## D-027 The stills, the drying column and the fuel filter use the supplied models
+* Current rule (amended 2026-11-03): the four items stand on the floor as
+  the supplied models (below) and have icons rendered from those models
+  (amendment).
 * Decision: `TLG.PotStill`, `TLG.RefluxStill`, `TLG.DryingColumn` and
   `TLG.FuelFilter` stand on the floor as the models the user supplied on
   2026-11-03 (`TLG_models.txt`; provenance in `art-src/potstill`,
   `refluxstill`, `dryingcolumn` and `fuelfilter`). They ship as the
   fermenter's model does: each FBX byte for byte, each texture saved as
   PNG. Each scale sets a true size from the capacity the machine models:
-  the pot still a 60 L pot (0.7: a 0.44 m pot, 1.05 m wide with its swan
-  neck and hose), the reflux still a 120 L boiler under its column (0.9:
-  1.35 m tall), the drying column a 40 L receiver jar under its column
-  (0.55: 0.82 m tall), the filter a 0.15 m canister (0.1). None of them
-  has a hand model; the stills' vanilla cooking pot in the hand is gone.
+  * the pot still a 60 L pot (0.7: a 0.44 m pot, 1.05 m wide with its swan
+    neck and hose);
+  * the reflux still a 120 L boiler under its column (0.9: 1.35 m tall);
+  * the drying column a 40 L receiver jar under its column (0.55: 0.82 m
+    tall);
+  * the filter a 0.15 m canister (0.1).
+
+  None of them has a hand model; the stills' vanilla cooking pot in the
+  hand is gone.
 * Reason: the user asked for them. The placeholders misled: the two
   stills were the same cooking pot and the drying column a car's fuel
   tank (run 66). The game draws a non-weapon held in one hand only during
@@ -779,17 +872,18 @@ listed with their replacement.
   there (run 121), as it does for a carried generator.
 * Consequences: verified RT-SP runs 120–122 (10/0 each): the scripts load
   with their own meshes and textures, the items name them, and all four
-  drew on the floor beside the fermenter; next to the character the
+  drew on the floor beside the fermenter. Next to the character the
   heights came within about 10 % of the planned sizes. Again from the
   package's item tree after the zip of `8c9dd19` installed clean (runs
   123–124), whose save and continue loaded a placed reflux still and
-  drying column back (not photographed). Neither still's
-  model shows a firebox. The icons were still vanilla placeholders (I02,
-  I06–I08; see the amendment), and the editable sources were not
-  supplied. Multiplayer is
-  not run. The licence record rests on the user's statement of 2026-11-02
-  that they hold a commercial Tripo licence; the models were generated
-  the next day.
+  drying column back (not photographed). Neither still's model shows a
+  firebox. The icons were still vanilla placeholders (I02, I06–I08; see
+  the amendment), and the editable sources were not supplied. Multiplayer
+  is not run. The licence record rests on the user's statement of
+  2026-11-02 that they hold a commercial Tripo licence; the models were
+  generated the next day.
+
+  ![Runs 121 and 122: the fermenter, fuel filter, drying column, pot still and reflux still on the floor and beside the character, and nothing drawn when the pot still or the drying column is held during an action](evidence/2026-11-03_run122_machine_models_sheet.jpg)
 * Amendment (2026-11-03, runs 125–126): the four items have their own
   icons, rendered from their models. The user chose this next, after the
   models. `tools/make-model-icons.ps1` runs `tools/blender/pz_icon.py` on
@@ -801,7 +895,7 @@ listed with their replacement.
   stills, and the filter and the drying column, no longer share an icon.
   Seen in game in the equipped-item button (run 126), and again from the
   package's item tree after the zip of `f69a74a` installed clean (runs
-  127–128); the fermenter's icon stays the drawn one.
+  127–128). The fermenter's icon stays the drawn one.
 
 ## D-028 Every item has an icon of its own
 * Decision: the sampling kit, the yeast starter, the fuel stabilizer and
@@ -816,6 +910,11 @@ listed with their replacement.
   the one bottle among the jars; the manual an olive field manual with a
   title band and an orange badge. `tools/make-model-icons.ps1` renders all
   eight icons; two renders give the same files.
+
+  ![All nine of the mod's icons at eight times their size and at 32 pixels on dark and light: sampling kit, yeast starter, fuel stabilizer, field manual, fuel filter, drying column, pot still, reflux still and the fermenter](evidence/2026-11-03_item_icons_8x.png)
+
+  The last five are the four icons of the D-027 amendment and the
+  fermenter's drawn icon.
 * Reason: the user asked for them in the asset-requirements session on
   2026-11-03 ("Yes, give them icons. Make icons also for the Fuel Systems
   Manual and Fuel Stabilizer"), relayed by that session. The kit and the
@@ -825,12 +924,12 @@ listed with their replacement.
   from the filter and the drying column.
 * Consequences: verified RT-SP run 129 (19/0): every one of the eight
   rendered icons loads the mod's own `Item_TLG_<Name>.png`, and each item
-  equipped shows it in the equipped-item button; again from the package's
-  item tree after the zip of `21feecf` installed clean (runs 130–131).
-  The shapes are this
-  repository's own, so the icons carry no outside asset. The four items'
-  floor models are unchanged (A29): the stabilizer, the kit, the starter
-  and the manual still have none. (Since D-029 they have their own.)
+  equipped shows it in the equipped-item button. Verified again from the
+  package's item tree after the zip of `21feecf` installed clean (runs
+  130–131). The shapes are this repository's own, so the icons carry no
+  outside asset. The four items' floor models are unchanged (A29): the
+  stabilizer, the kit, the starter and the manual still have none. (Since
+  D-029 they have their own.)
 
 ## D-029 The kit, the starter, the stabilizer and the manual have floor models of their own
 * Decision: `TLG.FuelSampleKit`, `TLG.YeastStarter`, `TLG.FuelStabilizer`
@@ -865,6 +964,8 @@ listed with their replacement.
   writes the same files but for the time in each FBX's header. Not
   checked: an item dropped by a player (turned at random) or seen after a
   reload; multiplayer.
+
+  ![Runs 132 and 133: the field manual on its back, the stabilizer, the yeast starter and the sampling kit with its hose coiled flat, on the floor beside the character, close up and in the morning fog](evidence/2026-11-03_run133_floor_models_sheet.jpg)
 
 ## D-030 On a server the mod takes the fermentation vessel off the floor itself
 * Decision: on a dedicated server, when a player takes one of the mod's
@@ -963,38 +1064,48 @@ listed with their replacement.
     zero, and fuel coming in unseen is not charged. The fuel evaluated is
     the record as written, aged to the charge: a tank run dry still tells
     what it burned.
-  * Stalls: the sandbox option "Bad fuel can stall engines" (`VehicleStalls`)
-    now covers a running car too. Before, only the start gate read it, and
-    cars stalled on bad fuel with the option off. It stays a car option:
-    generators do not stall, and their start gate does not read it.
+  * Stalls: the sandbox option **Bad fuel can stall engines**
+    (`VehicleStalls`) now covers a running car too. Before, only the start
+    gate read it, and cars stalled on bad fuel with the option off. It
+    stays a car option: generators do not stall, and their start gate does
+    not read it.
 * Reason: the user asked on 2026-11-04 ("Fix the 2 problems you found by
   reading the code") after the driving runs (174–176), which found both by
   reading the code.
 * Consequences: verified by `tests/domain/test_engine_effects.lua` and
   `tests/integration/test_engine_effects.lua`, and in game by RT-SP run
-  179 (`-Mode engine-effects`, 36/0). A car on petrol aged to 2.6 ran at
-  3406 of its 4000 power (factor 0.851) from its first game minute, with
-  quality and loudness kept, and had its power back two game minutes after
-  stopping. Its engine lost what its 0.778 L owed, at 100 times the rate
-  (a fixture): 8 points, 0.670 carried. With the option off, a car on fuel
-  it cannot take ran 5.3 game minutes at 2000 without a stall. A generator
-  on petrol aged to 3.0 ran 6 game hours; the next refuel charged it the 3
-  points its 0.012 L owed at 100 times the rate, and once only. The cars
-  reached 24 km/h after 0.55 game minutes at full power (run 178), 0.63 at
-  85 % and 0.76 at half (run 179). Run 177 found one expectation of the harness wrong (it evaluated
-  the generator's fuel before its 6 hours of ageing). The driving mode
-  repeated 26/0 with the change (run 178). Generator wear shows at the next
-  refuel, move or switch, not as it burns. A car saved with its engine
-  running on poor fuel is saved with the lowered power; without the mod,
-  only a repair or an engine swap restores it (`migrations.md`). On a
-  dedicated server (RT-MP run 188, A 22/0, B 9/0), the server lowered the
-  power, charged the wear, refused the start, held the floor with stalls
-  off, stalled the engine with them on and charged the generator at its
-  refuel. Both clients, the driver's and another's, showed the power,
-  state and condition the server had. A client's loudness is the
-  server's × 0.37 from the first engine packet the game sends (vanilla's
-  own), and the mod's changes left it there. Not run: driving in
-  multiplayer, flex-converted engines, other chassis.
+  179 (`-Mode engine-effects`, 36/0):
+  * A car on petrol aged to 2.6 ran at 3406 of its 4000 power (factor
+    0.851) from its first game minute, with quality and loudness kept, and
+    had its power back two game minutes after stopping.
+  * Its engine lost what its 0.778 L owed, at 100 times the rate (a
+    fixture): 8 points, 0.670 carried.
+  * With the option off, a car on fuel it cannot take ran 5.3 game minutes
+    at 2000 without a stall.
+  * A generator on petrol aged to 3.0 ran 6 game hours; the next refuel
+    charged it the 3 points its 0.012 L owed at 100 times the rate, and
+    once only.
+  * The cars reached 24 km/h after 0.55 game minutes at full power
+    (run 178), 0.63 at 85 % and 0.76 at half (run 179).
+
+  Run 177 found one expectation of the harness wrong (it evaluated the
+  generator's fuel before its 6 hours of ageing). The driving mode
+  repeated 26/0 with the change (run 178).
+
+  Generator wear shows at the next refuel, move or switch, not as it
+  burns. A car saved with its engine running on poor fuel is saved with
+  the lowered power; without the mod, only a repair or an engine swap
+  restores it (`migrations.md`).
+
+  On a dedicated server (RT-MP run 188, A 22/0, B 9/0), the server lowered
+  the power, charged the wear, refused the start, held the floor with
+  stalls off, stalled the engine with them on and charged the generator at
+  its refuel. Both clients, the driver's and another's, showed the power,
+  state and condition the server had. A client's loudness is the server's
+  × 0.37 from the first engine packet the game sends (vanilla's own), and
+  the mod's changes left it there.
+
+  Not run: driving in multiplayer, flex-converted engines, other chassis.
 
 ## D-032 The machines' notes, readings and catch-up do the same work for less
 * Decision: four changes to the machines' timers and catch-up
@@ -1106,8 +1217,8 @@ listed with their replacement.
   * A player's knowledge of a fuel record keeps the latest observation of
     each test (`{ kit = obs, visual = obs }`, `Inspection.remember`). A new
     result replaces only the same test's last one.
-  * A new read-only command, `known`, answers What I know about it from
-    the authority's player object (`H.known`). It needs the same reach as
+  * A new read-only command, `known`, answers **What I know about it**
+    from the authority's player object (`H.known`). It needs the same reach as
     `status` (no ledger).
   * Its reply lists each test, the more precise first (`Inspection.known`,
     `Inspection.ORDER`), with:
@@ -1125,8 +1236,8 @@ listed with their replacement.
     may differ".
   * Knowledge saved before (the last observation alone) reads as that
     test's (`Inspection.tests`; `migrations.md`).
-* Reason: the user found that What I know about it did not show what they
-  knew ("Shouldn't it show what I actually know about the smell and kit
+* Reason: the user found that **What I know about it** did not show what
+  they knew ("Shouldn't it show what I actually know about the smell and kit
   tests? ... which tests have been done and how long ago ... If a
   container is not sealed it should say that the actual results may
   vary"). Confirmed in game before the fix:
@@ -1152,9 +1263,9 @@ listed with their replacement.
     Audit cases: `known` refuses out of reach and tells one player nothing
     of another's tests; on a can nobody tested it writes no record.
   * Asked about fuel the mod has not recorded, `known`, like `status`
-    before it, gives the record its read builds an id that is never
-    written: the world's next id moves by one (Containers endpoint read,
-    `persist` true; audit suite, 2026-11-06). Left as it was.
+    before it, gives the record its read builds an id, and that id is
+    never written: the world's next id moves by one (Containers endpoint
+    read, `persist` true; audit suite, 2026-11-06). Left as it was.
   * The knowledge outlives a save. Run 207 (single player, 7/0 and 9/0):
     saved and exited to the menu after both tests, then continued; the
     knowledge and the can's record (same revision) came back as saved,

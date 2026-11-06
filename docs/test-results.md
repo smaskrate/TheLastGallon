@@ -1,20 +1,22 @@
 # Test results
 
-Every run lists date, build, command, outcome and what was **not** run.
-Domain = `tools/run-tests.ps1` on the game's Kahlua VM. RT-DS = isolated
-dedicated server harness. RT-SP / RT-MP = client runtime tests.
+Each entry gives the date, the build, the command, the outcome and what was
+not run at the time. Domain tests run with `tools/run-tests.ps1` on the
+game's Kahlua VM. RT-DS is the isolated dedicated server harness; RT-SP
+(single player) and RT-MP (a dedicated server with clients) are the client
+runtime tests.
 
 ## Not run (standing list)
 
 | Area | Reason |
 | --- | --- |
-| RT-SP: station-reservoir pour, pouring from a can on the ground; driving another chassis, a converted car or off-road (a standard car on the road: launches 174–176) | Not in the harness yet |
-| RT-SP: picking up a running still or drying column (fermenters: runs 26–27); Pause and Abort on a still (fermenters and the drying column: run 31); workshop menu Project status/Cancel/Remove; Italian text in game | Not in the harness yet |
-| RT-SP: walking away from the work (the harness moves the character); cancelling or removing a conversion; two workers; a winter run (only July was tested) | Not in the harness yet |
-| RT-MP: a real network | Needs a second machine; the user chose to leave it NOT RUN (2026-11-03). Everything else runs on this machine (launches 139–171) |
-| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
+| RT-SP: **Pour into the station reservoir**; pouring from a can on the ground; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
+| RT-SP: the workshop menu's **Project status**, **Cancel the project** and **Remove the conversion**; the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
+| RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
+| RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
+| RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
-| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | No earlier supported version (0.1.0 is the first); the game scans Workshop folders only in Steam mode (the zip's manual install is rehearsed, `release-checklist.md` gate 12); uploading is the user's manual step, not taken |
+| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | No earlier supported version exists: 0.1.0 is the first. The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the user's manual step and has not been taken |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -49,23 +51,23 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 ## 2026-10-30 — RT-SP client harness attempt 1 (BLOCKED)
 
 * Command: `tools/run-sp-harness.ps1`
-* Result: client booted, passed terms screen, played intro videos, then no
-  progress for 7 minutes. Windows session was locked (`LogonUI.exe`), so the
-  window could not render. Client stopped by hand; **no client evidence**.
-  All RT-SP checks remain NOT RUN.
+* Result: the client booted, passed the terms screen and played the intro
+  videos, then made no progress for 7 minutes. The Windows session was
+  locked (`LogonUI.exe`), so the window could not render. The client was
+  stopped by hand: **no client evidence**. All RT-SP checks remain NOT RUN.
 
 ## 2026-10-30 — Domain + authority + production suites
 
 * Command: `tools/run-tests.ps1` → `modules=8 cases=61 passed=61 failed=0`.
 * Compile check (package + harness): `compiled=54 errors=0`.
-* Bug found and fixed while writing tests: transition policy applied
-  pre-outbreak age at install time (expected fresh); BOM-prefixed files from
-  PowerShell broke Kahlua compilation.
+* Bugs found and fixed while writing the tests: the transition policy
+  applied the pre-outbreak age at install time (fresh was expected);
+  BOM-prefixed files from PowerShell broke Kahlua compilation.
 
 ## 2026-10-30 — RT-DS harness boot 3 (container adapter)
 
 * Command: `tools/dev-server-controller.ps1` + `tools/stop-dev-server.ps1`
-* Evidence: `docs/evidence/2026-10-30_rt-ds_harness_boot3.txt`
+* Evidence: [2026-10-30_rt-ds_harness_boot3.txt](evidence/2026-10-30_rt-ds_harness_boot3.txt)
 * Result: 16 PASS, 3 FAIL (the same three dedicated-server translation
   checks). New PASS: world record (policy `transition`, existing world at
   2.0 h), all mod fluids registered, native composition write, transfer hook
@@ -84,12 +86,12 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
   SHA-256 manifest; warning: no preview.png. Not uploaded.
 * Not run: every adapter path that needs a world object (vehicles,
   generators, pumps, machines on the ground), the TLG pour action, start
-  gates, UI menus, crafting recipes — all require a client session; the
-  desktop stayed locked for the whole session.
+  gates, UI menus, crafting recipes. All of them need a client session,
+  and the desktop stayed locked for the whole session.
 
 ## 2026-10-30 — RT-DS harness boot 4 (scripts)
 
-* Evidence: `docs/evidence/2026-10-30_rt-ds_harness_boot4.txt`
+* Evidence: [2026-10-30_rt-ds_harness_boot4.txt](evidence/2026-10-30_rt-ds_harness_boot4.txt)
 * Result: 32 PASS, 3 FAIL (dedicated-server translation checks, unchanged).
   New PASS: 8 items, 7 craft recipes, sandbox options; machine process record
   round-trips through item modData (in memory). Adapter install log clean.
@@ -106,7 +108,7 @@ dedicated server harness. RT-SP / RT-MP = client runtime tests.
 
 ## 2026-10-30 — RT-DS harness boot 5 (merged package)
 
-* Evidence: `docs/evidence/2026-10-30_rt-ds_harness_boot5.txt`
+* Evidence: [2026-10-30_rt-ds_harness_boot5.txt](evidence/2026-10-30_rt-ds_harness_boot5.txt)
 * Result: 32 PASS, 3 FAIL (dedicated-server translation checks, unchanged).
   With energy, biodiesel, biogas, wood gas, propane and conversion content
   loaded at boot: no registry validation problems, no duplicate definitions,
@@ -126,20 +128,21 @@ menu, continues the save and runs phase B (persistence).
   (`getVehicles():get(i)` on a `HashSet`) and "Break On Error" halted the
   game in the Lua debugger. Fixed: Set iteration (adapter and two menus),
   automatic click, options, debugger break off for harness runs.
-* Launch 3 (`docs/evidence/2026-10-31_rt-sp_harness_run3_phaseA.txt`):
+* Launch 3 ([2026-10-31_rt-sp_harness_run3_phaseA.txt](evidence/2026-10-31_rt-sp_harness_run3_phaseA.txt)):
   phase A 41 PASS / 5 FAIL; phase B never ran (the world's `mods.txt` was
   empty, then the 20-minute watchdog stopped the client). All 5 failures were
   harness placement (pump → vehicle, second generator).
-* Launch 4 (`docs/evidence/2026-10-31_rt-sp_harness_run4.txt`): phase A
-  42 PASS / 1 FAIL (the TLG pour target generator was nearly full: 0.015 L
-  moved, conserved); phase B 9 PASS / 1 FAIL: a can on the ground came back
-  without an item FluidContainer, which exposed the container-ownership defect
-  (fixed, see engine-capabilities G02).
-* Launch 5 (`docs/evidence/2026-10-31_rt-sp_harness_run5.txt`): phase A
-  **47 PASS / 0 FAIL**; phase B 9 PASS / 2 FAIL. The two failures are harness
-  lookups that matched the neighbouring vehicle / generator; the records
-  found equal, to the four decimals logged, the phase A records of those
-  objects. Lookups now match by record id (not re-run).
+* Launch 4 ([2026-10-31_rt-sp_harness_run4.txt](evidence/2026-10-31_rt-sp_harness_run4.txt)):
+  phase A 42 PASS / 1 FAIL (the TLG pour target generator was nearly full:
+  0.015 L moved, conserved); phase B 9 PASS / 1 FAIL: a can on the ground
+  came back without an item FluidContainer, which exposed the
+  container-ownership defect (fixed, see engine-capabilities G02).
+* Launch 5 ([2026-10-31_rt-sp_harness_run5.txt](evidence/2026-10-31_rt-sp_harness_run5.txt)):
+  phase A **47 PASS / 0 FAIL**; phase B 9 PASS / 2 FAIL. The two failures
+  are harness lookups that matched the neighbouring vehicle and generator.
+  The records they found were equal to the phase A records of those
+  objects, to the four decimals logged. Lookups now match by record id
+  (not re-run).
 
 Verified at runtime (RT-SP, details in `engine-capabilities.md`):
 
@@ -162,8 +165,9 @@ Not run: see the standing list above. Domain suite after the fixes:
 
 ## 2026-10-31 — RT-SP client harness, launch 6 (start gates, stall, vehicle pours)
 
-Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run6.txt`. Phase A
-**63 PASS / 0 FAIL**, phase B **11 PASS / 0 FAIL**; launcher exit code 0.
+Evidence: [2026-10-31_rt-sp_harness_run6.txt](evidence/2026-10-31_rt-sp_harness_run6.txt).
+Phase A **63 PASS / 0 FAIL**, phase B **11 PASS / 0 FAIL**; launcher exit
+code 0.
 
 New checks, all through the vanilla actions:
 
@@ -184,9 +188,10 @@ New checks, all through the vanilla actions:
   amounts identical after reload, with the ground can, pump, items and world
   record (11/11).
 
-Finding (balance, not a code defect; changed by D-017 below): station water was drawn from 0–0.4 %
-while the stock engine tolerates 0.2 %, so about half of all stations
-dispense fuel that halves a stock car's start chance from the first day.
+Finding (balance, not a code defect; changed by D-017 below): station water
+was drawn from 0–0.4 % while the stock engine tolerates 0.2 %, so about half
+of all stations dispense fuel that halves a stock car's start chance from
+the first day.
 
 ## 2026-10-31 — Station water balance (D-017)
 
@@ -202,8 +207,9 @@ dispense fuel that halves a stock car's start chance from the first day.
 
 ## 2026-10-31 — RT-SP client harness, launch 7 (renewable loop)
 
-Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run7.txt`. Phase A
-**74 PASS / 8 FAIL**, phase B **12 PASS / 2 FAIL**; launcher exit code 0.
+Evidence: [2026-10-31_rt-sp_harness_run7.txt](evidence/2026-10-31_rt-sp_harness_run7.txt).
+Phase A **74 PASS / 8 FAIL**, phase B **12 PASS / 2 FAIL**; launcher exit
+code 0.
 
 Time fixture: fermentation (96 h), distillation, drying (12 h) and the
 conversion work (7.5 h and 13 h) are too long to wait for, so the harness
@@ -249,9 +255,10 @@ Failed: one defect and its consequences.
 
 ## 2026-10-31 — RT-SP client harness, launch 8 (renewable loop after the fix)
 
-Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run8.txt`. Phase A
-**82 PASS / 0 FAIL**, phase B **14 PASS / 0 FAIL**; launcher exit code 0.
-Same time fixture as launch 7; commands sent directly, not through the menus.
+Evidence: [2026-10-31_rt-sp_harness_run8.txt](evidence/2026-10-31_rt-sp_harness_run8.txt).
+Phase A **82 PASS / 0 FAIL**, phase B **14 PASS / 0 FAIL**; launcher exit
+code 0. Same time fixture as launch 7; commands sent directly, not through
+the menus.
 
 * Production repeated launch 7 exactly (3.30 L ethanol in the wash, 3.036 L
   at 94 %, dried to 0.5 % water, degradation kept).
@@ -285,9 +292,9 @@ ethanol, cancelling or removing a conversion, multiplayer.
 
 ## 2026-10-31 — RT-SP client harness, launch 9 (conversion work as a timed action, D-018)
 
-Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run9.txt`. Phase A
-**83 PASS / 0 FAIL**, phase B **14 PASS / 0 FAIL**; launcher exit code 0; no
-TLG error or TLG stack frame in the console.
+Evidence: [2026-10-31_rt-sp_harness_run9.txt](evidence/2026-10-31_rt-sp_harness_run9.txt).
+Phase A **83 PASS / 0 FAIL**, phase B **14 PASS / 0 FAIL**; launcher exit
+code 0; no TLG error or TLG stack frame in the console.
 
 The harness queues `ISTLGConversionWork` itself and moves the mod clock
 0.05 h per tick while it runs (same fixture as launches 7–8).
@@ -338,15 +345,15 @@ Fixed before launch 10, from reading vanilla code and bytecode:
 * The workshop dialog listed raw ids ("Base.Wrench"); it now shows item
   names and skills as "Mechanics 4".
 
-Launch 10 (`docs/evidence/2026-10-31_rt-sp_harness_run10.txt`), phase A
-**76/15**, phase B 12/2: all 7 recipes listed; the mash took 30 L of the
-32 L carried; every menu dialog translated; the refused start showed "A tool
-is missing: - Wrench". Failures: every craft `canPerform=false`; the split
-into a second can moved nothing; both work actions went quiet after their
-first report; the rest followed from these.
+Launch 10 ([2026-10-31_rt-sp_harness_run10.txt](evidence/2026-10-31_rt-sp_harness_run10.txt)),
+phase A **76/15**, phase B 12/2: all 7 recipes listed; the mash took 30 L of
+the 32 L carried; every menu dialog translated; the refused start showed "A
+tool is missing: - Wrench". Failures: every craft `canPerform=false`; the
+split into a second can moved nothing; both work actions went quiet after
+their first report; the rest followed from these.
 
-Launch 11 (`…run11.txt`), phase A **80/11**, phase B 12/2, with load and
-action logging. Found:
+Launch 11 ([2026-10-31_rt-sp_harness_run11.txt](evidence/2026-10-31_rt-sp_harness_run11.txt)),
+phase A **80/11**, phase B 12/2, with load and action logging. Found:
 
 * The harness carried everything at once (57.7 kg, `hasFullInventory`
   true). Vanilla then refuses a can-to-can transfer (BC
@@ -355,17 +362,17 @@ action logging. Found:
   work. Harness changed to hand materials over per step.
 * Pots and jars were not consumed by crafting: container inputs are kept
   unless the recipe says `mode:destroy` (vanilla pasta/rice recipes). Fixed.
-* The work action made one good report and was then dropped from vanilla's
-  action queue while it kept running in Java: its progress call
+* The work action made one good report. Vanilla's action queue then
+  dropped it while it kept running in Java. Its progress call
   `setJobDelta` sets `currentTime = maxTime × delta` (BC `BaseAction`),
-  negative for an open-ended action, and the queue's `tick()` then treats
-  it as stalled (`hasStalled`). The queue looked idle while the character
-  worked. Progress bar removed. Run 9 never looked at the queue, so it did
-  not show there.
+  which is negative for an open-ended action, and the queue's `tick()` then
+  treats it as stalled (`hasStalled`). The queue looked idle while the
+  character worked. Progress bar removed. Run 9 never looked at the queue,
+  so it did not show there.
 
-Launch 12 (`…run12.txt`): phase A **94 PASS / 0 FAIL**, phase B
-**14 PASS / 0 FAIL**; launcher exit code 0; no TLG error, TLG stack frame or
-queue warning in the console.
+Launch 12 ([2026-10-31_rt-sp_harness_run12.txt](evidence/2026-10-31_rt-sp_harness_run12.txt)):
+phase A **94 PASS / 0 FAIL**, phase B **14 PASS / 0 FAIL**; launcher exit
+code 0; no TLG error, TLG stack frame or queue warning in the console.
 
 * Crafted through the inventory craft menu, next to a counter: fermentation
   vessel, pot still, reflux still (in hand, welding) and drying column; each
@@ -378,10 +385,11 @@ queue warning in the console.
   on it" without the wrench, then "Work on it" to `Commissioned` (26
   reports, 7.5 h) and the dialog "Converted and commissioned".
 * Car from the workshop menu: "Work on it" walked 3.6 tiles into the engine
-  area before working; moved away after 2 h, the action stopped and 3 h
-  away earned nothing; at 6 h the screwdriver was taken and the next report
-  ended the action with "A tool is missing: - Screwdriver" and no credit;
-  the third session reached `Commissioned` with 13 h credited.
+  area before working. The character was moved away after 2 h: the action
+  stopped, and 3 h away earned nothing. At 6 h the screwdriver was taken,
+  and the next report ended the action with "A tool is missing: -
+  Screwdriver" and no credit. The third session reached `Commissioned`
+  with 13 h credited.
 * Pours, generator start, car start (first attempt) and phase B as in
   launch 8.
 
@@ -391,15 +399,17 @@ Not run: see the standing list.
 
 Command: `tools/run-sp-harness.ps1 -Mode realtime -TimeoutMinutes 60` (request
 `sp-rt`: the same scenario, only the ethanol loop, no mod-clock offset, no
-reload). Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run13_realtime.txt`.
+reload). Evidence:
+[2026-10-31_rt-sp_harness_run13_realtime.txt](evidence/2026-10-31_rt-sp_harness_run13_realtime.txt).
 **10 PASS / 1 FAIL**; launcher exit code 0; no TLG error, TLG stack frame or
 queue warning in the console.
 
 Time ran on the game clock, 2.0 → 138.2 world hours. Machines waited at a
-debug multiplier (`GameTime.setMultiplier(100)`, as the debug panel's Game
-Speed slider; measured 2.22 game hours per 300 ticks); the conversion work
-ran at vanilla's fastest speed, x40 (measured true multiplier 40.0); walking
-and teleports at x1. The character was invulnerable, invisible and kept fed.
+debug multiplier, `GameTime.setMultiplier(100)`, the call the debug panel's
+Game Speed slider makes (measured 2.22 game hours per 300 ticks). The
+conversion work ran at vanilla's fastest speed, x40 (measured true
+multiplier 40.0); walking and teleports ran at x1. The character was
+invulnerable, invisible and kept fed.
 
 * Fermentation (menu, 6 kg sugar, 30 L water) finished after 97.2 game
   hours: 97 h at full rate. Outdoor temperature ranged 10.9–28.0 °C; the
@@ -408,10 +418,10 @@ and teleports at x1. The character was invulnerable, invisible and kept fed.
 * Chunk unload (G12): 12 hours in, the character was moved 400 tiles away;
   the machines' square was no longer loaded. Back after 24 game hours, the
   fermenter had done 24.02 h more work. The check compared that with the
-  time to the return teleport (24.01 h, logged); the status read came 120
-  settling ticks later (about 0.01 game h at x1, not logged), so it failed
-  by its own bound. Bound changed to the time between the two reads and
-  rerun as launch 14.
+  time to the return teleport (24.01 h, logged). The status read came 120
+  settling ticks later (about 0.01 game h at x1, not logged), so the check
+  failed by its own bound. The bound was changed to the time between the
+  two reads, and the run repeated as launch 14.
 * Distillation: 3.78 game hours (expected ~3.8), 3.036 L ethanol + 0.194 L
   water. Drying: 12.09 game hours, water to 0.5 %.
 * Generator conversion from the menu: 7.71 game hours from the click for
@@ -425,7 +435,7 @@ season other than summer.
 
 Same command as launch 13, with the catch-up bound measured between the two
 status reads and the true multiplier read before the speed is reset.
-Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run14_realtime.txt`.
+Evidence: [2026-10-31_rt-sp_harness_run14_realtime.txt](evidence/2026-10-31_rt-sp_harness_run14_realtime.txt).
 **11 PASS / 0 FAIL**; launcher exit code 0; console clean.
 
 * Measured x100 (true multiplier 100.0, 2.22 game hours per 300 ticks).
@@ -441,12 +451,12 @@ Evidence: `docs/evidence/2026-10-31_rt-sp_harness_run14_realtime.txt`.
 Command: `tools/run-sp-harness.ps1 -Mode winter -TimeoutMinutes 60` (request
 `sp-rtw`: the real-clock scenario from 15 January; one fermentation followed
 until it finishes, spoils or 400 game hours pass). Each hourly status read is
-compared with the stage rules of `ethanol_ferment` (full rate 18–32 °C,
-0.4 between 8 and 18 °C, paused below 8 °C, spoiled after 72 h paused)
-applied to the day temperature TLG had recorded, sheltered as the climate
-model does: (mean + 16) / 2.
+compared with the stage rules of `ethanol_ferment`: full rate 18–32 °C, 0.4
+between 8 and 18 °C, paused below 8 °C, spoiled after 72 h paused. The rules
+are applied to the day temperature TLG had recorded, sheltered as the
+climate model does: (mean + 16) / 2.
 
-Launch 15 (`docs/evidence/2026-10-31_rt-sp_harness_run15_winter.txt`),
+Launch 15 ([2026-10-31_rt-sp_harness_run15_winter.txt](evidence/2026-10-31_rt-sp_harness_run15_winter.txt)),
 **5 PASS / 0 FAIL**. Every day recorded 0.5–0.6 °C, so the fermenter sat at
 8.3 °C and ran at 0.4 (9.63 h of work per 24 h): finished after 241.7 game
 hours (97 at full rate); 229 hours compared, all exact. No day stalled.
@@ -457,8 +467,8 @@ ageing had never seen a cold snap or a heat wave. Fixed:
 `World.recordClimate` now records the running mean of the hourly air
 temperature (D-020).
 
-Launch 16 (`…run16_winter.txt`), **8 PASS / 0 FAIL**, console clean, with the
-fix:
+Launch 16 ([2026-10-31_rt-sp_harness_run16_winter.txt](evidence/2026-10-31_rt-sp_harness_run16_winter.txt)),
+**8 PASS / 0 FAIL**, console clean, with the fix:
 
 * Recorded day means −0.8, −2.7, −2.4 and −4.7 °C (air −7.2 to 3.0 °C);
   the recorded mean equalled the mean of the harness's own hourly air
@@ -483,16 +493,21 @@ Command: `tools/run-sp-harness.ps1 -Mode winter -TimeoutMinutes 60` (request
 (`ElecShut` 1, `ElecShutModifier` −1; `isHydroPowerOn()` false in every run),
 three fermenters within reach of one spot near the Muldraugh Gas2Go were
 loaded in the same hour with 6 kg of sugar and 30 L of water each:
-outdoors (10618,10627), in a room (10619,10628) and in a room on a tile
-with an `IsoHeatSource` of radius 1 and 35 °C added from Lua (10618,10628).
-Every game hour the harness read the game's air at the three tiles; before
-each status read it compared the readings the mod had filed with its own,
-after it the day temperature the status reported (against
-`siteDayMean` over the harness's readings) and the work done (against the
-stage rule fed by that temperature). A 12 game hour trip of 400 tiles on
+
+* outdoors (10618,10627);
+* in a room (10619,10628);
+* in a room on a tile with an `IsoHeatSource` of radius 1 and 35 °C added
+  from Lua (10618,10628).
+
+Every game hour the harness read the game's air at the three tiles. Before
+each status read it compared the readings the mod had filed with its own.
+After the read it compared the day temperature the status reported with
+`siteDayMean` over the harness's readings, and the work done with the
+stage rule fed by that temperature. A 12 game hour trip of 400 tiles on
 day 2 unloaded the tiles. Evidence:
-`docs/evidence/2026-10-31_rt-sp_harness_run17_sites.txt`, `…run18_sites.txt`,
-`…run19_sites.txt`.
+[2026-10-31_rt-sp_harness_run17_sites.txt](evidence/2026-10-31_rt-sp_harness_run17_sites.txt),
+[2026-10-31_rt-sp_harness_run18_sites.txt](evidence/2026-10-31_rt-sp_harness_run18_sites.txt),
+[2026-10-31_rt-sp_harness_run19_sites.txt](evidence/2026-10-31_rt-sp_harness_run19_sites.txt).
 
 | | Run 17 | Run 18 | Run 19 |
 | --- | --- | --- | --- |
@@ -511,10 +526,10 @@ day 2 unloaded the tiles. Evidence:
 Outdoor day means were −8.1 to +1.7 °C. The room ran 9.5–13.1 °C above the
 outdoor air, 4.5–11.4 °C at the room fermenter: slow on the first day, then
 mostly stopped, and spoiled in every run. A room alone did not carry a
-batch through these Januaries; the warmed tile did. Status read, e.g.,
-"Paused · Reason: too cold here · Stage: fermenting · Temperature here
-today: 45.3 °F, in a room" (this dev cache shows °F; the log holds a UTF-8
-"°").
+batch through these Januaries; the warmed tile did. A Status read, for
+example: "Paused · Reason: too cold here · Stage: fermenting · Temperature
+here today: 45.3 °F, in a room" (this dev cache shows °F; the log holds a
+UTF-8 "°").
 
 Found and fixed:
 
@@ -525,7 +540,7 @@ Found and fixed:
   unloaded, and no read was paused on a day read throughout.
 * Run 18: right after midnight the status still showed the unheated value
   (3.28 °C): the access pruned yesterday's last reading before the status
-  used it. `Machines.trimTemps` keeps that hour; run 19 exact.
+  used it. `Machines.trimTemps` now keeps that hour; run 19 was exact.
 
 Not run: upper floors, a real fire, fireplace or barbecue (the heat source
 was added from Lua; the vanilla objects register the same kind, BC), the
@@ -536,18 +551,24 @@ fireplace of the map: see launches 20–21.)
 
 Command: `tools/run-sp-harness.ps1 -Mode fireplace -TimeoutMinutes 60`
 (request `sp-rtf`, new). The same January world with the grid off. The
-harness looks for a working fireplace of the map, lights it with a log
-through the calls the vanilla actions make (`addFuel`, `turnOn`,
-`sendObjectChange`; the actions and their menu were not used), compares
-the air on every floor tile within 9 of it with the heat formula unlit and
-at four fuel levels (set as vanilla's `fireplace.setFuel` command does),
-then runs one fermentation (6 kg of sugar, 30 L of water) on a room tile
-beside it. Meanwhile it tends the fire as a player can (a log adds 360
-minutes and only goes in once it fits under the 480 minute cap) and makes
-the winter run's checks of readings, day temperature, work and a 12 game
-hour trip. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run20_fireplace_search.txt`,
-`…run21_fireplace.txt`.
+harness:
+
+1. looks for a working fireplace of the map;
+2. lights it with a log through the calls the vanilla actions make
+   (`addFuel`, `turnOn`, `sendObjectChange`; the actions and their menu
+   were not used);
+3. compares the air on every floor tile within 9 of it with the heat
+   formula, unlit and at four fuel levels (set as vanilla's
+   `fireplace.setFuel` command does);
+4. runs one fermentation (6 kg of sugar, 30 L of water) on a room tile
+   beside it.
+
+Meanwhile it tends the fire as a player can: a log adds 360 minutes and
+only goes in once it fits under the 480 minute cap. It also makes the
+winter run's checks of readings, day temperature, work and a 12 game hour
+trip. Evidence:
+[2026-11-01_rt-sp_harness_run20_fireplace_search.txt](evidence/2026-11-01_rt-sp_harness_run20_fireplace_search.txt),
+[2026-11-01_rt-sp_harness_run21_fireplace.txt](evidence/2026-11-01_rt-sp_harness_run21_fireplace.txt).
 
 * Run 20 (1 PASS / 0 FAIL, the search only): 49 windows of 97 × 97 tiles
   up to 288 tiles around the start held two campfires and two braziers
@@ -575,38 +596,39 @@ hour trip. Evidence:
 The absence cost about 17 hours. The 7 unloaded hours of 16 January took
 the unheated room value (7.7 °C), which brought that day's mean to just
 below 18 °C (0.4). The 5 unloaded hours of 17 January had no reading at
-all: the day stood at 7.8 °C and the batch paused (the 5.36 h; the
-harness's day line for 17 January shows 12.91 h paused because it counts
-the whole interval since the previous read as paused when a read finds the
-batch paused, while the mod's own `pausedFor` is 5.36 h). Even with
-the fire lit again, the day's mean then stayed below 18 °C for about 11
-hours (0.4 rate; 14.6 °C at 48 h in). This is the day-mean rule of D-020
-and D-021 at work, matched exactly by the harness. Meanwhile the fire
-burned its 365 minutes during the absence, in one step on the reload, and
-was out on the return (vanilla, BC `IsoFireplace.update`). Status read
-"Working · Stage: fermenting · Temperature here today: 72.0 °F, in a
-room".
+all: the day stood at 7.8 °C and the batch paused (the 5.36 h). The
+harness's day line for 17 January shows 12.91 h paused: when a read finds
+the batch paused, the harness counts the whole interval since the previous
+read as paused. The mod's own `pausedFor` is 5.36 h. Even with the fire lit
+again, the day's mean then stayed below 18 °C for about 11 hours (0.4 rate;
+14.6 °C at 48 h in). This is the day-mean rule of D-020 and D-021 at work,
+matched exactly by the harness.
+
+During the absence the fire burned its 365 minutes, in one step on the
+reload, and was out on the return (vanilla, BC `IsoFireplace.update`).
+Status read "Working · Stage: fermenting · Temperature here today: 72.0 °F,
+in a room".
 
 Not run: a fire (`IsoFire`) or barbecue beside a machine, the fireplace's
 menu and timed actions, a fireplace upstairs.
 
 Run 22 repeated the winter mode (launches 17–19) once its status,
-filed-reading and trip helpers served both scenarios: **25 PASS / 0
-FAIL**, as run 19 (room formula exact over 94 hours; readings, day
-temperatures and work exact; outdoors and the room spoiled at 72.00
-paused hours, the warmed batch finished with 5.26 h paused). Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run22_sites.txt`.
+filed-reading and trip helpers served both scenarios. It gave **25 PASS /
+0 FAIL**, as run 19: the room formula exact over 94 hours; readings, day
+temperatures and work exact; outdoors and the room spoiled at 72.00 paused
+hours; the warmed batch finished with 5.26 h paused. Evidence:
+[2026-11-01_rt-sp_harness_run22_sites.txt](evidence/2026-11-01_rt-sp_harness_run22_sites.txt).
 
 ## 2026-11-01 — RT-SP client harness, launch 23 (a fire's fuel counts while away, D-022)
 
 Command: `tools/run-sp-harness.ps1 -Mode fireplace -TimeoutMinutes 60`,
-with D-022 in the mod and the harness; the same fireplace and tile as run
-21. Every ten game minutes the harness took its own note of the fire
+with D-022 in the mod and the harness; the same fireplace and tile as
+run 21. Every ten game minutes the harness took its own note of the fire
 warming the fermenter, at the same ticks as the mod, and compared the two.
 It fed the fire a quarter hour before the trip (379 minutes left, so no log
 fitted) and checked the work over the trip against the stage rule fed by
 the credited day temperatures. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run23_fire_credit.txt`.
+[2026-11-01_rt-sp_harness_run23_fire_credit.txt](evidence/2026-11-01_rt-sp_harness_run23_fire_credit.txt).
 
 Result: **21 PASS / 0 FAIL**.
 
@@ -630,7 +652,7 @@ notes know, so nothing was credited: the day temperatures matched the
 harness's without notes. The outcomes were as in run 22 (outdoors and the
 room spoiled at 72.00 paused hours; the warmed batch finished, its 6.26
 paused hours all on the day of the trip; the weather differs per run).
-Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run24_sites.txt`.
+Evidence: [2026-11-01_rt-sp_harness_run24_sites.txt](evidence/2026-11-01_rt-sp_harness_run24_sites.txt).
 
 ## 2026-11-01 — RT-SP client harness, launch 25 (the fireplace batch across a save)
 
@@ -644,7 +666,7 @@ state to the expectations file, saved and exited to the menu. Phase 2
 continued the save from the main menu and, before any access, compared the
 record with the expectations. It then relit the fire and ran the batch on
 with the trip and every check of the fireplace run. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run25_fire_reload.txt`.
+[2026-11-01_rt-sp_harness_run25_fire_reload.txt](evidence/2026-11-01_rt-sp_harness_run25_fire_reload.txt).
 
 Result: phase 1 **8 PASS / 0 FAIL**, phase 2 **20 PASS / 0 FAIL**.
 
@@ -677,7 +699,7 @@ down with the place action and B with the inventory menu's Drop, each on
 another room tile. All three were read two game hours later, and again
 two hours after that. The three `RTP.D015_` checks hold the work to D-015:
 processing advances only while the machine is placed. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run26_pickup.txt`.
+[2026-11-01_rt-sp_harness_run26_pickup.txt](evidence/2026-11-01_rt-sp_harness_run26_pickup.txt).
 
 Result: **25 PASS / 3 FAIL**. The three failures are the D-015 checks: the
 work around a move does not follow the decision.
@@ -696,13 +718,15 @@ work around a move does not follow the decision.
 | **FAIL** B while carried | 8.03 h credited for 5.03 h placed: never read while carried, it counted the 3.00 h carried as if it had stood at its new tile |
 
 The mod learns of a move only when the machine is next used, and then
-cannot tell the hours placed from the hours carried: a Status while
-carried drops every hour since the last use, and without one every hour
-counts. With the grid on, the four readings compared were 22.0000 °C, and
-Status gave 71.6 °F (22 °C) as the day temperature at all three tiles, as
-the room formula says (its first check in game with power). Not run: a
-still or drying column picked up, a move in multiplayer, a carried machine
-across a save.
+cannot tell the hours placed from the hours carried. A Status while carried
+drops every hour since the last use; without one, every hour counts.
+
+With the grid on, the four readings compared were 22.0000 °C, and Status
+gave 71.6 °F (22 °C) as the day temperature at all three tiles, as the room
+formula says (its first check in game with power).
+
+Not run: a still or drying column picked up, a move in multiplayer, a
+carried machine across a save.
 
 ## 2026-11-01 — RT-SP client harness, launch 27 (pickup after the fix)
 
@@ -716,7 +740,7 @@ item transaction is in multiplayer. D's Status was not read while carried,
 and it went down with the inventory menu's Drop. The checks that run 26
 read as "not read until a Status" now expect the hourly reading to find
 the machines at their new tiles at once. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run27_pickup_fix.txt`.
+[2026-11-01_rt-sp_harness_run27_pickup_fix.txt](evidence/2026-11-01_rt-sp_harness_run27_pickup_fix.txt).
 
 Result: **34 PASS / 0 FAIL** (the console showed "machine move hooks
 installed" and no move error).
@@ -746,12 +770,12 @@ done from the machine menu. 12 kg of sugar and 60 L of water fermented at
 full rate into 66.6 L of wash, more than the pot still's 60 L, so the wash
 went in two loads. The firebox got one log before the first run and was
 left to run out; an hour after Status showed it, four logs were offered.
-Both runs went into one fuel can, which was evaluated with
-`Consumers.evaluate`, the function the vehicle and generator start gates
-call, against every spark-ignition profile; it was then dried with
-quicklime and evaluated again. Expectations come from the definitions in
+Both runs went into one fuel can. The can was evaluated against every
+spark-ignition profile with `Consumers.evaluate`, the function the vehicle
+and generator start gates call; it was then dried with quicklime and
+evaluated again. Expectations come from the definitions in
 `Content/Production.lua`. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run28_pot_still.txt`.
+[2026-11-01_rt-sp_harness_run28_pot_still.txt](evidence/2026-11-01_rt-sp_harness_run28_pot_still.txt).
 
 Result: **25 PASS / 0 FAIL** (no TLG error or warning in the console).
 
@@ -771,6 +795,7 @@ With wash left in it, the fermenter's Status read "Finished: output
 waiting", "Reason: output waiting, nowhere to put it", "Stage: fermenting":
 the batch is done and waits for the still, which those words do not say
 (fixed, run 29).
+
 The engines' verdicts are the start gates' evaluation, not engine starts;
 the engines ran on dried reflux ethanol in runs 13–14. Not run: the pot
 still built from the crafting window in this run (spawned; building it was
@@ -783,7 +808,7 @@ with the fix of commit `958b958`: `Process.status` names a stage only while
 the batch runs, and the machine menu words a finished machine by its kind.
 Run 28's note on the fermenter's Status became a check, with one for the
 still after its first run and one for the drying column. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run29_pot_still_status.txt`.
+[2026-11-01_rt-sp_harness_run29_pot_still_status.txt](evidence/2026-11-01_rt-sp_harness_run29_pot_still_status.txt).
 
 Result: **28 PASS / 0 FAIL**: run 28's 25 checks again (the same
 quantities; the hour without fuel was 1.105826 h, the refeed a few ticks
@@ -803,24 +828,30 @@ out), as it should. The Italian text is not checked in game.
 Command: `tools/run-sp-harness.ps1 -Mode controls -TimeoutMinutes 30`
 (request `sp-rtc`; new). Summer with the grid on, room tiles: three
 fermenters and a drying column loaded in the same tick, every press from
-the machine menu. F1 was paused 5 h in, resumed 6 h later and read 4 h
-after; Pause, Resume and Abort were also pressed where they do not apply.
-F2 was aborted 5 h in and loaded again. The drying column, loaded from a
-can of 4 L ethanol and 1 L water with 4 kg quicklime, was aborted 6 h in.
-F3 was paused 5 h in and left; once spoiled, Abort and Load mash were tried
-on it. The four `RTC.design_` checks hold Abort to its handler's own
-description ("returns the partial result to the player ... discarded and
-listed") and to `Process.abort`'s ("an abort never loses material"), and a
-spoiled batch to a way out from the menu. The still was left out: it shares
-the abort handler, and the domain tests pin its firebox and litres.
-Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run31_controls.txt`.
+the machine menu.
+
+* F1 was paused 5 h in, resumed 6 h later and read 4 h after; Pause,
+  Resume and Abort were also pressed where they do not apply.
+* F2 was aborted 5 h in and loaded again.
+* The drying column, loaded from a can of 4 L ethanol and 1 L water with
+  4 kg quicklime, was aborted 6 h in.
+* F3 was paused 5 h in and left; once spoiled, Abort and Load mash were
+  tried on it.
+
+The four `RTC.design_` checks hold Abort to its handler's own description
+("returns the partial result to the player ... discarded and listed") and
+to `Process.abort`'s ("an abort never loses material"), and a spoiled batch
+to a way out from the menu. The still was left out: it shares the abort
+handler, and the domain tests pin its firebox and litres. Evidence:
+[2026-11-01_rt-sp_harness_run31_controls.txt](evidence/2026-11-01_rt-sp_harness_run31_controls.txt).
 
 Run 30 (19 PASS / 5 FAIL) filled the column's can with vanilla water, which
-never went into the can (the fluid the mod reads as water in fuel is its
+never went into the can. The fluid the mod reads as water in fuel is its
 own, `TLG_FuelWater`; had the game's water been there, the menu would have
-greyed the entry as a can with something else in it): the load saw only
+greyed the entry as a can with something else in it. The load saw only
 ethanol and refused it as already dry, so the column's four checks meant
-nothing. Run 31 used the mod's fuel water. Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run30_controls_setup.txt`.
+nothing. Run 31 used the mod's fuel water. Evidence:
+[2026-11-01_rt-sp_harness_run30_controls_setup.txt](evidence/2026-11-01_rt-sp_harness_run30_controls_setup.txt).
 
 Result, run 31: **20 PASS / 4 FAIL**. The four failures are the design
 checks: three defects.
@@ -852,13 +883,13 @@ is emptied, refusals read as sentences, and the menu offers Pause, Resume
 and Abort only where they apply. The mode now expects that and adds a pot
 still beside the fermenters to take a stopped wash; F1 is aborted twice at
 the end and F3 is emptied and reloaded after it spoils. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run33_controls_fix.txt`.
+[2026-11-01_rt-sp_harness_run33_controls_fix.txt](evidence/2026-11-01_rt-sp_harness_run33_controls_fix.txt).
 
 Run 32 (29 PASS / 3 FAIL) still pressed Pause, Resume and Abort from the
 menu where they no longer appear, and found no entry; the menu was doing
 its job. Run 33 sends those presses as a menu deciding on a stale copy of
 the record would. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run32_controls_fix.txt`.
+[2026-11-01_rt-sp_harness_run32_controls_fix.txt](evidence/2026-11-01_rt-sp_harness_run32_controls_fix.txt).
 
 Result, run 33: **32 PASS / 0 FAIL**, the four design checks run 31 failed
 among them.
@@ -900,7 +931,7 @@ hourly readings and the harness's own ten-minute notes of the fire warming
 each machine. It tended the fires with the calls the add-fuel actions make
 (a log once it fits under the 8 h cap) and made a 12 game hour trip that
 unloaded both. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run34_fires.txt`.
+[2026-11-01_rt-sp_harness_run34_fires.txt](evidence/2026-11-01_rt-sp_harness_run34_fires.txt).
 
 Result: **35 PASS / 4 FAIL**. The four failures are one defect, read from
 the sources before the run:
@@ -920,12 +951,16 @@ the sources before the run:
 | Radius at a fuel level | truncated, 46 of 46 readings (rounded would fit 18) | always 3 |
 | Machine air = formula, readings filed | 42 h, 0.00000 °C; exact | 42 h, 0.00000 °C; exact |
 | Warming one tile away | 10.9 to 29.8 °C above the outdoor air; lowest air 3.5 °C | 7.7 to 15.4 °C; lowest air 2.3 °C |
-| Day temperature at the machine (outdoors −6.4, −8.5, −8.2 °C) | 14.51 and 13.32 °C before the trip, rate 0.4; 7.61 °C on 17 January. Derived: the rule's 3.0332 h at rate 0.4 puts midnight 7.58 h after the 29.11 h read, and the noted fuel ran out about 0.2 h before that, so the day began with the fire out until the return | 4.64, 3.54 and 0.82 °C: paused too cold 53.1 of 54.1 hours |
+| Day temperature at the machine (outdoors −6.4, −8.5, −8.2 °C) | 14.51 and 13.32 °C before the trip, rate 0.4; 7.61 °C on 17 January (derived below the table) | 4.64, 3.54 and 0.82 °C: paused too cold 53.1 of 54.1 hours |
 | Notes filed = harness's | **FAIL**: 44 hours, each "no fire" while the harness saw the campfire | 44 hours, all with the fire, 0 off |
 | Hours away credited | **FAIL**: 0.00 h of 12.01 (the harness's last note, 397 min, covers 6.48 h) | 6.02 h, as the harness's (369 min) |
 | Work over the trip = rule with the credit | **FAIL**: did 0.0000 h, the rule 3.0332 h: uncredited, 16 January fell below the 8 °C floor and the batch stopped | 0.0000 h, as the rule (too cold either way) |
 | Day temperature after the trip | **FAIL**: 1.81 °C below the harness's at the first read back | exact |
 | Burned while away | 388 → 0 min, one per minute event (721 in 721 game minutes) | 361 → 0 min, by game time |
+
+Derived for the campfire: the rule's 3.0332 h at rate 0.4 puts midnight
+7.58 h after the 29.11 h read. The noted fuel ran out about 0.2 h before
+that, so 17 January began with the fire out until the return.
 
 Logs added by the harness besides the first: 9 on the campfire, 8 on the
 barbecue. Neither fire was refed during the trip, so both were out on the
@@ -940,7 +975,7 @@ permanent `IsoFire` and the "Campfire" object on its tile, whose mod data
 holds the fuel. They note it with its largest radius, and the credit uses
 the campfire's radius law (truncated). The mode is unchanged; same sites
 and tiles as run 34, milder weather. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run35_fires_fix.txt`.
+[2026-11-01_rt-sp_harness_run35_fires_fix.txt](evidence/2026-11-01_rt-sp_harness_run35_fires_fix.txt).
 
 Result: **39 PASS / 0 FAIL**, run 34's four failures among them.
 
@@ -993,13 +1028,14 @@ could be crafted from the craft menu: the recipes were listed and the
 inputs, surface and range all found, yet the game's own check refused. The
 package was not the cause, since the repository's mod failed identically.
 The game's check needs light (BC `CraftRecipeData.consumeInputsInternal`,
-`IsoPlayer.tooDarkToRead`). The harness's craft step now switches a torch
-on in hand when it is too dark. In run 38 it logged a light level of 0.15
-at the workbench at 10:37 game time (the threshold is 0.43). Run 12 had
-crafted at the same bench, its light level not logged. Every other gate
-of the check had passed in runs 36–37, so darkness is inferred for them,
-not measured. With the torch all four machines were crafted from the
-menu.
+`IsoPlayer.tooDarkToRead`). Every other gate of the check had passed in
+runs 36–37, so darkness is inferred for them, not measured.
+
+The harness's craft step now switches a torch on in hand when it is too
+dark. In run 38 it logged a light level of 0.15 at the workbench at 10:37
+game time (the threshold is 0.43); with the torch all four machines were
+crafted from the menu. Run 12 had crafted at the same bench, its light
+level not logged.
 
 Everything else in run 38 matched run 12:
 * the fuel chain, pumps, vehicles, generators and start gates;
@@ -1009,9 +1045,9 @@ Everything else in run 38 matched run 12:
 
 The run needed no input: the launcher's two clicks passed the two
 loading screens. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run36_install_rehearsal.txt`,
-`docs/evidence/2026-11-01_rt-sp_harness_run37_full_repository.txt`,
-`docs/evidence/2026-11-01_rt-sp_harness_run38_install_rehearsal.txt`.
+[2026-11-01_rt-sp_harness_run36_install_rehearsal.txt](evidence/2026-11-01_rt-sp_harness_run36_install_rehearsal.txt),
+[2026-11-01_rt-sp_harness_run37_full_repository.txt](evidence/2026-11-01_rt-sp_harness_run37_full_repository.txt),
+[2026-11-01_rt-sp_harness_run38_install_rehearsal.txt](evidence/2026-11-01_rt-sp_harness_run38_install_rehearsal.txt).
 
 Not run: an install through the Steam Workshop (needs Steam), an upgrade
 (there is no previous supported version), the packaged mod on a dedicated
@@ -1038,16 +1074,19 @@ harness finds it the way a player's pour does. The can is poured from
 mod's own transfer. The harness notes the moment and computes the
 expected condition from the policy's two ends, without the mod's
 `WorldInit.baseline`. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run39_existing_launch1.txt` and
-`_launch2.txt`, the same for run 40.
+[2026-11-01_rt-sp_harness_run39_existing_launch1.txt](evidence/2026-11-01_rt-sp_harness_run39_existing_launch1.txt),
+[2026-11-01_rt-sp_harness_run39_existing_launch2.txt](evidence/2026-11-01_rt-sp_harness_run39_existing_launch2.txt),
+[2026-11-01_rt-sp_harness_run40_existing_launch1.txt](evidence/2026-11-01_rt-sp_harness_run40_existing_launch1.txt),
+[2026-11-01_rt-sp_harness_run40_existing_launch2.txt](evidence/2026-11-01_rt-sp_harness_run40_existing_launch2.txt).
 
-Run 40: launch 1 **3/0**, phase B **9/1**, phase C **3/0**. Run 39 hit a
-harness error at the can on the ground: the game keeps a ground item's
-fluid on the world object, and the harness read it from the item. So run
-39 never recorded that can, and its phase C check of the can passed
-vacuously ("none" before and after). The world-age figures vary by world
-seed and item, since the pre-outbreak age is seeded (run 39: 0.127 for
-the can, 0.560 for the pump).
+Run 40: launch 1 **3/0**, phase B **9/1**, phase C **3/0**.
+
+Run 39 hit a harness error at the can on the ground: the game keeps a
+ground item's fluid on the world object, and the harness read it from the
+item. So run 39 never recorded that can, and its phase C check of the can
+passed vacuously ("none" before and after). The world-age figures vary by
+world seed and item, since the pre-outbreak age is seeded (run 39: 0.127
+for the can, 0.560 for the pump).
 
 | Run 40 | Result |
 | --- | --- |
@@ -1079,8 +1118,8 @@ that commit (82 files, SHA-256 `c5221a32…`) matched its manifest. The
 look is now can A's first contact, so the harness computes its expected
 condition from the moment of the look and checks that a later pour keeps
 that record. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run41_existing_launch1.txt` and
-`_launch2.txt`.
+[2026-11-01_rt-sp_harness_run41_existing_launch1.txt](evidence/2026-11-01_rt-sp_harness_run41_existing_launch1.txt),
+[2026-11-01_rt-sp_harness_run41_existing_launch2.txt](evidence/2026-11-01_rt-sp_harness_run41_existing_launch2.txt).
 
 Result: launch 1 **3/0**, phase B **11/0**, phase C **3/0**, run 40's
 failure among them.
@@ -1106,7 +1145,7 @@ package. That is the zip of commit `6764990`, byte for byte the one
 `5e22a15` built: 82 files, SHA-256 `d1a6f5e1…`. It matched its manifest.
 Run 38 had used the zip of `2591370`, before D-024 changed five runtime
 files. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run42_install_rehearsal.txt`.
+[2026-11-01_rt-sp_harness_run42_install_rehearsal.txt](evidence/2026-11-01_rt-sp_harness_run42_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12 and 38.
 * The workbench was dark again (light 0.15 at 10:31 game time); with the
@@ -1127,8 +1166,8 @@ each with what the game gives: `getText` for the menu, interface, fluid
 and sandbox texts, an item's display name for each item id. It then fills
 two placeholders and opens the Fuel menu on a petrol can and the machine
 menu on a fermenter, with their Look and smell and Status dialogs.
-Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run43_italian.txt`,
-`docs/evidence/2026-11-01_rt-sp_harness_run44_italian.txt`.
+Evidence: [2026-11-01_rt-sp_harness_run43_italian.txt](evidence/2026-11-01_rt-sp_harness_run43_italian.txt),
+[2026-11-01_rt-sp_harness_run44_italian.txt](evidence/2026-11-01_rt-sp_harness_run44_italian.txt).
 
 Run 43 (4/1) matched 220 of 237. The 17 others were exactly the strings
 with placeholders: the game stores `%1` as `%1$s`, which `getText`
@@ -1174,7 +1213,7 @@ They were carried for two game hours, then put down:
 Every time the checks use comes from the records themselves (a move hook
 sets `t` to the moment of the move). Every expectation comes from the
 definitions. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run45_still_pickup.txt`.
+[2026-11-01_rt-sp_harness_run45_still_pickup.txt](evidence/2026-11-01_rt-sp_harness_run45_still_pickup.txt).
 
 Result: **41 PASS / 0 FAIL**. The console showed "machine move hooks
 installed" and no TLG error or warning. The run took about 5 minutes.
@@ -1218,7 +1257,7 @@ were carried, the mode now sends each of the five as a request: Feed the
 firebox, Collect and Pause to the pot still, Resume and Abort batch to the
 column. A log and an empty can were carried, so nothing but the placement
 could refuse them. The rest of the mode is run 45's. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run46_still_pickup_refusals.txt`.
+[2026-11-01_rt-sp_harness_run46_still_pickup_refusals.txt](evidence/2026-11-01_rt-sp_harness_run46_still_pickup_refusals.txt).
 
 Result: **46 PASS / 0 FAIL** (the console showed "machine move hooks
 installed" and no TLG error or warning).
@@ -1239,12 +1278,12 @@ taking the same commands, is the control); all three pass with the fix.
 
 Command: `tools/rehearse-install.ps1 -NoBuild`, on the zip in `dist/`. That
 is the package of commit `21ef95c`: 82 files, SHA-256 `b608f4c5…`, 203,050
-bytes. It has the fix that has a carried machine answer Status only. It
-differs from run 42's zip (`d1a6f5e1…`) in three files:
+bytes. It includes the fix that makes a carried machine answer Status
+only. It differs from run 42's zip (`d1a6f5e1…`) in three files:
 `MachineHandlers.lua`, the player guide and the changelog. The zip matched
 its manifest (82 files), was installed into a fresh isolated cache and ran
 the full harness. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run47_install_rehearsal.txt`.
+[2026-11-01_rt-sp_harness_run47_install_rehearsal.txt](evidence/2026-11-01_rt-sp_harness_run47_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38 and 42.
 * The workbench was dark again (light 0.15 at 10.59 game time); with the
@@ -1268,9 +1307,10 @@ checked, before any access, that:
 * their records were exactly as saved (every field to three levels,
   numbers exact);
 * the hourly list was as it had been.
+
 The run then carried them another hour and went on with run 45's
 put-downs and every check after them. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run48_still_save.txt`.
+[2026-11-01_rt-sp_harness_run48_still_save.txt](evidence/2026-11-01_rt-sp_harness_run48_still_save.txt).
 
 Result: phase 1 **29 PASS / 0 FAIL**, phase 2 **24 PASS / 0 FAIL**. The
 launcher sent the two click-to-start clicks, and the console showed
@@ -1306,7 +1346,7 @@ The player guide says Abort batch "keeps what it made so far: … a still's
 spirit". The check `RTSC.design_abort_keeps_only_what_it_distilled` holds
 the kept spirit to what the distilling stage has made, since nothing
 distils while heating up. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run49_still_controls.txt`.
+[2026-11-01_rt-sp_harness_run49_still_controls.txt](evidence/2026-11-01_rt-sp_harness_run49_still_controls.txt).
 
 Result: **27 PASS / 1 FAIL**. The console showed "machine move hooks
 installed" and no TLG or Lua error.
@@ -1325,6 +1365,7 @@ Run 49's failure was a mod defect, fixed in commit `1cb67b7` (runs
 counting every stage, so it kept spirit for the heating-up hour, when
 nothing distils. Aborted mid-way through heating up, a still would have
 handed out spirit it never made. The fix had two constraints:
+
 1. The same rule credits a fermenter's 1 h prepare stage (1/97 of its
    ethanol). Run 33's `RT.C.wash(done)` expects `done / 97`, so a fix
    changes that expectation too; run 33's evidence stays as it was.
@@ -1340,8 +1381,8 @@ result (`makes`: fermenting, distilling, drying), and Abort keeps the
 share done of those. Before, every stage counted, the heat-up and
 preparing hours included. The controls mode now expects a fermenter's
 wash at `(done − 1) / 96`. Evidence:
-`docs/evidence/2026-11-01_rt-sp_harness_run50_still_controls_fix.txt`,
-`docs/evidence/2026-11-01_rt-sp_harness_run51_controls_fix.txt`.
+[2026-11-01_rt-sp_harness_run50_still_controls_fix.txt](evidence/2026-11-01_rt-sp_harness_run50_still_controls_fix.txt),
+[2026-11-01_rt-sp_harness_run51_controls_fix.txt](evidence/2026-11-01_rt-sp_harness_run51_controls_fix.txt).
 
 Result: run 50 (`-Mode still-controls`) **28 PASS / 0 FAIL**; run 51
 (`-Mode controls`) **32 PASS / 0 FAIL**. Both consoles showed "machine
@@ -1362,7 +1403,7 @@ bytes, with the carried-machine and Abort fixes. It differs from run 47's
 zip (`b608f4c5…`) in four files: `Process.lua`, `Production.lua`, the
 player guide and the changelog. The zip matched its manifest (82 files),
 was installed into a fresh isolated cache and ran the full harness.
-Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run52_install_rehearsal.txt`.
+Evidence: [2026-11-01_rt-sp_harness_run52_install_rehearsal.txt](evidence/2026-11-01_rt-sp_harness_run52_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42 and
 47.
@@ -1386,13 +1427,13 @@ to 30 days for cans, 75 for station tanks).
   were left alone.
 * 7 game days later the second can (a pour) and the pump (the mod's own
   transfer) were found.
-* Each first record was compared with Aging.advance over the whole span
+* Each first record was compared with `Aging.advance` over the whole span
   (the world-age end of run 40's `RT.X.expected`), not with
-  WorldInit.baseline.
+  `WorldInit.baseline`.
 * The can found at the start was read again and compared with the same
   one-span calculation.
 
-Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run53_late_find.txt`.
+Evidence: [2026-11-01_rt-sp_harness_run53_late_find.txt](evidence/2026-11-01_rt-sp_harness_run53_late_find.txt).
 
 Result: **7 PASS / 0 FAIL**. The console showed "world fuel history
 created: policy=new_world … newGame=true" and no TLG or Lua error.
@@ -1413,6 +1454,7 @@ day's hours, the pre-outbreak ones included, at the mean of the readings
 taken so far. The record is not redone after midnight, while the
 one-span calculation uses the day's final mean. The size depends on how
 far the early readings sat from the day's mean, which was not measured.
+
 Not run: the other two existing-save policies, a server, removing and
 re-adding the mod.
 
@@ -1431,8 +1473,10 @@ save's `mods.txt` was rewritten as the load screen's Choose mods does:
    3 L of fresh petrol into Q, let a game day pass and saved.
 3. The mod and the harness again (`rm-c`), continuing the save.
 
-Evidence: `docs/evidence/2026-11-01_rt-sp_harness_run54_removal_launch1.txt`,
-`…_launch2.txt`, `…_launch2_console.txt`, `…_launch3.txt`.
+Evidence: [2026-11-01_rt-sp_harness_run54_removal_launch1.txt](evidence/2026-11-01_rt-sp_harness_run54_removal_launch1.txt),
+[…_launch2.txt](evidence/2026-11-01_rt-sp_harness_run54_removal_launch2.txt),
+[…_launch2_console.txt](evidence/2026-11-01_rt-sp_harness_run54_removal_launch2_console.txt),
+[…_launch3.txt](evidence/2026-11-01_rt-sp_harness_run54_removal_launch3.txt).
 
 Result: launch 1 **1/0**, launch 2 **2/0**, launch 3 **4/1**.
 
@@ -1448,11 +1492,10 @@ below). `Containers.read` reconciled an untracked change at the record's
 last write (`side.t`). The caller then aged the result to now, so fuel
 that came in unseen carried the baseline condition of the moment it was
 found and also the aging of the whole time since the record was written.
-After a day away the can read
-11.5 % more degraded than D-006's rule gives. The added fuel itself
-came out at about 0.083, some 17 % above the baseline of 0.071. The
-excess grew with the time since the last read; in ordinary play, reads
-come often and the gap was small.
+After a day away the can read 11.5 % more degraded than D-006's rule
+gives. The added fuel itself came out at about 0.083, some 17 % above the
+baseline of 0.071. The excess grew with the time since the last read; in
+ordinary play, reads come often and the gap was small.
 
 Found for players: removing the mod loses its machines (with their
 batches) and its ethanol in containers. The game skips the unknown items
@@ -1477,8 +1520,10 @@ with the fix for run 54's failure (D-006 amendment) and the removal docs.
 The zip matched its manifest and was installed into a fresh isolated
 cache. The three launches were run 54's.
 
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run55_removal_launch1.txt`,
-`…_launch2.txt`, `…_launch2_console.txt`, `…_launch3.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run55_removal_launch1.txt](evidence/2026-11-02_rt-sp_harness_run55_removal_launch1.txt),
+[…_launch2.txt](evidence/2026-11-02_rt-sp_harness_run55_removal_launch2.txt),
+[…_launch2_console.txt](evidence/2026-11-02_rt-sp_harness_run55_removal_launch2_console.txt),
+[…_launch3.txt](evidence/2026-11-02_rt-sp_harness_run55_removal_launch3.txt).
 
 Result: launch 1 **1/0**, launch 2 **2/0**, launch 3 **5/0**.
 
@@ -1494,11 +1539,15 @@ the baseline of the moment it is found and is aged once. This world's
 seed drew older fuel than run 54's (an untracked baseline of 0.533
 against 0.071), so here the second aging would have added 1.9 % to the
 can, where run 54 measured 11.5 %. The check holds the code to the rule
-to 1e-6 either way. Launch 2's two exceptions are the driver's own, as in
-run 54 (`Driver.lua:182`, inside `pcall`). Launches 1 and 3 had no Lua or
-TLG error; the ERROR lines in their consoles are the game's own (fonts,
-map zones). Not run, as in run 54: a save that still lists the mod after
-it was uninstalled, a server, the mod's other fluids and items.
+to 1e-6 either way.
+
+Launch 2's two exceptions are the driver's own, as in run 54
+(`Driver.lua:182`, inside `pcall`). Launches 1 and 3 had no Lua or TLG
+error; the ERROR lines in their consoles are the game's own (fonts, map
+zones).
+
+Not run, as in run 54: a save that still lists the mod after it was
+uninstalled, a server, the mod's other fluids and items.
 
 ## 2026-11-02 — RT-SP client harness, launch 56 (the zip with the inflow fix installed clean)
 
@@ -1510,7 +1559,7 @@ removal docs. It differs from run 52's zip (`75873ed3…`) in eight files:
 `Stations.lua`, the player guide, `migrations.md` and the changelog. The
 zip matched its manifest (82 files), was installed into a fresh isolated
 cache and ran the full harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run56_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run56_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run56_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42, 47
 and 52.
@@ -1524,21 +1573,24 @@ and 52.
 
 ## 2026-11-02 — RT-SP client harness, launches 57–59 (the water a can takes up)
 
-A test with a faked game found that the water aging gives a can's fuel was
-written to the mod's record alone after a vanilla pour or a first look,
-and dropped by the next read, which takes the can's fluids as they are.
-The fix (D-007 amendment, `Containers.commit`) writes it into the fluids
-too. New mode `tools/run-sp-harness.ps1 -Mode can-water` (request
+A test with a faked game found that, after a vanilla pour or a first look,
+the water that aging gives a can's fuel was written to the mod's record
+alone. The next read, which takes the can's fluids as they are, dropped
+it. The fix (D-007 amendment, `Containers.commit`) writes the water into
+the fluids too.
+
+Command: `tools/run-sp-harness.ps1 -Mode can-water` (new; request
 `sp-rtcw`), on the repository's code in the dev cache. A jerry can of the
 mod's ethanol is recorded by a first pour and opened with the Fuel menu's
 treatment, and the mod clock moves on. Then:
 * a pour through the game's `FluidContainer.Transfer` (wrapped by the
   mod), and a read;
 * a second pour;
-* a Look and smell on a full 10 L petrol can the mod had not seen.
+* a **Look and smell** on a full 10 L petrol can the mod had not seen.
 
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run57_can_water.txt`,
-`…_run58_can_water_probe.txt`, `…_run59_can_water.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run57_can_water.txt](evidence/2026-11-02_rt-sp_harness_run57_can_water.txt),
+[…_run58_can_water_probe.txt](evidence/2026-11-02_rt-sp_harness_run58_can_water_probe.txt),
+[…_run59_can_water.txt](evidence/2026-11-02_rt-sp_harness_run59_can_water.txt).
 
 | Run | Result |
 | --- | --- |
@@ -1557,7 +1609,7 @@ Command: `tools/rehearse-install.ps1`, which rebuilt the package first
 files, SHA-256 `3970ad6b…`, 206,632 bytes, with the water fix (D-007 and
 D-024 amendments). The zip matched its manifest (82 files), was installed
 into a fresh isolated cache and ran the full harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run60_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run60_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run60_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52 and 56.
@@ -1579,8 +1631,10 @@ Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 Command: `tools/rehearse-install.ps1 -NoBuild -Scenario removal`, on run
 60's zip (`3970ad6b…`). The fix changes what a record write puts in a
 can's fluids, so run 55's scenario was run again.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run61_removal_launch1.txt`,
-`…_launch2.txt`, `…_launch2_console.txt`, `…_launch3.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run61_removal_launch1.txt](evidence/2026-11-02_rt-sp_harness_run61_removal_launch1.txt),
+[…_launch2.txt](evidence/2026-11-02_rt-sp_harness_run61_removal_launch2.txt),
+[…_launch2_console.txt](evidence/2026-11-02_rt-sp_harness_run61_removal_launch2_console.txt),
+[…_launch3.txt](evidence/2026-11-02_rt-sp_harness_run61_removal_launch3.txt).
 
 Result: launch 1 **1/0**, launch 2 **2/0**, launch 3 **5/0**, as in run 55.
 World seed 956347149. Without the mod, the ethanol can was empty and the
@@ -1602,7 +1656,7 @@ Command: `tools/run-sp-harness.ps1 -Mode chassis` (new; request
 vehicle steps unchanged, on two `Base.PickUpTruck` instead of
 `Base.CarNormal`. It first checks that the game has the script (SRC
 `media/scripts/generated/vehicles/vehicle_pickuptruck.txt`).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run62_chassis_pickup.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run62_chassis_pickup.txt](evidence/2026-11-02_rt-sp_harness_run62_chassis_pickup.txt).
 
 Result: **29/0**. The trucks had 75 L tanks; the run emptied them first.
 
@@ -1621,8 +1675,10 @@ The first hop moved 1 L, where the car runs moved 10 L: the game's pump
 action ended after one unit, and the run did not record why. The mod
 accounted for exactly what moved: the pump's units went down one, and the
 can held 1 L with the station's water and sediment. The console had no
-TLG error and no Lua exception. Not run on this chassis: the flex
-conversion (`flex_pickup_truck`), save and reload, driving.
+TLG error and no Lua exception.
+
+Not run on this chassis: the flex conversion (`flex_pickup_truck`), save
+and reload, driving.
 
 ## 2026-11-02 — RT-SP client harness, launch 63 (the zip with the truck documented, installed clean)
 
@@ -1633,7 +1689,7 @@ run 60's zip (`3970ad6b…`) in two files: `Containers.lua` (the written
 record normalized) and the support matrix (the truck). The zip matched
 its manifest (82 files), was installed into a fresh isolated cache and
 ran the full harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run63_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run63_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run63_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56 and 60. The pump filled a can to the brim and the vehicle was
@@ -1646,20 +1702,29 @@ deep recursion (`LuaProbe.lua`), and no stack frame names the mod.
 
 ## 2026-11-02 — RT-SP client harness, launches 64–67 (one original model imported, G13)
 
-Command: `tools/make-test-model.ps1`, then `tools/run-sp-harness.ps1 -Mode
-model-import` (new; requests `sp-rtmi`, then `sp-rtmib`), on the
-repository's code in the dev cache. The model is original and lives in
-the dev-only harness mod only: a barrel drawn by the script (a text `.x`
-mesh in metres, a 256×256 texture marked to show orientation, texture
-direction and transparency, a 32×32 icon). The harness wires it to
-`TLG.FermenterVessel` through the item script's own parser
-(`Item.DoParam`) before any vessel exists. Each launch places the vessels
-turned 0, 90, 180 and 270 degrees, takes screenshots, saves, exits to the
-menu, continues the save, checks every item and takes screenshots again.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run64_model_import.txt`
-to `run67`, the screenshots `docs/evidence/2026-11-02_run65_*` and
-`2026-11-02_run66_*`. What the screenshots show was read from them by the
-agent; nobody else has looked yet.
+Command: `tools/make-test-model.ps1`, then
+`tools/run-sp-harness.ps1 -Mode model-import` (new; requests `sp-rtmi`,
+then `sp-rtmib`), on the repository's code in the dev cache. The model is
+original and lives only in the dev-only harness mod: a barrel drawn by the
+script (a text `.x` mesh in metres, a 256×256 texture marked to show
+orientation, texture direction and transparency, a 32×32 icon). The
+harness wires it to `TLG.FermenterVessel` through the item script's own
+parser (`Item.DoParam`) before any vessel exists. Each launch places the
+vessels turned 0, 90, 180 and 270 degrees, takes screenshots, saves,
+exits to the menu, continues the save, checks every item and takes
+screenshots again.
+Evidence: [2026-11-02_rt-sp_harness_run64_model_import.txt](evidence/2026-11-02_rt-sp_harness_run64_model_import.txt),
+[…_run65_model_import.txt](evidence/2026-11-02_rt-sp_harness_run65_model_import.txt),
+[…_run66_model_import.txt](evidence/2026-11-02_rt-sp_harness_run66_model_import.txt) and
+[…_run67_model_import.txt](evidence/2026-11-02_rt-sp_harness_run67_model_import.txt), and the screenshots
+[2026-11-02_run65_lid_and_window_x2.5.png](evidence/2026-11-02_run65_lid_and_window_x2.5.png),
+[2026-11-02_run66_held_vanilla_bottle.jpg](evidence/2026-11-02_run66_held_vanilla_bottle.jpg),
+[2026-11-02_run66_icon_and_category.jpg](evidence/2026-11-02_run66_icon_and_category.jpg),
+[2026-11-02_run66_placeholders.jpg](evidence/2026-11-02_run66_placeholders.jpg),
+[2026-11-02_run66_test_vessels.jpg](evidence/2026-11-02_run66_test_vessels.jpg) and
+[2026-11-02_run66_test_vessels_reloaded.jpg](evidence/2026-11-02_run66_test_vessels_reloaded.jpg).
+What the screenshots show was read from them by the agent; nobody else
+has looked yet.
 
 | Launch | Result | What changed |
 | --- | --- | --- |
@@ -1668,26 +1733,35 @@ agent; nobody else has looked yet.
 | 66 | 15/1 | two groups, each photographed from behind its middle; a copy with `undoCoreScale`; vanilla's water bottle held as a control. After the reload the menu was asked in the same tick as the teleport (refused) |
 | 67 | **16/0** | the menu asked a step after the teleport; the hide flags logged and vanilla's hand-model reset called before the held shots |
 
-Every launch: the model scripts loaded with their mesh and texture (one
-in launches 64–65, three from 66); the vessel's world model, hand model
-and icon were the test model's, its icon texture the harness mod's file;
-every item stood on its square with its turn and came back after the save
-with it. From launch 65 the vessel's machine record id came back too
-(launch 64's menu was refused, so it had none). The square stayed free
-and not solid. From 1.4 tiles the machine menu answered "Ready".
+Every launch:
+- the model scripts loaded with their mesh and texture (one in launches
+  64–65, three from 66);
+- the vessel's world model, hand model and icon were the test model's,
+  its icon texture the harness mod's file;
+- every item stood on its square with its turn and came back after the
+  save with it.
+
+From launch 65 the vessel's machine record id came back too (launch 64's
+menu was refused, so it had none). The square stayed free and not solid.
+From 1.4 tiles the machine menu answered "Ready".
 
 The screenshots show (G13 in `engine-capabilities.md` has the details):
-the barrel drawn textured, staves and hoops, the lid's cross and notch,
-the red stripe and tap on its +X side; turned as set, clockwise seen from
-above, with +X east and +Z north at 0 degrees; "TOP" upright, so the
-texture's V runs down; the transparent window cut out and the
-semi-transparent airlock translucent; no ground shadow under any item.
+- the barrel drawn textured, staves and hoops, the lid's cross and notch,
+  the red stripe and tap on its +X side;
+- each barrel turned as set, clockwise seen from above, with +X east and
+  +Z north at 0 degrees;
+- "TOP" upright, so the texture's V runs down;
+- the transparent window cut out and the semi-transparent airlock
+  translucent;
+- no ground shadow under any item.
+
 At scale 1.0 the barrel drew 1.5 times the size of its `undoCoreScale`
 copy, which measured about true size against the character. The icon
 showed in the inventory list and the equipped-item button. Neither the
 vessel (launches 65–67) nor vanilla's water bottle (66–67) was drawn in
 the character's hand; launch 67 logged the hide flags false and called
 vanilla's hand-model reset first. The in-hand look is NOT RUN.
+
 The placeholders were seen for the first time: the drying column reads as
 a car fuel tank and the pot still as a cooking pot. The inventory showed
 the vessel's category as the raw key `IGUI_ItemCat_Tools` (the machines'
@@ -1697,6 +1771,7 @@ scripts.
 The console had no error naming the model, its texture or the mod. Its
 one Lua error during loading came from an `OnRenderTick` handler run on
 the wrong thread; neither the mod nor the harness registers that event.
+
 Not run: multiplayer rendering, `.fbx` and `.glb` meshes, animation, the
 machine menu from other sides, a vehicle part (G11).
 
@@ -1704,36 +1779,44 @@ machine menu from other sides, a vehicle part (G11).
 
 The fermentation vessel's own model was supplied on 2026-11-02: a binary
 FBX exported by Blender 5.0.1 from a Tripo Studio model, and a 512×512
-JPEG texture (`art-src/fermenter/PROVENANCE.md`). It ships as
-`TLG.Fermenter` (`TLG_models.txt`, mesh `models_X/TLG/Fermenter.fbx`
-unchanged, texture saved as `textures/TLG/Fermenter.png`) at `scale =
-0.5`; the vessel's `WorldStaticModel` names it. Its icon and its model in
-the hand stay vanilla's `WaterTank`. The same change sets the four
-machines' `DisplayCategory` to vanilla's `Tool`.
+JPEG texture (`art-src/fermenter/PROVENANCE.md`). It ships as the model
+`TLG.Fermenter` in `TLG_models.txt`, at `scale = 0.5`: the mesh
+`models_X/TLG/Fermenter.fbx` unchanged, the texture saved as
+`textures/TLG/Fermenter.png`. The vessel's `WorldStaticModel` names it.
+Its icon and its model in the hand stay vanilla's `WaterTank`. The same
+change sets the four machines' `DisplayCategory` to vanilla's `Tool`.
 
 Command: `tools/run-sp-harness.ps1 -Mode fermenter-model` (new; requests
 `sp-rtmf`, then `sp-rtmfb`): the model-import placing with the shipped
 scripts, four vessels turned 0–270 degrees beside the `undoCoreScale`
 test barrel, saved, continued and photographed again.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run68_fermenter_model.txt`,
-`..._run69_fermenter_model.txt` and `2026-11-02_run69_fermenters*.jpg`.
+Evidence: [2026-11-02_rt-sp_harness_run68_fermenter_model.txt](evidence/2026-11-02_rt-sp_harness_run68_fermenter_model.txt),
+[..._run69_fermenter_model.txt](evidence/2026-11-02_rt-sp_harness_run69_fermenter_model.txt),
+[2026-11-02_run69_fermenters.jpg](evidence/2026-11-02_run69_fermenters.jpg) and
+[2026-11-02_run69_fermenters_reloaded.jpg](evidence/2026-11-02_run69_fermenters_reloaded.jpg).
 
-| Launch | Result | |
+| Launch | Result | Notes |
 | --- | --- | --- |
 | 68 | 14/2 | both failures the harness's expectation: the game reads `StaticModel = WaterTank` back as `Base.WaterTank`. Its close-up at zoom 0.25 framed only the character, and its shot with the interface shown had the inventory list collapsed; both were dropped, and the zoom's direction is now read at either end of the range |
 | 69 | **16/0** | |
 
-Both launches: `TLG.Fermenter` loaded with its mesh and texture; the
-vessel's world model was it; every machine's category read "Tool" through
-the inventory's own text lookup; the eight items came back after the save
-with their turns and the vessel's machine record id; from 1.4 tiles the
-machine menu answered "Ready". The screenshots show the wooden barrel
-with its hoops, planked lid, airlock and tap, the texture the right way
-up, the tap going round with each turn, each vessel about hip-high to the
-character and about 15 % wider than the 0.56 m test barrel, as its
-proportions give at 0.75 m tall. The console had no error naming the
-model or its texture. Run 68 had fog; run 69's pictures are clearer. Not
-run: the vessel in the hand, multiplayer, the model's look up close.
+Both launches:
+- `TLG.Fermenter` loaded with its mesh and texture, and the vessel's
+  world model was it;
+- every machine's category read "Tool" through the inventory's own text
+  lookup;
+- the eight items came back after the save with their turns and the
+  vessel's machine record id;
+- from 1.4 tiles the machine menu answered "Ready".
+
+The screenshots show the wooden barrel with its hoops, planked lid,
+airlock and tap, the texture the right way up and the tap going round
+with each turn. Each vessel is about hip-high to the character and about
+15 % wider than the 0.56 m test barrel, as its proportions give at 0.75 m
+tall. Run 68 had fog; run 69's pictures are clearer. The console had no
+error naming the model or its texture.
+
+Not run: the vessel in the hand, multiplayer, the model's look up close.
 
 ## 2026-11-02 — RT-SP client harness, launch 70 (the zip with the fermenter's model, installed clean)
 
@@ -1746,7 +1829,7 @@ own model (`models_X/TLG/Fermenter.fbx`, `textures/TLG/Fermenter.png`,
 category, the notice and the changelog. The zip matched its manifest
 (85 files), was installed into a fresh isolated cache and ran the full
 harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run70_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run70_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run70_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60 and 63. The console had no error naming the mod or the
@@ -1754,16 +1837,17 @@ model.
 
 ## 2026-11-02 — RT-SP client harness, launch 71 (the fermenter's own icon)
 
-The vessel's icon is now the mod's own: `Item_TLG_Fermenter.png`, 32×32
+The vessel's icon is now the mod's own, `Item_TLG_Fermenter.png`: 32×32
 pixel art drawn by `tools/make-icons.ps1` (new) in colours picked from
-the supplied model's texture: a hooped wooden barrel with a lid, a white
-airlock and a brass tap. `TLG_machines.txt` sets `Icon = TLG_Fermenter`.
+the supplied model's texture, showing a hooped wooden barrel with a lid,
+a white airlock and a brass tap. `TLG_machines.txt` sets
+`Icon = TLG_Fermenter`.
 
 Command: `tools/run-sp-harness.ps1 -Mode fermenter-model`, which now also
 equips a vessel through vanilla's equip action and takes a screenshot
 with the interface shown.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run71_fermenter_icon.txt`
-and `2026-11-02_run71_icon_in_equipped_button_x4.png`.
+Evidence: [2026-11-02_rt-sp_harness_run71_fermenter_icon.txt](evidence/2026-11-02_rt-sp_harness_run71_fermenter_icon.txt)
+and [2026-11-02_run71_icon_in_equipped_button_x4.png](evidence/2026-11-02_run71_icon_in_equipped_button_x4.png).
 
 Result: **17/0**. The icon's texture was the mod's file, in both phases
 and on the placed vessels; the equipped-item button showed it (the
@@ -1780,7 +1864,7 @@ run 70's zip (`15229e13…`, 85 files) in the fermenter's own icon
 (`textures/Item_TLG_Fermenter.png`, 475 bytes), the vessel's `Icon` line,
 the notice and the changelog. The zip matched its manifest (86 files),
 was installed into a fresh isolated cache and ran the full harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run72_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run72_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run72_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60, 63 and 70. The console had no error naming the mod.
@@ -1793,8 +1877,13 @@ photographed at zoom 0.25 with the interface hidden. Launch 74 adds a
 do-nothing timed action that holds the vessel as vanilla's actions hold
 an item (`setOverrideHandModels`), with its own hand model and then with
 the supplied `TLG.Fermenter` named instead.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run73_held.txt`,
-`..._run74_held.txt` and `2026-11-02_run73_*.jpg`, `2026-11-02_run74_*.jpg`.
+Evidence: [2026-11-02_rt-sp_harness_run73_held.txt](evidence/2026-11-02_rt-sp_harness_run73_held.txt),
+[..._run74_held.txt](evidence/2026-11-02_rt-sp_harness_run74_held.txt) and the screenshots
+[2026-11-02_run73_hand_bones.jpg](evidence/2026-11-02_run73_hand_bones.jpg),
+[2026-11-02_run73_held_bat.jpg](evidence/2026-11-02_run73_held_bat.jpg),
+[2026-11-02_run73_held_vessel_idle.jpg](evidence/2026-11-02_run73_held_vessel_idle.jpg),
+[2026-11-02_run74_vessel_in_action_hand_model.jpg](evidence/2026-11-02_run74_vessel_in_action_hand_model.jpg) and
+[2026-11-02_run74_vessel_in_action_supplied_model.jpg](evidence/2026-11-02_run74_vessel_in_action_supplied_model.jpg).
 
 Result: **9/0** both launches (every equip landed: the primary hand, and
 both hands for the two-handed one).
@@ -1817,18 +1906,22 @@ vessel keeps vanilla's `WaterTank` in the hand.
 ## 2026-11-02 — RT-SP client harness, launches 75–79 (the fermentation vessel carried in both hands)
 
 The user asked for the vessel to be carried in both hands. Vanilla's way
-is the heavy item (`Tags = base:heavyitem`, `RequiresEquippedBothHands =
-true`, as `Base.LargeMeteorite` and the anvils carry): taken into both
-hands by `ISEquipHeavyItem`, dropped at the feet by `forceDropHeavyItems`.
-`TLG_machines.txt` now scripts the vessel so, and `Machines.install`
-follows both moves (D-015 amendment).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run75_heavy.txt` to
-`..._run79_pickup_heavy.txt`.
+is the heavy item, as `Base.LargeMeteorite` and the anvils are scripted:
+`Tags = base:heavyitem` and `RequiresEquippedBothHands = true`.
+`ISEquipHeavyItem` takes a heavy item into both hands, and
+`forceDropHeavyItems` drops it at the feet. `TLG_machines.txt` now
+scripts the vessel so, and `Machines.install` follows both moves (D-015
+amendment).
+Evidence: [2026-11-02_rt-sp_harness_run75_heavy.txt](evidence/2026-11-02_rt-sp_harness_run75_heavy.txt),
+[..._run76_pickup_heavy.txt](evidence/2026-11-02_rt-sp_harness_run76_pickup_heavy.txt),
+[..._run77_pickup_heavy.txt](evidence/2026-11-02_rt-sp_harness_run77_pickup_heavy.txt),
+[..._run78_heavy_floor.txt](evidence/2026-11-02_rt-sp_harness_run78_heavy_floor.txt) and
+[..._run79_pickup_heavy.txt](evidence/2026-11-02_rt-sp_harness_run79_pickup_heavy.txt).
 
-| Launch | Command | Result | |
+| Launch | Command | Result | Notes |
 | --- | --- | --- | --- |
 | 75 | `-Mode heavy` (new) | **8/0** | vanilla's meteorite and anvil, then the vessel scripted heavy, carried in both hands: none drawn in the idle character's hands; each heavy take dropped the previous item at the feet |
-| 76 | `-Mode pickup` | 35/1 | the vessel heavy, the scenario otherwise unchanged: every D-015 check passed. Its last phase called the loot window's Grab button (`onGrabItems`), which vanilla does not check for heavy items: a plain transfer, not a take into both hands |
+| 76 | `-Mode pickup` | 35/1 | the vessel heavy, the scenario otherwise unchanged: every D-015 check passed. Its last phase called the loot window's **Grab** button (`onGrabItems`), which vanilla does not check for heavy items: a plain transfer, not a take into both hands |
 | 77 | `-Mode pickup` | 34/2 | the last phase took C as a double-click does (`equipHeavyItem`): in both hands, yet its world object stayed on the square, so the mod saw no pickup |
 | 78 | `-Mode heavy` | **8/0** | vanilla's meteorite taken off the floor the same way: in both hands and the inventory, its world object still on the square. `ISEquipHeavyItem.complete` removes the item from the loot window's floor container only (`sendRemoveItemFromContainer` acts only in multiplayer, BC) |
 | 79 | `-Mode pickup` | **39/0** | after the fix (the mod takes its own machine's world object off as the floor transfer does): C in both hands and off its tile, counted 10.0485 h for 10.0486 h placed, carried an hour, dropped by `forceDropHeavyItems` at the character's feet, resumed there at once; 11.0487 h done for 11.0487 h placed |
@@ -1850,7 +1943,7 @@ lines (a heavy item, both hands), the machine move hooks
 player guide and the support matrix. The zip matched its manifest (86
 files), was installed into a fresh isolated cache and ran the full
 harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run80_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run80_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run80_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60, 63, 70 and 72. Phase A crafted the vessel, now a heavy
@@ -1862,26 +1955,27 @@ probe, as in earlier launches.
 ## 2026-11-02 — RT-SP client harness, launch 81 (the vessel put down by the menus' unequip)
 
 Runs 75–79 put the carried vessel down with `forceDropHeavyItems`, called
-directly. Reading the menus afterwards showed another way down: before
+directly. Reading the menus afterwards showed another way down. Before
 taking a heavy item, `ISInventoryPaneContextMenu.equipHeavyItem` (the loot
 window's double-click and drag) queues an `ISUnequipAction` for whatever
-is in the hands (SRC `ISInventoryPaneContextMenu.lua:4157-4173`), and
-`ISUnequipAction.complete` drops a heavy item at the feet itself unless it
-is unequipped to be dropped or placed (`ISUnequipAction.lua:134`). The
+is in the hands (SRC `ISInventoryPaneContextMenu.lua:4157-4173`).
+`ISUnequipAction.complete` drops a heavy item at the feet itself, unless
+it is unequipped to be dropped or placed (`ISUnequipAction.lua:134`). The
 take's own `forceDropHeavyItems` then finds the hands empty. The world
 menu's Take generator, the corpse grab and the inventory menu's weapon
-equip unequip the hands the same way. The mod did not follow that drop: a
-running vessel put down so stayed paused until its menu was next opened
-(a carried machine leaves the hourly reading's list, so no reading finds
-it), however long that took. `Machines.install` now wraps
-`ISUnequipAction.complete` too, for its machines only (192/192 tests;
-the new test case fails without the wrap).
+equip unequip the hands the same way.
+
+The mod did not follow that drop. A running vessel put down that way
+stayed paused until its menu was next opened, however long that took: a
+carried machine leaves the hourly reading's list, so no reading finds it.
+`Machines.install` now wraps `ISUnequipAction.complete` too, for its
+machines only (192/192 tests; the new test case fails without the wrap).
 
 Command: `tools/run-sp-harness.ps1 -Mode pickup`. After run 79's phases
 the scenario takes C again the double-click way, carries it half an hour,
 then puts a `Base.LargeMeteorite` on the character's tile and takes it the
 same way.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run81_pickup_unequip.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run81_pickup_unequip.txt](evidence/2026-11-02_rt-sp_harness_run81_pickup_unequip.txt).
 
 Result: **43/0**. Run 79's 39 checks passed again. The menus queued
 `ISUnequipAction,ISEquipHeavyItem`; C went down on the character's tile
@@ -1906,7 +2000,7 @@ hook for the menus' unequip (`Machines.lua`), a comment in
 `TLG_machines.txt` and the support matrix. The zip matched its manifest
 (86 files), was installed into a fresh isolated cache and ran the full
 harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run82_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run82_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run82_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60, 63, 70, 72 and 80; the vessel was crafted and put down as
@@ -1920,11 +2014,12 @@ Launch 81 showed the menus put a carried heavy item down through
 on every other drop path, but not on this one (it was an open item).
 `Generators.lua` now wraps `ISUnequipAction.complete` as it wraps the
 other drops: for a carried generator that left the inventory, the record
-goes to the object it became (`G.attachNear`). Tests 193/193, with a new
-case (`tests/integration/test_generator_moves.lua`) that fails without
-the wrap, and again without the check that the generator left the
-inventory: one unequipped to be dropped stays there, and a record-less
-generator with the same fuel nearby would get its record.
+goes to the object it became (`G.attachNear`). Tests 193/193. A new case
+(`tests/integration/test_generator_moves.lua`) fails without the wrap,
+and again without the check that the generator left the inventory: a
+generator unequipped to be dropped stays in the inventory, and without
+the check a record-less generator with the same fuel nearby would get its
+record.
 
 Command: `tools/run-sp-harness.ps1 -Mode generator-unequip` (new; request
 `sp-rtgu`, no save): two generators with records on the ground. A is
@@ -1932,19 +2027,22 @@ taken from the world menu (`ISWorldObjectContextMenu.onTakeGenerator`),
 then B the same way while A is carried, then a bat is equipped from the
 inventory menu (`ISInventoryPaneContextMenu.equipWeapon`) while B is
 carried.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run83_generator_unequip.txt`
-to `..._run85_generator_unequip.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run83_generator_unequip.txt](evidence/2026-11-02_rt-sp_harness_run83_generator_unequip.txt),
+[..._run84_generator_unequip.txt](evidence/2026-11-02_rt-sp_harness_run84_generator_unequip.txt) and
+[..._run85_generator_unequip.txt](evidence/2026-11-02_rt-sp_harness_run85_generator_unequip.txt).
 
-| Launch | Result | |
+| Launch | Result | Notes |
 | --- | --- | --- |
 | 83 | 5/3 | before the fix. A's take, from the tile next to it, left the queue without being performed, so B's take had nothing to unequip. The bat's equip queued `ISUnequipAction,ISEquipWeaponAction` and put B down: no generator within two tiles of the character had B's record |
 | 84 | 1/1 | with the fix; the same first take failed again, and the run stopped there |
 | 85 | **8/0** | each take after a walk, as B's was in launch 83. B's take queued `ISWalkToTimedAction,ISUnequipAction,ISTakeGenerator`: A went down on the character's tile with its record and its 6 L, and B came into both hands with its own. The bat's equip put B down with its record and its 4 L |
 
-Why the first take of launches 83–84 never ran was not found: the two
-tiles reached each other (`canReachTo`, checked before the take), and
-every take after a walk went through. Not run: a generator put down by
-taking a heavy item from the loot window, or by grabbing a corpse.
+The first take of launches 83–84 never ran, and the cause was not found:
+the two tiles reached each other (`canReachTo`, checked before the take),
+and every take after a walk went through.
+
+Not run: a generator put down by taking a heavy item from the loot
+window, or by grabbing a corpse.
 
 ## 2026-11-02 — RT-SP client harness, launches 86–87 (the vessel held with vanilla's held-bag pose, a trial)
 
@@ -1955,14 +2053,15 @@ the game builds the pose when the item script loads (BC `Item.Load`).
 Launch 86 therefore set it in the working copy of `TLG_machines.txt` (not
 committed, reverted). Launch 87 used a harness stand-in instead,
 `TLGHarness.PoseBag` (`TLGHarness_pose.txt`: the vessel's script plus the
-pose). The harness switched the hand model between placements
-(`StaticModel`, read when the item is drawn; `TLGHarness_models.txt`)
-and photographed each one carried in both hands (`ISEquipHeavyItem`):
+pose). Between placements the harness switched the hand model
+(`StaticModel`, read when the item is drawn; `TLGHarness_models.txt`).
+It photographed each one carried in both hands (`ISEquipHeavyItem`):
 from the front, from behind on the right and, in launch 87, walking.
 Command: `tools/run-sp-harness.ps1 -Mode pose` (new; request `sp-rtmp`,
 no save).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run86_pose.txt`,
-`..._run87_pose.txt` and `2026-11-02_run87_pose_trial_sheet.jpg`.
+Evidence: [2026-11-02_rt-sp_harness_run86_pose.txt](evidence/2026-11-02_rt-sp_harness_run86_pose.txt),
+[..._run87_pose.txt](evidence/2026-11-02_rt-sp_harness_run87_pose.txt) and
+[2026-11-02_run87_pose_trial_sheet.jpg](evidence/2026-11-02_run87_pose_trial_sheet.jpg).
 
 Result: **11/0** and **10/0** (every hold landed, and the right hand's
 mask variable read `holdingbagright`).
@@ -1993,26 +2092,27 @@ in `TLGHarness_pose.txt`) select them through `primaryAnimMask`. From
 launch 89, the animator's own log was kept for each pose
 (`AnimatorDebugMonitor`, as the debug menu's anim monitor uses it).
 Commands: `tools/run-sp-harness.ps1 -Mode pose-hold` (new; request
-`sp-rtmph`, launches 88-89, no save) and `-Mode pose-freeze` (new;
+`sp-rtmph`, launches 88–89, no save) and `-Mode pose-freeze` (new;
 request `sp-rtmpf`, launch 90, no save).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run88_pose_hold.txt`,
-`..._run89_pose_hold.txt`, `..._run90_pose_freeze.txt`, the animator
-logs `2026-11-02_run89_animlog_shrug.txt` and
-`2026-11-02_run90_animlog_frozen.txt`, and the sheets
-`2026-11-02_run89_two_arm_pose_sheet.jpg` and
-`2026-11-02_run90_frozen_pose_sheet.jpg`.
+Evidence: [2026-11-02_rt-sp_harness_run88_pose_hold.txt](evidence/2026-11-02_rt-sp_harness_run88_pose_hold.txt),
+[..._run89_pose_hold.txt](evidence/2026-11-02_rt-sp_harness_run89_pose_hold.txt),
+[..._run90_pose_freeze.txt](evidence/2026-11-02_rt-sp_harness_run90_pose_freeze.txt), the animator logs
+[2026-11-02_run89_animlog_shrug.txt](evidence/2026-11-02_run89_animlog_shrug.txt) and
+[2026-11-02_run90_animlog_frozen.txt](evidence/2026-11-02_run90_animlog_frozen.txt), and the sheets
+[2026-11-02_run89_two_arm_pose_sheet.jpg](evidence/2026-11-02_run89_two_arm_pose_sheet.jpg) and
+[2026-11-02_run90_frozen_pose_sheet.jpg](evidence/2026-11-02_run90_frozen_pose_sheet.jpg).
 
-| Launch | Result | |
+| Launch | Result | Notes |
 | --- | --- | --- |
 | 88 | **8/0** | `Bob_IdleHolding` (in `anims_X/Bob`; none of the game's pose files uses it) on both arms: both arms down and the item at the right hand, standing and walking. Not a carry |
 | 89 | **9/0** | each time the animator log shows the masking layer switch to the harness's node and play its clip (`player/maskingright/tlgshrug`, track `Bob_EmoteShrug2H`): a mod's own pose file loads and plays. The shrug moved both forearms, so one right-hand pose drives both arms. `Bob_IdleHolding` again kept the arms down. `Bob_IdlePackBox` brought both hands forward around the 0.5 m barrel at one moment, but it is a packing loop: walking, the barrel swung below the waist and the left hand came off it |
 | 90 | **6/0** | five of the game's both-hands-in-front clips (packing and unpacking a box, large and small, opening an ammo box), each held still on its first frame (`m_SpeedScale` 0.00, as vanilla's torch pose holds its clip) and switched in through `RightHandMask`. From the front the barrel sits at her chest in two of them. From behind on the right she holds it out at arm's length with her right hand, and her left hand does not touch it |
 
-What this settles: the game side of a two-armed carry works from a mod.
-Its own pose file is loaded, one pose drives both arms, a clip can be
-held still, and the item is drawn at the right hand. What is missing is a
-clip of both arms carrying something in front: none of the game's own
-clips tried is one. The mod ships none of this.
+The game side of a two-armed carry works from a mod: its own pose file is
+loaded, one pose drives both arms, a clip can be held still, and the item
+is drawn at the right hand. What is missing is a clip of both arms
+carrying something in front; none of the game's own clips tried is one.
+The mod ships none of this.
 
 ## 2026-11-02 — RT-SP client harness, launches 91–92 (a Mixamo carry clip retargeted onto the game's skeleton, a trial)
 
@@ -2033,24 +2133,25 @@ and two scripts made a game clip of its arms:
   and upper arm's Y, palms face the hand's Z, and bones keep the game's
   lengths.
 
-It wrote `Bob_TLGCarry` (151 keys over 10 s, every second frame) in
+The scripts wrote `Bob_TLGCarry` (151 keys over 10 s, every second frame) in
 `anims_X/Bob/` of the harness mod. All 45 bones are animated; the arms
 and fingers come from the clip and the rest holds the first frame of
-`Bob_Idle.x`. The clip also places `Bip01_Prop1`, the held item's bone,
-which hangs off `Bip01`: between the hands, turned as `Bob_Idle_Bag.x`
+`Bob_Idle.x`. The clip also places `Bip01_Prop1`, the held item's bone
+(it hangs off `Bip01`), between the hands, turned as `Bob_Idle_Bag.x`
 turns it. The pose file `maskingright/tlgcarry.xml` (both clavicles and
 both prop bones) plays it for `TLGHarness.PoseCarry`. The barrel hand
 models are centred on the prop (`FermenterHeldC*`, the lantern's turn).
 Command: `tools/run-sp-harness.ps1 -Mode pose-carry` (new; request
 `sp-rtmpc`, no save).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run91_pose_carry.txt`,
-`..._run92_pose_carry.txt`, `2026-11-02_run91_carry_sheet.jpg`,
-`2026-11-02_run92_carry_sheet.jpg` and the animator log
-`2026-11-02_run92_animlog_carry.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run91_pose_carry.txt](evidence/2026-11-02_rt-sp_harness_run91_pose_carry.txt),
+[..._run92_pose_carry.txt](evidence/2026-11-02_rt-sp_harness_run92_pose_carry.txt),
+[2026-11-02_run91_carry_sheet.jpg](evidence/2026-11-02_run91_carry_sheet.jpg),
+[2026-11-02_run92_carry_sheet.jpg](evidence/2026-11-02_run92_carry_sheet.jpg) and the animator log
+[2026-11-02_run92_animlog_carry.txt](evidence/2026-11-02_run92_animlog_carry.txt).
 
-| Launch | Result | |
+| Launch | Result | Notes |
 | --- | --- | --- |
-| 91 | **8/0** | the animator log shows the masking layer playing `tlgcarry` with track `Bob_TLGCarry`: the game loads a clip from a mod's `anims_X/Bob`. Both forearms come forward with open hands and the item between them, standing and walking. The 0.75 m barrel is wider than the arms and swallows the torso; at 0.5 m it reads as carried in both arms, but its back sinks into the belly and its tap points into the left arm |
+| 91 | **8/0** | the animator log shows the masking layer playing `tlgcarry` with track `Bob_TLGCarry`: the game loads a clip from a mod's `anims_X/Bob`. Both forearms come forward with open hands and the item between them, standing and walking. The 0.75 m barrel is wider than the arms and the torso disappears inside it; at 0.5 m it reads as carried in both arms, but its back sinks into the belly and its tap points into the left arm |
 | 92 | **8/0** | the clip rewritten with the prop 0.05 file units further forward and turned a quarter about the body's up (`PROP_FORWARD`, `PROP_TURN_LEFT_TO_FORWARD`): at 0.6 m and at 0.5 m the barrel sits in front of the body with the tap forward and the hands at its sides, standing and walking |
 
 Not checked: the vessel during actions (placing it, pouring), where the
@@ -2067,20 +2168,21 @@ height. `tools/blender/pz_arms.py` now takes the held item's offsets
 (forward, down) and a second clip of the same animation to blend
 direction by direction. Run on the first clip alone, the reworked script
 gave the same hands as before.
+Commands: `-Mode pose-carry-wide` (request `sp-rtmpw`) and
+`-Mode pose-carry-mid` (`sp-rtmpm`), both new, no save.
+Evidence: [2026-11-02_rt-sp_harness_run93_pose_carry_wide.txt](evidence/2026-11-02_rt-sp_harness_run93_pose_carry_wide.txt),
+[..._run94_pose_carry_mid.txt](evidence/2026-11-02_rt-sp_harness_run94_pose_carry_mid.txt),
+[2026-11-02_run93_carry_wide_sheet.jpg](evidence/2026-11-02_run93_carry_wide_sheet.jpg),
+[2026-11-02_run94_carry_mid_sheet.jpg](evidence/2026-11-02_run94_carry_mid_sheet.jpg) and the animator log
+[2026-11-02_run94_animlog_carry_mid.txt](evidence/2026-11-02_run94_animlog_carry_mid.txt).
 
-| Launch | Clip (hands apart, file units) | Result | |
+| Launch | Clip (hands apart, file units) | Result | Notes |
 | --- | --- | --- | --- |
 | 93 | `Bob_TLGCarryWide` (0.52), prop 0.08 forward, 0.02 down | **7/0** | the masking layer played `tlgcarrywide`. Her hands are about 1 m apart, while the 0.75 m barrel is about 0.65 m wide, so her hands hang in the air beside it, and the lid comes up to her chin |
 | 94 | `Bob_TLGCarryMid`, the two blended halfway (0.40), prop 0.08 forward, 0.06 down | **7/0** | the masking layer played `tlgcarrymid`. At 0.75 m (true size) her hands rest on the barrel's sides near the top band and the lid is at chest height, standing, from behind and walking; at 0.6 m the hands float slightly outside it |
 
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run93_pose_carry_wide.txt`,
-`..._run94_pose_carry_mid.txt`, `2026-11-02_run93_carry_wide_sheet.jpg`,
-`2026-11-02_run94_carry_mid_sheet.jpg` and the animator log
-`2026-11-02_run94_animlog_carry_mid.txt`. Commands: `-Mode
-pose-carry-wide` (request `sp-rtmpw`) and `-Mode pose-carry-mid`
-(`sp-rtmpm`), both new, no save. Not checked, as for launches 91–92:
-actions, running, sneaking and multiplayer. The mod ships none of this
-yet.
+Not checked, as for launches 91–92: actions, running, sneaking and
+multiplayer. The mod ships none of this yet.
 
 ## 2026-11-02 — RT-SP client harness, launch 95 (the full-size barrel moved out of the torso)
 
@@ -2089,18 +2191,18 @@ The user saw launch 94's full-size barrel go halfway through the body.
 Launch 94's item stood 0.18 file units in front of it, about the barrel's
 own radius (0.65 m across is about 0.17 file units at about 1.9 m per
 unit, from the game's shoulder joints 0.195 apart). Its back was
-therefore near the spine. The halfway blend was written three more times
+therefore near the spine. The halfway blend was written three more times,
 with the item 0.13, 0.17 and 0.21 in front of the hands (0.23, 0.27 and
-0.31 in front of `Bip01_Spine1`; the hands at 0.10, 0.06 down)
-as `Bob_TLGCarryMid13/17/21` (pose files `tlgcarrymid13/17/21.xml`,
-items `TLGHarness.PoseCarryMid13/17/21`). Each was photographed with the
-full-size barrel.
+0.31 in front of `Bip01_Spine1`; the hands at 0.10, 0.06 down). The clips
+are `Bob_TLGCarryMid13/17/21`, with the pose files
+`tlgcarrymid13/17/21.xml` and the items `TLGHarness.PoseCarryMid13/17/21`.
+Each was photographed with the full-size barrel.
 Command: `tools/run-sp-harness.ps1 -Mode pose-carry-offsets` (new; request
 `sp-rtmpo`, no save).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run95_pose_carry_offsets.txt`,
-`2026-11-02_run95_carry_offsets_sheet.jpg`,
-`2026-11-02_run95_carry_offsets_side_zoom.jpg` and the animator log
-`2026-11-02_run95_animlog_carry_mid17.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run95_pose_carry_offsets.txt](evidence/2026-11-02_rt-sp_harness_run95_pose_carry_offsets.txt),
+[2026-11-02_run95_carry_offsets_sheet.jpg](evidence/2026-11-02_run95_carry_offsets_sheet.jpg),
+[2026-11-02_run95_carry_offsets_side_zoom.jpg](evidence/2026-11-02_run95_carry_offsets_side_zoom.jpg) and the animator log
+[2026-11-02_run95_animlog_carry_mid17.txt](evidence/2026-11-02_run95_animlog_carry_mid17.txt).
 
 Result: **8/0**; the animator log shows each node playing. From the side:
 - 0.13: the barrel's back still presses into the belly.
@@ -2131,9 +2233,9 @@ Command: `tools/run-sp-harness.ps1 -Mode vessel-carry` (new; request
 walking. It is then held through a do-nothing action playing vanilla's
 "Loot", as `ISEquipHeavyItem` plays it, with the vessel as the action's
 hand model.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run96_vessel_carry.txt`,
-`2026-11-02_run96_vessel_carry_sheet.jpg` and the animator log
-`2026-11-02_run96_animlog_vessel.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run96_vessel_carry.txt](evidence/2026-11-02_rt-sp_harness_run96_vessel_carry.txt),
+[2026-11-02_run96_vessel_carry_sheet.jpg](evidence/2026-11-02_run96_vessel_carry_sheet.jpg) and the animator log
+[2026-11-02_run96_animlog_vessel.txt](evidence/2026-11-02_run96_animlog_vessel.txt).
 
 Result: **6/0**. The vessel's script read back as shipped
 (`StaticModel=TLG.FermenterHeld`), the vessel was in both hands, and the
@@ -2152,14 +2254,16 @@ it plays no animation and keeps the pose), multiplayer.
 Command: `tools/rehearse-install.ps1`, which rebuilt the package first
 (193/193 tests, compile check 102/0, translations OK): the zip of commit
 `ef1734a`, 88 files, SHA-256 `7169c16c…`, 921,305 bytes. It differs from
-run 82's zip (`2a762bad…`, 86 files) in the generator move hook for the
-menus' unequip (`Generators.lua`), the vessel's carry (the pose file and
-its clip, two new files, and the held model and the vessel's lines in
-`TLG_models.txt` and `TLG_machines.txt`), the notice, the changelog, the
-player guide and the support matrix. The zip matched its manifest (88
-files), was installed into a fresh isolated cache and ran the full
-harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run97_install_rehearsal.txt`.
+run 82's zip (`2a762bad…`, 86 files) in:
+- the generator move hook for the menus' unequip (`Generators.lua`);
+- the vessel's carry: the pose file and its clip (two new files), and the
+  held model and the vessel's lines in `TLG_models.txt` and
+  `TLG_machines.txt`;
+- the notice, the changelog, the player guide and the support matrix.
+
+The zip matched its manifest (88 files), was installed into a fresh
+isolated cache and ran the full harness.
+Evidence: [2026-11-02_rt-sp_harness_run97_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run97_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60, 63, 70, 72, 80 and 82. The console had no error naming
@@ -2174,14 +2278,14 @@ After launch 97 the changelog's carry entry was corrected (`4aca0b0`: it
 names only the action that was seen) and the package rebuilt: 88 files,
 SHA-256 `6ed15990…`, 921,325 bytes. Its files differ from launch 97's
 only in that entry; the zip's entries carry the newer commit's time.
-Command: `tools/run-sp-harness.ps1 -Mode
-vessel-carry -ModSource <repo>\dist\TheLastGallon\Contents\mods\TheLastGallon`:
+Command:
+`tools/run-sp-harness.ps1 -Mode vessel-carry -ModSource <repo>\dist\TheLastGallon\Contents\mods\TheLastGallon`:
 launch 96's steps with the mod deployed from the package's item tree,
 the folder the zip is made from, instead of the repository. The deployed
 clip `Bob_TLG_CarryVessel.x` has the repository's SHA-256 (`ecc4c413…`).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run98_vessel_carry_packaged.txt`,
-`2026-11-02_run98_vessel_carry_packaged_sheet.jpg` and the animator log
-`2026-11-02_run98_animlog_vessel.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run98_vessel_carry_packaged.txt](evidence/2026-11-02_rt-sp_harness_run98_vessel_carry_packaged.txt),
+[2026-11-02_run98_vessel_carry_packaged_sheet.jpg](evidence/2026-11-02_run98_vessel_carry_packaged_sheet.jpg) and the animator log
+[2026-11-02_run98_animlog_vessel.txt](evidence/2026-11-02_run98_animlog_vessel.txt).
 
 Result: **6/0**, as launch 96. The vessel's script read back as shipped,
 the vessel was in both hands, and the animator's log shows the masking
@@ -2201,10 +2305,10 @@ capabilities, G14), not when looting, eating or dressing. The mod now
 wraps `ISBaseTimedAction.setActionAnim`: when an action on another item
 starts its animation while a mod machine that is a heavy item is
 carried, `forceDropHeavyItems` puts it down at the feet (D-025
-amendment). Before the launch: tests 194/194 (a new case: the put-down,
-an action on the vessel itself, a multiplayer client's command, a
-generator and a pot still left alone, a failing put-down logged) and the
-compile check 102/0.
+amendment). Before the launch: tests 194/194 and the compile check 102/0.
+The new test case covers the put-down, an action on the vessel itself, a
+multiplayer client's command, a generator and a pot still left alone, and
+a failing put-down logged.
 
 Command: `tools/run-sp-harness.ps1 -Mode vessel-actions` (new; request
 `sp-rtmva`, no save). The shipped vessel is taken into both hands. A
@@ -2215,10 +2319,10 @@ it. Then a `Base.Generator` goes through the same loot, and then a
 second vessel is put down by the menus' own unequip when a bat is
 equipped from the inventory menu (`equipWeapon`; the unequip's time set
 to 300).
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run99_vessel_actions.txt`,
-`2026-11-02_run99_vessel_actions_sheet.jpg`,
-`2026-11-02_run99_unequip_close.png` and the animator log
-`2026-11-02_run99_animlog_vessel_loot.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run99_vessel_actions.txt](evidence/2026-11-02_rt-sp_harness_run99_vessel_actions.txt),
+[2026-11-02_run99_vessel_actions_sheet.jpg](evidence/2026-11-02_run99_vessel_actions_sheet.jpg),
+[2026-11-02_run99_unequip_close.png](evidence/2026-11-02_run99_unequip_close.png) and the animator log
+[2026-11-02_run99_animlog_vessel_loot.txt](evidence/2026-11-02_run99_animlog_vessel_loot.txt).
 
 Result: **11/0**.
 - The vessel through the loot: 30 ticks in, "Loot" was playing, the hands
@@ -2247,7 +2351,7 @@ running, sneaking, multiplayer.
 After launch 99 the hook's look at the hands moved inside its error
 guard (`c3a1d25`; tests 194/194, compile 102/0). Command: the same,
 `tools/run-sp-harness.ps1 -Mode vessel-actions`.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run100_vessel_actions.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run100_vessel_actions.txt](evidence/2026-11-02_rt-sp_harness_run100_vessel_actions.txt).
 
 Result: **11/0**, every check and observation as in launch 99: the
 vessel lay at the feet as "Loot" began, the generator stayed in both
@@ -2260,9 +2364,9 @@ camera stayed at zoom 0.25 this time.
 The asset review found `TLG.ManualFuelSystems` could not be obtained and
 did nothing when read: nothing spawned or read it. It is now print media
 (D-026). Its `OnCreate` gives each new manual the game's print media
-fields, so the inventory menu offers Inspect and the read shows a page
-of start-up, compatibility and troubleshooting in the game's print
-media window (EN and IT). It is added to 11 vanilla loot lists on
+fields, so the inventory menu offers **Inspect** and the read shows a page
+on start-up, compatibility and troubleshooting in the game's print media
+window (EN and IT). It is added to 11 vanilla loot lists on
 `OnPreDistributionMerge`. Before the launches: tests 197/197 (three new
 cases: the fields, the lists added to once, the weights), the compile
 check 105/0 and the translations check (240 EN keys, IT parity).
@@ -2278,22 +2382,25 @@ in Italian). The steps:
   to measure each text element, and its text panel is opened.
 - The first rolled manual is put in the inventory. Its menu is built as
   a right-click builds it (`createMenu`), and Inspect is chosen.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run101_manual.txt`,
-`…_run102_manual_italian.txt`, `…_run103_manual.txt`,
-`2026-11-02_runs102-103_manual_pages_sheet.jpg` and
-`2026-11-02_run103_manual_text_panel.png`.
+Evidence: [2026-11-02_rt-sp_harness_run101_manual.txt](evidence/2026-11-02_rt-sp_harness_run101_manual.txt),
+[…_run102_manual_italian.txt](evidence/2026-11-02_rt-sp_harness_run102_manual_italian.txt),
+[…_run103_manual.txt](evidence/2026-11-02_rt-sp_harness_run103_manual.txt),
+[2026-11-02_runs102-103_manual_pages_sheet.jpg](evidence/2026-11-02_runs102-103_manual_pages_sheet.jpg) and
+[2026-11-02_run103_manual_text_panel.png](evidence/2026-11-02_run103_manual_text_panel.png).
 
 | Launch | Language, page | Result | Notes |
 | --- | --- | --- | --- |
-| 101 | EN, 1100×560, body text at 0.30 | **10/0** | every list held the manual at its weight. 137 manuals in 3500 fills (9 to 33 per list), the first already print media with its page resolving. Inspect offered (not Read); the read ended with the manual recorded read (print media and literature). The page showed with its text 168–192 px tall, ending at y 326 of 560: legible but small, half the page empty |
-| 102 | IT, 1100×500, body text at 0.36 | **10/0** | as 101: 154 manuals, "Ispeziona" offered. The longest column ends at y 426 of 500. Accents and `°C` draw correctly |
+| 101 | EN, 1100×560, body text at 0.30 | **10/0** | every list held the manual at its weight. 137 manuals in 3500 fills (9 to 33 per list), the first already print media with its page resolving. **Inspect** offered (not **Read**); the read ended with the manual recorded read (print media and literature). The page showed with its text 168–192 px tall, ending at y 326 of 560: legible but small, half the page empty |
+| 102 | IT, 1100×500, body text at 0.36 | **10/0** | as 101: 154 manuals, **Ispeziona** offered. The longest column ends at y 426 of 500. Accents and `°C` draw correctly |
 | 103 | EN, the same layout | **10/0** | as 101: 147 manuals; the longest column ends at y 383 of 500 |
 
 The console had no exception in any of them. The rolls used a density
 of 1 with the harness world's loot settings, so they show that the
-lists produce the manual, not how often a player meets one. Not checked:
-a manual found in a real building's container, multiplayer, and the
-Italian text panel (the English one shows the full text, scrollable).
+lists produce the manual, not how often a player meets one.
+
+Not checked: a manual found in a real building's container, multiplayer,
+and the Italian text panel (the English one shows the full text,
+scrollable).
 
 ## 2026-11-02 — RT-SP client harness, launches 104–106 (the zip with the put-down and the manual)
 
@@ -2306,7 +2413,7 @@ manual: two new files (`Manual.lua`, `Loot.lua`), its item script line
 and its EN/IT page (`IG_UI.json`). The changelog, the player guide and
 the support matrix changed too. The zip matched its manifest (90 files),
 was installed into a fresh isolated cache and ran the full harness.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run104_install_rehearsal.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run104_install_rehearsal.txt](evidence/2026-11-02_rt-sp_harness_run104_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as runs 12, 38, 42,
 47, 52, 56, 60, 63, 70, 72, 80, 82 and 97. The console logged the manual
@@ -2325,10 +2432,10 @@ the folder the zip is made from:
   and no error from the hook.
 - Launch 106, `-Mode manual-italian`: **10/0**, as launch 102. All 11
   lists held the manual, and 133 of 3500 fills rolled it, each already
-  print media. "Ispeziona" read it and the game recorded it read; the
+  print media. **Ispeziona** read it and the game recorded it read; the
   page measured as in launch 102. The console had no exception.
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run105_vessel_actions_packaged.txt`
-and `…_run106_manual_italian_packaged.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run105_vessel_actions_packaged.txt](evidence/2026-11-02_rt-sp_harness_run105_vessel_actions_packaged.txt)
+and […_run106_manual_italian_packaged.txt](evidence/2026-11-02_rt-sp_harness_run106_manual_italian_packaged.txt).
 
 ## 2026-11-02 — RT-SP client harness, launches 107–108 (the vessel carried running and sneaking)
 
@@ -2376,14 +2483,14 @@ Launch 108: **21/0**.
   monitor was created, so it holds the whole leg.
 - The vessel stayed in both hands and off the ground through every leg
   and the crouch: no gait puts it down.
-- The pictures: walking and running, the barrel stands upright between
-  her hands. Sprinting, it tilts forward with her lean. Crouched, still,
-  walking or running, it tips forward, its lid turned out and its bottom
-  swung back between her knees, and her hips and belly sink into its
-  back. Her hands stay on its sides throughout. (Corrected after launch
-  117: running tilts the barrel too and swings it through the stride.
-  Launch 117's pictures show it plainly, and read again, launch 113's
-  show it as well.)
+- The pictures: walking, the barrel stands upright between her hands.
+  Running, it tilts with her lean and swings through the stride (corrected
+  after launch 117: this entry first said it stood upright when running,
+  as when walking; launch 117's pictures show the tilt plainly, and read
+  again, launch 113's show it as well). Sprinting, it tilts forward with
+  her lean. Crouched, still, walking or running, it tips forward, its lid
+  turned out and its bottom swung back between her knees, and her hips
+  and belly sink into its back. Her hands stay on its sides throughout.
 - Why (corrected after launch 110): the game reparents a player's
   `Bip01_Prop1` under the right hand and the clavicles under
   `Bip01_Spine1` (BC `IsoPlayer.onAnimPlayerCreated`), so the barrel turns
@@ -2395,9 +2502,11 @@ Launch 108: **21/0**.
   (`walksneakbagright.xml`, `idlesneakbagright.xml` and others).
 - The console had no exception.
 
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run107_vessel_gaits.txt`,
-`…_run108_vessel_gaits.txt`, `2026-11-02_run108_vessel_gaits_sheet.jpg`
-and the five legs' animator logs, `2026-11-02_run108_animlogs_gaits.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run107_vessel_gaits.txt](evidence/2026-11-02_rt-sp_harness_run107_vessel_gaits.txt),
+[…_run108_vessel_gaits.txt](evidence/2026-11-02_rt-sp_harness_run108_vessel_gaits.txt),
+[2026-11-02_run108_vessel_gaits_sheet.jpg](evidence/2026-11-02_run108_vessel_gaits_sheet.jpg)
+and the five legs' animator logs,
+[2026-11-02_run108_animlogs_gaits.txt](evidence/2026-11-02_run108_animlogs_gaits.txt).
 
 Not checked: multiplayer; the keys pressed on a keyboard (the harness sets
 the flags the keys set); what the vessel's weight does to a normal
@@ -2472,13 +2581,16 @@ Launch 113, `-Mode vessel-gaits` with the shipped files: **23/0**.
 - The vessel stayed in both hands through every leg. The console had no
   exception.
 
-Evidence: `docs/evidence/2026-11-02_rt-sp_harness_run109_crouch_trials.txt`,
-`…_run110_crouch_trials.txt`, `2026-11-03_rt-sp_harness_run111_crouch_trials.txt`,
-`…_run112_crouch_trials.txt`, `…_run113_vessel_gaits.txt`; the sheets
-`2026-11-02_run110_crouch_trials_sheet.jpg`,
-`2026-11-03_run111_crouch_trials_sheet.jpg`, `…_run112_crouch_trials_sheet.jpg`
-and `…_run113_vessel_gaits_sheet.jpg`; and the five legs' animator logs,
-`2026-11-03_run113_animlogs_gaits.txt`.
+Evidence: [2026-11-02_rt-sp_harness_run109_crouch_trials.txt](evidence/2026-11-02_rt-sp_harness_run109_crouch_trials.txt),
+[…_run110_crouch_trials.txt](evidence/2026-11-02_rt-sp_harness_run110_crouch_trials.txt),
+[2026-11-03_rt-sp_harness_run111_crouch_trials.txt](evidence/2026-11-03_rt-sp_harness_run111_crouch_trials.txt),
+[…_run112_crouch_trials.txt](evidence/2026-11-03_rt-sp_harness_run112_crouch_trials.txt),
+[…_run113_vessel_gaits.txt](evidence/2026-11-03_rt-sp_harness_run113_vessel_gaits.txt); the sheets
+[2026-11-02_run110_crouch_trials_sheet.jpg](evidence/2026-11-02_run110_crouch_trials_sheet.jpg),
+[2026-11-03_run111_crouch_trials_sheet.jpg](evidence/2026-11-03_run111_crouch_trials_sheet.jpg),
+[…_run112_crouch_trials_sheet.jpg](evidence/2026-11-03_run112_crouch_trials_sheet.jpg)
+and […_run113_vessel_gaits_sheet.jpg](evidence/2026-11-03_run113_vessel_gaits_sheet.jpg); and the five legs' animator logs,
+[2026-11-03_run113_animlogs_gaits.txt](evidence/2026-11-03_run113_animlogs_gaits.txt).
 
 Not checked: multiplayer; a sprint pose of its own (not made then; see
 launches 116–117); the crouch through the keyboard's own key.
@@ -2494,7 +2606,7 @@ files) in the crouched carry pose. There are four new files: two clips
 and two pose files. `tlgcarryvessel.xml` gained a comment, and the
 changelog and the support matrix changed. The zip matched its manifest,
 was installed into a fresh isolated cache and ran the full harness.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run114_install_rehearsal.txt`.
+Evidence: [2026-11-03_rt-sp_harness_run114_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run114_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as launch 104. The
 console's one exception came from the harness's own deep-recursion
@@ -2506,18 +2618,18 @@ item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`):
 The crouched legs played `tlgcarryvesselsneak` at every shot. Crouching
 still switched to `tlgcarryvesselsneakidle`, and standing up switched
 back to `tlgcarryvessel`. The console had no exception.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run115_vessel_gaits_packaged.txt`.
+Evidence: [2026-11-03_rt-sp_harness_run115_vessel_gaits_packaged.txt](evidence/2026-11-03_rt-sp_harness_run115_vessel_gaits_packaged.txt).
 
 ## 2026-11-03 — RT-SP client harness, launches 116–117 (a sprint carry pose)
 
 After launch 113 the user asked for a sprint pose made the same way as
 the crouched one. That way keys the arms for one frame of the game's
-clip, and the crouch clips' chests move under 10° through a stride. The
-sprint's does not: `Bob_Sprint.x` turns `Bip01_Spine1` up to 76° from its
-first frame, and its first frame stands 36° from the stride's mean. The
-lean holds at 41°, while the shoulder line's yaw and roll swing ±25° and
-±18°. Two engine facts, read in the bytecode, decided how to answer it
-(engine capabilities, animation tooling):
+clip. The crouch clips' chests move under 10° through a stride; the
+sprint clip's chest does not. `Bob_Sprint.x` turns `Bip01_Spine1` up to
+76° from its first frame, and its first frame stands 36° from the
+stride's mean. The lean holds at 41°, while the shoulder line's yaw and
+roll swing ±25° and ±18°. Two engine facts, read in the bytecode, decided
+the approach (engine capabilities, animation tooling):
 - A looping track in a sub-layer runs at the time fraction of the body
   layer's sync track (`AnimLayer.updateInternal` and `findSyncTrack`;
   `m_SyncTrackingEnabled` is true unless a pose file says otherwise).
@@ -2535,11 +2647,11 @@ Launch 116. Command: `tools/run-sp-harness.ps1 -Mode pose-sprint` (new;
 request `sp-rtmps`, no save). Each candidate is a harness item with the
 shipped hand model. Its own pose files play the candidate clip while the
 character sprints and moves (the conditions planned for the vessel), and
-the shipped standing clip otherwise. Each sprints the views row both
-ways, photographed eight times between 30 and 65 percent of the way: 3
-to 4 tiles at about 3.2 tiles a second, just over one stride
-(`defaultSprint.xml` plays the 0.67 s clip at speed scales 0.96 and
-0.80).
+the shipped standing clip otherwise. With each candidate the character
+sprints the views row both ways and is photographed eight times between
+30 and 65 percent of the way: 3 to 4 tiles at about 3.2 tiles a second,
+just over one stride (`defaultSprint.xml` plays the 0.67 s clip at speed
+scales 0.96 and 0.80).
 
 | Candidate | Keyed for (all from `Bob_Sprint.x`, arms in their standing directions, 0.17 forward) | Down | The pictures |
 | --- | --- | --- | --- |
@@ -2550,24 +2662,27 @@ to 4 tiles at about 3.2 tiles a second, just over one stride
 
 Result: **33/0**. Every shot was taken sprinting, with the candidate's
 node active, and the standing node came back at the end of each leg.
-Only the game's syncing the hand clip to the body's would keep the
-per-key clips steady while the others swing. Chosen: the per-key clip,
-0.10 down.
+Only if the game syncs the hand clip to the body's would the per-key
+clips stay steady while the others swing. Chosen: the per-key clip, 0.10
+down.
 
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run116_sprint_trials.txt`
-was rebuilt from the game's archived debug log (its `[TLGH]` lines, the
-logger's trailing period removed): the next launch cleared the harness's
-own result file before it was copied. Its last 60 lines match the copy
-the launcher printed. Also the eight legs' animator logs,
-`2026-11-03_run116_animlogs_sprint_trials.txt`, and the sheet,
-`2026-11-03_run116_sprint_trials_sheet.jpg`.
+Evidence: [2026-11-03_rt-sp_harness_run116_sprint_trials.txt](evidence/2026-11-03_rt-sp_harness_run116_sprint_trials.txt),
+the eight legs' animator logs
+[2026-11-03_run116_animlogs_sprint_trials.txt](evidence/2026-11-03_run116_animlogs_sprint_trials.txt)
+and the sheet
+[2026-11-03_run116_sprint_trials_sheet.jpg](evidence/2026-11-03_run116_sprint_trials_sheet.jpg).
+The first file was rebuilt from the game's archived debug log (its
+`[TLGH]` lines, the logger's trailing period removed), because the next
+launch cleared the harness's own result file before it was copied. Its
+last 60 lines match the copy the launcher printed.
 
 Shipped (D-025, third amendment): `Bob_TLG_CarryVesselSprint.x`, keyed
 against each key of `Bob_Sprint`. It plays through
-`tlgcarryvesselsprint.xml`: the vessel's mask, `isSprinting` and
-`isMoving` true, three conditions, more than the standing node's one and
-the crouched node's two. `isMoving` keeps it apart from the crouched
-still node. Provenance is in `art-src/carry/PROVENANCE.md`.
+`tlgcarryvesselsprint.xml` on three conditions: the vessel's mask,
+`isSprinting` true and `isMoving` true. That is more than the standing
+node's one condition and the crouched node's two. `isMoving` keeps it
+apart from the crouched still node. Provenance is in
+`art-src/carry/PROVENANCE.md`.
 
 Launch 117, `-Mode vessel-gaits` with the shipped files, now with a leg
 sprinting crouched and eight shots on each sprinting leg: **26/0**.
@@ -2591,21 +2706,26 @@ sprinting crouched and eight shots on each sprinting leg: **26/0**.
 - The vessel stayed in both hands through every leg. The console had no
   exception.
 
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run117_vessel_gaits.txt`,
-the six legs' animator logs `2026-11-03_run117_animlogs_gaits.txt` and the
-sheet `2026-11-03_run117_vessel_gaits_sheet.jpg`.
+Evidence: [2026-11-03_rt-sp_harness_run117_vessel_gaits.txt](evidence/2026-11-03_rt-sp_harness_run117_vessel_gaits.txt),
+the six legs' animator logs [2026-11-03_run117_animlogs_gaits.txt](evidence/2026-11-03_run117_animlogs_gaits.txt) and the
+sheet [2026-11-03_run117_vessel_gaits_sheet.jpg](evidence/2026-11-03_run117_vessel_gaits_sheet.jpg).
 
-Not checked: multiplayer; the keys pressed on a keyboard (the harness
-sets the flags they set); the low crouch near walls; a running pose of
-its own (not made, so running still tilts the barrel); what the vessel's
-weight does to a normal character (the harness has god mode and
-unlimited carry); a `WalkSpeed` other than 0.8, which changes the body's
-blend of `Bob_Sprint` and `Bob_Run`; turning or colliding while
-sprinting. A turn animation takes `[layer][1]` and moves the carry to
-`[layer][2]` (launch 108). The carry keeps the body's timing, since each
-layer passes its parent's sync track on (`AnimLayer.findSyncTrack`), but
-the turn poses the chest instead of `Bob_Sprint`, so the barrel may not
-hold steady while it plays.
+Not checked:
+- multiplayer;
+- the keys pressed on a keyboard (the harness sets the flags they set);
+- the low crouch near walls;
+- a running pose of its own (not made, so running still tilts the
+  barrel);
+- what the vessel's weight does to a normal character (the harness has
+  god mode and unlimited carry);
+- a `WalkSpeed` other than 0.8, which changes the body's blend of
+  `Bob_Sprint` and `Bob_Run`;
+- turning or colliding while sprinting. A turn animation takes
+  `[layer][1]` and moves the carry to `[layer][2]` (launch 108). The
+  carry keeps the body's timing, since each layer passes its parent's
+  sync track on (`AnimLayer.findSyncTrack`), but the turn poses the chest
+  instead of `Bob_Sprint`, so the barrel may not hold steady while it
+  plays.
 
 ## 2026-11-03 — RT-SP client harness, launches 118–119 (the zip with the sprint pose)
 
@@ -2619,7 +2739,7 @@ comments in `tlgcarryvessel.xml` and `tlgcarryvesselsneak.xml`. The
 changelog and the support matrix changed too. The zip matched its
 manifest, was installed into a fresh isolated cache and ran the full
 harness.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run118_install_rehearsal.txt`.
+Evidence: [2026-11-03_rt-sp_harness_run118_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run118_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as launch 114. The
 console's one exception came from the harness's own deep-recursion
@@ -2633,7 +2753,7 @@ as in the zip's manifest). Both sprinting legs played
 `tlgcarryvesselsprint` at all eight shots, crouched or not, and the
 other legs and the crouch played the nodes they played in launch 117.
 The console had no exception.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run119_vessel_gaits_packaged.txt`.
+Evidence: [2026-11-03_rt-sp_harness_run119_vessel_gaits_packaged.txt](evidence/2026-11-03_rt-sp_harness_run119_vessel_gaits_packaged.txt).
 
 ## 2026-11-03 — RT-SP client harness, launches 120–122 (the stills', drying column's and fuel filter's own models)
 
@@ -2642,12 +2762,13 @@ The user supplied four models for the mod in `<game>/createdAssets/`
 `fuelfilter`). They ship as the fermenter's did: each FBX byte for byte
 in `media/models_X/TLG`, each JPEG texture saved as PNG (the method gives
 the fermenter's shipped PNG byte for byte), and a model script each in
-`TLG_models.txt`. Their scales set true sizes from the machines'
-capacities: the pot still 0.7 (1.05 m wide, 0.68 m tall, a 0.44 m pot of
-55 L), the reflux still 0.9 (1.35 m tall, a 0.55 m boiler of 110 L), the
-drying column 0.55 (0.82 m, a 0.35 m receiver jar of 40 L) and the
-filter 0.1 (0.15 m). The items name them as their `WorldStaticModel`
-(`TLG_machines.txt`, `TLG_items.txt`).
+`TLG_models.txt`. The items name them as their `WorldStaticModel`
+(`TLG_machines.txt`, `TLG_items.txt`). Their scales set true sizes from
+the machines' capacities:
+- the pot still 0.7: 1.05 m wide, 0.68 m tall, a 0.44 m pot of 55 L;
+- the reflux still 0.9: 1.35 m tall, a 0.55 m boiler of 110 L;
+- the drying column 0.55: 0.82 m, a 0.35 m receiver jar of 40 L;
+- the filter 0.1: 0.15 m.
 
 Command: `tools/run-sp-harness.ps1 -Mode machine-models` (new; request
 `sp-rtmm`, no save). It checks each model script's mesh and texture and
@@ -2662,16 +2783,22 @@ fermenter, at 0 degrees, and photographs them.
 
 Each launch's console had no exception.
 
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run120_machine_models.txt`,
-`…_run121_machine_models.txt` and `…_run122_machine_models.txt`; the
-sheets `2026-11-03_run120_machine_models_sheet.jpg` (the row and the
-stills held at true size) and `2026-11-03_run122_machine_models_sheet.jpg`
+Evidence: [2026-11-03_rt-sp_harness_run120_machine_models.txt](evidence/2026-11-03_rt-sp_harness_run120_machine_models.txt),
+[…_run121_machine_models.txt](evidence/2026-11-03_rt-sp_harness_run121_machine_models.txt) and
+[…_run122_machine_models.txt](evidence/2026-11-03_rt-sp_harness_run122_machine_models.txt); the sheets
+[2026-11-03_run120_machine_models_sheet.jpg](evidence/2026-11-03_run120_machine_models_sheet.jpg)
+(the row and the stills held at true size) and
+[2026-11-03_run122_machine_models_sheet.jpg](evidence/2026-11-03_run122_machine_models_sheet.jpg)
 (runs 121–122).
 
-Not checked: the models turned other ways than 0 degrees (the fermenter's
-turns drew and reloaded in launches 68–69, the same code), the models
-seen after a save and reload (launch 123 reloaded two of them, unseen), multiplayer, and the items' icons (then still vanilla's
-pot and respirator filter; their own since launches 125–126).
+Not checked:
+- the models turned other ways than 0 degrees (the fermenter's turns drew
+  and reloaded in launches 68–69, the same code);
+- the models seen after a save and reload (launch 123 reloaded two of
+  them, unseen);
+- multiplayer;
+- the items' icons (then still vanilla's pot and respirator filter; their
+  own since launches 125–126).
 
 ## 2026-11-03 — RT-SP client harness, launches 123–124 (the zip with the supplied models)
 
@@ -2684,7 +2811,7 @@ FBX meshes and four PNG textures, each with the hash its provenance
 records), the model and item scripts, and the changelog and notice. The
 zip matched its manifest, was installed into a fresh isolated cache and
 ran the full harness.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run123_install_rehearsal.txt`.
+Evidence: [2026-11-03_rt-sp_harness_run123_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run123_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as launch 118. Phase
 B found a placed reflux still and drying column back after the save and
@@ -2698,16 +2825,16 @@ package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGal
 **10/0**, as launch 122. The deployed meshes and textures carried the
 shipped hashes, the four models drew beside the fermenter, and the pot
 still held through an action drew nothing. The console had no exception.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run124_machine_models_packaged.txt`.
+Evidence: [2026-11-03_rt-sp_harness_run124_machine_models_packaged.txt](evidence/2026-11-03_rt-sp_harness_run124_machine_models_packaged.txt).
 
 ## 2026-11-03 — RT-SP client harness, launches 125–126 (the four items' own icons)
 
 After the models, the user chose their icons next. `tools/make-model-icons.ps1`
 renders each from the shipped model and texture with
-`tools/blender/pz_icon.py`: orthographic, Eevee in Blender 4.5.15 LTS,
-lit from the upper left, shrunk from 256 to 32 pixels with hard edges,
-reduced to twelve colours and outlined in the fermenter icon's #1E150C.
-The views were chosen by eye at 32 pixels from trial renders (the
+`tools/blender/pz_icon.py`: orthographic, with Eevee in Blender 4.5.15 LTS,
+lit from the upper left. The render is shrunk from 256 to 32 pixels with
+hard edges, reduced to twelve colours and outlined in the fermenter icon's
+#1E150C. The views were chosen by eye at 32 pixels from trial renders (the
 reflux still from its left side, where its column stands clear of its
 arm). The items now say `Icon = TLG_PotStill`, `TLG_RefluxStill`,
 `TLG_DryingColumn` and `TLG_FuelFilter`. Two renders of one model gave the
@@ -2719,44 +2846,49 @@ each item in turn to photograph it with the interface shown.
 
 | Launch | Result | What it showed |
 | --- | --- | --- |
-| 125 | **14/0** | All four icons found. The reflux still's, the drying column's and the filter's showed in the equipped-item button. The pot still's equip was queued behind the 1200-tick do-nothing action before it, its step timed out after 900 ticks (reported, not counted as a failure), and the button was empty in its picture |
+| 125 | **14/0** | All four icons found. The reflux still's, the drying column's and the filter's showed in the equipped-item button. The pot still's equip was queued behind the 1200-tick do-nothing action before it; its step timed out after 900 ticks (reported, not counted as a failure), and the button was empty in its picture |
 | 126 | **15/0** | The equips moved before that action: all four icons in the button, the stills now told apart at a glance |
 
 Each console had no exception.
 
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run125_machine_icons.txt`,
-`…_run126_machine_icons.txt`, the button crops
-`2026-11-03_run126_machine_icons_buttons.jpg` and the icons enlarged beside
-the fermenter's, `2026-11-03_machine_icons_8x.png`.
+Evidence:
+[2026-11-03_rt-sp_harness_run125_machine_icons.txt](evidence/2026-11-03_rt-sp_harness_run125_machine_icons.txt),
+[2026-11-03_rt-sp_harness_run126_machine_icons.txt](evidence/2026-11-03_rt-sp_harness_run126_machine_icons.txt),
+the button crops
+[2026-11-03_run126_machine_icons_buttons.jpg](evidence/2026-11-03_run126_machine_icons_buttons.jpg)
+and the icons enlarged beside the fermenter's,
+[2026-11-03_machine_icons_8x.png](evidence/2026-11-03_machine_icons_8x.png).
 
 Not checked: the icons in the inventory list (the list stayed collapsed
 in launch 68's shots, so the button stands in for it), multiplayer.
 
 ## 2026-11-03 — RT-SP client harness, launches 127–128 (the zip with the icons)
 
-Launch 127. Command: `tools/rehearse-install.ps1`, which rebuilt the
-package first (197/197 tests, compile check 105/0, translations OK, every
-shipped XML file parsing): the zip of commit `f69a74a`, 108 files,
-SHA-256 `f9c52565…`, 3,738,890 bytes. It differs from launch 123's zip
+Launch 127. Command: `tools/rehearse-install.ps1`. It rebuilt the package
+first (197/197 tests, compile check 105/0, translations OK, every shipped
+XML file parsing): the zip of commit `f69a74a`, 108 files, SHA-256
+`f9c52565…`, 3,738,890 bytes. It differs from launch 123's zip
 (`0a0a6a1e…`, 104 files) in the four icons (`Item_TLG_PotStill.png`,
 `Item_TLG_RefluxStill.png`, `Item_TLG_DryingColumn.png`,
 `Item_TLG_FuelFilter.png`, each with the hash its provenance records), the
 item scripts' `Icon` lines and comments, and the changelog and notice.
 The zip matched its manifest, was installed into a fresh isolated cache
 and ran the full harness.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run127_install_rehearsal.txt`.
+Evidence:
+[2026-11-03_rt-sp_harness_run127_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run127_install_rehearsal.txt).
 
-Result: phase A **94/0**, phase B **14/0**, the same as launch 123,
-phase B again finding the placed reflux still and drying column. The
-console's one exception came from the harness's own deep-recursion
-probe, and no line named the models or the icons.
+Result: phase A **94/0**, phase B **14/0**, the same as launch 123; phase
+B again found the placed reflux still and drying column. The console's one
+exception came from the harness's own deep-recursion probe, and no line
+named the models or the icons.
 
 Launch 128, `-Mode machine-models` with the mod deployed from the
 package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`):
 **15/0**, as launch 126. The deployed icons and models carried the
 shipped hashes, and each icon showed in the equipped-item button. The
 console had no exception.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run128_machine_icons_packaged.txt`.
+Evidence:
+[2026-11-03_rt-sp_harness_run128_machine_icons_packaged.txt](evidence/2026-11-03_rt-sp_harness_run128_machine_icons_packaged.txt).
 
 ## 2026-11-03 — RT-SP client harness, launch 129 (icons for the four items with no model)
 
@@ -2764,41 +2896,46 @@ The user asked, in the asset-requirements session, for icons for the
 sampling kit, the yeast starter, the fuel stabilizer and the field
 manual (D-028). None has a model, so `tools/blender/pz_icon_props.py`
 builds simple shapes for each and renders them through the same pipeline
-as the model icons: three small jars of fuel and a red rubber hose; a jar
-of cream culture under a tied cloth; a corked bottle of tar with a label;
-an olive field manual. The first try made the starter a squat tub, too
-like the filter, and the stabilizer a tin can; the second, a taller jar
-under a cloth dome and a bottle, read apart at 32 pixels. Two renders
-gave the same files, and the four model icons rebuilt byte for byte after
-the renderer was split to serve both.
+as the model icons: for the kit, three small jars of fuel and a red rubber
+hose; for the starter, a jar of cream culture under a tied cloth; for the
+stabilizer, a corked bottle of tar with a label; for the manual, an olive
+field manual. The first try made the starter a squat tub, too like the
+filter, and the stabilizer a tin can. The second made them a taller jar
+under a cloth dome and a bottle, which read apart at 32 pixels. Two
+renders gave the same files, and the four model icons rebuilt byte for
+byte after the renderer was split to serve both.
 
 The machine-models mode now checks all eight rendered icons and equips
 the four new items too.
 
 Launch 129: **19/0**. Every one of the eight items loaded its own
-`Item_TLG_<Name>.png`, and each, equipped, showed it in the equipped-item
+`Item_TLG_<Name>.png` and, when equipped, showed it in the equipped-item
 button. The console had no exception.
 
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run129_item_icons.txt`,
-the button crops `2026-11-03_run129_item_icons_buttons.jpg` and all nine
-icons enlarged, `2026-11-03_item_icons_8x.png`.
+Evidence:
+[2026-11-03_rt-sp_harness_run129_item_icons.txt](evidence/2026-11-03_rt-sp_harness_run129_item_icons.txt),
+the button crops
+[2026-11-03_run129_item_icons_buttons.jpg](evidence/2026-11-03_run129_item_icons_buttons.jpg)
+and all nine icons enlarged,
+[2026-11-03_item_icons_8x.png](evidence/2026-11-03_item_icons_8x.png).
 
 Not checked: the icons in the inventory list (the button stands in for
 it), multiplayer.
 
 ## 2026-11-03 — RT-SP client harness, launches 130–131 (the zip with every icon)
 
-Launch 130. Command: `tools/rehearse-install.ps1`, which rebuilt the
-package first (197/197 tests, compile check 105/0, translations OK, every
-shipped XML file parsing): the zip of commit `21feecf`, 112 files,
-SHA-256 `b01db3e7…`, 3,743,610 bytes. It differs from launch 127's zip
+Launch 130. Command: `tools/rehearse-install.ps1`. It rebuilt the package
+first (197/197 tests, compile check 105/0, translations OK, every shipped
+XML file parsing): the zip of commit `21feecf`, 112 files, SHA-256
+`b01db3e7…`, 3,743,610 bytes. It differs from launch 127's zip
 (`f9c52565…`, 108 files) in the four new icons
 (`Item_TLG_FuelSampleKit.png`, `Item_TLG_YeastStarter.png`,
 `Item_TLG_FuelStabilizer.png`, `Item_TLG_ManualFuelSystems.png`), the item
 script's `Icon` lines, and the changelog and notice. The zip matched its
 manifest, was installed into a fresh isolated cache and ran the full
 harness.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run130_install_rehearsal.txt`.
+Evidence:
+[2026-11-03_rt-sp_harness_run130_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run130_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as launch 127. The
 console's one exception came from the harness's own deep-recursion
@@ -2809,7 +2946,8 @@ package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGal
 **19/0**, as launch 129. The nine deployed icons carried the shipped
 hashes, all eight rendered ones loaded, and each item equipped showed its
 icon. The console had no exception.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run131_item_icons_packaged.txt`.
+Evidence:
+[2026-11-03_rt-sp_harness_run131_item_icons_packaged.txt](evidence/2026-11-03_rt-sp_harness_run131_item_icons_packaged.txt).
 
 ## 2026-11-03 — RT-SP client harness, launches 132–133 (floor models for the four small items)
 
@@ -2818,19 +2956,19 @@ the sampling kit, the yeast starter, the fuel stabilizer and the field
 manual ("Add floor models"; D-029). They are made from the shapes their
 icons are rendered from. `tools/make-prop-models.ps1` runs
 `tools/blender/pz_prop_models.py`, which builds each shape as it lies on
-the floor (`pz_icon_props.py`'s new `floor` switch: the kit's hose coiled
-flat, clear of its jars; the manual on its back) with half the icons'
-sides. It joins each into one mesh with a palette texture of flat
-colours and exports it as the supplied models are. Dumped, each file
-matched the supplied filter's: Y up, `UnitScaleFactor` 100, the node
-turned −90° about X, no node scaling, triangles, one material, 1.0 along
-its largest side. Re-imported in Blender, all four stood upright in
-their colours. Two builds first differed in the exporter's object ids,
-which come from Python's string hash (Blender seeds it anew each run),
-and in the order of the starter's triangles. The build now fixes both,
-and three rebuilds differed only in the time in each file's header. The
-eight icons rendered again byte for byte after the shape builder gained
-the switch.
+the floor, with half the icons' sides. The lying shapes come from
+`pz_icon_props.py`'s new `floor` switch: the kit's hose coiled flat, clear
+of its jars; the manual on its back. The script joins each into one mesh
+with a palette texture of flat colours and exports it as the supplied
+models are. Dumped, each file matched the supplied filter's: Y up,
+`UnitScaleFactor` 100, the node turned −90° about X, no node scaling,
+triangles, one material, 1.0 along its largest side. Re-imported in
+Blender, all four stood upright in their colours. Two builds first
+differed in the exporter's object ids, which come from Python's string
+hash (Blender seeds it anew each run), and in the order of the starter's
+triangles. The build now fixes both, and three rebuilds differed only in
+the time in each file's header. The eight icons rendered again byte for
+byte after the shape builder gained the switch.
 
 The machine-models mode now puts the four left of the fermenter, two on
 each side of the character, and checks their model scripts and wiring
@@ -2849,10 +2987,10 @@ row below the feet of a character standing on its row.
 Launch 133, with the fog intensity's override set to 0 as vanilla's
 tutorial does (`Tutorial1.lua`) and the close-ups taken from a square
 nearer the camera: **19/0**. The fog read 0 before the override as well
-as after, so the clear sky may be the weather's. In clear light all four show
-their colours: the kit's three jars of fuel with dark lids and the red
-hose coiled in front, the starter's jar under its cloth and string, the
-stabilizer's corked bottle with its label and red band, the manual on
+as after, so the clear sky may be the weather's. In clear light all four
+showed their colours: the kit's three jars of fuel with dark lids and the
+red hose coiled in front, the starter's jar under its cloth and string,
+the stabilizer's corked bottle with its label and red band, the manual on
 its back with its badge and title band. Widths were measured against the
 character, taken as 1.75 m from hair to soles, with the camera 30° above
 the ground. At zoom 0.5 the starter, the stabilizer and the manual came
@@ -2861,26 +2999,29 @@ column's jar 14 % wider, in frames from the same run. The close-ups at
 0.25 gave 12–15 %. So the new models take the supplied models' scale.
 The console had no exception and no line about the models.
 
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run132_floor_models.txt`,
-`…_run133_floor_models.txt`, and the sheet
-`2026-11-03_run133_floor_models_sheet.jpg`.
+Evidence:
+[2026-11-03_rt-sp_harness_run132_floor_models.txt](evidence/2026-11-03_rt-sp_harness_run132_floor_models.txt),
+[2026-11-03_rt-sp_harness_run133_floor_models.txt](evidence/2026-11-03_rt-sp_harness_run133_floor_models.txt),
+and the sheet
+[2026-11-03_run133_floor_models_sheet.jpg](evidence/2026-11-03_run133_floor_models_sheet.jpg).
 
 Not checked: an item dropped by a player (turned at random), the models
 after a reload, multiplayer.
 
 ## 2026-11-03 — RT-SP client harness, launches 134–135 (the zip with the floor models)
 
-Launch 134. Command: `tools/rehearse-install.ps1`, which rebuilt the
-package first (197/197 tests, compile check 105/0, translations OK, every
-shipped XML file parsing): the zip of commit `8950b57`, 120 files,
-SHA-256 `e249719d…`, 3,813,797 bytes. It differs from launch 130's zip
-(`b01db3e7…`, 112 files) in the four floor models, eight new files (each
-an FBX in `media/models_X/TLG` and its texture in `media/textures/TLG`),
-the model script's four entries and the item script's
-`WorldStaticModel` lines; the sprint pose's comment, the changelog and
-the notice changed too. The zip matched its manifest, was installed into
-a fresh isolated cache and ran the full harness.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run134_install_rehearsal.txt`.
+Launch 134. Command: `tools/rehearse-install.ps1`. It rebuilt the package
+first (197/197 tests, compile check 105/0, translations OK, every shipped
+XML file parsing): the zip of commit `8950b57`, 120 files, SHA-256
+`e249719d…`, 3,813,797 bytes. It differs from launch 130's zip
+(`b01db3e7…`, 112 files) in the four floor models (eight new files: for
+each, an FBX in `media/models_X/TLG` and its texture in
+`media/textures/TLG`), the model script's four entries and the item
+script's `WorldStaticModel` lines. The sprint pose's comment, the
+changelog and the notice changed too. The zip matched its manifest, was
+installed into a fresh isolated cache and ran the full harness.
+Evidence:
+[2026-11-03_rt-sp_harness_run134_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run134_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as launch 130. The
 console's one exception came from the harness's own deep-recursion
@@ -2892,7 +3033,8 @@ package's item tree (`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGal
 the hashes built into the mod, and all four drew on the floor in their
 colours, as in launch 133. The fog read 0 again before the override. The
 console had no exception.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run135_floor_models_packaged.txt`.
+Evidence:
+[2026-11-03_rt-sp_harness_run135_floor_models_packaged.txt](evidence/2026-11-03_rt-sp_harness_run135_floor_models_packaged.txt).
 
 ## 2026-11-03 — RT-MP harness, launches 136–138 (a server and one client, unattended)
 
@@ -2930,11 +3072,13 @@ Launch 138: **2/0**.
 - Client A joined, made its character (unemployed) and spawned at
   10660,10645, as tlga with the admin role and no zombies in its cell.
 - A harness message came back through the server's relay after 4 ticks.
-- Its picture shows the character with its name tag, in the morning fog.
+- Client A's picture shows the character with its name tag, in the
+  morning fog.
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run138_client_a.txt`,
-`…_run138_server.txt`. The server's raw log is not kept: `adduser` echoes
-the passwords.
+Evidence:
+[2026-11-03_rt-mp_harness_run138_client_a.txt](evidence/2026-11-03_rt-mp_harness_run138_client_a.txt),
+[2026-11-03_rt-mp_harness_run138_server.txt](evidence/2026-11-03_rt-mp_harness_run138_server.txt).
+The server's raw log is not kept: `adduser` echoes the passwords.
 
 ## 2026-11-03 — RT-MP harness, launches 139–145 (two clients)
 
@@ -2957,14 +3101,14 @@ What was checked, in launch 145 (A **18/2** over its two sessions, B
 - **The manual** in the server's loot: 9 manuals in 400 containers filled
   on the server from four of its loot lists (12 in launches 139–140). The
   rolled manual reached A with its print media data, its menu offered
-  Inspect, and reading it was recorded on the server. A's own client did
-  not show it read, at once or 5 s later. Vanilla's Nolan's flier, given
-  and read the same way, behaved exactly so: recorded on the server, not
-  on the client.
+  **Inspect**, and reading it was recorded on the server. A's own client
+  did not show it read, at once or 5 s later. Vanilla's Nolan's flier,
+  given and read the same way, behaved exactly so: recorded on the server,
+  not on the client.
 - **The small items' floor models**, dropped by A through the inventory's
-  Drop after walking to each square. A's and B's clients each list the
-  same items on the same squares around the spawn point as the server
-  does, all five there. A then left to the main menu and joined again; A's
+  **Drop** after walking to each square. A's and B's clients each listed
+  the same items on the same squares around the spawn point as the server
+  did, all five there. A then left to the main menu and joined again; A's
   and B's lists still matched the server's. In the pictures each model
   lies in its colours on both screens.
 - **The carry pose on another player's screen.** With the vessel in A's
@@ -2973,18 +3117,18 @@ What was checked, in launch 145 (A **18/2** over its two sessions, B
   gait. B's own screenshots show A carrying it standing, walking, running,
   sprinting, sneaking and crouched; sneaking, A is drawn faded on B's
   screen.
-- **Taking a heavy item off the floor** as a double-click in the loot
-  window does (`ISInventoryPaneContextMenu.equipHeavyItem` on the item the
-  floor listing holds) failed for the vessel and for vanilla's meteorite
-  alike. Both stayed on their squares. On the server
-  `ISEquipHeavyItem.complete` stopped at its line 63 (`DoRemoveItem` of a
-  nil container: a world item has none there). Launch 144 ran the
-  meteorite alone on a server and client without The Last Gallon (the
-  harness's own requirement on it stripped): it failed the same way. So
-  this is the game's own multiplayer bug, and it keeps players from taking
-  the vessel into their arms from the floor. To watch the pose anyway, the
-  server handed A a vessel the way that `complete` does on the server
-  (`AddItem`, both hands, `sendEquip`).
+- **Taking a heavy item off the floor** failed for the vessel and for
+  vanilla's meteorite alike: both stayed on their squares. The take was
+  made as a double-click in the loot window does
+  (`ISInventoryPaneContextMenu.equipHeavyItem` on the item the floor
+  listing holds). On the server `ISEquipHeavyItem.complete` stopped at its
+  line 63 (`DoRemoveItem` of a nil container: a world item has none
+  there). Launch 144 ran the meteorite alone on a server and client
+  without The Last Gallon (the harness's own requirement on it stripped):
+  it failed the same way. So this is the game's own multiplayer bug, and
+  it keeps players from taking the vessel into their arms from the floor.
+  To watch the pose anyway, the server handed A a vessel the way that
+  `complete` does on the server (`AddItem`, both hands, `sendEquip`).
 
 How the harness got there:
 - Launch 139: the drops landed a square or two off. The harness had
@@ -2999,23 +3143,29 @@ How the harness got there:
   Toggle to Run, as the single-player legs do, and reads `running=true` on
   both screens.
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run145_client_a.txt`,
-`…_run145_client_b.txt`, `…_run145_server.txt`, `…_run144_nomod_client_a.txt`
-and `…_run144_nomod_server.txt`. The sheets are
-`2026-11-03_run145_mp_carry_on_other_screen_sheet.jpg` and
-`2026-11-03_run145_mp_floor_sheet.jpg`. Client A's file ends with
-`SUMMARY pass=2 fail=0`: the report starts its counts again after the
-rejoin, so that line covers the second session only. Its lines give 18
-passed and 2 failed in all. Since then the harness counts the earlier
-sessions' lines into the summary.
+Evidence:
+[2026-11-03_rt-mp_harness_run145_client_a.txt](evidence/2026-11-03_rt-mp_harness_run145_client_a.txt),
+[2026-11-03_rt-mp_harness_run145_client_b.txt](evidence/2026-11-03_rt-mp_harness_run145_client_b.txt),
+[2026-11-03_rt-mp_harness_run145_server.txt](evidence/2026-11-03_rt-mp_harness_run145_server.txt),
+[2026-11-03_rt-mp_harness_run144_nomod_client_a.txt](evidence/2026-11-03_rt-mp_harness_run144_nomod_client_a.txt)
+and
+[2026-11-03_rt-mp_harness_run144_nomod_server.txt](evidence/2026-11-03_rt-mp_harness_run144_nomod_server.txt).
+The sheets are
+[2026-11-03_run145_mp_carry_on_other_screen_sheet.jpg](evidence/2026-11-03_run145_mp_carry_on_other_screen_sheet.jpg)
+and
+[2026-11-03_run145_mp_floor_sheet.jpg](evidence/2026-11-03_run145_mp_floor_sheet.jpg).
+Client A's file ends with `SUMMARY pass=2 fail=0`: the report starts its
+counts again after the rejoin, so that line covers the second session
+only. Its lines give 18 passed and 2 failed in all. Since then the harness
+counts the earlier sessions' lines into the summary.
 
 The server's path, tried on a real server: started with its cache reached
-through a junction, it stopped on the pose-file checksum ("couldn't find
-…\servercache_link\…tlgcarryvessel.xml", "Server Terminated"), as the
-replay predicted. A symbolic link was not tried.
+through a junction, the server stopped on the pose-file checksum
+("couldn't find …\servercache_link\…tlgcarryvessel.xml", "Server
+Terminated"), as the replay predicted. A symbolic link was not tried.
 
 Not checked:
-- the world menu's Grab of the vessel;
+- the world menu's **Grab** of the vessel;
 - two players working one machine at once;
 - the TLG pour, refuelling, conversions, generators and vehicles in
   multiplayer;
@@ -3061,10 +3211,10 @@ B **11/0**). Both gave the same results:
   message and took the vessel at once; B queued its take on the tick the
   message reached it (tick 5 of its waiting step in launch 146, tick 4 in
   launch 147). On the server A's take came first (`true`). Then B's action
-  reached the server's `complete` and was refused (`false`). One vessel,
-  in A's arms, its batch carried; each client saw A holding it and B not.
-  Run on the server for B against the vessel A held, the take returned
-  false again and A kept it.
+  reached the server's `complete` and was refused (`false`). There was one
+  vessel, in A's arms, its batch carried; each client saw A holding it and
+  B not. Run on the server for B against the vessel A held, the take
+  returned false again and A kept it.
 - Everything launch 145 checked passed again in launch 147: the mod's
   requests, the ledger, the can's record, a machine's status for both
   players (now `Processing`), the manual in the server's loot and read,
@@ -3072,15 +3222,23 @@ B **11/0**). Both gave the same results:
 
 Launch 148 (`tools/run-sp-harness.ps1 -Mode pickup`, single player)
 checked that the change leaves single player as it was: **43/0**, the
-same checks as run 81. Among them, C was taken into both hands the
-double-click way and off its tile, its batch paused while carried, dropped
-at the feet and resumed there, then taken again and put down by taking a
-meteorite.
+same checks as run 81. Among them, fermenter C was taken into both hands
+the double-click way and off its tile, its batch paused while carried,
+dropped at the feet and resumed there, then taken again and put down by
+taking a meteorite.
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run146_client_a.txt`,
-`…_run146_client_b.txt` and `…_run146_server.txt`, the same three for run
-147, and `2026-11-03_rt-sp_harness_run148_pickup.txt`. The domain suite
-has the server's take as a case of its own in
+Evidence:
+[2026-11-03_rt-mp_harness_run146_client_a.txt](evidence/2026-11-03_rt-mp_harness_run146_client_a.txt),
+[2026-11-03_rt-mp_harness_run146_client_b.txt](evidence/2026-11-03_rt-mp_harness_run146_client_b.txt)
+and
+[2026-11-03_rt-mp_harness_run146_server.txt](evidence/2026-11-03_rt-mp_harness_run146_server.txt),
+[2026-11-03_rt-mp_harness_run147_client_a.txt](evidence/2026-11-03_rt-mp_harness_run147_client_a.txt),
+[2026-11-03_rt-mp_harness_run147_client_b.txt](evidence/2026-11-03_rt-mp_harness_run147_client_b.txt)
+and
+[2026-11-03_rt-mp_harness_run147_server.txt](evidence/2026-11-03_rt-mp_harness_run147_server.txt),
+and
+[2026-11-03_rt-sp_harness_run148_pickup.txt](evidence/2026-11-03_rt-sp_harness_run148_pickup.txt).
+The domain suite has the server's take as a case of its own in
 `tests/integration/test_machine_sites.lua` (198 cases, all passed). With
 the take disabled, the case fails as the game does.
 
@@ -3090,7 +3248,7 @@ Not checked:
 - the vessel taken from a container in multiplayer (the game's own
   `complete`, which the mod leaves alone; from the player's own inventory
   since checked, launch 151);
-- the world menu's Grab of the vessel in multiplayer;
+- the world menu's **Grab** of the vessel in multiplayer;
 - two players working one machine's batch at once; the TLG pour,
   refuelling, conversions, generators and vehicles in multiplayer; a
   server restart; players without admin rights; a real network.
@@ -3105,41 +3263,48 @@ XML file parsing): the zip of commit `9824306`, 120 files, SHA-256
 and in the shipped support matrix and changelog (multiplayer). The zip
 matched its manifest, was installed into a fresh isolated cache and ran
 the full harness.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run149_install_rehearsal.txt`.
+Evidence:
+[2026-11-03_rt-sp_harness_run149_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run149_install_rehearsal.txt).
 
 Result: phase A **94/0**, phase B **14/0**, the same as launch 134. The
 console's one exception came from the harness's own deep-recursion
 probe, and the mod logged no error or warning.
 
-Launch 150, `tools/run-mp-harness.ps1 -Clients 2 -Only carry` with the
-mod deployed from the package's item tree (`-ModSource
-…\dist\TheLastGallon\Contents\mods\TheLastGallon`; the server's copy held
-the package's own docs, and its `Machines.lua` matched the package's):
-A **10/0**, B **8/0**, as launch 146. The vessel came off the floor into
-A's arms with its batch carried. B saw it carried at every gait, and it
-ran again where it was put down. In the race B's action reached the
-server and was refused, as in launches 146 and 147.
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run150_packaged_client_a.txt`,
-`…_client_b.txt` and `…_server.txt`.
+Launch 150: `tools/run-mp-harness.ps1 -Clients 2 -Only carry` with the
+mod deployed from the package's item tree
+(`-ModSource …\dist\TheLastGallon\Contents\mods\TheLastGallon`). The
+server's copy held the package's own docs, and its `Machines.lua` matched
+the package's. Result: A **10/0**, B **8/0**, as launch 146. The vessel
+came off the floor into A's arms with its batch carried. B saw it carried
+at every gait, and it ran again where it was put down. In the race B's
+action reached the server and was refused, as in launches 146 and 147.
+Evidence:
+[2026-11-03_rt-mp_harness_run150_packaged_client_a.txt](evidence/2026-11-03_rt-mp_harness_run150_packaged_client_a.txt),
+[2026-11-03_rt-mp_harness_run150_packaged_client_b.txt](evidence/2026-11-03_rt-mp_harness_run150_packaged_client_b.txt)
+and
+[2026-11-03_rt-mp_harness_run150_packaged_server.txt](evidence/2026-11-03_rt-mp_harness_run150_packaged_server.txt).
 
 ## 2026-11-03 — RT-MP launch 151 (a vessel equipped from the inventory on a server)
 
-The one path the server's take changed that had worked before on a
-server: a vessel in the player's own inventory equipped into both hands,
+Only one of the paths the server's take changed had worked on a server
+before: a vessel in the player's own inventory equipped into both hands,
 as a double-click in the inventory does. Before D-030 the game's
 `complete` ran for it; now the mod's take must recognise the player as
 the holder and leave the item to that `complete`. After the race, the
 server gave A a second vessel and A equipped it from the inventory
-(`equipHeavyItem` on the inventory item). Command: `tools/run-mp-harness.ps1
--Clients 2 -Only carry`.
+(`equipHeavyItem` on the inventory item). Command:
+`tools/run-mp-harness.ps1 -Clients 2 -Only carry`.
 
 Result: A **12/0**, B **8/0**. The vessel came into A's hands, and the
 server held it in A's inventory and both hands. The server's log shows
 the mod's take returning nothing for it (`tlga:nil`), so the game's own
 `complete` did the equip. Everything launch 146 checked passed again,
 the race included (B's take refused on the server).
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run151_client_a.txt`,
-`…_client_b.txt` and `…_server.txt`.
+Evidence:
+[2026-11-03_rt-mp_harness_run151_client_a.txt](evidence/2026-11-03_rt-mp_harness_run151_client_a.txt),
+[2026-11-03_rt-mp_harness_run151_client_b.txt](evidence/2026-11-03_rt-mp_harness_run151_client_b.txt)
+and
+[2026-11-03_rt-mp_harness_run151_server.txt](evidence/2026-11-03_rt-mp_harness_run151_server.txt).
 
 Not checked: a vessel taken from a crate or another container in
 multiplayer (also left to the game's `complete`).
@@ -3152,12 +3317,12 @@ machine, unattended. A real network needs a second machine, and the user
 chose to leave it NOT RUN ("Leave it not run").
 
 **Plain players.** `-NonAdmin` makes both test accounts plain players.
-Launches 152 and 153 left them admins and are not counted. Accounts keep
-their access level between runs in the server's database. Launch 152
-only skipped the `setaccesslevel` command. Launch 153 sent the level
-"none", and the server refused it ("Access Level '' unknown"). From launch
-154 the launcher sets the role by name, `user`. Both clients now walk to
-where they stand rather than being teleported.
+Launches 152 and 153 left them admins and are not counted. Launch 152
+only skipped the `setaccesslevel` command, but accounts keep their access
+level between runs in the server's database. Launch 153 sent the level
+"none", and the server refused it ("Access Level '' unknown"). From
+launch 154 the launcher sets the role by name, `user`. Both clients now
+walk to where they stand rather than being teleported.
 
 Launch 154 was the full run with both players `role=user` (the server
 logged "User tlga is now user"): A **28/0**, B **11/0**. Everything
@@ -3166,12 +3331,12 @@ server logged no kick and no anti-cheat line. The launcher's scan for
 those had matched two packet names in the server's start-up list
 (`ViewBannedIPs`, `ViewBannedSteamIDs`); it now matches whole words.
 
-**The world menu's Grab and two players on one fermenter** (`-Only
-machines`, launch 155: A **13/0**, B **2/0**):
+**The world menu's Grab and two players on one fermenter**
+(`-Only machines`, launch 155: A **13/0**, B **2/0**):
 - **Grab.** A running vessel the server put down was taken with the world
-  menu's Grab (`ISWorldObjectContextMenu.onGrabWItem`). On a client that
-  queues an inventory transfer (`ISInventoryTransferAction`), which the
-  server carries out as an item transaction. None of the mod's Lua saw
+  menu's **Grab** (`ISWorldObjectContextMenu.onGrabWItem`). On a client,
+  that queues an inventory transfer (`ISInventoryTransferAction`), which
+  the server carries out as an item transaction. None of the mod's Lua saw
   it, and the mod's server-side take was not called. Right after the
   grab, the server's record still said `Processing` at the old tile. The
   first status asked while it was carried paused it (`Paused`,
@@ -3191,9 +3356,15 @@ machines`, launch 155: A **13/0**, B **2/0**):
   A's sugar, yeast and water gone. B's was refused (`machine_busy`), and
   B kept all of its own.
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run154_nonadmin_client_a.txt`,
-`…_client_b.txt`, `…_server.txt`, and the same three for
-`run155_machines`.
+Evidence:
+[2026-11-03_rt-mp_harness_run154_nonadmin_client_a.txt](evidence/2026-11-03_rt-mp_harness_run154_nonadmin_client_a.txt),
+[2026-11-03_rt-mp_harness_run154_nonadmin_client_b.txt](evidence/2026-11-03_rt-mp_harness_run154_nonadmin_client_b.txt),
+[2026-11-03_rt-mp_harness_run154_nonadmin_server.txt](evidence/2026-11-03_rt-mp_harness_run154_nonadmin_server.txt),
+and the same three for launch 155,
+[2026-11-03_rt-mp_harness_run155_machines_client_a.txt](evidence/2026-11-03_rt-mp_harness_run155_machines_client_a.txt),
+[2026-11-03_rt-mp_harness_run155_machines_client_b.txt](evidence/2026-11-03_rt-mp_harness_run155_machines_client_b.txt)
+and
+[2026-11-03_rt-mp_harness_run155_machines_server.txt](evidence/2026-11-03_rt-mp_harness_run155_machines_server.txt).
 
 ## 2026-11-03 — RT-MP launches 156–160 (pours, refuelling, a generator and a car; two multiplayer bugs fixed)
 
@@ -3266,10 +3437,21 @@ Launch 160 (A **19/0**):
 - The car unlocked with its key, started on the first try and idled
   0.025 L, its record following.
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run156_fuel_client_a.txt`
-and `…_server.txt` for each of launches 156–160, and
-`2026-11-03_rt-mp_run156_server_constructor_errors.txt` (the server's
-lines above).
+Evidence, client A's file and the server's for each of launches 156–160:
+[2026-11-03_rt-mp_harness_run156_fuel_client_a.txt](evidence/2026-11-03_rt-mp_harness_run156_fuel_client_a.txt),
+[2026-11-03_rt-mp_harness_run156_fuel_server.txt](evidence/2026-11-03_rt-mp_harness_run156_fuel_server.txt),
+[2026-11-03_rt-mp_harness_run157_fuel_client_a.txt](evidence/2026-11-03_rt-mp_harness_run157_fuel_client_a.txt),
+[2026-11-03_rt-mp_harness_run157_fuel_server.txt](evidence/2026-11-03_rt-mp_harness_run157_fuel_server.txt),
+[2026-11-03_rt-mp_harness_run158_fuel_client_a.txt](evidence/2026-11-03_rt-mp_harness_run158_fuel_client_a.txt),
+[2026-11-03_rt-mp_harness_run158_fuel_server.txt](evidence/2026-11-03_rt-mp_harness_run158_fuel_server.txt),
+[2026-11-03_rt-mp_harness_run159_fuel_client_a.txt](evidence/2026-11-03_rt-mp_harness_run159_fuel_client_a.txt),
+[2026-11-03_rt-mp_harness_run159_fuel_server.txt](evidence/2026-11-03_rt-mp_harness_run159_fuel_server.txt),
+[2026-11-03_rt-mp_harness_run160_fuel_client_a.txt](evidence/2026-11-03_rt-mp_harness_run160_fuel_client_a.txt)
+and
+[2026-11-03_rt-mp_harness_run160_fuel_server.txt](evidence/2026-11-03_rt-mp_harness_run160_fuel_server.txt);
+and
+[2026-11-03_rt-mp_run156_server_constructor_errors.txt](evidence/2026-11-03_rt-mp_run156_server_constructor_errors.txt)
+(the server's lines above).
 
 ## 2026-11-03 — RT-MP launch 161 (a server restart)
 
@@ -3287,8 +3469,11 @@ unchanged. The vessel's came back with the same state, site, hourly-list
 entry, inputs and stage hours (`Processing`, 10658,10647, 6 kg and 30 L,
 0.5250 h).
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run161_restart_client_a.txt`,
-`…_client_b.txt` and `…_server.txt`.
+Evidence:
+[2026-11-03_rt-mp_harness_run161_restart_client_a.txt](evidence/2026-11-03_rt-mp_harness_run161_restart_client_a.txt),
+[2026-11-03_rt-mp_harness_run161_restart_client_b.txt](evidence/2026-11-03_rt-mp_harness_run161_restart_client_b.txt)
+and
+[2026-11-03_rt-mp_harness_run161_restart_server.txt](evidence/2026-11-03_rt-mp_harness_run161_restart_server.txt).
 
 ## 2026-11-03 — RT-MP launch 162 (a generator conversion)
 
@@ -3298,9 +3483,9 @@ down an empty generator by the spawn point and gave A the tools and parts
 the single-player loop hands over. It set A's skills and the Generator
 recipe on its own copy of the player, where the conversion's handlers
 read them, as the single-player loop sets them; A's client set the same.
-A then did what the workshop menu does: Start (`conversion.begin`), Hand
-over parts (`conversion.deliver`), and Work on it (`WorkshopMenu.work`,
-`ISTLGConversionWork`).
+A then did what the workshop menu does: **Start** (`conversion.begin`),
+**Hand over parts** (`conversion.deliver`), and **Work on it**
+(`WorkshopMenu.work`, `ISTLGConversionWork`).
 
 Result: A **7/0**.
 - The conversion began (`InProgress`, inspect), and handing over the
@@ -3315,8 +3500,10 @@ Result: A **7/0**.
   the result reached the player's client. The generator then started on
   it.
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run162_conversion_client_a.txt`
-and `…_server.txt`.
+Evidence:
+[2026-11-03_rt-mp_harness_run162_conversion_client_a.txt](evidence/2026-11-03_rt-mp_harness_run162_conversion_client_a.txt)
+and
+[2026-11-03_rt-mp_harness_run162_conversion_server.txt](evidence/2026-11-03_rt-mp_harness_run162_conversion_server.txt).
 
 Still not checked in multiplayer: a real network (the user chose to leave
 it NOT RUN, with no second machine), siphoning (it had the same fault and
@@ -3340,14 +3527,17 @@ A's fuel chain went through the changed hooks in single player: pump to
 can, can to car, the siphon back into a can, can to generator, pump to
 car, the blend, and the mod's pours with their replies. The console's one
 exception came from the harness's own deep-recursion probe.
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run163_install_rehearsal.txt`.
+Evidence:
+[2026-11-03_rt-sp_harness_run163_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run163_install_rehearsal.txt).
 
 Launch 164, `tools/run-mp-harness.ps1 -Clients 1 -Only fuel` with the mod
 deployed from the package's item tree. The server's copy held the
 package's own docs, and its `Stations.lua` matched the package's. Result:
 A **19/0**, as launch 160.
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run164_fuel_packaged_client_a.txt`
-and `…_server.txt`.
+Evidence:
+[2026-11-03_rt-mp_harness_run164_fuel_packaged_client_a.txt](evidence/2026-11-03_rt-mp_harness_run164_fuel_packaged_client_a.txt)
+and
+[2026-11-03_rt-mp_harness_run164_fuel_packaged_server.txt](evidence/2026-11-03_rt-mp_harness_run164_fuel_packaged_server.txt).
 
 ## 2026-11-03 — RT-MP launches 165–171 (siphoning, a vessel from a container, a car conversion, the stills and the drying column)
 
@@ -3379,27 +3569,27 @@ B **2/0**, everything launch 155 checked too).
 **A car conversion** (`-Only carconv`, launches 168–169, the shortest
 day). The server parked a `Base.CarNormal` with an empty tank and gave A
 its key, the tools and parts of `flex_car_normal`, and Mechanics 4 with
-Basic Mechanics. A did what the workshop menu does: Start, Hand over
-parts (2 rubber hoses, 2 engine parts, 6 screws and 2 electric wires
-used), Work on it. The work
-action paths to the engine and reported 53 times (13 hours of world time,
-about 8 real minutes) up to `Commissioned`. The car's profile on the
-server then read `engine_si_flex`. In launch 168 A poured ethanol from
-where the work had left it, at the engine, and the server refused it
-(`no_access_destination`; the mod takes a pour into a car only at the
-filler, and its menu offers it only there); the empty car then would not
-start. Launch 169 (A **7/0**) walked to the filler first: 3 L of ethanol
-went in without a confirmation, with the result shown to the player, and
-the car started on it at the first try.
+Basic Mechanics. A did what the workshop menu does: **Start**,
+**Hand over parts** (2 rubber hoses, 2 engine parts, 6 screws and 2
+electric wires used), **Work on it**. The work action paths to the engine
+and reported 53 times (13 hours of world time, about 8 real minutes) up
+to `Commissioned`. The car's profile on the server then read
+`engine_si_flex`. In launch 168 A poured ethanol from where the work had
+left it, at the engine. The server refused it (`no_access_destination`):
+the mod takes a pour into a car only at the filler, and its menu offers
+it only there. The empty car then would not start. Launch 169 (A **7/0**)
+walked to the filler first: 3 L of ethanol went in without a
+confirmation, with the result shown to the player, and the car started on
+it at the first try.
 
 **The stills and the drying column** (`-Only stills`, launches 170–171,
-the shortest day). A fermenter's 97 hours do not fit a run. So the server
-ran a batch (20 kg of sugar, 100 L of water) to its end through the
+the shortest day). A fermenter's 97 hours do not fit in a run, so the
+server ran a batch (20 kg of sugar, 100 L of water) to its end through the
 domain, as `tests/domain/test_production.lua` runs it (July, a day at a
-step: 11 L of ethanol in 100 L of water), and kept it done. It stood
-between the pot still, the reflux still and the drying column, each a
-square from A. Everything after went through the mod's machine requests,
-as their menu sends them:
+step: 11 L of ethanol in 100 L of water), and kept it done. The fermenter
+stood between the pot still, the reflux still and the drying column, each
+a square from A. Everything after went through the mod's machine
+requests, as their menu sends them:
 - two logs into each still's firebox (18 kg);
 - the wash into each: 60 L into the pot still, the 51 L left into the
   reflux still;
@@ -3418,11 +3608,23 @@ finished:
 - the dried ethanol: 4.67 L with 0.023 L of water, under 0.5 %, the cans'
   records holding each.
 
-Evidence: `docs/evidence/2026-11-03_rt-mp_harness_run165_fuel_siphon_client_a.txt`
-and `…_server.txt`, `…_run167_machines_container_client_a.txt`,
-`…_client_b.txt` and `…_server.txt`, `…_run169_carconv_client_a.txt` and
-`…_server.txt`, and `…_run170_stills_…` and `…_run171_stills_…` (client
-A and server each).
+Evidence:
+[2026-11-03_rt-mp_harness_run165_fuel_siphon_client_a.txt](evidence/2026-11-03_rt-mp_harness_run165_fuel_siphon_client_a.txt)
+and
+[2026-11-03_rt-mp_harness_run165_fuel_siphon_server.txt](evidence/2026-11-03_rt-mp_harness_run165_fuel_siphon_server.txt),
+[2026-11-03_rt-mp_harness_run167_machines_container_client_a.txt](evidence/2026-11-03_rt-mp_harness_run167_machines_container_client_a.txt),
+[2026-11-03_rt-mp_harness_run167_machines_container_client_b.txt](evidence/2026-11-03_rt-mp_harness_run167_machines_container_client_b.txt)
+and
+[2026-11-03_rt-mp_harness_run167_machines_container_server.txt](evidence/2026-11-03_rt-mp_harness_run167_machines_container_server.txt),
+[2026-11-03_rt-mp_harness_run169_carconv_client_a.txt](evidence/2026-11-03_rt-mp_harness_run169_carconv_client_a.txt)
+and
+[2026-11-03_rt-mp_harness_run169_carconv_server.txt](evidence/2026-11-03_rt-mp_harness_run169_carconv_server.txt),
+and client A's and the server's files for launches 170 and 171:
+[2026-11-03_rt-mp_harness_run170_stills_client_a.txt](evidence/2026-11-03_rt-mp_harness_run170_stills_client_a.txt),
+[2026-11-03_rt-mp_harness_run170_stills_server.txt](evidence/2026-11-03_rt-mp_harness_run170_stills_server.txt),
+[2026-11-03_rt-mp_harness_run171_stills_client_a.txt](evidence/2026-11-03_rt-mp_harness_run171_stills_client_a.txt)
+and
+[2026-11-03_rt-mp_harness_run171_stills_server.txt](evidence/2026-11-03_rt-mp_harness_run171_stills_server.txt).
 
 Still not run in multiplayer: a real network (the user's choice), a still
 or drying column picked up while working, and a crate as such.
@@ -3447,9 +3649,10 @@ Launch 173, the same zip again: phase A **94/0**, phase B **14/0**, the
 pump-to-car step included (39 L, its record carried). The console's one
 exception came from the harness's own deep-recursion probe.
 
-Evidence: `docs/evidence/2026-11-03_rt-sp_harness_run173_install_rehearsal.txt`,
+Evidence:
+[2026-11-03_rt-sp_harness_run173_install_rehearsal.txt](evidence/2026-11-03_rt-sp_harness_run173_install_rehearsal.txt),
 and launch 172's partial file,
-`2026-11-03_rt-sp_harness_run172_install_rehearsal_stalled.txt`.
+[2026-11-03_rt-sp_harness_run172_install_rehearsal_stalled.txt](evidence/2026-11-03_rt-sp_harness_run172_install_rehearsal_stalled.txt).
 
 ## 2026-11-04 — RT-SP launches 174–176 (driving)
 
@@ -3461,7 +3664,7 @@ on the main road below Muldraugh (the map's road zone at x 10585–10598
 from y 10800). The lane is chosen nearest the road's middle where it is
 street and clear from 4 tiles behind the car. The car drives itself on
 the game's cruise control at 25 km/h. Every tick the five tiles across
-the car are checked 22 tiles ahead, and it brakes on anything solid, a
+the car are checked 22 tiles ahead. The car brakes on anything solid, a
 tree, a vehicle, a zombie, a square that is not street or not loaded, or
 a drift of 2.5 tiles. Afterwards no impact (speed lost while not braking)
 and no damaged part may be found; brakes, tires, suspension and muffler
@@ -3470,8 +3673,8 @@ are left out, as vanilla wears them while driving.
 The burn is counted where vanilla writes it: `Vehicles.Update.GasTank`
 ends in `setContainerContentAmount(amount, false, true)`, about once a
 game minute. The engine caches that function, so the harness wraps the
-method in VehiclePart's method table instead (three arguments: vanilla's
-burn; one: anyone else).
+method in VehiclePart's method table instead. A call with three
+arguments is vanilla's burn; a call with one comes from anyone else.
 
 Two legs:
 1. **Drive:** E10 (9 L petrol, 1 L ethanol) poured from a can through
@@ -3485,19 +3688,18 @@ Launch 174 (**20/3**): both cars left their lane within ten tiles; the
 drift guard braked them at 25 km/h, and neither hit anything or lost
 condition. The debug spawn faces a car a few degrees off its direction
 (forward vectors 10 and −5 degrees off south). The burns that did happen
-matched vanilla's exactly and reconciled; the drive leg's
-`burn_by_vanilla_only` still failed, on its 0.02 L minimum (12 tiles burned
-0.0077 L, all vanilla's), and its `drove` check on the distance. Since
-then the harness turns the
-car onto the road's line (`setAngles`, measured with `getForwardVector`)
-and centres the lane.
+matched vanilla's exactly and reconciled. The drive leg still failed its
+`burn_by_vanilla_only` check, on its 0.02 L minimum (12 tiles burned
+0.0077 L, all vanilla's), and its `drove` check, on the distance. Since
+then the harness turns the car onto the road's line (`setAngles`,
+measured with `getForwardVector`) and centres the lane.
 
 Launch 175 (**22/3**): the drive leg passed everything (352 tiles,
-0.778017 L against launch 176's 0.778136 L, all of it vanilla's burn). The stall leg's engine
-stalled at 15.8 km/h 0.02 game minute after the effects were let go,
-before vanilla's first burn. So the three burn checks had nothing to measure;
-the stall and the coast to a stop passed. Since then the effects also wait
-for one burn.
+0.778017 L against launch 176's 0.778136 L, all of it vanilla's burn).
+The stall leg's engine stalled 0.02 game minute after the effects were
+let go, at 15.8 km/h, before vanilla's first burn. So the three burn
+checks had nothing to measure; the stall and the coast to a stop passed.
+Since then the effects also wait for one burn.
 
 Launch 176 (**26/0**):
 - **Drive:** 352.1 tiles in 14.09 game minutes, top 25.3 km/h. The tank
@@ -3507,11 +3709,11 @@ Launch 176 (**26/0**):
   8.2996 L petrol (worst deviation 5.6e-16). The engine ran throughout
   (`startFactor=1`). Vanilla's rate there: 0.055 L per game minute, 0.22 L
   per 100 tiles at 3500 rpm.
-- **Stall:** released at 25.1 km/h after one burn (0.007796 L,
-  reconciled). The engine stalled at 24.7 km/h 0.78 game minute later
-  (`Stalling`, reason `too_much_ethanol`). The tank stayed at 7.992204 L
-  from the stall to the end, and the car rolled from tile 28 to tile 44
-  and stopped in its lane.
+- **Stall:** the effects were released at 25.1 km/h after one burn
+  (0.007796 L, reconciled). The engine stalled 0.78 game minute later, at
+  24.7 km/h (`Stalling`, reason `too_much_ethanol`). The tank stayed at
+  7.992204 L from the stall to the end, and the car rolled from tile 28 to
+  tile 44 and stopped in its lane.
 - **No collision:** no impact in either leg; every part at 100 before and
   after (wearing parts included). The cars held within 0.04 tiles of their
   line.
@@ -3526,20 +3728,27 @@ Found, not fixed (code reading; neither is exercised by the harness):
 Not run: other chassis, a flex-converted car on the move, off-road
 driving, the heater on, towing, multiplayer driving.
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run174_driving.txt`,
-`…_run175_driving.txt` and `…_run176_driving.txt`.
+Evidence:
+[2026-11-04_rt-sp_harness_run174_driving.txt](evidence/2026-11-04_rt-sp_harness_run174_driving.txt),
+[2026-11-04_rt-sp_harness_run175_driving.txt](evidence/2026-11-04_rt-sp_harness_run175_driving.txt)
+and
+[2026-11-04_rt-sp_harness_run176_driving.txt](evidence/2026-11-04_rt-sp_harness_run176_driving.txt).
 
 ## 2026-11-04 — Domain suite and RT-SP launches 177–179 (engine effects, D-031)
 
 Domain: `tools/run-tests.ps1` 214/214 (14 new cases in
 `tests/domain/test_engine_effects.lua` and
-`tests/integration/test_engine_effects.lua`). They cover the power to run at
-and its floor, the power never lowered twice and given back, a repair
-becoming the base, wear carried as a fraction and normalised by the sandbox
-consumption, the stall option on a running car, and a generator charged
-once per litre since its record was written: a tank run dry, a rewritten
-record, unseen fuel, the item's rate, and no charge on a multiplayer
-client. Compile check 117/0, translations OK.
+`tests/integration/test_engine_effects.lua`). They cover:
+- the power to run at, and its floor;
+- the power never lowered twice, and given back;
+- a repair becoming the base;
+- wear carried as a fraction and normalised by the sandbox consumption;
+- the stall option on a running car;
+- a generator charged once per litre since its record was written: a tank
+  run dry, a rewritten record, unseen fuel, the item's rate, and no charge
+  on a multiplayer client.
+
+Compile check 117/0, translations OK.
 
 Command: `tools/run-sp-harness.ps1 -Mode engine-effects` (request `sp-rte`),
 on the driving mode's cleared road with its crash guards (launches
@@ -3588,8 +3797,11 @@ Not run: multiplayer (the power reaches clients through `transmitEngine`),
 flex-converted engines, other chassis and generator models, a fridge on the
 generator.
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run177_engine_effects.txt`,
-`…_run178_driving.txt` and `…_run179_engine_effects.txt`.
+Evidence:
+[2026-11-04_rt-sp_harness_run177_engine_effects.txt](evidence/2026-11-04_rt-sp_harness_run177_engine_effects.txt),
+[2026-11-04_rt-sp_harness_run178_driving.txt](evidence/2026-11-04_rt-sp_harness_run178_driving.txt)
+and
+[2026-11-04_rt-sp_harness_run179_engine_effects.txt](evidence/2026-11-04_rt-sp_harness_run179_engine_effects.txt).
 
 ## 2026-11-04 — RT-SP launch 180 (the zip of `b604f6b`)
 
@@ -3606,11 +3818,12 @@ Result: phase A **94/0**, phase B **14/0**: the same 108 checks as launch
 173, none added, missing or failed. Phase A ran through the changed
 adapters on good fuel: the car idled half a game hour under the mod's
 per-minute effects, and the can-to-generator step went through `ISAddFuel`,
-whose wrapper now starts with the wear charge. The effects on poor fuel are not part
-of the full harness; launch 179 tested them. The console's one exception
-came from the harness's own deep-recursion probe.
+whose wrapper now starts with the wear charge. The effects on poor fuel
+are not part of the full harness; launch 179 tested them. The console's
+one exception came from the harness's own deep-recursion probe.
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run180_install_rehearsal.txt`.
+Evidence:
+[2026-11-04_rt-sp_harness_run180_install_rehearsal.txt](evidence/2026-11-04_rt-sp_harness_run180_install_rehearsal.txt).
 
 ## 2026-11-04 — RT-SP launches 181–182 (performance, gate 11)
 
@@ -3636,7 +3849,8 @@ Launch 181 (**7/0**): every workload was built as intended (400 records,
 running and listed, 480 readings each). Frames held 60 a second at every
 stage. Their main-thread times read 0: `getCPUTime` and `getGPUTime`
 already return whole milliseconds (the game divides its nanosecond counters
-by 1,000,000, BC), and the harness divided again. Fixed before launch 182.
+by 1,000,000, BC), and the harness divided again. The harness was fixed
+before launch 182.
 
 Launch 182 (**23/0**: the 7 again and 16 budgets): every figure within a
 few percent of launch 181.
@@ -3666,8 +3880,10 @@ Found, not fixed (open findings in `performance.md`, no budgets yet):
 Not run: several clients sharing storage (multiplayer), other machines.
 Electrical networks are not built in game in this build.
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run181_performance.txt`
-and `…_run182_performance.txt`.
+Evidence:
+[2026-11-04_rt-sp_harness_run181_performance.txt](evidence/2026-11-04_rt-sp_harness_run181_performance.txt)
+and
+[2026-11-04_rt-sp_harness_run182_performance.txt](evidence/2026-11-04_rt-sp_harness_run182_performance.txt).
 
 ## 2026-11-04 — Domain suite and RT-SP launches 183–185 (the three findings fixed, D-032)
 
@@ -3697,8 +3913,8 @@ Launch 183, `-Mode performance` (**23/0**). Every workload as in launches
 - fresh fermenters, now that the copy is gone: 0.59 and 0.54 ms for 32
   (1.50 and 1.55).
 
-After it, the trim leaves notes one over the limit alone (a prune there
-removes nothing; the trim test covers the case), and the three findings
+After it, the trim leaves notes one over the limit alone: a prune there
+removes nothing, and the trim test covers the case. The three findings
 got budgets of about three times these medians.
 
 Launch 184, `-Mode fireplace` (**21/0**, the same 21 checks as launch 23).
@@ -3722,8 +3938,11 @@ Not run since D-032:
 - a save and reload of records written in place (the install rehearsal's
   save and continue covers it).
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run183_performance.txt`,
-`…_run184_fireplace.txt` and `…_run185_performance.txt`.
+Evidence:
+[2026-11-04_rt-sp_harness_run183_performance.txt](evidence/2026-11-04_rt-sp_harness_run183_performance.txt),
+[2026-11-04_rt-sp_harness_run184_fireplace.txt](evidence/2026-11-04_rt-sp_harness_run184_fireplace.txt)
+and
+[2026-11-04_rt-sp_harness_run185_performance.txt](evidence/2026-11-04_rt-sp_harness_run185_performance.txt).
 
 ## 2026-11-04 — RT-SP launches 186–187 (the zip of `b7dd527`)
 
@@ -3745,9 +3964,10 @@ wrote records in place (D-032). Saved, exited and continued, those
 records came back (`G08.machine_records_persist`). The console's one
 exception came from the harness's own deep-recursion probe.
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run187_install_rehearsal.txt`,
+Evidence:
+[2026-11-04_rt-sp_harness_run187_install_rehearsal.txt](evidence/2026-11-04_rt-sp_harness_run187_install_rehearsal.txt),
 and launch 186's partial file,
-`2026-11-04_rt-sp_harness_run186_install_rehearsal_interrupted.txt`.
+[2026-11-04_rt-sp_harness_run186_install_rehearsal_interrupted.txt](evidence/2026-11-04_rt-sp_harness_run186_install_rehearsal_interrupted.txt).
 
 ## 2026-11-04 — RT-MP launches 188–189 (engine effects and the machines' timers on a server)
 
@@ -3794,10 +4014,11 @@ the engine and emits the noise zombies hear from its own loudness
 Last, a generator by the car: 8 L poured in from a can, its record aged to
 3.0, switched on by the server (a fixture) for 6 game hours. It burned
 0.0348 L (single-player run 179's burned 0.012 L in 6 hours; the
-difference was not traced, `engine-capabilities.md`). A's 2 L refuel through the world menu made the server build
-`ISAddFuel`. Its `new` charged, at 100 times the rate (a fixture), 8
-points with 0.718012 carried: exactly the 8.718012 due. Charged again at
-once: nothing. A's client showed condition 92, as the server. The mod's
+difference was not traced, `engine-capabilities.md`). A's 2 L refuel
+through the world menu made the server build `ISAddFuel`. Its `new`
+charged 8 points at 100 times the rate (a fixture), with 0.718012
+carried: exactly the 8.718012 due. Charged again at once, it took
+nothing. A's client showed condition 92, as the server did. The mod's
 minute pass cost 0.015 ms a vehicle on the server (4290 calls over about
 22 vehicles in its cell).
 
@@ -3811,11 +4032,10 @@ same event, compared every record with what they read themselves:
 - 96 of 96 hourly readings equalled the air at their machine;
 - 576 of 576 ten-minute notes were as the air and the campfire give them.
   The four machines beside the fire were warmed in each pass logged (1–3,
-  6, 12 and 18; air 20.15 against 15.65 °C unwarmed at the first) and
-  noted the campfire: its
-  offset, its fuel by the server's campfire object (474 at the first
-  note, 10 less each pass). None of the 28 away was warmed, and they
-  noted none.
+  6, 12 and 18; air 20.15 against 15.65 °C unwarmed at the first). They
+  noted the campfire: its offset, and its fuel by the server's campfire
+  object (474 at the first note, 10 less each pass). None of the 28 away
+  was warmed, and they noted none.
 
 A then asked the status of a machine by the fire and one away, standing
 at each, as the menu does. Both were `Processing`. The catch-up the
@@ -3830,10 +4050,16 @@ machine's status catch-up 0.106 ms. The bench's writes stayed on the
 server, so these leave out sending the records to clients; the timed
 events include it.
 
-Evidence: `docs/evidence/2026-11-04_rt-mp_harness_run188_effects_client_a.txt`,
-`…_client_b.txt` and `…_server.txt`, and
-`…_run189_timers_client_a.txt` and `…_server.txt`. No server stdout was
-kept (it holds the accounts' passwords).
+Evidence:
+[2026-11-04_rt-mp_harness_run188_effects_client_a.txt](evidence/2026-11-04_rt-mp_harness_run188_effects_client_a.txt),
+[2026-11-04_rt-mp_harness_run188_effects_client_b.txt](evidence/2026-11-04_rt-mp_harness_run188_effects_client_b.txt)
+and
+[2026-11-04_rt-mp_harness_run188_effects_server.txt](evidence/2026-11-04_rt-mp_harness_run188_effects_server.txt),
+and
+[2026-11-04_rt-mp_harness_run189_timers_client_a.txt](evidence/2026-11-04_rt-mp_harness_run189_timers_client_a.txt)
+and
+[2026-11-04_rt-mp_harness_run189_timers_server.txt](evidence/2026-11-04_rt-mp_harness_run189_timers_server.txt).
+No server stdout was kept (it holds the accounts' passwords).
 
 Not run in multiplayer: driving on poor fuel, so the lowered power's
 effect on the car's speed there; flex-converted engines; other chassis;
@@ -3842,9 +4068,9 @@ choice).
 
 ## 2026-11-04 — RT-SP launch 190 (the 0.1.0 zip, with its release metadata)
 
-The user asked for the release metadata ("Yes, release metadata") and,
-asked, chose the licence and the version: CC BY-NC-SA 4.0, and 0.1.0 now
-(D-033). `tools/make-preview.ps1` made the preview (256×256, 80,474
+The user asked for the release metadata ("Yes, release metadata"). When
+asked, they chose the licence and the version: CC BY-NC-SA 4.0, and 0.1.0
+now (D-033). `tools/make-preview.ps1` made the preview (256×256, 80,474
 bytes), which is also the poster. `tools/package.ps1` then built
 `TheLastGallon-0.1.0.zip` from uncommitted changes on `6123c0e`. Before
 it: 218/218 tests, compile check 118/0, translations OK. The zip has 125
@@ -3883,7 +4109,8 @@ translations OK first. It is SHA-256
 files, byte for byte. Only the entries' time stamps differ, set from the
 commit. A second build gave the same bytes. This is the 0.1.0 package.
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run190_install_rehearsal.txt`.
+Evidence:
+[2026-11-04_rt-sp_harness_run190_install_rehearsal.txt](evidence/2026-11-04_rt-sp_harness_run190_install_rehearsal.txt).
 
 ## 2026-11-04 — RT-SP launches 191–195 (the crafting window; the recipes' names)
 
@@ -3893,33 +4120,34 @@ inventory menu (`OnNewCraft`) and only checks that the window's query
 lists the recipes. New mode `tools/run-sp-harness.ps1 -Mode crafting`
 (request `sp-rtcr`):
 
-* The window is opened with the crafting button beside the equipped items
-  (`ISEquippedItem` "CRAFTING", `forceClick`), standing at the workbench
-  phase A uses (`industry_01_23` at 10619,10630), with a torch when dark.
+* The character stands at the workbench phase A uses (`industry_01_23` at
+  10619,10630), with a torch when dark. The window is opened with the
+  crafting button beside the equipped items (`ISEquippedItem` "CRAFTING",
+  `forceClick`).
 * For each of the mod's seven recipes:
   * the name the window shows (`getTranslationName`);
   * that name typed in the search box (`onTextChange`);
   * with the search cleared, its row clicked (the row's `onmousedown`);
-  * made with the Craft button, or for the drying column with a
+  * made with the **Craft** button, or for the drying column with a
     double-click on its row;
   * the output counted, inputs used, and tools kept.
 * The fermentation vessel is first picked with its nails missing: the
-  Craft button must be disabled and pressing it must start nothing.
+  **Craft** button must be disabled and pressing it must start nothing.
 * The sampling kit, the filter and the stabilizer were never crafted in
   game before.
 
-Launch 191 (3/21) found the defect, along with two of the harness's own
-bugs. Every recipe's row read its id (`TLG_MakeFermenterVessel`, …). The
-harness bugs: a step table overwrote the expected names, and
-`getScriptManager():getCraftRecipe(id)` found none of the recipes. Fixed
-in the harness: the window's own recipe objects, and a wait for the rows
+Launch 191 (3/21) found the defect: every recipe's row read its id
+(`TLG_MakeFermenterVessel`, …). It also found two bugs in the harness: a
+step table overwrote the expected names, and
+`getScriptManager():getCraftRecipe(id)` found none of the recipes. The
+harness now uses the window's own recipe objects, and waits for the rows
 after the search is cleared.
 
 Launch 192 (11/14), the mod as committed in `5574606`:
-* all seven crafts made through the window, six with the Craft button and
-  the drying column by double-click;
-* the vessel refused without its nails (Craft disabled, nothing queued,
-  nothing made);
+* all seven crafts made through the window, six with the **Craft** button
+  and the drying column by double-click;
+* the vessel refused without its nails (**Craft** disabled, nothing
+  queued, nothing made);
 * the 14 failures are the defect alone: seven names that read as ids,
   and seven searches by name that found nothing.
 
@@ -3932,7 +4160,7 @@ Fix: `Translate/EN/Recipes.json` and `IT/Recipes.json`, in vanilla's style
 in the mod's scripts. Without the files, it lists all seven as missing.
 
 * Launch 193 (**25/0**): all seven names as shipped; each found by typing
-  its name; the refusal; all seven crafts, with the Craft button
+  its name; the refusal; all seven crafts, with the **Craft** button
   enabled 2–30 ticks after the materials arrived. No exception in the
   console.
 * Launch 194 (`-Mode italian`, **5/0**): the Italian mode now reads recipe
@@ -3964,9 +4192,12 @@ compile check 118/0 and translations OK first. It is SHA-256
 files, byte for byte. Only the entries' time stamps differ, set from the
 commit. A second build gave the same bytes. This is the 0.1.0 package.
 
-Evidence: `docs/evidence/2026-11-04_rt-sp_harness_run191_crafting_window.txt`,
-`…_run192_crafting_window_before.txt`, `…_run193_crafting_window.txt`,
-`…_run194_italian.txt`, `…_run195_install_rehearsal.txt`.
+Evidence:
+[2026-11-04_rt-sp_harness_run191_crafting_window.txt](evidence/2026-11-04_rt-sp_harness_run191_crafting_window.txt),
+[2026-11-04_rt-sp_harness_run192_crafting_window_before.txt](evidence/2026-11-04_rt-sp_harness_run192_crafting_window_before.txt),
+[2026-11-04_rt-sp_harness_run193_crafting_window.txt](evidence/2026-11-04_rt-sp_harness_run193_crafting_window.txt),
+[2026-11-04_rt-sp_harness_run194_italian.txt](evidence/2026-11-04_rt-sp_harness_run194_italian.txt),
+[2026-11-04_rt-sp_harness_run195_install_rehearsal.txt](evidence/2026-11-04_rt-sp_harness_run195_install_rehearsal.txt).
 
 ## 2026-11-05 — RT-SP launches 196–199 (death and a successor)
 
@@ -3976,7 +4207,7 @@ continues as a new survivor ("Yes, test that"). New mode
 beside the station:
 
 * survivor A loads two fermenters (F1 and F2), takes a petrol can and
-  looks at it (Look and smell);
+  looks at it (**Look and smell**);
 * an hour and a half later, A takes F2 into both arms the loot window's
   double-click way;
 * A is killed (`Kill(nil)`);
@@ -3987,11 +4218,11 @@ beside the station:
 * B is brought to the body and takes back the can (the loot window's
   transfer) and F2 (double-click, then put down).
 
-Launches 196–198 were the harness's own:
+The problems in launches 196–198 were the harness's own:
 * 196: the game fires `OnNewGame` again for the new survivor, and the
   debug scenario's `onStart` hangs on it, so the steps started a second
-  time beside the first. The harness now starts once. Also, a summary
-  helper was given the wrong argument.
+  time beside the first. The harness now starts once. A summary helper
+  was also given the wrong argument.
 * 197: F2 was two tiles away, too far for the loot window, so the take
   had no container. The records were read before they had caught up. The
   body was looked for before it existed.
@@ -4009,10 +4240,10 @@ Launch 199: **18/0**, no exception in the console. In order:
 * The world record (seed, epoch, installation, policy) was unchanged.
 * B was another character, and knew nothing of the can (0 observations).
 * The can's record in the body was as A left it.
-* F2 was still paused until B's Status found it on the floor; it then
+* F2 was still paused until B's **Status** found it on the floor; it then
   worked, with the 0.04 game h before that not credited.
 * F1, placed, worked on through the death (1.5097 → 1.5481 h) and
-  answered B's Status.
+  answered B's **Status**.
 * B took the can out of the body (record unchanged), looked, and then
   knew it.
 * B took F2 from the floor into both arms and put it down; it worked
@@ -4028,26 +4259,30 @@ Not run:
   are not credited);
 * the spawn-region screen (this world offered none).
 
-Evidence: `docs/evidence/2026-11-05_rt-sp_harness_run196_successor.txt`
-to `…_run199_successor.txt` (196's interleaves the two runs).
+Evidence (launch 196's file interleaves the two runs):
+[2026-11-05_rt-sp_harness_run196_successor.txt](evidence/2026-11-05_rt-sp_harness_run196_successor.txt),
+[2026-11-05_rt-sp_harness_run197_successor.txt](evidence/2026-11-05_rt-sp_harness_run197_successor.txt),
+[2026-11-05_rt-sp_harness_run198_successor.txt](evidence/2026-11-05_rt-sp_harness_run198_successor.txt)
+and
+[2026-11-05_rt-sp_harness_run199_successor.txt](evidence/2026-11-05_rt-sp_harness_run199_successor.txt).
 
 ## 2026-11-06 — RT-SP launches 200–202 and 205–206, RT-MP launches 203–204 (What I know about it; death fixed)
 
-The user reported that What I know about it did not show what they knew
-from their looks and kit samples. They asked for it to show which tests
-were done, how long ago, with their results, and a note when the
+The user reported that **What I know about it** did not show what they
+knew from their looks and kit samples. They asked for it to show which
+tests were done, how long ago, with their results, and a note when the
 container is not sealed. They also asked to fix the vessel left unworked
 after a death ("Yes, fix it"). New modes:
 `tools/run-sp-harness.ps1 -Mode knowledge` (`sp-rtkn`) and
-`tools/run-mp-harness.ps1 -Clients 1 -Only knowledge`. Both read What I
-know about it from the Fuel menu, as a player opens it, and check the
-dialog's text.
+`tools/run-mp-harness.ps1 -Clients 1 -Only knowledge`. Both read
+**What I know about it** from the Fuel menu, as a player opens it, and
+check the dialog's text.
 
 Launch 200 (3/7), the mod as committed in `e9f1e87` (single player),
 confirmed the report:
-* a kit sample, then, two game hours later, a look: What I know about it
-  showed the look alone ("Method: look and smell (rough)"), and the kit's
-  "Composition: Gasoline 100.0%" was gone;
+* a kit sample, then, two game hours later, a look:
+  **What I know about it** showed the look alone ("Method: look and smell
+  (rough)"), and the kit's "Composition: Gasoline 100.0%" was gone;
 * no test was named and no age given;
 * after the can was opened from the menu, and after a litre was poured
   out, it showed the same text, with no note.
@@ -4059,12 +4294,13 @@ after the can was opened. The client's own copy of the player's mod data
 held no knowledge.
 
 Fix (D-034): knowledge keeps each test's latest result; the menu asks the
-authority (`known`, same reach as `status`). The authority answers each
-test, most precise first, with its age, whether the fuel changed since,
-and the seal. The menu shows each test's name and age above its findings,
-a note under a test the fuel changed since, and a note for an open
-container. Old entries read as their test. Death (D-015 amendment):
-`Machines.onDeath` puts down a machine the dying character carried.
+authority (`known`, with the same reach as `status`). The authority
+answers each test, most precise first, with its age, whether the fuel
+changed since, and the seal. The menu shows each test's name and age
+above its findings, a note under a test the fuel changed since, and a
+note for an open container. Old entries read as their test. Death (D-015
+amendment): `Machines.onDeath` puts down a machine the dying character
+carried.
 
 Domain 223/223, the five new cases included:
 * knowledge per test, and the list with ages and changes;
@@ -4072,8 +4308,8 @@ Domain 223/223, the five new cases included:
 * the `known` handler;
 * the death hook's three cases.
 
-Audit 25/25, the new cases being `known` out of reach and another
-player's tests, and a read on a can nobody tested writing no record
+Audit 25/25. The new audit cases are `known` out of reach, another
+player's tests, and a read on a can nobody tested, which writes no record
 (it still moves the next id by one, as status does; D-034). Compile
 125/0. Translations OK (261 EN keys).
 
@@ -4087,9 +4323,9 @@ player's tests, and a read on a can nobody tested writing no record
   reads as the kit's.
 * Launch 202 (`-Mode successor`, **18/0**): the dying survivor's
   fermenter lay at the feet with its record already working from the
-  death (3.5331, the death 3.5331). Over the 0.0356 game h to the
-  successor's Status it worked 0.0356 h, as the placed one did. The
-  mod's log: "a carrier died: 0 machine(s) in the hands, 1 already at
+  death (from 3.5331; the death was at 3.5331). Over the 0.0356 game h to
+  the successor's **Status** it worked 0.0356 h, as the placed one did.
+  The mod's log: "a carrier died: 0 machine(s) in the hands, 1 already at
   the feet" (the drop comes before the event in 42.21).
 * Launch 204 (RT-MP, **8/0**): the client's menu lists both tests,
   answered by the server, and, once the can is opened, the changed and
@@ -4123,18 +4359,25 @@ Not run:
 * the new knowledge across a save and reload;
 * a pump's, vehicle's or generator's knowledge through a menu.
 
-Evidence: `docs/evidence/2026-11-06_rt-sp_harness_run200_knowledge_before.txt`,
-`…_run201_knowledge.txt`, `…_run202_successor.txt`, `…_run205_italian.txt`,
-`…_run206_install_rehearsal.txt`;
-`2026-11-06_rt-mp_harness_run203_knowledge_before_client_a.txt` and
-`_server.txt`, `…_run204_knowledge_client_a.txt` and `_server.txt`.
+Evidence:
+[2026-11-06_rt-sp_harness_run200_knowledge_before.txt](evidence/2026-11-06_rt-sp_harness_run200_knowledge_before.txt),
+[2026-11-06_rt-sp_harness_run201_knowledge.txt](evidence/2026-11-06_rt-sp_harness_run201_knowledge.txt),
+[2026-11-06_rt-sp_harness_run202_successor.txt](evidence/2026-11-06_rt-sp_harness_run202_successor.txt),
+[2026-11-06_rt-sp_harness_run205_italian.txt](evidence/2026-11-06_rt-sp_harness_run205_italian.txt),
+[2026-11-06_rt-sp_harness_run206_install_rehearsal.txt](evidence/2026-11-06_rt-sp_harness_run206_install_rehearsal.txt);
+[2026-11-06_rt-mp_harness_run203_knowledge_before_client_a.txt](evidence/2026-11-06_rt-mp_harness_run203_knowledge_before_client_a.txt)
+and
+[2026-11-06_rt-mp_harness_run203_knowledge_before_server.txt](evidence/2026-11-06_rt-mp_harness_run203_knowledge_before_server.txt),
+[2026-11-06_rt-mp_harness_run204_knowledge_client_a.txt](evidence/2026-11-06_rt-mp_harness_run204_knowledge_client_a.txt)
+and
+[2026-11-06_rt-mp_harness_run204_knowledge_server.txt](evidence/2026-11-06_rt-mp_harness_run204_knowledge_server.txt).
 
 ## 2026-11-06 — RT-SP launch 207, RT-MP launches 208–209 (knowledge across a save; death on a server)
 
 The user asked to test the two things launches 200–206 left out ("Yes,
-test those"): What I know about it across a save and reload, and a
-carrier's death in multiplayer. The mod as committed in `d9cd9aa`; only
-the harness changed. New modes:
+test those"): **What I know about it** across a save and reload, and a
+carrier's death in multiplayer. The mod was as committed in `d9cd9aa`;
+only the harness changed. New modes:
 * `tools/run-sp-harness.ps1 -Mode knowledge-save` (`sp-rtkns`, then
   `sp-rtknb`);
 * `tools/run-mp-harness.ps1 -Clients 1 -Only knowledge -Restart`;
@@ -4145,23 +4388,23 @@ and by its batch record, and logs `OnPlayerDeath` and `OnCharacterDeath`
 if they fire on the server.
 
 * Launch 207 (`-Mode knowledge-save`, single player, **7/0** before the
-  save, **9/0** after). A kit sample and, two game hours later, a look at
-  a sealed petrol can; then saved and exited to the menu, and the save
-  continued. Before any read, the character's knowledge came back exactly
-  as saved (both tests' times and readings) and the can's record at the
-  same revision (0). The menu then listed "Sampling kit, 2 hours ago" with
-  "Composition: Gasoline 100.0%" and "Look and smell, 1 minute ago", with
-  no changed note and no open note.
-* Launch 208 (RT-MP, one client, `-Restart`, **11/0**). A kit sample and
-  a look answered by the server, both listed by the menu; then the player
-  left, the server was saved, stopped and started again on the same
-  world, and the player joined again ("saved player: true"). The can came
-  back with the same record (`S190009910-12`). The server's `known` reply
-  listed the kit, then the look, neither changed, the can sealed. The
-  menu read "Sampling kit, 1 minute ago" with its composition and "Look
-  and smell, 1 minute ago", no notes. So what the server writes into its
-  copy of the player is saved by the server and outlives the client's
-  copy, which never had it.
+  save, **9/0** after). A kit sample and, two game hours later, a look
+  were taken of a sealed petrol can; the game was then saved, exited to
+  the menu and continued. Before any read, the character's knowledge came
+  back exactly as saved (both tests' times and readings), and the can's
+  record at the same revision (0). The menu then listed
+  "Sampling kit, 2 hours ago" with "Composition: Gasoline 100.0%" and
+  "Look and smell, 1 minute ago", with no changed note and no open note.
+* Launch 208 (RT-MP, one client, `-Restart`, **11/0**). The server
+  answered a kit sample and a look, and the menu listed both. Then the
+  player left, the server was saved, stopped and started again on the
+  same world, and the player joined again ("saved player: true"). The can
+  came back with the same record (`S190009910-12`). The server's `known`
+  reply listed the kit, then the look, neither changed, with the can
+  sealed. The menu read "Sampling kit, 1 minute ago" with its composition
+  and "Look and smell, 1 minute ago", no notes. So what the server writes
+  into its copy of the player is saved by the server and outlives the
+  client's copy, which never had it.
 * Launch 209 (RT-MP, two clients, `-Only death`, on the shortest day; A
   **4/0**, B **3/3**). A took a running vessel off the floor into both
   arms (the mod's take on the server), carried it two squares and was
@@ -4175,9 +4418,9 @@ if they fire on the server.
   * the server's harness logged no `OnPlayerDeath` and no
     `OnCharacterDeath`: neither fires in a dedicated server's Lua for a
     client's death, so the mod's death hook (D-015 amendment) never ran;
-  * at 5.3076 B asked for Status from beside it: the batch ran again from
-    then (the move no Lua saw), with no work for the 1.3 game h since the
-    death.
+  * at 5.3076 B asked for **Status** from beside it: the batch ran again
+    from then (the move no Lua saw), with no work for the 1.3 game h since
+    the death.
 
   Of B's three failures, two are this finding: the record not put down
   at the death, and no work from it. The third is the harness's own: its
@@ -4192,10 +4435,15 @@ Not run:
 * a successor in multiplayer;
 * a pump's, vehicle's or generator's knowledge through a menu.
 
-Evidence: `docs/evidence/2026-11-06_rt-sp_harness_run207_knowledge_save.txt`;
-`2026-11-06_rt-mp_harness_run208_knowledge_restart_client_a.txt` and
-`_server.txt`; `…_run209_death_client_a.txt`, `_client_b.txt` and
-`_server.txt`.
+Evidence:
+[2026-11-06_rt-sp_harness_run207_knowledge_save.txt](evidence/2026-11-06_rt-sp_harness_run207_knowledge_save.txt);
+[2026-11-06_rt-mp_harness_run208_knowledge_restart_client_a.txt](evidence/2026-11-06_rt-mp_harness_run208_knowledge_restart_client_a.txt)
+and
+[2026-11-06_rt-mp_harness_run208_knowledge_restart_server.txt](evidence/2026-11-06_rt-mp_harness_run208_knowledge_restart_server.txt);
+[2026-11-06_rt-mp_harness_run209_death_client_a.txt](evidence/2026-11-06_rt-mp_harness_run209_death_client_a.txt),
+[2026-11-06_rt-mp_harness_run209_death_client_b.txt](evidence/2026-11-06_rt-mp_harness_run209_death_client_b.txt)
+and
+[2026-11-06_rt-mp_harness_run209_death_server.txt](evidence/2026-11-06_rt-mp_harness_run209_death_server.txt).
 
 ## 2026-11-06 — RT-MP launch 210 (a carrier's death on a server, the hands followed)
 
@@ -4213,15 +4461,19 @@ tick. Every ten game minutes the hands of the players in the game are
 looked at again (a player who joins holding a machine fires no equip
 event).
 
-Before the launch: tests 225/225 (two new cases: a server's drop in
-42.21's order, a machine in one hand, an unequip into the inventory, a
-hook's own drop written once, a client, a failing look; the ten-minute
-look: a player loaded holding the vessel, hands emptied with no event, a
-holder who left, single player) and the compile check 125/0. The
-harness's server now logs whether `OnTick` fires there and each put-down
-the mod makes, with where and when. Its vessel probe says whether the mod
-holds the vessel as in someone's hands (`held`) and how many machines it
-watches land; A checks that the mod knew the vessel in its hands.
+Before the launch: tests 225/225 and the compile check 125/0. The two new
+cases cover:
+* a server's drop in 42.21's order, a machine in one hand, an unequip
+  into the inventory, a hook's own drop written once, a client, a failing
+  look;
+* the ten-minute look: a player loaded holding the vessel, hands emptied
+  with no event, a holder who left, single player.
+
+The harness's server now logs whether `OnTick` fires there and each
+put-down the mod makes, with where and when. Its vessel probe says
+whether the mod holds the vessel as in someone's hands (`held`) and how
+many machines it watches land; A checks that the mod knew the vessel in
+its hands.
 
 Command: `tools/run-mp-harness.ps1 -Clients 2 -Only death`, the mod and
 the harness as in the working tree on `e3ca43b` (about 4 minutes).
@@ -4243,10 +4495,10 @@ Result: A **5/0**, B **6/0**.
   * the mod held nothing in hands and watched nothing any more;
   * the server's log has one put-down: "1448783971 at 10661,10644 from
     t=4.1684: pause not_placed -> none, state Processing".
-* B walked to it and, 1,800 ticks later, asked for Status: `Processing`,
-  now in the fermenting stage. The probe after it: 0.958 h of work over
-  the 1.293 game h from the probe before the death, about 1.24 h of it
-  placed. No second vessel and no duplicate.
+* B walked to it and, 1,800 ticks later, asked for **Status**:
+  `Processing`, now in the fermenting stage. The probe after it found
+  0.958 h of work over the 1.293 game h from the probe before the death,
+  about 1.24 h of it placed. There was no second vessel and no duplicate.
 
 Not run:
 * a climb's drop (over a wall, through a window, on a sheet rope), in
@@ -4257,5 +4509,8 @@ Not run:
   the death, so run 202's path is unchanged (unit tests);
 * a successor in multiplayer.
 
-Evidence: `docs/evidence/2026-11-06_rt-mp_harness_run210_death_client_a.txt`,
-`_client_b.txt` and `_server.txt`.
+Evidence:
+[2026-11-06_rt-mp_harness_run210_death_client_a.txt](evidence/2026-11-06_rt-mp_harness_run210_death_client_a.txt),
+[2026-11-06_rt-mp_harness_run210_death_client_b.txt](evidence/2026-11-06_rt-mp_harness_run210_death_client_b.txt)
+and
+[2026-11-06_rt-mp_harness_run210_death_server.txt](evidence/2026-11-06_rt-mp_harness_run210_death_server.txt).

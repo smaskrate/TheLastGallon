@@ -1,9 +1,13 @@
 # Balance
 
-All numbers are game-design values (not real-world shelf-life or chemistry
-claims). Exposure rates (how fast fuel changes) are separate from the
-suitability mapping (what a given state does to an engine), so campaign speed
-can be tuned without rewriting consumer behaviour.
+All numbers are game-design values, not real-world shelf-life or chemistry
+claims, and all are first estimates from the domain models: campaign
+playthroughs (fresh, six-month, one-year, inherited installation) and
+multi-pathway comparisons are NOT RUN.
+
+Exposure rates (how fast fuel changes) are separate from the suitability
+mapping (what a given state does to an engine), so campaign speed can be
+tuned without rewriting consumer behaviour.
 
 ## Campaign presets (`TLG/Domain/Balance.lua`, sandbox "Fuel ageing speed")
 
@@ -21,6 +25,11 @@ intervals keep the preset that was active then (no retroactive rewrite).
 
 `d(deg)/dt = k (1 + a·deg)`, `k = rate · preset · storage.agingMul ·
 (1 + 0.5·(1 − condition)) · q10^((T − 20)/10) · seal · (1 − stabMax·min(stab, 1))`.
+
+`preset` is the campaign preset's agingMul and `T` the temperature in °C.
+`rate`, `a`, `q10`, `seal` and `stabMax` depend on the fuel (table below);
+`seal` is the fuel's unsealed factor unless the container is sealed or
+vented, where it is 1.
 
 | Fuel | rate /h @20 °C | autocat a | q10 | unsealed × | stabilizer max |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -43,6 +52,12 @@ UI hysteresis 0.08 when improving.
 | Vehicle tank (vented, outdoor) | day 50 | — | 30–90 |
 | Sealed steel jerrycan (sheltered) | day 93 | — | 60–150 |
 
+## Fuel energy (`TLG/Content/Fuels.lua`)
+
+Energy per unit (nominal): gasoline 32.0 MJ/L, ethanol 21.2, diesel 36.0,
+biodiesel 33.0, propane 93 MJ/Nm³, biogas 21.5, wood gas 5.0, firewood
+15 MJ/kg, charcoal 29.
+
 ## Storage profiles (`TLG/Content/Storage.lua`)
 
 | Profile | agingMul | breathing /h | thermal | notes |
@@ -59,8 +74,8 @@ UI hysteresis 0.08 when improving.
 Sealed containers breathe at 5 % of the listed rate. Breathing exchanges
 evaporated fuel for moisture at constant volume, scaled by the blend's
 hygroscopicity (gasoline 0.05, diesel 0.1, biodiesel 0.5, ethanol 1.0).
-Microbial index grows 0.004/h × microbial fraction while free water exists,
-decays 0.001/h when dry.
+The microbial index grows 0.004/h × microbial fraction while free water
+exists, and decays 0.001/h when dry.
 
 ## Consumers (`TLG/Content/Consumers.lua`)
 
@@ -74,17 +89,23 @@ decays 0.001/h when dry.
 | engine_ci_bio | diesel, biodiesel 1/1, fuel heater | 3.5 | 0.15 % |
 | generator_gas | propane, biogas, woodgas | — | — |
 
-Effects: start factor falls to 0.55 at maxDeg, power to 0.8, wear rises to
-2×; marginal blends cost up to 40 % start, 15 % power; free water halves
-start chance; phase separation is incompatible for spark engines. Vehicle
-stall chance per running minute = 4 % × (1 − startFactor); incompatible fuel
-stalls on the next minute (verified in game; the 4 % rate is not measured).
-Stalls and refused starts of cars follow the sandbox option "Bad fuel can
-stall engines" (D-031).
+Effects:
+
+* at maxDeg the start factor falls to 0.55 and power to 0.8, and wear rises
+  to 2×;
+* marginal blends cost up to 40 % start and 15 % power;
+* free water halves the start chance;
+* phase separation is incompatible for spark engines;
+* a vehicle's stall chance per running minute is 4 % × (1 − startFactor),
+  and incompatible fuel stalls it on the next minute (verified in game; the
+  4 % rate is not measured).
+
+Stalls and refused starts of cars follow the sandbox option **Bad fuel can
+stall engines** (D-031).
 
 ### Engine effects (`TLG/Domain/EngineEffects.lua`, D-031)
 
-What the adapters apply of those factors. First estimates, like the rest.
+What the adapters apply of those factors:
 
 | Effect | Applied to | Rule |
 | --- | --- | --- |
@@ -97,25 +118,21 @@ What the adapters apply of those factors. First estimates, like the rest.
   (3.3 L an hour, RT-SP run 176) it is about half a point an hour of
   driving; a 40 L tank of such fuel costs about 6 points.
 * A vanilla generator loses 1–2 points (1.5 on average) once in N running
-  hours. The reference load is 0.15 L an hour, a fridge's (the power
-  constants 0.02 base + 0.13 fridge-freezer, BC `IsoGenerator`; not
-  measured with a fridge). The generator rate makes the extra wear at
-  wearFactor 2 equal vanilla's own at that load. It follows the fuel burned, so a
+  hours. The generator rate makes the extra wear at wearFactor 2 equal to
+  vanilla's own at the reference load of 0.15 L an hour, a fridge's (the
+  power constants 0.02 base + 0.13 fridge-freezer, BC `IsoGenerator`; not
+  measured with a fridge). The extra wear follows the fuel burned, so a
   generator with little plugged in wears little extra: run 177's burned
   0.012 L in 6 game hours at the roadside. A 10 L tank at wearFactor 1.75
   (Base.Generator) costs 2.5 points.
 * The power floor only matters for fuel the engine cannot take
-  (powerFactor 0) when the sandbox option "Bad fuel can stall engines" is
-  off; with it on such an engine stalls within a game minute.
+  (powerFactor 0) when the sandbox option **Bad fuel can stall engines** is
+  off; with it on, such an engine stalls within a game minute.
 * Generators have no power the mod can lower.
-
-Energy per unit (nominal): gasoline 32.0 MJ/L, ethanol 21.2, diesel 36.0,
-biodiesel 33.0, propane 93 MJ/Nm³, biogas 21.5, wood gas 5.0, firewood
-15 MJ/kg, charcoal 29.
 
 ## World initialisation
 
-Pre-outbreak fuel age up to 30 days (portable/vehicles) and 75 days
+Pre-outbreak fuel age is up to 30 days (portable/vehicles) and 75 days
 (stations), seeded by world seed and stable identity. Station tanks start
 with up to 0.1 % sediment and, per station (`WorldInit.STATION_WATER`):
 
@@ -123,15 +140,15 @@ with up to 0.1 % sediment and, per station (`WorldInit.STATION_WATER`):
 * about 1 in 10: 0.2–0.4 % water ("contaminated"): a stock car's start
   chance is halved, and from 0.3 % a stock generator's too.
 
-Contamination can be switched off in the sandbox options. Existing saves
-default to a 30-day transition.
+The sandbox option **Station tanks start with water and sediment** switches
+contamination off. Existing saves default to a 30-day transition.
 
-History: until 2026-10-31 water was uniform on 0–0.4 %, so about half of all
-stations exceeded the stock car tolerance from the first day (seen in game at
-the Gas2Go pump: 0.22–0.23 %, `startFactor=0.5`). Changed to the two tiers
-above (D-017) so that fuel trouble grows mainly with age, while a few bad
-stations remain to be found. Only stations initialised after the change use
-the new draw; existing reservoir records keep their water.
+Reason for the two tiers (D-017): until 2026-10-31 water was uniform on
+0–0.4 %, so about half of all stations exceeded the stock car tolerance from
+the first day (seen in game at the Gas2Go pump: 0.22–0.23 %,
+`startFactor=0.5`). With the tiers, fuel trouble grows mainly with age, while
+a few bad stations remain to be found. Only stations initialised after the
+change use the new draw; existing reservoir records keep their water.
 
 ## Ethanol chain (`TLG/Content/Production.lua`)
 
@@ -141,55 +158,64 @@ the new draw; existing reservoir records keep their water.
 | Distil | pot still (60 L) / reflux still (120 L) | wash | hydrous ethanol 80 % / 94 % purity, recovery 0.88 / 0.92 | 1 h heat-up + wash ÷ 8 or 12 L/h at 6 kW; firebox 30 / 50 kg, 4.2 kWh/kg, 45 % / 55 % efficient |
 | Dry | drying column | hydrous ethanol + quicklime | water down to 0.5 % | 12 h, 0.3 L water per kg quicklime |
 
-Temperature: machine rates use the day's mean temperature at the machine,
-not the hour's reading: a batch has a day's thermal mass, so a few warm
-hours lift the whole day. Since D-021 that is the mean air temperature
-where the machine stands over the day's hours of the batch: the game's own
-hourly value at its tile while the area is loaded (rooms, grid power,
-fires), the day's unheated value for its site while it is not, except
-that a fire noted warming it keeps doing so while its noted fuel lasts
-(D-022); the hour in progress takes the previous hour's reading. The weather is included
-(D-020). A fermenter slows below 18 °C and stops below 8 °C:
+### Temperature at the machine
+
+Machine rates use the day's mean temperature at the machine, not the hour's
+reading: a batch has a day's thermal mass, so a few warm hours lift the whole
+day. That mean is the mean air temperature where the machine stands over the
+day's hours of the batch (D-021), weather included (D-020):
+
+* while the area is loaded, the game's own hourly value at the machine's
+  tile (rooms, grid power, fires);
+* while it is not, the day's unheated value for its site, except that a fire
+  noted warming the machine keeps doing so while its noted fuel lasts
+  (D-022);
+* the hour in progress takes the previous hour's reading.
+
+A fermentation vessel slows below 18 °C and stops below 8 °C:
 
 | Where it stands | Its temperature | Slows below (outdoor day mean) | Stops below |
 | --- | --- | --- | --- |
 | Outdoors | the outdoor air | 18 °C | 8 °C |
-| Room, ground floor, grid off | T + k (22 − T), k = 0.4–0.6 with the daylight; 0.435 on January days (runs 17–19) | about 15 °C | about −3 °C in January |
+| Room, ground floor, grid off | T + k (22 − T), T the outdoor air, k = 0.4–0.6 with the daylight; 0.435 on January days (runs 17–19) | about 15 °C | about −3 °C in January |
 | Room upstairs, grid off | 0.85 of that pull | about 16 °C | about 0 °C in January |
 | Room, grid on | 22 °C | never | never |
-| Near a lit fireplace, wood stove, campfire or barbecue (while away: as long as its fuel lasts) | the game's value; a fireplace with an hour of fuel reaches 8 tiles in sight: in an 8 °C room about 25 °C one tile away, 20 °C three tiles away (28 °C on its own tile); measured beside a map fireplace kept fed in January: 20.7 °C or more at 2.24 tiles (run 21) | — | — |
+| Near a lit fireplace, wood stove, campfire or barbecue (while away: as long as its fuel lasts) | the game's value (below) | — | — |
+
+A fireplace with an hour of fuel reaches 8 tiles in sight: in an 8 °C room
+about 25 °C one tile away, 20 °C three tiles away (28 °C on its own tile).
+Measured beside a map fireplace kept fed in January: 20.7 °C or more at
+2.24 tiles (run 21).
 
 Days recorded before D-021 have no room means; for them a room assumes
 k = 0.5. Before D-021 every machine counted as "sheltered", (outdoor mean
 + 16 °C) / 2, wherever it stood; a record keeps that until its first access
 since.
 
-Measured on the game clock (RT-SP): July, 97.2 h, the full-rate time (run
-13, sheltered); January on the season curve, 0.4 all through, 241.7 h (run
-15); January with the weather, sheltered: stopped from the first day,
-spoiled 73.2 h after loading at 72 paused hours (run 16); January by site
-with the grid off, −8.1 to +1.7 °C day means (runs 17–19): outdoors stopped
-and spoiled at 72 paused hours; a ground-floor room ran 9.5–13.1 °C above
-the outdoor air (4.5–11.4 °C at the machine), slow on the first day, then
-mostly stopped, and spoiled every time; a tile warmed by a 35 °C heat
-source read 28 °C every hour and the batch finished, its only pauses the
-hours of a morning spent unloaded. Beside a map fireplace kept fed with
-logs (run 21, 2.24 tiles from the fire, outdoor day means −9.4 to
-−1.1 °C): 20.7 °C or more every hour, and the batch finished after 114.3
-game hours for 97 hours of work. The 12 hour trip in it cost about 17
-hours (unheated room value while away, a cold day mean after the return)
-and the batch burned 18 logs. Since D-022 the fire's fuel counts while
-away: in the same setup with the credit (run 23, a milder January) its 365
-minutes covered 6.08 of the 12 hours and the batch finished after 109.2
-hours with 17 logs. Spoilage counts the batch's total
-paused hours, also across separate cold spells (not yet seen in game).
+Fermentation batches measured on the game clock (RT-SP):
+
+| Setting | Result |
+| --- | --- |
+| July, sheltered (run 13) | 97.2 h, the full-rate time |
+| January on the season curve (run 15) | 0.4 all through, 241.7 h |
+| January with the weather, sheltered (run 16) | stopped from the first day; spoiled 73.2 h after loading, at 72 paused hours |
+| January by site, grid off, day means −8.1 to +1.7 °C (runs 17–19): outdoors | stopped; spoiled at 72 paused hours |
+| Same, ground-floor room | 9.5–13.1 °C above the outdoor air (4.5–11.4 °C at the machine); slow on the first day, then mostly stopped; spoiled every time |
+| Same, a tile warmed by a 35 °C heat source | 28 °C every hour; the batch finished, its only pauses the hours of a morning spent unloaded |
+| Beside a map fireplace kept fed with logs (run 21, 2.24 tiles from the fire, outdoor day means −9.4 to −1.1 °C) | 20.7 °C or more every hour; finished after 114.3 game hours for 97 hours of work. The 12 hour trip in it cost about 17 hours (unheated room value while away, a cold day mean after the return); 18 logs burned |
+| The same setup with the fire's fuel counted while away (D-022), a milder January (run 23) | the fire's 365 minutes covered 6.08 of the 12 hours away; finished after 109.2 hours with 17 logs |
+
+Spoilage counts the batch's total paused hours, also across separate cold
+spells (not yet seen in game).
 
 Fire fuel (vanilla, default sandbox): a log adds 6 hours, and a fireplace
-holds at most 8 (`MaximumFireFuelHours`; the menu offers no fuel past
-it), so a log only goes in once 2 hours or less are left. A fire kept
-going burns 4 logs a game day. It burns its fuel while you are away too,
-and since D-022 its warmth counts for those minutes: a fire fed before
-leaving keeps a machine warm for up to 8 hours away.
+holds at most 8 (`MaximumFireFuelHours`; the menu offers no fuel past it),
+so a log only goes in once 2 hours or less are left. A fire kept going burns
+4 logs a game day. It burns its fuel while you are away too, and its warmth
+counts for those minutes (D-022): a fire fed before leaving keeps a machine
+warm for up to 8 hours away.
+
+### Condition, yields and examples
 
 Condition through production: distillate leaves the still fresh (ageing
 products stay in the stillage), while dried ethanol keeps the degradation it
@@ -198,11 +224,13 @@ water in solution and runs flex engines without drying; pot-still spirit
 (80 %) carries free water and must be dried first.
 
 Example (RT-SP run 28): 12 kg sugar + 60 L water → 66.6 L of wash, two
-pot-still loads. 60 L: 1 h + 7.5 h, 26.98 kg of wood, 5.23 L ethanol and
-1.31 L water. The other 6.6 L: 2 h (the 1 h minimum), 6.35 kg, 0.57 L
-ethanol at 0.994 efficiency (condition 0.98 after the first run). The
-7.26 L of spirit held 1.04 L of free water (14 %); 5 kg of quicklime
-brought it to 5.80 L ethanol and 0.03 L water in 12 h.
+pot-still loads.
+
+* 60 L: 1 h + 7.5 h, 26.98 kg of wood, 5.23 L ethanol and 1.31 L water.
+* The other 6.6 L: 2 h (the 1 h minimum), 6.35 kg, 0.57 L ethanol at 0.994
+  efficiency (condition 0.98 after the first run).
+* The 7.26 L of spirit held 1.04 L of free water (14 %); 5 kg of quicklime
+  brought it to 5.80 L ethanol and 0.03 L water in 12 h.
 
 Feedstock sugar equivalents per vanilla item: Sugar 1.0 kg, Brown sugar 0.9,
 Sugar beet 0.16, Corn 0.12, Potato 0.09, Pumpkin 0.15, Watermelon 0.25,
@@ -233,19 +261,25 @@ derates a gas generator to 60 % power.
 
 ## Biodiesel (`TLG/Content/Biodiesel.lua`)
 
-Oil press 0.30 kg oil/kg seed (+0.003/skill, max 0.33). Wood retort per kg
-firewood: methanol 0.04 kg, charcoal 0.28, tar 0.07, liquor water 0.32,
-off-gas 0.29 (loss). Lye 0.15 kg per kg ash. Reactor: 0.15 L methanol and
-0.0125 kg lye per L oil, conversion 98.5 % (+0.1 %/skill), per L oil 0.985 L
-biodiesel + 0.099 L glycerin. Wash removes 92 % soap, 97 % methanol. 40 kg
-oilseed → 12.85 L "good" biodiesel.
+* Oil press: 0.30 kg oil/kg seed (+0.003/skill, max 0.33).
+* Wood retort, per kg firewood: methanol 0.04 kg, charcoal 0.28, tar 0.07,
+  liquor water 0.32, off-gas 0.29 (loss).
+* Lye: 0.15 kg per kg ash.
+* Reactor: 0.15 L methanol and 0.0125 kg lye per L oil, conversion 98.5 %
+  (+0.1 %/skill); per L oil 0.985 L biodiesel + 0.099 L glycerin.
+* Wash: removes 92 % soap, 97 % methanol.
+
+40 kg oilseed → 12.85 L "good" biodiesel.
 
 ## Wood gas (`TLG/Content/WoodGas.lua`, `TLG/Domain/Gas.lua`)
 
-Gas per kg: firewood 2.2 Nm³, dry chips 2.4, charcoal 4.2. Stationary
-gasifier 120 kg hopper, 8 kg/h, 0.5 h warm-up, 2 Nm³ buffer, filter 400 kg;
-vehicle module 60 kg, 15 kg/h, 0.3 h warm-up, 180 kg installed, 35 % cargo
-loss, power factor 0.65. Loads above 30 % moisture are refused.
+Gas per kg: firewood 2.2 Nm³, dry chips 2.4, charcoal 4.2. Loads above 30 %
+moisture are refused.
+
+* Stationary gasifier: 120 kg hopper, 8 kg/h, 0.5 h warm-up, 2 Nm³ buffer,
+  filter 400 kg.
+* Vehicle module: 60 kg, 15 kg/h, 0.3 h warm-up, 180 kg installed, 35 % cargo
+  loss, power factor 0.65.
 
 ## Biogas (`TLG/Content/Biogas.lua`)
 
@@ -258,9 +292,3 @@ below 10 °C, slow 10–20 °C and 40–50 °C. Yield cap 5.5 Nm³ per digester-
 
 Vanilla `Base.PropaneTank` 5000 uses = 4.48 Nm³ = 9 kg = 417 MJ; propane does
 not age. Bulk tank profile 380 Nm³.
-
-## Not yet balanced
-
-Campaign playthroughs (fresh, six-month, one-year, inherited installation)
-and multi-pathway comparisons are NOT RUN; all values above are first
-estimates from the domain models.

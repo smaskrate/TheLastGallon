@@ -2,31 +2,39 @@
 
 Release gate 11 (spec section 18, "Performance acceptance"): the cost the
 mod adds to the game, measured on a reference machine and world, and the
-budgets set from that measurement. Measured with
-`tools/run-sp-harness.ps1 -Mode performance` in RT-SP runs 181–185
-(2026-11-04). Runs 181–182 were the baseline. They found three pauses,
-which D-032 removed; runs 183 and 185 measured the fix. Evidence:
-`docs/evidence/2026-11-04_rt-sp_harness_run181_performance.txt` to
-`…_run185_performance.txt`, and run 184's fireplace test
-(`…_run184_fireplace.txt`).
+budgets set from that measurement. The figures come from
+`tools/run-sp-harness.ps1 -Mode performance`, RT-SP runs 181–183 and 185
+(2026-11-04), unless a section names other runs. Run 185, the latest
+performance run, passed all 22 budgets. Runs 181–182 measured the code
+before D-032, which made the machines' notes, readings and catch-up
+cheaper with the same results; the tables keep their figures for
+comparison. Evidence, in `docs/evidence/`:
+[run 181](evidence/2026-11-04_rt-sp_harness_run181_performance.txt),
+[run 182](evidence/2026-11-04_rt-sp_harness_run182_performance.txt),
+[run 183](evidence/2026-11-04_rt-sp_harness_run183_performance.txt),
+[run 185](evidence/2026-11-04_rt-sp_harness_run185_performance.txt) and
+run 184's fireplace test
+([run 184](evidence/2026-11-04_rt-sp_harness_run184_fireplace.txt)).
 
 ## What the mod runs on its own
 
 - **Nothing every frame in steady play.** The mod keeps no per-frame
-  handler: no `OnPlayerUpdate`, no render event, and `OnTick` only for a
-  few seconds at a time. When a machine leaves a character's hands, the
-  authority looks at it once a tick until it lies on the ground, for at
-  most 300 ticks (about 5 seconds at 60 frames a second; a dedicated
-  server ticked about 4 times a second at its start in RT-MP run 210, so
-  there up to about 80 seconds): one engine call a tick per machine, then
-  the put-down if it landed where no hook saw it (`Machines.watchLanding`,
-  D-015 amendment). A drop lands within the tick, so the watch usually
-  ends on the first. The vanilla functions it
-  wraps run once per player action: a refuel, a transfer, an equip, the
-  start of a timed action. So do the two equip events it listens to
-  (`OnEquipPrimary`, `OnEquipSecondary`, `Machines.onHands`): a look at
-  whether the item is a machine with a record and, while one is held, at
-  the holder's hands. Not timed: a few engine calls.
+  handler: no `OnPlayerUpdate`, no render event, and `OnTick` only while
+  the landing watch below runs.
+- **The landing watch** (`Machines.watchLanding`, D-015 amendment). When a
+  machine leaves a character's hands, the authority looks at it once a
+  tick until it lies on the ground: one engine call a tick per machine,
+  then the put-down if it landed where no hook saw it. A drop lands within
+  the tick, so the watch usually ends on the first tick. It lasts at most
+  300 ticks: about 5 seconds at 60 frames a second, and up to about 80
+  seconds on a dedicated server, which ticked about 4 times a second at
+  its start (RT-MP run 210).
+- **Once per player action:** the vanilla functions the mod wraps (a
+  refuel, a transfer, an equip, the start of a timed action) and the two
+  equip events it listens to (`OnEquipPrimary`, `OnEquipSecondary`). The
+  events' handler, `Machines.onHands`, looks at whether the item is a
+  machine with a record and, while one is held, at the holder's hands: a
+  few engine calls, not timed.
 - **Three timers**, run by the authority (the game in single player, the
   server in multiplayer):
   - every game minute, the engine effects of every vehicle in the loaded
@@ -36,23 +44,23 @@ which D-032 removed; runs 183 and 185 measured the fix. Evidence:
   - every ten game minutes, a note of the fire warming each running machine
     in the hourly list (`Machines.observeFires`). The list holds at most 256
     machines (`MAX_INDEXED`). Then a look at the hands of the characters in
-    the game, two engine calls each (`Machines.censusHands`, since
-    2026-11-06; not timed);
+    the game, two engine calls each (`Machines.censusHands`, added on
+    2026-11-06, after the performance runs, and not timed);
   - every game hour, the day's climate record and an air reading at each
     running machine (`Machines.sampleSites`).
 - **On demand:** the fuel and machine menus, the requests they send, and
   transfers. The machine menu brings the batch to now on every right-click,
-  without saving it. Status saves the caught-up batch.
+  without saving it. **Status** saves the caught-up batch.
 - **Records** live in the modData of the item, tank or object they
   describe. The mod keeps no list of them, so a record is read only when its
   object is used. Dormant supplies are never visited.
 
 In the measured world (day length 1 hour 30 minutes) a game minute lasts
-3.75 real seconds. The ten-minute note comes every 37.5 seconds and the
-hourly reading every 3.75 minutes. On a 1-hour day they come every 2.5
-seconds, 25 seconds and 2.5 minutes.
+3.75 real seconds, so the ten-minute note comes every 37.5 seconds and the
+hourly reading every 3.75 minutes. On a 1-hour day the three timers run
+every 2.5 seconds, 25 seconds and 2.5 minutes.
 
-## Reference
+## Reference machine and world
 
 | | |
 | --- | --- |
@@ -75,8 +83,8 @@ seconds, 25 seconds and 2.5 minutes.
   3. 10, then 20 parked cars with tank records;
   4. 8 of them idling on stale petrol: deterioration 2.6, power factor
      0.85, wear factor 1.74. Stalls are off so they keep running;
-  5. 8, then 32 fermenters loaded through the machine menu, as a player
-     loads them;
+  5. 8, then 32 fermentation vessels ("fermenters" in the tables), loaded
+     through the machine menu as a player loads them;
   6. the 32 as if a fire warmed each. The air reads 5 °C above the
      unheated value, so each ten-minute note scans the tiles around the
      machines. No fire is found, so each scan runs to the end, as it does
@@ -86,11 +94,11 @@ seconds, 25 seconds and 2.5 minutes.
      area and nobody uses it for 20 days. The world is only hours old, so
      the readings are dated ahead; the cost depends on how many a record
      holds.
-- Catch-up: a can's fuel, a tank's fuel and a fermenter's batch are brought
-  forward 1, 30 and 365 days (`Aging.advance`, `Machines.advance`). That is
-  the arithmetic of catching up after that long away. The fermenter with 20
-  days of readings is also brought through them, and its menu opened with
-  the mod's clock 20 days on.
+- Catch-up: a can's fuel, a tank's fuel and a vessel's batch are brought
+  forward 1, 30 and 365 days (`Aging.advance`, `Machines.advance`), the
+  arithmetic of catching up after that long away. The vessel with 20 days
+  of readings is also brought through them, and its menu opened with the
+  mod's clock 20 days on.
 - Frames: 20 seconds at normal speed after each stage. For each frame, the
   game's own main-thread time (`getCPUTime`: the frame step from logic
   through render preparation and Lua events, in whole milliseconds) and the
@@ -103,7 +111,10 @@ seconds, 25 seconds and 2.5 minutes.
 
 Milliseconds per call: the median of five batches.
 
-### Timers before D-032 (run 181 / run 182)
+### Timers by workload (run 181 / run 182)
+
+In the fermenter rows, the ten-minute and hourly figures are those of the
+code before D-032; the next table has run 185's.
 
 | Workload (each includes those above) | Every game minute | Every ten minutes | Every hour |
 | --- | --- | --- | --- |
@@ -119,9 +130,9 @@ Milliseconds per call: the median of five batches.
 
 ### What D-032 changed (run 182 → run 185)
 
-Runs 183 and 185 measured every other workload as runs 181–182 did,
-within a few percent. Run 183 came before the notes' saving (the last
-change of D-032), run 185 after it.
+Run 183 came before the notes' saving, the last change of D-032, and
+run 185 after it. Runs 183 and 185 measured every other workload as runs
+181–182 did, within a few percent.
 
 | Workload | Run 182 | Run 183 | Run 185 |
 | --- | --- | --- | --- |
@@ -163,8 +174,8 @@ same; D-032 changed only the catch-up through readings.
 
 ### Frames (run 182)
 
-Every stage of every run held the frame-rate cap of 60: between frames,
-median 17 ms, worst 20–21 ms. So the frame rate cannot show load. The
+Every stage of every run held the frame-rate cap of 60 (between frames:
+median 17 ms, worst 20–21 ms), so the frame rate cannot show load. The
 game's main-thread time per frame, in milliseconds:
 
 | Stage | Mean | Median | 95th percentile | 99th percentile | Worst |
@@ -176,12 +187,13 @@ game's main-thread time per frame, in milliseconds:
 | 32 fermenters, 8 engines idling | 3.58 | 3 | 5 | 6 | 8 |
 
 Giving the cans records changed nothing measurable. The last stage's rise
-of 1.7 ms is the game's own work for eight running engines and 32 fermenter
-models. The mod's timers come to about 0.006 ms a frame there: 1.1 ms once
-every 225 frames, and less than that every 2,250 and 13,500. Runs 183 and
-185 measured the same stages within 0.2 ms (the last stage: 3.66 and 3.74
-mean). Run 181's main-thread times were lost to a units error in the
-harness, since fixed.
+of 1.7 ms is the game's own work for eight running engines and 32 vessel
+models. The mod's timers come to about 0.006 ms a frame there, mostly the
+minute's 1.1 ms once every 225 frames; the ten-minute and hourly calls
+come once every 2,250 and 13,500 frames. Runs 183 and 185 measured the
+same stages within 0.2 ms (the last stage: 3.66 and 3.74 mean). Run 181's
+main-thread times were lost to a units error in the harness, fixed before
+run 182.
 
 ## Budgets
 
@@ -204,45 +216,52 @@ nobody touches must cost nothing.
 | Through 20 days of readings / its machine menu | 13 / 15 | run 183 | 4.3 / 4.9 |
 | Fuel menu / machine menu for a fresh batch, each with the game's own context menu (0.024 ms) | 0.08 / 0.8 | run 181 | 0.027 / 0.27 |
 
-Run 182 passed the 16 budgets of run 181. Run 185 passed all 22, four of
-them at their earlier values: 4.5 and 4.7 from run 181, 52 and 83 from
-run 183. Those four are now set from run 185 itself. Run 185's figures
-are within the new values, and the next performance run checks them.
+Run 182 passed the 16 budgets set from run 181, and run 185 passed all 22.
+Four of them had earlier values when run 185 checked them: 4.5 and 4.7
+from run 181, 52 and 83 from run 183. Those four are now set from run 185
+itself (the two rows marked run 185). Run 185's figures are within the new
+values; the next performance run is the first to check them.
 
-## The three findings and D-032
+## Machine records: fire scan, readings and catch-up
 
-Runs 181–182 found three pauses, all in the machines' records. D-032 made
-the work cheaper with the same results.
+Three conditions raise the cost of a machine's notes, readings and
+catch-up: a fire warming it, readings it keeps while nobody uses it, and
+catching up through those readings. Since D-032 each works as described
+below. The figures before it are from runs 181–182; the decision and the
+test log have the history.
 
-1. **The fire scan.** Each ten-minute note looked for the fire warming its
-   machine by scanning every square within 18 tiles, about 1,000 of them,
-   and every object on them. Floor items count: they are in a square's
-   objects. With 32 fermenters beside a fire that was 90 ms every 37.5
-   seconds. Now one scan serves all the warmed machines, each square
-   visited once: 10.2 ms.
-2. **Readings kept by machines nobody uses.** Each hourly reading and
-   ten-minute note copied the whole record and sorted the hours of its
-   readings and notes. Readings pile up from the last time the batch was
-   brought forward, up to 480, until a Status or an action brings it
-   forward again. 32 fermenters left unused for 20 days in a loaded area
-   cost 190–200 ms at every note and reading. Now the notes and readings
-   change the stored record in place, and a trim finds what to drop
-   without sorting: 6.7 ms per note, 17.6 ms per reading.
-3. **Catching up through readings.** `Climate:siteDayMean` sorted the
-   notes' hours again for every day it averaged. Bringing a fermenter
-   through 20 days of readings took 60 ms, and its menu took as long on
-   every right-click. Now they are sorted once: 4.3 and 4.9 ms.
+1. **The fire scan.** A ten-minute note looks for the fire warming its
+   machine among every square within 18 tiles, about 1,000 of them, and
+   every object on them. Floor items count: they are in a square's
+   objects. One scan serves all the warmed machines, each square visited
+   once: 10.2 ms for 32 vessels beside a fire. With a scan for each
+   machine, before D-032, the same 32 took 90 ms every 37.5 seconds.
+2. **Readings kept by machines nobody uses.** Readings pile up from the
+   last time the batch was brought forward, up to 480, until a **Status**
+   or an action brings it forward again. The hourly reading and the
+   ten-minute note change the stored record in place, and a trim finds
+   what to drop without sorting: 6.7 ms per note and 17.6 ms per reading
+   for 32 vessels left unused for 20 days in a loaded area. Before D-032
+   each note and reading copied the whole record and sorted the hours of
+   its readings and notes, and the same 32 cost 190–200 ms at every note
+   and reading.
+3. **Catching up through readings.** The notes' hours are sorted once for
+   all the days a catch-up averages; before D-032, `Climate:siteDayMean`
+   sorted them again for every day it averaged. Bringing a vessel through
+   20 days of readings takes 4.3 ms, and its menu, which does so on every
+   right-click, 4.9 ms. Before D-032 the catch-up took 60 ms, and the menu
+   as long.
 
-The equivalence tests compare the new code with the old on random records
-and fires, ties included. The fireplace mode repeated its run in game
-(run 184, 21/0): every fire note and reading as the game gives them, the
-trip away credited exactly.
+Equivalence tests compare the code with the code before D-032 on random
+records and fires, ties included. In game, the fireplace mode repeated its
+run (run 184, 21/0): every fire note and reading as the game gives them,
+and the trip away credited exactly.
 
-What remains is linear in what a base holds. Extrapolated to the hourly
-list's limit of 256 machines (not measured): 4.6 ms per note or reading
-for running fermenters. With 480 readings each it would be about 54 ms
-per note and 140 ms per hourly reading. The fire scan grows with the area
-the warmed machines cover rather than with their number.
+The remaining cost is linear in what a base holds. Extrapolated to the
+hourly list's limit of 256 machines (not measured): 4.6 ms per note or
+reading for running vessels, and with 480 readings each about 54 ms per
+note and 140 ms per hourly reading. The fire scan grows with the area the
+warmed machines cover rather than with their number.
 
 ## On a dedicated server (RT-MP runs 188–189)
 
@@ -262,45 +281,62 @@ milliseconds. These are observations, not budgets.
 
 The bench kept its writes on the server, so its figures leave out sending
 the records to the clients; the timed events include it. Single player
-gave 0.55 ms per reading and 0.59 ms per note for 32 fresh fermenters
-(run 185). The server's note pass costs more here because four machines
-stand by a fire: each pass scans the squares within reach of them.
+gave 0.55 ms per reading and 0.59 ms per note for 32 fresh vessels
+(run 185). The server's note pass costs more because four machines stand
+by a fire: each pass scans the squares within reach of them.
 
-Since the security audit's V-01 fix (2026-11-05), every read and write of
-a record on a server also goes through the vault (`TLG/Authority/Vault.lua`,
-docs/security-audit-2026-11-05.md §7.3). The same timers mode with it
-(the audit's run 19): hourly pass 0.60 ms, note pass 2.87 ms, a status
-0.11 ms, against 0.40, 4.39 and 0.17 ms without it (the audit's run 5),
-within what two unchanged runs differ by here. The first read of a record
-after the world loads compares it field by field once: about 0.3 ms for a
-machine with 480 readings (Kahlua). Single player does not use the vault.
-Since the vault keeps a machine's readings and fire notes as digests
-(2026-11-05, the compact store), every write of a machine record also
+### The vault's cost
+
+On a server every read and write of a record also goes through the vault
+(`TLG/Authority/Vault.lua`, docs/security-audit-2026-11-05.md §7.3), added
+by the security audit's V-01 fix (2026-11-05). Single player does not use
+the vault. The vault keeps a machine's readings and fire notes as digests
+(the compact store, 2026-11-05), so every write of a machine record also
 brings its digests up to date, recomputing only the entries that changed.
-Kahlua, one fermenter with 480 readings and 480 notes, every call one hour
-(or ten minutes) later so each write adds an entry and the trim drops the
-oldest: the hourly reading 0.45 ms without the vault and 0.64-0.68 ms with
-it (0.37 and 0.59-0.62 ms with a fireplace note every hour), the ten-minute
-note 0.20-0.21 and 0.35-0.37 ms. With 256 such machines that adds about
-50 ms to the hourly pass and 40 ms to the ten-minute pass. The first read
-after a load, of the world or of the machine's chunk (the item's mod data
-comes back as new tables), computes the digests whole: about 3.4 ms for
-that fermenter with fireplace notes, against about 0.3 ms for the field
-comparison alone before. In game (the audit's run 27, the timers mode, 32
-fermenters with a few hours of history) the hourly pass took 0.76 ms
-against 0.60 ms with the uncompacted vault (run 19), the note pass 2.91
-against 2.87 ms, a status 0.10 against 0.11 ms. To recompute only what changed, the server keeps in
-memory (not saved), per machine, each reading's and note's value and term:
-about 1,900 table entries for a machine with 480 of each, on top of the
-record itself.
+
+The timers mode (above) measured the server's passes in three of the
+security audit's runs:
+
+| Server pass | Without the vault (the audit's run 5) | Uncompacted vault (the audit's run 19) | Compact store (the audit's run 27) |
+| --- | --- | --- | --- |
+| Hourly pass | 0.40 ms | 0.60 ms | 0.76 ms |
+| Ten-minute note pass | 4.39 ms | 2.87 ms | 2.91 ms |
+| A status | 0.17 ms | 0.11 ms | 0.10 ms |
+
+The differences between runs 5 and 19 are within what two unchanged runs
+differ by here. In run 27 the 32 vessels had a few hours of history.
+
+Measured in Kahlua on one vessel with 480 readings and 480 notes, each
+call one hour (or ten minutes) after the last, so each write adds an entry
+and the trim drops the oldest:
+
+| Call | Without the vault | With the vault |
+| --- | --- | --- |
+| Hourly reading | 0.45 ms | 0.64-0.68 ms |
+| Hourly reading, with a fireplace note every hour | 0.37 ms | 0.59-0.62 ms |
+| Ten-minute note | 0.20-0.21 ms | 0.35-0.37 ms |
+
+With 256 such machines the vault adds about 50 ms to the hourly pass and
+40 ms to the ten-minute pass.
+
+The first read of a record after the world loads compares it field by
+field once: about 0.3 ms for a machine with 480 readings (Kahlua). For a
+machine, the first read after a load, of the world or of the machine's
+chunk, computes the digests whole, because the item's mod data comes back
+as new tables: about 3.4 ms for that vessel with fireplace notes, against
+about 0.3 ms for the field comparison alone before the compact store.
+
+To recompute only what changed, the server keeps in memory (not saved),
+per machine, each reading's and note's value and term: about 1,900 table
+entries for a machine with 480 of each, on top of the record itself.
 
 ## Not measured
 
 - **Multiple electrical networks:** no network is built in game in this
   build. The energy model is domain-only (gate 4).
 - **Several clients using shared storage:** the server's timers were
-  timed with one player's car or machines (above). Several players'
-  cars and machines at once were not measured, nor frames on a client in
+  timed with one player's car or machines (above). Several players' cars
+  and machines at once were not measured, nor frames on a client in
   multiplayer.
-- **Other machines:** every figure is this machine's. A slower CPU makes
-  each call proportionally slower.
+- **Other computers:** every figure is the reference machine's. A slower
+  CPU makes each call proportionally slower.
