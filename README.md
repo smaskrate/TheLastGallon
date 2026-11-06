@@ -83,9 +83,9 @@ tools\rehearse-install.ps1                               # install the zip in a 
 tools\rehearse-install.ps1 -Scenario existing            # the zip added to a save played without it (~30 min)
 ```
 
-Every harness mode, with what it covers and how long it takes, is listed
-in [docs/release-checklist.md](docs/release-checklist.md); the results are
-in [docs/test-results.md](docs/test-results.md).
+[docs/release-checklist.md](docs/release-checklist.md) lists every harness
+mode with what it covers, and how long it takes where that was measured;
+the results are in [docs/test-results.md](docs/test-results.md).
 
 ## Never point a cache at this folder
 

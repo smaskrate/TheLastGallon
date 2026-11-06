@@ -116,7 +116,7 @@ files were verified unchanged. The rules above, enforced by
 ## Client harnesses
 
 A single-player client harness (debug scenario with `forceLaunch`) is
-described in `engine-capabilities.md` ("Client harness status").
+described in `engine-capabilities.md` ("Unattended client launches").
 
 `tools/run-mp-harness.ps1` runs the TLGDev dedicated server and its clients
 on this computer with no clicks, with one client (A) or two (`-Clients 2`:
