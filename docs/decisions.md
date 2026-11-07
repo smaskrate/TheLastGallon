@@ -1275,3 +1275,51 @@ their replacement.
     still knew both tests, unchanged, the can sealed.
   * Not run: the knowledge of a pump, vehicle or generator through the
     menu (the Fuel menu is for cans).
+
+## D-035 The game's pour action is followed once per pour
+* Decision:
+  * The container adapter wraps the game's pour action,
+    `ISFluidTransferAction`, which the **Transfer Liquid** window queues
+    (`Containers.installPourAction`). While the action's `update` or
+    `complete` runs, its own `FluidContainer.Transfer` calls go to the
+    game alone. The first of them reads both records and the source's
+    fluids.
+  * The mod follows the whole pour once: when the action completes, or
+    in its `stop` when the player stops it part-way. The parcel is what
+    left the source since the first slice, and the records are the ones
+    read before it.
+  * When either record was written during the pour (another player, on a
+    server), the mod does not follow it and logs a warning. The next read
+    then finds the poured litres as fuel the mod did not see arrive, at
+    the world's baseline.
+  * Every other `FluidContainer.Transfer` call is still followed on its
+    own.
+* Reason: RT-SP run 213. The action pours a slice per update, about
+  0.02 L. Followed slice by slice, the mod wrote the target's record and
+  fluids after each one, and a component under 0.0002 L
+  (`Native.MIN_FLUID`) went to the largest one (`Native.holdable`, D-007).
+  So into a target with no water or sediment, each slice's water and
+  sediment became petrol: two pours of 3.79 L lost all 0.08 L the source
+  held. Fuel with less than about 1 % of either came out clean, without
+  the filter or the drain. A lower `Native.MIN_FLUID` would not have
+  helped: the game drops a fluid under 0.0001 L, and a slice of fuel with
+  0.1 % water carries 0.00002 L.
+* Consequences:
+  * During a pour the records stay as they were before it, while the
+    target's fluids fill. If the action ends without its `complete` or
+    `stop` running, the next read finds the poured litres as fuel the mod
+    did not see arrive.
+  * A pour writes each record once instead of once per slice (190 times
+    for 3.79 L), and so sends each can's fields (`syncItemFields`) once.
+  * On a server the action's `update` never runs and `complete` pours
+    everything in one call (`engine-capabilities.md`, timed actions on a
+    server), so a pour there was already followed once. Reasoned from the
+    code; not run.
+  * Offline tests: `tests/integration/test_pour_action.lua` runs a
+    stand-in of the action through the mod's hook: a full pour, a pour
+    stopped part-way, a call outside the action, a fluid the mod does not
+    track, and a record written during the pour.
+  * RT-SP run 215 (40/0): through the window, two pours of 3.79 L each
+    carried their 0.03 L of water and 0.01 L of sediment, with the
+    ageing, stabilizer and blend; a pour stopped after 80 ticks carried
+    the 1.60 L that had left, and no record changed before the stop.

@@ -25,6 +25,13 @@
   death, so there the mod watches the vessel leave the player's hands
   instead. That also covers a vessel dropped when climbing (not checked
   in game). Checked in game, in single player and on a server.
+* Fuel poured with the game's **Transfer Liquid** window keeps its water
+  and sediment. Before, the window's small slices (about 0.02 L each) lost
+  them when the fuel held less than about 1 % of either: the target got
+  petrol in their place, so a pour cleaned the fuel without the filter or
+  the drain. The mod now follows each pour once, when it ends or is
+  stopped. Checked in game, in single player, with a pour stopped
+  part-way too.
 * The crafting window and the craft menu name the mod's recipes ("Make
   Fermentation Vessel", in Italian "Crea recipiente di fermentazione").
   Before, they showed their internal ids, such as "TLG_MakeFermenterVessel",

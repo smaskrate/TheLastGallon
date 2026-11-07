@@ -207,10 +207,13 @@
   it: Fluid > Transfer Liquid on a can of aged, stabilized petrol with
   ethanol, water and sediment, an empty can picked from the target box's
   menu, the slider at half and Pour clicked; then that can taken away and
-  the rest poured into a can of fresh petrol. The first must hold the
-  source's fuel in its condition, the second the blend the mixing rules
-  give; the window's preview must write no record. One screenshot of the
-  window; no save.
+  the rest poured into a can of fresh petrol; then all of that can poured
+  into a new empty can and stopped part-way by clearing the action queue.
+  The first and third targets must hold their source's fuel in its
+  condition, the second the blend the mixing rules give; the window's
+  preview must write no record, no record may change before the stop, and
+  after each pour both cans' fluids must match their records. One
+  screenshot of the window; no save.
 .PARAMETER ModSource
   Folder deployed as the mod (default: the repository's; see setup-devenv.ps1).
 .PARAMETER ActiveMods

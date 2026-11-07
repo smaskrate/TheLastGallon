@@ -12399,8 +12399,14 @@ end
 --          give (deg weighted by each component's litres, stabilizer by fuel
 --          litres, microbial growth by all litres), worked out here from
 --          both records rather than with the mod's own blend function.
+--   pour3: A taken away, empty can D given, all of C poured into it and
+--          the pour stopped part-way as a player stops it (the action
+--          queue cleared). D must hold the litres that left C, in C's
+--          condition, and no record may be written before the stop: the
+--          mod follows the action's pour once, when it completes or stops.
 -- While the window previews a pour (a Transfer into a copy of the target,
--- SRC ISFluidTransferUI.lua:410), neither can's record may change. Every
+-- SRC ISFluidTransferUI.lua:410), neither can's record may change. After
+-- each pour both cans' fluids must hold what their records say. Every
 -- FluidContainer.Transfer call is counted on its way in, and the mod's
 -- error log is watched for the whole run.
 ------------------------------------------------------------------------------
@@ -12551,9 +12557,27 @@ RT.TL.setup = { name = "rttl_setup", timeout = 600, fn = function(ctx, ticks)
     return true
 end }
 
+-- The largest difference, in litres, between a can's fluids and the
+-- composition its record holds, and where.
+function RT.TL.recordGap(can)
+    local side = can:getModData().tlg
+    if side == nil then return math.huge, "no record" end
+    local comp = TLG.Integration.Native.readComposition(can:getFluidContainer())
+    local worst, where = 0, "-"
+    local keys = {}
+    for k in pairs(comp) do keys[k] = true end
+    for k in pairs(side.q or {}) do keys[k] = true end
+    for _, k in ipairs(TLG.Tables.sortedKeys(keys)) do
+        local d = math.abs((comp[k] or 0) - ((side.q or {})[k] or 0))
+        if d > worst then worst, where = d, k end
+    end
+    return worst, where
+end
+
 -- One pour through the window: `slider` is the share of the most the window
 -- allows; `afterPour(ctx, moved, dstView)` adds the pour's own checks.
-function RT.TL.pourStep(name, getSrc, getDst, slider, emptyDestination, afterPour)
+-- `stopAfter`: ticks after Pour is clicked at which the pour is stopped.
+function RT.TL.pourStep(name, getSrc, getDst, slider, emptyDestination, afterPour, stopAfter)
     return { name = "rttl_" .. name, timeout = 6000, fn = function(ctx, ticks)
         local TL = RT.TL
         local label = "RTTL." .. name
@@ -12563,6 +12587,10 @@ function RT.TL.pourStep(name, getSrc, getDst, slider, emptyDestination, afterPou
                 R:line("SKIP %s: a can is missing", label)
                 return true
             end
+            -- Run 214: in pour1, called without it, stopAfter was neither
+            -- nil nor a number at the comparison ("__le not defined").
+            ctx.stopAt = type(stopAfter) == "number" and stopAfter or nil
+            R:line("OBS  %s stopAfter type=%s value=%s", label, type(stopAfter), tostring(stopAfter))
             local fa, fb = ctx.a:getFluidContainer(), ctx.b:getFluidContainer()
             R:line("OBS  %s %s canTransfer=%s", label, loadText(), tostring(FluidContainer.CanTransfer(fa, fb)))
             hopBegin(ctx, label, "item", ctx.a, canAmount(fa), "item", ctx.b, canAmount(fb))
@@ -12618,14 +12646,43 @@ function RT.TL.pourStep(name, getSrc, getDst, slider, emptyDestination, afterPou
             return nil
         end
         if ctx.phase == "pouring" then
+            if ctx.stopAt and not ctx.stopped and ticks - ctx.t0 >= ctx.stopAt then
+                -- Pouring now: the target has fluids, and the records are
+                -- the ones read before the first slice.
+                local side = sidecar(ctx.a:getModData()) .. " / " .. sidecar(ctx.b:getModData())
+                R:line("OBS  %s stopping at tick %d: dst fluids %s; sidecars %s; Transfer calls: %s", label,
+                    ticks - ctx.t0, TLGH.fluidSummary(ctx.b:getFluidContainer()), side, TL.callsText())
+                R:check(label .. ".no_record_written_while_pouring", function()
+                    return ctx.b:getFluidContainer():getAmount() > 0.5 and side == ctx.side0,
+                        string.format("dst %.4f L; before: %s; now: %s", ctx.b:getFluidContainer():getAmount(),
+                            ctx.side0, side)
+                end)
+                ISTimedActionQueue.clear(player())
+                ctx.stopped = true
+                return nil
+            end
             if ticks - ctx.t0 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
             R:line("OBS  %s poured in %d ticks; Transfer calls: %s; mod errors so far %d", label, ticks - ctx.t0,
                 TL.callsText(), #TL.errors)
             local moved, dv = hopEnd(ctx, emptyDestination)
             R:line("OBS  %s.after fluids src %s dst %s", label, TLGH.fluidSummary(ctx.a:getFluidContainer()),
                 TLGH.fluidSummary(ctx.b:getFluidContainer()))
-            R:check(label .. ".moved_what_the_window_showed", function()
-                return math.abs(moved - ctx.planned) <= 1e-3, string.format("moved=%.4f window=%.4f", moved, ctx.planned)
+            if ctx.stopAt then
+                R:check(label .. ".stopped_part_way", function()
+                    return ctx.stopped == true and moved > 0.5 and moved < ctx.planned - 0.5,
+                        string.format("moved=%.4f window=%.4f", moved, ctx.planned)
+                end)
+            else
+                R:check(label .. ".moved_what_the_window_showed", function()
+                    return math.abs(moved - ctx.planned) <= 1e-3,
+                        string.format("moved=%.4f window=%.4f", moved, ctx.planned)
+                end)
+            end
+            R:check(label .. ".fluids_match_records", function()
+                local ws, at = TL.recordGap(ctx.a)
+                local wd, bt = TL.recordGap(ctx.b)
+                return ws <= 1e-4 and wd <= 1e-4,
+                    string.format("src worst %.2e at %s; dst worst %.2e at %s", ws, at, wd, bt)
             end)
             R:check(label .. ".poured_through_the_wrapped_call", function()
                 return TL.calls.cans > 0, TL.callsText()
@@ -12681,6 +12738,37 @@ function RT.TL.afterPour2(ctx, moved, dv)
     end)
 end
 
+function RT.TL.afterPour3(ctx, moved, dv)
+    local now, env = TLG.World.now(), TLG.World.env()
+    local s0 = TLG.Domain.Aging.advance(ctx.srcView, now, env)
+    local sv = tlgView("item", ctx.a)
+    R:check("RTTL.pour3.source_keeps_its_condition", function()
+        if sv == nil then return false, "no view of the source" end
+        local same, detail = sameFuel(s0, sv, 1e-3)
+        return same and math.abs((sv.stab or 0) - (s0.stab or 0)) <= 1e-3,
+            string.format("%s; stab %.4f -> %.4f", detail, s0.stab or 0, sv.stab or 0)
+    end)
+    R:check("RTTL.pour3.stabilizer_carried", function()
+        if dv == nil then return false, "no view of the target" end
+        return (s0.stab or 0) > 0 and math.abs((dv.stab or 0) - (s0.stab or 0)) <= 1e-3,
+            string.format("source %.4f target %.4f", s0.stab or 0, dv.stab or 0)
+    end)
+end
+
+-- A taken away (empty after pour2), empty can D given.
+RT.TL.swap2 = { name = "rttl_swap2", timeout = 600, fn = function(ctx, ticks)
+    local TL = RT.TL
+    if ticks == 1 then
+        if TL.a and TL.a:getContainer() then TL.a:getContainer():Remove(TL.a) end
+        TL.d = giveCan("Base.PetrolCan", {})
+        return nil
+    end
+    if ticks < 30 then return nil end
+    R:line("OBS  RTTL.can_d fluids %s; sidecar %s", TLGH.fluidSummary(TL.d:getFluidContainer()),
+        sidecar(TL.d:getModData()))
+    return true
+end }
+
 -- B taken away (two cans carried per pour), C given with fresh petrol and
 -- recorded as a first look records it.
 RT.TL.swap = { name = "rttl_swap", timeout = 600, fn = function(ctx, ticks)
@@ -12712,6 +12800,9 @@ if REQUEST == "sp-rttl" then
         RT.TL.pourStep("pour1", function() return RT.TL.a end, function() return RT.TL.b end, 0.5, true, RT.TL.afterPour1),
         RT.TL.swap,
         RT.TL.pourStep("pour2", function() return RT.TL.a end, function() return RT.TL.c end, 1.0, false, RT.TL.afterPour2),
+        RT.TL.swap2,
+        RT.TL.pourStep("pour3", function() return RT.TL.c end, function() return RT.TL.d end, 1.0, true, RT.TL.afterPour3,
+            80),
         RT.TL.close, RT.finish }
 end
 

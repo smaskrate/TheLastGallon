@@ -19,7 +19,8 @@
 --
 -- Lua-initiated pours go through FluidContainer.Transfer, which this adapter
 -- wraps (wrappability verified RT-DS, G02) so the destination receives the
--- source's chemical condition with the moved fluid.
+-- source's chemical condition with the moved fluid. The game's pour action,
+-- which pours in slices, is followed once per pour (see the hook below).
 require "TLG/Integration/Native"
 require "TLG/Integration/World"
 require "TLG/Authority/Transactions"
@@ -282,36 +283,117 @@ function C.followNativeTransfer(srcOwner, srcKind, srcRec, dstOwner, dstKind, ds
     return newSrc, merged
 end
 
+-- The record's revision as stored on the owner; -1 when it has none.
+local function revOf(owner)
+    local side = owner:getModData()[C.SIDECAR]
+    return type(side) == "table" and side.rev or -1
+end
+
+-- What following a pour needs, read before it: both records and the
+-- source's fluids. Nil when the mod does not follow it (no owner, no fuel
+-- of the mod's in the source, another fluid in the target).
+local function prepare(a, b)
+    local ao, ak = C.ownerOf(a)
+    local bo, bk = C.ownerOf(b)
+    if not ao or not bo then return nil end
+    local srcRec = C.read(ao, ak, true)
+    if not srcRec or Supply.isEmpty(srcRec) then return nil end
+    local dstRec = C.read(bo, bk, true)
+    if not dstRec then return nil end
+    return { a = a, ao = ao, ak = ak, bo = bo, bk = bk, src = srcRec, dst = dstRec,
+        before = Native.readComposition(a), revs = { revOf(ao), revOf(bo) } }
+end
+
+-- Follows what left the source since `prepare`. When either record was
+-- written in between, the records `prepare` read are out of date: the
+-- litres are left to the next read, as fuel the mod did not see arrive.
+local function follow(c)
+    local parcel, moved = subtract(c.before, Native.readComposition(c.a))
+    if moved <= 1e-7 then return end
+    if revOf(c.ao) ~= c.revs[1] or revOf(c.bo) ~= c.revs[2] then
+        TLG.Log.warn("pour of %.4f L into %s not followed: a record was written during it", moved,
+            C.keyOf(c.bo, c.bk))
+        return
+    end
+    C.followNativeTransfer(c.ao, c.ak, c.src, c.bo, c.bk, c.dst, parcel)
+end
+
+-- The game's pour action (ISFluidTransferAction, used by the Transfer
+-- Liquid window) pours one slice per update and the rest when it completes
+-- (SRC ISFluidTransferAction.lua:29,73): about 0.02 L a slice, 190 calls
+-- for 3.79 L (RT-SP run 213). Followed slice by slice, a component under
+-- Native.MIN_FLUID in a slice went to the largest component of a target
+-- without it, so fuel with less than about 1 % water or sediment arrived
+-- without them (run 213). While the action's update or complete runs, its
+-- own slices go to the game alone; the whole pour is followed once, when
+-- the action completes or is stopped, from the records as they were before
+-- its first slice. A multiplayer client moves nothing (SRC :25,
+-- `not isClient()`); the server calls the action's complete and never its
+-- update (engine-capabilities.md, timed actions on a server), so a pour
+-- there is one call.
+local active = nil -- { action, a, b } while an action's update or complete runs
+
 local function transferHook(a, b, amount, ...)
     if not World.isAuthority() or a == nil or b == nil then
         return originalTransfer(a, b, amount, ...)
     end
-    local ok, ctxOrErr = pcall(function()
-        local ao, ak = C.ownerOf(a)
-        local bo, bk = C.ownerOf(b)
-        if not ao or not bo then return nil end
-        local srcRec = C.read(ao, ak, true)
-        if not srcRec or Supply.isEmpty(srcRec) then return nil end
-        local dstRec = C.read(bo, bk, true)
-        if not dstRec then return nil end
-        return { ao = ao, ak = ak, bo = bo, bk = bk, src = srcRec, dst = dstRec,
-            before = Native.readComposition(a) }
-    end)
+    if active and a == active.a and b == active.b then
+        local action = active.action
+        if action.tlgPour == nil then
+            local ok, p = pcall(prepare, a, b)
+            if not ok then TLG.Log.error("pour action prepare: %s", tostring(p)) end
+            action.tlgPour = ok and p or false
+        end
+        return originalTransfer(a, b, amount, ...)
+    end
+    local ok, ctxOrErr = pcall(prepare, a, b)
     local res = originalTransfer(a, b, amount, ...)
     if ok and ctxOrErr then
-        local c = ctxOrErr
-        local ok2, err = pcall(function()
-            local after = Native.readComposition(a)
-            local parcel, moved = subtract(c.before, after)
-            if moved > 1e-7 then
-                C.followNativeTransfer(c.ao, c.ak, c.src, c.bo, c.bk, c.dst, parcel)
-            end
-        end)
+        local ok2, err = pcall(follow, ctxOrErr)
         if not ok2 then TLG.Log.error("transfer hook: %s", tostring(err)) end
     elseif not ok then
         TLG.Log.error("transfer hook prepare: %s", tostring(ctxOrErr))
     end
     return res
+end
+
+-- Runs one of the action's methods with its own slices left to the game.
+local function asPour(orig, action, ...)
+    local ok, a, b = pcall(function()
+        return action.source:getFluidContainer(), action.target:getFluidContainer()
+    end)
+    if not ok or a == nil or b == nil then return orig(action, ...) end
+    local outer = active
+    active = { action = action, a = a, b = b }
+    local done, res = pcall(orig, action, ...)
+    active = outer
+    if not done then error(res, 0) end
+    return res
+end
+
+local function finishPour(action)
+    local p = action.tlgPour
+    action.tlgPour = false
+    if p then
+        local ok, err = pcall(follow, p)
+        if not ok then TLG.Log.error("pour action: %s", tostring(err)) end
+    end
+end
+
+-- Wraps the pour action's class (`cls`: ISFluidTransferAction in the game,
+-- a stand-in in the tests).
+function C.installPourAction(cls)
+    local update, complete, stop = cls.update, cls.complete, cls.stop
+    function cls:update(...) return asPour(update, self, ...) end
+    function cls:complete(...)
+        local res = asPour(complete, self, ...)
+        finishPour(self)
+        return res
+    end
+    function cls:stop(...)
+        finishPour(self)
+        return stop(self, ...)
+    end
 end
 
 function C.install()
@@ -323,6 +405,13 @@ function C.install()
     originalTransfer = FluidContainer.Transfer
     FluidContainer.Transfer = transferHook
     TLG.Log.info("container adapter installed (FluidContainer.Transfer wrapped)")
+    local A = ISFluidTransferAction
+    if A and A.update and A.complete and A.stop then
+        C.installPourAction(A)
+        TLG.Log.info("container adapter: the game's pour action followed once per pour")
+    else
+        TLG.Log.warn("ISFluidTransferAction not found; its pours are followed slice by slice")
+    end
 end
 
 function C.originalTransfer()

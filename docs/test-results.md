@@ -4682,3 +4682,65 @@ Evidence:
 [2026-11-06_rt-sp_harness_run213_transfer_liquid.txt](evidence/2026-11-06_rt-sp_harness_run213_transfer_liquid.txt);
 the window before Pour 1 (stored as JPEG):
 [Transfer Liquid](evidence/2026-11-06_run213_transfer_liquid_window.jpg).
+
+## 2026-11-07 — RT-SP launches 214–215 (Transfer Liquid followed once per pour)
+
+The user asked for the lost water and sediment of run 213 to be fixed
+("Yes, fix it"). The mod now follows the game's pour action once per pour,
+when it completes or is stopped, and leaves its slices to the game (D-035,
+`Containers.installPourAction`).
+
+Offline, on the game's Kahlua:
+* domain suite 230/230, with five new cases in
+  `tests/integration/test_pour_action.lua` (a full pour, a pour stopped
+  part-way, a call outside the action, a fluid the mod does not track, a
+  record written during the pour). With the action wrap turned off, the
+  full pour's case fails;
+* audit suite 25/25; compile check 126/0.
+
+The harness mode `-Mode transfer-liquid` gained a third pour and two
+checks:
+* after every pour, both cans' fluids must hold what their records say
+  (`fluids_match_records`, 0.0001 L);
+* pour 3: can A taken away, an empty can D given, all of C poured into it
+  through the window and stopped 80 ticks after **Pour** by clearing the
+  action queue (`ISTimedActionQueue.clear`, which calls the character's
+  `StopAllActionQueue`). No record may change before the stop
+  (`no_record_written_while_pouring`), and D must hold what left C, in C's
+  condition.
+
+* Launch 214 (**32/0**, pour 1 not checked). Pour 1 ended in a harness
+  error, "`__le` not defined for operand": `stopAfter`, a parameter its
+  call did not pass, held a value that was not a number (launch 215 shows
+  which). The action poured on while the next step took can B away; it
+  then stopped, and A's record shows the 0.044 L that had left, in A's
+  proportions. Pours 2 and 3 ran on what A had left: pour 2 moved 6.00 L
+  into C, up to its 10 L, by the mixing rules (worst 5.1e-6); pour 3
+  stopped after 80 ticks with 1.60 L in D, in C's condition.
+* Launch 215 (**40/0**), the harness checking that parameter's type:
+  * Pour 1, half of A into empty can B: 3.79 L in 189 ticks through 190
+    calls. B's record holds 3.00 L of gasoline, 0.75 L of ethanol,
+    0.03 L of water and 0.01 L of sediment, with A's degradation (0.3
+    and 0.15) and stabilizer (0.6); B's fluids are the same (worst
+    1.9e-6 L). In run 213 B got 3.04 L of gasoline and no water or
+    sediment.
+  * Pour 2, the rest of A (3.79 L) into C, 4 L of petrol at the world's
+    baseline (degradation 0.0793): C holds 7.00 L of gasoline, 0.75 L of
+    ethanol, 0.03 L of water and 0.01 L of sediment, gasoline
+    degradation 0.1739 and stabilizer 0.2903, as the rules give (worst
+    1.4e-8).
+  * Pour 3, all of C (7.79 L) into empty can D, stopped at tick 80:
+    1.6031 L moved. D holds it in C's proportions (worst 2.5e-9) and
+    condition; neither record had changed before the stop; C kept its
+    condition.
+  * The mod logged no error. The parameter not passed was the string
+    `"afterPour1"` in pour 1 and nil in pour 2 (`engine-capabilities.md`).
+
+Not run:
+* the window in multiplayer: reasoned from the code, the server pours in
+  one call at `complete`, so nothing changes there (D-035);
+* world containers (rain barrels, the FuelPump entity).
+
+Evidence:
+[2026-11-07_rt-sp_harness_run214_transfer_liquid.txt](evidence/2026-11-07_rt-sp_harness_run214_transfer_liquid.txt);
+[2026-11-07_rt-sp_harness_run215_transfer_liquid.txt](evidence/2026-11-07_rt-sp_harness_run215_transfer_liquid.txt).

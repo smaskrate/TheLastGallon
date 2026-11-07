@@ -402,8 +402,10 @@ the shipped changelog and support matrix. The documentation rewrite of
 matrix, the migrations notes and the changelog; `LICENSE.md` and
 `NOTICE.md` are unchanged), and the package now also ships the player
 guide's pictures (`docs/images`, copied by `tools/package.ps1`, which now
-accepts `.jpg`). The 0.1.0 package must be built and rehearsed again
-before release.
+accepts `.jpg`). The **Transfer Liquid** fix (D-035, run 215) changed
+`Containers.lua` and, again, the player guide, the support matrix and the
+changelog. The 0.1.0 package must be built and rehearsed again before
+release.
 
 The current 0.1.0 package is the zip of commit `d9cd9aa`: SHA-256
 `e3c075f9…`, 4,008,919 bytes; two builds gave the same bytes. Its 129 files

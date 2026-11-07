@@ -27,7 +27,7 @@ alternative), **NOT RUN**.
 | Gate | Question | Status | Evidence / result |
 | --- | --- | --- | --- |
 | G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), in English and in Italian (runs 43–44), not on the DS |
-| G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); the **Transfer Liquid** window loses water and sediment under about 1 % (run 213); a can on the ground keeps its fluid on the world object after reload |
+| G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); the **Transfer Liquid** window's pours, followed once per pour, carry water and sediment too (runs 213, 215; D-035); a can on the ground keeps its fluid on the world object after reload |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP + MP)** idle, start gate, stall, power and wear; driving SP | Vanilla burns the fuel, idling and driving, and the mod reconciles it proportionally; the mod never subtracts. Refuel, siphon, start gate, stall and poor fuel's power and wear (D-031): SP runs 3–6 and 179, MP runs 160, 165, 169 and 188. Driving burn (0.778 L over 352 tiles at 25 km/h) and a stall on the move: SP run 176. See G03 below |
 | G04 Generator consumption | Extend fuel/burn? | **PASS (SP + MP)** burn and start gate | Native burn reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 (SP runs 3–6; MP runs 160, 162) |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP + MP)** with adapter | Pickup, the drop action, `forceDropHeavyItems`, the menus' unequip and a drag to the floor carry the record (SP runs 3–6 and 85); taken and put back on a server (MP run 160) |
@@ -220,9 +220,22 @@ RT-DS results (`TLG_harness_server.txt`):
   The window's preview (SRC `ISFluidTransferUI.lua:410`) calls the same
   function into a copy of the target that has no owner, so the wrapper
   leaves it alone: no record was written before **Pour**. Ageing,
-  stabilizer and the blend followed; a small share of water and sediment
-  did not (`support-matrix.md`, transfer paths).
-* NOT RUN: world-object containers (rain barrels, FuelPump entity).
+  stabilizer and the blend followed. A small share of water and sediment
+  did not, as each slice was followed on its own (D-035).
+* RT-SP run 215 (40/0), with the action followed once per pour (D-035):
+  the same two pours carried water and sediment, and a third, stopped
+  after 80 ticks by clearing the action queue (`ISTimedActionQueue.clear`),
+  carried the 1.60 L that had left the source: the clear reaches the
+  action's `stop`. No record was written while it poured.
+* In game, a harness function with seven parameters, called with six, did
+  not get nil in the seventh. Run 214 stopped on comparing it with a
+  number ("`__le` not defined for operand"); run 215 logged it: the
+  string `"afterPour1"`, the name of the sixth argument's field
+  (`RT.TL.afterPour1`). A second call of the same shape got nil, and the
+  same calls run offline on the game's Kahlua gave nil. Cause not
+  established; the harness now checks the type of that parameter.
+* NOT RUN: world-object containers (rain barrels, FuelPump entity); the
+  window in multiplayer.
 
 ## G03 Vehicle fuel — PASS (SP + MP); driving SP only
 

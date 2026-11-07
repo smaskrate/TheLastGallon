@@ -35,6 +35,10 @@ Fuel has two separate problems:
 * **Contamination** is water, sediment and, in diesel, microbial sludge.
   You can drain or filter it out.
 
+Both go with the fuel when you pour it with the game's own **Transfer
+Liquid** window, refuel or siphon: the target gets the fuel's ageing,
+stabilizer, water and sediment in proportion.
+
 ## The mod's items
 
 ![The nine items the mod adds, with their names](images/item-icons.png)
