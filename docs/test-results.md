@@ -5307,3 +5307,28 @@ of the server with the diesel generator placed; the loot lists.
 Evidence:
 [run 247](evidence/2026-11-10_rt-mp_harness_run247_biodiesel_42.22.2.txt);
 [run 248](evidence/2026-11-10_rt-mp_harness_run248_biodiesel_42.22.2.txt).
+## 2026-11-10 — RT-SP client harness, launches 249–250 (the five machines crafted; the client in Italian, D-036)
+
+Build 42.22.2, `feature/biodiesel` after `1bacaa0`.
+
+* Launch 249, `-Mode crafting`: **40/0**. The crafting window, beside a
+  workbench, now for the mod's twelve recipes. Each of the five new ones
+  (`TLG_MakeWoodRetort`, `TLG_MakeAshBarrel`, `TLG_MakeLyeLeacher`,
+  `TLG_MakeBiodieselReactor`, `TLG_MakeBiodieselWashTank`) shows its
+  English name, is found by typing it in the search box, and was made
+  with the Craft button from exactly its script's inputs: one machine
+  made, the materials gone, the hammer, the blow torch and the welding
+  mask kept. The retort's bucket was handed over empty. The seven older
+  recipes passed as before.
+* Launch 250, `-Mode italian`: **5/0**. All 316 Italian strings the mod
+  ships come back from the game as shipped (ContextMenu 41, Fluids 8,
+  IG_UI 223, ItemName 15, Recipes 12, Sandbox 17), the new ones among
+  them; the Fuel and machine menus read Italian.
+
+Not run: the new machines' menus, statuses and refusals read in Italian
+in the game (their strings are loaded as shipped); crafting on a server;
+a bucket holding water as the retort's input.
+
+Evidence:
+[run 249](evidence/2026-11-10_rt-sp_harness_run249_crafting_42.22.2.txt);
+[run 250](evidence/2026-11-10_rt-sp_harness_run250_italian_42.22.2.txt).

@@ -1338,7 +1338,8 @@ local function grownCan(before)
     return nil, nil
 end
 
-local TLG_RECIPES = { "TLG_MakeFermenterVessel", "TLG_MakePotStill", "TLG_MakeRefluxStill", "TLG_MakeDryingColumn",
+local TLG_RECIPES = { "TLG_MakeWoodRetort", "TLG_MakeAshBarrel", "TLG_MakeLyeLeacher", "TLG_MakeBiodieselReactor",
+    "TLG_MakeBiodieselWashTank", "TLG_MakeFermenterVessel", "TLG_MakePotStill", "TLG_MakeRefluxStill", "TLG_MakeDryingColumn",
     "TLG_MakeSampleKit", "TLG_MakeFuelFilter", "TLG_MakeFuelStabilizer" }
 
 -- Recipes the crafting window lists (ISHandcraftWindow.lua:53), by short name.
@@ -11430,7 +11431,7 @@ end
 -- the window is opened with the button beside the equipped items
 -- (ISEquippedItem "CRAFTING" -> ISEntityUI.OpenHandcraftWindow, query
 -- "InHandCraft;AnySurfaceCraft"), beside a workbench. Each of the mod's
--- seven recipes: its name as the window shows it, found by typing that
+-- twelve recipes: its name as the window shows it, found by typing that
 -- name in the search box, picked from the list (the row's click handler,
 -- ISRecipeScrollingListBox.onMouseDown), made with the Craft button
 -- (ISButton.forceClick, which does nothing on a disabled button, as a
@@ -11445,6 +11446,9 @@ RT.CR = {
         TLG_MakeRefluxStill = "Make Reflux Column Still", TLG_MakeDryingColumn = "Make Ethanol Drying Column",
         TLG_MakeSampleKit = "Make Fuel Sampling Kit", TLG_MakeFuelFilter = "Make Fuel Filter Cartridge",
         TLG_MakeFuelStabilizer = "Make Fuel Stabilizer",
+        -- The biodiesel chain's machines (D-036).
+        TLG_MakeWoodRetort = "Make Wood Retort", TLG_MakeAshBarrel = "Make Ash Barrel", TLG_MakeLyeLeacher = "Make Lye Leacher",
+        TLG_MakeBiodieselReactor = "Make Biodiesel Reactor", TLG_MakeBiodieselWashTank = "Make Biodiesel Wash Tank",
     },
     -- { type, count, kept }: what is handed over; `uses` items stay but are used.
     specs = {
@@ -11462,11 +11466,28 @@ RT.CR = {
             mats = { { "Base.RippedSheets", 2 }, { "Base.Charcoal", 1 }, { "Base.EmptyJar", 1 } } },
         { recipe = "TLG_MakeFuelStabilizer", out = "TLG.FuelStabilizer", search = "Stabilizer",
             mats = { { "Base.Charcoal", 2 }, { "Base.EmptyJar", 1 } } },
+        -- The biodiesel chain's machines (D-036). The retort's bucket is
+        -- handed over empty.
+        { recipe = "TLG_MakeWoodRetort", out = "TLG.WoodRetort", search = "Retort", emptied = "Base.BucketEmpty",
+            mats = { { "Base.MetalDrum", 1 }, { "Base.SheetMetal", 2 }, { "Base.MetalPipe", 2 }, { "Base.BucketEmpty", 1 },
+                { "Base.BlowTorch", 1, true }, { "Base.WeldingMask", 1, true } } },
+        { recipe = "TLG_MakeAshBarrel", out = "TLG.AshBarrel", search = "Ash",
+            mats = { { "Base.MetalDrum", 1 }, { "Base.MetalBar", 2 }, { "Base.Hammer", 1, true } } },
+        { recipe = "TLG_MakeLyeLeacher", out = "TLG.LyeLeacher", search = "Leacher",
+            mats = { { "Base.Hammer", 1, true }, { "Base.Plank", 6 }, { "Base.Nails", 12 }, { "Base.CheeseCloth", 1 },
+                { "Base.Pot", 1 } } },
+        { recipe = "TLG_MakeBiodieselReactor", out = "TLG.BiodieselReactor", search = "Reactor",
+            mats = { { "Base.MetalDrum", 1 }, { "Base.SheetMetal", 1 }, { "Base.MetalBar", 2 }, { "Base.MetalPipe", 1 },
+                { "Base.BlowTorch", 1, true }, { "Base.WeldingMask", 1, true } } },
+        { recipe = "TLG_MakeBiodieselWashTank", out = "TLG.BiodieselWashTank", search = "Wash Tank",
+            mats = { { "Base.MetalDrum", 1 }, { "Base.SheetMetal", 2 }, { "Base.MetalBar", 3 }, { "Base.MetalPipe", 1 },
+                { "Base.BlowTorch", 1, true }, { "Base.WeldingMask", 1, true } } },
     },
     cleared = { "Base.Hammer", "Base.Plank", "Base.Nails", "Base.EmptyJar", "Base.Pot", "Base.MetalPipe", "Base.RubberHose",
         "Base.Screwdriver", "Base.SheetMetal", "Base.BlowTorch", "Base.WeldingMask", "Base.RippedSheets", "Base.Charcoal",
         "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn", "TLG.FuelSampleKit", "TLG.FuelFilter",
-        "TLG.FuelStabilizer" },
+        "TLG.FuelStabilizer", "Base.MetalDrum", "Base.MetalBar", "Base.BucketEmpty", "Base.CheeseCloth", "TLG.WoodRetort",
+        "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor", "TLG.BiodieselWashTank" },
 }
 
 function RT.CR.window() return ISEntityUI.GetWindowInstance(0, "HandcraftWindow") end
@@ -11615,6 +11636,14 @@ function RT.CR.craft(s)
             local now = {}
             for _, m in ipairs(s.mats) do if m[1] ~= s.withhold then now[#now + 1] = m end end
             RT.CR.handOver(now)
+            if s.emptied then
+                local list = player():getInventory():getItemsFromFullType(s.emptied)
+                for i = 0, (list and list:size() or 0) - 1 do
+                    local fc = list:get(i):getFluidContainer()
+                    if fc then fc:Empty() end
+                end
+                triggerEvent("OnContainerUpdate")
+            end
             ctx.phase, ctx.at = "search", ticks
             return nil
         end

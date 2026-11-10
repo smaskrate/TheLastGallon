@@ -193,7 +193,7 @@
   through the inventory menu's Inspect (manual-italian: the client in
   Italian); no save.
   crafting: the crafting window, opened with the button beside the
-  equipped items: each of the mod's seven recipes found by name in its
+  equipped items: each of the mod's twelve recipes found by name in its
   search box, picked from its list and made with its Craft button (the
   drying column by double-clicking its row), beside a workbench; the
   vessel first with its nails missing (Craft disabled); no save.

@@ -1398,7 +1398,10 @@ their replacement.
     the definitions give them. Launch 230 found the can refusing the
     batch's leftover methanol and plant oil: their fluids were category
     Industrial only and now carry Fuel as well (`TLG_fluids.txt`).
-  * NOT RUN in game: crafting any of the five recipes; a part-used bottle
+  * Run since (2026-11-10): the five recipes crafted in the crafting
+    window (launch 249), the Italian strings (launch 250), the loads and
+    the collection on a dedicated server (launch 248).
+  * NOT RUN in game: a part-used bottle
     of oil (a new bottle gives its 0.9 L: launch 230); lard and olive oil;
     a batch limited by the methanol; the retort emptied (its charcoal);
     Pause, Resume and Abort on these machines; picking one up; a save;

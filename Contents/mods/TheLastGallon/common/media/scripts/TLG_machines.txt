@@ -216,7 +216,7 @@ module TLG
        on 2026-11-10 (TLG_models.txt); their icons are rendered from them
        (tools/make-model-icons.ps1).
        Ingredient ids were checked in the 42.22.2 item scripts; the welded
-       ones mirror TLG_MakeRefluxStill. Not crafted in game yet. */
+       ones mirror TLG_MakeRefluxStill. Crafted in game in launch 249. */
     item WoodRetort
     {
         DisplayCategory = Tool,
