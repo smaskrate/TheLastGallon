@@ -4925,3 +4925,29 @@ Evidence:
 [2026-11-10_rt-sp_harness_run230_biodiesel_chain_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run230_biodiesel_chain_42.22.2.txt);
 [2026-11-10_rt-sp_harness_run231_biodiesel_chain_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run231_biodiesel_chain_42.22.2.txt);
 screenshots in [evidence/run231](evidence/run231).
+
+## 2026-11-10 — RT-SP client harness, launch 232 (the biodiesel machines' models)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `7fd1c2c`. New
+mode: `tools\run-sp-harness.ps1 -Mode biodiesel-models` (request
+`sp-rtbdm`): the fermentation vessel and the five machines on a row
+outdoors, two tiles apart, the character standing on the row between two
+of them for each photograph. 1 check passed (clear ground found), 0
+failed; the result is the six photographs.
+
+* Each of the five models is seen whole, in its colours, beside the
+  character: the wood retort (a drum lying on a brick firebox, its pipe to
+  a small can), the ash barrel, the lye leacher (a tub on a stand, a pot
+  beneath), the reactor (a drum on a brick firebox, a crank on its lid)
+  and the wash tank (a cone-bottomed tank on three legs with a drain).
+* Sizes against the character: the ash barrel reaches her waist, the
+  leacher and the reactor her chest, the wash tank her shoulders, the
+  retort her hips. Read from the photographs, not measured.
+* `tlg_rtbdm_row.png` (zoom 1.0) cuts the vessel and the wash tank at the
+  frame's edges; the five at zoom 0.5 show every machine whole twice.
+
+Not run: the models seen indoors, at night, from other sides, or held.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run232_biodiesel_models_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run232_biodiesel_models_42.22.2.txt);
+screenshots in [evidence/run232](evidence/run232).

@@ -1402,8 +1402,8 @@ their replacement.
     of oil (a new bottle gives its 0.9 L: launch 230); lard and olive oil;
     a batch limited by the methanol; the retort emptied (its charcoal);
     Pause, Resume and Abort on these machines; picking one up; a save;
-    cold weather; Italian; multiplayer. Three of the five models were
-    photographed only in part (launch 231).
+    cold weather; Italian; multiplayer. All five models were
+    photographed whole in launch 232.
 * Decision (the owner's second round, 2026-11-10):
   * Diesel vehicles: vanilla heavy vehicles only, from a list shown to
     the owner before it is built. `Base.PickUpTruck` and `Base.StepVan`

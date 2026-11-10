@@ -87,6 +87,8 @@
 --   sp-rtbd -> summer, grid on: the biodiesel chain's five machines read
 --              back as the game loaded them, photographed, and one batch
 --              from logs, water and cooking oil to washed biodiesel in cans
+--   sp-rtbdm -> the biodiesel chain's five models on a row outdoors, the
+--              fermentation vessel beside them, photographed; no save
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -112,7 +114,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
@@ -14488,6 +14490,37 @@ function RT.BD.stand(name, k)
     end }
 end
 
+-- The models alone (request "sp-rtbdm"): the row and nothing else, the
+-- character standing on it between two machines for each photograph, so
+-- each machine is seen whole beside her (launch 231 stood her behind the
+-- row and three machines fell outside the frame).
+RT.BD.photoSetup = { name = "rtbdm_setup", timeout = 600, fn = function(ctx, ticks)
+    if ticks == 1 then
+        player():setGodMod(true)
+        player():setInvisible(true)
+    end
+    return ticks >= 60 or nil
+end }
+
+function RT.BD.on(name, k)
+    return { name = name, timeout = 600, fn = function(ctx, ticks)
+        if RT.BD.cx == nil then return true end
+        if ticks == 1 then
+            local x, y = RT.MI.spot(RT.BD.cx, RT.BD.cy, k)
+            player():teleportTo(x + 0.5, y + 0.5, 0)
+        end
+        return ticks >= 90 or nil
+    end }
+end
+
+RT.biodieselModelSteps = { RT.waitWorld, RT.BD.photoSetup, RT.MM.clearSky, RT.BD.row,
+    RT.BD.on("rtbdm_on_0", 0), RT.MI.zoomTo("rtbdm_zoom_row", 1.0), RT.MI.shot("rtbdm_row", true),
+    RT.MI.zoomTo("rtbdm_zoom", 0.5), RT.MI.shot("rtbdm_barrel_leacher", true),
+    RT.BD.on("rtbdm_on_m4", -4), RT.MI.shot("rtbdm_vessel_retort", true),
+    RT.BD.on("rtbdm_on_m2", -2), RT.MI.shot("rtbdm_retort_barrel", true),
+    RT.BD.on("rtbdm_on_2", 2), RT.MI.shot("rtbdm_leacher_reactor", true),
+    RT.BD.on("rtbdm_on_4", 4), RT.MI.shot("rtbdm_reactor_tank", true), RT.finish }
+
 RT.biodieselSteps = { RT.waitWorld, RT.setup, RT.MM.clearSky, RT.BD.row,
     RT.BD.stand("rtbd_stand_row", 0), RT.MI.zoomTo("rtbd_zoom", 0.5), RT.MI.shot("rtbd_row", true),
     RT.MI.zoomTo("rtbd_zoom_close", 0.25),
@@ -14510,7 +14543,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -14588,6 +14621,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtbd" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, the biodiesel chain")
                 TLGH.Steps.run(R, RT.biodieselSteps, H, nil)
+            elseif REQUEST == "sp-rtbdm" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel chain's models")
+                TLGH.Steps.run(R, RT.biodieselModelSteps, H, nil)
             elseif REQUEST == "sp-rtc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, machine controls")
                 TLGH.Steps.run(R, RT.controlSteps, H, nil)
