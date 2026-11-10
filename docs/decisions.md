@@ -1370,12 +1370,13 @@ their replacement.
     models and icons, and a rule for part-used ones, for materials the
     player only carries from one machine to the next.
 * Consequences:
-  * `TLG.WoodRetort`, `TLG.LyeLeacher`, `TLG.BiodieselReactor` and
-    `TLG.BiodieselWashTank` are known to the machine adapter
+  * `TLG.WoodRetort`, `TLG.AshBarrel`, `TLG.LyeLeacher`,
+    `TLG.BiodieselReactor` and `TLG.BiodieselWashTank` are known to the machine adapter
     (`Machines.ITEMS`). They have no item scripts, models, menu entries
     or texts yet, so none can exist in a game.
-  * Offline tests (`tests/authority/test_biodiesel_commands.lua`, 5
-    cases): a reactor load in the recipe's ratios; the retort's methanol
+  * Offline tests (`tests/authority/test_biodiesel_commands.lua`, 7
+    cases): firewood through the retort, and through the ash barrel and
+    the leacher; a reactor load in the recipe's ratios; the retort's methanol
     limiting the oil; a part-used bottle; refused loads taking nothing;
     reactor to wash tank over the recipe's hours, ending in washed
     biodiesel of grade good or fair; `machine.load` refused for the
@@ -1383,16 +1384,29 @@ their replacement.
   * NOT RUN in game: everything. Not checked offline either: collecting
     washed biodiesel into a can (`machine.collect`), and
     `Food.getBaseHunger` and `getHungChange` on a part-used bottle.
-* Open, for the owner:
-  * Which vehicles are diesel. `Base.PickUpTruck` and `Base.StepVan` have
-    flex-fuel conversions, and `-Mode chassis` runs the pickup on petrol
-    in a new world; listing either changes those.
-  * What a station pump puts into a diesel vehicle, and what its tank
-    holds when the world starts.
-  * Where the diesel generator comes from: loot, a craft, or both.
-  * Whether the mod's own oil press and its oilseed route ship, now that
-    vanilla's press gives the oil.
-  * Where the retort's charcoal goes (vanilla has `Base.Charcoal`).
+* Decision (the owner's second round, 2026-11-10):
+  * Diesel vehicles: vanilla heavy vehicles only, from a list shown to
+    the owner before it is built. `Base.PickUpTruck` and `Base.StepVan`
+    stay petrol and keep their flex-fuel conversions.
+  * Some station pumps give diesel. This changes the station model (a
+    product per pump) and needs its own tests at the pumps.
+  * The diesel generator comes from loot only.
+  * The mod's own oil press does not ship in 0.2.0: vanilla's gives the
+    oil.
+* Decision (the chain's machines, five):
+  * `TLG.AshBarrel` (`ash_pit`) burns firewood to wood ash,
+    `TLG.LyeLeacher` takes the ash of a finished barrel within two tiles
+    and clean water (2 L for a kilogram of ash; with less water carried,
+    less ash is taken), `TLG.WoodRetort` makes methanol from firewood,
+    then the reactor and the wash tank. The owner was told four machines:
+    the ash barrel is the fifth, since nothing in vanilla leaves ash.
+  * The load that takes a retort's last methanol gives its charcoal to
+    the player as `Base.Charcoal`, one for each whole kilogram. Its tar
+    and liquor are thrown away.
+* Wood needed, from the recipes: a 27 L batch of oil takes 4.05 L of
+  methanol (80 kg of firewood through the retort) and 0.34 kg of lye
+  (2.25 kg of ash, 150 kg of firewood through the barrel), besides the
+  fireboxes. Not balanced against play yet.
 * Not decided here: whether a `TLG` item tagged `base:generator` becomes
   a working `IsoGenerator` with its own profile. That needs a run in game
   before the generator is built.

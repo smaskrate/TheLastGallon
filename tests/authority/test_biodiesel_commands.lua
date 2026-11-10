@@ -110,6 +110,7 @@ local function player()
     end
     function inv:getItemWithIDRecursiv() return nil end
     function inv:getFirstTypeRecurse() return nil end
+    function inv:AddItem(fullType) return p:give(fullType) end
     function p:getInventory() return inv end
     function p:getUsername() return "tester" end
     function p:getSquare() return nil end
@@ -284,6 +285,103 @@ T.case("biodiesel: reactor, wash tank and the hours between give washed biodiese
         T.ok(q.grade == "good" or q.grade == "fair", "a batch in the recipe's ratios washes to usable fuel: " ..
             tostring(q.grade))
         T.ok(q.methanol < 0.01, "the methanol is washed out")
+    end)
+end)
+
+-- Runs a loaded machine to the end of its batch and returns its status.
+local function finish(g, p, item, hours)
+    g.now = g.now + hours + 0.01
+    return H.commands["machine.status"](p, req(item))
+end
+
+T.case("biodiesel: firewood through the retort gives methanol, and its charcoal with the last of it", function()
+    inGame(function(g)
+        local retort = machine("TLG.WoodRetort", square(g, 1, 1), nil)
+        local leacher = machine("TLG.LyeLeacher", square(g, 2, 1), finished("lye_leacher", { lye = 2 }))
+        local reactor = machine("TLG.BiodieselReactor", square(g, 1, 2), nil)
+        local p = player()
+        -- 12 logs: 108 kg. The retort takes 11 (99 kg of the 100 it holds);
+        -- the last one feeds the firebox.
+        for _ = 1, 12 do p:give("Base.Log") end
+        local r = H.commands["machine.load"](p, req(retort))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.near(r.woodKg, 99, 1e-9)
+        T.eq(p:count("Base.Log"), 1)
+        T.eq(H.commands["machine.addFuel"](p, req(retort)).ok, true)
+        -- Heating up 1.5 h, carbonizing 99 kg at 10 kg/h, cooling 6 h. One
+        -- log does not last: the firebox is fed again when it stops.
+        local s = finish(g, p, retort, 1.5 + 9.9 + 6)
+        T.eq(s.pause, "no_heat", "9 kg of wood is not enough heat")
+        for _ = 1, 3 do p:give("Base.Log") end
+        T.eq(H.commands["machine.addFuel"](p, req(retort)).ok, true)
+        s = finish(g, p, retort, 1.5 + 9.9 + 6)
+        T.eq(s.state, "OutputReady", tostring(s.pause))
+        local params = R.need("recipe", "methanol_wood_distill").params
+        local methanol = 99 * params.methanolKgPerKg / R.need("fuel", "methanol").density
+        T.near(s.outputs.methanol, methanol, 1e-6)
+        -- 5.01 L of methanol covers 33.4 L of oil: 37 bottles (33.3 L) fit,
+        -- which leaves a little in the retort, and its charcoal with it.
+        for _ = 1, 40 do p:give("Base.OilVegetable") end
+        local first = H.commands["machine.load"](p, req(reactor))
+        T.eq(first.ok, true, tostring(first.reason))
+        T.near(first.oilL, 33.3, 1e-9)
+        T.eq(first.charcoal, 0, "methanol is left: the retort is not empty")
+        T.eq(p:count("Base.Charcoal"), 0)
+        T.eq(rec(retort).state, "OutputReady")
+        T.near(rec(leacher).outputs.lye, 2 - first.lyeKg, 1e-9)
+    end)
+    inGame(function(g)
+        -- A retort holding exactly what 6 bottles need is emptied by the load.
+        local recipe = R.need("recipe", "biodiesel_react").params
+        local full = finished("wood_retort", { methanol = 5.4 * recipe.methanolPerOil })
+        full.byproducts = { charcoal = 27.72, wood_tar = 6.93, water = 31.7 }
+        local retort = machine("TLG.WoodRetort", square(g, 1, 1), full)
+        machine("TLG.LyeLeacher", square(g, 2, 1), finished("lye_leacher", { lye = 2 }))
+        local reactor = machine("TLG.BiodieselReactor", square(g, 1, 2), nil)
+        local p = player()
+        for _ = 1, 6 do p:give("Base.OilVegetable") end
+        local r = H.commands["machine.load"](p, req(reactor))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.eq(rec(retort).state, "Ready", "the retort is empty")
+        T.eq(r.charcoal, 27)
+        T.eq(p:count("Base.Charcoal"), 27, "its charcoal, in whole kilograms")
+    end)
+end)
+
+T.case("biodiesel: firewood through the ash barrel and the leacher gives lye", function()
+    inGame(function(g)
+        local barrel = machine("TLG.AshBarrel", square(g, 1, 1), nil)
+        local leacher = machine("TLG.LyeLeacher", square(g, 2, 1), nil)
+        local p = player()
+        for _ = 1, 11 do p:give("Base.Log") end
+        T.eq(H.commands["machine.load"](p, req(leacher)).reason, "no_ready_ash")
+        local r = H.commands["machine.load"](p, req(barrel))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.near(r.woodKg, 99, 1e-9)
+        -- Burning 99 kg at 20 kg/h, cooling 12 h.
+        local s = finish(g, p, barrel, 99 / 20 + 12)
+        T.eq(s.state, "OutputReady", tostring(s.pause))
+        local ashKg = 99 * R.need("recipe", "ash_burn").params.ashKgPerKg
+        T.near(s.outputs.wood_ash, ashKg, 1e-9)
+        T.eq(H.commands["machine.collect"](p, req(barrel, { destination = { kind = "item", id = 1 } })).reason,
+            "use_next_machine")
+        -- No water carried: nothing is taken.
+        r = H.commands["machine.load"](p, req(leacher))
+        T.eq(r.reason, "not_enough_water")
+        T.near(rec(barrel).outputs.wood_ash, ashKg, 1e-9)
+        -- 2.5 L covers 1.25 kg of the 1.485 kg of ash; the rest stays.
+        local water = p:giveWater(2.5)
+        r = H.commands["machine.load"](p, req(leacher))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.near(r.ashKg, 1.25, 1e-9)
+        T.near(water.amount, 0, 1e-9)
+        T.near(rec(barrel).outputs.wood_ash, ashKg - 1.25, 1e-9)
+        p:give("Base.Log")
+        T.eq(H.commands["machine.addFuel"](p, req(leacher)).ok, true)
+        -- Leaching a day, boiling down four hours.
+        s = finish(g, p, leacher, 28)
+        T.eq(s.state, "OutputReady", tostring(s.pause))
+        T.near(s.outputs.lye, 1.25 * R.need("recipe", "lye_leach").params.lyeKgPerKgAsh, 1e-9)
     end)
 end)
 

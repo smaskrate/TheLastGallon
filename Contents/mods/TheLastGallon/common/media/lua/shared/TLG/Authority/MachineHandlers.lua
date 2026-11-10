@@ -359,9 +359,14 @@ local function loadReactor(player, args, st)
     takeAmounts(player, "oil", oilMax)
     writeSource(retortItem, retort, methanol)
     writeSource(leacherItem, leacher, lye)
+    -- The load that takes a retort's last methanol empties it: its charcoal
+    -- goes to the player as whole pieces of 1 kg (the tar and the liquor are
+    -- thrown away).
+    local charcoal = math.floor(((methanol.byproducts or {}).charcoal or 0) + 1e-9)
+    for _ = 1, charcoal do player:getInventory():AddItem("Base.Charcoal") end
     local started = Process.start(loaded.proc, now)
     return commit(player, args, st, started.proc, { oilL = inputs.plant_oil, methanolL = inputs.methanol,
-        lyeKg = inputs.lye })
+        lyeKg = inputs.lye, charcoal = charcoal })
 end
 
 -- Wash tank: the whole crude of a finished reactor within two tiles, and
@@ -395,7 +400,58 @@ local function loadWashTank(player, args, st)
         discarded = crude.byproducts })
 end
 
-local LOADS = { reactor = loadReactor, settler = loadWashTank }
+-- Wood retort and ash barrel: wood from the inventory, as much as the
+-- recipe takes unless the request names less. The retort's firebox is fed
+-- apart (machine.addFuel), from the same wood.
+local function loadWood(recipeId)
+    return function(player, args, st)
+        local bounds = TLG.Registry.need("recipe", recipeId).inputs.firewood
+        local wanted = TLG.Num.clamp(tonumber(args.kg) or bounds.max, 0, bounds.max)
+        local wood = takeFeedstock(player, "wood", wanted, wanted, true)
+        local plan = Process.plan(recipeId, { firewood = wood }, st.rec)
+        if not plan.ok then return fail(plan.reason, { woodAvailableKg = wood }) end
+        local loaded = Process.load(st.rec, recipeId, { firewood = wood }, player:getPerkLevel(Perks.Cooking))
+        if not loaded.ok then return fail(loaded.reason) end
+        takeFeedstock(player, "wood", wanted, wanted)
+        local started = Process.start(loaded.proc, World.now())
+        return commit(player, args, st, started.proc, { woodKg = wood })
+    end
+end
+
+-- Lye leacher: wood ash from a finished ash barrel within two tiles and
+-- clean water from the inventory, two litres for a kilogram of ash (less
+-- water leaches less lye out of the same ash). When the water carried is
+-- short, less ash is taken and the rest stays in the barrel.
+local function loadLeacher(player, args, st)
+    local recipe = TLG.Registry.need("recipe", "lye_leach")
+    local perKg = recipe.params.waterPerKgAsh
+    local now, env = World.now(), World.env()
+    local barrelItem, barrel = finishedNear(st, "fire_pit", "wood_ash", now, env)
+    if barrelItem == nil then return fail("no_ready_ash") end
+    local ashMax = math.min(recipe.inputs.wood_ash.max, barrel.outputs.wood_ash, recipe.inputs.water.max / perKg)
+    local water = takeWater(player, ashMax * perKg, true)
+    local ashKg = math.min(ashMax, water / perKg)
+    local short = { ashAvailableKg = barrel.outputs.wood_ash, waterAvailableL = water }
+    -- The water is named first: with too little of it the ash follows it down.
+    if water < recipe.inputs.water.min - 1e-9 then return fail("not_enough_water", short) end
+    local inputs = { wood_ash = ashKg, water = ashKg * perKg }
+    local plan = Process.plan("lye_leach", inputs, st.rec)
+    if not plan.ok then return fail(plan.reason, short) end
+    local ash = Process.collect(barrel, inputs.wood_ash)
+    if not ash.ok then return fail(ash.reason) end
+    inputs.wood_ash = ash.parcel.wood_ash
+    local loaded = Process.load(st.rec, "lye_leach", inputs, player:getPerkLevel(Perks.Cooking))
+    if not loaded.ok then return fail(loaded.reason) end
+    takeWater(player, inputs.water)
+    writeSource(barrelItem, barrel, ash)
+    local started = Process.start(loaded.proc, now)
+    return commit(player, args, st, started.proc, { ashKg = inputs.wood_ash, waterL = inputs.water })
+end
+
+local LOADS = {
+    retort = loadWood("methanol_wood_distill"), fire_pit = loadWood("ash_burn"), leacher = loadLeacher,
+    reactor = loadReactor, settler = loadWashTank,
+}
 
 function H.machineLoad(player, args)
     local st, err = machineState(player, args)

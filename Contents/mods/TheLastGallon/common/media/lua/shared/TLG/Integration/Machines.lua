@@ -99,6 +99,7 @@ M.ITEMS = {
     -- hand their methanol and lye to a reactor beside them, and the reactor
     -- its crude to a wash tank, as a fermenter hands its wash to a still.
     ["TLG.WoodRetort"] = "wood_retort",
+    ["TLG.AshBarrel"] = "ash_pit",
     ["TLG.LyeLeacher"] = "lye_leacher",
     ["TLG.BiodieselReactor"] = "biodiesel_reactor",
     ["TLG.BiodieselWashTank"] = "biodiesel_wash_tank",
