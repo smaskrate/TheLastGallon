@@ -7,3 +7,6 @@ tests/out/
 *.log
 Thumbs.db
 desktop.ini
+
+# Editor state
+.vs/
