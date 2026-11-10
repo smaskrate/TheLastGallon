@@ -16,7 +16,7 @@ runtime tests.
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
-| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The rehearsal has no upgrade scenario (0.1.1 to 0.1.2 changed only the version values and `mod.info`). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: 0.1.1 was uploaded on 2026-11-08, 0.1.2 has not been |
+| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The rehearsal has no upgrade scenario (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: 0.1.1 was uploaded on 2026-11-08, 0.1.2 has not been |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -4833,6 +4833,11 @@ were overwritten by the next launch.
   `tools/package.ps1` and lines of the README, the player guide and
   `environment.md`; `965e063` and `f674d1c` restored them. No harness
   check reads those.
+* Both zips were built while `tools/package.ps1` was saved with LF line
+  ends, so their `workshop.txt` had LF too. A checkout writes the script
+  with CRLF, and the zip it builds from `f674d1c` is SHA-256 `e6971619…`,
+  4,478,419 bytes: the same bytes as launch 228's in the 143 other files.
+  The game does not read `workshop.txt` in a manual install.
 * Launch 228's console: one exception, from the harness's own
   deep-recursion probe; no "untested game version" warning.
 

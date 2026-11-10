@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 261 Italian strings as shipped in a client set to Italian (run 205); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.1.2 package is the zip of `f674d1c` (SHA-256 `be68b619…`), installed and played on 42.22.2 in launch 228 (100/0, 14/0). The Workshop item serves 0.1.1, which was never rehearsed from its zip. NOT RUN: an install through the Steam Workshop, an upgrade from 0.1.1 |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.1.2 package is the zip of `f674d1c` (SHA-256 `e6971619…`), its mod files installed and played on 42.22.2 in launch 228 (100/0, 14/0). The Workshop item serves 0.1.1; no rehearsal of its zip is recorded. NOT RUN: an install through the Steam Workshop, an upgrade from 0.1.1 |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -396,22 +396,26 @@ changed.
 ### Gate 12: clean install and upgrade pass with the packaged artifact
 
 The current package is `TheLastGallon-0.1.2.zip`, the zip of commit
-`f674d1c`: SHA-256 `be68b619…`, 4,478,414 bytes, 144 files. Launch 228
-rehearsed its manual install (`tools/rehearse-install.ps1 -NoBuild`) on
-42.22.2: the zip matched its manifest and was installed into a fresh
-isolated cache. Phase A passed 100/0 and phase B, after save, exit and
+`f674d1c`: SHA-256 `e6971619…`, 4,478,419 bytes, 144 files. Launch 228
+rehearsed the manual install (`tools/rehearse-install.ps1 -NoBuild`) on
+42.22.2, from a zip that differs from it in one file outside the mod:
+`workshop.txt` had LF line ends there (SHA-256 `be68b619…`, 4,478,414
+bytes), because `tools/package.ps1` had been saved with LF and not as a
+checkout writes it, with CRLF. The 143 other files are the same bytes.
+The zip matched its manifest and was installed into a fresh isolated cache. Phase A passed 100/0 and phase B, after save, exit and
 continue, 14/0. The console's one exception came from the harness's own
 deep-recursion probe, and the mod did not warn of an untested game version.
 
 Launch 227 had rehearsed the zip of `965e063` and failed one check (99/1,
 then 14/0): the game read no description from `mod.info`, because the
 0.1.2 commit (`cfae118`) had cut the line's `description=` key. `f674d1c`
-restored it. The zip of `cfae118`, built and pushed on 2026-11-10, has
-that defect and two malformed lines in `workshop.txt`; it was not uploaded.
+restored it. The zip built from `cfae118` on 2026-11-10 has that defect
+and two malformed lines in `workshop.txt`; it was not uploaded. The commit
+itself was pushed.
 
 The Steam Workshop item (id 3835496461) serves 0.1.1, uploaded by the
-owner on 2026-11-08 and public. The 0.1.1 zip was never rehearsed: its
-menus on placed items were checked from the repository's mod
+owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
+its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
 (`<user>/Zomboid/Workshop/TheLastGallon`) still holds 0.1.1, with a
 `workshop.txt` edited by hand (the item's id, `visibility=public`, the tag
@@ -487,8 +491,10 @@ packages' sizes, file counts and contents are in `test-results.md`.
   game scans those folders only in Steam mode (BC), and the harness does
   not run in it. A subscribed copy of 0.1.1 is on this computer.
 - Upgrade NOT RUN: a save played with 0.1.1 has not been continued with
-  0.1.2, and `tools/rehearse-install.ps1` has no scenario for it. Between
-  the two versions only the version values and `mod.info` changed.
+  0.1.2, and `tools/rehearse-install.ps1` has no scenario for it. The
+  subscribed 0.1.1 and the 0.1.2 package differ in five files: `mod.info`,
+  the version values in `Core.lua`, and the shipped changelog, player
+  guide and support matrix.
 
 ### Gate 13: no core behaviour represented only by a placeholder
 
