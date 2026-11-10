@@ -420,8 +420,8 @@ its menus on placed items were checked from the repository's mod
 (`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.1.2 package's
 `Contents` since 2026-11-10, its 142 files checked by hash; it has not
 been uploaded. Its `workshop.txt` is the owner's, edited by hand (the
-item's id, `visibility=public`, the tag `WIP`, two reworded lines), and
-was left as it is: it still says version 0.1.1 and 42.21.0. Copying the
+item's id, `visibility=public`, the tag `WIP`, two reworded lines); only
+its version and build were changed, to 0.1.2 and 42.22.2. Copying the
 package's `workshop.txt` over it would lose the hand edits.
 
 What changed in the package since the last rehearsed one (run 206, 0.1.0):
