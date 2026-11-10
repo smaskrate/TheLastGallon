@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.1.1 (2026-11-08)
+
+* Fuel menus now find fluids held by placed items, including red petrol
+  cans, bottles and buckets. Right-clicking their world model or floor
+  inventory entry offers the same fuel menu. Nearby placed containers and
+  containers inside furniture can be inspected and treated by item ID.
+  Other fluid containers show the menu when they contain fuel, including
+  fixed world containers. Engine pours pick up the vessel first.
+* Added the machine context menu when right-clicking placed 3D machines or
+  their floor tile. Machines sharing a tile have separate, named submenus.
+  Verified all four machine types through the floor inventory's own menu
+  builder, both as individual items and grouped entries.
+
 ## 0.1.0 (2026-11-04)
 
 * First release. The mod is licensed under CC BY-NC-SA 4.0, except the

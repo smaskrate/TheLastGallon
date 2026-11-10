@@ -9,6 +9,7 @@ TLG.UI = TLG.UI or {}
 TLG.UI.FuelMenu = TLG.UI.FuelMenu or {}
 local Menu = TLG.UI.FuelMenu
 local Fmt, Native = TLG.UI.Format, TLG.Integration.Native
+local Containers, Resolver = TLG.Integration.Containers, TLG.Authority.Resolver
 
 local function show(text)
     local w, h = 420, 260
@@ -34,7 +35,7 @@ local function onReply(reply)
     end
 end
 
-local function itemRef(item) return { kind = "item", id = item:getID() } end
+local function itemRef(item) return Resolver.refForItem(item) end
 
 local function request(command, args) TLG.Net.request(command, args, onReply) end
 
@@ -43,25 +44,25 @@ local function firstItem(entry)
     return entry.items and entry.items[1]
 end
 
-local function isFuelCan(item)
-    local fc = item and item:getFluidContainer()
+local function isFuelCan(item, kind)
+    local fc = item and Containers.fluidOf(item, kind or "item")
     if fc == nil then return false end
-    if fc:isEmpty() then return TLG.ContainerProfiles.items[item:getFullType()] ~= nil end
-    return Native.isFuelContainer(fc)
+    if kind ~= "object" and TLG.ContainerProfiles.items[item:getFullType()] then return true end
+    local comp = Native.readComposition(fc)
+    for id, amount in pairs(comp) do
+        if amount > 0 and TLG.Registry.need("fuel", id).role == "fuel" then return true end
+    end
+    return false
 end
 
-function Menu.fill(playerNum, context, items)
+local function addContainer(playerNum, context, item, kind, title)
     local player = getSpecificPlayer(playerNum)
-    local item
-    for _, entry in ipairs(items) do
-        local it = firstItem(entry)
-        if isFuelCan(it) then item = it; break end
-    end
     if item == nil or player == nil then return end
-    local root = context:addOption(getText("ContextMenu_TLG_Fuel"), nil, nil)
+    local fc = Containers.fluidOf(item, kind)
+    local root = context:addOption(title or getText("ContextMenu_TLG_Fuel"), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
-    local ref = itemRef(item)
+    local ref = kind == "item" and itemRef(item) or Resolver.refForObject(item, "object")
     local side = item:getModData().tlg
     -- Asked of the authority, which keeps the knowledge (in multiplayer the
     -- client's own copy of the player never had it).
@@ -82,18 +83,67 @@ function Menu.fill(playerNum, context, items)
     else
         sub:addOption(getText("ContextMenu_TLG_Seal"), nil, function() request("treat", { target = ref, op = "seal" }) end)
     end
-    if item:getFluidContainer():isEmpty() then
+    if fc:isEmpty() then
         sub:addOption(getText("ContextMenu_TLG_Clean"), nil, function() request("treat", { target = ref, op = "clean" }) end)
-    else
+    elseif kind == "item" then
         Menu.addPourOptions(player, sub, item)
     end
-    Menu.addDrainOptions(player, sub, item)
+    if kind == "item" then Menu.addDrainOptions(player, sub, item) end
+end
+
+function Menu.fill(playerNum, context, items)
+    for _, entry in ipairs(items) do
+        local item = firstItem(entry)
+        if isFuelCan(item) then
+            addContainer(playerNum, context, item, "item")
+            return
+        end
+    end
+end
+
+function Menu.fillWorld(playerNum, context, worldobjects, test)
+    if getSpecificPlayer(playerNum) == nil then return end
+    local found, seen, squares = {}, {}, {}
+    local function collect(object)
+        local owner, kind = object, "object"
+        if instanceof(object, "IsoWorldInventoryObject") then owner, kind = object:getItem(), "item" end
+        if owner and not seen[owner] and isFuelCan(owner, kind) then
+            seen[owner] = true
+            found[#found + 1] = { owner = owner, kind = kind }
+        end
+    end
+    for _, object in ipairs(worldobjects) do
+        collect(object)
+        local square = object:getSquare()
+        if square and not squares[square] then
+            squares[square] = true
+            local items = square:getWorldObjects()
+            for i = 0, items:size() - 1 do collect(items:get(i)) end
+        end
+    end
+    if #found == 0 then return end
+    if test then return ISWorldObjectContextMenu.setTest() end
+    for _, entry in ipairs(found) do
+        local title = getText("ContextMenu_TLG_Fuel")
+        if #found > 1 then
+            local name = entry.kind == "item" and entry.owner:getDisplayName()
+                or Containers.fluidOf(entry.owner, entry.kind):getUiName()
+            title = title .. " - " .. name
+        end
+        addContainer(playerNum, context, entry.owner, entry.kind, title)
+    end
 end
 
 -- Pouring into engines goes through the authoritative transfer so that any
 -- fuel (not only Petrol) and its condition reach the tank, and incompatible
 -- blends need an explicit experimental confirmation.
 local function queuePour(player, item, destination, face, experimental)
+    local world = item:getWorldItem()
+    if world then
+        ISWorldObjectContextMenu.onGrabWItem({}, world, player:getPlayerNum())
+    else
+        ISInventoryPaneContextMenu.transferIfNeeded(player, item)
+    end
     if luautils and luautils.equipItems then luautils.equipItems(player, item, nil) end
     ISTimedActionQueue.add(ISTLGPourFuel:new(player, item, destination, face, experimental, function(reply)
         if reply.ok then return end
@@ -158,12 +208,12 @@ end
 -- Vanilla has no way to empty a generator; conversions require a drained
 -- fuel system, so TLG offers an authoritative drain into a can.
 function Menu.addDrainOptions(player, sub, item)
-    local free = item:getFluidContainer():getFreeCapacity()
+    local free = Containers.fluidOf(item, "item"):getFreeCapacity()
     local g = nearbyGenerator(player)
     if g and free > 0.05 and g:getFuel() > 0 then
         sub:addOption(getText("ContextMenu_TLG_DrainGenerator"), nil, function()
             request("transfer", { source = TLG.Authority.Resolver.refForObject(g, "generator"),
-                destination = { kind = "item", id = item:getID() }, amount = free })
+                destination = itemRef(item), amount = free })
         end)
     end
 end
@@ -173,9 +223,9 @@ function Menu.addPourOptions(player, sub, item)
     if pump then
         -- Restored station: the reservoir becomes player-run storage.
         sub:addOption(getText("ContextMenu_TLG_PourStation"), nil, function()
-            request("transfer", { source = { kind = "item", id = item:getID() },
+            request("transfer", { source = itemRef(item),
                 destination = TLG.Authority.Resolver.refForObject(pump, "pump"),
-                amount = item:getFluidContainer():getAmount() })
+                amount = Containers.fluidOf(item, "item"):getAmount() })
         end)
     end
     local v = nearbyVehicleTank(player)
@@ -193,5 +243,6 @@ function Menu.addPourOptions(player, sub, item)
 end
 
 Events.OnFillInventoryObjectContextMenu.Add(Menu.fill)
+Events.OnFillWorldObjectContextMenu.Add(Menu.fillWorld)
 
 return Menu

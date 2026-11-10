@@ -90,8 +90,12 @@ function Tx.transfer(ctx, actor, req)
     if not dstEp then return e2 end
     if srcEp.key == dstEp.key then return reject("same_supply") end
 
-    local src = Tx.advance(ctx, srcEp:read())
-    local dst = Tx.advance(ctx, dstEp:read())
+    local srcStored, srcError = srcEp:read()
+    if srcStored == nil then return reject(srcError or "unknown_source") end
+    local dstStored, dstError = dstEp:read()
+    if dstStored == nil then return reject(dstError or "unknown_destination") end
+    local src = Tx.advance(ctx, srcStored)
+    local dst = Tx.advance(ctx, dstStored)
     if req.expectedSourceRevision ~= nil and req.expectedSourceRevision ~= src.rev then
         return reject("stale", { source = summary(src), destination = summary(dst) })
     end

@@ -100,6 +100,7 @@ description=[*]New and existing saves. Read the player guide before removing the
 description=[*]Not in this version: biodiesel, wood gas, biogas, propane and electrical networks.
 description=[/list]
 description=
+description=Created by smaskrate.
 description=Licence: CC BY-NC-SA 4.0, except the five supplied machine models and the carry animations, which ship only as part of the mod (docs/LICENSE.md in the mod folder).
 tags=Build 42;Realistic;Vehicles;Items
 visibility=private

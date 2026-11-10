@@ -134,16 +134,11 @@ local function hydrousEthanolCan(player)
     return nil
 end
 
-function Menu.fill(playerNum, context, items)
+local function addMachine(playerNum, context, item, title)
     local player = getSpecificPlayer(playerNum)
-    local item
-    for _, entry in ipairs(items) do
-        local it = firstItem(entry)
-        if Machines.machineFor(it) then item = it; break end
-    end
     if item == nil or player == nil then return end
     local kind = TLG.Registry.need("machine", Machines.machineFor(item)).kind
-    local root = context:addOption(getText("ContextMenu_TLG_Machine"), nil, nil)
+    local root = context:addOption(title or getText("ContextMenu_TLG_Machine"), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
     local ref = Machines.refFor(item)
@@ -182,6 +177,47 @@ function Menu.fill(playerNum, context, items)
     if c.abort then sub:addOption(getText("ContextMenu_TLG_Abort"), nil, function() req("machine.abort", { target = ref }) end) end
 end
 
+function Menu.fill(playerNum, context, items)
+    for _, entry in ipairs(items) do
+        local item = firstItem(entry)
+        if Machines.machineFor(item) then
+            addMachine(playerNum, context, item)
+            return
+        end
+    end
+end
+
+-- The world picker can supply the floor tile instead of its 3D items.
+-- Visit each clicked square once, including all machines on that square.
+function Menu.fillWorld(playerNum, context, worldobjects, test)
+    if getSpecificPlayer(playerNum) == nil then return end
+    local items, seenItems, seenSquares = {}, {}, {}
+    local function collect(object)
+        if not instanceof(object, "IsoWorldInventoryObject") then return end
+        local item = object:getItem()
+        if Machines.machineFor(item) and not seenItems[item] then
+            seenItems[item] = true
+            items[#items + 1] = item
+        end
+    end
+    for _, object in ipairs(worldobjects) do
+        collect(object)
+        local square = object:getSquare()
+        if square and not seenSquares[square] then
+            seenSquares[square] = true
+            local objects = square:getWorldObjects()
+            for i = 0, objects:size() - 1 do collect(objects:get(i)) end
+        end
+    end
+    if #items == 0 then return end
+    if test then return ISWorldObjectContextMenu.setTest() end
+    for _, item in ipairs(items) do
+        local title = getText("ContextMenu_TLG_Machine")
+        if #items > 1 then title = title .. " - " .. item:getDisplayName() end
+        addMachine(playerNum, context, item, title)
+    end
+end
+
 -- Which of Pause, Resume and Abort batch apply to the machine now, from its
 -- record brought to now without writing it (records advance lazily, so the
 -- stored state can lag). Run 31 showed all three in every state.
@@ -200,5 +236,6 @@ function Menu.controls(item)
 end
 
 Events.OnFillInventoryObjectContextMenu.Add(Menu.fill)
+Events.OnFillWorldObjectContextMenu.Add(Menu.fillWorld)
 
 return Menu

@@ -35,6 +35,23 @@ local function req(id, src, dst, amount, extra)
     return r
 end
 
+T.case("authority: unsupported native mixtures reject transfers without writing", function()
+    for _, invalid in ipairs({ "A", "B" }) do
+        local W = world()
+        W.add("A", { q = { gasoline = 10 } }); W.add("B", { q = {} })
+        local resolve = W.ctx.resolve
+        W.ctx.resolve = function(ref)
+            local ep = resolve(ref)
+            if ref.id == invalid then ep.read = function() return nil, "foreign_fluid" end end
+            return ep
+        end
+        local reply = Tx.transfer(W.ctx, "p1", req("foreign", "A", "B", 2))
+        T.eq(reply.ok, false)
+        T.eq(reply.reason, "foreign_fluid")
+        T.eq(W.writes, 0)
+    end
+end)
+
 T.case("authority: transfer commits, bumps revisions and returns authoritative totals", function()
     local W = world()
     W.add("A", { q = { gasoline = 10 }, deg = { gasoline = 1 } })

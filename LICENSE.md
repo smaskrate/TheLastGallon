@@ -1,6 +1,6 @@
 # Licence
 
-The Last Gallon © 2026 Manuel Alessio
+The Last Gallon © 2026 smaskrate
 
 Except for the files listed under *Not covered* below, The Last Gallon is
 licensed under the **Creative Commons Attribution-NonCommercial-ShareAlike
@@ -14,7 +14,7 @@ repository. To view a copy of this licence, visit
 
 In short, and the legal code decides: you may share and adapt the covered
 material for non-commercial purposes, if you credit it ("The Last Gallon by
-Manuel Alessio, CC BY-NC-SA 4.0", with a link to the licence), say what you
+smaskrate, CC BY-NC-SA 4.0", with a link to the licence), say what you
 changed, and release what you adapt under the same licence.
 
 ## Not covered

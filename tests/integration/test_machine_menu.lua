@@ -2,14 +2,90 @@ require "support/fixtures"
 -- The machine menu's Status text (client UI). The menu registers game events
 -- when it loads; a stand-in event list takes them.
 local savedEvents = Events
+local callbacks = {}
 Events = setmetatable({}, { __index = function(t, k)
-    local e = { Add = function() end }
+    local e = { Add = function(fn) callbacks[k] = fn end }
     rawset(t, k, e)
     return e
 end })
 require "TLG/UI/MachineContextMenu"
 Events = savedEvents
 local Menu = TLG.UI.MachineMenu
+
+T.case("integration: registered machine menus handle floor inventory and world picking", function()
+    local saved = { instanceof = instanceof, getSpecificPlayer = getSpecificPlayer, getText = getText,
+        ISContextMenu = ISContextMenu, ISWorldObjectContextMenu = ISWorldObjectContextMenu,
+        request = TLG.Net.request }
+    local function context()
+        local c = { options = {} }
+        function c:addOption(name, target, fn)
+            local option = { name = name, onSelect = fn }
+            self.options[#self.options + 1] = option
+            return option
+        end
+        function c:addSubMenu(option, sub) option.sub = sub end
+        return c
+    end
+    local objects = {}
+    local square = {
+        getX = function() return 10 end, getY = function() return 20 end, getZ = function() return 1 end,
+        getWorldObjects = function() return {
+            size = function() return #objects end, get = function(_, i) return objects[i + 1] end,
+        } end,
+    }
+    local floor = { getSquare = function() return square end }
+    local requested, tested
+    instanceof = function(value, class) return value.class == class end
+    getText = function(key) return key end
+    getSpecificPlayer = function() return { getInventory = function() return {
+        getAllEvalRecurse = function() return { size = function() return 0 end } end,
+    } end } end
+    ISContextMenu = { getNew = context }
+    ISWorldObjectContextMenu = { setTest = function() tested = true; return true end }
+    TLG.Net.request = function(command, args) requested = { command = command, args = args } end
+    local ok, err = pcall(function()
+        T.eq(callbacks.OnFillInventoryObjectContextMenu, Menu.fill)
+        T.eq(callbacks.OnFillWorldObjectContextMenu, Menu.fillWorld)
+        for fullType in pairs(TLG.Integration.Machines.ITEMS) do
+            local item = { class = "InventoryItem", getFullType = function() return fullType end,
+                getID = function() return 123 end, getModData = function() return {} end,
+                getDisplayName = function() return fullType end }
+            local world = { class = "IsoWorldInventoryObject", getItem = function() return item end,
+                getSquare = function() return square end }
+            item.getWorldItem = function() return world end
+            objects = { world }
+            for _, entry in ipairs({ item, { items = { item, item } } }) do
+                local c = context()
+                callbacks.OnFillInventoryObjectContextMenu(0, c, { entry })
+                T.eq(#c.options, 1, fullType .. " floor inventory")
+                c.options[1].sub.options[1].onSelect()
+                T.eq(requested.command, "machine.status")
+                T.eq(requested.args.target.id, 123)
+                T.eq(requested.args.target.x, 10)
+                T.eq(requested.args.target.z, 1)
+            end
+            local c = context()
+            callbacks.OnFillWorldObjectContextMenu(0, c, { floor, world, floor }, false)
+            T.eq(#c.options, 1, "one entry per machine")
+            c.options[1].sub.options[1].onSelect()
+            T.eq(requested.args.target.y, 20)
+            tested = false
+            c = context()
+            callbacks.OnFillWorldObjectContextMenu(0, c, { floor }, true)
+            T.ok(tested, "controller probe detects the menu")
+            T.eq(#c.options, 0, "probe does not build a menu")
+        end
+        objects = {}
+        tested = false
+        local c = context()
+        callbacks.OnFillWorldObjectContextMenu(0, c, { floor }, true)
+        T.ok(not tested, "empty floor has no machine menu")
+    end)
+    instanceof, getSpecificPlayer, getText = saved.instanceof, saved.getSpecificPlayer, saved.getText
+    ISContextMenu, ISWorldObjectContextMenu = saved.ISContextMenu, saved.ISWorldObjectContextMenu
+    TLG.Net.request = saved.request
+    if not ok then error(err, 0) end
+end)
 
 -- getText as the game's Translator: a key it knows comes back as "[key]"
 -- (arguments appended), one it does not as the key itself.

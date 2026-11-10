@@ -5,7 +5,7 @@
 A mod for Project Zomboid **Build 42.21.0**. Fuel ages, takes up water and
 gathers dirt; engines start harder, lose power and wear on poor fuel; you
 can ferment, distil and dry your own ethanol and convert a generator or a
-car to run on it. Version 0.1.0 is the first release
+car to run on it. The current version is 0.1.1
 ([CHANGELOG.md](CHANGELOG.md)). The specification it was built from is
 [The_Last_Gallon_Implementation_Plan.md](The_Last_Gallon_Implementation_Plan.md).
 

@@ -12,7 +12,8 @@ require "TLG/Authority/Handlers"
 ISTLGPourFuel = ISBaseTimedAction:derive("ISTLGPourFuel")
 
 function ISTLGPourFuel:isValid()
-    return self.item ~= nil and self.item:getFluidContainer() ~= nil and not self.item:getFluidContainer():isEmpty()
+    local fc = self.item and TLG.Integration.Containers.fluidOf(self.item, "item")
+    return fc ~= nil and not fc:isEmpty()
 end
 
 function ISTLGPourFuel:waitToStart()
@@ -79,7 +80,7 @@ function ISTLGPourFuel:new(character, item, destination, faceObject, experimenta
     o.faceObject = faceObject
     o.experimental = experimental and true or false
     o.onDone = onDone
-    o.amount = item:getFluidContainer():getAmount()
+    o.amount = TLG.Integration.Containers.fluidOf(item, "item"):getAmount()
     o.requestId = requestId or string.format("pour-%d-%d", item:getID(), getTimestampMs())
     if onDone and isClient() and TLG.Net then
         TLG.Net.pending[o.requestId] = onDone

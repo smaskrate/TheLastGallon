@@ -1,7 +1,9 @@
 -- Single owner of "reference -> adapter endpoint" resolution on the authority.
 -- References are plain tables sent by clients; nothing in them is trusted
 -- beyond identifying an object the server then validates:
---   { kind = "item", id = <InventoryItem:getID()> }          (actor's inventory)
+--   { kind = "item", id = <InventoryItem:getID()>, x =, y =, z = }
+--       Coordinates are optional for the actor's inventory, required for
+--       nearby ground items or items inside furniture.
 --   { kind = "vehicle", id = <BaseVehicle:getId()> }
 --   { kind = "object", x =, y =, z =, index = }               (fluid object)
 --   { kind = "pump", x =, y =, z =, index = }
@@ -33,13 +35,33 @@ local function nearby(player, square, range)
     return player and square and player:getSquare() and player:getSquare():DistToProper(square) <= (range or 2.5)
 end
 
+local function nearbyItem(player, ref)
+    if not (int(ref.x) and int(ref.y) and int(ref.z)) then return nil end
+    local square = getCell() and getCell():getGridSquare(ref.x, ref.y, ref.z)
+    if not nearby(player, square) or player:getSquare():getZ() ~= square:getZ() then return nil end
+    local worldItems = square:getWorldObjects()
+    for i = 0, worldItems:size() - 1 do
+        local item = worldItems:get(i):getItem()
+        if item and item:getID() == ref.id then return item end
+    end
+    local objects = square:getObjects()
+    for i = 0, objects:size() - 1 do
+        local object = objects:get(i)
+        for j = 0, object:getContainerCount() - 1 do
+            local item = object:getContainerByIndex(j):getItemWithIDRecursiv(ref.id)
+            if item then return item end
+        end
+    end
+end
+
 function Res.resolve(ref, ctx)
     if type(ref) ~= "table" then return nil, "malformed_ref" end
     local player = ctx.player
     if ref.kind == "item" then
         if not int(ref.id) or player == nil then return nil, "malformed_ref" end
         local item = player:getInventory():getItemWithIDRecursiv(ref.id)
-        if item == nil or item:getFluidContainer() == nil then return nil, "no_item" end
+        if item == nil then item = nearbyItem(player, ref) end
+        if item == nil or C.fluidOf(item, "item") == nil then return nil, "no_item" end
         return C.endpoint(item, "item")
     elseif ref.kind == "vehicle" then
         if not int(ref.id) then return nil, "malformed_ref" end
@@ -94,6 +116,17 @@ function Res.resolve(ref, ctx)
         return ep
     end
     return nil, "unknown_kind"
+end
+
+-- Coordinates locate a dropped item or an item inside nearby furniture.
+-- The authority still checks identity and reach, and keeps its item sidecar.
+function Res.refForItem(item)
+    local ref = { kind = "item", id = item:getID() }
+    local world = item:getWorldItem()
+    local outer = item:getOutermostContainer()
+    local square = (world and world:getSquare()) or (outer and outer:getSourceGrid())
+    if square then ref.x, ref.y, ref.z = square:getX(), square:getY(), square:getZ() end
+    return ref
 end
 
 -- Builds a reference for an object the client is looking at.

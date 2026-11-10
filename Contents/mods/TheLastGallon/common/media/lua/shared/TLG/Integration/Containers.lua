@@ -231,7 +231,7 @@ function C.endpoint(owner, kind, actor)
     function ep:read()
         local rec, status = C.read(owner, kind, true)
         self.readStatus = status
-        return rec
+        return rec, status
     end
     function ep:write(rec)
         return C.commit(owner, kind, rec, true)

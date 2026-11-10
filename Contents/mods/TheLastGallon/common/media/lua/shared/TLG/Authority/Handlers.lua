@@ -56,7 +56,9 @@ local function openTarget(player, args)
     if ep == nil then return nil, { ok = false, reason = "unknown_target", detail = why } end
     local ok, reason = ep:canAccess(player)
     if not ok then return nil, { ok = false, reason = "no_access", detail = reason } end
-    local rec = Aging.advance(ep:read(), ctx.now, ctx.env)
+    local stored, readError = ep:read()
+    if stored == nil then return nil, { ok = false, reason = readError } end
+    local rec = Aging.advance(stored, ctx.now, ctx.env)
     if args.expectedRevision ~= nil and args.expectedRevision ~= rec.rev then
         return nil, { ok = false, reason = "stale", rev = rec.rev }
     end
@@ -153,7 +155,9 @@ function H.status(player, args)
     if ep == nil then return { ok = false, reason = "unknown_target", detail = why, requestId = args.requestId } end
     local ok, reason = (ep.canObserve or ep.canAccess)(ep, player)
     if not ok then return { ok = false, reason = "no_access", detail = reason, requestId = args.requestId } end
-    local rec = Aging.advance(ep:read(), ctx.now, ctx.env)
+    local stored, readError = ep:read()
+    if stored == nil then return { ok = false, reason = readError, requestId = args.requestId } end
+    local rec = Aging.advance(stored, ctx.now, ctx.env)
     local eval
     if ep.consumer then eval = TLG.Domain.Consumers.evaluate(ep.consumer, rec, { ambientC = ctx.ambientC }) end
     return { ok = true, requestId = args.requestId, rev = rec.rev, total = Supply.total(rec), cap = rec.cap,
@@ -175,7 +179,9 @@ function H.known(player, args)
     if ep == nil then return { ok = false, reason = "unknown_target", detail = why, requestId = args.requestId } end
     local ok, reason = (ep.canObserve or ep.canAccess)(ep, player)
     if not ok then return { ok = false, reason = "no_access", detail = reason, requestId = args.requestId } end
-    local rec = Aging.advance(ep:read(), ctx.now, ctx.env)
+    local stored, readError = ep:read()
+    if stored == nil then return { ok = false, reason = readError, requestId = args.requestId } end
+    local rec = Aging.advance(stored, ctx.now, ctx.env)
     local know = player:getModData().tlgKnowledge or {}
     local entry = rec.id ~= nil and know[tostring(rec.id)] or nil
     return { ok = true, requestId = args.requestId, tests = Inspection.known(rec, entry), sealed = rec.sealed == true }

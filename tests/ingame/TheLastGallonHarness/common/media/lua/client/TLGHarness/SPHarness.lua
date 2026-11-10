@@ -13195,7 +13195,54 @@ end }
 
 function RT.DS.fuelMenu(name, which)
     return RT.DS.menuShot({ name = name, rootKey = "ContextMenu_TLG_Fuel", noGreyed = true,
-        build = function(x, y) ISInventoryPaneContextMenu.createMenu(0, true, { RT.DS[which] }, x, y) end,
+        build = function(x, y)
+            if which == "full" then
+                local C, Res = TLG.Integration.Containers, TLG.Authority.Resolver
+                local root = getText("ContextMenu_TLG_Fuel")
+                for _, spec in ipairs({
+                    { "Base.PetrolCan", Fluid.Petrol, true },
+                    { "Base.PetrolCan", nil, true },
+                    { "Base.WaterBottle", Fluid.Petrol, true },
+                    { "Base.BucketEmpty", Fluid.Get("TLG_Ethanol"), true },
+                    { "Base.WaterBottle", Fluid.Water, false },
+                }) do
+                    local item = instanceItem(spec[1])
+                    local fc = item:getFluidContainer()
+                    fc:Empty()
+                    if spec[2] then fc:addFluid(spec[2], 0.5) end
+                    RT.DS.fuelAt:AddWorldInventoryItem(item, 0.5, 0.5, 0, false)
+                    local label = spec[1] .. "_" .. tostring(spec[2])
+                    R:line("OBS floor fuel %s itemFluid=%s worldFluid=%s", label,
+                        tostring(item:getFluidContainer()), tostring(item:getWorldItem():getFluidContainer()))
+                    for _, stacked in ipairs({ false, true }) do
+                        R:check("RTDS.fuel_floor_" .. label .. "_" .. tostring(stacked), function()
+                            local entry = stacked and { items = { item, item } } or item
+                            local c = ISInventoryPaneContextMenu.createMenu(0, false, { entry }, x, y)
+                            return (c ~= nil and RT.DS.index(c, root) ~= nil) == spec[3], "native floor inventory menu"
+                        end)
+                    end
+                    R:check("RTDS.fuel_world_" .. label, function()
+                        local c = ISWorldObjectContextMenu.createMenu(0, { item:getWorldItem() }, x, y, false)
+                        return (c ~= nil and RT.DS.index(c, root) ~= nil) == spec[3], "native world menu"
+                    end)
+                    if spec[3] then
+                        for _, command in ipairs({ "known", "sample", "treat" }) do
+                            R:check("RTDS.fuel_floor_action_" .. label .. "_" .. command, function()
+                                local reply = TLG.Authority.Handlers.dispatch(player(), command, {
+                                    requestId = "floor-" .. tostring(item:getID()) .. "-" .. command,
+                                    target = Res.refForItem(item), method = "visual", op = "unseal",
+                                })
+                                local cannotSeal = command == "treat" and spec[1] == "Base.BucketEmpty"
+                                return (cannotSeal and reply.reason == "not_sealable") or reply.ok == true,
+                                    tostring(reply.reason)
+                            end)
+                        end
+                    end
+                    TLG.Integration.Machines.liftFromGround(item)
+                end
+            end
+            ISInventoryPaneContextMenu.createMenu(0, true, { RT.DS[which] }, x, y)
+        end,
         fill = function(c) TLG.UI.FuelMenu.fill(0, c, { RT.DS[which] }) end,
         want = function()
             local w = {}
@@ -13252,7 +13299,27 @@ RT.DS.toVessel = { name = "rtds_to_vessel", timeout = 300, fn = function(ctx, ti
 end }
 
 RT.DS.machineMenu = RT.DS.menuShot({ name = "machine_menu", rootKey = "ContextMenu_TLG_Machine",
-    build = function(x, y) ISInventoryPaneContextMenu.createMenu(0, false, { RT.DS.vessel }, x, y) end,
+    build = function(x, y)
+        local root = getText("ContextMenu_TLG_Machine")
+        local world = RT.DS.vessel:getWorldItem()
+        R:check("RTDS.machine_world_menu", function()
+            local c = ISWorldObjectContextMenu.createMenu(0, { world }, x, y, false)
+            return c ~= nil and RT.DS.index(c, root) ~= nil, "world right-click builder"
+        end)
+        for fullType in pairs(TLG.Integration.Machines.ITEMS) do
+            local item = instanceItem(fullType)
+            world:getSquare():AddWorldInventoryItem(item, 0.5, 0.5, 0, false)
+            for _, stacked in ipairs({ false, true }) do
+                R:check("RTDS.floor_menu_" .. fullType .. "_" .. tostring(stacked), function()
+                    local entry = stacked and { items = { item, item } } or item
+                    local c = ISInventoryPaneContextMenu.createMenu(0, false, { entry }, x, y)
+                    return c ~= nil and RT.DS.index(c, root) ~= nil, "floor inventory right-click builder"
+                end)
+            end
+            TLG.Integration.Machines.liftFromGround(item)
+        end
+        ISInventoryPaneContextMenu.createMenu(0, false, { RT.DS.vessel }, x, y)
+    end,
     fill = function(c) TLG.UI.MachineMenu.fill(0, c, { RT.DS.vessel }) end,
     want = function() return { getText("ContextMenu_TLG_MachineStatus"), getText("ContextMenu_TLG_LoadFerment"),
         getText("ContextMenu_TLG_Pause"), getText("ContextMenu_TLG_Abort") } end })
@@ -13287,6 +13354,35 @@ end }
 -- The world menu as a right-click on the generator's square builds it, far
 -- enough left for its submenu to open on the right, as the others do (run
 -- 211's, built at x 700, opened on the left).
+RT.DS.floorPour = { name = "rtds_floor_pour", timeout = 900, fn = function(ctx, ticks)
+    local C, D = TLG.Integration.Containers, RT.DS
+    if ticks == 1 then
+        ctx.can = instanceItem("Base.PetrolCan")
+        ctx.can:getFluidContainer():Empty()
+        ctx.can:getFluidContainer():addFluid(Fluid.Petrol, 0.5)
+        local rec = C.read(ctx.can, "item", true)
+        rec.q, rec.deg = { gasoline = 0.5 }, { gasoline = 0 }
+        C.commit(ctx.can, "item", rec, true)
+        D.spots[1]:AddWorldInventoryItem(ctx.can, 0.5, 0.5, 0, false)
+        local reply = menuClick("RTDS.floor_pour", function(c)
+            TLG.UI.FuelMenu.fillWorld(0, c, { ctx.can:getWorldItem() }, false)
+        end, getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_PourGenerator"))
+        R:check("RTDS.floor_pour_queued", function() return reply.ok, tostring(reply.reason) end)
+        return nil
+    end
+    if D.gen:getFuel() < 0.49 and ticks < 850 then return nil end
+    R:check("RTDS.floor_pour_completed", function()
+        return ctx.can:getWorldItem() == nil and player():getInventory():contains(ctx.can)
+            and C.fluidOf(ctx.can, "item"):isEmpty() and D.gen:getFuel() >= 0.49,
+            string.format("onGround=%s generator=%.3f", tostring(ctx.can:getWorldItem() ~= nil), D.gen:getFuel())
+    end)
+    ISTimedActionQueue.clear(player())
+    D.gen:setFuel(0)
+    D.gen:getModData().tlg = nil
+    closeDialogs()
+    return true
+end }
+
 RT.DS.workshopMenu = RT.DS.menuShot({ name = "workshop_menu", rootKey = GEN_MENU, x = 560,
     build = function(x, y)
         local objs, list = {}, RT.DS.gen:getSquare():getObjects()
@@ -13387,7 +13483,7 @@ end }
 if REQUEST == "sp-rtds" then
     RT.docsSteps = { RT.waitWorld, RT.DS.setup, RT.DS.fuelSpot, RT.DS.fuelMenu("fuel_menu", "full"),
         RT.DS.fuelMenu("fuel_menu_empty_can", "empty"), RT.DS.kit, RT.DS.wait, RT.DS.look, RT.DS.known, RT.DS.toVessel,
-        RT.DS.machineMenu, RT.DS.status, RT.DS.generator, RT.DS.workshopMenu, RT.DS.project, RT.DS.projectStatus,
+        RT.DS.machineMenu, RT.DS.status, RT.DS.generator, RT.DS.floorPour, RT.DS.workshopMenu, RT.DS.project, RT.DS.projectStatus,
         RT.CR.setup, RT.DS.playerView(true), RT.CR.open, RT.DS.crafting, RT.CR.close, RT.DS.playerView(false), RT.finish }
 end
 

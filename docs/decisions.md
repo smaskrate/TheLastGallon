@@ -1170,7 +1170,7 @@ their replacement.
 ## D-033 Version 0.1.0, licensed CC BY-NC-SA 4.0, with release metadata
 * Decision:
   * The mod is licensed under CC BY-NC-SA 4.0 (`LICENSE.md`, at the
-    repository root and in the package's `docs/`), © 2026 Manuel Alessio
+    repository root and in the package's `docs/`), © 2026 smaskrate
     (`author=` in `mod.info`). Not covered: the five supplied Tripo models
     with their textures, and the four carry clips made from Mixamo's
     animation. They ship only as part of the mod.
