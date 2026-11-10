@@ -192,6 +192,7 @@
     "IGUI_TLG_Profile_engine_ci_stock": "motore diesel di serie",
     "IGUI_TLG_Profile_engine_ci_bio": "motore diesel predisposto per biodiesel",
     "IGUI_TLG_Profile_generator_ci_stock": "generatore diesel di serie",
+    "IGUI_TLG_Profile_generator_ci_bio": "generatore diesel, adatto al biodiesel",
     "IGUI_TLG_Profile_generator_gas": "generatore a gas (propano/biogas/gas di legna)",
     "IGUI_TLG_Conversion_flex_generator": "Conversione flex-fuel del generatore",
     "IGUI_TLG_Conversion_gas_generator": "Conversione a gas del generatore",

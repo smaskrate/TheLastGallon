@@ -5041,3 +5041,24 @@ Evidence:
 [run 235](evidence/2026-11-10_rt-sp_harness_run235_diesel_generator_save_42.22.2.txt);
 [run 236](evidence/2026-11-10_rt-sp_harness_run236_diesel_generator_tile_42.22.2.txt);
 screenshots in [evidence/run236](evidence/run236).
+## 2026-11-10 — RT-SP client harness, launch 237 (the diesel generator's profile, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `b7d9531`. The
+owner decided that the diesel generator takes pure biodiesel without
+penalty. New consumer profile `generator_ci_bio` (the stock diesel
+generator's limits, biodiesel at any share), given to
+`TLG.DieselGenerator`. The probe holds the start gate's roll at 0.999, so
+only a start factor of 1 passes. 17 passed, then 3 after the save; 0
+failed.
+
+* 5 L of biodiesel poured in evaluates fit with no reason listed: start
+  factor 1, power factor 1, wear factor 1 (launch 236, on
+  `generator_ci_stock`: 0.6, 0.85 and 1.5 with `marginal_biodiesel`).
+* The start through `ISActivateGenerator` succeeded against the held roll.
+* Every other check as in launch 236; after the save the generator reads
+  `generator_ci_bio`.
+
+Not run: as in launches 234-236; biodiesel in the cold in this generator.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run237_diesel_generator_profile_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run237_diesel_generator_profile_42.22.2.txt).

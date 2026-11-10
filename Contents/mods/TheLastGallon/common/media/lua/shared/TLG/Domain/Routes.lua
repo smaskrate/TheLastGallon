@@ -99,7 +99,7 @@ Routes.list = {
         skills = { "Farming: oilseed crops", "Cooking: reactor mixing and washing (skill raises conversion and soap removal)",
             "Metalworking: retort, reactor and wash tank" },
         equipment = { machines = { "oil_press", "wood_retort", "ash_pit", "lye_leacher", "biodiesel_reactor",
-            "biodiesel_wash_tank" }, items = { "diesel engine or generator (engine_ci_bio / generator_ci_stock)" } },
+            "biodiesel_wash_tank" }, items = { "diesel engine or generator (engine_ci_bio / generator_ci_bio)" } },
         initialEnergy = "Manual labour and independent wood fires (retort, leacher, reactor, drying); no electricity.",
         renewableInputs = { "oilseed", "firewood", "water" },
         finiteDependencies = {

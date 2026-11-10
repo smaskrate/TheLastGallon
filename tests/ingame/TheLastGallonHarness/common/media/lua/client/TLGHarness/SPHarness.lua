@@ -13966,7 +13966,7 @@ RT.BD = { names = { "WoodRetort", "AshBarrel", "LyeLeacher", "BiodieselReactor",
     ids = { "wood_retort", "ash_pit", "lye_leacher", "biodiesel_reactor", "biodiesel_wash_tank" },
     recipes = { "methanol_wood_distill", "ash_burn", "lye_leach", "biodiesel_react", "biodiesel_wash" },
     wood = { "Base.Log", "Base.Firewood", "Base.Plank", "Base.Twigs" },
-    diesels = { "engine_ci_stock", "engine_ci_bio", "generator_ci_stock" }, tol = 1e-6, timeTol = 1e-4, phases = {} }
+    diesels = { "engine_ci_stock", "engine_ci_bio", "generator_ci_stock", "generator_ci_bio" }, tol = 1e-6, timeTol = 1e-4, phases = {} }
 
 function RT.BD.rec(i) return RT.BD.items[i]:getModData().tlgProc or {} end
 function RT.BD.kind(i) return TLG.Registry.need("machine", RT.BD.ids[i]).kind end
@@ -14620,7 +14620,7 @@ RT.DG.place = { name = "rtdg_place", timeout = 1200, fn = function(ctx, ticks)
     end)
     R:check("RTDG.diesel_profile", function()
         local g = DG.gens[1]
-        return g ~= nil and G.profile(g) == "generator_ci_stock" and G.referenceFuel(g) == "diesel", lines[1]
+        return g ~= nil and G.profile(g) == "generator_ci_bio" and G.referenceFuel(g) == "diesel", lines[1]
     end)
     R:check("RTDG.vanilla_generator_keeps_the_petrol_profile", function()
         local g = DG.gens[3]
@@ -14645,11 +14645,11 @@ end, function(ctx)
     end)
     hopEnd(ctx, true)
     player():setPrimaryHandItem(nil)
-    -- The stock diesel profile starts on pure biodiesel 6 times in 10
-    -- (launch 233 lost the roll): the gate's roll is held at its lowest
-    -- for the start that follows, and put back after it.
+    -- The gate's roll is held at its highest for the start that follows:
+    -- only a start factor of 1 passes (the stock diesel profile gave 0.6 on
+    -- pure biodiesel and lost the roll in launch 233).
     RT.DG.roll = TLG.Integration.Generators.startRoll
-    TLG.Integration.Generators.startRoll = function() return 0 end
+    TLG.Integration.Generators.startRoll = function() return 0.999 end
 end)
 
 -- Vanilla's pickup: the item it gives must be the generator's own type.
@@ -14760,7 +14760,7 @@ RT.DG.reload = { name = "rtdgb_reload", timeout = 3000, fn = function(ctx, ticks
         pcall(function() tex = diesel:getSprite():getTextureForCurrentFrame(diesel:getDir()) end)
         local v, status = tlgView("generator", diesel)
         return name == G.SPRITES["TLG.DieselGenerator"] and itemType == "TLG.DieselGenerator" and tex ~= nil
-            and G.profile(diesel) == "generator_ci_stock" and v ~= nil and (v.q.biodiesel or 0) > 4,
+            and G.profile(diesel) == "generator_ci_bio" and v ~= nil and (v.q.biodiesel or 0) > 4,
             string.format("sprite %s, picture %s, item type %s, profile %s, record %s", tostring(name), tostring(tex ~= nil),
                 tostring(itemType), tostring(G.profile(diesel)), viewText(v, status))
     end)

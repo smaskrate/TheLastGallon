@@ -192,6 +192,7 @@
     "IGUI_TLG_Profile_engine_ci_stock": "stock diesel engine",
     "IGUI_TLG_Profile_engine_ci_bio": "biodiesel-ready diesel engine",
     "IGUI_TLG_Profile_generator_ci_stock": "stock diesel generator",
+    "IGUI_TLG_Profile_generator_ci_bio": "diesel generator, biodiesel-ready",
     "IGUI_TLG_Profile_generator_gas": "gas generator (propane/biogas/wood gas)",
     "IGUI_TLG_Conversion_flex_generator": "Flex-fuel generator conversion",
     "IGUI_TLG_Conversion_gas_generator": "Gas generator conversion",

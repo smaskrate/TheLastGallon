@@ -49,7 +49,7 @@ G.ITEM_TYPES = { ["Base.Generator"] = true, ["Base.Generator_Old"] = true, ["Bas
 -- Generator items with a profile of their own (D-036); the others have
 -- DEFAULT_PROFILE. The game keeps the item's type on the object it becomes
 -- (mod data "generatorFullType").
-G.ITEM_PROFILES = { ["TLG.DieselGenerator"] = "generator_ci_stock" }
+G.ITEM_PROFILES = { ["TLG.DieselGenerator"] = "generator_ci_bio" }
 
 -- The mod's own generator sprites (D-036). The game reads a generator's
 -- item type from its sprite's name (BC IsoGenerator.getGeneratorItemType)

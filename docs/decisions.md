@@ -1418,7 +1418,9 @@ their replacement.
     sprite of its own (2026-11-10): a tile of the mod's own sheet,
     `tlg_generators_01_0`, rendered from the mod's shapes; with it the
     generator keeps its type through pickup and a save (launch 236).
-    Open: `generator_ci_stock` starts on pure biodiesel only 6 times in 10.
+    On `generator_ci_stock` it started on pure biodiesel 6 times in 10;
+    the owner decided it takes pure biodiesel without penalty
+    (2026-11-10): profile `generator_ci_bio`, run in launch 237.
   * The mod's own oil press does not ship in 0.2.0: vanilla's gives the
     oil.
 * Decision (the chain's machines, five):

@@ -45,6 +45,15 @@ R.define("consumer", {
     accepts = { diesel = { soft = 1.0, max = 1.0 }, biodiesel = { soft = 0.2, max = 1.0 } },
     foreignMax = 0.02, maxDeg = 4.0, waterMax = 0.0015, sedimentMax = 0.002,
 })
+-- The mod's diesel generator (TLG.DieselGenerator, D-036): the stock diesel
+-- generator's limits, but biodiesel at any share without penalty. The
+-- owner's decision of 2026-11-10: the player's own biodiesel is its main
+-- fuel. No fuel heater: biodiesel still gels in the cold.
+R.define("consumer", {
+    id = "generator_ci_bio", ignition = "compression", referenceFuel = "diesel",
+    accepts = { diesel = { soft = 1.0, max = 1.0 }, biodiesel = { soft = 1.0, max = 1.0 } },
+    foreignMax = 0.02, maxDeg = 4.0, waterMax = 0.0015, sedimentMax = 0.002,
+})
 R.define("consumer", {
     id = "generator_gas", ignition = "gaseous", referenceFuel = "propane",
     accepts = { propane = { soft = 1.0, max = 1.0 }, biogas = { soft = 1.0, max = 1.0 },

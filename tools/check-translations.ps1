@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Checks EN/IT translation parity and that referenced keys exist.
 .DESCRIPTION
@@ -83,7 +83,7 @@ foreach ($s in "output_full_fermenter") { [void]$referenced.Add("IGUI_TLG_Pause_
 foreach ($s in "prepare","ferment","heat_up","distill","dry") { [void]$referenced.Add("IGUI_TLG_Stage_$s") }
 foreach ($s in "none","Planned","InProgress","Commissioned","Cancelled","Removed","Reverted","Invalidated") { [void]$referenced.Add("IGUI_TLG_ConvState_$s") }
 foreach ($s in "inspect","prepare","install","configure","test","commission") { [void]$referenced.Add("IGUI_TLG_ConvStage_$s") }
-foreach ($s in "engine_si_stock","engine_si_flex","generator_si_stock","generator_si_flex","engine_ci_stock","engine_ci_bio","generator_ci_stock","generator_gas") { [void]$referenced.Add("IGUI_TLG_Profile_$s") }
+foreach ($s in "engine_si_stock","engine_si_flex","generator_si_stock","generator_si_flex","engine_ci_stock","engine_ci_bio","generator_ci_stock","generator_ci_bio","generator_gas") { [void]$referenced.Add("IGUI_TLG_Profile_$s") }
 foreach ($s in "flex_generator","gas_generator","flex_car_normal","flex_small_car","flex_pickup_truck","flex_step_van") { [void]$referenced.Add("IGUI_TLG_Conversion_$s") }
 
 foreach ($k in $referenced) {
