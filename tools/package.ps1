@@ -1,4 +1,4 @@
-﻿<#
+<#
 .SYNOPSIS
   Builds the release package (Workshop item layout) under dist/. Never uploads.
 .DESCRIPTION
@@ -101,7 +101,7 @@ description=[*]Not in this version: biodiesel, wood gas, biogas, propane and ele
 description=[/list]
 description=
 description=Created by smaskrate.
-description=Licence: CC BY-NC-SA 4.0, except the five supplied machine models and the carry animations, which ship only as part of the mod (docs/LICENSE.md in the mod folder).
+description=Licence: CC BY-NC-SA 4.0, except the supplied machine models and the carry animations, which ship only as part of the mod (docs/LICENSE.md in the mod folder).
 tags=Build 42;Realistic;Vehicles;Items
 visibility=private
 "@ | Set-Content -Encoding ascii (Join-Path $item "workshop.txt")

@@ -1404,6 +1404,11 @@ their replacement.
     Pause, Resume and Abort on these machines; picking one up; a save;
     cold weather; Italian; multiplayer. All five models were
     photographed whole in launch 232.
+  * Amendment (2026-11-10): the owner supplied models and textures for
+    the five machines, which replace the shape-built ones (provenance
+    in `art-src`, as for D-027); their icons are rendered from them.
+    Seen in game in launch 241. The diesel generator's sprite and icon
+    stay the mod's own shapes.
 * Decision (the owner's second round, 2026-11-10):
   * Diesel vehicles: vanilla heavy vehicles only, from a list shown to
     the owner before it is built. `Base.PickUpTruck` and `Base.StepVan`

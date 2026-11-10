@@ -22,6 +22,19 @@
   licence, which Tripo's published help pages say allows their
   distribution (`PROVENANCE.md` in `art-src/fermenter`, `art-src/potstill`,
   `art-src/refluxstill`, `art-src/dryingcolumn` and `art-src/fuelfilter`).
+* The biodiesel chain's five machines' models and textures (`WoodRetort`,
+  `AshBarrel`, `LyeLeacher`, `BiodieselReactor` and `BiodieselWashTank` in
+  the same folders) were supplied for this mod on 2026-11-10. Each model
+  file's names are Tripo's, as the earlier models' are. The basis for
+  their distribution is the same commercial Tripo licence; whether these
+  five were generated under it was not asked (`PROVENANCE.md` in
+  `art-src/woodretort`, `art-src/ashbarrel`, `art-src/lyeleacher`,
+  `art-src/biodieselreactor` and `art-src/biodieselwashtank`).
+* The diesel generator's tile sprite and icon
+  (`media/textures/TLG/Tile_DieselGenerator.png`,
+  `media/textures/Item_TLG_DieselGenerator.png`) were made for the mod
+  from its own shapes by `tools/make-tile-sprites.ps1` and
+  `tools/make-model-icons.ps1`.
 * The fermentation vessel's carry animations
   (`media/anims_X/Bob/Bob_TLG_CarryVessel.x`, and the crouched and sprint
   clips `Bob_TLG_CarryVesselSneak.x`, `Bob_TLG_CarryVesselSneakIdle.x` and

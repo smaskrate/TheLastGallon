@@ -25,7 +25,7 @@ reuse or redistribute them. Paths are inside the mod's folder.
 
 | Files | What they are | Where they come from |
 | --- | --- | --- |
-| `common/media/models_X/TLG/Fermenter.fbx`, `PotStill.fbx`, `RefluxStill.fbx`, `DryingColumn.fbx`, `FuelFilter.fbx`, and the PNG textures of the same names in `common/media/textures/TLG/` | The five machines' models | Generated with Tripo Studio under the author's commercial Tripo plan |
+| `common/media/models_X/TLG/Fermenter.fbx`, `PotStill.fbx`, `RefluxStill.fbx`, `DryingColumn.fbx`, `FuelFilter.fbx`, `WoodRetort.fbx`, `AshBarrel.fbx`, `LyeLeacher.fbx`, `BiodieselReactor.fbx`, `BiodieselWashTank.fbx`, and the PNG textures of the same names in `common/media/textures/TLG/` | The ten machines' models | Generated with Tripo Studio under the author's commercial Tripo plan |
 | `common/media/anims_X/Bob/Bob_TLG_CarryVessel.x`, `Bob_TLG_CarryVesselSneak.x`, `Bob_TLG_CarryVesselSneakIdle.x`, `Bob_TLG_CarryVesselSprint.x` | The fermentation vessel's carry animations | Made from Mixamo's "Carrying" animation (Adobe); Adobe's terms for Mixamo apply |
 
 Each one's record is in `NOTICE.md`, and in more detail in

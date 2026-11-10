@@ -212,8 +212,9 @@ module TLG
     }
 
     /* The biodiesel chain (D-036): placeable items like the stills, with
-       no hand model. Their floor models and icons are the mod's own
-       shapes (tools/make-prop-models.ps1, tools/make-model-icons.ps1).
+       no hand model. Their floor models are the ones the user supplied
+       on 2026-11-10 (TLG_models.txt); their icons are rendered from them
+       (tools/make-model-icons.ps1).
        Ingredient ids were checked in the 42.22.2 item scripts; the welded
        ones mirror TLG_MakeRefluxStill. Not crafted in game yet. */
     item WoodRetort

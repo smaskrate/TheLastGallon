@@ -34,7 +34,7 @@ ORIGIN_ABOVE_BOTTOM = 32
 
 def render(name, out, azimuth=45.0):
     bpy.ops.wm.read_factory_settings(use_empty=True)
-    pz_icon_props.PROPS[name]()
+    pz_icon_props.ICON_ONLY[name]()
     bpy.context.view_layer.update()
     scene = bpy.context.scene
     engines = [e.identifier for e in bpy.types.RenderSettings.bl_rna.properties["engine"].enum_items]

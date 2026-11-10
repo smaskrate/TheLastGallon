@@ -35,7 +35,13 @@ $views = @(
     @("PotStill", 15, 20),
     @("RefluxStill", -70, 15),
     @("DryingColumn", 15, 20),
-    @("FuelFilter", 20, 25)
+    @("FuelFilter", 20, 25),
+    # The biodiesel chain's supplied models (D-036).
+    @("WoodRetort", 30, 25),
+    @("AshBarrel", 30, 25),
+    @("LyeLeacher", 30, 25),
+    @("BiodieselReactor", 30, 25),
+    @("BiodieselWashTank", 30, 25)
 )
 foreach ($v in $views) {
     $name = $v[0]
@@ -47,8 +53,7 @@ foreach ($v in $views) {
 }
 & $Blender -b --factory-startup --python (Join-Path $PSScriptRoot "blender\pz_icon_props.py") -- $OutDir 2>&1 |
     Where-Object { "$_" -match "^PZI |Error|Traceback" } | ForEach-Object { Write-Host "$_" }
-foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems",
-        "WoodRetort", "AshBarrel", "LyeLeacher", "BiodieselReactor", "BiodieselWashTank", "DieselGenerator") {
+foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems", "DieselGenerator") {
     if (-not (Test-Path (Join-Path $OutDir "Item_TLG_$name.png"))) { throw "no icon written for $name" }
 }
 Write-Host "icons written to $OutDir"

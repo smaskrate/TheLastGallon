@@ -5130,3 +5130,33 @@ petrol only so far.
 Evidence:
 [2026-11-10_rt-sp_harness_run240_diesel_vehicles_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run240_diesel_vehicles_42.22.2.txt);
 [evidence/run240](evidence/run240).
+## 2026-11-10 — RT-SP client harness, launch 241 (the biodiesel machines' supplied models, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `c1444e9`. The
+owner supplied models and textures for the five machines
+(`<game>/createdAssets/woodRetort`, `metalBarrel`, `LyeLeacher`,
+`BiodieselReactor` and `BiodieselWashtank`). They replace the shape-built
+placeholders: each FBX byte for byte, each texture saved as PNG, the
+icons rendered from them (`tools/make-model-icons.ps1`). Mode
+`biodiesel-models`: 1 check passed, 0 failed; the result is the six
+photographs.
+
+* Each of the five draws on the floor with its texture, whole, beside the
+  character: the wood retort (a drum on a firebox with a stack, a bucket
+  behind it), the ash barrel (a steel drum), the lye leacher (a wooden
+  stand with ash in a cloth, a pot under it), the reactor (an open drum
+  with a crank) and the wash tank (a cone-bottomed drum on three legs).
+* Sizes against the character, read from the photographs: the ash barrel
+  and the reactor's drum reach her waist, the reactor's crank and the
+  leacher her chest, the retort's stack her chest, the wash tank her
+  shoulders. Scales 0.87, 0.6, 0.73, 0.77 and 1.0.
+* Put down unturned, the leacher shows its back and its side: its pot is
+  seen only at one edge. A player turns an item when placing it.
+
+Not run with these models: the chain (launch 231 ran it with the
+placeholders; the items, scripts' names and the Lua are unchanged), the
+icons seen in the game's interface, a save, multiplayer.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run241_supplied_biodiesel_models_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run241_supplied_biodiesel_models_42.22.2.txt);
+screenshots in [evidence/run241](evidence/run241).

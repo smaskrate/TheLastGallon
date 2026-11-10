@@ -1,0 +1,36 @@
+# TLG single-player harness, the biodiesel chain's models
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=9189490873482620856 hours=2.0095 DayLength=4
+STEP rtbdm_setup begin
+STEP rtmm_clear_sky begin
+OBS  RTMM.fog intensity 0.00 -> 0.00
+STEP rtbd_row begin
+PASS RTBD.clear_ground_for_the_row :: from 10660,10645: 10660,10645
+OBS  RTBD.row TLG.FermenterVessel 10655,10650; TLG.WoodRetort 10657,10648; TLG.AshBarrel 10659,10646; TLG.LyeLeacher 10661,10644; TLG.BiodieselReactor 10663,10642; TLG.BiodieselWashTank 10665,10640
+STEP rtbdm_on_0 begin
+STEP rtbdm_zoom_row begin
+OBS  RTMI.zoom 1.00 -> 1.00 in 0 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtbdm_row begin
+OBS  RTMI.screenshot tlg_rtbdm_row.png ok=true ; interface hidden; zoom 1.00; player 10660,10645; game hour 9.04
+STEP rtbdm_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtbdm_barrel_leacher begin
+OBS  RTMI.screenshot tlg_rtbdm_barrel_leacher.png ok=true ; interface hidden; zoom 0.50; player 10660,10645; game hour 9.06
+STEP rtbdm_on_m4 begin
+STEP rtmi_shot_rtbdm_vessel_retort begin
+OBS  RTMI.screenshot tlg_rtbdm_vessel_retort.png ok=true ; interface hidden; zoom 0.50; player 10656,10649; game hour 9.08
+STEP rtbdm_on_m2 begin
+STEP rtmi_shot_rtbdm_retort_barrel begin
+OBS  RTMI.screenshot tlg_rtbdm_retort_barrel.png ok=true ; interface hidden; zoom 0.50; player 10658,10647; game hour 9.10
+STEP rtbdm_on_2 begin
+STEP rtmi_shot_rtbdm_leacher_reactor begin
+OBS  RTMI.screenshot tlg_rtbdm_leacher_reactor.png ok=true ; interface hidden; zoom 0.50; player 10662,10643; game hour 9.12
+STEP rtbdm_on_4 begin
+STEP rtmi_shot_rtbdm_reactor_tank begin
+OBS  RTMI.screenshot tlg_rtbdm_reactor_tank.png ok=true ; interface hidden; zoom 0.50; player 10664,10641; game hour 9.13
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.14
+SUMMARY pass=1 fail=0
+DONE

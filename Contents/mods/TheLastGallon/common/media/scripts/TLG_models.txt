@@ -129,11 +129,14 @@ module TLG
         scale = 0.16,
     }
 
-    /* The biodiesel chain's machines (D-036): the mod's own shapes, built
-       like the four above (tools/blender/pz_icon_props.py). Each scale is
-       the model's largest side in metres over 1.5.
-       WoodRetort: a drum lying on a brick firebox, a pipe to a condenser
-       bucket; 1.3 m across. */
+    /* The biodiesel chain's machines (D-036): the models the user supplied
+       on 2026-11-10 (provenance in art-src/woodretort, ashbarrel,
+       lyeleacher, biodieselreactor and biodieselwashtank), shipped as the
+       stills' are: each FBX byte for byte, each texture saved as PNG. Each
+       model is 1 unit along its largest side, so its scale is that side
+       in metres over 1.5.
+       WoodRetort: a drum lying on a firebox with a stack, its pipe into a
+       bucket on the same base; 1.3 m long, 1.28 m to the top of the stack. */
     model WoodRetort
     {
         mesh = TLG/WoodRetort,
@@ -141,7 +144,7 @@ module TLG
         scale = 0.87,
     }
 
-    /* AshBarrel: an open drum with air holes, ash to the brim; 0.9 m tall. */
+    /* AshBarrel: a lidded steel drum with two handles; 0.9 m tall. */
     model AshBarrel
     {
         mesh = TLG/AshBarrel,
@@ -149,7 +152,8 @@ module TLG
         scale = 0.6,
     }
 
-    /* LyeLeacher: a wooden tub on a trestle over a pan; 1.1 m tall. */
+    /* LyeLeacher: a wooden stand with a cloth of ash in its top, a pot
+       under it; 1.1 m tall. */
     model LyeLeacher
     {
         mesh = TLG/LyeLeacher,
@@ -157,17 +161,17 @@ module TLG
         scale = 0.73,
     }
 
-    /* BiodieselReactor: a drum standing on a brick firebox, a stirrer's
-       crank on its lid; 1.3 m tall. */
+    /* BiodieselReactor: an open drum with a stirrer's crank over it and a
+       drain at its foot; 1.15 m to the top of the crank. */
     model BiodieselReactor
     {
         mesh = TLG/BiodieselReactor,
         texture = TLG/BiodieselReactor,
-        scale = 0.87,
+        scale = 0.77,
     }
 
-    /* BiodieselWashTank: a cone-bottomed tank on three legs with a drain
-       valve; 1.5 m tall. */
+    /* BiodieselWashTank: a cone-bottomed drum on three legs with a drain;
+       1.5 m tall. */
     model BiodieselWashTank
     {
         mesh = TLG/BiodieselWashTank,
