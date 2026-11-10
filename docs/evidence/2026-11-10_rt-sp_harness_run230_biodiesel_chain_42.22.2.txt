@@ -1,0 +1,97 @@
+# TLG single-player harness, real game clock, the biodiesel chain
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=51628167169695996140 hours=2.0097 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2296 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2296 game h in 300 ticks
+STEP rtbd_sites begin
+OBS  RTBD.spots character 10618,10628; WoodRetort 10617,10628 AshBarrel 10617,10629 LyeLeacher 10618,10629 BiodieselReactor 10619,10628 BiodieselWashTank 10619,10629; grid power=true
+PASS RTBD.grid_is_on :: isHydroPowerOn=true
+PASS RTBD.all_placed_in_a_room :: in a room: true,true,true,true,true,true; placed: true,true,true,true,true
+STEP rtbd_static begin
+PASS RTBD.model_scripts_loaded :: TLG.WoodRetort mesh=TLG/WoodRetort texture=TLG/WoodRetort; TLG.AshBarrel mesh=TLG/AshBarrel texture=TLG/AshBarrel; TLG.LyeLeacher mesh=TLG/LyeLeacher texture=TLG/LyeLeacher; TLG.BiodieselReactor mesh=TLG/BiodieselReactor texture=TLG/BiodieselReactor; TLG.BiodieselWashTank mesh=TLG/BiodieselWashTank texture=TLG/BiodieselWashTank
+PASS RTBD.items_wired :: TLG.WoodRetort WorldStaticModel=TLG.WoodRetort weight=14; TLG.AshBarrel WorldStaticModel=TLG.AshBarrel weight=9; TLG.LyeLeacher WorldStaticModel=TLG.LyeLeacher weight=9; TLG.BiodieselReactor WorldStaticModel=TLG.BiodieselReactor weight=12; TLG.BiodieselWashTank WorldStaticModel=TLG.BiodieselWashTank weight=11
+PASS RTBD.icons_found :: WoodRetort icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_WoodRetort.png; AshBarrel icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_AshBarrel.png; LyeLeacher icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_LyeLeacher.png; BiodieselReactor icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_BiodieselReactor.png; BiodieselWashTank icon=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_BiodieselWashTank.png
+PASS RTBD.items_named :: WoodRetort="Wood Retort"; AshBarrel="Ash Barrel"; LyeLeacher="Lye Leacher"; BiodieselReactor="Biodiesel Reactor"; BiodieselWashTank="Biodiesel Wash Tank"
+PASS RTBD.categories_named :: WoodRetort=Tool ("Tool"); AshBarrel=Tool ("Tool"); LyeLeacher=Tool ("Tool"); BiodieselReactor=Tool ("Tool"); BiodieselWashTank=Tool ("Tool")
+PASS RTBD.recipes_listed :: TLG_MakeWoodRetort="Make Wood Retort"; TLG_MakeAshBarrel="Make Ash Barrel"; TLG_MakeLyeLeacher="Make Lye Leacher"; TLG_MakeBiodieselReactor="Make Biodiesel Reactor"; TLG_MakeBiodieselWashTank="Make Biodiesel Wash Tank"
+PASS RTBD.texts_loaded :: 36 keys, without a text: 
+STEP rtbd_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtbd_machines begin
+OBS  RTMI.screenshot tlg_rtbd_machines.png ok=true ; interface hidden; zoom 0.50; player 10618,10628; game hour 11.26
+STEP rtbd_zoom_close begin
+OBS  RTMI.zoom 0.50 -> 0.25 in 1 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtbd_machines_close begin
+OBS  RTMI.screenshot tlg_rtbd_machines_close.png ok=true ; interface hidden; zoom 0.25; player 10618,10628; game hour 11.28
+STEP rtbd_run begin
+OBS  RTBD.feed_WoodRetort menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTBD.firebox_fed_WoodRetort :: added kg 27, logs left 0, reason=nil
+OBS  RTBD.load_WoodRetort menu "Load firewood to distil" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTBD.loaded_WoodRetort :: wood 99 kg, state=Processing reason=nil, logs left 0
+OBS  RTBD.load_AshBarrel menu "Load firewood and burn it to ash" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTBD.loaded_AshBarrel :: wood 99 kg, state=Processing reason=nil, logs left 0
+OBS  RTBD.ash_barrel_firebox menu "Feed the firebox" -> ok=false reason=no_menu_entry state=nil stage=nil outputs=nil consumed=nil
+PASS RTBD.ash_barrel_has_no_firebox_entry :: no_menu_entry
+OBS  RTBD.refused_LyeLeacher menu "Load ash from a nearby ash barrel, and water" -> ok=false reason=no_ready_ash state=nil stage=nil outputs=nil consumed=nil
+PASS RTBD.refused_no_ready_ash :: reason=no_ready_ash dialog=No finished ash barrel within two tiles.
+OBS  RTBD.refused_BiodieselReactor menu "Load oil, with methanol and lye from nearby machines" -> ok=false reason=no_ready_retort state=nil stage=nil outputs=nil consumed=nil
+PASS RTBD.refused_no_ready_retort :: reason=no_ready_retort dialog=No finished wood retort within two tiles.
+OBS  RTBD.refused_BiodieselWashTank menu "Load crude biodiesel from a nearby reactor, and wash water" -> ok=false reason=no_ready_reactor state=nil stage=nil outputs=nil consumed=nil
+PASS RTBD.refused_no_ready_reactor :: reason=no_ready_reactor dialog=No finished reactor within two tiles.
+OBS  RTBD.retort_collect machine.collect -> ok=false reason=use_next_machine state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTBD.retort_gives_nothing_to_a_can :: use_next_machine
+OBS  RTBD.status_retort_heating menu "Status" -> ok=true reason=nil state=Processing stage=heat_up outputs={} consumed=nil
+PASS RTBD.retort_status_while_heating :: Working <LINE> Stage: heating up <LINE> Temperature here today: 71.6 °F, in a room <LINE> Firebox: 27.0 kg of wood
+PASS RTBD.hours_WoodRetort :: state=OutputReady pause=nil; done 17.4000 h after loading, expected 17.4000; paused 0.0000 h
+PASS RTBD.outputs_WoodRetort :: {methanol=5.012658227848101}; expected {methanol=5.012658227848101}; byproducts {charcoal=27.720000000000002,water=31.68,wood_tar=6.930000000000001}
+PASS RTBD.firebox_WoodRetort :: left 2.4286 kg, expected 2.4286 (24.5714 kg burned)
+OBS  RTBD.status_WoodRetort menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={methanol=5.012658227848101} consumed=nil
+PASS RTBD.status_WoodRetort :: Finished: methanol ready for a reactor <LINE> Temperature here now: 71.6 °F, in a room <LINE> Firebox: 2.4 kg of wood <LINE> Methanol: 5.01
+PASS RTBD.hours_AshBarrel :: state=OutputReady pause=nil; done 16.9500 h after loading, expected 16.9500; paused 0.0000 h
+PASS RTBD.outputs_AshBarrel :: {wood_ash=1.4849999999999999}; expected {wood_ash=1.4849999999999999}; byproducts {}
+OBS  RTBD.status_AshBarrel menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={wood_ash=1.4849999999999999} consumed=nil
+PASS RTBD.status_AshBarrel :: Finished: ash ready for a lye leacher <LINE> Temperature here now: 71.6 °F, in a room <LINE> Wood ash: 1.48
+OBS  RTBD.feed_LyeLeacher menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTBD.firebox_fed_LyeLeacher :: added kg 9, logs left 0, reason=nil
+OBS  RTBD.load_LyeLeacher menu "Load ash from a nearby ash barrel, and water" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTBD.loaded_LyeLeacher :: ash 1.4849999999999999 kg (1.4850), water 2.9699999999999998 L (2.9700), carried water 30.000 -> 27.030; barrel Ready, reason=nil
+PASS RTBD.hours_LyeLeacher :: state=OutputReady pause=nil; done 28.0000 h after loading, expected 28.0000; paused 0.0000 h
+PASS RTBD.outputs_LyeLeacher :: {lye=0.22274999999999998}; expected {lye=0.22274999999999998}; byproducts {spent_ash=1.2622499999999999}
+PASS RTBD.firebox_LyeLeacher :: left 1.8571 kg, expected 1.8571 (7.1429 kg burned)
+OBS  RTBD.status_LyeLeacher menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={lye=0.22274999999999998} consumed=nil
+PASS RTBD.status_LyeLeacher :: Finished: lye ready for a reactor <LINE> Temperature here now: 71.6 °F, in a room <LINE> Firebox: 1.9 kg of wood <LINE> Lye: 0.22
+PASS RTBD.new_oil_bottle_gives_its_litres :: Feed.amount=0.9 (definition 0.9); getBaseHunger=-0.30000001192092896 getHungChange=-0.30000001192092896
+OBS  RTBD.feed_BiodieselReactor menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTBD.firebox_fed_BiodieselReactor :: added kg 9, logs left 0, reason=nil
+OBS  RTBD.load_BiodieselReactor menu "Load oil, with methanol and lye from nearby machines" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTBD.loaded_BiodieselReactor :: oil 17.1 L (19 bottles, 17.1000), methanol 2.565 L, lye 0.21375000000000002 kg, bottles left 1, reason=nil; retort held 5.0127 L, leacher 0.2227 kg
+PASS RTBD.retort_and_leacher_keep_the_rest :: retort OutputReady {methanol=2.4476582278481014}; leacher OutputReady {lye=0.008999999999999952}; charcoal given 0
+PASS RTBD.hours_BiodieselReactor :: state=OutputReady pause=nil; done 10.5000 h after loading, expected 10.5000; paused 0.0000 h
+PASS RTBD.outputs_BiodieselReactor :: {biodiesel=16.843500000000002,methanol=0.6766042499999996,plant_oil=0.18809999999999905,sediment=0.17292375000000001}; expected {biodiesel=16.843500000000002,methanol=0.6766042499999996,plant_oil=0.18809999999999905,sediment=0.17292375000000001}; byproducts {glycerin=1.6963810714285712}
+PASS RTBD.firebox_BiodieselReactor :: left 6.1429 kg, expected 6.1429 (2.8571 kg burned)
+OBS  RTBD.status_BiodieselReactor menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={biodiesel=16.843500000000002,methanol=0.6766042499999996,plant_oil=0.18809999999999905,sediment=0.17292375000000001} consumed=nil
+PASS RTBD.status_BiodieselReactor :: Finished: crude biodiesel ready for a wash tank <LINE> Temperature here now: 71.6 °F, in a room <LINE> Firebox: 6.1 kg of wood <LINE> Biodiesel: 16.84 <LINE> Methanol: 0.68 <LINE> Plant oil: 0.19 <LINE> Sediment: 0.17
+OBS  RTBD.crude quality {conversion=0.985,grade=crude,methanol=0.037839013847448526,oil=0.010519470583734931,soap=0.009670740570729095,water=0}; glycerin and other byproducts {glycerin=1.6963810714285712}
+OBS  RTBD.feed_BiodieselWashTank menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTBD.firebox_fed_BiodieselWashTank :: added kg 9, logs left 0, reason=nil
+OBS  RTBD.load_BiodieselWashTank menu "Load crude biodiesel from a nearby reactor, and wash water" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTBD.loaded_BiodieselWashTank :: crude 17.881128 L (17.8811), wash water 5.053050000000001 L (5.0531), carried water 27.030 -> 21.977; reactor Ready; thrown away {glycerin=1.6963810714285712}; reason=nil
+PASS RTBD.hours_BiodieselWashTank :: state=OutputReady pause=nil; done 28.0000 h after loading, expected 28.0000; paused 0.0000 h
+PASS RTBD.outputs_BiodieselWashTank :: {biodiesel=16.843500000000002,methanol=0.02029812750000004,plant_oil=0.18809999999999905,sediment=0.013833899999999982,water=0.008421750000000002}; expected {biodiesel=16.843500000000002,methanol=0.02029812750000004,plant_oil=0.18809999999999905,sediment=0.013833899999999982,water=0.008421750000000002}; byproducts {methanol=0.6563061224999995,sediment=0.15908985000000003,water=4.985676000000001}
+PASS RTBD.firebox_BiodieselWashTank :: left 6.8571 kg, expected 6.8571 (2.1429 kg burned)
+OBS  RTBD.status_BiodieselWashTank menu "Status" -> ok=true reason=nil state=OutputReady stage=nil outputs={biodiesel=16.843500000000002,methanol=0.02029812750000004,plant_oil=0.18809999999999905,sediment=0.013833899999999982,water=0.008421750000000002} consumed=nil
+PASS RTBD.status_BiodieselWashTank :: Finished: biodiesel ready to collect <LINE> Temperature here now: 71.6 °F, in a room <LINE> Firebox: 6.9 kg of wood <LINE> Biodiesel: 16.84 <LINE> Methanol: 0.02 <LINE> Plant oil: 0.19 <LINE> Sediment: 0.01 <LINE> Water: 0.01
+OBS  RTBD.washed quality {grade=good,methanol=0.0011888218745428269,oil=0.011016651393164427,soap=8.10224634279096E-4,washed=1,water=4.932455282848644E-4}; wash effluent {methanol=0.6563061224999995,sediment=0.15908985000000003,water=4.985676000000001}
+OBS  RTBD.collect_1 menu "Collect biodiesel into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTBD.collect_1 ok=true reason=nil detail=nil collected={biodiesel=16.843500000000002,methanol=0.02029812750000004,plant_oil=0.18809999999999905,sediment=0.013833899999999982,water=0.008421750000000002}; tank Ready keeps {}; dialog=Ready <LINE> Firebox: 6.9 kg of wood
+FAIL RTBD.biodiesel_in_cans :: 1 clicks, 1 cans hold {biodiesel=16.843500000000002,sediment=0.013833899999999982,water=0.008421750000000002}; expected {biodiesel=16.843500000000002,methanol=0.02029812750000004,plant_oil=0.18809999999999905,sediment=0.013833899999999982,water=0.008421750000000002}; tank Ready
+PASS RTBD.cans_fluids_match_their_records :: Base.JerryCan holds 16.8658 L of 20.0, fluids {biodiesel=16.8435001373291,sediment=0.013833899982273579,water=0.00842174980789423} foreign=0, record reconciled id=S868932123-10 rev=1 total=16.8658 q[biodiesel=16.8435,sediment=0.0138,water=0.0084] deg[biodiesel=0.0000] mic=0 stab=0
+OBS  RTBD.verdicts engine_ci_stock fit (marginal_biodiesel); engine_ci_bio fit (); generator_ci_stock fit (marginal_biodiesel)
+PASS RTBD.washed_biodiesel_fits_the_biodiesel_engine :: engine_ci_stock fit (marginal_biodiesel); engine_ci_bio fit (); generator_ci_stock fit (marginal_biodiesel)
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 88.93
+SUMMARY pass=48 fail=1
+DONE

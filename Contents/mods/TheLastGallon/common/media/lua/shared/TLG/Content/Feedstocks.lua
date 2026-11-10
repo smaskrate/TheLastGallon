@@ -47,7 +47,9 @@ end
 -- What this item gives of `field` now. A food item that was partly used
 -- (cooking oil poured into a meal) gives the share left: the game keeps
 -- that as the hunger it still restores (Food.getHungChange against
--- getBaseHunger, both negative). NOT RUN in game.
+-- getBaseHunger, both negative). A new bottle of vegetable oil read -0.3
+-- for both and gave its 0.9 L (RT-SP launch 230); a part-used one is NOT
+-- RUN in game.
 function Feed.amount(item, field)
     local c = Feed.items[item:getFullType()]
     local q = c and c[field] or 0

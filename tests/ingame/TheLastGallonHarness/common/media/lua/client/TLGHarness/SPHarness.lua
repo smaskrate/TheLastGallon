@@ -84,6 +84,9 @@
 --              shown and photographed
 --   sp-rttl -> the game's Transfer Liquid window: aged, stabilized fuel
 --              poured into an empty can, then into a can of fresh petrol
+--   sp-rtbd -> summer, grid on: the biodiesel chain's five machines read
+--              back as the game loaded them, photographed, and one batch
+--              from logs, water and cooking oil to washed biodiesel in cans
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -109,7 +112,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
@@ -13935,6 +13938,566 @@ end }
 RT.italianSteps = { RT.waitWorld, RT.itSetup, RT.itText, RT.itMenus, RT.finish }
 
 ------------------------------------------------------------------------------
+-- The biodiesel chain (request "sp-rtbd", D-036). Summer with the grid on:
+-- a wood retort, an ash barrel, a lye leacher, a biodiesel reactor and a
+-- wash tank on room tiles around the character (RT.P.findSpots), every load
+-- through the machine menu. First what the game loaded is read back: the
+-- five model scripts, the items' models, icons, names and category, the
+-- five craft recipes as the crafting window lists them (none is crafted)
+-- and the chain's texts. Before that a second set is photographed outdoors
+-- on a row, the fermentation vessel beside it for size (RT.BD.row).
+-- Then the chain: 11 logs (99 kg) into the retort, its firebox fed 3 logs,
+-- and 11 logs into the ash barrel; while they work, the loads and the
+-- collection that need a finished machine are refused. The leacher takes
+-- the barrel's ash and 2 L of water per kg; the reactor takes cooking oil
+-- from 20 bottles carried, as many as the leacher's lye allows, with the
+-- retort's methanol and that lye; the wash tank takes the reactor's crude
+-- and wash water. The washed biodiesel is collected into jerry cans and
+-- judged with Consumers.evaluate against the diesel profiles. Every hour,
+-- kilogram of firebox wood and output is checked against the definitions
+-- (Content/Biodiesel: the recipes' stages and the converters, at Cooking 0
+-- and the machine's condition before the batch).
+------------------------------------------------------------------------------
+RT.BD = { names = { "WoodRetort", "AshBarrel", "LyeLeacher", "BiodieselReactor", "BiodieselWashTank" },
+    ids = { "wood_retort", "ash_pit", "lye_leacher", "biodiesel_reactor", "biodiesel_wash_tank" },
+    recipes = { "methanol_wood_distill", "ash_burn", "lye_leach", "biodiesel_react", "biodiesel_wash" },
+    wood = { "Base.Log", "Base.Firewood", "Base.Plank", "Base.Twigs" },
+    diesels = { "engine_ci_stock", "engine_ci_bio", "generator_ci_stock" }, tol = 1e-6, timeTol = 1e-4, phases = {} }
+
+function RT.BD.rec(i) return RT.BD.items[i]:getModData().tlgProc or {} end
+function RT.BD.kind(i) return TLG.Registry.need("machine", RT.BD.ids[i]).kind end
+function RT.BD.near(a, b, tol) return type(a) == "number" and type(b) == "number" and math.abs(a - b) <= (tol or RT.BD.tol) end
+
+-- Equal amounts under the same names.
+function RT.BD.same(a, b, tol)
+    a, b = a or {}, b or {}
+    for k, v in pairs(a) do if not RT.BD.near(v, b[k] or 0, tol) then return false end end
+    for k, v in pairs(b) do if not RT.BD.near(v, a[k] or 0, tol) then return false end end
+    return true
+end
+
+-- What machine i makes of `inputs`, in how many hours and for how much
+-- firebox wood, from the definitions (Process.stageHours, stageRate and
+-- completeBatch).
+function RT.BD.plan(i, inputs)
+    local rec, m = TLG.Registry.need("recipe", RT.BD.recipes[i]), TLG.Registry.need("machine", RT.BD.ids[i])
+    local total, h, burn = 0, 0, 0
+    for _, v in pairs(inputs) do total = total + v end
+    for _, st in ipairs(rec.stages) do
+        local sh = st.hours
+        if st.hoursFrom then sh = math.max(st.minHours or 0.5, total / (m[st.hoursFrom] or 1)) end
+        h = h + sh
+        if st.heatKW and st.heatKW > 0 then burn = burn + sh * st.heatKW / (m.firebox.kwhPerKg * m.firebox.efficiency) end
+    end
+    local eff = 1 - 0.3 * (1 - (RT.BD.rec(i).cond or 1))
+    local res = TLG.Domain.Process.converters[rec.converter](TLG.Tables.copy(inputs), rec.params, m, eff, 0)
+    return { hours = h, burn = burn, outputs = res.outputs, byproducts = res.byproducts, props = res.props }
+end
+
+-- A machine menu entry clicked; the reply and the dialog the player reads.
+function RT.BD.click(i, key, label)
+    local before = #H.dialogs.texts
+    local r = machineClick("RTBD." .. label, RT.BD.items[i], key)
+    local text = H.dialogs.texts[before + 1]
+    closeDialogs()
+    return r, text
+end
+
+-- All wood taken away, `logs` logs given, and the firebox fed from the menu.
+function RT.BD.feed(i, logs)
+    for _, t in ipairs(RT.BD.wood) do removeAll(t) end
+    give("Base.Log", logs)
+    local r = RT.BD.click(i, "ContextMenu_TLG_AddFirewood", "feed_" .. RT.BD.names[i])
+    R:check("RTBD.firebox_fed_" .. RT.BD.names[i], function()
+        return r.ok == true and RT.BD.near(r.addedKg, 9 * logs) and countType("Base.Log") == 0,
+            string.format("added kg %s, logs left %d, reason=%s", tostring(r.addedKg), countType("Base.Log"), tostring(r.reason))
+    end)
+    return r
+end
+
+-- A load refused: the reason, and its text as the player reads it.
+function RT.BD.refused(i, reason)
+    local r, text = RT.BD.click(i, "ContextMenu_TLG_Load_" .. RT.BD.kind(i), "refused_" .. RT.BD.names[i])
+    R:check("RTBD.refused_" .. reason, function()
+        return r.ok == false and r.reason == reason and text == getText("IGUI_TLG_MachineFail_" .. reason)
+            and not has(text, "IGUI_TLG"), string.format("reason=%s dialog=%s", tostring(r.reason), tostring(text))
+    end)
+end
+
+-- Waits on the game clock until every machine in ctx.waiting is finished
+-- (or one faults, or `maxHours` pass); pauses are logged as they appear.
+function RT.BD.wait(ctx, maxHours)
+    RT.speed(RT.waitSpeed)
+    if hours() < (ctx.next or 0) then return false end
+    ctx.next = hours() + 0.25
+    ctx.pauses = ctx.pauses or {}
+    local done, stop = true, hours() - ctx.waitFrom >= maxHours
+    for _, i in ipairs(ctx.waiting) do
+        local s = RT.statusOf(RT.BD.items[i])
+        local key = RT.BD.names[i] .. ":" .. tostring(s.pause)
+        if s.pause and not ctx.pauses[key] then
+            ctx.pauses[key] = true
+            R:line("OBS  RTBD.pause %s state=%s pause=%s stage=%s firebox=%s, %.2f h after loading", RT.BD.names[i],
+                tostring(s.state), tostring(s.pause), tostring(s.stage), tostring(s.firebox), hours() - ctx.waitFrom)
+        end
+        if s.state == "Faulted" or s.ok == false then stop = true end
+        done = done and s.state == "OutputReady"
+    end
+    if not (done or stop) then return false end
+    RT.speed(1)
+    return true
+end
+
+-- A finished batch against the plan `e`, loaded at `t0` with `fed` kg in
+-- the firebox.
+function RT.BD.finished(i, e, t0, fed)
+    local BD, rec = RT.BD, RT.BD.rec(i)
+    local name = BD.names[i]
+    R:check("RTBD.hours_" .. name, function()
+        return rec.state == "OutputReady" and BD.near(rec.completedAt, t0 + e.hours, BD.timeTol) and BD.near(rec.pausedFor or 0, 0),
+            string.format("state=%s pause=%s; done %.4f h after loading, expected %.4f; paused %.4f h", tostring(rec.state),
+                tostring(rec.pause), (rec.completedAt or -1) - t0, e.hours, rec.pausedFor or -1)
+    end)
+    R:check("RTBD.outputs_" .. name, function()
+        return BD.same(rec.outputs, e.outputs), string.format("%s; expected %s; byproducts %s", brief(rec.outputs), brief(e.outputs),
+            brief(rec.byproducts))
+    end)
+    if fed then
+        R:check("RTBD.firebox_" .. name, function()
+            return BD.near(rec.firebox, fed - e.burn, BD.timeTol), string.format("left %.4f kg, expected %.4f (%.4f kg burned)",
+                rec.firebox or -1, fed - e.burn, e.burn)
+        end)
+    end
+    local _, text = BD.click(i, "ContextMenu_TLG_MachineStatus", "status_" .. name)
+    R:check("RTBD.status_" .. name, function()
+        return has(text, getText("IGUI_TLG_MachineState_OutputReady_" .. BD.kind(i))) and not has(text, "IGUI_TLG"), tostring(text)
+    end)
+    return rec.state == "OutputReady"
+end
+
+RT.BD.setup = { name = "rtbd_sites", timeout = 3000, fn = function(ctx, ticks)
+    local BD = RT.BD
+    if not ctx.t0 and RT.skip("rtbd_sites") then return true end
+    if not ctx.t0 then
+        local here = player():getSquare()
+        local spots = RT.P.findSpots(here:getX(), here:getY())
+        if spots == nil then
+            RT.abort = "no free room tile with free room neighbours nearby"
+            R:line("OBS  RTBD.spots none found")
+            return true
+        end
+        BD.spots, BD.items = {}, {}
+        for i, s in ipairs(spots) do BD.spots[i] = { x = s:getX(), y = s:getY() } end
+        for i, name in ipairs(BD.names) do
+            local it = instanceItem("TLG." .. name)
+            if it == nil then
+                RT.abort = "the game has no item TLG." .. name
+                R:check("RTBD.item_exists_" .. name, function() return false, "instanceItem gave nil" end)
+                return true
+            end
+            spots[i + 1]:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            BD.items[i] = it
+        end
+        player():setPosition(BD.spots[1].x + 0.5, BD.spots[1].y + 0.5, 0)
+        player():setPerkLevelDebug(Perks.Cooking, 0)
+        local power
+        pcall(function() power = getWorld():isHydroPowerOn() end)
+        local parts = {}
+        for i, name in ipairs(BD.names) do parts[i] = string.format("%s %d,%d", name, BD.spots[i + 1].x, BD.spots[i + 1].y) end
+        R:line("OBS  RTBD.spots character %d,%d; %s; grid power=%s", BD.spots[1].x, BD.spots[1].y, table.concat(parts, " "),
+            tostring(power))
+        R:check("RTBD.grid_is_on", function() return power == true, "isHydroPowerOn=" .. tostring(power) end)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local seen, placed = {}, {}
+    for i = 1, 6 do seen[i] = tostring(TLG.Integration.Machines.siteOf(sq(BD.spots[i].x, BD.spots[i].y, 0)).room) end
+    for i = 1, 5 do placed[i] = tostring(TLG.Integration.Machines.isPlaced(BD.items[i])) end
+    R:check("RTBD.all_placed_in_a_room", function()
+        return table.concat(seen, ",") == "true,true,true,true,true,true" and table.concat(placed, ",") == "true,true,true,true,true",
+            "in a room: " .. table.concat(seen, ",") .. "; placed: " .. table.concat(placed, ",")
+    end)
+    return true
+end }
+
+-- What the game loaded of the five machines, before anything is run.
+RT.BD.static = { name = "rtbd_static", timeout = 300, fn = function()
+    local BD = RT.BD
+    if RT.skip("rtbd_static") then return true end
+    local sm = getScriptManager()
+    local models, items, icons, names, cats = {}, {}, {}, {}, {}
+    local okModels, okItems, okIcons, okNames, okCats = true, true, true, true, true
+    for i, name in ipairs(BD.names) do
+        local ms = sm:getModelScript("TLG." .. name)
+        local mesh, tex = ms and ms:getMeshName(), ms and ms:getTextureName()
+        okModels = okModels and mesh == "TLG/" .. name and tex == "TLG/" .. name
+        models[i] = string.format("TLG.%s mesh=%s texture=%s", name, tostring(mesh), tostring(tex))
+        local si = sm:getItem("TLG." .. name)
+        local world = si and si:getWorldStaticModel()
+        okItems = okItems and world == "TLG." .. name
+        local weight = "?"
+        pcall(function() weight = BD.items[i]:getActualWeight() end)
+        items[i] = string.format("TLG.%s WorldStaticModel=%s weight=%s", name, tostring(world), tostring(weight))
+        local it = BD.items[i]
+        local t = it:getTex()
+        local texName = tostring(t and t:getName())
+        okIcons = okIcons and has(texName, "Item_TLG_" .. name) and not has(texName, "Question_On")
+        icons[i] = string.format("%s icon=%s", name, texName)
+        local shown = tostring(it:getDisplayName())
+        okNames = okNames and shown ~= "" and not has(shown, "ItemName") and not has(shown, "TLG.")
+        names[i] = string.format("%s=\"%s\"", name, shown)
+        local c = tostring(si and si:getDisplayCategory())
+        local ct = getText("IGUI_ItemCat_" .. c)
+        okCats = okCats and ct ~= "IGUI_ItemCat_" .. c
+        cats[i] = string.format("%s=%s (\"%s\")", name, c, tostring(ct))
+    end
+    R:check("RTBD.model_scripts_loaded", function() return okModels, table.concat(models, "; ") end)
+    R:check("RTBD.items_wired", function() return okItems, table.concat(items, "; ") end)
+    R:check("RTBD.icons_found", function() return okIcons, table.concat(icons, "; ") end)
+    R:check("RTBD.items_named", function() return okNames, table.concat(names, "; ") end)
+    R:check("RTBD.categories_named", function() return okCats, table.concat(cats, "; ") end)
+    -- The crafting window's own query (ISHandcraftWindow.lua:53). Listed is
+    -- not crafted: no recipe is made in this run.
+    local listed, got, all = windowRecipes(), {}, true
+    for i, name in ipairs(BD.names) do
+        local r = listed["TLG_Make" .. name]
+        local shown = "nil"
+        pcall(function() shown = tostring(r:getTranslationName()) end)
+        all = all and r ~= nil and not has(shown, "TLG_Make")
+        got[i] = string.format("TLG_Make%s=%s", name, r and ("\"" .. shown .. "\"") or "not listed")
+    end
+    R:check("RTBD.recipes_listed", function() return all, table.concat(got, "; ") end)
+    -- Every text the chain shows must have a translation loaded.
+    local keys, raw = { "ContextMenu_TLG_CollectBiodiesel", "ContextMenu_TLG_AddFirewood" }, {}
+    for i = 1, 5 do
+        keys[#keys + 1] = "ContextMenu_TLG_Load_" .. BD.kind(i)
+        keys[#keys + 1] = "IGUI_TLG_MachineState_OutputReady_" .. BD.kind(i)
+        for _, st in ipairs(TLG.Registry.need("recipe", BD.recipes[i]).stages) do keys[#keys + 1] = "IGUI_TLG_Stage_" .. st.id end
+    end
+    for _, reason in ipairs({ "no_ready_retort", "no_ready_leacher", "no_ready_ash", "no_ready_reactor", "not_enough_methanol",
+        "not_enough_lye", "not_enough_plant_oil", "not_enough_firewood", "not_enough_wood_ash", "not_enough_water",
+        "use_next_machine" }) do
+        keys[#keys + 1] = "IGUI_TLG_MachineFail_" .. reason
+    end
+    for _, k in ipairs(keys) do if getText(k) == k then raw[#raw + 1] = k end end
+    R:check("RTBD.texts_loaded", function() return #raw == 0, string.format("%d keys, without a text: %s", #keys, table.concat(raw, ",")) end)
+    return true
+end }
+
+-- Firebox wood, then the retort's and the ash barrel's loads.
+function RT.BD.phases.wood(ctx)
+    local BD = RT.BD
+    ctx.fed = { BD.feed(1, 3).addedKg or 0 }
+    local logs = { 11, 11 }
+    for i = 1, 2 do
+        for _, t in ipairs(BD.wood) do removeAll(t) end
+        give("Base.Log", logs[i])
+        ctx.plan = ctx.plan or {}
+        ctx.plan[i] = BD.plan(i, { firewood = 9 * logs[i] })
+        local r = BD.click(i, "ContextMenu_TLG_Load_" .. BD.kind(i), "load_" .. BD.names[i])
+        ctx.t = ctx.t or {}
+        ctx.t[i] = hours()
+        R:check("RTBD.loaded_" .. BD.names[i], function()
+            return r.ok == true and BD.near(r.woodKg, 9 * logs[i]) and r.state == "Processing" and countType("Base.Log") == 0,
+                string.format("wood %s kg, state=%s reason=%s, logs left %d", tostring(r.woodKg), tostring(r.state),
+                    tostring(r.reason), countType("Base.Log"))
+        end)
+        if r.ok ~= true then
+            RT.abort = "the " .. BD.names[i] .. " did not load"
+            return true
+        end
+    end
+    -- The ash barrel has no firebox: its menu must not offer one.
+    local none = BD.click(2, "ContextMenu_TLG_AddFirewood", "ash_barrel_firebox")
+    R:check("RTBD.ash_barrel_has_no_firebox_entry", function() return none.reason == "no_menu_entry", tostring(none.reason) end)
+    -- Nothing is finished yet: the three loads that need a finished machine
+    -- beside them are refused, and so is the retort's collection into a can.
+    BD.refused(3, "no_ready_ash")
+    BD.refused(4, "no_ready_retort")
+    BD.refused(5, "no_ready_reactor")
+    local can = giveCan("Base.JerryCan")
+    local c = ask("RTBD.retort_collect", "machine.collect", { target = TLG.Integration.Machines.refFor(BD.items[1]),
+        destination = { kind = "item", id = can:getID() } })
+    R:check("RTBD.retort_gives_nothing_to_a_can", function()
+        return c.ok == false and c.reason == "use_next_machine" and can:getFluidContainer():isEmpty(), tostring(c.reason)
+    end)
+    local _, text = BD.click(1, "ContextMenu_TLG_MachineStatus", "status_retort_heating")
+    R:check("RTBD.retort_status_while_heating", function()
+        return has(text, getText("IGUI_TLG_Stage", getText("IGUI_TLG_Stage_heat_up"))) and not has(text, "IGUI_TLG"), tostring(text)
+    end)
+    ctx.waiting, ctx.waitFrom, ctx.next, ctx.phase = { 1, 2 }, hours(), 0, "burning"
+end
+
+function RT.BD.phases.burning(ctx)
+    local BD = RT.BD
+    if not BD.wait(ctx, 40) then return end
+    local ok1 = BD.finished(1, ctx.plan[1], ctx.t[1], ctx.fed[1])
+    local ok2 = BD.finished(2, ctx.plan[2], ctx.t[2], nil)
+    if not (ok1 and ok2) then
+        RT.abort = "the retort or the ash barrel did not finish"
+        return true
+    end
+    ctx.phase = "leach"
+end
+
+function RT.BD.phases.leach(ctx)
+    local BD = RT.BD
+    ctx.fed[3] = BD.feed(3, 1).addedKg or 0
+    local ash = ctx.plan[2].outputs.wood_ash
+    local perKg = TLG.Registry.need("recipe", "lye_leach").params.waterPerKgAsh
+    ctx.plan[3] = BD.plan(3, { wood_ash = ash, water = ash * perKg })
+    local water = waterCarried()
+    local r = BD.click(3, "ContextMenu_TLG_Load_leacher", "load_LyeLeacher")
+    ctx.t[3] = hours()
+    R:check("RTBD.loaded_LyeLeacher", function()
+        return r.ok == true and BD.near(r.ashKg, ash) and BD.near(r.waterL, ash * perKg) and BD.near(water - waterCarried(), ash * perKg, 1e-3)
+            and BD.rec(2).state == "Ready", string.format("ash %s kg (%.4f), water %s L (%.4f), carried water %.3f -> %.3f; barrel %s, reason=%s",
+            tostring(r.ashKg), ash, tostring(r.waterL), ash * perKg, water, waterCarried(), tostring(BD.rec(2).state), tostring(r.reason))
+    end)
+    if r.ok ~= true then
+        RT.abort = "the lye leacher did not load"
+        return true
+    end
+    ctx.waiting, ctx.waitFrom, ctx.next, ctx.phase = { 3 }, hours(), 0, "leaching"
+end
+
+function RT.BD.phases.leaching(ctx)
+    local BD = RT.BD
+    if not BD.wait(ctx, 60) then return end
+    if not BD.finished(3, ctx.plan[3], ctx.t[3], ctx.fed[3]) then
+        RT.abort = "the lye leacher did not finish"
+        return true
+    end
+    ctx.phase = "react"
+end
+
+function RT.BD.phases.react(ctx)
+    local BD = RT.BD
+    local p = TLG.Registry.need("recipe", "biodiesel_react").params
+    local bottle = TLG.Feedstocks.items["Base.OilVegetable"].oil
+    removeAll("Base.OilVegetable")
+    give("Base.OilVegetable", 20)
+    -- Feed.amount reads a food item's share left from these two (NOT RUN
+    -- until this run): a new bottle must give its whole 0.9 L.
+    local one = player():getInventory():getFirstTypeRecurse("Base.OilVegetable")
+    local base, left, amount = "?", "?", -1
+    pcall(function() base = one:getBaseHunger() end)
+    pcall(function() left = one:getHungChange() end)
+    pcall(function() amount = TLG.Feedstocks.amount(one, "oil") end)
+    R:check("RTBD.new_oil_bottle_gives_its_litres", function()
+        return BD.near(amount, bottle), string.format("Feed.amount=%s (definition %s); getBaseHunger=%s getHungChange=%s",
+            tostring(amount), tostring(bottle), tostring(base), tostring(left))
+    end)
+    ctx.fed[4] = BD.feed(4, 1).addedKg or 0
+    local methanol, lye = ctx.plan[1].outputs.methanol, ctx.plan[3].outputs.lye
+    local bottles = math.min(20, math.floor(math.min(methanol / p.methanolPerOil, lye / p.lyePerOil) / bottle + 1e-9))
+    local oil = bottles * bottle
+    ctx.plan[4] = BD.plan(4, { plant_oil = oil, methanol = oil * p.methanolPerOil, lye = oil * p.lyePerOil })
+    local r = BD.click(4, "ContextMenu_TLG_Load_reactor", "load_BiodieselReactor")
+    ctx.t[4] = hours()
+    local retort, leacher = BD.rec(1), BD.rec(3)
+    R:check("RTBD.loaded_BiodieselReactor", function()
+        return r.ok == true and BD.near(r.oilL, oil) and BD.near(r.methanolL, oil * p.methanolPerOil) and BD.near(r.lyeKg, oil * p.lyePerOil)
+            and countType("Base.OilVegetable") == 20 - bottles, string.format(
+            "oil %s L (%d bottles, %.4f), methanol %s L, lye %s kg, bottles left %d, reason=%s; retort held %.4f L, leacher %.4f kg",
+            tostring(r.oilL), bottles, oil, tostring(r.methanolL), tostring(r.lyeKg), countType("Base.OilVegetable"), tostring(r.reason),
+            methanol, lye)
+    end)
+    R:check("RTBD.retort_and_leacher_keep_the_rest", function()
+        return retort.state == "OutputReady" and BD.near((retort.outputs or {}).methanol, methanol - oil * p.methanolPerOil)
+            and leacher.state == "OutputReady" and BD.near((leacher.outputs or {}).lye, lye - oil * p.lyePerOil) and r.charcoal == 0,
+            string.format("retort %s %s; leacher %s %s; charcoal given %s", tostring(retort.state), brief(retort.outputs),
+                tostring(leacher.state), brief(leacher.outputs), tostring(r.charcoal))
+    end)
+    if r.ok ~= true then
+        RT.abort = "the reactor did not load"
+        return true
+    end
+    ctx.waiting, ctx.waitFrom, ctx.next, ctx.phase = { 4 }, hours(), 0, "reacting"
+end
+
+function RT.BD.phases.reacting(ctx)
+    local BD = RT.BD
+    if not BD.wait(ctx, 30) then return end
+    if not BD.finished(4, ctx.plan[4], ctx.t[4], ctx.fed[4]) then
+        RT.abort = "the reactor did not finish"
+        return true
+    end
+    R:line("OBS  RTBD.crude quality %s; glycerin and other byproducts %s", brief((BD.rec(4).outProps or {}).quality), brief(BD.rec(4).byproducts))
+    ctx.phase = "wash"
+end
+
+function RT.BD.phases.wash(ctx)
+    local BD = RT.BD
+    ctx.fed[5] = BD.feed(5, 1).addedKg or 0
+    local crude = TLG.Tables.copy(ctx.plan[4].outputs)
+    local crudeL = 0
+    for _, v in pairs(crude) do crudeL = crudeL + v end
+    local wash = (crude.biodiesel or 0) * TLG.Registry.need("recipe", "biodiesel_wash").params.washWaterPerL
+    crude.water = (crude.water or 0) + wash
+    ctx.plan[5] = BD.plan(5, crude)
+    local water = waterCarried()
+    local r = BD.click(5, "ContextMenu_TLG_Load_settler", "load_BiodieselWashTank")
+    ctx.t[5] = hours()
+    R:check("RTBD.loaded_BiodieselWashTank", function()
+        return r.ok == true and BD.near(r.crudeL, crudeL) and BD.near(r.washWaterL, wash) and BD.near(water - waterCarried(), wash, 1e-3)
+            and BD.rec(4).state == "Ready", string.format(
+            "crude %s L (%.4f), wash water %s L (%.4f), carried water %.3f -> %.3f; reactor %s; thrown away %s; reason=%s",
+            tostring(r.crudeL), crudeL, tostring(r.washWaterL), wash, water, waterCarried(), tostring(BD.rec(4).state), brief(r.discarded),
+            tostring(r.reason))
+    end)
+    if r.ok ~= true then
+        RT.abort = "the wash tank did not load"
+        return true
+    end
+    ctx.waiting, ctx.waitFrom, ctx.next, ctx.phase = { 5 }, hours(), 0, "washing"
+end
+
+function RT.BD.phases.washing(ctx)
+    local BD = RT.BD
+    if not BD.wait(ctx, 60) then return end
+    if not BD.finished(5, ctx.plan[5], ctx.t[5], ctx.fed[5]) then
+        RT.abort = "the wash tank did not finish"
+        return true
+    end
+    R:line("OBS  RTBD.washed quality %s; wash effluent %s", brief((BD.rec(5).outProps or {}).quality), brief(BD.rec(5).byproducts))
+    ctx.phase = "collect"
+end
+
+-- Carried containers holding biodiesel, by item id.
+function RT.BD.cans()
+    local out = {}
+    local list = player():getInventory():getAllEvalRecurse(function(it)
+        local fc = it:getFluidContainer()
+        return fc ~= nil and not fc:isEmpty()
+    end)
+    for i = 0, list:size() - 1 do
+        local it = list:get(i)
+        local comp = TLG.Integration.Native.readComposition(it:getFluidContainer())
+        if (comp.biodiesel or 0) > 0 then out[#out + 1] = it end
+    end
+    return out
+end
+
+-- The wash tank's biodiesel into jerry cans, one menu click a can, until
+-- the tank is empty.
+function RT.BD.phases.collect(ctx)
+    local BD = RT.BD
+    local want = ctx.plan[5].outputs
+    local clicks = 0
+    for n = 1, 5 do
+        if n > 1 then giveCan("Base.JerryCan") end
+        local r, text = BD.click(5, "ContextMenu_TLG_CollectBiodiesel", "collect_" .. n)
+        clicks = n
+        R:line("OBS  RTBD.collect_%d ok=%s reason=%s detail=%s collected=%s; tank %s keeps %s; dialog=%s", n, tostring(r.ok),
+            tostring(r.reason), brief(r.detail), brief(r.collected), tostring(BD.rec(5).state), brief(BD.rec(5).outputs), tostring(text))
+        if r.ok ~= true or BD.rec(5).state ~= "OutputReady" then break end
+    end
+    local sum, parts, matches = {}, {}, true
+    for _, can in ipairs(BD.cans()) do
+        local v, status = tlgView("item", can)
+        local fc = can:getFluidContainer()
+        local comp, foreign = TLG.Integration.Native.readComposition(fc)
+        for k, q in pairs(v and v.q or {}) do sum[k] = (sum[k] or 0) + q end
+        matches = matches and v ~= nil and BD.near(fc:getAmount(), TLG.Domain.Supply.total(v), 1e-3)
+        parts[#parts + 1] = string.format("%s holds %.4f L of %.1f, fluids %s foreign=%s, record %s", can:getFullType(), fc:getAmount(),
+            fc:getCapacity(), brief(comp), tostring(foreign), viewText(v, status))
+        ctx.can = ctx.can or can
+    end
+    R:check("RTBD.biodiesel_in_cans", function()
+        return BD.rec(5).state == "Ready" and BD.same(sum, want, 1e-3), string.format("%d clicks, %d cans hold %s; expected %s; tank %s",
+            clicks, #parts, brief(sum), brief(want), tostring(BD.rec(5).state))
+    end)
+    R:check("RTBD.cans_fluids_match_their_records", function() return #parts > 0 and matches, table.concat(parts, " | ") end)
+    if ctx.can then
+        local v = tlgView("item", ctx.can)
+        local verdicts, lines = {}, {}
+        for _, id in ipairs(BD.diesels) do
+            local e = v and TLG.Domain.Consumers.evaluate(id, v) or { compatible = false, reasons = { "no_record" } }
+            verdicts[id] = e
+            lines[#lines + 1] = string.format("%s %s (%s)", id, e.compatible and "fit" or "unfit", table.concat(e.reasons or {}, ","))
+        end
+        R:line("OBS  RTBD.verdicts %s", table.concat(lines, "; "))
+        R:check("RTBD.washed_biodiesel_fits_the_biodiesel_engine", function()
+            return verdicts.engine_ci_bio.compatible == true, table.concat(lines, "; ")
+        end)
+    end
+    return true
+end
+
+RT.BD.run = { name = "rtbd_run", timeout = 120000, fn = function(ctx, ticks)
+    if not ctx.phase and RT.skip("rtbd_run") then return true end
+    if ticks % 30 == 0 then RT.keepFit() end
+    return RT.BD.phases[ctx.phase or "wood"](ctx, ticks) == true
+end }
+
+-- A second set of the five machines for the photographs, outdoors in
+-- daylight on a row across the screen (RT.MI.spot), two tiles apart, the
+-- fermentation vessel first for size. Launch 230 photographed the working
+-- set in its room, which was dark: nothing could be seen.
+RT.BD.row = { name = "rtbd_row", timeout = 1200, fn = function(ctx, ticks)
+    local BD, M = RT.BD, RT.MI
+    if RT.skip("rtbd_row") then return true end
+    if ticks < 30 then return nil end
+    if not ctx.placed then
+        local px, py = math.floor(player():getX()), math.floor(player():getY())
+        for r = 0, 15 do
+            for dx = -r, r do
+                for dy = -r, r do
+                    if not BD.cx and math.max(math.abs(dx), math.abs(dy)) == r then
+                        local cx, cy, ok = px + dx, py + dy, true
+                        for k = -5, 5 do
+                            local x, y = M.spot(cx, cy, k)
+                            local bx, by = M.behind(cx, cy, k)
+                            ok = ok and M.clear(x, y) and M.clear(bx, by)
+                        end
+                        if ok then BD.cx, BD.cy = cx, cy end
+                    end
+                end
+            end
+        end
+        R:check("RTBD.clear_ground_for_the_row", function()
+            return BD.cx ~= nil, string.format("from %d,%d: %s,%s", px, py, tostring(BD.cx), tostring(BD.cy))
+        end)
+        if BD.cx == nil then return true end
+        local at = {}
+        for i, t in ipairs({ "TLG.FermenterVessel", "TLG.WoodRetort", "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor",
+            "TLG.BiodieselWashTank" }) do
+            local x, y = M.spot(BD.cx, BD.cy, 2 * i - 7)
+            local it = instanceItem(t)
+            if it then sq(x, y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false) end
+            at[i] = string.format("%s %d,%d", t, x, y)
+        end
+        R:line("OBS  RTBD.row %s", table.concat(at, "; "))
+        ctx.placed = ticks
+        return nil
+    end
+    return ticks - ctx.placed >= 30 or nil
+end }
+
+-- The character on the row behind the photographed one, at square k.
+function RT.BD.stand(name, k)
+    return { name = name, timeout = 600, fn = function(ctx, ticks)
+        if RT.BD.cx == nil then return true end
+        if ticks == 1 then
+            local x, y = RT.MI.behind(RT.BD.cx, RT.BD.cy, k)
+            player():teleportTo(x + 0.5, y + 0.5, 0)
+        end
+        return ticks >= 90 or nil
+    end }
+end
+
+RT.biodieselSteps = { RT.waitWorld, RT.setup, RT.MM.clearSky, RT.BD.row,
+    RT.BD.stand("rtbd_stand_row", 0), RT.MI.zoomTo("rtbd_zoom", 0.5), RT.MI.shot("rtbd_row", true),
+    RT.MI.zoomTo("rtbd_zoom_close", 0.25),
+    RT.BD.stand("rtbd_stand_left", -3), RT.MI.shot("rtbd_vessel_retort_barrel", true),
+    RT.BD.stand("rtbd_stand_middle", 0), RT.MI.shot("rtbd_barrel_leacher", true),
+    RT.BD.stand("rtbd_stand_right", 3), RT.MI.shot("rtbd_leacher_reactor_tank", true),
+    RT.MI.zoomTo("rtbd_zoom_back", 1.0), RT.BD.stand("rtbd_stand_back", 0),
+    RT.BD.setup, RT.BD.static, RT.BD.run, RT.finish }
+
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -13947,7 +14510,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -13979,7 +14542,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- (BC SandboxOptions.randomElectricityShut).
                 SandboxVars.ElecShut = 1
                 SandboxVars.ElecShutModifier = -1
-            elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts"
+            elseif REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtbd"
                 or REQUEST == "sp-rtss" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtds" then
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
@@ -14022,6 +14585,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtpot" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, pot still")
                 TLGH.Steps.run(R, RT.potSteps, H, nil)
+            elseif REQUEST == "sp-rtbd" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, the biodiesel chain")
+                TLGH.Steps.run(R, RT.biodieselSteps, H, nil)
             elseif REQUEST == "sp-rtc" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, machine controls")
                 TLGH.Steps.run(R, RT.controlSteps, H, nil)

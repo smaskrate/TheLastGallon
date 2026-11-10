@@ -4848,3 +4848,80 @@ above lists.
 Evidence:
 [2026-11-10_rt-sp_harness_run227_install_rehearsal_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run227_install_rehearsal_42.22.2.txt);
 [2026-11-10_rt-sp_harness_run228_install_rehearsal_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run228_install_rehearsal_42.22.2.txt).
+
+## 2026-11-10 — RT-SP client harness, launches 229–231 (the biodiesel chain, D-036)
+
+Build 42.22.2 (`3d39148846`), working tree of `feature/biodiesel` after
+`9719b13`. New mode: `tools\run-sp-harness.ps1 -Mode biodiesel` (request
+`sp-rtbd`). Summer, grid on; the five machines on room tiles around the
+character, every load through the machine menu, Cooking 0.
+
+| Launch | Result (pass/fail) | Note |
+| --- | --- | --- |
+| 229 | none | The runner stopped the client 5 s in: it read a `DONE` line in the results file before the client had written one. The runner now counts only a results file written after the launch started |
+| 230 | 48/1 | The chain ran to the end; the jerry can lost the batch's methanol and plant oil |
+| 231 | 50/0 | After the fluid fix; photographs outdoors |
+
+What launch 231 checked (launch 230 gave the same values up to the collection):
+
+* As the game loaded them: the five model scripts (mesh and texture), the
+  items' floor models, weights (14, 9, 9, 12, 11), icons, display names and
+  category text; the five craft recipes in the crafting window's own
+  query, each with its name (none was crafted); 36 text keys of the chain,
+  all with a text.
+* Wood retort: firebox 27 kg, 99 kg of logs loaded; finished 17.40 h after
+  loading with 5.0127 L of methanol, 24.57 kg of firebox wood burned.
+* Ash barrel: 99 kg of logs; finished after 16.95 h with 1.485 kg of ash.
+  Its menu has no firebox entry.
+* While both worked: the leacher, the reactor and the wash tank refused
+  their loads (`no_ready_ash`, `no_ready_retort`, `no_ready_reactor`) with
+  their texts, and the retort refused collection into a can
+  (`use_next_machine`).
+* Lye leacher: the barrel's 1.485 kg of ash and 2.97 L of water; the barrel
+  back to Ready; finished after 28.00 h with 0.2227 kg of lye, 7.14 kg of
+  firebox wood burned.
+* Reactor: of 20 bottles of vegetable oil carried, 19 loaded (17.1 L, what
+  the lye allowed), with 2.565 L of methanol and 0.2137 kg of lye; the
+  retort kept 2.4477 L and the leacher 0.009 kg; finished after 10.50 h
+  with 16.8435 L of biodiesel, 0.6766 L of methanol, 0.1881 L of plant
+  oil and 0.1729 L of sediment; 1.70 L of glycerin thrown away at the
+  next load.
+* Wash tank: the reactor's 17.8811 L of crude and 5.0531 L of wash water;
+  finished after 28.00 h, grade good: biodiesel 16.8435 L, plant oil
+  0.1881 L, methanol 0.0203 L, sediment 0.0138 L, water 0.0084 L.
+* **Collect biodiesel into a fuel can**: one click put all of it, 17.0742 L,
+  into a 20 L jerry can; the can's fluids equal its record; the tank back
+  to Ready. `Consumers.evaluate` on the can: `engine_ci_bio` fit,
+  `engine_ci_stock` and `generator_ci_stock` fit with
+  `marginal_biodiesel`.
+* A new bottle of `Base.OilVegetable` reads `getBaseHunger` and
+  `getHungChange` -0.3 and `Feedstocks.amount` gives 0.9 L.
+* Game clock 2.01 h to 88.98 h; no stage paused.
+
+Launch 230's failure, `RTBD.biodiesel_in_cans`: the reply listed the five
+components collected, the can held biodiesel, sediment and water only
+(16.8658 L), and its record was rebuilt from those fluids: 0.2084 L of
+methanol and plant oil were lost. `TLG_Methanol` and `TLG_PlantOil` were
+category Industrial only, so the can's other fluids (which blend with
+category Fuel) refused them. Both now carry Fuel and blend with Fuel
+(`TLG_fluids.txt`). `Native.writeComposition` still does not report a
+fluid the container refuses.
+
+Photographs: launch 230's two, taken in the machines' room, are black (the
+room was dark) and were not kept. Launch 231 photographed a second set
+outdoors on a row with the fermentation vessel: the ash barrel and the
+lye leacher are seen whole beside the character; of the wood retort, the
+reactor and the wash tank only parts are in frame (the row was spaced too
+wide for the zoom).
+
+Not run: crafting the five recipes; a part-used bottle of oil, lard, olive
+oil; a batch limited by the methanol; the retort emptied (charcoal); Pause,
+Resume and Abort on these machines; a machine picked up; a save; cold
+weather; the chain in Italian; multiplayer; the retort's, the reactor's and
+the wash tank's models seen whole.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run229_biodiesel_stopped_by_runner_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run229_biodiesel_stopped_by_runner_42.22.2.txt);
+[2026-11-10_rt-sp_harness_run230_biodiesel_chain_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run230_biodiesel_chain_42.22.2.txt);
+[2026-11-10_rt-sp_harness_run231_biodiesel_chain_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run231_biodiesel_chain_42.22.2.txt);
+screenshots in [evidence/run231](evidence/run231).

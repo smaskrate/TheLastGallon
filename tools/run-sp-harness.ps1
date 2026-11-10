@@ -32,6 +32,16 @@
   pot-still: summer with the grid on; a 66.6 L wash through the 60 L pot
   still in two runs (the firebox left to run out once), collected into one
   can, dried with quicklime and evaluated against the engine profiles.
+  biodiesel: summer with the grid on; the biodiesel chain's five machines
+  (D-036) on room tiles. Their models, icons, names, craft recipes and texts
+  are read back as the game loaded them (no recipe is crafted) and the
+  machines photographed at two zooms. Then one batch through the machine
+  menu: logs into the wood retort and the ash barrel, the barrel's ash and
+  water into the lye leacher, cooking oil with the retort's methanol and the
+  leacher's lye into the reactor, its crude and wash water into the wash
+  tank, the washed biodiesel collected into jerry cans and evaluated against
+  the diesel profiles. Hours, firebox wood and outputs are checked against
+  the definitions; about 85 game hours.
   controls: summer with the grid on; Pause, Resume and Abort batch from the
   machine menu on three fermenters and a drying column, one left paused
   until it spoils.
@@ -220,7 +230,7 @@
   Mods the client loads (default: the mod and the harness; see setup-devenv.ps1).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "controls", "still-pickup",
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
         "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
@@ -268,7 +278,10 @@ if ($Mode -eq "docs-shots") { $opts["temperatureDisplayCelsius"] = "true" }
 
 $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
-foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") { Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue }
+foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") {
+    Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue
+    if (Test-Path (Join-Path $luaDir $f)) { Write-Host "WARNING: $f from an earlier launch could not be removed" }
+}
 if ($Mode -eq "italian") {
     # Every Italian string the deployed mod ships, as category|key=value in
     # ASCII: letters past ASCII and backslashes as \uXXXX, which the harness
@@ -284,7 +297,7 @@ if ($Mode -eq "italian") {
     Set-Content -Encoding ascii -Path (Join-Path $luaDir "TLG_it_expect.txt") -Value $lines
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "controls" { "sp-rtc" }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "controls" { "sp-rtc" }
     "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } "transfer-liquid" { "sp-rttl" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
@@ -332,7 +345,10 @@ $finished = $false
 $clicks = 0
 while ((Get-Date) -lt $deadline -and -not $p.HasExited) {
     Start-Sleep -Seconds 5
-    if ((Test-Path $results) -and ((Read-Shared $results) -match "(?m)^DONE")) { $finished = $true; break }
+    # Only a results file this launch wrote counts: launch 229 was stopped 5 s
+    # in on a DONE line that was there before the client wrote anything.
+    if ((Test-Path $results) -and (Get-Item $results).LastWriteTime -ge $started -and
+        ((Read-Shared $results) -match "(?m)^DONE")) { $finished = $true; break }
     $log = Read-Shared $console
     $loads = ([regex]::Matches($log, "game loading took")).Count
     $exits = ([regex]::Matches($log, "STATE: exit zombie\.gameStates\.GameLoadingState")).Count

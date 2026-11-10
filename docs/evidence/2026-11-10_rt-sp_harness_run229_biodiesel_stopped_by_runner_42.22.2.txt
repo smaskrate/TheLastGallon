@@ -1,0 +1,3 @@
+# TLG single-player harness, real game clock, the biodiesel chain
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false

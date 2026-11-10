@@ -119,13 +119,18 @@ module TLG
         }
     }
 
-    /* Process liquids: Industrial only, never offered to engines. */
+    /* Process liquids. Methanol and plant oil are left in washed biodiesel
+       in small amounts, so they carry category Fuel like the contaminants
+       above and blend with it: launch 230 collected 17 L of biodiesel into
+       a jerry can, which refused its 0.02 L of methanol and 0.19 L of plant
+       oil (they were Industrial only). Glycerin never goes into a can. */
     fluid TLG_Methanol
     {
         ColorReference = PowderBlue,
         DisplayName = Fluid_Name_TLG_Methanol,
         Categories
         {
+            Fuel,
             Hazardous,
             Industrial,
             Poisons,
@@ -141,7 +146,7 @@ module TLG
             whitelist = true,
             categories
             {
-                Industrial,
+                Fuel,
             }
         }
     }
@@ -170,6 +175,7 @@ module TLG
         DisplayName = Fluid_Name_TLG_PlantOil,
         Categories
         {
+            Fuel,
             Industrial,
         }
         BlendWhiteList
@@ -177,7 +183,7 @@ module TLG
             whitelist = true,
             categories
             {
-                Industrial,
+                Fuel,
             }
         }
     }

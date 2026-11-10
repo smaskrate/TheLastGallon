@@ -1390,9 +1390,20 @@ their replacement.
     reactor to wash tank over the recipe's hours, ending in washed
     biodiesel of grade good or fair; `machine.load` refused for the
     ethanol machines and for a carried machine.
-  * NOT RUN in game: everything. Not checked offline either: collecting
-    washed biodiesel into a can (`machine.collect`), and
-    `Food.getBaseHunger` and `getHungChange` on a part-used bottle.
+  * Run in game (RT-SP launches 230–231, 42.22.2, `test-results.md`): the
+    five items, models, icons, names and texts as the game loaded them,
+    the five recipes listed by the crafting window, and one batch through
+    the machine menu from logs, water and cooking oil to 17.07 L of washed
+    biodiesel in a jerry can, every hour, firebox kilogram and output as
+    the definitions give them. Launch 230 found the can refusing the
+    batch's leftover methanol and plant oil: their fluids were category
+    Industrial only and now carry Fuel as well (`TLG_fluids.txt`).
+  * NOT RUN in game: crafting any of the five recipes; a part-used bottle
+    of oil (a new bottle gives its 0.9 L: launch 230); lard and olive oil;
+    a batch limited by the methanol; the retort emptied (its charcoal);
+    Pause, Resume and Abort on these machines; picking one up; a save;
+    cold weather; Italian; multiplayer. Three of the five models were
+    photographed only in part (launch 231).
 * Decision (the owner's second round, 2026-11-10):
   * Diesel vehicles: vanilla heavy vehicles only, from a list shown to
     the owner before it is built. `Base.PickUpTruck` and `Base.StepVan`
