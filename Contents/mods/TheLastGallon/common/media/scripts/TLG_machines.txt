@@ -210,4 +210,156 @@ module TLG
             item 1 TLG.FuelStabilizer,
         }
     }
+
+    /* The biodiesel chain (D-036): placeable items like the stills, with
+       no hand model. Their floor models and icons are the mod's own
+       shapes (tools/make-prop-models.ps1, tools/make-model-icons.ps1).
+       Ingredient ids were checked in the 42.22.2 item scripts; the welded
+       ones mirror TLG_MakeRefluxStill. Not crafted in game yet. */
+    item WoodRetort
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 14.0,
+        Icon = TLG_WoodRetort,
+        WorldStaticModel = TLG.WoodRetort,
+    }
+
+    item AshBarrel
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 9.0,
+        Icon = TLG_AshBarrel,
+        WorldStaticModel = TLG.AshBarrel,
+    }
+
+    item LyeLeacher
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 9.0,
+        Icon = TLG_LyeLeacher,
+        WorldStaticModel = TLG.LyeLeacher,
+    }
+
+    item BiodieselReactor
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 12.0,
+        Icon = TLG_BiodieselReactor,
+        WorldStaticModel = TLG.BiodieselReactor,
+    }
+
+    item BiodieselWashTank
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 11.0,
+        Icon = TLG_BiodieselWashTank,
+        WorldStaticModel = TLG.BiodieselWashTank,
+    }
+
+    craftRecipe TLG_MakeWoodRetort
+    {
+        time = 400,
+        timedAction = Making,
+        category = Welding,
+        Tags = InHandCraft;Welding,
+        inputs
+        {
+            item 1 [Base.MetalDrum],
+            item 2 [Base.SheetMetal],
+            item 2 [Base.MetalPipe],
+            item 1 [Base.BucketEmpty] mode:destroy,
+            item 2 [Base.BlowTorch] flags[DontRecordInput],
+            item 1 tags[base:weldingmask] mode:keep,
+        }
+        outputs
+        {
+            item 1 TLG.WoodRetort,
+        }
+    }
+
+    craftRecipe TLG_MakeAshBarrel
+    {
+        time = 200,
+        timedAction = Making,
+        category = Metalworking,
+        Tags = InHandCraft,
+        inputs
+        {
+            item 1 [Base.MetalDrum],
+            item 2 [Base.MetalBar],
+            item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeLight],
+        }
+        outputs
+        {
+            item 1 TLG.AshBarrel,
+        }
+    }
+
+    craftRecipe TLG_MakeLyeLeacher
+    {
+        time = 300,
+        timedAction = Making,
+        category = Carpentry,
+        Tags = AnySurfaceCraft;Carpentry,
+        SkillRequired = Woodwork:2,
+        inputs
+        {
+            item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeLight],
+            item 6 [Base.Plank],
+            item 12 [Base.Nails],
+            item 1 [Base.CheeseCloth],
+            item 1 [Base.Pot] mode:destroy,
+        }
+        outputs
+        {
+            item 1 TLG.LyeLeacher,
+        }
+    }
+
+    craftRecipe TLG_MakeBiodieselReactor
+    {
+        time = 400,
+        timedAction = Making,
+        category = Welding,
+        Tags = InHandCraft;Welding,
+        inputs
+        {
+            item 1 [Base.MetalDrum],
+            item 1 [Base.SheetMetal],
+            item 2 [Base.MetalBar],
+            item 1 [Base.MetalPipe],
+            item 2 [Base.BlowTorch] flags[DontRecordInput],
+            item 1 tags[base:weldingmask] mode:keep,
+        }
+        outputs
+        {
+            item 1 TLG.BiodieselReactor,
+        }
+    }
+
+    craftRecipe TLG_MakeBiodieselWashTank
+    {
+        time = 400,
+        timedAction = Making,
+        category = Welding,
+        Tags = InHandCraft;Welding,
+        inputs
+        {
+            item 1 [Base.MetalDrum],
+            item 2 [Base.SheetMetal],
+            item 3 [Base.MetalBar],
+            item 1 [Base.MetalPipe],
+            item 2 [Base.BlowTorch] flags[DontRecordInput],
+            item 1 tags[base:weldingmask] mode:keep,
+        }
+        outputs
+        {
+            item 1 TLG.BiodieselWashTank,
+        }
+    }
 }

@@ -36,7 +36,8 @@ try {
 } finally {
     $env:PYTHONHASHSEED = $seed
 }
-foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems") {
+foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems",
+        "WoodRetort", "AshBarrel", "LyeLeacher", "BiodieselReactor", "BiodieselWashTank") {
     foreach ($file in (Join-Path $models "$name.fbx"), (Join-Path $textures "$name.png")) {
         if (-not (Test-Path $file) -or (Get-Item $file).LastWriteTime -lt $start) { throw "not written: $file" }
     }

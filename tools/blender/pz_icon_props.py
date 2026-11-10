@@ -160,8 +160,93 @@ def manual_fuel_systems(floor=False):
     return 30.0, 12.0
 
 
+STEEL, RUST, BRICK, SOOT, WOOD, ASH, COPPER = "#6E7477", "#8A5A3C", "#9A4A38", "#2B2B2B", "#9B7445", "#B9B6AE", "#B5673A"
+
+
+def lying(x, y, z, radius, length, colour, **kw):
+    """A cylinder lying along the X axis, centred at (x, y, z)."""
+    bpy.ops.mesh.primitive_cylinder_add(vertices=_sides(40), radius=radius, depth=length, location=(x, y, z),
+                                        rotation=(0.0, math.radians(90), 0.0))
+    return _finish(bpy.context.active_object, colour, **kw)
+
+
+def firebox(width, depth, height):
+    """A brick firebox with its dark mouth on the front (-Y)."""
+    box(0.0, 0.0, 0.0, width, depth, height, BRICK, roughness=0.9)
+    box(0.0, -depth / 2 - 0.005, 0.05, width * 0.35, 0.02, height * 0.6, SOOT, roughness=0.9)
+
+
+def wood_retort(floor=False):
+    # A steel drum lying on a brick firebox; a copper pipe rises from it,
+    # runs across and drops into a condenser bucket beside the firebox.
+    firebox(1.0, 0.6, 0.35)
+    lying(0.0, 0.0, 0.65, 0.3, 1.1, STEEL, roughness=0.5, metallic=0.6)
+    cylinder(0.4, 0.0, 0.93, 0.03, 0.24, COPPER, roughness=0.4, metallic=0.8)
+    lying(0.575, 0.0, 1.15, 0.03, 0.38, COPPER, roughness=0.4, metallic=0.8)
+    cylinder(0.75, 0.0, 0.28, 0.03, 0.89, COPPER, roughness=0.4, metallic=0.8)
+    cylinder(0.75, 0.0, 0.0, 0.15, 0.3, "#8E9497", roughness=0.5, metallic=0.5)
+    return 25.0, 22.0
+
+
+def ash_barrel(floor=False):
+    # An open rusty drum with a dark band of air holes near its foot, ash to
+    # the brim.
+    cylinder(0.0, 0.0, 0.0, 0.3, 0.85, RUST, roughness=0.8, metallic=0.3)
+    cylinder(0.0, 0.0, 0.1, 0.304, 0.07, SOOT, roughness=0.9)
+    torus(0.0, 0.0, 0.85, 0.3, 0.02, SOOT, roughness=0.8)
+    cylinder(0.0, 0.0, 0.8, 0.27, 0.07, ASH, roughness=1.0)
+    return 15.0, 32.0
+
+
+def lye_leacher(floor=False):
+    # A wooden tub, wider at the top, on a trestle; ash to its brim, a
+    # spout under it and a dark pan on the ground to catch the lye.
+    for dx in (-0.25, 0.25):
+        for dy in (-0.25, 0.25):
+            box(dx, dy, 0.0, 0.06, 0.06, 0.5, WOOD, roughness=0.9)
+    box(0.0, 0.0, 0.46, 0.62, 0.62, 0.04, WOOD, roughness=0.9)
+    cone(0.0, 0.0, 0.5, 0.3, 0.36, 0.55, "#8A6A40", roughness=0.9)
+    torus(0.0, 0.0, 0.62, 0.316, 0.015, SOOT, roughness=0.6)
+    torus(0.0, 0.0, 0.95, 0.352, 0.015, SOOT, roughness=0.6)
+    cylinder(0.0, 0.0, 1.02, 0.33, 0.035, ASH, roughness=1.0)
+    cylinder(0.0, 0.0, 0.34, 0.02, 0.12, COPPER, roughness=0.4, metallic=0.8)
+    cylinder(0.0, 0.0, 0.0, 0.22, 0.12, SOOT, roughness=0.5, metallic=0.5)
+    return 20.0, 24.0
+
+
+def biodiesel_reactor(floor=False):
+    # A blue drum standing on a brick firebox, a steel lid with the
+    # stirrer's shaft through it and a crank with a wooden handle.
+    firebox(0.7, 0.7, 0.35)
+    cylinder(0.0, 0.0, 0.35, 0.3, 0.8, "#3F6F8F", roughness=0.6, metallic=0.3)
+    cylinder(0.0, 0.0, 1.15, 0.31, 0.03, STEEL, roughness=0.5, metallic=0.6)
+    cylinder(0.0, 0.0, 1.18, 0.02, 0.15, STEEL, roughness=0.5, metallic=0.6)
+    lying(0.09, 0.0, 1.33, 0.02, 0.22, STEEL, roughness=0.5, metallic=0.6)
+    cylinder(0.2, 0.0, 1.33, 0.025, 0.09, WOOD, roughness=0.9)
+    return 20.0, 22.0
+
+
+def biodiesel_wash_tank(floor=False):
+    # A pale cone-bottomed tank on three legs, a yellow band round it (the
+    # fuel), and under the cone a drain valve with a red handle.
+    pale = "#C8CCCE"
+    for turn in (90.0, 210.0, 330.0):
+        a = math.radians(turn)
+        cylinder(0.29 * math.cos(a), 0.29 * math.sin(a), 0.0, 0.025, 0.75, STEEL, roughness=0.5, metallic=0.6)
+    cone(0.0, 0.0, 0.35, 0.04, 0.32, 0.35, pale, roughness=0.5, metallic=0.3)
+    cylinder(0.0, 0.0, 0.7, 0.32, 0.7, pale, roughness=0.5, metallic=0.3)
+    cylinder(0.0, 0.0, 0.95, 0.324, 0.12, "#C9A227", roughness=0.7)
+    torus(0.0, 0.0, 1.4, 0.32, 0.015, STEEL, roughness=0.5, metallic=0.6)
+    cylinder(0.0, 0.0, 0.24, 0.03, 0.12, COPPER, roughness=0.4, metallic=0.8)
+    box(0.06, 0.0, 0.28, 0.12, 0.025, 0.025, "#B23A2A", roughness=0.7)
+    return 20.0, 20.0
+
+
 PROPS = {"FuelSampleKit": fuel_sample_kit, "YeastStarter": yeast_starter, "FuelStabilizer": fuel_stabilizer,
-         "ManualFuelSystems": manual_fuel_systems}
+         "ManualFuelSystems": manual_fuel_systems,
+         # The biodiesel chain's machines (D-036).
+         "WoodRetort": wood_retort, "AshBarrel": ash_barrel, "LyeLeacher": lye_leacher,
+         "BiodieselReactor": biodiesel_reactor, "BiodieselWashTank": biodiesel_wash_tank}
 
 if __name__ == "__main__":
     out_dir = sys.argv[sys.argv.index("--") + 1:][0]

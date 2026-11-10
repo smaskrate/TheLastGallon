@@ -1371,9 +1371,18 @@ their replacement.
     player only carries from one machine to the next.
 * Consequences:
   * `TLG.WoodRetort`, `TLG.AshBarrel`, `TLG.LyeLeacher`,
-    `TLG.BiodieselReactor` and `TLG.BiodieselWashTank` are known to the machine adapter
-    (`Machines.ITEMS`). They have no item scripts, models, menu entries
-    or texts yet, so none can exist in a game.
+    `TLG.BiodieselReactor` and `TLG.BiodieselWashTank` are known to the
+    machine adapter (`Machines.ITEMS`). Each has its item script and
+    craft recipe (`TLG_machines.txt`; ingredient ids checked in the
+    42.22.2 scripts), a shape-built floor model and icon
+    (`tools/blender/pz_icon_props.py`), its menu entries (one load,
+    **Feed the firebox** where it has one, and
+    **Collect biodiesel into a fuel can** on the wash tank) and its
+    English and Italian texts. The game has not loaded any of them yet.
+  * The menu's offline tests
+    (`tests/integration/test_machine_menu_chain.lua`, 2 cases): each
+    chain machine's entries and the request its load sends; the ethanol
+    machines' entries unchanged.
   * Offline tests (`tests/authority/test_biodiesel_commands.lua`, 7
     cases): firewood through the retort, and through the ash barrel and
     the leacher; a reactor load in the recipe's ratios; the retort's methanol

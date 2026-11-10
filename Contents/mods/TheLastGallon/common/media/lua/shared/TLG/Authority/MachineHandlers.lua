@@ -339,6 +339,15 @@ local function loadReactor(player, args, st)
     if retortItem == nil then return fail("no_ready_retort") end
     local leacherItem, leacher = finishedNear(st, "leacher", "lye", now, env)
     if leacherItem == nil then return fail("no_ready_leacher") end
+    -- A retort or a leacher holding less than the smallest batch needs is
+    -- named, not the oil it would leave behind.
+    local oilMin = recipe.inputs.plant_oil.min
+    if retort.outputs.methanol < oilMin * p.methanolPerOil - 1e-9 then
+        return fail("not_enough_methanol", { methanolAvailableL = retort.outputs.methanol })
+    end
+    if leacher.outputs.lye < oilMin * p.lyePerOil - 1e-9 then
+        return fail("not_enough_lye", { lyeAvailableKg = leacher.outputs.lye })
+    end
     local oilMax = math.min(recipe.inputs.plant_oil.max, retort.outputs.methanol / p.methanolPerOil,
         leacher.outputs.lye / p.lyePerOil)
     if tonumber(args.oilL) then oilMax = math.min(oilMax, math.max(0, tonumber(args.oilL))) end

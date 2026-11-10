@@ -98,19 +98,29 @@ local function firstItem(entry)
     return entry.items and entry.items[1]
 end
 
-local function onlyEthanolAndWater(fc)
+-- What a can may hold to be topped up with a machine's output: the fuel
+-- itself and what its batches carry with it.
+local ETHANOL = { main = "ethanol", ethanol = true, water = true }
+local BIODIESEL = { main = "biodiesel", biodiesel = true, plant_oil = true, methanol = true, sediment = true,
+    water = true }
+
+local function holdsOnly(fc, family)
     local comp, foreign = TLG.Integration.Native.readComposition(fc)
-    if foreign > 1e-6 or (comp.ethanol or 0) <= 0 then return false end
+    if foreign > 1e-6 or (comp[family.main] or 0) <= 0 then return false end
     for id in pairs(comp) do
-        if id ~= "ethanol" and id ~= "water" then return false end
+        if id ~= "main" and not family[id] then return false end
     end
     return true
 end
 
--- Where collected ethanol goes: an empty fuel can first, else one holding
--- only ethanol and water. A can with any other fuel is never used; this used
--- to take the first can with room, petrol can included (found 2026-10-31).
-local function fuelCanWithRoom(player, except)
+local function onlyEthanolAndWater(fc) return holdsOnly(fc, ETHANOL) end
+
+-- Where a machine's fuel goes: an empty fuel can first, else one holding
+-- only that fuel's family (ethanol and water; biodiesel and what its
+-- batches carry). A can with any other fuel is never used; this used to
+-- take the first can with room, petrol can included (found 2026-10-31).
+local function fuelCanWithRoom(player, except, family)
+    family = family or ETHANOL
     local list = player:getInventory():getAllEvalRecurse(function(it)
         local fc = it:getFluidContainer()
         return it ~= except and fc ~= nil and fc:getFreeCapacity() > 0.1 and TLG.ContainerProfiles.items[it:getFullType()] ~= nil
@@ -119,10 +129,14 @@ local function fuelCanWithRoom(player, except)
     for i = 0, list:size() - 1 do
         local fc = list:get(i):getFluidContainer()
         if fc:isEmpty() then return list:get(i) end
-        if topUp == nil and onlyEthanolAndWater(fc) then topUp = list:get(i) end
+        if topUp == nil and holdsOnly(fc, family) then topUp = list:get(i) end
     end
     return topUp
 end
+
+-- The biodiesel chain's machines (D-036): one load each, named after what
+-- it takes (ContextMenu_TLG_Load_<kind>).
+local CHAIN = { retort = true, fire_pit = true, leacher = true, reactor = true, settler = true }
 
 -- A can holding ethanol and water only (still output to dry).
 local function hydrousEthanolCan(player)
@@ -137,7 +151,8 @@ end
 local function addMachine(playerNum, context, item, title)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
-    local kind = TLG.Registry.need("machine", Machines.machineFor(item)).kind
+    local def = TLG.Registry.need("machine", Machines.machineFor(item))
+    local kind = def.kind
     local root = context:addOption(title or getText("ContextMenu_TLG_Machine"), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
@@ -170,6 +185,20 @@ local function addMachine(playerNum, context, item, title)
             req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
         end)
         if can == nil then o.notAvailable = true end
+    elseif CHAIN[kind] then
+        sub:addOption(getText("ContextMenu_TLG_Load_" .. kind), nil, function() req("machine.load", { target = ref }) end)
+        if def.firebox then
+            sub:addOption(getText("ContextMenu_TLG_AddFirewood"), nil, function() req("machine.addFuel", { target = ref }) end)
+        end
+        -- Only the wash tank's biodiesel goes into a can; the others hand
+        -- their output to the next machine.
+        if kind == "settler" then
+            local can = fuelCanWithRoom(player, nil, BIODIESEL)
+            local o = sub:addOption(getText("ContextMenu_TLG_CollectBiodiesel"), nil, function()
+                req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
+            end)
+            if can == nil then o.notAvailable = true end
+        end
     end
     local c = Menu.controls(item)
     if c.pause then sub:addOption(getText("ContextMenu_TLG_Pause"), nil, function() req("machine.pause", { target = ref }) end) end

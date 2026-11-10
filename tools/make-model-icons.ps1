@@ -47,7 +47,8 @@ foreach ($v in $views) {
 }
 & $Blender -b --factory-startup --python (Join-Path $PSScriptRoot "blender\pz_icon_props.py") -- $OutDir 2>&1 |
     Where-Object { "$_" -match "^PZI |Error|Traceback" } | ForEach-Object { Write-Host "$_" }
-foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems") {
+foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems",
+        "WoodRetort", "AshBarrel", "LyeLeacher", "BiodieselReactor", "BiodieselWashTank") {
     if (-not (Test-Path (Join-Path $OutDir "Item_TLG_$name.png"))) { throw "no icon written for $name" }
 }
 Write-Host "icons written to $OutDir"

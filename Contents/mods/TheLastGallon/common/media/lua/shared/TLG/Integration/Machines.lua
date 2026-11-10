@@ -73,6 +73,7 @@ require "TLG/Domain/Production/Process"
 require "TLG/Persistence/Migrations"
 require "TLG/Integration/World"
 require "TLG/Content/Production"
+require "TLG/Content/Biodiesel"
 require "TLG/Authority/Vault"
 
 TLG.Integration.Machines = TLG.Integration.Machines or {}
