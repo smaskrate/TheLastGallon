@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.1.1, for Project Zomboid 42.21.0. Each section ends with what
+Version 0.1.2, for Project Zomboid 42.22.2.
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 

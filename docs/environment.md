@@ -8,12 +8,12 @@ listed here.
 
 | Item | Value | Source |
 | --- | --- | --- |
-| Game version | **42.21.0** | `Zomboid/version.txt`, `console.txt` (`version=42.21.0 4a0e9546ec demo=false`) |
-| Revision | `4a0e9546ec` | same |
+| Game version | **42.22.2** (42.21.0 until 2026-11-09) | `console.txt` (`version=42.22.2 3d39148846 demo=false`) |
+| Revision | `3d39148846` (`4a0e9546ec` for 42.21.0) | same |
 | Steam app / depot | 108600 / 108604, manifest `7544133343391543313` | `steamapps/appmanifest_108600.acf` |
 | Steam build id | 25485521 | `appmanifest_108600.acf` (`buildid`) |
 | Branch | default (no `BetaKey` in the manifest) | `appmanifest_108600.acf` |
-| Dedicated server | Same install (`zombie.network.GameServer` in `projectzomboid.jar`); reports `42.21.0 4a0e9546ec` at runtime | `TLG_harness_server.txt` line `game=` |
+reports `42.22.2 3d39148846` at runtime
 | Game JRE | Azul Zulu 25.0.1+8 (`jre64`) | `jre64/release` |
 | Class file version | 69 (Java 25) | `javap -v zombie.core.GameVersion` |
 | PZBullet | 1.0.0.28 | `version.txt` |

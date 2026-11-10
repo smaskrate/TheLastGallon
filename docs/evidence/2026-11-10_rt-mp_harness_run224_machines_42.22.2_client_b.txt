@@ -1,0 +1,33 @@
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_zoom begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_stand begin
+STEP mp_hello begin
+STEP mp_wait_start begin
+STEP mp_wait_load_setup begin
+STEP give_feedstock begin
+STEP mp_have_feedstock begin
+OBS  MP.load B carries sugar=2 yeast=1 water=10.0
+STEP mp_walk_to_load begin
+STEP mp_load_ready begin
+STEP mp_load_now begin
+OBS  MP.load B sent at tick 5
+OBS  MP.load B reply: ok=false reason=machine_busy duplicate=nil state=nil sugarKg=nil waterL=nil; carries sugar=2 yeast=1 water=10.0
+PASS MP.load_items_follow_the_reply_B :: ok=false; before sugar=2 yeast=1 water=10.0, after sugar=2 yeast=1 water=10.0
+STEP mp_wait_finish begin
+STEP mp_finish begin
+SUMMARY pass=2 fail=0
+DONE

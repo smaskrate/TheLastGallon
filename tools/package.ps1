@@ -74,7 +74,7 @@ if ($badXml.Count -gt 0) { $badXml | ForEach-Object { Write-Host "XML ERROR $($_
 @"
 version=1
 title=The Last Gallon
-description=Fuel that ages, takes up water and gathers dirt, and engines that feel it. Version $version for Project Zomboid Build 42.21.
+Version $version for Project Zomboid Build 42.22.
 description=
 description=[h2]Fuel that goes bad[/h2]
 description=[list]
@@ -94,7 +94,7 @@ description=[/list]
 description=
 description=[h2]Good to know[/h2]
 description=[list]
-description=[*]Tested only on Project Zomboid 42.21.0, in single player and on a dedicated server (two players on one computer). Other builds are not supported.
+Tested only on Project Zomboid 42.22.2, in single player
 description=[*]English and Italian.
 description=[*]New and existing saves. Read the player guide before removing the mod: without it the game drops its machines and the ethanol in your containers (docs/player-guide.md in the mod folder).
 description=[*]Not in this version: biodiesel, wood gas, biogas, propane and electrical networks.

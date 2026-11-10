@@ -1,7 +1,10 @@
 # Support matrix
 
-Build: 42.21.0 (`4a0e9546ec`) only. Nothing here is supported on another
-build until it is tested there again.
+Build: 42.22.2 (`3d39148846`) only. Nothing here is supported on another
+build until it is tested there again. The rows below were verified on
+On 42.22.2 nine harness
+modes were run again and all passed (launches 216–226, `test-results.md`);
+the other modes have not been run again on this build.
 
 Evidence levels:
 

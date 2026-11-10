@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.1.2 (2026-11-10)
+
+* Tested on Project Zomboid 42.22.2 (`3d39148846`), which replaced 42.21.0
+  on 2026-11-09. Nothing in the mod's behaviour changed; it no longer
+  warns of an untested game version on this build.
+
 ## 0.1.1 (2026-11-08)
 
 * Fuel menus now find fluids held by placed items, including red petrol

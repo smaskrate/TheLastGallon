@@ -4744,3 +4744,42 @@ Not run:
 Evidence:
 [2026-11-07_rt-sp_harness_run214_transfer_liquid.txt](evidence/2026-11-07_rt-sp_harness_run214_transfer_liquid.txt);
 [2026-11-07_rt-sp_harness_run215_transfer_liquid.txt](evidence/2026-11-07_rt-sp_harness_run215_transfer_liquid.txt).
+
+## 2026-11-10 — RT-SP and RT-MP on 42.22.2, launches 216–226
+
+The game updated from 42.21.0 to 42.22.2 (`3d39148846`) on 2026-11-09.
+The repository's mod at `0c8aa7f` (0.1.1) logged "untested game version"
+and nothing else. Domain tests: 233 cases, 0 failed. Nine harness modes
+were run again, each reporting `game=42.22.2 3d39148846`; none failed and
+no code was changed.
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 216 | `tools/run-sp-harness.ps1` (full: phase A, reload, phase B) | 100/0, then 14/0 |
+| 217 | `tools/run-mp-harness.ps1 -Clients 2` | A 28/0, B 11/0 |
+| 218 | `tools/run-mp-harness.ps1 -Only fuel` | 20/0 |
+| 219 | `tools/run-mp-harness.ps1 -Only heavy` | 2/0 |
+| 220 | `tools/run-mp-harness.ps1 -Only death`, one client by mistake | 5/0, two waits for client B timed out; not counted |
+| 221 | `tools/run-mp-harness.ps1 -Only effects`, one client by mistake | stopped by hand while waiting for client B; not counted |
+| 222 | `tools/run-mp-harness.ps1 -Clients 2 -Only death` | A 5/0, B 6/0 |
+| 223 | `tools/run-mp-harness.ps1 -Clients 2 -Only effects` | A 22/0, B 9/0 |
+| 224 | `tools/run-mp-harness.ps1 -Clients 2 -Only machines` | A 15/0, B 2/0 |
+| 225 | `tools/run-sp-harness.ps1 -Mode pickup` | 43/0 |
+| 226 | `tools/run-sp-harness.ps1 -Mode engine-effects` | 36/0 |
+
+Not run on 42.22.2:
+* every other single-player mode (realtime, winter, fireplace,
+  fireplace-reload, pot-still, controls, still-pickup, still-save,
+  still-controls, late-find, can-water, chassis, driving, performance,
+  model-import and the later ones) and the multiplayer modes carry,
+  conversion, carconv, stills, timers, audit and knowledge;
+* the install rehearsal and the release checklist's gates;
+* a comparison of the game's 42.22 scripts and Java against what
+  `engine-capabilities.md` records for 42.21.
+
+Evidence: only the last output of each cache was kept, the earlier ones
+were overwritten by the next launch.
+[2026-11-10_rt-mp_harness_run224_machines_42.22.2_client_a.txt](evidence/2026-11-10_rt-mp_harness_run224_machines_42.22.2_client_a.txt);
+[2026-11-10_rt-mp_harness_run224_machines_42.22.2_client_b.txt](evidence/2026-11-10_rt-mp_harness_run224_machines_42.22.2_client_b.txt);
+[2026-11-10_rt-mp_harness_run224_machines_42.22.2_server.txt](evidence/2026-11-10_rt-mp_harness_run224_machines_42.22.2_server.txt);
+[2026-11-10_rt-sp_harness_run226_engine_effects_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run226_engine_effects_42.22.2.txt).

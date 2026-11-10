@@ -4,7 +4,7 @@
 TLG = TLG or {}
 
 TLG.MOD_ID = "TheLastGallon"
-TLG.VERSION = "0.1.1"
+TLG.VERSION = "0.1.2"
 
 -- Persistent/versioned contracts (see docs/migrations.md).
 TLG.SCHEMA = {
@@ -17,8 +17,8 @@ TLG.SCHEMA = {
 }
 
 -- The only build this package has been tested on (docs/environment.md).
-TLG.TESTED_GAME_VERSION = "42.21.0"
-TLG.TESTED_GAME_REVISION = "4a0e9546ec"
+TLG.TESTED_GAME_VERSION = "42.22.2"
+TLG.TESTED_GAME_REVISION = "3d39148846"
 
 TLG.Log = TLG.Log or {}
 local Log = TLG.Log
