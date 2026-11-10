@@ -95,6 +95,13 @@ M.ITEMS = {
     ["TLG.PotStill"] = "pot_still",
     ["TLG.RefluxStill"] = "reflux_still",
     ["TLG.DryingColumn"] = "drying_column",
+    -- The biodiesel chain (D-036). The wood retort and the lye leacher
+    -- hand their methanol and lye to a reactor beside them, and the reactor
+    -- its crude to a wash tank, as a fermenter hands its wash to a still.
+    ["TLG.WoodRetort"] = "wood_retort",
+    ["TLG.LyeLeacher"] = "lye_leacher",
+    ["TLG.BiodieselReactor"] = "biodiesel_reactor",
+    ["TLG.BiodieselWashTank"] = "biodiesel_wash_tank",
 }
 
 function M.machineFor(item)

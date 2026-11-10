@@ -270,7 +270,10 @@ R.define("machine", {
 })
 
 ------------------------------------------------------------------------------
--- Recipes
+-- Recipes. `makes` marks the stages that make the result (Process.abort):
+-- pressing, carbonizing, burning, leaching and boiling down, reacting. The
+-- reactor's mixing and settling make nothing more. Every stage of the wash
+-- is marked: its converter gives the mix back unchanged until all are done.
 ------------------------------------------------------------------------------
 local SETTLE = { tempMin = 0, slowBelow = 10, slowRate = 0.5 }
 local function settle(st)
@@ -281,7 +284,7 @@ end
 R.define("recipe", {
     id = "press_oilseed", version = 1, machines = { "oil_press" }, converter = "press_oil",
     inputs = { oilseed = { min = 2, max = 40 } },
-    stages = { { id = "press", hoursFrom = "throughputKgph", minHours = 0.5, labor = true } },
+    stages = { { id = "press", hoursFrom = "throughputKgph", minHours = 0.5, labor = true, makes = true } },
     params = { oilKgPerKg = 0.30, skillOilKgPerKg = 0.003, maxOilKgPerKg = 0.33, residueKgPerKg = 0.01 },
 })
 R.define("recipe", {
@@ -289,7 +292,7 @@ R.define("recipe", {
     inputs = { firewood = { min = 10, max = 100 } },
     stages = {
         { id = "heat_up", hours = 1.5, heatKW = 8 },
-        { id = "carbonize", hoursFrom = "throughputKgph", minHours = 2, heatKW = 4 },
+        { id = "carbonize", hoursFrom = "throughputKgph", minHours = 2, heatKW = 4, makes = true },
         { id = "cool_down", hours = 6 },
     },
     params = { methanolKgPerKg = 0.04, skillMethanol = 0.02, charcoalKgPerKg = 0.28, tarKgPerKg = 0.07,
@@ -299,7 +302,7 @@ R.define("recipe", {
     id = "ash_burn", version = 1, machines = { "ash_pit" }, converter = "burn_to_ash",
     inputs = { firewood = { min = 5, max = 100 } },
     stages = {
-        { id = "burn", hoursFrom = "burnKgph", minHours = 1 },
+        { id = "burn", hoursFrom = "burnKgph", minHours = 1, makes = true },
         { id = "cool", hours = 12 },
     },
     params = { ashKgPerKg = 0.015 },
@@ -308,8 +311,8 @@ R.define("recipe", {
     id = "lye_leach", version = 1, machines = { "lye_leacher" }, converter = "leach_lye",
     inputs = { wood_ash = { min = 1, max = 40 }, water = { min = 2, max = 120 } },
     stages = {
-        { id = "leach", hours = 24 },
-        { id = "boil_down", hours = 4, heatKW = 3 },
+        { id = "leach", hours = 24, makes = true },
+        { id = "boil_down", hours = 4, heatKW = 3, makes = true },
     },
     params = { lyeKgPerKgAsh = 0.15, waterPerKgAsh = 2.0 },
 })
@@ -321,7 +324,7 @@ R.define("recipe", {
     },
     stages = {
         { id = "mix", hours = 0.5, labor = true },
-        { id = "react", hours = 2, heatKW = 3 },
+        { id = "react", hours = 2, heatKW = 3, makes = true },
         settle({ id = "settle", hours = 8 }),
     },
     params = {
@@ -337,9 +340,9 @@ R.define("recipe", {
         sediment = { min = 0, max = 10 }, water = { min = 2, max = 120 },
     },
     stages = {
-        { id = "wash", hours = 1, labor = true },
-        settle({ id = "settle", hours = 24 }),
-        { id = "dry", hours = 3, heatKW = 1.5 },
+        { id = "wash", hours = 1, labor = true, makes = true },
+        settle({ id = "settle", hours = 24, makes = true }),
+        { id = "dry", hours = 3, heatKW = 1.5, makes = true },
     },
     params = {
         washWaterPerL = 0.3, soapRemoval = 0.92, skillSoapRemoval = 0.005, maxSoapRemoval = 0.98,

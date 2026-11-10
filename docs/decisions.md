@@ -1323,3 +1323,76 @@ their replacement.
     carried their 0.03 L of water and 0.01 L of sediment, with the
     ageing, stabilizer and blend; a pour stopped after 80 ticks carried
     the 1.60 L that had left, and no record changed before the stop.
+
+## D-036 Biodiesel is the second pathway: version 0.2.0, the whole chain in one release
+* Decision (the owner's four choices, 2026-11-10):
+  * Biodiesel is the next pathway to be made playable. Version 0.2.0
+    ships the whole chain, from oil and firewood to washed biodiesel.
+    Nothing of it is advertised, and the package's "not in this version"
+    lines stay, until the full loop has run in game.
+  * What burns diesel and biodiesel: a new diesel generator item, and a
+    short list of vanilla heavy vehicles declared diesel in new worlds
+    only. Existing saves keep their cars as they are.
+  * The new machines get shape-built models first (the tooling of D-029);
+    the owner may supply models before the release, as for the stills.
+  * The work is on the branch `feature/biodiesel`. `main` stays the
+    0.1.x line that `tools/package.ps1` zips.
+* Decision (how the chain is wired):
+  * Methanol, lye and crude biodiesel are never items. A wood retort and
+    a lye leacher hand their output to a reactor within two tiles, and
+    the reactor hands its crude to a wash tank, as a fermentation vessel
+    hands its wash to a still. `machine.collect` refuses those machines
+    (`use_next_machine`). Only the washed biodiesel is collected into a
+    can.
+  * One command loads the chain's machines, `machine.load`. The authority
+    picks the recipe from the machine and works out every amount; a
+    client names the machine and, at most, the oil or the wash water.
+    The three ethanol load commands are unchanged.
+  * The reactor's oil sets its batch. Methanol and lye follow in the
+    recipe's ratios (0.15 L and 0.0125 kg per litre of oil); when the
+    retort or the leacher holds less, less oil is taken. Oil is taken as
+    whole items: a part-used bottle counts for the share left in it
+    (`Feedstocks.amount`).
+  * The six recipes mark the stages that make their result (`makes`,
+    D-023).
+* Reason:
+  * The domain was done and tested (six machines, six recipes, the
+    compression-ignition profiles); the game-facing side was missing.
+  * Vanilla 42.22.2 has no diesel, methanol or lye, and no fluid for
+    cooking oil: `Base.OilVegetable` is a food item (`food.txt:13334`),
+    used up by its hunger value. Its generators are items tagged
+    `base:generator` with a `WorldObjectSprite` (`normal.txt:4800`).
+  * Vanilla already makes cooking oil from seeds: `PressOil` turns 30
+    seed paste into one `Base.OilVegetable` with `Base.OilPress`
+    (`craftrecipe_handpress.txt`). The reactor takes that oil, so the
+    chain runs without the mod's own oil press.
+  * Intermediates as items would have needed three more items, their
+    models and icons, and a rule for part-used ones, for materials the
+    player only carries from one machine to the next.
+* Consequences:
+  * `TLG.WoodRetort`, `TLG.LyeLeacher`, `TLG.BiodieselReactor` and
+    `TLG.BiodieselWashTank` are known to the machine adapter
+    (`Machines.ITEMS`). They have no item scripts, models, menu entries
+    or texts yet, so none can exist in a game.
+  * Offline tests (`tests/authority/test_biodiesel_commands.lua`, 5
+    cases): a reactor load in the recipe's ratios; the retort's methanol
+    limiting the oil; a part-used bottle; refused loads taking nothing;
+    reactor to wash tank over the recipe's hours, ending in washed
+    biodiesel of grade good or fair; `machine.load` refused for the
+    ethanol machines and for a carried machine.
+  * NOT RUN in game: everything. Not checked offline either: collecting
+    washed biodiesel into a can (`machine.collect`), and
+    `Food.getBaseHunger` and `getHungChange` on a part-used bottle.
+* Open, for the owner:
+  * Which vehicles are diesel. `Base.PickUpTruck` and `Base.StepVan` have
+    flex-fuel conversions, and `-Mode chassis` runs the pickup on petrol
+    in a new world; listing either changes those.
+  * What a station pump puts into a diesel vehicle, and what its tank
+    holds when the world starts.
+  * Where the diesel generator comes from: loot, a craft, or both.
+  * Whether the mod's own oil press and its oilseed route ship, now that
+    vanilla's press gives the oil.
+  * Where the retort's charcoal goes (vanilla has `Base.Charcoal`).
+* Not decided here: whether a `TLG` item tagged `base:generator` becomes
+  a working `IsoGenerator` with its own profile. That needs a run in game
+  before the generator is built.

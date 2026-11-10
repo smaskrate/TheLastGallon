@@ -44,4 +44,21 @@ function Feed.contribution(fullType)
     return Feed.items[fullType]
 end
 
+-- What this item gives of `field` now. A food item that was partly used
+-- (cooking oil poured into a meal) gives the share left: the game keeps
+-- that as the hunger it still restores (Food.getHungChange against
+-- getBaseHunger, both negative). NOT RUN in game.
+function Feed.amount(item, field)
+    local c = Feed.items[item:getFullType()]
+    local q = c and c[field] or 0
+    if q <= 0 then return 0 end
+    if item.getBaseHunger and item.getHungChange then
+        local base, left = item:getBaseHunger(), item:getHungChange()
+        if type(base) == "number" and type(left) == "number" and base < 0 then
+            q = q * math.max(0, math.min(1, left / base))
+        end
+    end
+    return q
+end
+
 return Feed

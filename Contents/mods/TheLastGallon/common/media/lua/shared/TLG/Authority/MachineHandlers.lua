@@ -4,6 +4,7 @@
 require "TLG/Authority/Handlers"
 require "TLG/Integration/Machines"
 require "TLG/Content/Feedstocks"
+require "TLG/Content/Biodiesel"
 
 local H = TLG.Authority.Handlers
 local Machines, Process, World = TLG.Integration.Machines, TLG.Domain.Process, TLG.World
@@ -277,12 +278,143 @@ function H.machineAbort(player, args)
     return commit(player, args, st, r.proc, { aborted = true, kept = r.kept, discarded = r.discarded, spoiled = r.spoiled })
 end
 
+------------------------------------------------------------------------------
+-- The biodiesel chain's loads (D-036): one command, machine.load. The
+-- authority picks the recipe from the machine and works out every amount:
+-- the client names the machine and, at most, how much oil or wash water.
+------------------------------------------------------------------------------
+
+-- Machine kinds whose output the next machine takes from them.
+local HANDS_ON = { retort = true, leacher = true, reactor = true, fire_pit = true }
+
+-- Takes whole items giving `field` (Feed.amount, so a part-used bottle of
+-- oil counts for what is left in it) while they fit under `max`. Returns
+-- the amount taken; with `dryRun` nothing is removed.
+local function takeAmounts(player, field, max, dryRun)
+    local got = 0
+    for _, item in ipairs(sortedItems(player, function(it) return Feed.amount(it, field) > 0 end)) do
+        local c = Feed.amount(item, field)
+        if got + c <= max + 1e-9 then
+            if not dryRun then removeItem(item) end
+            got = got + c
+        end
+    end
+    return got
+end
+
+-- A finished machine of `kind` within two tiles of the one being loaded,
+-- with its record brought to now. With `only`, its output must be that one
+-- material: a batch stopped early also holds what it had not worked yet.
+local function finishedNear(st, kind, only, now, env)
+    for _, it in ipairs(Machines.nearbyMachines(Machines.square(st.item), 2, kind)) do
+        local r = Machines.advance(it, (Machines.read(it, true)), now, env)
+        if r.state == "OutputReady" then
+            local fits = true
+            if only then
+                fits = (r.outputs[only] or 0) > 0
+                for _, id in ipairs(Tables.sortedKeys(r.outputs)) do fits = fits and id == only end
+            end
+            if fits then return it, r end
+        end
+    end
+    return nil
+end
+
+-- Writes a machine a load drew from, after the draw.
+local function writeSource(item, before, collected)
+    collected.proc.rev = (before.rev or 0) + 1
+    Machines.write(item, collected.proc)
+end
+
+-- Reactor: cooking oil or fat from the inventory, methanol from a finished
+-- wood retort and lye from a finished lye leacher, both within two tiles.
+-- The oil sets the batch. Methanol and lye follow it in the recipe's
+-- ratios, since too little of either leaves oil unreacted and too much lye
+-- makes soap; when the retort or the leacher holds less, less oil is taken.
+local function loadReactor(player, args, st)
+    local recipe = TLG.Registry.need("recipe", "biodiesel_react")
+    local p = recipe.params
+    local now, env = World.now(), World.env()
+    local retortItem, retort = finishedNear(st, "retort", "methanol", now, env)
+    if retortItem == nil then return fail("no_ready_retort") end
+    local leacherItem, leacher = finishedNear(st, "leacher", "lye", now, env)
+    if leacherItem == nil then return fail("no_ready_leacher") end
+    local oilMax = math.min(recipe.inputs.plant_oil.max, retort.outputs.methanol / p.methanolPerOil,
+        leacher.outputs.lye / p.lyePerOil)
+    if tonumber(args.oilL) then oilMax = math.min(oilMax, math.max(0, tonumber(args.oilL))) end
+    local oil = takeAmounts(player, "oil", oilMax, true)
+    local inputs = { plant_oil = oil, methanol = oil * p.methanolPerOil, lye = oil * p.lyePerOil }
+    local short = { oilAvailableL = oil, methanolAvailableL = retort.outputs.methanol,
+        lyeAvailableKg = leacher.outputs.lye }
+    -- The oil is named first: the plan would report the lye that follows it.
+    if oil < recipe.inputs.plant_oil.min - 1e-9 then return fail("not_enough_plant_oil", short) end
+    local plan = Process.plan("biodiesel_react", inputs, st.rec)
+    if not plan.ok then return fail(plan.reason, short) end
+    local methanol = Process.collect(retort, inputs.methanol)
+    local lye = Process.collect(leacher, inputs.lye)
+    if not (methanol.ok and lye.ok) then return fail(methanol.reason or lye.reason) end
+    inputs.methanol, inputs.lye = methanol.parcel.methanol, lye.parcel.lye
+    local loaded = Process.load(st.rec, "biodiesel_react", inputs, player:getPerkLevel(Perks.Cooking))
+    if not loaded.ok then return fail(loaded.reason) end
+    takeAmounts(player, "oil", oilMax)
+    writeSource(retortItem, retort, methanol)
+    writeSource(leacherItem, leacher, lye)
+    local started = Process.start(loaded.proc, now)
+    return commit(player, args, st, started.proc, { oilL = inputs.plant_oil, methanolL = inputs.methanol,
+        lyeKg = inputs.lye })
+end
+
+-- Wash tank: the whole crude of a finished reactor within two tiles, and
+-- clean water from the inventory, as much as the recipe asks for the
+-- biodiesel in it unless the request names less. The reactor's glycerin is
+-- thrown away.
+local function loadWashTank(player, args, st)
+    local recipe = TLG.Registry.need("recipe", "biodiesel_wash")
+    local now, env = World.now(), World.env()
+    local reactorItem, reactor = finishedNear(st, "reactor", nil, now, env)
+    if reactorItem == nil then return fail("no_ready_reactor") end
+    local crude = Process.collect(reactor, math.huge)
+    if not crude.ok then return fail(crude.reason) end
+    local inputs = Tables.copy(crude.parcel)
+    local crudeL = 0
+    for _, id in ipairs(Tables.sortedKeys(inputs)) do crudeL = crudeL + inputs[id] end
+    local carried = inputs.water or 0
+    local wanted = (inputs.biodiesel or 0) * recipe.params.washWaterPerL
+    if tonumber(args.waterL) then wanted = math.min(wanted, math.max(0, tonumber(args.waterL))) end
+    wanted = math.min(wanted, math.max(0, recipe.inputs.water.max - carried))
+    local water = takeWater(player, wanted, true)
+    inputs.water = carried + water
+    local plan = Process.plan("biodiesel_wash", inputs, st.rec)
+    if not plan.ok then return fail(plan.reason, { waterAvailableL = water }) end
+    local loaded = Process.load(st.rec, "biodiesel_wash", inputs, player:getPerkLevel(Perks.Cooking))
+    if not loaded.ok then return fail(loaded.reason) end
+    takeWater(player, wanted)
+    writeSource(reactorItem, reactor, crude)
+    local started = Process.start(loaded.proc, now)
+    return commit(player, args, st, started.proc, { crudeL = crudeL, washWaterL = water,
+        discarded = crude.byproducts })
+end
+
+local LOADS = { reactor = loadReactor, settler = loadWashTank }
+
+function H.machineLoad(player, args)
+    local st, err = machineState(player, args)
+    if not st then return err end
+    if not Machines.isPlaced(st.item) then return fail("not_placed") end
+    local load = LOADS[TLG.Registry.need("machine", Machines.machineFor(st.item)).kind]
+    if load == nil then return fail("wrong_machine") end
+    return load(player, args, st)
+end
+
 -- Collect still output (hydrous ethanol) into a fuel container in inventory.
 function H.machineCollect(player, args)
     local st, err = machineState(player, args)
     if not st then return err end
     local mid = Machines.machineFor(st.item)
     if mid == "fermenter_barrel" then return fail("use_still") end
+    -- Methanol, lye and crude biodiesel go to the next machine, never into
+    -- a can (D-036).
+    if HANDS_ON[TLG.Registry.need("machine", mid).kind] then return fail("use_next_machine") end
     if not Machines.isPlaced(st.item) then return fail("not_placed") end
     if type(args.destination) ~= "table" then return fail("malformed_destination") end
     local can = player:getInventory():getItemWithIDRecursiv(args.destination.id or -1)
@@ -314,6 +446,7 @@ H.commands["machine.status"] = H.machineStatus
 H.commands["machine.loadFerment"] = H.machineLoadFerment
 H.commands["machine.loadWash"] = H.machineLoadWash
 H.commands["machine.loadDry"] = H.machineLoadDry
+H.commands["machine.load"] = H.machineLoad
 H.commands["machine.addFuel"] = H.machineAddFuel
 H.commands["machine.pause"] = H.machinePause
 H.commands["machine.resume"] = H.machineResume
