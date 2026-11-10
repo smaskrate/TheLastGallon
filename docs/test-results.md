@@ -10,7 +10,7 @@ runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP: **Pour into the station reservoir**; pouring from a can on the ground; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
+| RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
@@ -4744,6 +4744,33 @@ Not run:
 Evidence:
 [2026-11-07_rt-sp_harness_run214_transfer_liquid.txt](evidence/2026-11-07_rt-sp_harness_run214_transfer_liquid.txt);
 [2026-11-07_rt-sp_harness_run215_transfer_liquid.txt](evidence/2026-11-07_rt-sp_harness_run215_transfer_liquid.txt).
+
+## 2026-11-08 — RT-SP, two launches without a number (the 0.1.1 menus on placed items)
+
+Written on 2026-11-10 from the two result files committed with 0.1.1
+(`b46cf79`). The launches were given no number and no entry at the time,
+so their command line and the order they ran in are not recorded. Both
+files carry the heading of `-Mode docs-shots` and `game=42.21.0
+4a0e9546ec`.
+
+* [2026-11-08_rt-sp_context_menus.txt](evidence/2026-11-08_rt-sp_context_menus.txt):
+  26/0.
+* [2026-11-08_rt-sp_fuel_context_menus.txt](evidence/2026-11-08_rt-sp_fuel_context_menus.txt):
+  55/0. What it checked beyond the screenshots:
+  * Placed containers: a petrol can holding petrol, an empty petrol can, a
+    water bottle holding petrol and a bucket holding ethanol each got
+    **Fuel (The Last Gallon)** from the floor inventory's menu (as a single
+    item and as a grouped entry) and from the world menu.
+    **What I know about it**, **Take a sample (kit)** and a treatment were
+    answered for each placed container; the bucket's treatment was refused
+    with `not_sealable`.
+  * Machines: the placed fermentation vessel got
+    **Machine (The Last Gallon)** from the world menu, and all four machine
+    types got it from the floor inventory's menu, single and grouped.
+  * **Pour into the generator** from a placed can's menu: the action was
+    queued, the can left the ground and the generator held 0.500 L.
+
+Not run: these menus on 42.22.2, and in multiplayer.
 
 ## 2026-11-10 — RT-SP and RT-MP on 42.22.2, launches 216–226
 

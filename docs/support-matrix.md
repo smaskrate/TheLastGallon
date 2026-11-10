@@ -2,7 +2,7 @@
 
 Build: 42.22.2 (`3d39148846`) only. Nothing here is supported on another
 build until it is tested there again. The rows below were verified on
-On 42.22.2 nine harness
+42.21.0 (`4a0e9546ec`), in the run each one cites. On 42.22.2 nine harness
 modes were run again and all passed (launches 216–226, `test-results.md`);
 the other modes have not been run again on this build.
 
@@ -35,7 +35,7 @@ Evidence levels:
 | TLG pour (`ISTLGPourFuel`, any fuel) | authoritative transfer | yes | TLG sets native | **Verified RT-SP** into generators and a car: petrol accepted, an incompatible result refused without confirmation (nothing moved), accepted with confirmation; dried ethanol accepted without confirmation by a flex-converted generator and car (run 8) |
 | Generator pickup (`ISTakeGenerator`) | wrap copies sidecar to the new hand item | yes | native fuel copied by vanilla | **Verified RT-SP**, incl. taking a second generator while carrying one (the action queued directly in phase A; from the world menu in run 85) |
 | Generator drop: drop action, the menus' unequip (`ISUnequipAction`: a second generator or a heavy item taken, a weapon equipped), `forceDropHeavyItems`, inventory drag to the floor; `IsoGenerator.new` | wraps re-attach the sidecar to the converted object | yes | native | **Verified RT-SP** (the drop action, `forceDropHeavyItems` and the drag; the menus' unequip in run 85: a second generator taken from the world menu, a bat equipped from the inventory menu); drops done by Java alone are not seen |
-| Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Read verified RT-SP** (run 5: record found after reload, the fluid sits on the world object); pouring from a ground can NOT RUN |
+| Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Read verified RT-SP** (run 5: record found after reload, the fluid sits on the world object). **Pour into the generator** from a placed can's menu **verified RT-SP** (2026-11-08): the character picked the can up, then poured |
 | Still → can (TLG command) | TLG writes native fluids + sidecar | yes (fresh) | TLG then native | **Verified RT-SP** (run 7, reflux still: 3.036 L ethanol + 0.194 L water; can fluids and record match) |
 | Can → drying column → can (`machine.loadDry`, `machine.collect`) | TLG takes the can's ethanol and water and the quicklime; bottles dried ethanol | yes (degradation kept) | TLG then native | **Verified RT-SP** (run 7, 2026-10-31: water 6 % → 0.5 %, degradation 0.8 kept) |
 | Fermentation vessel → still (TLG command) | machine-to-machine | n/a (wash) | TLG | **Verified RT-SP** (run 7: 33.3 L wash; yeast starter returned) |
@@ -63,9 +63,13 @@ followed per slice (run 213), they did not arrive.
 Vanilla's refuel menus offer only containers that hold `Petrol`
 (`contains(Fluid.Petrol)`): a station can with water and sediment is still
 offered (RT-SP), pure ethanol is not. Pour other fuels with the TLG pour,
-from the **Fuel (The Last Gallon)** menu. That menu is not shown for a can
-lying on the ground: pick the can up first, since the mod's item commands
-find cans in the player's inventory only.
+from the **Fuel (The Last Gallon)** menu. A container placed on the ground
+has the same menu, from a right-click on its world model or on its entry in
+the floor inventory. Verified RT-SP on 2026-11-08 for a petrol can (holding
+petrol, and empty), a water bottle holding petrol and a bucket holding
+ethanol: **What I know about it**, **Take a sample (kit)** and a treatment
+were each answered for the placed container. A pour into an engine picks
+the container up first.
 
 ## Vehicles
 
