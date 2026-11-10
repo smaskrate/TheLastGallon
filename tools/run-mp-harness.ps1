@@ -74,7 +74,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault)
 $ErrorActionPreference = "Stop"
@@ -208,13 +208,25 @@ if (Test-Path $userOptions) {
         if ($keys -contains $k) { $opts[$k] = $v }
     }
 }
+# A file an earlier launch left: removed, or emptied where it cannot be
+# (launch 246: the removal did nothing, the client's old results still said
+# DONE and the client was stopped 30 s in; launch 229 the same in single
+# player).
+function Clear-Stale([string]$path) {
+    Remove-Item $path -ErrorAction SilentlyContinue
+    if (Test-Path $path) {
+        Clear-Content $path -ErrorAction SilentlyContinue
+        Write-Host "WARNING: $(Split-Path -Leaf $path) from an earlier launch could not be removed; emptied"
+    }
+}
 for ($i = 0; $i -lt $Clients; $i++) {
     $c = $clientCaches[$i]
     ($opts.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) | Set-Content -Encoding ascii (Join-Path $c "options.ini")
     $lua = Join-Path $c "Lua"
     New-Item -ItemType Directory -Force $lua | Out-Null
-    Remove-Item (Join-Path $lua "TLG_harness_mp.txt"), (Join-Path $lua "TLG_harness_mpstate.txt"),
-        (Join-Path $lua "TLG_harness_mpgo.txt"), (Join-Path $lua "TLG_harness_mpsnap.txt") -ErrorAction SilentlyContinue
+    foreach ($f in "TLG_harness_mp.txt", "TLG_harness_mpstate.txt", "TLG_harness_mpgo.txt", "TLG_harness_mpsnap.txt") {
+        Clear-Stale (Join-Path $lua $f)
+    }
     Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_request.txt") -Value $roles[$i]
     @("ip=127.0.0.1", "port=16361", "user=$($users[$i])", "password=$($cred[$users[$i]])",
         "serverPassword=$($cred.serverPassword)", "only=$Only", "restart=$(if ($Restart) { '1' } else { '0' })",
@@ -223,7 +235,7 @@ for ($i = 0; $i -lt $Clients; $i++) {
 }
 $serverLua = Join-Path $serverCache "Lua"
 New-Item -ItemType Directory -Force $serverLua | Out-Null
-Remove-Item (Join-Path $serverLua "TLG_harness_mpserver.txt") -ErrorAction SilentlyContinue
+Clear-Stale (Join-Path $serverLua "TLG_harness_mpserver.txt")
 
 # A harness server left from an earlier run holds the port and its log
 # files (run 136's printed "Server Terminated" and kept running).

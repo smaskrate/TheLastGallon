@@ -513,6 +513,175 @@ function services.setup_production(player, args)
         outputs = S.text(rec.outputs), hours = t })
 end
 
+-- The biodiesel case (D-036). Two rows north of the spawn point: the five
+-- machines empty, and beside each one that loads from another machine, that
+-- machine with a finished batch (run to its end through the domain, as
+-- setup_production runs the fermenter's): a finished ash barrel by the
+-- leacher, a finished retort and leacher by the reactor, a finished reactor
+-- by the wash tank, and a finished wash tank to collect from. Each group is
+-- more than two squares from the next, the reach of a load. Also a diesel
+-- generator, an ambulance with 10 L and no record and its key, an empty
+-- jerry can, and one untouched pump of the station given its first record
+-- with the draw's share held at 1 (the harness's worlds draw no diesel
+-- pump otherwise).
+local BD = { fresh = { retort = { "TLG.WoodRetort", -6 }, barrel = { "TLG.AshBarrel", -5 }, leacher = { "TLG.LyeLeacher", -2 },
+    reactor = { "TLG.BiodieselReactor", 2 }, wash = { "TLG.BiodieselWashTank", 6 } } }
+
+local function doneMachine(itemType, recipe, inputs, firebox, dx, dy)
+    local Machines, Process, World = TLG.Integration.Machines, TLG.Domain.Process, TLG.World
+    local sq = getCell():getGridSquare(S.CX + dx, S.CY + dy, 0)
+    local item = sq:AddWorldInventoryItem(itemType, 0.5, 0.5, 0)
+    local env = TLG.Domain.Climate.new({ dayOfYear = 190, hourOfDay = 9 }, {}, nil)
+    local rec = Process.new({ id = World.newId("P"), machine = Machines.machineFor(item), t = 0 })
+    if firebox then rec = Process.addFirebox(rec, firebox).proc end
+    rec = Process.load(rec, recipe, inputs).proc
+    rec = Process.start(rec, 0).proc
+    local t = 0
+    while (rec.state == "Processing" or rec.state == "Paused") and t < 24 * 30 do
+        t = t + 24
+        rec = Process.advance(rec, t, env)
+    end
+    rec.t = World.now()
+    item:getModData()[Machines.SIDECAR] = rec
+    rec = Machines.advance(item, rec, World.now(), World.env())
+    Machines.write(item, rec)
+    Machines.index(item, rec)
+    return item, rec
+end
+
+function services.setup_biodiesel(player, args)
+    local out, blocked = {}, {}
+    for dx = -6, 9 do
+        for dy = -3, -2 do
+            local sq = getCell():getGridSquare(S.CX + dx, S.CY + dy, 0)
+            if not (sq and sq:isFree(false)) then blocked[#blocked + 1] = dx .. "," .. dy end
+        end
+    end
+    out.blocked = table.concat(blocked, " ")
+    for key, spec in pairs(BD.fresh) do
+        local item = getCell():getGridSquare(S.CX + spec[2], S.CY - 2, 0):AddWorldInventoryItem(spec[1], 0.5, 0.5, 0)
+        out[key], out[key .. "X"] = tostring(item:getID()), S.CX + spec[2]
+    end
+    local done = {
+        barrelDone = { "TLG.AshBarrel", "ash_burn", { firewood = 99 }, nil, -2 },
+        retortDone = { "TLG.WoodRetort", "methanol_wood_distill", { firewood = 99 }, 40, 1 },
+        leacherDone = { "TLG.LyeLeacher", "lye_leach", { wood_ash = 1.485, water = 2.97 }, 20, 3 },
+        reactorDone = { "TLG.BiodieselReactor", "biodiesel_react", { plant_oil = 17.1, methanol = 2.565, lye = 0.21375 }, 20, 6 },
+        washDone = { "TLG.BiodieselWashTank", "biodiesel_wash",
+            { biodiesel = 16.8435, methanol = 0.6766, plant_oil = 0.1881, sediment = 0.1729, water = 5.053 }, 10, 9 },
+    }
+    local states = {}
+    for key, d in pairs(done) do
+        local dy = key == "washDone" and -2 or -3
+        local item, rec = doneMachine(d[1], d[2], d[3], d[4], d[5], dy)
+        out[key], out[key .. "X"], out[key .. "Y"] = tostring(item:getID()), S.CX + d[5], S.CY + dy
+        states[#states + 1] = key .. "=" .. tostring(rec.state) .. " " .. S.text(rec.outputs)
+    end
+    table.sort(states)
+    out.states, out.y = table.concat(states, "; "), S.CY - 2
+    -- The diesel generator, put down as emptyGenerator puts vanilla's.
+    local gx, gy = S.CX - 3, S.CY + 3
+    local g = IsoGenerator.new(instanceItem("TLG.DieselGenerator"), getCell(), getCell():getGridSquare(gx, gy, 0))
+    g:setFuel(0)
+    g:getModData().tlg = nil
+    TLG.Authority.Vault.release("supply", TLG.Integration.Generators.keyOf(g))
+    g:setConnected(true)
+    g:sync()
+    g:transmitModData()
+    out.gx, out.gy = gx, gy
+    -- The ambulance, as a vehicle of the map is found: fuel and no record.
+    local van = addVehicleDebug("Base.VanAmbulance", IsoDirections.N, nil, getCell():getGridSquare(S.CX + 3, S.CY + 3, 0))
+    local inv = player:getInventory()
+    local key = van and van:createVehicleKey()
+    if key then sendAddItemToContainer(inv, inv:AddItem(key)) end
+    local tank = van and van:getPartById("GasTank")
+    if tank then
+        pcall(function() van:repair() end)
+        tank:setContainerContentAmount(10)
+        tank:getModData().tlg = nil
+        van:transmitPartModData(tank)
+    end
+    out.van = tostring(van and van:getId())
+    local can = inv:AddItem("Base.JerryCan")
+    can:getFluidContainer():Empty()
+    sendAddItemToContainer(inv, can)
+    out.jerry = tostring(can:getID())
+    -- A pump nothing has touched, nearest the spawn point, made a diesel pump.
+    local St, W = TLG.Integration.Stations, TLG.Domain.WorldInit
+    local best, bestD
+    for x = STATION.x0, STATION.x1 do
+        for y = STATION.y0, STATION.y1 do
+            local p = pumpAt(x, y)
+            if p and p:getPipedFuelAmount() > 100 and p:getModData().tlg == nil then
+                local d = (x - S.CX) * (x - S.CX) + (y - S.CY) * (y - S.CY)
+                if bestD == nil or d < bestD then best, bestD = p, d end
+            end
+        end
+    end
+    if best then
+        local share = W.STATION_DIESEL_SHARE
+        W.STATION_DIESEL_SHARE = 1
+        local rec = St.read(best, true)
+        St.writeSidecar(best, rec)
+        W.STATION_DIESEL_SHARE = share
+        out.px, out.py, out.pumpUnits = best:getSquare():getX(), best:getSquare():getY(), best:getPipedFuelAmount()
+        out.pumpProduct = tostring(St.product(best))
+    end
+    out.dieselWorld = tostring(TLG.World.get().dieselVehicles)
+    reply("biodiesel_site", args, out)
+end
+
+-- The server's view of the biodiesel case: each machine's state and
+-- outputs, the generator, the ambulance, the pump, the requester's cans
+-- (`ids`) and a generator item carried.
+function services.probe_biodiesel(player, args)
+    local out = {}
+    local machines = {}
+    for dx = -7, 10 do
+        for dy = -4, -1 do
+            local sq = getCell():getGridSquare(S.CX + dx, S.CY + dy, 0)
+            local objs = sq and sq:getWorldObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local it = objs:get(i):getItem()
+                if it and TLG.Integration.Machines.machineFor(it) then machines[tostring(it:getID())] = it end
+            end
+        end
+    end
+    for _, key in ipairs(split(args.keys)) do
+        local it = machines[tostring(args[key])]
+        local rec = it and it:getModData().tlgProc
+        out[key] = tostring(rec and rec.state or (it and "no record" or "not found"))
+        out[key .. "Out"] = S.text(rec and rec.outputs)
+    end
+    local g = generatorAt(tonumber(args.gx), tonumber(args.gy))
+    out.gFound, out.gFuel, out.gOn = tostring(g ~= nil), g and g:getFuel() or -1, tostring(g and g:isActivated())
+    out.gProfile = tostring(g and TLG.Integration.Generators.profile(g))
+    out.gType = tostring(g and g:getGeneratorItemType())
+    out.gSide = S.text(g and g:getModData().tlg)
+    local carried
+    local items = player:getInventory():getItems()
+    for i = 0, items:size() - 1 do
+        if TLG.Integration.Generators.ITEM_TYPES[items:get(i):getFullType()] then carried = items:get(i) end
+    end
+    out.carriedType = tostring(carried and carried:getFullType())
+    out.carriedSide = S.text(carried and carried:getModData().tlg)
+    local van = getVehicleById(tonumber(args.van) or -1)
+    local tank = van and van:getPartById("GasTank")
+    out.vanProfile = tostring(van and TLG.Integration.Vehicles.profile(van))
+    out.vanL, out.vanSide = tank and tank:getContainerContentAmount() or -1, S.text(tank and tank:getModData().tlg)
+    out.vanEngine = tostring(van and van:isEngineRunning())
+    local pump = args.px and pumpAt(tonumber(args.px), tonumber(args.py))
+    out.pumpUnits, out.pumpSide = pump and pump:getPipedFuelAmount() or -1, S.text(pump and pump:getModData().tlg)
+    local cans = {}
+    for _, id in ipairs(split(args.ids)) do
+        local it = player:getInventory():getItemWithIDRecursiv(tonumber(id))
+        local fc = it and it:getFluidContainer()
+        cans[#cans + 1] = id .. "=" .. (fc and string.format("%.4f", fc:getAmount()) or "nil") .. " " .. S.sidecar(it)
+    end
+    out.cans = table.concat(cans, " | ")
+    reply("probe_biodiesel", args, out)
+end
+
 -- The take a second player's action makes when it completes after the
 -- first's has taken the vessel: ISEquipHeavyItem:new(player, vessel):complete()
 -- run here as the server runs a completed action (NetTimedAction.perform

@@ -5247,3 +5247,63 @@ multiplayer.
 
 Evidence:
 [2026-11-10_rt-sp_harness_run245_full_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run245_full_42.22.2.txt).
+## 2026-11-10 — RT-MP harness, launches 246–248 (the biodiesel pathway on a server, D-036)
+
+Build 42.22.2, `feature/biodiesel` after `054eb1a`. A dedicated server and
+one client on this machine (`tools\run-mp-harness.ps1 -Only biodiesel`, a
+new case). The server sets the site up (`setup_biodiesel`): the five
+machines empty, and beside each one that loads from another machine, that
+machine with a batch run to its end through the domain; a diesel
+generator; an ambulance with 10 L and no record; one untouched pump given
+its first record with the draw's share held at 1 (the harness's server
+holds it at 0 otherwise). The client acts through the mod's requests and
+the game's own menu functions; after each part the server's view is asked.
+
+| Launch | Result (pass/fail) | Note |
+| --- | --- | --- |
+| 246 | none | The runner stopped the client 30 s in on a `DONE` line in results left by an earlier run: its removal had done nothing, as in launch 229. Both runners now empty a results file they cannot remove |
+| 247 | 22/1 | The failed check was the harness's (below) |
+| 248 | 23/0 | |
+
+What launch 248 checked:
+
+* The client sees the ten machines, the diesel generator drawn with the
+  mod's own sprite and picture (`tlg_generators_01_0`, item type
+  `TLG.DieselGenerator`), and holds the world's `dieselVehicles`: the
+  ambulance reads `engine_ci_stock` on the client too.
+* `machine.load` from the client on the retort and the ash barrel (18 kg
+  of logs each), the leacher (1.485 kg of ash from the finished barrel,
+  2.97 L of water), the reactor (6.3 L of oil from 7 bottles, 0.945 L of
+  methanol and 0.0788 kg of lye from the finished retort and leacher) and
+  the wash tank (the finished reactor's crude and wash water); firewood
+  into the reactor's firebox. On the server the five are Processing, the
+  finished barrel and reactor Ready, the finished retort and leacher keep
+  what was not taken.
+* `machine.collect` on the finished wash tank: 17.07 L in the client's
+  jerry can, fluids and record alike (biodiesel, methanol, plant oil,
+  sediment, water). The same request on the finished retort is refused
+  (`use_next_machine`).
+* 5 L of biodiesel poured into the diesel generator with the mod's pour;
+  switched on through the game's menu function it runs on the server with
+  `generator_ci_bio`. Unplugged and taken, the server's player carries
+  `TLG.DieselGenerator` with its record and the client holds it in its
+  hands; put down again, it is the diesel generator with its record.
+* The ambulance: the mod's status reads diesel, fit; it starts.
+* The diesel pump: its status reads diesel and the client's menu has the
+  entry; a can filled at it through the game's `onTakeFuelNew` holds 10 L
+  of `TLG_Diesel` with the station's water and sediment and no `Petrol` on
+  the client, and the server's pump lost 10 units.
+
+Launch 247's failure, `MP.van_starts_on_diesel_A`: the check asked for a
+record on the ambulance's tank on the server, and nothing writes one before
+fuel moves (the status reads it without writing). The check now holds the
+engine and the profile.
+
+Not run on a server: a batch through its hours; a second client; a pump
+left to the world's draw (a client cannot tell what a pump gives without
+asking); a vehicle refuelled at a pump; the wrong fuel refused; a restart
+of the server with the diesel generator placed; the loot lists.
+
+Evidence:
+[run 247](evidence/2026-11-10_rt-mp_harness_run247_biodiesel_42.22.2.txt);
+[run 248](evidence/2026-11-10_rt-mp_harness_run248_biodiesel_42.22.2.txt).

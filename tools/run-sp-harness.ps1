@@ -300,7 +300,11 @@ $luaDir = Join-Path $DevCache "Lua"
 New-Item -ItemType Directory -Force $luaDir | Out-Null
 foreach ($f in "TLG_harness_sp.txt", "TLG_harness_expect.txt") {
     Remove-Item (Join-Path $luaDir $f) -ErrorAction SilentlyContinue
-    if (Test-Path (Join-Path $luaDir $f)) { Write-Host "WARNING: $f from an earlier launch could not be removed" }
+    if (Test-Path (Join-Path $luaDir $f)) {
+        # Emptied where it cannot be removed (launches 229 and 246).
+        Clear-Content (Join-Path $luaDir $f) -ErrorAction SilentlyContinue
+        Write-Host "WARNING: $f from an earlier launch could not be removed; emptied"
+    }
 }
 if ($Mode -eq "italian") {
     # Every Italian string the deployed mod ships, as category|key=value in

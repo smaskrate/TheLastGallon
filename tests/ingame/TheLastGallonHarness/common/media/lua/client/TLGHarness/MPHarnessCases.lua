@@ -1,5 +1,5 @@
 -- Multiplayer harness, further cases (tools/run-mp-harness.ps1 -Only
--- machines|fuel|conversion|carconv|stills|effects|timers), built from
+-- machines|fuel|conversion|carconv|stills|effects|timers|biodiesel), built from
 -- MPHarness.lua's helpers (MP.h).
 -- machines: a running vessel moved where no Lua sees it (the world menu's
 -- Grab and the inventory's Drop are item transactions on a client, D-015),
@@ -1830,6 +1830,304 @@ end
 -- time since. The server's harness logs whether OnPlayerDeath and
 -- OnCharacterDeath fire there (MPServer.lua).
 ------------------------------------------------------------------------------
+if MP.only == "biodiesel" then
+    -- The biodiesel pathway on a server (D-036), A alone. The server sets
+    -- the site up (MPServer.lua setup_biodiesel). A loads each of the five
+    -- machines through the mod's requests as their menu sends them (the
+    -- leacher, the reactor and the wash tank from the finished machine
+    -- beside them), collects a finished wash tank's biodiesel into a can
+    -- and is refused a retort's methanol; pours biodiesel into the diesel
+    -- generator, starts it, and takes it; starts the ambulance on the
+    -- diesel it was found with; reads a diesel pump's label and fills a
+    -- can at it through the game's own menu function. After each part the
+    -- server's view is asked (probe_biodiesel) and this client's own view
+    -- of the can, the generator's sprite and the item is checked.
+    local BM = { keys = "retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone" }
+    MP.BM = BM
+    local function bsite(k) return BM.site and tonumber(BM.site[k]) end
+    local function machineItem(key)
+        local id = bsite(key)
+        local item = inventoryItem(id)
+        for x = S.CX - 8, S.CX + 11 do
+            for y = S.CY - 5, S.CY do
+                local sq = item == nil and getCell():getGridSquare(x, y, 0)
+                local objs = sq and sq:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getID() == id then item = it end
+                end
+            end
+        end
+        return item
+    end
+    local function objectAt(x, y, pred)
+        local sq = x and getCell():getGridSquare(x, y, 0)
+        local objs = sq and sq:getObjects()
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            if pred(objs:get(i)) then return objs:get(i) end
+        end
+        return nil
+    end
+    local function bgen() return objectAt(bsite("gx"), bsite("gy"), function(o) return instanceof(o, "IsoGenerator") end) end
+    local function bpump() return objectAt(bsite("px"), bsite("py"), function(o) return o:getPipedFuelAmount() > 0 end) end
+    local function van() return BM.site and getVehicleById(bsite("van")) end
+    local function fluids(item)
+        local fc = item and item:getFluidContainer()
+        if not fc then return {}, "no container" end
+        local comp = TLG.Integration.Native.readComposition(fc)
+        return comp, S.text(comp) .. " petrol=" .. tostring(fc:contains(Fluid.Petrol))
+    end
+    local function breq(name, command, key, extra, judge)
+        return request(name, command, function()
+            local it = machineItem(key)
+            if not it then return nil end
+            local a = { target = TLG.Integration.Machines.refFor(it) }
+            for k, v in pairs(type(extra) == "function" and extra() or extra or {}) do a[k] = v end
+            return a
+        end, function(r)
+            report():line("OBS  MP.%s reply: %s wood=%s ash=%s water=%s oil=%s methanol=%s lye=%s crude=%s wash=%s firebox=%s"
+                .. " collected=%s", name, brief(r), tostring(r.woodKg), tostring(r.ashKg), tostring(r.waterL), tostring(r.oilL),
+                tostring(r.methanolL), tostring(r.lyeKg), tostring(r.crudeL), tostring(r.washWaterL), tostring(r.firebox),
+                S.text(r.collected))
+            judge(r)
+        end)
+    end
+    local function give(name, items, extra)
+        local a = { items = items }
+        for k, v in pairs(extra or {}) do a[k] = v end
+        return call(name, "give", a, "given", function() end)
+    end
+    local function toMachine(key)
+        return walkTo("mp_walk_to_" .. key, function() return bsite(key .. "X"), (bsite(key .. "Y") or bsite("y")) + 1 end)
+    end
+    local function probeB(name, judge)
+        return call(name, "probe_biodiesel", function()
+            local s = BM.site or {}
+            local have = {}
+            for _, id in ipairs({ tonumber(s.jerry) or false, FU.bdCan or false, FU.dCan or false }) do
+                if id then have[#have + 1] = tostring(id) end
+            end
+            local a = { keys = BM.keys, gx = s.gx, gy = s.gy, van = s.van, px = s.px, py = s.py, ids = table.concat(have, ";") }
+            for key in string.gmatch(BM.keys, "[^;]+") do a[key] = s[key] end
+            return a
+        end, "probe_biodiesel", function(m)
+            local parts = {}
+            for key in string.gmatch(BM.keys, "[^;]+") do parts[#parts + 1] = key .. "=" .. tostring(m[key]) .. " " .. tostring(m[key .. "Out"]) end
+            report():line("OBS  MP.%s server machines: %s", name, table.concat(parts, "; "))
+            report():line("OBS  MP.%s server: generator found=%s type=%s profile=%s fuel=%s on=%s %s; carried %s %s", name,
+                tostring(m.gFound), tostring(m.gType), tostring(m.gProfile), tostring(m.gFuel), tostring(m.gOn), tostring(m.gSide),
+                tostring(m.carriedType), tostring(m.carriedSide))
+            report():line("OBS  MP.%s server: van profile=%s tank=%s L engine=%s %s; pump units=%s %s; cans %s", name,
+                tostring(m.vanProfile), tostring(m.vanL), tostring(m.vanEngine), tostring(m.vanSide), tostring(m.pumpUnits),
+                tostring(m.pumpSide), tostring(m.cans))
+            judge(m)
+        end)
+    end
+    local function has(text, part) return text ~= nil and string.find(text, part, 1, true) ~= nil end
+    local loaded = function(name, more)
+        return function(r) check(name, function() return r.ok == true and r.state == "Processing" and more(r), brief(r) end) end
+    end
+
+    BM.setup = call("biodiesel_site", "setup_biodiesel", {}, "biodiesel_site", function(m)
+        BM.site = m
+        report():line("OBS  MP.biodiesel site: blocked squares [%s]; finished machines: %s; generator %s,%s; van %s; pump %s,%s"
+            .. " (%s units, gives %s); world has diesel=%s", tostring(m.blocked), tostring(m.states), tostring(m.gx), tostring(m.gy),
+            tostring(m.van), tostring(m.px), tostring(m.py), tostring(m.pumpUnits), tostring(m.pumpProduct), tostring(m.dieselWorld))
+        check("biodiesel_site_made", function()
+            return m.blocked == "" and has(m.states, "washDone=OutputReady") and has(m.states, "reactorDone=OutputReady")
+                and has(m.states, "retortDone=OutputReady") and has(m.states, "leacherDone=OutputReady")
+                and has(m.states, "barrelDone=OutputReady") and m.pumpProduct == "diesel" and m.dieselWorld == "true",
+                tostring(m.states)
+        end)
+    end)
+
+    -- What this client holds of the site: the ten machines, the generator
+    -- with its own sprite and picture, the van, and the world's record.
+    BM.seen = once("mp_biodiesel_site_seen", function()
+        local missing = {}
+        for key in string.gmatch(BM.keys, "[^;]+") do
+            if machineItem(key) == nil then missing[#missing + 1] = key end
+        end
+        local g = bgen()
+        local name, tex, itemType = "?", nil, "?"
+        pcall(function() name = g:getSprite():getName() end)
+        pcall(function() tex = g:getSprite():getTextureForCurrentFrame(g:getDir()) end)
+        pcall(function() itemType = g:getGeneratorItemType() end)
+        local world = TLG.World.get()
+        local v = van()
+        check("biodiesel_site_seen", function()
+            return #missing == 0 and g ~= nil and v ~= nil, string.format("machines missing: %s; generator %s; van %s",
+                table.concat(missing, ","), tostring(g ~= nil), tostring(v ~= nil))
+        end)
+        check("diesel_generator_drawn_on_the_client", function()
+            return name == "tlg_generators_01_0" and tex ~= nil and itemType == "TLG.DieselGenerator",
+                string.format("sprite %s, picture %s, item type %s", tostring(name), tostring(tex ~= nil), tostring(itemType))
+        end)
+        check("client_knows_the_van_is_diesel", function()
+            local profile = v and TLG.Integration.Vehicles.baseProfile(v)
+            return world.dieselVehicles == true and profile == "engine_ci_stock", string.format(
+                "client's world record dieselVehicles=%s; profile here %s", tostring(world.dieselVehicles), tostring(profile))
+        end)
+    end)
+
+    BM.collect = breq("biodiesel_collect", "machine.collect", "washDone", function()
+        return { destination = { kind = "item", id = bsite("jerry") } }
+    end, function(r) check("biodiesel_collect", function() return r.ok == true, brief(r) end) end)
+
+    BM.can = once("mp_biodiesel_can", function()
+        local can = inventoryItem(bsite("jerry"))
+        local comp, text = fluids(can)
+        local q = can and can:getModData().tlg and can:getModData().tlg.q or {}
+        check("biodiesel_in_the_client_can", function()
+            return (comp.biodiesel or 0) > 16 and (comp.methanol or 0) > 0.01 and (comp.plant_oil or 0) > 0.1
+                and (q.biodiesel or 0) > 16, string.format("fluids %s; record %s", text, S.text(q))
+        end)
+    end)
+
+    BM.refused = breq("retort_collect", "machine.collect", "retortDone", function()
+        return { destination = { kind = "item", id = bsite("jerry") } }
+    end, function(r)
+        check("retort_gives_nothing_to_a_can", function() return r.ok == false and r.reason == "use_next_machine", brief(r) end)
+    end)
+
+    BM.afterChain = probeB("after_chain", function(m)
+        check("chain_states_on_the_server", function()
+            return m.retort == "Processing" and m.barrel == "Processing" and m.leacher == "Processing" and m.reactor == "Processing"
+                and m.wash == "Processing" and m.barrelDone == "Ready" and m.reactorDone == "Ready" and m.washDone == "Ready"
+                and m.retortDone == "OutputReady" and m.leacherDone == "OutputReady",
+                string.format("retort %s barrel %s leacher %s reactor %s wash %s; finished barrel %s retort %s leacher %s reactor %s"
+                    .. " wash tank %s", tostring(m.retort), tostring(m.barrel), tostring(m.leacher), tostring(m.reactor),
+                    tostring(m.wash), tostring(m.barrelDone), tostring(m.retortDone), tostring(m.leacherDone),
+                    tostring(m.reactorDone), tostring(m.washDone))
+        end)
+    end)
+
+    BM.pour = act("pour_biodiesel", function(ctx, p)
+        local g = bgen()
+        ISTimedActionQueue.add(ISTLGPourFuel:new(p, inventoryItem(FU.bdCan), TLG.Authority.Resolver.refForObject(g, "generator"),
+            g, false, function(r) BM.pourReply = r end))
+    end, 180)
+    BM.on = act("start_diesel_generator", function() ISWorldObjectContextMenu.onActivateGenerator(nil, true, bgen(), 0) end, 180)
+    BM.afterOn = probeB("after_generator_start", function(m)
+        local r = BM.pourReply
+        check("biodiesel_poured_into_the_generator", function()
+            return r ~= nil and r.ok == true and near(tonumber(m.gFuel), 5, 0.01) and has(m.gSide, "biodiesel"),
+                string.format("pour %s; server fuel %s %s", r and brief(r) or "no reply", tostring(m.gFuel), tostring(m.gSide))
+        end)
+        check("diesel_generator_runs_on_the_server", function()
+            return m.gOn == "true" and m.gProfile == "generator_ci_bio" and m.gType == "TLG.DieselGenerator",
+                string.format("on=%s profile=%s type=%s", tostring(m.gOn), tostring(m.gProfile), tostring(m.gType))
+        end)
+    end)
+    BM.off = act("stop_diesel_generator", function() ISWorldObjectContextMenu.onActivateGenerator(nil, false, bgen(), 0) end, 120)
+    BM.unplug = act("unplug_diesel_generator", function() ISWorldObjectContextMenu.onPlugGenerator(nil, bgen(), 0, false) end, 120)
+    BM.take = act("take_diesel_generator", function() ISWorldObjectContextMenu.onTakeGenerator(nil, bgen(), 0) end, 180)
+    BM.afterTake = probeB("after_generator_take", function(m)
+        local held = player():getPrimaryHandItem()
+        check("diesel_generator_taken_as_itself", function()
+            return m.gFound == "false" and m.carriedType == "TLG.DieselGenerator" and has(m.carriedSide, "biodiesel")
+                and held ~= nil and held:getFullType() == "TLG.DieselGenerator", string.format(
+                "server: object left=%s, carried %s %s; in this client's hands %s", tostring(m.gFound), tostring(m.carriedType),
+                tostring(m.carriedSide), tostring(held and held:getFullType()))
+        end)
+    end)
+    BM.drop = act("put_generator_down", function(ctx, p)
+        local it = p:getPrimaryHandItem()
+        ISTimedActionQueue.add(ISDropWorldItemAction:new(p, it, getCell():getGridSquare(bsite("gx"), bsite("gy"), 0), 0.5, 0.5,
+            0, 0, false))
+    end, 180)
+    BM.afterDrop = probeB("after_generator_put_down", function(m)
+        check("diesel_generator_put_down_as_itself", function()
+            return m.gFound == "true" and m.gType == "TLG.DieselGenerator" and m.gProfile == "generator_ci_bio"
+                and has(m.gSide, "biodiesel"), string.format("found=%s type=%s profile=%s %s", tostring(m.gFound),
+                tostring(m.gType), tostring(m.gProfile), tostring(m.gSide))
+        end)
+    end)
+
+    BM.enter = act("enter_van", function(ctx, p) ISVehicleMenu.onEnter(p, van(), 0) end, 120)
+    BM.start = startCar("start_van", van)
+    BM.status = request("van_status", "status", function()
+        return BM.site and { target = { kind = "vehicle", id = bsite("van") } }
+    end, function(r)
+        report():line("OBS  MP.van_status reply: %s primary=%s total=%s compatible=%s", brief(r), tostring(r.primary),
+            tostring(r.total), tostring(r.evaluation and r.evaluation.compatible))
+        check("van_holds_diesel", function()
+            return r.ok == true and r.primary == "diesel" and r.evaluation ~= nil and r.evaluation.compatible == true, brief(r)
+        end)
+    end)
+    BM.afterStart = probeB("after_van_start", function(m)
+        check("van_starts_on_diesel", function()
+            -- The tank has no record on the server yet: nothing has written
+            -- one (launch 247 asked for it here); the status above read it.
+            return m.vanEngine == "true" and m.vanProfile == "engine_ci_stock",
+                string.format("engine=%s profile=%s %s", tostring(m.vanEngine), tostring(m.vanProfile), tostring(m.vanSide))
+        end)
+    end)
+    BM.exit = act("leave_van", function(ctx, p) ISVehicleMenu.onExit(p) end, 180)
+
+    BM.label = request("pump_label", "status", function()
+        local p = bpump()
+        return p and { target = TLG.Authority.Resolver.refForObject(p, "pump") }
+    end, function(r)
+        local context = ISContextMenu.get(0, 100, 100)
+        TLG.UI.FuelMenu.fillWorld(0, context, { bpump() }, false)
+        local opt = context:getOptionFromName(getText("ContextMenu_TLG_PumpProduct"))
+        context:setVisible(false)
+        report():line("OBS  MP.pump_label reply: %s primary=%s total=%s; menu entry=%s", brief(r), tostring(r.primary),
+            tostring(r.total), tostring(opt ~= nil))
+        check("pump_label_reads_diesel", function() return r.ok == true and r.primary == "diesel" and opt ~= nil, brief(r) end)
+    end)
+    BM.pumpToCan = act("diesel_pump_to_can", function(ctx, p)
+        BM.units0 = bpump():getPipedFuelAmount()
+        ISWorldObjectContextMenu.onTakeFuelNew(nil, bpump(), nil, inventoryItem(FU.dCan), 0)
+    end, 180)
+    BM.afterPump = probeB("after_diesel_pump", function(m)
+        local can = inventoryItem(FU.dCan)
+        local comp, text = fluids(can)
+        check("diesel_from_the_pump_in_the_client_can", function()
+            return (comp.diesel or 0) > 1 and (comp.gasoline or 0) == 0 and not can:getFluidContainer():contains(Fluid.Petrol)
+                and tonumber(m.pumpUnits) < (BM.units0 or 0) and has(m.cans, "diesel"), string.format(
+                "this client's can: %s; server pump units %s (were %s); server cans %s", text, tostring(m.pumpUnits),
+                tostring(BM.units0), tostring(m.cans))
+        end)
+    end)
+
+    MP.stepsA = {
+        MP.waitWorld, BM.setup, wait("mp_biodiesel_site_arrives", 300), BM.seen,
+        give("give_logs_retort", "Base.Log;Base.Log"), wait("mp_logs_retort_arrive", 120), toMachine("retort"),
+        breq("retort_load", "machine.load", "retort", nil, loaded("retort_load", function(r) return near(r.woodKg, 18) end)),
+        give("give_logs_barrel", "Base.Log;Base.Log"), wait("mp_logs_barrel_arrive", 120), toMachine("barrel"),
+        breq("barrel_load", "machine.load", "barrel", nil, loaded("barrel_load", function(r) return near(r.woodKg, 18) end)),
+        give("give_water", "Base.BucketEmpty", { water = "10" }), wait("mp_water_arrives", 120), toMachine("leacher"),
+        breq("leacher_load", "machine.load", "leacher", nil, loaded("leacher_load", function(r)
+            return near(r.ashKg, 1.485, 1e-6) and near(r.waterL, 2.97, 1e-6)
+        end)),
+        give("give_oil", string.rep("Base.OilVegetable;", 7)), wait("mp_oil_arrives", 120), toMachine("reactor"),
+        breq("reactor_load", "machine.load", "reactor", nil, loaded("reactor_load", function(r)
+            return near(r.oilL, 6.3, 1e-6) and near(r.methanolL, 0.945, 1e-6) and near(r.lyeKg, 0.07875, 1e-6)
+        end)),
+        give("give_log_reactor", "Base.Log"), wait("mp_log_reactor_arrives", 120),
+        breq("reactor_firewood", "machine.addFuel", "reactor", nil, function(r)
+            check("reactor_firewood", function() return r.ok == true and near(tonumber(r.firebox), 9), brief(r) end)
+        end),
+        toMachine("wash"),
+        breq("wash_load", "machine.load", "wash", nil, loaded("wash_load", function(r)
+            return (tonumber(r.crudeL) or 0) > 17 and (tonumber(r.washWaterL) or 0) > 5
+        end)),
+        toMachine("washDone"), BM.collect, wait("mp_biodiesel_arrives", 180), BM.can,
+        toMachine("retortDone"), BM.refused, BM.afterChain,
+        giveCan("give_biodiesel_can", { fill = "TLG_Biodiesel", litres = "5" }, "bdCan"), arrived("bdCan"),
+        walkTo("mp_walk_to_diesel_generator", function() return bsite("gx") + 1, bsite("gy") end),
+        BM.pour, BM.on, BM.afterOn, BM.off, BM.unplug, BM.take, BM.afterTake, BM.drop, BM.afterDrop,
+        BM.enter, BM.start, BM.status, BM.afterStart, BM.exit,
+        giveCan("give_can_for_diesel", { petrol = "0" }, "dCan"), arrived("dCan"),
+        walkTo("mp_walk_to_diesel_pump", function() return bsite("px") + 1, bsite("py") end),
+        BM.label, BM.pumpToCan, BM.afterPump,
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+    }
+    MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+end
+
 if MP.only == "death" then
     local DE = {}
     local function dId() return DE.id end
