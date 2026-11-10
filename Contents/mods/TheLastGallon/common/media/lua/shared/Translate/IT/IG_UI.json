@@ -53,6 +53,8 @@
     "IGUI_TLG_Fail_NotEmpty": "Svuota il contenitore prima di pulirlo.",
     "IGUI_TLG_Fail_NoAccess": "Non riesci a raggiungerlo.",
     "IGUI_TLG_Fail_Stale": "Qualcuno l'ha modificato nel frattempo. Riprova.",
+    "IGUI_TLG_PumpGives": "Questa pompa eroga: %1.",
+    "IGUI_TLG_PumpEmpty": "Questa pompa è vuota.",
     "IGUI_TLG_Fail_Incompatible": "Quel motore non può usare questa miscela. Usa l'opzione sperimentale per versarla comunque.",
     "IGUI_TLG_Fail_Generic": "Non è possibile adesso (%1).",
     "IGUI_TLG_TreatDone_stabilize": "Stabilizzante aggiunto. D'ora in poi il carburante invecchierà più lentamente.",

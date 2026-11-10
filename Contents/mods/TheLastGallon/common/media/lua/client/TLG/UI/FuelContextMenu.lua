@@ -101,6 +101,19 @@ function Menu.fill(playerNum, context, items)
     end
 end
 
+-- "This pump gives diesel.", from the pump's status (its main fuel).
+function Menu.askPump(pump)
+    TLG.Net.request("status", { target = Resolver.refForObject(pump, "pump") }, function(reply)
+        if not reply.ok then
+            show(Fmt.failure(reply))
+        elseif reply.primary == nil or (reply.total or 0) <= 0 then
+            show(getText("IGUI_TLG_PumpEmpty"))
+        else
+            show(getText("IGUI_TLG_PumpGives", Fmt.componentName(reply.primary)))
+        end
+    end)
+end
+
 function Menu.fillWorld(playerNum, context, worldobjects, test)
     if getSpecificPlayer(playerNum) == nil then return end
     local found, seen, squares = {}, {}, {}
@@ -121,8 +134,25 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
             for i = 0, items:size() - 1 do collect(items:get(i)) end
         end
     end
-    if #found == 0 then return end
+    -- A station pump: what it gives (D-036: some give diesel). Asked of the
+    -- authority, which makes the pump's record at its first contact.
+    local pump
+    for _, object in ipairs(worldobjects) do
+        if pump == nil and TLG.Integration.Stations.isPump(object) then pump = object end
+    end
+    if pump == nil then
+        for square in pairs(squares) do
+            local objects = square:getObjects()
+            for i = 0, objects:size() - 1 do
+                if pump == nil and TLG.Integration.Stations.isPump(objects:get(i)) then pump = objects:get(i) end
+            end
+        end
+    end
+    if #found == 0 and pump == nil then return end
     if test then return ISWorldObjectContextMenu.setTest() end
+    if pump then
+        context:addOption(getText("ContextMenu_TLG_PumpProduct"), nil, function() Menu.askPump(pump) end)
+    end
     for _, entry in ipairs(found) do
         local title = getText("ContextMenu_TLG_Fuel")
         if #found > 1 then

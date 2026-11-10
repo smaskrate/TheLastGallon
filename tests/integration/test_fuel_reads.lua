@@ -287,3 +287,82 @@ T.case("integration: diesel chassis exist only in a world started as a new game 
     g.restore()
     if not ok then error(err, 0) end
 end)
+-- Diesel at some pumps (D-036).
+local function stationPump(x, litres, side)
+    local o = { md = { tlg = side }, units = litres }
+    local square = {}
+    function square:getX() return x end
+    function square:getY() return 20 end
+    function square:getZ() return 0 end
+    function o:getSquare() return square end
+    function o:getPipedFuelAmount() return self.units end
+    function o:setPipedFuelAmount(n) self.units = n end
+    function o:hasModData() return true end
+    function o:getModData() return self.md end
+    function o:transmitModData() end
+    return o
+end
+
+T.case("domain: about one pump in four holds diesel, the same pump every time", function()
+    local W = D.WorldInit
+    local world, diesel = { seed = 4242 }, 0
+    for i = 1, 2000 do
+        local key = "pump:" .. i .. ",20,0"
+        local p = W.stationProduct(world, key)
+        T.ok(p == "diesel" or p == "gasoline", p)
+        T.eq(W.stationProduct(world, key), p, "the same draw again")
+        if p == "diesel" then diesel = diesel + 1 end
+    end
+    T.ok(diesel > 2000 * 0.20 and diesel < 2000 * 0.30, "share " .. diesel / 2000)
+    -- Another world draws its own pumps.
+    local differs = 0
+    for i = 1, 200 do
+        local key = "pump:" .. i .. ",20,0"
+        if W.stationProduct({ seed = 99 }, key) ~= W.stationProduct(world, key) then differs = differs + 1 end
+    end
+    T.ok(differs > 0, "another seed gives another set")
+end)
+
+T.case("integration: a pump's first record holds its draw's fuel, in a world with diesel vehicles only", function()
+    local S, W = I.Stations, D.WorldInit
+    local g = fakeGame(200)
+    local share = W.STATION_DIESEL_SHARE
+    local ok, err = pcall(function()
+        local world = World.get()
+        local srv = World.server()
+        srv.seed, srv.nextId = 7, 1
+        -- A save from before: every pump is petrol, whatever the draw.
+        W.STATION_DIESEL_SHARE = 1
+        local rec = S.read(stationPump(1, 500), false)
+        T.ok((rec.q.gasoline or 0) > 490 and rec.q.diesel == nil, "petrol in an older save")
+        T.eq(rec.product, "gasoline")
+        world.dieselVehicles = true
+        rec = S.read(stationPump(2, 500), false)
+        T.ok((rec.q.diesel or 0) > 490 and rec.q.gasoline == nil, "diesel where the draw says so")
+        T.eq(rec.product, "diesel")
+        W.STATION_DIESEL_SHARE = 0
+        rec = S.read(stationPump(3, 500), false)
+        T.ok((rec.q.gasoline or 0) > 490 and rec.q.diesel == nil, "petrol where it does not")
+        -- Written, the pump keeps what it gives: a later draw does not change it.
+        W.STATION_DIESEL_SHARE = 1
+        local pump = stationPump(4, 500)
+        rec = S.read(pump, true)
+        S.write(pump, rec)
+        T.eq(pump.md.tlg.product, "diesel")
+        W.STATION_DIESEL_SHARE = 0
+        local again = S.read(pump, false)
+        T.eq(again.product, "diesel"); T.ok((again.q.diesel or 0) > 490)
+        T.eq(S.product(pump), "diesel")
+        -- A record rebuilt without the field (a transfer's) is written with it.
+        again.product = nil
+        S.writeSidecar(pump, again)
+        T.eq(pump.md.tlg.product, "diesel")
+        -- A record from before the field existed is petrol.
+        local old = stationPump(5, 4, sidecar())
+        T.eq(S.product(old), "gasoline")
+        T.eq(S.read(old, false).product, "gasoline")
+    end)
+    W.STATION_DIESEL_SHARE = share
+    g.restore()
+    if not ok then error(err, 0) end
+end)

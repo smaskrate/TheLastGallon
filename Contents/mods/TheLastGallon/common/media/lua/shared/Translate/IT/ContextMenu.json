@@ -19,6 +19,7 @@
     "ContextMenu_TLG_Load_leacher": "Carica la cenere da un bidone vicino, e acqua",
     "ContextMenu_TLG_Load_reactor": "Carica l'olio, con metanolo e liscivia dai macchinari vicini",
     "ContextMenu_TLG_Load_settler": "Carica il biodiesel grezzo da un reattore vicino, e acqua di lavaggio",
+    "ContextMenu_TLG_PumpProduct": "Leggi cosa eroga questa pompa",
     "ContextMenu_TLG_CollectBiodiesel": "Raccogli il biodiesel in una tanica",
     "ContextMenu_TLG_AddFirewood": "Alimenta il focolare",
     "ContextMenu_TLG_CollectEthanol": "Raccogli l'etanolo in una tanica",

@@ -57,6 +57,19 @@ local function contaminationEnabled()
     return o ~= false
 end
 
+-- What a pump gives (D-036): its record says once it has one. Before
+-- that, diesel for some pumps of a world started as a new game with diesel
+-- vehicles (the world record's `dieselVehicles`), petrol everywhere else:
+-- an older save's vehicles are all petrol. Authority only for a pump
+-- without a record: the draw needs the world's seed.
+function S.product(obj, side)
+    if side == nil then side = obj:hasModData() and obj:getModData().tlg or nil end
+    if type(side) == "table" then return side.product or "gasoline" end
+    local world = World.get and World.get() or nil
+    if world and world.dieselVehicles then return WorldInit.stationProduct(World.facts(), S.keyOf(obj)) end
+    return "gasoline"
+end
+
 -- Reservoir record; initialises original station fuel on first contact.
 function S.read(obj, persist)
     local units = obj:getPipedFuelAmount()
@@ -67,21 +80,24 @@ function S.read(obj, persist)
     local litres = units * S.LITRES_PER_UNIT + ((side and side.frac) or 0)
     if side == nil then
         local key = S.keyOf(obj)
-        local q = { gasoline = litres }
+        local product = S.product(obj, false)
+        local q = { [product] = litres }
         if contaminationEnabled() then
             local c = WorldInit.stationContamination(World.facts(), key, litres)
-            q.gasoline = litres - c.water - c.sediment
+            q[product] = litres - c.water - c.sediment
             q.water, q.sediment = c.water, c.sediment
         end
         local rec = World.baseline(key, { storage = "station_ust", cap = math.max(10000, litres), q = q,
             preAgeMax = WorldInit.MAX_STATION_PRE_AGE })
         if persist then rec.id = World.newId("R") end
         rec.frac = 0
+        rec.product = product
         return rec, "initialized"
     end
     local rec = Supply.new({ storage = "station_ust", cap = side.cap or math.max(10000, litres), t = side.t,
         cond = side.cond, stab = side.stab, mic = side.mic, label = side.label })
     rec.id, rec.rev, rec.frac = side.id, side.rev or 0, side.frac or 0
+    rec.product = side.product or "gasoline"
     for id, q in pairs(side.q or {}) do rec.q[id] = q end
     for id, d in pairs(side.deg or {}) do rec.deg[id] = d end
     rec.prov = Tables.deepCopy(side.prov or {})
@@ -89,8 +105,8 @@ function S.read(obj, persist)
     if math.abs(litres - Supply.total(rec)) <= 1e-4 then return rec, "ok" end
     local base, at = { deg = 0, mic = 0 }, nil
     if litres > Supply.total(rec) then base, at = C.inflowAt() end
-    local out = TLG.Authority.Transactions.reconcile(rec, { total = litres }, base, "gasoline", at)
-    out.frac = rec.frac
+    local out = TLG.Authority.Transactions.reconcile(rec, { total = litres }, base, rec.product, at)
+    out.frac, out.product = rec.frac, rec.product
     return out, "reconciled"
 end
 
@@ -107,7 +123,10 @@ end
 
 -- The reservoir's record alone, the pump's units untouched.
 function S.writeSidecar(obj, rec)
-    local side = { v = C.SCHEMA, cap = rec.cap, frac = rec.frac or 0 }
+    -- What the pump gives stays with the pump: a record a transfer rebuilt
+    -- has lost it, and the pump's own record or the world's draw gives it
+    -- back.
+    local side = { v = C.SCHEMA, cap = rec.cap, frac = rec.frac or 0, product = rec.product or S.product(obj) }
     for _, f in ipairs({ "id", "rev", "deg", "stab", "mic", "t", "cond", "label", "prov", "q" }) do
         side[f] = Tables.deepCopy(rec[f])
     end
@@ -122,7 +141,7 @@ local function draw(obj, before, litres)
     local res = Aging.advance(before, now, env)
     local remaining, parcel = Mixing.removeProportional(res, litres)
     remaining.rev = (res.rev or 0) + 1
-    remaining.frac = before.frac
+    remaining.frac, remaining.product = before.frac, before.product
     S.write(obj, remaining)
     local p = Supply.copy(res)
     p.q = parcel

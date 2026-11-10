@@ -20,6 +20,7 @@
     "ContextMenu_TLG_Load_reactor": "Load oil, with methanol and lye from nearby machines",
     "ContextMenu_TLG_Load_settler": "Load crude biodiesel from a nearby reactor, and wash water",
     "ContextMenu_TLG_CollectBiodiesel": "Collect biodiesel into a fuel can",
+    "ContextMenu_TLG_PumpProduct": "Read what this pump gives",
     "ContextMenu_TLG_AddFirewood": "Feed the firebox",
     "ContextMenu_TLG_CollectEthanol": "Collect ethanol into a fuel can",
     "ContextMenu_TLG_LoadDry": "Dry ethanol with quicklime",

@@ -108,4 +108,15 @@ function WorldInit.stationContamination(world, siteKey, litres)
     return { water = litres * waterFrac, sediment = litres * sedFrac }
 end
 
+-- What a station pump held at the outbreak: diesel for about one pump in
+-- four, petrol for the others (D-036; the share is a design value).
+-- Seeded by the pump's key, apart from its contamination's draw.
+WorldInit.STATION_DIESEL_SHARE = 0.25
+
+function WorldInit.stationProduct(world, siteKey)
+    local r = Rng.new(Rng.hash(siteKey .. ":product", world.seed))
+    r:next()
+    return r:next() < WorldInit.STATION_DIESEL_SHARE and "diesel" or "gasoline"
+end
+
 return WorldInit

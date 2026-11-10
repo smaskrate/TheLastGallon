@@ -5187,3 +5187,42 @@ Evidence:
 [evidence/run242](evidence/run242);
 [run 243](evidence/2026-11-10_rt-sp_harness_run243_diesel_generator_retextured_42.22.2.txt),
 [evidence/run243](evidence/run243).
+## 2026-11-10 — RT-SP client harness, launch 244 (diesel at some pumps, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `fb34e5a`. A
+pump's first record holds diesel for about one pump in four
+(`WorldInit.stationProduct`, share 0.25, seeded by the pump's key) in a
+world whose record says `dieselVehicles`, petrol otherwise; the record
+keeps `product`. The pump's menu has **Read what this pump gives**. New
+mode: `tools\run-sp-harness.ps1 -Mode diesel-pumps` (request `sp-rtdp`).
+18 passed, 0 failed.
+
+* The station's 8 pumps by this world's own draw: 2 diesel, 6 petrol.
+* Two untouched pumps given their first record with the share held at 1
+  and at 0 (a fixture): 552 L of diesel and 13,450 L of petrol, each with
+  its water and sediment.
+* The menu entry, clicked beside each: "This pump gives Diesel." and
+  "This pump gives Gasoline.".
+* Vanilla's `ISTakeFuel` at the diesel pump into an empty jerry can: 20 L,
+  the pump's units 552 to 532; the can's fluids are `TLG_Diesel` with the
+  station's water and sediment and no `Petrol`; its record carries the
+  pump's fuel.
+* Vanilla's `ISRefuelFromGasPump` at the diesel pump into an ambulance's
+  empty tank: 65 L, litre for litre, recorded as diesel; the ambulance
+  started at the first attempt.
+* The same at the petrol pump into a pickup van's empty tank: 55 L
+  recorded as petrol, evaluated `incompatible_fuel`; its start was
+  refused.
+* Seen and not changed: the diesel pump's first record has a microbial
+  load of 0.999 and its fuel evaluates fit with the reason `microbial`
+  (the petrol pump's is 0).
+
+Not run: a pump left to the world's draw from its first contact to a
+fill; a can that already holds diesel topped up at a pump (vanilla offers
+its pump menu for an empty can or one with `Petrol`); **Pour into the
+station reservoir** at a diesel pump; an older save in game; the infinite
+sandbox setting; multiplayer, where a client does not hold the world's
+seed.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run244_diesel_pumps_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run244_diesel_pumps_42.22.2.txt).

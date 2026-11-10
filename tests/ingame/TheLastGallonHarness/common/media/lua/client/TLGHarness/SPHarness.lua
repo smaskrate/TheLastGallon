@@ -93,6 +93,8 @@
 --              down, fuelled with biodiesel and with petrol, started
 --   sp-rtdv -> diesel vehicles: the chosen chassis' profile and fuel in a
 --              new world, a start on diesel, biodiesel taken, petrol refused
+--   sp-rtdp -> diesel at some pumps: what a pump gives read from its menu,
+--              a can and vehicles filled at a diesel and a petrol pump
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -118,7 +120,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
@@ -14916,6 +14918,180 @@ RT.dieselVehicleSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DV.batch(1), RT.DV.
     vehicleGateStep("RTDV.trade_van_starts_on_petrol", function() return RT.DV.cars[3] end, false, true),
     RT.MI.zoomTo("rtdv_zoom", 1.0), RT.MI.shot("rtdv_vehicles", true), RT.finish }
 
+------------------------------------------------------------------------------
+-- Diesel at some pumps (request "sp-rtdp", D-036). A new world. The
+-- station's pumps are found and what each would give by the world's own
+-- draw is listed. Two untouched pumps then get their first record with
+-- the draw's share held at 1 and at 0 (a fixture: the world's own draw may
+-- give this station no diesel pump): one diesel, one petrol. The pump
+-- menu's entry must say what each gives. From the diesel pump a can is
+-- filled with vanilla's ISTakeFuel and an ambulance's empty tank with
+-- vanilla's ISRefuelFromGasPump: both must hold diesel, litre for litre,
+-- the can's fluids included, and the ambulance must start. From the petrol
+-- pump a pickup van's empty tank is filled the same way: it must hold
+-- petrol and its start must be refused.
+------------------------------------------------------------------------------
+RT.DP = { pumps = {}, cars = {} }
+
+RT.DP.find = { name = "rtdp_find", timeout = 1200, fn = function(ctx, ticks)
+    local DP, S, W = RT.DP, TLG.Integration.Stations, TLG.Domain.WorldInit
+    if ticks < 60 then return nil end
+    if not ctx.done then
+        captureDialogs(true)
+        local world = TLG.World.get()
+        R:check("RTDP.new_world_has_diesel", function()
+            return world.dieselVehicles == true, "dieselVehicles=" .. tostring(world.dieselVehicles)
+        end)
+        local drawn, diesel = {}, 0
+        for x = STATION.x0, STATION.x1 do
+            for y = STATION.y0, STATION.y1 do
+                local s = sq(x, y, 0)
+                local objs = s and s:getObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local o = objs:get(i)
+                    if o:getPipedFuelAmount() > 0 and S.isPump(o) then
+                        local p = S.product(o)
+                        if p == "diesel" then diesel = diesel + 1 end
+                        drawn[#drawn + 1] = string.format("%d,%d=%s", x, y, p)
+                        DP.pumps[#DP.pumps + 1] = { obj = o, x = x, y = y, drawn = p, untouched = o:getModData().tlg == nil }
+                    end
+                end
+            end
+        end
+        R:line("OBS  RTDP.drawn %d pumps, %d diesel by this world's draw (share %.2f): %s", #DP.pumps, diesel,
+            W.STATION_DIESEL_SHARE, table.concat(drawn, " "))
+        if #DP.pumps < 2 then
+            RT.abort = "fewer than two pumps at the station"
+            return true
+        end
+        local share = W.STATION_DIESEL_SHARE
+        DP.diesel, DP.petrol = DP.pumps[1], DP.pumps[2]
+        for _, t in ipairs({ { DP.diesel, 1 }, { DP.petrol, 0 } }) do
+            W.STATION_DIESEL_SHARE = t[2]
+            local rec = S.read(t[1].obj, true)
+            S.writeSidecar(t[1].obj, rec)
+        end
+        W.STATION_DIESEL_SHARE = share
+        local d, p = tlgView("pump", DP.diesel.obj), tlgView("pump", DP.petrol.obj)
+        R:check("RTDP.one_pump_diesel_one_petrol", function()
+            return d ~= nil and p ~= nil and (d.q.diesel or 0) > 1 and (d.q.gasoline or 0) == 0 and (p.q.gasoline or 0) > 1
+                and (p.q.diesel or 0) == 0 and S.product(DP.diesel.obj) == "diesel" and S.product(DP.petrol.obj) == "gasoline",
+                string.format("pump %d,%d %s | pump %d,%d %s", DP.diesel.x, DP.diesel.y, viewText(d, "-"), DP.petrol.x, DP.petrol.y,
+                    viewText(p, "-"))
+        end)
+        for i, spec in ipairs({ "Base.VanAmbulance", "Base.PickUpVan" }) do
+            local v = addVehicleDebug(spec, IsoDirections.N, nil, sq(START.x + 5 * i - 2, START.y + 3, 0))
+            if v then pcall(function() v:repair() end) end
+            DP.cars[i] = v
+        end
+        ctx.done = ticks
+        return nil
+    end
+    if ticks - ctx.done < 60 then return nil end
+    for i = 1, 2 do
+        local tank = DP.cars[i] and DP.cars[i]:getPartById("GasTank")
+        if tank then
+            tank:setContainerContentAmount(0)
+            tank:getModData().tlg = nil
+        end
+    end
+    return true
+end }
+
+-- The pump menu's entry, clicked beside the pump: the dialog the player reads.
+function RT.DP.label(name, getPump, fuel)
+    return { name = name, timeout = 600, fn = function(ctx, ticks)
+        if RT.skip(name) then return true end
+        local pump = getPump()
+        if ticks == 1 then player():teleportTo(pump.x + 1, pump.y, 0) end
+        if ticks < 40 then return nil end
+        local context = ISContextMenu.get(0, 100, 100)
+        TLG.UI.FuelMenu.fillWorld(0, context, { pump.obj }, false)
+        local opt = context:getOptionFromName(getText("ContextMenu_TLG_PumpProduct"))
+        context:setVisible(false)
+        local before = #H.dialogs.texts
+        local reply = opt and click(opt) or nil
+        local text = H.dialogs.texts[before + 1]
+        closeDialogs()
+        R:check("RTDP." .. name, function()
+            return opt ~= nil and reply ~= nil and reply.ok == true and reply.primary == fuel
+                and text == getText("IGUI_TLG_PumpGives", getText("IGUI_TLG_Fuel_" .. fuel)) and not has(text, "IGUI_TLG"),
+                string.format("entry=%s reply ok=%s primary=%s reason=%s dialog=%s", tostring(opt ~= nil), tostring(reply and reply.ok),
+                    tostring(reply and reply.primary), tostring(reply and reply.reason), tostring(text))
+        end)
+        return true
+    end }
+end
+
+RT.DP.can = actionStep("rtdp_pump_to_can", function(ctx)
+    if RT.skip("rtdp_pump_to_can") then return nil end
+    local pump = RT.DP.diesel
+    local can, fc = giveCan("Base.JerryCan")
+    player():setPrimaryHandItem(can)
+    player():teleportTo(pump.x + 1, pump.y, 0)
+    ctx.can, ctx.fc, ctx.units = can, fc, pump.obj:getPipedFuelAmount()
+    hopBegin(ctx, "RTDP.diesel_pump_to_can", "pump", pump.obj, pumpAmount(pump.obj), "item", can, canAmount(fc))
+    return ISTakeFuel:new(player(), pump.obj, can)
+end, function(ctx)
+    local moved = hopEnd(ctx, true)
+    local comp, foreign = TLG.Integration.Native.readComposition(ctx.fc)
+    local units = RT.DP.diesel.obj:getPipedFuelAmount()
+    R:check("RTDP.can_holds_diesel", function()
+        return (comp.diesel or 0) > 1 and (comp.gasoline or 0) == 0 and foreign == 0 and not ctx.fc:contains(Fluid.Petrol)
+            and math.abs((ctx.units - units) - moved) < 1.01, string.format("fluids %s; pump units %d -> %d for %.4f L",
+            TLGH.fluidSummary(ctx.fc), ctx.units, units, moved)
+    end)
+    player():setPrimaryHandItem(nil)
+end)
+
+-- A vehicle's empty tank filled at a pump with vanilla's action.
+function RT.DP.refuel(name, getPump, getCar, fuel)
+    return { name = name, timeout = 7000, fn = function(ctx, ticks)
+        if not ctx.queued and RT.skip(name) then return true end
+        local pump, v = getPump(), getCar()
+        local part = v and v:getPartById("GasTank")
+        if not part then R:line("SKIP %s: no vehicle", name); return true end
+        if not ctx.queued then
+            ctx.try = ctx.try or 0
+            if ctx.placedAt == nil then
+                ctx.try = ctx.try + 1
+                local o = AREA_OFFSETS[ctx.try]
+                if o == nil then R:line("SKIP %s: never in the fuel-cap area", name); return true end
+                local c = v:getAreaCenter(part:getArea())
+                ctx.target = { x = c:getX() + o[1], y = c:getY() + o[2] }
+                player():teleportTo(math.floor(ctx.target.x), math.floor(ctx.target.y), 0)
+                ctx.placedAt = ticks
+                return nil
+            end
+            if ticks - ctx.placedAt == 5 then player():setPosition(ctx.target.x, ctx.target.y, 0) end
+            if ticks - ctx.placedAt < 20 then return nil end
+            if not v:isInArea(part:getArea(), player()) then ctx.placedAt = nil; return nil end
+            hopBegin(ctx, "RTDP." .. name, "pump", pump.obj, pumpAmount(pump.obj), "vehicle", v, tankAmount(part))
+            ISTimedActionQueue.add(ISRefuelFromGasPump:new(player(), part, pump.obj))
+            ctx.queued, ctx.t1 = true, ticks
+            return nil
+        end
+        if ticks - ctx.t1 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+        local _, dv = hopEnd(ctx, true)
+        local other = fuel == "diesel" and "gasoline" or "diesel"
+        R:check("RTDP." .. name .. ".tank_holds_" .. fuel, function()
+            return dv ~= nil and (dv.q[fuel] or 0) > 1 and (dv.q[other] or 0) == 0,
+                viewText(dv, "-") .. "; " .. evaluationText(TLG.Integration.Vehicles.evaluate(v))
+        end)
+        return true
+    end }
+end
+
+RT.dieselPumpSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DP.find,
+    RT.DP.label("label_diesel", function() return RT.DP.diesel end, "diesel"),
+    RT.DP.label("label_petrol", function() return RT.DP.petrol end, "gasoline"),
+    RT.DP.can,
+    RT.DP.refuel("ambulance_at_the_diesel_pump", function() return RT.DP.diesel end, function() return RT.DP.cars[1] end, "diesel"),
+    vehicleGateStep("RTDP.ambulance_starts", function() return RT.DP.cars[1] end, false, true),
+    RT.DP.refuel("pickup_van_at_the_petrol_pump", function() return RT.DP.petrol end, function() return RT.DP.cars[2] end, "gasoline"),
+    vehicleGateStep("RTDP.pickup_van_refused", function() return RT.DP.cars[2] end, true),
+    RT.finish }
+
 RT.biodieselSteps = { RT.waitWorld, RT.setup, RT.MM.clearSky, RT.BD.row,
     RT.BD.stand("rtbd_stand_row", 0), RT.MI.zoomTo("rtbd_zoom", 0.5), RT.MI.shot("rtbd_row", true),
     RT.MI.zoomTo("rtbd_zoom_close", 0.25),
@@ -14938,7 +15114,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -15016,6 +15192,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtbd" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, the biodiesel chain")
                 TLGH.Steps.run(R, RT.biodieselSteps, H, nil)
+            elseif REQUEST == "sp-rtdp" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, diesel at some pumps")
+                TLGH.Steps.run(R, RT.dieselPumpSteps, H, nil)
             elseif REQUEST == "sp-rtdv" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, diesel vehicles")
                 TLGH.Steps.run(R, RT.dieselVehicleSteps, H, nil)

@@ -53,6 +53,8 @@
     "IGUI_TLG_Fail_NotEmpty": "Empty the container before cleaning it.",
     "IGUI_TLG_Fail_NoAccess": "You cannot reach it.",
     "IGUI_TLG_Fail_Stale": "Someone changed it meanwhile. Try again.",
+    "IGUI_TLG_PumpGives": "This pump gives %1.",
+    "IGUI_TLG_PumpEmpty": "This pump is empty.",
     "IGUI_TLG_Fail_Incompatible": "That engine cannot use this blend. Use the experimental option to pour anyway.",
     "IGUI_TLG_Fail_Generic": "Not possible right now (%1).",
     "IGUI_TLG_TreatDone_stabilize": "Stabilizer added. The fuel will age more slowly from now on.",

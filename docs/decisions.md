@@ -1426,6 +1426,13 @@ their replacement.
     only fuel is what they are found with and biodiesel.
   * Some station pumps give diesel. This changes the station model (a
     product per pump) and needs its own tests at the pumps.
+    Built 2026-11-10: about one pump in four holds diesel (the share
+    is my choice), drawn per pump from the world's seed, in worlds
+    started as new games from this version on; the pump's record keeps
+    what it gives and its menu says it (**Read what this pump gives**).
+    Vanilla's pump actions deliver it: the mod writes the can's fluids
+    and the tank's record from the pump's. Run in launch 244. A station
+    may have no diesel pump, or several.
   * The diesel generator comes from loot only.
     Probed in launch 233: an item of the mod tagged `base:generator`
     becomes a working generator that keeps its type, and the mod gives
