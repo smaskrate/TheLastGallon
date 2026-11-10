@@ -45,7 +45,11 @@ local Vault = TLG.Authority.Vault
 
 G.DEFAULT_PROFILE = "generator_si_stock"
 G.ITEM_TYPES = { ["Base.Generator"] = true, ["Base.Generator_Old"] = true, ["Base.Generator_Yellow"] = true,
-    ["Base.Generator_Blue"] = true }
+    ["Base.Generator_Blue"] = true, ["TLG.DieselGenerator"] = true }
+-- Generator items with a profile of their own (D-036); the others have
+-- DEFAULT_PROFILE. The game keeps the item's type on the object it becomes
+-- (mod data "generatorFullType").
+G.ITEM_PROFILES = { ["TLG.DieselGenerator"] = "generator_ci_stock" }
 
 function G.keyOf(gen)
     local sq = gen:getSquare()
@@ -63,7 +67,16 @@ end
 
 function G.baseProfile(gen)
     local side = sidecarIn(gen)
-    return (side and side.profile) or G.DEFAULT_PROFILE
+    if side and side.profile then return side.profile end
+    local md = gen:getModData()
+    return G.ITEM_PROFILES[md and md.generatorFullType or ""] or G.DEFAULT_PROFILE
+end
+
+-- The fuel a generator is taken to hold when it has litres and no record:
+-- its profile's reference fuel (petrol, or diesel for a diesel generator).
+function G.referenceFuel(gen)
+    local def = TLG.Registry.get("consumer", G.baseProfile(gen))
+    return (def and def.referenceFuel) or "gasoline"
 end
 
 -- Effective profile: a Commissioned conversion wins (see ConversionDevices).
@@ -105,7 +118,7 @@ function G.read(gen, persist)
         if fuel <= 1e-6 then
             rec = Supply.new({ storage = "generator_tank", cap = cap, t = World.now() })
         else
-            rec = World.baseline(G.keyOf(gen), { storage = "generator_tank", cap = cap, q = { gasoline = fuel } })
+            rec = World.baseline(G.keyOf(gen), { storage = "generator_tank", cap = cap, q = { [G.referenceFuel(gen)] = fuel } })
         end
         rec.cap = cap
         if persist then rec.id = World.newId("G") end
@@ -115,7 +128,7 @@ function G.read(gen, persist)
     if math.abs(fuel - Supply.total(rec)) <= 1e-4 then return rec, "ok" end
     local base, at = { deg = 0, mic = 0 }, nil
     if fuel > Supply.total(rec) then base, at = C.inflowAt() end
-    local out = Tx.reconcile(rec, { total = fuel }, base, Supply.primary(rec) or "gasoline", at)
+    local out = Tx.reconcile(rec, { total = fuel }, base, Supply.primary(rec) or G.referenceFuel(gen), at)
     out.cap = cap
     return out, "reconciled"
 end

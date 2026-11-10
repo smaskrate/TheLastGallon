@@ -1411,6 +1411,12 @@ their replacement.
   * Some station pumps give diesel. This changes the station model (a
     product per pump) and needs its own tests at the pumps.
   * The diesel generator comes from loot only.
+    Probed in launch 233: an item of the mod tagged `base:generator`
+    becomes a working generator that keeps its type, and the mod gives
+    it the diesel profile. Open: it cannot share vanilla's sprite (the
+    game names a generator's item from the sprite, so vanilla's red
+    generator would be picked up as the diesel one), and
+    `generator_ci_stock` starts on pure biodiesel only 6 times in 10.
   * The mod's own oil press does not ship in 0.2.0: vanilla's gives the
     oil.
 * Decision (the chain's machines, five):

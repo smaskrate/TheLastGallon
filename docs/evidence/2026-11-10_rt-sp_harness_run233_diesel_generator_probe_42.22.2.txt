@@ -1,0 +1,45 @@
+# TLG single-player harness, the diesel generator probe
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=1889984570389746249 hours=2.0096 DayLength=4
+STEP rtbdm_setup begin
+STEP rtdg_place begin
+PASS RTDG.item_exists :: "Diesel Generator" weight=40
+OBS  RTDG.generator 1: IsoGenerator=true index=1 item type=TLG.DieselGenerator modData.generatorFullType=TLG.DieselGenerator sprite=appliances_misc_01_0 maxFuel=10 fuel=0 condition=100 base profile=generator_ci_stock profile=generator_ci_stock reference fuel=diesel
+OBS  RTDG.generator 2: IsoGenerator=true index=1 item type=TLG.DieselGenerator modData.generatorFullType=TLG.DieselGenerator sprite=appliances_misc_01_0 maxFuel=10 fuel=0 condition=100 base profile=generator_ci_stock profile=generator_ci_stock reference fuel=diesel
+OBS  RTDG.generator 3: IsoGenerator=true index=1 item type=TLG.DieselGenerator modData.generatorFullType=Base.Generator sprite=appliances_misc_01_0 maxFuel=10 fuel=0 condition=100 base profile=generator_si_stock profile=generator_si_stock reference fuel=gasoline
+PASS RTDG.item_becomes_a_generator :: 1: IsoGenerator=true index=1 item type=TLG.DieselGenerator modData.generatorFullType=TLG.DieselGenerator sprite=appliances_misc_01_0 maxFuel=10 fuel=0 condition=100 base profile=generator_ci_stock profile=generator_ci_stock reference fuel=diesel
+PASS RTDG.generator_keeps_its_type :: 1: IsoGenerator=true index=1 item type=TLG.DieselGenerator modData.generatorFullType=TLG.DieselGenerator sprite=appliances_misc_01_0 maxFuel=10 fuel=0 condition=100 base profile=generator_ci_stock profile=generator_ci_stock reference fuel=diesel
+PASS RTDG.diesel_profile :: 1: IsoGenerator=true index=1 item type=TLG.DieselGenerator modData.generatorFullType=TLG.DieselGenerator sprite=appliances_misc_01_0 maxFuel=10 fuel=0 condition=100 base profile=generator_ci_stock profile=generator_ci_stock reference fuel=diesel
+PASS RTDG.vanilla_generator_keeps_the_petrol_profile :: 3: IsoGenerator=true index=1 item type=TLG.DieselGenerator modData.generatorFullType=Base.Generator sprite=appliances_misc_01_0 maxFuel=10 fuel=0 condition=100 base profile=generator_si_stock profile=generator_si_stock reference fuel=gasoline
+STEP rtdg_pour_biodiesel begin
+OBS  RTDG.pour_biodiesel.before src initialized id=nil rev=0 total=5.0000 q[biodiesel=4.9999,water=0.0001] deg[biodiesel=0.4487] mic=0 stab=0
+OBS  RTDG.pour_biodiesel.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+PASS RTDG.pour_biodiesel.reply_ok :: {command=transfer,destination={id=G677102297-2,rev=1,t=2.035233497619629,total=5},evaluation={compatible=true,deg=0.4486836071570847,energyFactor=0.9166666666666666,grade=good,powerFactor=0.85,reasons={1=marginal_biodiesel},startFactor=0.6,wearFactor=1.5},moved=5,ok=true,requestId=pour-2060395106-1794337864986,source={id=S677102297-1,rev=1,t=2.035233497619629,total=0}}
+OBS  RTDG.pour_biodiesel litres src 5.0000->0.0000 dst 0.0000->5.0000
+OBS  RTDG.pour_biodiesel.after src ok id=S677102297-1 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTDG.pour_biodiesel.after dst ok id=G677102297-2 rev=1 total=5.0000 q[biodiesel=4.9999,water=0.0001] deg[biodiesel=0.4487] mic=0 stab=0
+PASS RTDG.pour_biodiesel.litres_conserved :: out=5.00000 in=5.00000
+PASS RTDG.pour_biodiesel.tlg_total_matches_native :: tlg=5.00000 native=5.00000 status=ok
+PASS RTDG.pour_biodiesel.fuel_state_carried :: worst=6.28e-08 at deg:biodiesel
+STEP RTDG.gate_biodiesel begin
+OBS  RTDG.gate_biodiesel fuel=5.0000 grade=good compatible=true startFactor=0.6 reasons=marginal_biodiesel
+OBS  RTDG.gate_biodiesel activated=false refusal=generator start refused: marginal_biodiesel
+FAIL RTDG.gate_biodiesel.activated :: generator start refused: marginal_biodiesel
+STEP rtdg_run begin
+PASS RTDG.runs_on_biodiesel :: ran 2.00 game h, activated=true, fuel 5.0000 -> 4.9820; record reconciled id=G677102297-2 rev=1 total=4.9820 q[biodiesel=4.9819,water=0.0001] deg[biodiesel=0.4519] mic=0 stab=0
+STEP rtdg_add_petrol begin
+PASS RTDG.petrol_goes_in_as_petrol :: fuel 0.0000 -> 5.0000; record ok id=G677102297-3 rev=1 total=5.0000 q[gasoline=5.0000,water=0.0000] deg[gasoline=0.1637] mic=0 stab=0
+STEP RTDG.gate_petrol begin
+OBS  RTDG.gate_petrol fuel=5.0000 grade=unsuitable compatible=false startFactor=0 reasons=incompatible_fuel
+OBS  RTDG.gate_petrol activated=false refusal=generator start refused: incompatible_fuel
+PASS RTDG.gate_petrol.refused_by_tlg :: generator start refused: incompatible_fuel
+STEP rtdg_zoom begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtdg_generators begin
+OBS  RTMI.screenshot tlg_rtdg_generators.png ok=true ; interface hidden; zoom 0.50; player 10659,10645; game hour 11.08
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 4.09
+SUMMARY pass=12 fail=1
+DONE

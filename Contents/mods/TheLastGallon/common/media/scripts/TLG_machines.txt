@@ -261,6 +261,15 @@ module TLG
         WorldStaticModel = TLG.BiodieselWashTank,
     }
 
+    /* The diesel generator (D-036) is not here yet. Launch 233 ran it as a
+       copy of Base.Generator under the type TLG.DieselGenerator with
+       vanilla's sprite (WorldObjectSprite = appliances_misc_01_0, tag
+       base:generator): it became a working generator with the diesel
+       profile, but the game names a generator's item from its sprite, so
+       a vanilla Base.Generator then reported TLG.DieselGenerator as its
+       item type, which vanilla's pickup would hand back. It needs a
+       sprite of its own, or the type put right in Lua at pickup. */
+
     craftRecipe TLG_MakeWoodRetort
     {
         time = 400,

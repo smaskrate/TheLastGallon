@@ -4951,3 +4951,44 @@ Not run: the models seen indoors, at night, from other sides, or held.
 Evidence:
 [2026-11-10_rt-sp_harness_run232_biodiesel_models_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run232_biodiesel_models_42.22.2.txt);
 screenshots in [evidence/run232](evidence/run232).
+## 2026-11-10 — RT-SP client harness, launch 233 (the diesel generator probe, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `06fccfd`, with an
+item `TLG.DieselGenerator` in `TLG_machines.txt` for this launch: a copy of
+`Base.Generator` (tag `base:generator`, `WorldObjectSprite =
+appliances_misc_01_0`, vanilla's icon). New mode:
+`tools\run-sp-harness.ps1 -Mode diesel-generator` (request `sp-rtdg`). Two
+of the item and one `Base.Generator` put down with `IsoGenerator.new`.
+12 passed, 1 failed.
+
+* The item becomes an `IsoGenerator` (10 L tank, condition 100) and its
+  mod data keeps `generatorFullType = TLG.DieselGenerator`; from that the
+  mod gives it `generator_ci_stock` and diesel as its reference fuel
+  (`Generators.ITEM_PROFILES`). The vanilla one keeps `generator_si_stock`.
+* 5 L of biodiesel through the mod's pour: reply ok, litres conserved, the
+  record carried. Switched on from Lua it ran 2.00 game hours, 5.0000 L to
+  4.9820 L, the record following (biodiesel only).
+* 5 L of petrol through vanilla's `ISAddFuel` into the second: recorded as
+  petrol; the start gate refused it (`incompatible_fuel`).
+* **Finding:** `getGeneratorItemType()` gave `TLG.DieselGenerator` for the
+  vanilla `Base.Generator` too. Both items name the same sprite and the
+  game reads a generator's item from its sprite; vanilla's pickup
+  (`ISTakeGenerator.complete`) makes the item from that call. With this
+  item in the scripts, picking up a vanilla red generator would give a
+  diesel generator. The pickup itself was not run. The item was taken out
+  of `TLG_machines.txt` after the launch; `ITEM_PROFILES` and the item's
+  names stay.
+* The failed check, `RTDG.gate_biodiesel.activated`: the start through
+  `ISActivateGenerator` was refused with `marginal_biodiesel`. The gate
+  worked as written: `generator_ci_stock` takes biodiesel without penalty
+  up to 20 %, so 100 % evaluates fit with start factor 0.6, and this
+  start's roll fell in the other 0.4. The check expected a start every
+  time.
+* The photograph shows three identical red generators.
+
+Not run: taking the generator and putting it down again, a save, the
+generator powering anything, its info window, loot, multiplayer.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run233_diesel_generator_probe_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run233_diesel_generator_probe_42.22.2.txt);
+[evidence/run233](evidence/run233).
