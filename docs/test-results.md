@@ -5226,3 +5226,24 @@ seed.
 
 Evidence:
 [2026-11-10_rt-sp_harness_run244_diesel_pumps_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run244_diesel_pumps_42.22.2.txt).
+## 2026-11-10 — RT-SP client harness, launch 245 (the full run on the biodiesel branch)
+
+Build 42.22.2, `feature/biodiesel` at `4fc27a3` with the harness change
+below. `tools\run-sp-harness.ps1` (full: phase A, save, reload, phase B):
+phase A **100/0**, phase B **14/0**, the counts of launches 216 and 228
+on `main`.
+
+* The modes written before some pumps gave diesel move petrol. They now
+  take a pump that gives it (`H.petrolPump`: phase A's pump list and the
+  two nearest-pump searches). In this world one of the station's pumps,
+  at 10654,10622, was drawn as diesel and left alone.
+* The multiplayer harness's server holds the draw's share at 0, so its
+  worlds have no diesel pump: a client cannot tell which pump gives petrol.
+  Not run.
+
+Not run on this branch: every other single-player mode written before it
+(the list of the 2026-11-08 entry), the install rehearsal, and all
+multiplayer.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run245_full_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run245_full_42.22.2.txt).

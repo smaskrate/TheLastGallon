@@ -137,6 +137,13 @@ local H = {}
 local R
 
 local function sq(x, y, z) return getCell():getGridSquare(x, y, z or 0) end
+
+-- The modes written before some pumps gave diesel (D-036) move petrol: they
+-- take a pump that gives it. In a world without diesel every pump does.
+function H.petrolPump(o)
+    local ok, product = pcall(TLG.Integration.Stations.product, o)
+    return not ok or product == "gasoline"
+end
 local function player() return getPlayer() end
 local function hours() return getGameTime():getWorldAgeHours() end
 
@@ -385,7 +392,7 @@ end })
 
 add({ name = "find_pumps", timeout = 600, fn = function()
     H.pumps = {}
-    local others = {}
+    local others, diesel = {}, {}
     for x = STATION.x0, STATION.x1 do
         for y = STATION.y0, STATION.y1 do
             local s = sq(x, y, 0)
@@ -395,7 +402,9 @@ add({ name = "find_pumps", timeout = 600, fn = function()
                     local o = objs:get(i)
                     local amount = o:getPipedFuelAmount()
                     local sprite = o:getSprite() and o:getSprite():getName() or "?"
-                    if amount > 0 then
+                    if amount > 0 and not H.petrolPump(o) then
+                        diesel[#diesel + 1] = string.format("%d,%d", x, y)
+                    elseif amount > 0 then
                         H.pumps[#H.pumps + 1] = { obj = o, x = x, y = y, amount = amount, sprite = sprite }
                     elseif string.find(string.lower(sprite), "fuel") or string.find(string.lower(sprite), "gas") then
                         others[#others + 1] = string.format("%s@%d,%d", sprite, x, y)
@@ -404,6 +413,7 @@ add({ name = "find_pumps", timeout = 600, fn = function()
             end
         end
     end
+    R:line("OBS  G06.diesel_pumps left alone (D-036): %s", #diesel > 0 and table.concat(diesel, " ") or "none")
     for _, p in ipairs(H.pumps) do
         R:line("OBS  G06.pump %s at %d,%d units=%d isPump=%s", p.sprite, p.x, p.y, p.amount,
             tostring(TLG.Integration.Stations.isPump(p.obj)))
@@ -7698,7 +7708,7 @@ RT.X.discover = { name = "rtx_discover", timeout = 3000, fn = function(ctx, tick
                 local objs = s and s:getObjects()
                 for i = 0, (objs and objs:size() or 0) - 1 do
                     local o = objs:get(i)
-                    if o:getPipedFuelAmount() > 0 and TLG.Integration.Stations.isPump(o) then
+                    if o:getPipedFuelAmount() > 0 and TLG.Integration.Stations.isPump(o) and H.petrolPump(o) then
                         local d = (x - START.x) * (x - START.x) + (y - START.y) * (y - START.y)
                         if best == nil or d < best.d then best = { obj = o, x = x, y = y, d = d } end
                     end
@@ -7890,7 +7900,7 @@ function RT.N.nearestPump()
             local objs = s and s:getObjects()
             for i = 0, (objs and objs:size() or 0) - 1 do
                 local o = objs:get(i)
-                if o:getPipedFuelAmount() > 0 and TLG.Integration.Stations.isPump(o) then
+                if o:getPipedFuelAmount() > 0 and TLG.Integration.Stations.isPump(o) and H.petrolPump(o) then
                     local d = (x - START.x) * (x - START.x) + (y - START.y) * (y - START.y)
                     if best == nil or d < best.d then best = { obj = o, x = x, y = y, d = d } end
                 end

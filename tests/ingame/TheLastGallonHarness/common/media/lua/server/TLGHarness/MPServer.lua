@@ -22,6 +22,12 @@ require "TLGHarness/MPShared"
 
 if not isServer() then return end
 
+-- The multiplayer cases move petrol, and a client cannot tell which pump
+-- gives it (the draw needs the world's seed, which the server holds):
+-- in the harness's worlds no pump is drawn as diesel (D-036).
+require "TLG/Domain/WorldInit"
+TLG.Domain.WorldInit.STATION_DIESEL_SHARE = 0
+
 TLGH = TLGH or {}
 TLGH.MPServer = TLGH.MPServer or {}
 local M = TLGH.MPServer
