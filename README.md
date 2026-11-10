@@ -2,10 +2,10 @@
 
 ![The Last Gallon: the five machines under the title](art-src/preview.png)
 
-A mod for Project Zomboid **Build 42.22.2**.
+A mod for Project Zomboid **Build 42.22.2**. Fuel ages, takes up water and
 gathers dirt; engines start harder, lose power and wear on poor fuel; you
 can ferment, distil and dry your own ethanol and convert a generator or a
-The current version is 0.1.2
+car to run on it. The current version is 0.1.2
 ([CHANGELOG.md](CHANGELOG.md)). The specification it was built from is
 [The_Last_Gallon_Implementation_Plan.md](The_Last_Gallon_Implementation_Plan.md).
 

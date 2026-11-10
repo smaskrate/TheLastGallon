@@ -6,4 +6,4 @@ versionMin=42.21
 category=features
 poster=poster.png
 icon=icon.png
-Tested only on Project Zomboid 42.22.2 (3d39148846).
+description=Fuel that ages, takes up water and gathers dirt, and engines that feel it: hard starts, stalls, lost power and wear. Inspect, filter, drain and stabilize what you find, or make your own ethanol (fermentation vessel, pot or reflux still, drying column) and convert a generator or a car to burn it. English and Italian. Tested only on Project Zomboid 42.22.2 (3d39148846). Licence: CC BY-NC-SA 4.0, except the supplied machine models and the carry animations (docs/LICENSE.md in the mod folder).
