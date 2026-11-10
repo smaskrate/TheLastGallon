@@ -1,0 +1,50 @@
+# TLG single-player harness, diesel vehicles
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=71100308459312564695 hours=2.0096 DayLength=4
+STEP rtbdm_setup begin
+STEP rtdv_batch_1 begin
+PASS RTDV.new_world_has_diesel_chassis :: dieselVehicles=true createdAsNewGame=true policy=new_world modVersion=0.1.2
+PASS RTDV.profile_VanSeats :: script Base.VanSeats; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9986,water=0.0014] deg[diesel=0.1717] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTDV.profile_VanRadio :: script Base.VanRadio; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9988,water=0.0012] deg[diesel=0.1529] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTDV.profile_PickUpTruck :: script Base.PickUpTruck; profile engine_si_stock; record initialized id=nil rev=0 total=10.0000 q[gasoline=9.9997,water=0.0003] deg[gasoline=0.1948] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+STEP rtdv_batch_2 begin
+PASS RTDV.profile_VanAmbulance :: script Base.VanAmbulance; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9992,water=0.0008] deg[diesel=0.0982] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTDV.profile_PickUpVanLightsFire :: script Base.PickUpVanLightsFire; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9989,water=0.0011] deg[diesel=0.1420] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTDV.profile_Van :: script Base.Van; profile engine_si_stock; record initialized id=nil rev=0 total=10.0000 q[gasoline=9.9993,water=0.0007] deg[gasoline=0.5235] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+STEP RTDV.ambulance_starts_on_diesel begin
+OBS  RTDV.ambulance_starts_on_diesel driver=true battery=1.00 engine=100 grade=good compatible=true startFactor=1 reasons=
+OBS  RTDV.ambulance_starts_on_diesel state=Running running=true attempts=1 refusal=nil
+PASS RTDV.ambulance_starts_on_diesel.running :: state=Running attempts=1 refusal=nil
+STEP RTDV.ambulance_takes_biodiesel begin
+OBS  RTDV.ambulance_takes_biodiesel inArea=true
+OBS  RTDV.ambulance_takes_biodiesel.before src initialized id=nil rev=0 total=5.0000 q[biodiesel=4.9998,water=0.0002] deg[biodiesel=0.6918] mic=0 stab=0
+OBS  RTDV.ambulance_takes_biodiesel.before dst - id=nil rev=0 total=10.0000 q[diesel=9.9992,water=0.0008] deg[diesel=0.0982] mic=0 stab=0
+OBS  RTDV.ambulance_takes_biodiesel reply ok=true reason=nil
+PASS RTDV.ambulance_takes_biodiesel.reply_ok :: nil
+OBS  RTDV.ambulance_takes_biodiesel litres src 5.0000->0.0000 dst 10.0000->15.0000
+OBS  RTDV.ambulance_takes_biodiesel.after src ok id=S691921846-1 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTDV.ambulance_takes_biodiesel.after dst ok id=V691921846-2 rev=1 total=15.0000 q[biodiesel=4.9998,diesel=9.9992,water=0.0010] deg[biodiesel=0.6918,diesel=0.0982] mic=0 stab=0
+PASS RTDV.ambulance_takes_biodiesel.litres_conserved :: out=5.00000 in=5.00000
+PASS RTDV.ambulance_takes_biodiesel.tlg_total_matches_native :: tlg=15.00000 native=15.00000 status=ok
+OBS  RTDV.ambulance_takes_biodiesel tank now grade=good compatible=true startFactor=0.9333296844844502 reasons=marginal_biodiesel
+STEP RTDV.pickup_van_refuses_petrol begin
+OBS  RTDV.pickup_van_refuses_petrol inArea=true
+OBS  RTDV.pickup_van_refuses_petrol.before src initialized id=nil rev=0 total=5.0000 q[gasoline=5.0000,water=0.0000] deg[gasoline=0.0414] mic=0 stab=0
+OBS  RTDV.pickup_van_refuses_petrol.before dst - id=nil rev=0 total=10.0000 q[diesel=9.9989,water=0.0011] deg[diesel=0.1420] mic=0 stab=0
+OBS  RTDV.pickup_van_refuses_petrol reply ok=false reason=incompatible
+PASS RTDV.pickup_van_refuses_petrol.refused_nothing_moved :: reason=incompatible dCan=0.00000 dTank=0.00000
+OBS  RTDV.pickup_van_refuses_petrol tank now grade=good compatible=true startFactor=1 reasons=
+STEP RTDV.trade_van_starts_on_petrol begin
+OBS  RTDV.trade_van_starts_on_petrol driver=true battery=1.00 engine=100 grade=good compatible=true startFactor=1 reasons=
+OBS  RTDV.trade_van_starts_on_petrol state=Running running=true attempts=1 refusal=nil
+PASS RTDV.trade_van_starts_on_petrol.running :: state=Running attempts=1 refusal=nil
+STEP rtdv_zoom begin
+OBS  RTMI.zoom 1.00 -> 1.00 in 0 scrolls (enabled=true, min 0.25)
+STEP rtmi_shot_rtdv_vehicles begin
+OBS  RTMI.screenshot tlg_rtdv_vehicles.png ok=true ; interface hidden; zoom 1.00; player 10671,10647; game hour 9.09
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.10
+SUMMARY pass=13 fail=0
+DONE

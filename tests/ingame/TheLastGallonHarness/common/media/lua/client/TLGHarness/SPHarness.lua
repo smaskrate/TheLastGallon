@@ -91,6 +91,8 @@
 --              fermentation vessel beside them, photographed; no save
 --   sp-rtdg -> the diesel generator probe: the mod's generator item put
 --              down, fuelled with biodiesel and with petrol, started
+--   sp-rtdv -> diesel vehicles: the chosen chassis' profile and fuel in a
+--              new world, a start on diesel, biodiesel taken, petrol refused
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -116,7 +118,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
@@ -14833,6 +14835,87 @@ end }
 RT.dieselGeneratorReloadSteps = { RT.DG.reload, RT.MI.zoomTo("rtdgb_zoom", 0.5), RT.MI.shot("rtdg_reloaded", true),
     RT.DG.take(1, "TLG.DieselGenerator"), RT.finish }
 
+------------------------------------------------------------------------------
+-- Diesel vehicles (request "sp-rtdv", D-036). A new world, so its record
+-- says diesel chassis exist. Three vehicles at a time are spawned beside
+-- the start (the squares phase A parks on), repaired and given 10 L with
+-- no record, as a vehicle of the map is found: the passenger van, the
+-- radio van and a pickup truck, read and removed; then the ambulance, the
+-- fire department's pickup van and a trade van, kept. The diesel chassis
+-- must have the diesel profile and read their litres as diesel, the
+-- others petrol. The ambulance must start on its diesel and take 5 L of
+-- biodiesel; the pickup van must refuse 5 L of petrol poured without
+-- confirmation; the trade van must start on its petrol.
+------------------------------------------------------------------------------
+RT.DV = { cars = {},
+    batches = { { { "Base.VanSeats", true }, { "Base.VanRadio", true }, { "Base.PickUpTruck", false } },
+        { { "Base.VanAmbulance", true }, { "Base.PickUpVanLightsFire", true }, { "Base.Van", false } } } }
+
+function RT.DV.batch(n)
+    return { name = "rtdv_batch_" .. n, timeout = 1200, fn = function(ctx, ticks)
+        local V, DV = TLG.Integration.Vehicles, RT.DV
+        if ticks < 30 then return nil end
+        if not ctx.spawned then
+            if n == 1 then
+                local world = TLG.World.get()
+                R:check("RTDV.new_world_has_diesel_chassis", function()
+                    return world.dieselVehicles == true, string.format("dieselVehicles=%s createdAsNewGame=%s policy=%s modVersion=%s",
+                        tostring(world.dieselVehicles), tostring(world.createdAsNewGame), tostring(world.policy), tostring(world.modVersion))
+                end)
+            end
+            for i, spec in ipairs(DV.batches[n]) do
+                local v = addVehicleDebug(spec[1], IsoDirections.N, nil, sq(START.x + 5 * i - 2, START.y + 3, 0))
+                if v then pcall(function() v:repair() end) end
+                DV.cars[i] = v
+            end
+            ctx.spawned = ticks
+            return nil
+        end
+        if ticks - ctx.spawned < 60 then return nil end
+        if not ctx.filled then
+            for i = 1, 3 do
+                local tank = DV.cars[i] and DV.cars[i]:getPartById("GasTank")
+                if tank then
+                    tank:setContainerContentAmount(10)
+                    tank:getModData().tlg = nil
+                end
+            end
+            ctx.filled = ticks
+            return nil
+        end
+        if ticks - ctx.filled < 10 then return nil end
+        for i, spec in ipairs(DV.batches[n]) do
+            local v = DV.cars[i]
+            local name = string.gsub(spec[1], "^Base%.", "")
+            R:check("RTDV.profile_" .. name, function()
+                if v == nil then return false, "not spawned" end
+                local rec, status = V.read(v, false)
+                local e = V.evaluate(v)
+                local wantProfile, wantFuel = spec[2] and "engine_ci_stock" or "engine_si_stock", spec[2] and "diesel" or "gasoline"
+                return V.isDieselChassis(v:getScriptName()) == spec[2] and V.baseProfile(v) == wantProfile and V.profile(v) == wantProfile
+                    and rec ~= nil and (rec.q[wantFuel] or 0) > 9.9 and e ~= nil and e.compatible == true,
+                    string.format("script %s; profile %s; record %s; %s", tostring(v:getScriptName()), tostring(V.profile(v)),
+                        viewText(rec, status), evaluationText(e))
+            end)
+        end
+        if n == 1 then
+            for i = 1, 3 do
+                if DV.cars[i] then pcall(function() DV.cars[i]:permanentlyRemove() end) end
+                DV.cars[i] = nil
+            end
+        end
+        return true
+    end }
+end
+
+RT.dieselVehicleSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DV.batch(1), RT.DV.batch(2),
+    vehicleGateStep("RTDV.ambulance_starts_on_diesel", function() return RT.DV.cars[1] end, false, true),
+    vehiclePourStep("RTDV.ambulance_takes_biodiesel", { { Fluid.Get("TLG_Biodiesel"), 5.0 } }, false, true,
+        function() return RT.DV.cars[1] end),
+    vehiclePourStep("RTDV.pickup_van_refuses_petrol", { { Fluid.Petrol, 5.0 } }, false, false, function() return RT.DV.cars[2] end),
+    vehicleGateStep("RTDV.trade_van_starts_on_petrol", function() return RT.DV.cars[3] end, false, true),
+    RT.MI.zoomTo("rtdv_zoom", 1.0), RT.MI.shot("rtdv_vehicles", true), RT.finish }
+
 RT.biodieselSteps = { RT.waitWorld, RT.setup, RT.MM.clearSky, RT.BD.row,
     RT.BD.stand("rtbd_stand_row", 0), RT.MI.zoomTo("rtbd_zoom", 0.5), RT.MI.shot("rtbd_row", true),
     RT.MI.zoomTo("rtbd_zoom_close", 0.25),
@@ -14855,7 +14938,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -14933,6 +15016,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtbd" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, real game clock, the biodiesel chain")
                 TLGH.Steps.run(R, RT.biodieselSteps, H, nil)
+            elseif REQUEST == "sp-rtdv" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, diesel vehicles")
+                TLGH.Steps.run(R, RT.dieselVehicleSteps, H, nil)
             elseif REQUEST == "sp-rtdg" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the diesel generator probe")
                 TLGH.Steps.run(R, RT.dieselGeneratorSteps, H, nil)

@@ -133,6 +133,10 @@ function World.ensure(isNewGame)
     md.climateLog = {}
     md.modVersion = TLG.VERSION
     md.createdAsNewGame = newGame and true or false
+    -- Diesel chassis (Vehicles.DIESEL_FAMILIES) exist from the start of a
+    -- new game only: a save that had the mod or the game before keeps its
+    -- vehicles on petrol (D-036). Never set afterwards.
+    md.dieselVehicles = newGame and true or false
     TLG.Log.info("world fuel history created: policy=%s seed=%d epoch=%.2f installedAt=%.2f newGame=%s", md.policy,
         srv.seed, md.epoch, md.installedAt, tostring(isNewGame))
     World.transmit()

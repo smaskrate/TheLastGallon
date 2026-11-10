@@ -5093,3 +5093,40 @@ one taken out of a container; the vehicle lists rolled.
 Evidence:
 [run 238](evidence/2026-11-10_rt-sp_harness_run238_diesel_generator_loot_42.22.2.txt);
 [run 239](evidence/2026-11-10_rt-sp_harness_run239_diesel_generator_loot_42.22.2.txt).
+## 2026-11-10 — RT-SP client harness, launch 240 (diesel vehicles, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `b13990b`. The
+owner chose the diesel chassis from the list of the build's vehicles:
+pickup vans, radio vans, passenger vans and the ambulance
+(`Vehicles.DIESEL_FAMILIES`, every variant whose script name begins with
+`PickUpVan`, `VanRadio`, `VanSeats` or `VanAmbulance`). They have
+`engine_ci_stock` in a world whose record says `dieselVehicles`, which
+`World.ensure` sets for a new game only. New mode:
+`tools\run-sp-harness.ps1 -Mode diesel-vehicles` (request `sp-rtdv`).
+13 passed, 0 failed.
+
+* The new world's record: `dieselVehicles=true`, `createdAsNewGame=true`.
+* Spawned, repaired and given 10 L with no record: `Base.VanSeats`,
+  `Base.VanRadio`, `Base.VanAmbulance` and `Base.PickUpVanLightsFire` have
+  `engine_ci_stock` and read their litres as diesel; `Base.PickUpTruck`
+  and `Base.Van` have `engine_si_stock` and read petrol. Each evaluates
+  fit.
+* The ambulance started on its diesel at the first attempt
+  (`ISStartVehicleEngine`).
+* 5 L of biodiesel poured into it: reply ok, litres conserved, the tank
+  15 L of one third biodiesel, fit with `marginal_biodiesel` (start factor
+  0.93).
+* 5 L of petrol poured into the pickup van without confirmation: refused
+  (`incompatible`), nothing moved.
+* The trade van started on its petrol at the first attempt.
+
+Not run: a diesel vehicle of the map itself; an older save (offline only:
+the same van reads petrol there); petrol put into a diesel vehicle at a
+vanilla pump or with vanilla's own actions, and its start refused; a
+start on pure biodiesel; driving, engine effects, cold weather; the
+flex-fuel conversion offered on a diesel chassis; multiplayer. Pumps give
+petrol only so far.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run240_diesel_vehicles_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run240_diesel_vehicles_42.22.2.txt);
+[evidence/run240](evidence/run240).

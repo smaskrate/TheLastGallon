@@ -52,11 +52,40 @@ function V.keyOf(vehicle)
     return "veh:" .. tostring(vehicle:getSqlId()) .. ":" .. tostring(vehicle:getScriptName())
 end
 
--- Stock profile of this engine (before any conversion).
+-- Vanilla chassis with a diesel engine (D-036, the owner's choice of
+-- 2026-11-10 from the list of 42.22.2's chassis): pickup vans, radio vans,
+-- passenger vans and the ambulance, each with every variant the game
+-- derives from it (their script names begin with the family's). Step vans,
+-- pickup trucks, the SUV, trade vans and cars stay petrol.
+V.DIESEL_PROFILE = "engine_ci_stock"
+V.DIESEL_FAMILIES = { "PickUpVan", "VanRadio", "VanSeats", "VanAmbulance" }
+
+function V.isDieselChassis(scriptName)
+    local name = string.match(tostring(scriptName), "([^%.]+)$") or ""
+    for _, family in ipairs(V.DIESEL_FAMILIES) do
+        if string.sub(name, 1, #family) == family then return true end
+    end
+    return false
+end
+
+-- Stock profile of this engine (before any conversion). Diesel chassis
+-- exist only in worlds started as new games with a version that has them
+-- (the world record's `dieselVehicles`): in an older save the same
+-- vehicles hold petrol and keep the petrol profile.
 function V.baseProfile(vehicle)
     local engine = vehicle:getPartById("Engine")
     local md = engine and engine:getModData().tlg
-    return (md and md.profile) or V.DEFAULT_PROFILE
+    if md and md.profile then return md.profile end
+    local world = World.get and World.get() or nil
+    if world and world.dieselVehicles and V.isDieselChassis(vehicle:getScriptName()) then return V.DIESEL_PROFILE end
+    return V.DEFAULT_PROFILE
+end
+
+-- The fuel a vehicle is taken to hold when it has litres and no record:
+-- its stock profile's reference fuel.
+function V.referenceFuel(vehicle)
+    local def = TLG.Registry.get("consumer", V.baseProfile(vehicle))
+    return (def and def.referenceFuel) or "gasoline"
 end
 
 -- Effective profile: a Commissioned conversion for this exact engine wins
@@ -87,7 +116,7 @@ function V.read(vehicle, persist)
         if amount <= 1e-6 then
             rec = Supply.new({ storage = "vehicle_tank", cap = cap, t = World.now() })
         else
-            rec = World.baseline(V.keyOf(vehicle), { storage = "vehicle_tank", cap = cap, q = { gasoline = amount } })
+            rec = World.baseline(V.keyOf(vehicle), { storage = "vehicle_tank", cap = cap, q = { [V.referenceFuel(vehicle)] = amount } })
         end
         rec.cap = cap
         if persist then rec.id = World.newId("V") end
@@ -99,7 +128,7 @@ function V.read(vehicle, persist)
     for id, q in pairs(side.q or {}) do rec.q[id] = q end
     for id, d in pairs(side.deg or {}) do rec.deg[id] = d end
     rec.prov = Tables.deepCopy(side.prov or {})
-    local primary = Supply.primary(rec) or "gasoline"
+    local primary = Supply.primary(rec) or V.referenceFuel(vehicle)
     local base, at = { deg = 0, mic = 0 }, nil
     if amount > Supply.total(rec) + 1e-4 then base, at = C.inflowAt() end
     -- Native stores floats; tolerate float precision before calling it a change.

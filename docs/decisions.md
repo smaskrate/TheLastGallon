@@ -1408,6 +1408,14 @@ their replacement.
   * Diesel vehicles: vanilla heavy vehicles only, from a list shown to
     the owner before it is built. `Base.PickUpTruck` and `Base.StepVan`
     stay petrol and keep their flex-fuel conversions.
+    The list shown on 2026-11-10: 42.22.2 has no lorries, buses or
+    tractors; its heaviest chassis are the step van (1160), the pickup
+    van (1104) and the pickup truck (1030). The owner chose pickup vans,
+    radio vans, passenger vans and the ambulance (about 42 variants);
+    the SUV, the trade vans and all cars stay petrol. They are diesel
+    (`engine_ci_stock`) in worlds started as new games from this
+    version on; run in launch 240. Until some pumps give diesel, their
+    only fuel is what they are found with and biodiesel.
   * Some station pumps give diesel. This changes the station model (a
     product per pump) and needs its own tests at the pumps.
   * The diesel generator comes from loot only.

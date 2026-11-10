@@ -236,3 +236,54 @@ T.case("integration: a record write leaves the fluids alone below the commit tol
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+-- Diesel chassis (D-036): a vehicle's stock profile and the fuel an
+-- unrecorded tank is taken to hold.
+local function chassis(script, litres, engineSide)
+    local x = { litres = litres or 0 }
+    local tank, engine, tmd, emd = {}, {}, {}, { tlg = engineSide }
+    function tank:getContainerContentAmount() return x.litres end
+    function tank:getContainerCapacity() return 60 end
+    function tank:getModData() return tmd end
+    function engine:getModData() return emd end
+    function x:getPartById(id) return (id == "GasTank" and tank) or (id == "Engine" and engine) or nil end
+    function x:getScriptName() return script end
+    function x:getSqlId() return 5 end
+    return x
+end
+
+T.case("integration: the chosen chassis families are diesel, each with its variants, and no other", function()
+    local V = I.Vehicles
+    for _, name in ipairs({ "Base.PickUpVan", "Base.PickUpVanLightsFire", "PickUpVan_Camo", "Base.VanRadio", "Base.VanRadio_3N",
+        "Base.VanSeats", "Base.VanSeats_Prison", "Base.VanSeatsAirportShuttle", "Base.VanAmbulance" }) do
+        T.ok(V.isDieselChassis(name), name)
+    end
+    for _, name in ipairs({ "Base.PickUpTruck", "Base.PickUpTruckLightsFire", "Base.StepVan", "Base.StepVanMail", "Base.Van",
+        "Base.VanSpiffo", "Base.Van_Transit", "Base.SUV", "Base.OffRoad", "Base.CarNormal", "Base.SmallCar", "nil", "" }) do
+        T.ok(not V.isDieselChassis(name), name .. " stays petrol")
+    end
+end)
+
+T.case("integration: diesel chassis exist only in a world started as a new game with them", function()
+    local V = I.Vehicles
+    local g = fakeGame(200)
+    local ok, err = pcall(function()
+        local world = World.get()
+        -- A save from before: the same van is a petrol van.
+        T.eq(V.baseProfile(chassis("Base.VanAmbulance")), "engine_si_stock")
+        T.eq(V.referenceFuel(chassis("Base.VanAmbulance")), "gasoline")
+        world.dieselVehicles = true
+        T.eq(V.baseProfile(chassis("Base.VanAmbulance")), "engine_ci_stock")
+        T.eq(V.referenceFuel(chassis("Base.VanAmbulance")), "diesel")
+        T.eq(V.baseProfile(chassis("Base.Van")), "engine_si_stock", "a trade van stays petrol")
+        T.eq(V.baseProfile(chassis("Base.PickUpVan", 0, { profile = "engine_si_flex" })), "engine_si_flex",
+            "an engine's own recorded profile comes first")
+        -- Found with fuel and no record: diesel in the diesel van, petrol in the other.
+        local rec = V.read(chassis("Base.VanAmbulance", 12), false)
+        T.near(rec.q.diesel or 0, 12, 0.01, "the baseline gives a little of it to water"); T.eq(rec.q.gasoline, nil)
+        rec = V.read(chassis("Base.Van", 12), false)
+        T.near(rec.q.gasoline or 0, 12, 0.01); T.eq(rec.q.diesel, nil)
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)
