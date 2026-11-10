@@ -159,6 +159,12 @@ module TLG
         mesh = TLG/LyeLeacher,
         texture = TLG/LyeLeacher,
         scale = 0.73,
+        /* Put down unturned it showed its back (launch 241): turned half
+           round, as vanilla's models are turned (models_items.txt). */
+        attachment world
+        {
+            rotate = 0.0 180.0 0.0,
+        }
     }
 
     /* BiodieselReactor: an open drum with a stirrer's crank over it and a

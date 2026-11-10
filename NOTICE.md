@@ -1,7 +1,9 @@
 # Notices
 
-* The package copies no game assets (`docs/asset-audit.csv`). Every
-  item's icon (`media/textures/Item_TLG_*.png`) was made for the mod: the
+* The package copies no game assets unchanged (`docs/asset-audit.csv`).
+  Two pictures are made from the game's own art: see the diesel generator
+  below. Every other item's icon (`media/textures/Item_TLG_*.png`) was
+  made for the mod: the
   vessel's drawn by `tools/make-icons.ps1`, the stills', the drying
   column's and the fuel filter's rendered from their own supplied models
   by `tools/make-model-icons.ps1`, and the sampling kit's, the yeast
@@ -32,9 +34,13 @@
   `art-src/biodieselreactor` and `art-src/biodieselwashtank`).
 * The diesel generator's tile sprite and icon
   (`media/textures/TLG/Tile_DieselGenerator.png`,
-  `media/textures/Item_TLG_DieselGenerator.png`) were made for the mod
-  from its own shapes by `tools/make-tile-sprites.ps1` and
-  `tools/make-model-icons.ps1`.
+  `media/textures/Item_TLG_DieselGenerator.png`) are Project Zomboid's
+  own red generator sprite (`appliances_misc_01_0`) and icon
+  (`Item_Generator`) with their red turned to green, read out of the
+  game's texture packs by `tools/make-tile-sprites.ps1`. The owner asked
+  for this on 2026-11-10 (D-036). They remain The Indie Stone's art and
+  are for use with the game only. The Indie Stone's terms for mods were
+  not read for this record.
 * The fermentation vessel's carry animations
   (`media/anims_X/Bob/Bob_TLG_CarryVessel.x`, and the crouched and sprint
   clips `Bob_TLG_CarryVesselSneak.x`, `Bob_TLG_CarryVesselSneakIdle.x` and

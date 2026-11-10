@@ -160,53 +160,14 @@ def manual_fuel_systems(floor=False):
     return 30.0, 12.0
 
 
-STEEL, RUST, BRICK, SOOT, WOOD, ASH, COPPER = "#6E7477", "#8A5A3C", "#9A4A38", "#2B2B2B", "#9B7445", "#B9B6AE", "#B5673A"
-
-
-def lying(x, y, z, radius, length, colour, **kw):
-    """A cylinder lying along the X axis, centred at (x, y, z)."""
-    bpy.ops.mesh.primitive_cylinder_add(vertices=_sides(40), radius=radius, depth=length, location=(x, y, z),
-                                        rotation=(0.0, math.radians(90), 0.0))
-    return _finish(bpy.context.active_object, colour, **kw)
-
-
-def diesel_generator(floor=False):
-    # A green engine block in a dark tube frame, a yellow tank on top with a
-    # black cap, a grey alternator at one end and an exhaust stack at the
-    # other: unlike vanilla's red petrol generators at a glance. Rendered
-    # as its icon here and as its tile sprite by pz_tile_sprite.py.
-    green, yellow, frame = "#3E6B3A", "#C9A227", "#26282A"
-    for dx in (-0.4, 0.4):
-        for dy in (-0.24, 0.24):
-            box(dx, dy, 0.0, 0.04, 0.04, 0.62, frame, roughness=0.5, metallic=0.6)
-        box(dx, 0.0, 0.58, 0.04, 0.52, 0.04, frame, roughness=0.5, metallic=0.6)
-    for dy in (-0.24, 0.24):
-        box(0.0, dy, 0.58, 0.84, 0.04, 0.04, frame, roughness=0.5, metallic=0.6)
-        box(0.0, dy, 0.0, 0.84, 0.04, 0.05, frame, roughness=0.5, metallic=0.6)
-    box(-0.08, 0.0, 0.05, 0.5, 0.38, 0.3, green, roughness=0.6, metallic=0.3)
-    lying(0.26, 0.0, 0.2, 0.13, 0.2, "#8E9497", roughness=0.5, metallic=0.6)
-    box(-0.02, 0.0, 0.35, 0.6, 0.38, 0.16, yellow, roughness=0.6, metallic=0.2)
-    cylinder(0.12, 0.0, 0.51, 0.045, 0.03, SOOT, roughness=0.6)
-    cylinder(-0.3, 0.12, 0.35, 0.035, 0.4, SOOT, roughness=0.7, metallic=0.4)
-    box(-0.08, -0.195, 0.12, 0.3, 0.01, 0.14, "#1F3A1D", roughness=0.8)
-    # Drawn at 0.7 of the measures above: at full size its sprite stood
-    # about 1.4 times vanilla's generator beside it (launch 234).
-    for o in bpy.context.scene.objects:
-        o.location = o.location * 0.7
-        o.scale = o.scale * 0.7
-    return 35.0, 25.0
-
-
 # The items with no supplied model: their icons and their floor models
 # (tools/blender/pz_prop_models.py) come from these shapes.
 PROPS = {"FuelSampleKit": fuel_sample_kit, "YeastStarter": yeast_starter, "FuelStabilizer": fuel_stabilizer,
          "ManualFuelSystems": manual_fuel_systems}
-# Shapes with an icon and no floor model: the diesel generator stands in
-# the world as a tile sprite (tools/blender/pz_tile_sprite.py).
-ICON_ONLY = {"DieselGenerator": diesel_generator}
+
 if __name__ == "__main__":
     out_dir = sys.argv[sys.argv.index("--") + 1:][0]
-    for name, build in list(PROPS.items()) + list(ICON_ONLY.items()):
+    for name, build in PROPS.items():
         bpy.ops.wm.read_factory_settings(use_empty=True)
         azimuth, elevation = build()
         pz_icon.render_scene(os.path.join(out_dir, "Item_TLG_%s.png" % name), azimuth, elevation)

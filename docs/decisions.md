@@ -1407,8 +1407,11 @@ their replacement.
   * Amendment (2026-11-10): the owner supplied models and textures for
     the five machines, which replace the shape-built ones (provenance
     in `art-src`, as for D-027); their icons are rendered from them.
-    Seen in game in launch 241. The diesel generator's sprite and icon
-    stay the mod's own shapes.
+    Seen in game in launch 241. The leacher is turned half round where
+    it is put down, to show its front (launch 242). The diesel
+    generator's sprite and icon are vanilla's red generator turned green,
+    at the owner's request (launch 243): the first pictures in the mod
+    made from the game's art (`NOTICE.md`, `LICENSE.md`).
 * Decision (the owner's second round, 2026-11-10):
   * Diesel vehicles: vanilla heavy vehicles only, from a list shown to
     the owner before it is built. `Base.PickUpTruck` and `Base.StepVan`
@@ -1429,7 +1432,7 @@ their replacement.
     it the diesel profile. It cannot share vanilla's sprite (the
     game names a generator's item from the sprite). The owner chose a
     sprite of its own (2026-11-10): a tile of the mod's own sheet,
-    `tlg_generators_01_0`, rendered from the mod's shapes; with it the
+    `tlg_generators_01_0`; with it the
     generator keeps its type through pickup and a save (launch 236).
     On `generator_ci_stock` it started on pure biodiesel 6 times in 10;
     the owner decided it takes pure biodiesel without penalty

@@ -5160,3 +5160,30 @@ icons seen in the game's interface, a save, multiplayer.
 Evidence:
 [2026-11-10_rt-sp_harness_run241_supplied_biodiesel_models_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run241_supplied_biodiesel_models_42.22.2.txt);
 screenshots in [evidence/run241](evidence/run241).
+## 2026-11-10 — RT-SP client harness, launches 242–243 (the leacher's facing; the diesel generator recoloured from vanilla's, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `c781c32`. Two
+changes the owner asked for.
+
+* Launch 242 (`biodiesel-models`, 1/0): the lye leacher's model script has
+  `attachment world { rotate = 0.0 180.0 0.0 }`. Put down unturned it now
+  shows its open front, the cloth of ash and the pot under it (launch 241:
+  its back).
+* Launch 243 (`diesel-generator`, 19/0, then 3/0 after the save): the
+  diesel generator's sprite and icon are vanilla's red generator
+  (`appliances_misc_01_0`, `Item_Generator`) with the red turned to a dark
+  green, read out of the game's texture packs by
+  `tools/make-tile-sprites.ps1` (`tools/pack-sprites.ps1`); the shapes
+  rendered for it before are gone. The sprite is still the mod's tile
+  `tlg_generators_01_0`. The photograph shows two green generators of
+  vanilla's size and shape beside the red one; every check of launch 239
+  passed again, the save included.
+
+Not run: the icon seen in the game's interface; the other vanilla
+generators recoloured (one diesel item exists).
+
+Evidence:
+[run 242](evidence/2026-11-10_rt-sp_harness_run242_leacher_facing_42.22.2.txt),
+[evidence/run242](evidence/run242);
+[run 243](evidence/2026-11-10_rt-sp_harness_run243_diesel_generator_retextured_42.22.2.txt),
+[evidence/run243](evidence/run243).

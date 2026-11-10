@@ -266,7 +266,8 @@ module TLG
        type. The tag makes it a generator to the game, and
        Generators.ITEM_PROFILES gives it the diesel profile. The game names
        a generator's item from its sprite (BC IsoGenerator
-       .getGeneratorItemType), so it has a sprite of its own: with
+       .getGeneratorItemType), so it has a sprite of its own, vanilla's
+       red generator turned green (the owner's choice): with
        vanilla's, a vanilla Base.Generator reported this item's type
        (launch 233). The sprite is a tile of the mod's own sheet
        (media/tlg_generators.tiles, named in mod.info), so the game saves
