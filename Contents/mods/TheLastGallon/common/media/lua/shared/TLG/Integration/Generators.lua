@@ -72,6 +72,44 @@ function G.loadSprites()
         end)
     end
 end
+-- The diesel generator in loot (D-036: loot only). Wherever a loot list
+-- offers vanilla's Base.Generator, it offers the diesel one at half that
+-- weight: in a list's items, its junk, or its junk's items (42.22.2: the
+-- crate list CrateGenerator and eleven truck beds of VehicleDistributions).
+-- `lists` is ProceduralDistributions.list or VehicleDistributions, before
+-- the game parses them. A list that has the diesel generator already is
+-- left as it is. Returns the names of the lists it was added to.
+G.LOOT_ITEM, G.LOOT_BESIDE, G.LOOT_SHARE = "TLG.DieselGenerator", "Generator", 0.5
+
+function G.addToLoot(lists)
+    local added = {}
+    if type(lists) ~= "table" then return added end
+    local function offer(items)
+        if type(items) ~= "table" then return false end
+        local weight, present
+        for i = 1, #items - 1, 2 do
+            if items[i] == G.LOOT_BESIDE and type(items[i + 1]) == "number" then weight = weight or items[i + 1] end
+            if items[i] == G.LOOT_ITEM then present = true end
+        end
+        if not weight or present then return false end
+        items[#items + 1] = G.LOOT_ITEM
+        items[#items + 1] = weight * G.LOOT_SHARE
+        return true
+    end
+    local names = {}
+    for name, list in pairs(lists) do
+        if type(name) == "string" and type(list) == "table" then names[#names + 1] = name end
+    end
+    table.sort(names)
+    for _, name in ipairs(names) do
+        local list = lists[name]
+        local junk = type(list.junk) == "table" and list.junk or nil
+        local a, b, c = offer(list.items), offer(junk), offer(junk and junk.items)
+        if a or b or c then added[#added + 1] = name end
+    end
+    return added
+end
+
 function G.keyOf(gen)
     local sq = gen:getSquare()
     return string.format("gen:%d,%d,%d", sq and sq:getX() or -1, sq and sq:getY() or -1, sq and sq:getZ() or -1)

@@ -270,7 +270,8 @@ module TLG
        (launch 233). The sprite is a tile of the mod's own sheet
        (media/tlg_generators.tiles, named in mod.info), so the game saves
        it; its picture is a single file that Generators.loadSprites gives
-       it (tools/make-tile-sprites.ps1). No recipe and no loot entry yet. */
+       it (tools/make-tile-sprites.ps1). No recipe: it comes from loot
+       (Generators.addToLoot). */
     item DieselGenerator
     {
         DisplayCategory = Electronics,

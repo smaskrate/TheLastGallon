@@ -5062,3 +5062,34 @@ Not run: as in launches 234-236; biodiesel in the cold in this generator.
 
 Evidence:
 [2026-11-10_rt-sp_harness_run237_diesel_generator_profile_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run237_diesel_generator_profile_42.22.2.txt).
+## 2026-11-10 — RT-SP client harness, launches 238–239 (the diesel generator in loot, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `43a876a`.
+`Generators.addToLoot` (called from `server/TLG/Server/Loot.lua` on
+`OnPreDistributionMerge`) offers `TLG.DieselGenerator` wherever a loot list
+offers `Base.Generator`, at half that weight. The probe mode gained the
+step `rtdg_loot`.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 238 | 18/1, then 3/0 after the save |
+| 239 | 19/0, then 3/0 after the save |
+
+* The lists as the game holds them: `CrateGenerator`'s junk has
+  `Generator` at 10 and `TLG.DieselGenerator` at 5; all 12 lists of
+  `VehicleDistributions` that offer `Generator` (truck beds, at 0.1) offer
+  the diesel one at half. The mod's log names them.
+* Launch 239: 500 fills of an electronics store's crate from that list's
+  junk part, as the game fills one (`ItemPickerJava.doRollItem`): 27
+  diesel generators, 73 `Base.Generator`, one generator of some kind in
+  every fill (the list gives exactly one).
+* Launch 238's failure was the check's: it rolled the list's items part,
+  which holds no generator, and got none of any kind.
+* Every other check as in launch 237.
+
+Not run: a diesel generator found in a crate of the map or in a truck bed;
+one taken out of a container; the vehicle lists rolled.
+
+Evidence:
+[run 238](evidence/2026-11-10_rt-sp_harness_run238_diesel_generator_loot_42.22.2.txt);
+[run 239](evidence/2026-11-10_rt-sp_harness_run239_diesel_generator_loot_42.22.2.txt).

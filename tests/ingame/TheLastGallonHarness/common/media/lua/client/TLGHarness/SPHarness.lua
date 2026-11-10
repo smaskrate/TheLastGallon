@@ -14630,6 +14630,57 @@ RT.DG.place = { name = "rtdg_place", timeout = 1200, fn = function(ctx, ticks)
     return true
 end }
 
+-- The diesel generator in loot: the lists as the game holds them, and a
+-- crate filled from CrateGenerator as the game fills one
+-- (ItemPickerJava.doRollItem, as RT.MN.roll does), many times over.
+RT.DG.loot = { name = "rtdg_loot", timeout = 1200, fn = function()
+    local function weightIn(items, id)
+        for i = 1, #(items or {}) - 1, 2 do
+            if items[i] == id then return items[i + 1] end
+        end
+        return nil
+    end
+    local crate = ProceduralDistributions and ProceduralDistributions.list and ProceduralDistributions.list.CrateGenerator
+    local junk = crate and crate.junk and crate.junk.items
+    local beds, missing = 0, {}
+    for name, list in pairs(VehicleDistributions or {}) do
+        if type(name) == "string" and type(list) == "table" and weightIn(list.items, "Generator") then
+            local w = weightIn(list.items, "TLG.DieselGenerator")
+            if w == weightIn(list.items, "Generator") * 0.5 then beds = beds + 1 else missing[#missing + 1] = name end
+        end
+    end
+    R:check("RTDG.loot_lists", function()
+        return junk ~= nil and weightIn(junk, "TLG.DieselGenerator") == weightIn(junk, "Generator") * 0.5 and beds > 0 and #missing == 0,
+            string.format("CrateGenerator junk: Generator=%s TLG.DieselGenerator=%s; vehicle lists with both: %d, without: %s",
+                tostring(weightIn(junk, "Generator")), tostring(weightIn(junk, "TLG.DieselGenerator")), beds,
+                #missing > 0 and table.concat(missing, ",") or "none")
+    end)
+    local p, fills, diesel, red, any = player(), 500, 0, 0, 0
+    -- The list's junk part, where its generators are (the fourth argument;
+    -- launch 238 rolled its items part and got no generator of any kind).
+    local dist = ItemPickerJava.getItemContainer("electronicstore", "other", "CrateGenerator", true)
+    if dist ~= nil then
+        local cont = ItemContainer.new("crate", p:getCurrentSquare(), p)
+        for _ = 1, fills do
+            cont:removeAllItems()
+            ItemPickerJava.doRollItem(dist, cont, 1, p, true, nil)
+            local d, r = cont:getItemsFromFullType("TLG.DieselGenerator"), cont:getItemsFromFullType("Base.Generator")
+            diesel, red = diesel + (d and d:size() or 0), red + (r and r:size() or 0)
+            local items = cont:getItems()
+            for i = 0, items:size() - 1 do
+                if TLG.Integration.Generators.ITEM_TYPES[items:get(i):getFullType()] then any = any + 1 end
+            end
+        end
+        cont:removeAllItems()
+    end
+    R:check("RTDG.rolled_from_loot", function()
+        return dist ~= nil and diesel > 0 and red > 0, string.format(
+            "%d fills of an electronics store's crate list: %d diesel generators, %d Base.Generator, %d generators of any kind",
+            fills, diesel, red, any)
+    end)
+    return true
+end }
+
 RT.DG.pour = actionStep("rtdg_pour_biodiesel", function(ctx)
     if RT.skip("rtdg_pour_biodiesel") then return nil end
     local g = RT.DG.gens[1]
@@ -14718,7 +14769,7 @@ end, function(ctx)
     player():setPrimaryHandItem(nil)
 end)
 
-RT.dieselGeneratorSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DG.place, RT.DG.pour,
+RT.dieselGeneratorSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DG.loot, RT.DG.place, RT.DG.pour,
     generatorGateStep("RTDG.gate_biodiesel", function() return RT.DG.gens[1] end, false), RT.DG.run, RT.DG.petrol,
     generatorGateStep("RTDG.gate_petrol", function() return RT.DG.gens[2] end, true),
     RT.MI.zoomTo("rtdg_zoom", 0.5), RT.MI.shot("rtdg_generators", true),

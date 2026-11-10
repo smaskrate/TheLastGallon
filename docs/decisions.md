@@ -1421,6 +1421,9 @@ their replacement.
     On `generator_ci_stock` it started on pure biodiesel 6 times in 10;
     the owner decided it takes pure biodiesel without penalty
     (2026-11-10): profile `generator_ci_bio`, run in launch 237.
+    Loot: wherever a list offers `Base.Generator` it offers the diesel
+    one at half that weight (my choice of weight, not the owner's):
+    the crate list `CrateGenerator` and 12 truck beds (launch 239).
   * The mod's own oil press does not ship in 0.2.0: vanilla's gives the
     oil.
 * Decision (the chain's machines, five):

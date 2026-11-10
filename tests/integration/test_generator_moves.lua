@@ -103,3 +103,43 @@ T.case("integration: a generator the menus' unequip puts down keeps its record a
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+T.case("integration: the diesel generator joins every loot list that offers vanilla's, at half its weight, once", function()
+    local lists = {
+        CrateGenerator = { rolls = 4, items = { "Screwdriver", 10 },
+            junk = { onlyOne = true, rolls = 20, items = { "Generator", 10, "Generator_Old", 40 } } },
+        ElectricianTruckBed = { rolls = 4, items = { "ElectricWire", 20, "Generator", 0.1 }, junk = { "Rope", 1 } },
+        OldStyleJunk = { rolls = 1, items = {}, junk = { "Generator", 4 } },
+        CrateTools = { rolls = 2, items = { "Hammer", 10 } },
+        [1] = { items = { "Generator", 1 } },
+    }
+    local added = G.addToLoot(lists)
+    T.eq(table.concat(added, ","), "CrateGenerator,ElectricianTruckBed,OldStyleJunk")
+    local junk = lists.CrateGenerator.junk.items
+    T.eq(junk[5], "TLG.DieselGenerator"); T.eq(junk[6], 5, "half the red generator's 10")
+    T.eq(#lists.CrateGenerator.items, 2, "its items had no generator")
+    T.eq(lists.ElectricianTruckBed.items[5], "TLG.DieselGenerator"); T.eq(lists.ElectricianTruckBed.items[6], 0.05)
+    T.eq(lists.OldStyleJunk.junk[4], 2)
+    T.eq(#lists.CrateTools.items, 2, "a list without generators is left alone")
+    T.eq(#lists[1].items, 2, "an entry without a name is left alone")
+    -- Added again (the event fired twice): nothing changes.
+    T.eq(#G.addToLoot(lists), 0)
+    T.eq(#junk, 6)
+    T.eq(#G.addToLoot(nil), 0)
+end)
+
+T.case("integration: a generator's profile follows the item it was, a record's own profile first", function()
+    local function gen(fullType, side)
+        local md = { generatorFullType = fullType, tlg = side }
+        local o = {}
+        function o:getModData() return md end
+        function o:getSquare() return nil end
+        function o:transmitModData() end
+        return o
+    end
+    T.eq(G.baseProfile(gen("TLG.DieselGenerator")), "generator_ci_bio")
+    T.eq(G.referenceFuel(gen("TLG.DieselGenerator")), "diesel")
+    T.eq(G.baseProfile(gen("Base.Generator")), "generator_si_stock")
+    T.eq(G.referenceFuel(gen("Base.Generator")), "gasoline")
+    T.eq(G.baseProfile(gen(nil)), "generator_si_stock", "a generator of the map has no type recorded")
+end)
