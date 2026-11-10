@@ -16,7 +16,7 @@ runtime tests.
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
-| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | No earlier supported version exists: 0.1.0 is the first. The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the user's manual step and has not been taken |
+| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The rehearsal has no upgrade scenario (0.1.1 to 0.1.2 changed only the version values and `mod.info`). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: 0.1.1 was uploaded on 2026-11-08, 0.1.2 has not been |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -4810,3 +4810,36 @@ were overwritten by the next launch.
 [2026-11-10_rt-mp_harness_run224_machines_42.22.2_client_b.txt](evidence/2026-11-10_rt-mp_harness_run224_machines_42.22.2_client_b.txt);
 [2026-11-10_rt-mp_harness_run224_machines_42.22.2_server.txt](evidence/2026-11-10_rt-mp_harness_run224_machines_42.22.2_server.txt);
 [2026-11-10_rt-sp_harness_run226_engine_effects_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run226_engine_effects_42.22.2.txt).
+
+## 2026-11-10 — RT-SP launches 227–228 (the 0.1.2 zip installed on 42.22.2)
+
+* Command: `tools/package.ps1`, then `tools/rehearse-install.ps1 -NoBuild`
+  (the zip unpacked, checked against its manifest and installed into a
+  fresh isolated cache; phase A, save, exit to the menu, continue,
+  phase B). Domain tests at each build: 233 cases, 0 failed.
+
+| Launch | Zip | Result (pass/fail) |
+| --- | --- | --- |
+| 227 | the zip of `965e063`: SHA-256 `f61a68ed…`, 4,478,122 bytes, 144 files | 99/1, then 14/0 |
+| 228 | the zip of `f674d1c`: SHA-256 `be68b619…`, 4,478,414 bytes, 144 files | 100/0, then 14/0 |
+
+* Launch 227's failure: `G01c.mod_info_description` read 0 characters. The
+  0.1.2 commit (`cfae118`) had replaced the `description=` line of
+  `mod.info` with its tested-on sentence alone, which the game does not
+  read as a key. Launch 216 had passed that check on the 0.1.1 `mod.info`,
+  before the line was cut. `f674d1c` restored the line with the 42.22.2
+  values; in launch 228 the game read 493 characters.
+* The same commit had cut two lines of the Workshop text in
+  `tools/package.ps1` and lines of the README, the player guide and
+  `environment.md`; `965e063` and `f674d1c` restored them. No harness
+  check reads those.
+* Launch 228's console: one exception, from the harness's own
+  deep-recursion probe; no "untested game version" warning.
+
+Not run: an install through the Steam Workshop, an upgrade from 0.1.1, the
+`existing` and `removal` scenarios on 42.22.2, and the modes the entry
+above lists.
+
+Evidence:
+[2026-11-10_rt-sp_harness_run227_install_rehearsal_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run227_install_rehearsal_42.22.2.txt);
+[2026-11-10_rt-sp_harness_run228_install_rehearsal_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run228_install_rehearsal_42.22.2.txt).

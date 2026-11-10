@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 261 Italian strings as shipped in a client set to Italian (run 205); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.1.0 package is the zip of `d9cd9aa` (SHA-256 `e3c075f9…`), the files run 206 installed and played (100/0, 14/0). It predates the death fix of run 210 and must be built and rehearsed again. Install through the Steam Workshop NOT RUN; upgrade due with the next release |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.1.2 package is the zip of `f674d1c` (SHA-256 `be68b619…`), installed and played on 42.22.2 in launch 228 (100/0, 14/0). The Workshop item serves 0.1.1, which was never rehearsed from its zip. NOT RUN: an install through the Steam Workshop, an upgrade from 0.1.1 |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -395,25 +395,36 @@ changed.
 
 ### Gate 12: clean install and upgrade pass with the packaged artifact
 
-**Rebuild needed.** The current package predates the death fix on a server
-(D-015 amendment, run 210), which changed `Machines.lua` and `Boot.lua` and
-the shipped changelog and support matrix. The documentation rewrite of
-2026-11-06 changed four shipped documents (the player guide, the support
-matrix, the migrations notes and the changelog; `LICENSE.md` and
-`NOTICE.md` are unchanged), and the package now also ships the player
-guide's pictures (`docs/images`, copied by `tools/package.ps1`, which now
-accepts `.jpg`). The **Transfer Liquid** fix (D-035, run 215) changed
-`Containers.lua` and, again, the player guide, the support matrix and the
-changelog. The 0.1.0 package must be built and rehearsed again before
-release.
+The current package is `TheLastGallon-0.1.2.zip`, the zip of commit
+`f674d1c`: SHA-256 `be68b619…`, 4,478,414 bytes, 144 files. Launch 228
+rehearsed its manual install (`tools/rehearse-install.ps1 -NoBuild`) on
+42.22.2: the zip matched its manifest and was installed into a fresh
+isolated cache. Phase A passed 100/0 and phase B, after save, exit and
+continue, 14/0. The console's one exception came from the harness's own
+deep-recursion probe, and the mod did not warn of an untested game version.
 
-The current 0.1.0 package is the zip of commit `d9cd9aa`: SHA-256
-`e3c075f9…`, 4,008,919 bytes; two builds gave the same bytes. Its 129 files
-match run 206's manifest byte for byte; only the entries' time stamps
-differ, set from the commit. It replaced the zip of `42b8d3c` as the 0.1.0
-package; nothing had been uploaded.
+Launch 227 had rehearsed the zip of `965e063` and failed one check (99/1,
+then 14/0): the game read no description from `mod.info`, because the
+0.1.2 commit (`cfae118`) had cut the line's `description=` key. `f674d1c`
+restored it. The zip of `cfae118`, built and pushed on 2026-11-10, has
+that defect and two malformed lines in `workshop.txt`; it was not uploaded.
 
-Run 206 rehearsed the manual install from the zip
+The Steam Workshop item (id 3835496461) serves 0.1.1, uploaded by the
+owner on 2026-11-08 and public. The 0.1.1 zip was never rehearsed: its
+menus on placed items were checked from the repository's mod
+(`test-results.md`, 2026-11-08). The upload folder
+(`<user>/Zomboid/Workshop/TheLastGallon`) still holds 0.1.1, with a
+`workshop.txt` edited by hand (the item's id, `visibility=public`, the tag
+`WIP`, two reworded lines): copying the package's `workshop.txt` over it
+would lose those.
+
+What changed in the package since the last rehearsed one (run 206, 0.1.0):
+the death fix on a server (D-015 amendment, run 210: `Machines.lua`,
+`Boot.lua`), the **Transfer Liquid** fix (D-035, run 215:
+`Containers.lua`), the 0.1.1 menus on placed items, the player guide's
+pictures (`docs/images`) and the 42.22.2 version values.
+
+Run 206 rehearsed the 0.1.0 package's manual install from the zip
 (`tools/rehearse-install.ps1`) on `TheLastGallon-0.1.0.zip` built from
 uncommitted changes on `e9f1e87`: SHA-256 `8ef1dd31…`, 4,008,919 bytes,
 129 files. The zip matched its manifest and was installed into a fresh
@@ -437,7 +448,7 @@ in:
 The zip's entry names use forward slashes, and two builds of one commit
 are byte-identical.
 
-Earlier packages, all superseded and none uploaded, are listed below with
+Earlier 0.1.0 packages, all superseded and none uploaded, are listed below with
 the runs made from each package's item tree, which the zip is made from.
 The full harness runs single player, so the multiplayer cases ran from
 the item tree (runs 150 and 164); run 61 used run 60's zip itself. The
@@ -473,9 +484,11 @@ packages' sizes, file counts and contents are in `test-results.md`.
 | run 38 | — | |
 
 - Install through the Steam Workshop (staged or subscribed) NOT RUN: the
-  game scans those folders only in Steam mode (BC).
-- Upgrade: no previous supported version, 0.1.0 is the first; due with the
-  next release.
+  game scans those folders only in Steam mode (BC), and the harness does
+  not run in it. A subscribed copy of 0.1.1 is on this computer.
+- Upgrade NOT RUN: a save played with 0.1.1 has not been continued with
+  0.1.2, and `tools/rehearse-install.ps1` has no scenario for it. Between
+  the two versions only the version values and `mod.info` changed.
 
 ### Gate 13: no core behaviour represented only by a placeholder
 
