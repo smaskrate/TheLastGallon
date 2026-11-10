@@ -14,7 +14,7 @@ stand-ins seen in run 66, none was checked rendering in game.
 
 Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 **B** biodiesel, wood gas, biogas and propane (domain only, not wired,
-except the biodiesel chain's five machines, which are items in 0.2.0 on
+except the biodiesel chain's five machines and the diesel generator, which are items in 0.2.0 on
 the branch `feature/biodiesel`, not released; D-036),
 **C** electricity, further vehicle conversions and stations.
 
@@ -50,8 +50,9 @@ the branch `feature/biodiesel`, not released; D-036),
   Sampling, treatments, the machine menu, draining a generator and pouring
   into a station run as instant requests with no action, animation or
   sound. A running machine makes no sound.
-* **Audit.** `asset-audit.csv` has 58 rows: the 57 below and I15, the
-  biodiesel machines' icons, added on 2026-11-10. It had 25 (unchanged since
+* **Audit.** `asset-audit.csv` has 60 rows: the 57 below and three added on
+  2026-11-10: I15, the biodiesel machines' icons, and A31 and I16, the
+  diesel generator's world sprite and icon. It had 25 (unchanged since
   `c8e7295`, 2026-10-30) and lacked the ash pit, the wood retort (it pointed
   at the still), the three TLG generators, the heat loop, the propane bulk
   tank, the IBC tank, by-product items, conversion badges and release art.
@@ -202,11 +203,12 @@ on the floor; its caption runs into the middle one's.
 | Audit | Code id | Needed | Note |
 | --- | --- | --- | --- |
 | A05 | `oil_press` | Screw press | the `FlaxPress` model (`WorldItems/Flax_Press`) of vanilla `Base.OilPress` (`items/normal.txt:11144`, a 0.2 kg tool) can stand in; scale unchecked, possibly too small for a machine |
-| A21 | `TLG.WoodRetort` (`wood_retort`) | Sealed drum on a firebox, condenser pipe, tar tap | placeholder made: `TLG.WoodRetort`, a steel drum lying on a brick firebox with a pipe to a condenser bucket, 1.3 m across (scale 0.87) |
-| A22 | `TLG.AshBarrel` (`ash_pit`) | Metal ash bin or pit | placeholder made: `TLG.AshBarrel`, an open rusty drum with air holes, ash to the brim, 0.9 m tall (scale 0.6) |
-| A06 | `TLG.LyeLeacher` (`lye_leacher`) | Leaching barrel with a tap over a boiling pan, firebox | placeholder made: `TLG.LyeLeacher`, a wooden tub on a trestle over a pan, 1.1 m tall (scale 0.73); it shows no firebox |
-| A06 | `TLG.BiodieselReactor` (`biodiesel_reactor`) | Heated drum with stirrer, firebox | placeholder made: `TLG.BiodieselReactor`, a blue drum standing on a brick firebox, a stirrer's crank on its lid, 1.3 m tall (scale 0.87) |
-| A06 | `TLG.BiodieselWashTank` (`biodiesel_wash_tank`) | Cone-bottom settling tank with drain valve, small firebox | placeholder made: `TLG.BiodieselWashTank`, a cone-bottomed tank on three legs with a drain valve, 1.5 m tall (scale 1.0); it shows no firebox |
+| A21 | `TLG.WoodRetort` (`wood_retort`) | Sealed drum on a firebox, condenser pipe, tar tap | supplied model: a drum lying on a firebox with a stack, a pipe from the drum into a bucket on the same base, 1.3 m long (scale 0.87) |
+| A22 | `TLG.AshBarrel` (`ash_pit`) | Metal ash bin or pit | supplied model: a lidded steel drum with two side handles, 0.9 m tall (scale 0.6) |
+| A06 | `TLG.LyeLeacher` (`lye_leacher`) | Leaching barrel with a tap over a boiling pan, firebox | supplied model: a wooden stand with a cloth of ash in its top and a cooking pot under it, 1.1 m tall (scale 0.73); it shows no firebox |
+| A06 | `TLG.BiodieselReactor` (`biodiesel_reactor`) | Heated drum with stirrer, firebox | supplied model: an open steel drum with a stirrer's crank over it and a drain pipe at its foot, 1.15 m to the top of the crank (scale 0.77); it shows no firebox |
+| A06 | `TLG.BiodieselWashTank` (`biodiesel_wash_tank`) | Cone-bottom settling tank with drain valve, small firebox | supplied model: a steel drum with a cone bottom on three legs and a drain pipe under the cone, 1.5 m tall (scale 1.0); it shows no firebox |
+| A31 | `TLG.DieselGenerator` | A generator that reads apart from vanilla's on the ground | made: a tile sprite, not a model (`tlg_generators_01_0`, one 128×256 picture): vanilla's red generator turned dark green, the owner's choice |
 | A08 | `gasifier_stationary` | Hopper, firebox, cyclone, cooler, filter; cold, warming and running looks | est. 2×2 (decision 1) |
 | A09 | `gasifier_vehicle` | Mounted unit for `Base.CarNormal`, `Base.SmallCar`, `Base.PickUpTruck`, `Base.StepVan` | blocked on G11 |
 | A10 | `biogas_digester` | 900 kg tank with gas outlet | |
@@ -217,29 +219,63 @@ on the floor; its caption runs into the middle one's.
 | A15 | conversion `gas_generator` | Mixer and regulator on the generator (today only `badge = "gas"`) | optional |
 | A15 | propane vehicle cradle | Cylinder cradle per chassis | no conversion defined in code; blocked on G11 |
 
-The five placeholders of the biodiesel chain are the mod's own, built since
-2026-11-10 by `tools/make-prop-models.ps1` from simple shapes
-(`tools/blender/pz_icon_props.py`, builders `wood_retort`, `ash_barrel`,
-`lye_leacher`, `biodiesel_reactor` and `biodiesel_wash_tank`), like the four
-small items of tier A. Each is an FBX in `media/models_X/TLG/` with a
-256×256 palette texture in `media/textures/TLG/`, named by its item's
-`WorldStaticModel` (`TLG_machines.txt`, `TLG_models.txt`); none has a hand
-model. The owner chose shape-built models first and may supply their own
-before the release (D-036). The asset picker offers each for replacement.
+The five models of the biodiesel chain were supplied by the owner on
+2026-11-10 (D-036) and are kept as delivered in `art-src/woodretort`,
+`ashbarrel`, `lyeleacher`, `biodieselreactor` and `biodieselwashtank`,
+each with a `PROVENANCE.md`. Each is an FBX of 910 to 1,084 triangles in
+`media/models_X/TLG/` (the delivered file, byte for byte) with a 512×512
+texture in `media/textures/TLG/` (the delivered JPEG saved as PNG), named
+by its item's `WorldStaticModel` (`TLG_machines.txt`, `TLG_models.txt`);
+none has a hand model. The ash barrel's model came in a folder named
+`metalBarrel`. Editable sources were not supplied. The FBX files' names
+begin with `tripo_`, like the models of 2026-11-03; whether these were
+generated under the owner's Tripo plan was not asked. They replaced the
+shape-built placeholders the mod made on 2026-11-10 (launches 231–232),
+whose builders are no longer in `tools/blender/pz_icon_props.py`.
 
-The game loaded the five model scripts and the items' floor models (RT-SP
-launch 231) and drew each model whole on the ground outdoors by day
-(launch 232). Against the character the ash barrel reaches her waist, the
-retort her hips, the leacher and the reactor her chest and the wash tank
-her shoulders; this is read from the photographs, not measured. NOT RUN:
-the models indoors, at night, from other sides, in multiplayer.
+The game drew each model whole on the ground beside the character (RT-SP
+launch 241). Against her the ash barrel and the reactor's drum reach her
+waist, the leacher, the reactor's crank and the retort's stack her chest
+and the wash tank her shoulders; this is read from the photographs, not
+measured. Put down unturned in launch 241, the leacher showed its back;
+its model script now turns it half round where it is put down
+(`attachment world`, `rotate = 0.0 180.0 0.0`), and it shows its open
+front, the cloth of ash and the pot (launch 242). NOT RUN with these
+models: the chain (launch 231 ran it with the placeholders), a save,
+multiplayer.
 
-![The fermentation vessel and the five biodiesel machines on a row outdoors at zoom 1.0, the character standing between the ash barrel and the lye leacher: from the left the vessel (cut by the frame), the wood retort, the ash barrel, the lye leacher, the reactor and the wash tank (cut by the frame)](evidence/run232/tlg_rtbdm_row.png)
+![The fermentation vessel and the five biodiesel machines on a row at zoom 1.0, the character standing between the ash barrel and the lye leacher: from the left the vessel (cut by the frame), the wood retort, the ash barrel, the lye leacher, the reactor and the wash tank (cut by the frame)](evidence/run241/tlg_rtbdm_row.png)
 
-![The reactor and the wash tank at zoom 0.5, the character between them](evidence/run232/tlg_rtbdm_reactor_tank.png)
+![The reactor and the wash tank at zoom 0.5, the character between them](evidence/run241/tlg_rtbdm_reactor_tank.png)
 
-Launch 232; the other four photographs of `evidence/run232` show each
-machine whole at zoom 0.5.
+Launch 241, the leacher still unturned; the other four photographs of
+`evidence/run241` show the machines two by two at zoom 0.5.
+
+![The ash barrel and the lye leacher at zoom 0.5, the character between them; the leacher shows its open front, the cloth of ash in its top and the pot under it](evidence/run242/tlg_rtbdm_barrel_leacher.png)
+
+Launch 242: the leacher turned half round.
+
+The diesel generator (`TLG.DieselGenerator`, D-036) is drawn on the ground
+as a tile sprite, like vanilla's generators, and has no item model. The
+game names a generator's item from its sprite, so it cannot share
+vanilla's (launch 233). Its sprite is the tile `tlg_generators_01_0` of
+the mod's own sheet (`media/tlg_generators.tiles`), one 128×256 picture
+(`media/textures/TLG/Tile_DieselGenerator.png`): vanilla's red generator
+sprite (`appliances_misc_01_0`) with its red turned to a dark green, at
+the owner's request of 2026-11-10. `tools/make-tile-sprites.ps1` reads
+the sprite out of the game's texture packs (`tools/pack-sprites.ps1`) and
+recolours it. The picture remains The Indie Stone's art and is for use
+with the game only (`NOTICE.md`, `LICENSE.md`); The Indie Stone's terms
+for mods were not read. It replaced the sprite the mod rendered from its
+own shapes (launches 234–236). The game drew two diesel generators of
+vanilla's size and shape beside the red one and kept the sprite through
+pickup and a save (launch 243). The item does not use the tier C energy
+definition `generator_diesel_6kw` (A26), which is not wired. NOT RUN: the
+sprite on a second client or a dedicated server.
+
+![Two dark green generators of the vanilla generator's shape standing on the ground on either side of the character, and vanilla's red generator to the left](evidence/run243/tlg_rtdg_generators.png)
+
+Launch 243.
 
 ### C. Electricity, further conversions, stations
 
@@ -322,10 +358,13 @@ Release art (audit R01–R04):
   diesel and CHP generators (9). Audit I10, I11. Five of B's are made
   (audit I15): `TLG_WoodRetort`, `TLG_AshBarrel`, `TLG_LyeLeacher`,
   `TLG_BiodieselReactor` and `TLG_BiodieselWashTank`, 32×32, rendered since
-  2026-11-10 by `tools/make-model-icons.ps1` from the shapes their floor
-  models are built from. They are placeholders like the models (D-036).
-  The game found each icon file (launch 231); none was looked at in the
-  inventory.
+  2026-11-10 by `tools/make-model-icons.ps1` from the supplied models.
+  None was looked at in game: launch 231 found the placeholder icons under
+  the same file names, and launch 241 hid the interface.
+* The diesel generator's icon, `TLG_DieselGenerator` (32×32; audit I16),
+  is made: vanilla's `Item_Generator` with its red turned to a dark green
+  by `tools/make-tile-sprites.ps1`, like the sprite, and The Indie
+  Stone's art like it. Not looked at in the game's interface.
 * B: icons for by-products vanilla lacks: wood ash, lye, wood tar, dry wood
   chips (4; audit I12). Press cake and digestate may reuse vanilla items:
   `Base.AnimalFeedBag` (icon `AnimalFeed`), and `Base.Fertilizer` (icon
@@ -393,7 +432,7 @@ the first to cut.
 | Tier | New 3D models | Icons | UI symbols | Original sounds | Release art |
 | --- | --- | --- | --- | --- | --- |
 | A | 9, all made: 5 supplied, 4 the mod's own | 9, all made: the vessel's drawn, 8 rendered | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster and icon made; banner and screenshots not made |
-| B | 15: 5 made as shape-built placeholders (D-036); of the other 10, 2 blocked on G11, 1 optional | 15: 5 made as placeholders | 2 badges | about 10 | — |
+| B | 15: 5 made, supplied by the owner (D-036); of the other 10, 2 blocked on G11, 1 optional. Also 1 tile sprite, the diesel generator's, made from vanilla's (recoloured) | 16: 5 made, rendered from the supplied models; the diesel generator's made from vanilla's (recoloured) | 2 badges | about 10 | — |
 | C | 13 (1 blocked on G11, 1 optional) | 9 | about 5 | about 9 | — |
 
 Not needed (spec §20, §22): new maps, character models or animations
