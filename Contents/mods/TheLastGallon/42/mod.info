@@ -1,10 +1,10 @@
 name=The Last Gallon
 id=TheLastGallon
 author=smaskrate
-modversion=0.1.2
+modversion=0.2.0
 versionMin=42.21
 category=features
 poster=poster.png
 icon=icon.png
-description=Fuel that ages, takes up water and gathers dirt, and engines that feel it: hard starts, stalls, lost power and wear. Inspect, filter, drain and stabilize what you find, or make your own ethanol (fermentation vessel, pot or reflux still, drying column) and convert a generator or a car to burn it. English and Italian. Tested only on Project Zomboid 42.22.2 (3d39148846). Licence: CC BY-NC-SA 4.0, except the supplied machine models and the carry animations (docs/LICENSE.md in the mod folder).
+description=Fuel that ages, takes up water and gathers dirt, and engines that feel it: hard starts, stalls, lost power and wear. Inspect, filter, drain and stabilize what you find, or make your own ethanol (fermentation vessel, pot or reflux still, drying column) and convert a generator or a car to burn it; or make biodiesel from wood and cooking oil for diesel engines. English and Italian. Tested only on Project Zomboid 42.22.2 (3d39148846). Licence: CC BY-NC-SA 4.0, except the supplied machine models, the carry animations and the diesel generator's pictures (docs/LICENSE.md in the mod folder).
 tiledef=tlg_generators 7341

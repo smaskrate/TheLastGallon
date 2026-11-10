@@ -5,8 +5,9 @@
 A mod for Project Zomboid **Build 42.22.2**. Fuel ages, takes up water and
 gathers dirt; engines start harder, lose power and wear on poor fuel; you
 can ferment, distil and dry your own ethanol and convert a generator or a
-car to run on it. The current version is 0.1.2
-([CHANGELOG.md](CHANGELOG.md)). The specification it was built from is
+car to run on it, or make biodiesel from wood and cooking oil for diesel
+engines. The version in this repository is 0.2.0, not yet released; the
+last release is 0.1.2 ([CHANGELOG.md](CHANGELOG.md)). The specification it was built from is
 [The_Last_Gallon_Implementation_Plan.md](The_Last_Gallon_Implementation_Plan.md).
 
 This README is for developers and does not ship in the package. Players
@@ -21,22 +22,28 @@ describes.
   * single player through the player's menus: the fuel adapters, start
     gates, stalls, poor fuel's effects on engines, the ethanol loop from
     crafting the machines to a converted generator and car running on the
-    ethanol, every recipe made through the crafting window, a death and a
-    new survivor in the same world, saves and reloads;
+    ethanol, the biodiesel chain from logs and oil to a can, the diesel
+    generator, diesel vehicles and diesel pumps, every recipe made through
+    the crafting window, a death and a new survivor in the same world,
+    saves and reloads;
   * a dedicated server with two players on this computer: the same paths,
-    carrying the vessel, a carrier's death and the machines' timers.
+    carrying the vessel, a carrier's death and the machines' timers; the
+    biodiesel machines' loads, the diesel generator, a diesel vehicle and a
+    diesel pump with one player.
 * The zip from `tools/package.ps1` is installed into a fresh game folder
   and played (`tools/rehearse-install.ps1`).
 
-Not tested: a real network, and the pathways other than ethanol.
+Not tested: a real network, and the pathways other than ethanol and
+biodiesel.
 [docs/release-checklist.md](docs/release-checklist.md) lists every release
 gate and what is still open. Publishing to the Workshop is a manual step;
 no script here uploads anything.
 
 ## Licence
 
-CC BY-NC-SA 4.0, except the supplied machine models and the carry
-animations ([LICENSE.md](LICENSE.md), [NOTICE.md](NOTICE.md)).
+CC BY-NC-SA 4.0, except the supplied machine models, the carry animations
+and the diesel generator's two pictures, which are made from the game's
+art ([LICENSE.md](LICENSE.md), [NOTICE.md](NOTICE.md)).
 
 ## Repository layout
 

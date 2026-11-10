@@ -4,10 +4,10 @@
 
 | Contract | Version | Where | Notes |
 | --- | --- | --- | --- |
-| Supply sidecar | 1 | item/object/part modData `tlg` | `v`, id, rev, deg, stab, mic, t, storage, sealed, cond, dirty, label, prov, q (+ `frac`, `cap` for pumps; `kind`, `profile` for generators) |
+| Supply sidecar | 1 | item/object/part modData `tlg` | `v`, id, rev, deg, stab, mic, t, storage, sealed, cond, dirty, label, prov, q (+ `frac`, `cap`, `product` for pumps; `kind`, `profile` for generators) |
 | Process (machine) | 1 | machine item modData `tlgProc` | recipe snapshot `{ id, version, fp, params }`; optional fields below |
 | Conversion project | 1 | vehicle/generator modData | see `TLG/Domain/Conversions/Project.lua` |
-| World record | 1 | global ModData `TLG_World` | epoch, policy, installedAt, transitionHours, calendar, climateLog (days carry optional room means `r0`, `r1`; D-021), balanceHistory, createdAsNewGame, modVersion. Sent to clients (the server answers `ModData.request` for any key), so it holds nothing private |
+| World record | 1 | global ModData `TLG_World` | epoch, policy, installedAt, transitionHours, calendar, climateLog (days carry optional room means `r0`, `r1`; D-021), balanceHistory, createdAsNewGame, dieselVehicles, modVersion. Sent to clients (the server answers `ModData.request` for any key), so it holds nothing private |
 | World server store | 1 | modData key `tlg` of the server-side global object system `tlgworld` (file `gos_tlgworld.bin` in the save; `server/TLG/Server/WorldStore.lua`) | `v`, seed, nextId, climateAcc (today's running climate sums, optional; D-020), machineSites (placed machines for the hourly air reading, optional; D-021). Never sent to clients (security audit 2026-11-05, V-03). Rules below |
 | Server-kept records ("vault") | 1 | key `vault` of the world server store's table (in `gos_tlgworld.bin`; `shared/TLG/Authority/Vault.lua`) | `v`, `from`, `tag`, `foreign`, `recs`, `holders`, `dk`; fields and rules below |
 | Player knowledge | 1 | player modData `tlgKnowledge` | fuel record id (as a string) → the latest observation of each test, `{ kit = obs, visual = obs }` (`lab` too); rules below |
@@ -139,8 +139,29 @@ The authority creates the world record once, on `OnInitGlobalModData`:
   was blended 20 % towards the world-age condition, and all of it was
   unchanged after save and continue.
 
-## Settings changes
+### Diesel in new worlds (0.2.0, D-036)
 
+Two optional fields carry it; neither changes a schema version:
+
+* The world record's `dieselVehicles` is set once, when the record is
+  created: `true` for a new game, `false` for an existing save. A record
+  made by an earlier version has no such field, which reads as `false`.
+  Where it is `true`, the chassis of `Vehicles.DIESEL_FAMILIES` have the
+  profile `engine_ci_stock` and an unrecorded tank is read as diesel;
+  elsewhere every vehicle keeps `engine_si_stock` and petrol.
+* A pump's sidecar keeps `product`, `"diesel"` or `"gasoline"`, from its
+  first record on. In a world with `dieselVehicles` it is drawn from the
+  world's seed and the pump's key; elsewhere it is `"gasoline"`. A sidecar
+  from an earlier version has no such field and reads as `"gasoline"`.
+
+So a save from 0.1.x keeps its vehicles and pumps on petrol under 0.2.0
+(domain-tested; not run in game). The diesel generator and the biodiesel
+machines are new items and need no migration. A placed diesel generator
+is saved by the game with its tile sprite, `tlg_generators_01_0`, whose
+number comes from `tiledef=tlg_generators 7341` in `mod.info`: changing
+that number would orphan placed generators.
+
+## Settings changes
 Changing **Fuel ageing speed** appends a dated entry to `balanceHistory`;
 every advance splits at those dates, so the past keeps its old rate.
 

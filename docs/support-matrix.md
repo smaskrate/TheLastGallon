@@ -4,7 +4,9 @@ Build: 42.22.2 (`3d39148846`) only. Nothing here is supported on another
 build until it is tested there again. The rows below were verified on
 42.21.0 (`4a0e9546ec`), in the run each one cites. On 42.22.2 nine harness
 modes were run again and all passed (launches 216–226, `test-results.md`);
-the other modes have not been run again on this build.
+the other modes have not been run again on this build. The biodiesel
+pathway, the diesel generator, the diesel vehicles and the diesel pumps
+(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250).
 
 Evidence levels:
 
@@ -80,6 +82,9 @@ the container up first.
 | Other vanilla cars | engine_si_stock (assumed: every vanilla tank is "Gasoline") | — | SRC (content type), NOT RUN |
 | Base.CarNormal, converted | engine_si_flex | flex_car_normal | **Verified RT-SP** (run 8): commissioned, ran on home-made ethanol (started first try), conversion survives reload |
 | Other conversion chassis | see `TLG/Content/Conversions.lua` | flex / others | domain-tested only, NOT RUN |
+| Base.VanAmbulance, Base.VanSeats, Base.VanRadio, Base.PickUpVanLightsFire, in a world started as a new game with 0.2.0 or later | engine_ci_stock; an unrecorded tank is read as diesel | — | **Verified RT-SP** (launch 240): profile and fuel; the ambulance started on its diesel and took biodiesel through the mod's pour; a petrol pour into the pickup van refused. Refuel at a diesel pump and start, and a pickup van filled at a petrol pump refused at the start (launch 244, `Base.PickUpVan`). **Verified RT-MP** (launch 248): the ambulance read as diesel on the client and started |
+| The other variants of `PickUpVan*`, `VanSeats*`, `VanRadio*`, `VanAmbulance*` (`Vehicles.DIESEL_FAMILIES`, by the script name's beginning) | engine_ci_stock, as above | — | domain-tested (the names), NOT RUN in game |
+| Any chassis in a world started before 0.2.0, or added to a save | engine_si_stock (the world's record has no `dieselVehicles`) | — | domain-tested, NOT RUN in game |
 
 A tank's capacity varies with the condition of the tank fitted
 (`conditionAffectsCapacity`, SRC `template_gastank.txt`); the mod reads it
@@ -148,6 +153,27 @@ the Gas2Go pump: 0.22–0.23 %, `startFactor=0.5`). The
 - Other generator types NOT RUN; the other three models' rates (25, 36,
   24) were not run.
 
+`TLG.DieselGenerator` (D-036) is the mod's own generator item: vanilla's
+`Base.Generator` values, the profile `generator_ci_bio` (diesel and
+biodiesel at any share), its own tile sprite `tlg_generators_01_0`
+(vanilla's red generator turned green) and icon. It comes from loot: every
+list that offers `Base.Generator` offers it at half that weight.
+
+- **Verified RT-SP** (launches 236–243): put down, it is an `IsoGenerator`
+  that keeps its item type; biodiesel through the mod's pour, started, run
+  two game hours with its record following; petrol through vanilla's
+  `ISAddFuel` recorded as petrol and refused at the start; taken with
+  vanilla's `ISTakeGenerator` as itself, a vanilla generator beside it as
+  `Base.Generator`; sprite, type, profile and fuel kept through a save and
+  a reload; rolled from `CrateGenerator`'s list as the game fills a
+  container (27 in 500 fills, launch 239).
+- **Verified RT-MP** (launch 248): drawn on the client with its sprite;
+  fuelled, started, taken and put down again, the server and the client
+  agreeing on its type and record.
+- NOT RUN: powering anything; its info window; one found in a container of
+  the map or a truck bed; a server restart with one placed; another mod
+  using tile file number 7341.
+
 ## Stations
 
 Pumps are objects whose `getPipedFuelAmount()` > 0 (amount stored in object
@@ -158,6 +184,20 @@ defines a `FuelPump` entity with a 22 000 L FluidContainer; the harness
 dispensed from the piped amount and did not check whether map pumps also
 carry that entity. Infinite-pump sandbox: quantities are not corrected,
 reservoirs still age (NOT RUN).
+
+Diesel pumps (D-036): in a world started as a new game with 0.2.0 or
+later, a pump's first record holds diesel for about one pump in four
+(`WorldInit.stationProduct`, seeded per pump) and petrol otherwise; the
+record keeps what the pump gives. The pump's menu has **Read what this
+pump gives**. **Verified RT-SP** (launch 244): the entry on a diesel and
+on a petrol pump; vanilla's `ISTakeFuel` into an empty can (the can's
+fluids `TLG_Diesel`, no `Petrol`) and `ISRefuelFromGasPump` into an empty
+tank, litre for litre. **Verified RT-MP** (launch 248): the entry's answer
+and a can filled, on the client. In both the pump was made a diesel pump
+by the test. NOT RUN: a pump left to the world's draw filled from; a can
+holding diesel topped up (vanilla offers its pump entry for an empty can
+or one with `Petrol`); **Pour into the station reservoir** at a diesel
+pump.
 
 ## Maps
 
@@ -226,7 +266,12 @@ both on one computer (RT-MP, 2026-11-03 to 2026-11-06):
     note once the can was opened; both tests still known after the player
     left and the server was saved, stopped and started again;
   - a carrier's death: the fermentation vessel put down where the player
-    died, from the death, and working on.
+    died, from the death, and working on;
+  - the biodiesel pathway (launch 248, one client): each of the five
+    machines loaded from the client, the leacher, the reactor and the wash
+    tank from a finished machine beside them; washed biodiesel collected
+    into the client's can, a retort's methanol refused to one; the diesel
+    generator, a diesel ambulance and a diesel pump as their sections say.
 - **The game's own limit (42.21):** on a dedicated server no heavy item can
   be taken off the floor through the loot window (double-click or drag);
   the server fails the action and the item stays where it is. Vanilla's
@@ -242,7 +287,9 @@ both on one computer (RT-MP, 2026-11-03 to 2026-11-06):
   not).
 - **NOT RUN:** a real network (everything ran on one computer; testing
   across machines is set aside for now); a still or drying column picked
-  up while working, in multiplayer; driving on poor fuel, in multiplayer.
+  up while working, in multiplayer; driving on poor fuel, in multiplayer;
+  a biodiesel batch running through its hours on a server (the machines
+  the test loaded from were set up finished).
 
 ## External mods
 
@@ -283,6 +330,9 @@ data exists for the vehicle gasifier module only).
 | Make Reflux Column Still (`TLG_MakeRefluxStill`) | in hand (`InHandCraft;Welding`) | **Verified RT-SP**: inventory craft menu (run 12), crafting window (run 193) |
 | Make Ethanol Drying Column (`TLG_MakeDryingColumn`) | table or counter (`AnySurfaceCraft`) | **Verified RT-SP**: inventory craft menu (run 12), crafting window (run 193) |
 | Make Fuel Sampling Kit, Make Fuel Filter Cartridge, Make Fuel Stabilizer (`TLG_MakeSampleKit`, `TLG_MakeFuelFilter`, `TLG_MakeFuelStabilizer`) | in hand | **Verified RT-SP** in the crafting window (run 193); listed for crafting in runs 10–12 |
+| Make Wood Retort, Make Biodiesel Reactor, Make Biodiesel Wash Tank (`TLG_MakeWoodRetort`, `TLG_MakeBiodieselReactor`, `TLG_MakeBiodieselWashTank`) | in hand (`InHandCraft;Welding`) | **Verified RT-SP** in the crafting window (launch 249) |
+| Make Ash Barrel (`TLG_MakeAshBarrel`) | in hand (`InHandCraft`) | **Verified RT-SP** in the crafting window (launch 249) |
+| Make Lye Leacher (`TLG_MakeLyeLeacher`) | table or counter (`AnySurfaceCraft;Carpentry`) | **Verified RT-SP** in the crafting window (launch 249) |
 
 Verified in the inventory craft menu (run 12): offered by the menu, crafted
 next to a counter (or in hand), output in the inventory, consumed inputs
@@ -295,7 +345,9 @@ column by double-clicking its row), with its output counted, inputs used
 and tools kept. Picked with its nails missing, the fermentation vessel
 showed **Craft** disabled, and nothing started. Not looked at: the craft
 menu's option labels, which come from the same names. The crafting window
-in Italian NOT RUN.
+in Italian NOT RUN. Launch 249 repeated the window's checks for all twelve
+recipes, the five biodiesel machines among them; those five were not tried
+from the inventory craft menu.
 
 With a full inventory vanilla drops the output on the floor
 (`Actions.addOrDropItem`).
@@ -313,6 +365,26 @@ With a full inventory vanilla drops the output on the floor
 
 ## Pathway machines
 
-Biodiesel, wood gas, biogas, propane and electricity are implemented as
-domain modules with tests only; no game-facing adapters, placeable items or
-UI exist for them yet. They are not advertised as playable.
+Biodiesel is playable from 0.2.0 (D-036): five placeable machines, each
+loaded from its menu (`machine.load`), the last collected into a can.
+
+| Machine | Load | Evidence |
+| --- | --- | --- |
+| Wood Retort (`TLG.WoodRetort`, `wood_retort`) | wood from the inventory; firebox | **Verified RT-SP** (launch 231): 99 kg, 17.4 h, 5.01 L of methanol, 24.6 kg of firebox wood. **Verified RT-MP** (launch 248): the load |
+| Ash Barrel (`TLG.AshBarrel`, `ash_pit`) | wood from the inventory | **Verified RT-SP** (launch 231): 99 kg, 16.95 h, 1.485 kg of ash. **Verified RT-MP** (launch 248): the load |
+| Lye Leacher (`TLG.LyeLeacher`, `lye_leacher`) | ash from a finished ash barrel within two tiles, water; firebox | **Verified RT-SP** (launch 231): 28 h, 0.223 kg of lye. **Verified RT-MP** (launch 248): the load |
+| Biodiesel Reactor (`TLG.BiodieselReactor`, `biodiesel_reactor`) | oil from the inventory, methanol and lye from a finished retort and leacher within two tiles; firebox | **Verified RT-SP** (launch 231): 19 bottles of `Base.OilVegetable` (17.1 L), 10.5 h, 16.84 L of biodiesel in the crude. **Verified RT-MP** (launch 248): the load and the firebox |
+| Biodiesel Wash Tank (`TLG.BiodieselWashTank`, `biodiesel_wash_tank`) | the crude of a finished reactor within two tiles, water; firebox; **Collect biodiesel into a fuel can** | **Verified RT-SP** (launch 231): 28 h, grade good, 17.07 L collected into a jerry can, fit for `engine_ci_bio`. **Verified RT-MP** (launch 248): the load, and the collection from a finished tank |
+
+Launch 231 ran the chain with the shape-built models the mod had then;
+the supplied models that replaced them were seen in game on their own
+(launches 241–242). NOT RUN: `Base.OilOlive`, `Base.Lard` and a part-used
+bottle; a batch limited by the methanol; the retort's charcoal; a firebox
+running out; Pause, Resume and Abort; a machine picked up while working; a
+save with a batch running; settling in the cold; a batch through its hours
+on a server.
+
+The mod's own oil press is not shipped: vanilla's gives the oil. Wood gas,
+biogas, propane and electricity are implemented as domain modules with
+tests only; no game-facing adapters, placeable items or UI exist for them
+yet. They are not advertised as playable.

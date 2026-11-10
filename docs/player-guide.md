@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.1.2, for Project Zomboid 42.22.2. Each section ends with what
+Version 0.2.0, for Project Zomboid 42.22.2. Each section ends with what
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 
@@ -41,9 +41,11 @@ stabilizer, water and sediment in proportion.
 
 ## The mod's items
 
-![The nine items the mod adds, with their names](images/item-icons.png)
+![Nine of the mod's items, with their names](images/item-icons.png)
 
-*The nine items as they appear in the inventory.*
+*The ethanol machines and the small items as they appear in the
+inventory. The biodiesel machines and the Diesel Generator are pictured
+under [Making biodiesel](#making-biodiesel) and [Diesel](#diesel).*
 
 ![On the floor, left to right: the field manual, the stabilizer, the yeast starter culture and the sampling kit](images/small-items-on-the-floor.jpg)
 
@@ -141,7 +143,8 @@ the generator into this can**.
 A stock gasoline engine runs well on up to 15 % ethanol, struggles up to
 25 % and will not run on more. A converted (flex) engine runs on any blend
 of gasoline and ethanol, but starts poorly on near-pure ethanol in the
-cold.
+cold. Diesel engines run on diesel and biodiesel only; which engines are
+diesel, and how much biodiesel each takes, is under [Diesel](#diesel).
 
 Stale, wet or dirty fuel makes an engine harder to start. A car running on
 it has less power, never below half, so it picks up speed more slowly; the
@@ -369,6 +372,246 @@ spoiled batch is emptied the same way.
 machines on upper floors, and stopped days adding up across separate cold
 spells.
 
+## Making biodiesel
+
+Biodiesel is made from cooking oil, methanol and lye. You find or press
+the oil; you make the methanol and the lye from wood. Five machines do the
+work, each handing its product to the next:
+
+| Machine | Takes | Makes |
+| --- | --- | --- |
+| Wood Retort | wood to distil, and wood in its firebox | methanol, for the reactor |
+| Ash Barrel | wood to burn | wood ash, for the leacher |
+| Lye Leacher | the barrel's ash, clean water, wood in its firebox | lye, for the reactor |
+| Biodiesel Reactor | cooking oil, the retort's methanol, the leacher's lye, wood in its firebox | crude biodiesel, for the wash tank |
+| Biodiesel Wash Tank | the reactor's crude biodiesel, clean water, wood in its firebox | biodiesel, for a fuel can |
+
+A machine that takes from another finds it within two tiles, so stand the
+barrel by the leacher, the retort and the leacher by the reactor, and the
+reactor by the wash tank. Only the wash tank fills a can: methanol, lye and
+crude biodiesel go from machine to machine and nowhere else.
+
+![The five machines on the ground beside a character, with the Fermentation Vessel for size](images/biodiesel-machines-on-the-floor.jpg)
+
+*Left to right: the Fermentation Vessel (for size) and the Wood Retort;
+the Ash Barrel and the Lye Leacher; the Biodiesel Reactor and the Biodiesel
+Wash Tank.*
+
+### Building the biodiesel machines
+
+The crafting window lists them as **Make Wood Retort**, **Make Ash
+Barrel**, **Make Lye Leacher**, **Make Biodiesel Reactor** and **Make
+Biodiesel Wash Tank**.
+
+| Machine | Ingredients and tools | Where you make it |
+| --- | --- | --- |
+| Wood Retort | a metal drum, two sheets of metal, two metal pipes, a bucket; a blowtorch and a welding mask | welded in hand |
+| Ash Barrel | a metal drum, two steel rods; a hammer | in hand |
+| Lye Leacher | six planks, twelve nails, a cheese cloth, a cooking pot; a hammer; Carpentry 2 | a table or counter within two tiles |
+| Biodiesel Reactor | a metal drum, a sheet of metal, two steel rods, a metal pipe; a blowtorch and a welding mask | welded in hand |
+| Biodiesel Wash Tank | a metal drum, two sheets of metal, three steel rods, a metal pipe; a blowtorch and a welding mask | welded in hand |
+
+Like the ethanol machines, each works only while it stands on the ground,
+and its options are under **Machine (The Last Gallon)**.
+
+### How much of each
+
+A litre of oil takes 0.15 L of methanol and 12.5 g of lye, and gives a
+little under a litre of biodiesel. The lye limits a batch:
+
+* a full Ash Barrel (99 kg of wood, eleven logs) gives 1.5 kg of ash, which
+  the leacher turns into 0.22 kg of lye: enough for about 17 L of oil;
+* a full Wood Retort (the same 99 kg, and about 25 kg more in its firebox)
+  gives 5 L of methanol: enough for about 33 L of oil.
+
+A log counts as 9 kg of wood, a piece of firewood as 2 kg, a plank as
+1.5 kg and a bundle of twigs as 0.3 kg.
+
+Loading wood and **Feed the firebox** both take all the wood you carry
+that fits. Where a machine has both, carry the firebox's wood and feed it,
+then fetch the wood for the load.
+
+### 1. Distil wood into methanol
+
+1. Place the Wood Retort.
+2. Carry about three logs and choose **Feed the firebox**. The firebox
+   holds 40 kg; a full load burns about 25 kg.
+3. Carry the wood to distil, 10 to 100 kg, and choose **Load firewood to
+   distil**.
+
+The retort heats up for an hour and a half, distils 10 kg an hour (two
+hours at least) and cools for six hours. A full load is done after about
+17 hours and holds 5 L of methanol. The methanol stays in the retort until
+a reactor takes it.
+
+### 2. Burn wood to ash
+
+1. Place the Ash Barrel within two tiles of where the Lye Leacher will
+   stand.
+2. Carry 5 to 100 kg of wood and choose **Load firewood and burn it to
+   ash**.
+
+The barrel burns 20 kg an hour (an hour at least) and cools for 12 hours.
+A full barrel is done after about 17 hours and holds 1.5 kg of ash. It has
+no firebox. It can burn while the retort works.
+
+### 3. Leach the ash into lye
+
+1. Place the Lye Leacher within two tiles of the finished barrel.
+2. Carry one log and choose **Feed the firebox** (it burns about 7 kg).
+3. Carry clean water, 2 L for each kilogram of ash (3 L for a full
+   barrel's ash), and choose **Load ash from a nearby ash barrel, and
+   water**. With less water than that, the leacher takes less ash and the
+   rest stays in the barrel.
+
+Leaching takes 24 hours and boiling the lye down 4 more. A kilogram of ash
+gives 0.15 kg of lye, which stays in the leacher until a reactor takes it.
+
+### 4. React the oil
+
+1. Place the Biodiesel Reactor within two tiles of the finished retort and
+   the finished leacher.
+2. Carry one log and choose **Feed the firebox** (it burns about 3 kg).
+3. Carry the oil and choose **Load oil, with methanol and lye from nearby
+   machines**. A bottle of Vegetable Oil or Olive Oil counts as 0.9 L and
+   a piece of Lard as 0.4 L. The reactor takes 5 to 100 L, in whole
+   bottles, as many as the methanol and the lye at hand allow, and draws
+   the methanol and the lye for them itself. Bottles it cannot use stay
+   with you.
+
+Mixing takes half an hour, the reaction 2 hours and settling 8 hours.
+Settling slows below 10 °C and stops below 0 °C. The crude biodiesel stays
+in the reactor until a wash tank takes it.
+
+### 5. Wash and dry the biodiesel
+
+1. Place the Biodiesel Wash Tank within two tiles of the finished reactor.
+2. Carry one log and choose **Feed the firebox** (it burns about 2 kg).
+3. Carry clean water, 0.3 L for each litre of biodiesel (about 5 L for a
+   17 L batch), and choose **Load crude biodiesel from a nearby reactor,
+   and wash water**. The tank takes the reactor's whole batch; the
+   reactor's glycerin is thrown away.
+4. After the wash (an hour), the settling (24 hours) and the drying
+   (3 hours), choose **Collect biodiesel into a fuel can** with an empty
+   fuel can or one that holds only biodiesel.
+
+From logs to a can, a batch takes about three and a half days when each
+machine is loaded as soon as the one before it has finished. The biodiesel
+keeps about 1 % of unreacted oil and a trace of methanol, which diesel
+engines tolerate.
+
+### What has been checked
+
+**Checked in game:**
+
+* the five machines made in the crafting window with its **Craft** button;
+* in single player, one batch through the menu entries above, from 22 logs
+  (and 6 more in the fireboxes), 8 L of water and 19 bottles of Vegetable
+  Oil to 17 L of biodiesel in one jerry can, with the hours, the firebox
+  wood and the amounts given above; the loads that need a finished machine
+  refused while there was none, and the retort's methanol refused to a
+  can. That run was made before the machines got their present models;
+  the models were then seen in game on their own;
+* on a server, each of the five loads, the collection into a can and the
+  retort's refusal, on machines the test server had set up finished.
+
+**Not checked in game:** Olive Oil, Lard and a part-used bottle; a batch
+limited by the methanol; the charcoal a retort gives back when its last
+methanol is taken; a firebox running out during a batch; **Pause**,
+**Resume** and **Abort batch** on these machines; one picked up while it
+works; a save with a batch running; settling in the cold; a batch running
+through its hours on a server; the machines' menus read in Italian (their
+Italian texts load as shipped).
+
+## Diesel
+
+In a world started with this version some vehicles and some station pumps
+are diesel. A world started earlier keeps every vehicle and pump on petrol
+([Existing saves](#existing-saves)).
+
+### Diesel vehicles
+
+These have a diesel engine and are found with diesel in the tank:
+
+* the Dash Bulldriver in all its liveries (fire department, police,
+  ranger, Fossoil and the trade ones);
+* the six-seat Franklin Valuline in all its versions, the Prisoner
+  Transport and Airport ones included;
+* the LBMW Radio Van and the Triple-N Van;
+* the Ambulance.
+
+Every other vehicle is petrol, the two-seat Franklin Valuline trade vans,
+the Chevalier D6 and the Chevalier Step Van included. The game shows no
+sign of the engine type: go by the model.
+
+A diesel vehicle runs on diesel and on biodiesel. Up to 20 % biodiesel in
+its diesel costs nothing; with more it starts less reliably, has less
+power and wears faster. Petrol or ethanol in its tank stops it from
+starting, and diesel does the same to a petrol engine. **Pour into this
+vehicle's tank** refuses such a pour and says why. The game's own
+refuelling, from a can or at a pump, does not check: if a vehicle will not
+start after it, siphon the tank with the game's **Siphon Gasoline** and
+fill it with the right fuel.
+
+### The Diesel Generator
+
+The Diesel Generator is found where the game's generators are: in the
+generator crates of electronics stores, where about one generator in
+fifteen is a diesel one, and in some truck beds. It is the green one, and
+it works like the others: carried in both hands, put down, connected and
+switched on the same way.
+
+![Two green Diesel Generators beside the game's red generator](images/diesel-generator.jpg)
+
+*Two Diesel Generators and, on the left, the game's red petrol generator.*
+
+It burns diesel or biodiesel in any blend, pure biodiesel included. Fill
+it with **Pour into the generator**. The game's own **Add Fuel** takes
+petrol cans only, and petrol stops the Diesel Generator from starting.
+
+### Diesel pumps
+
+About one pump in four gives diesel instead of petrol. Each pump is drawn
+on its own, so a station may have several diesel pumps or none. Right-click
+a pump and choose **Read what this pump gives** before you fill up.
+
+The game's own **Take Fuel** and **Refuel from Gas Pump** deliver what the
+pump holds, with its water and sediment. The game offers **Take Fuel** for
+an empty can or one that already holds petrol, so a can holding diesel
+cannot be topped up at a pump: bring empty cans.
+
+### What has been checked
+
+**Checked in game:**
+
+* in a new world, a six-seat Franklin Valuline, an LBMW Radio Van, an
+  Ambulance and a Fire Department Dash Bulldriver read as diesel, and a
+  Chevalier D6 and a Franklin Valuline trade van as petrol; the Ambulance
+  started on the diesel it was found with and took 5 L of biodiesel; a
+  petrol pour into the Dash Bulldriver was refused;
+* the Diesel Generator fuelled with biodiesel, started and run for two
+  hours; petrol put in with **Add Fuel** stopped another from starting;
+  one picked up and put down again, and one left on the ground through a
+  save and a reload, each still a Diesel Generator with its fuel; rolled
+  from the generator crates' loot list as the game fills a container;
+* a pump's **Read what this pump gives**; an empty can and an Ambulance's
+  empty tank filled with diesel at a diesel pump with the game's own
+  actions, the Ambulance then starting; a Dash Bulldriver filled at a
+  petrol pump refused to start;
+* on a server: the Diesel Generator seen, fuelled, started, picked up and
+  put down; the Ambulance read as diesel and started; a diesel pump read
+  and a can filled at it.
+
+The pumps in these tests were set to diesel or petrol by the test; a pump
+left to the world's own draw was read, not filled from.
+
+**Not checked in game:** driving on diesel or biodiesel; a diesel vehicle
+on pure biodiesel; biodiesel in the cold; siphoning a diesel tank; a
+Diesel Generator found in a crate on the map or in a truck bed, or
+powering anything; **Pour into the station reservoir** at a diesel pump;
+a vehicle refuelled at a pump on a server; an older save played with this
+version.
+
 ## Converting an engine
 
 A flex conversion lets an engine run on any blend of gasoline and
@@ -423,7 +666,9 @@ Pumps hold old fuel that ages underground, slowly. Most stations hold only
 a trace of water, but about one in ten is contaminated: its fuel makes a
 stock car hard to start until you drain the water or dilute it with
 cleaner fuel. Sample before you fill up at a station you do not know.
-Every litre you take leaves the station's reservoir exactly once.
+Every litre you take leaves the station's reservoir exactly once. In a
+world started with this version, about one pump in four gives diesel
+([Diesel pumps](#diesel-pumps)).
 
 **Checked in game:** the reservoir accounting.
 
@@ -438,6 +683,10 @@ Every litre you take leaves the station's reservoir exactly once.
 | A still is paused: "Reason: the firebox is out of fuel" | the wood ran out | Choose **Feed the firebox** |
 | A vessel says "Wash is left: load it again when the still is free" | the still takes 60 L (pot) or 120 L (reflux) at a time | Collect the still's ethanol, then choose **Load wash from a nearby fermenter** again |
 | A machine is paused: "Reason: it was picked up; place it to continue" | it was carried | Place it on the ground |
+| A biodiesel machine says "No finished ash barrel within two tiles." (or wood retort, lye leacher, reactor) | the machine it takes from has not finished, or stands more than two tiles away | Read that machine's **Status**; wait for it, or move the two together |
+| The reactor says "The leacher holds too little lye for a batch." or "The retort holds too little methanol for a batch." | the smallest batch is 5 L of oil, which takes 63 g of lye and 0.75 L of methanol | Run another barrel and leacher, or another retort load |
+| "This goes to the next machine, not into a can." | methanol, lye and crude biodiesel are never collected | Load the next machine in the chain |
+| A vehicle or the Diesel Generator will not start after refuelling | petrol in a diesel tank, or diesel in a petrol one | Choose **Read what this pump gives** before filling; siphon a vehicle's tank and refill it with the right fuel |
 | A vessel is **Faulted**: "Reason: the batch spoiled while stalled" | it was stopped for 3 days in all, pauses by hand included | **Abort batch** empties it; then load a new mash |
 
 ## Existing saves
@@ -454,13 +703,18 @@ Once recorded, that fuel ages like any other. A single-player save takes
 the mod's default for this: the sandbox option **Existing saves** set to
 **Transition period**. The load screen has no setting for it.
 
+Diesel vehicles and diesel pumps exist only in a world started as a new
+game with version 0.2.0 or later: in an older save every vehicle and pump
+stays petrol. The biodiesel machines work in any save.
+
 **Checked in game:** a world played 10 days without the mod. A can first
 looked at and a station pump recorded at installation were fresh, and the
 look was remembered; a can first used 6 days later was a fifth of the way
 to the world's age.
 
 **Not checked in game:** the other two settings (**Age from world start**
-and **Start ageing at installation**), and servers.
+and **Start ageing at installation**), servers, and a save from an
+earlier version played with this one.
 
 ## Removing the mod
 

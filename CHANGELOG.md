@@ -1,5 +1,30 @@
 # Changelog
 
+## 0.2.0 (not released)
+
+* Biodiesel. Five new machines turn wood and cooking oil into biodiesel:
+  the Wood Retort (methanol), the Ash Barrel and the Lye Leacher (lye), the
+  Biodiesel Reactor and the Biodiesel Wash Tank. Each is crafted, placed on
+  the ground and loaded from its menu; a machine takes what it needs from
+  the finished machine beside it, and the wash tank fills a fuel can. Their
+  models were supplied for the mod. `docs/player-guide.md` has the steps
+  and the amounts.
+* The Diesel Generator, found in loot beside the game's generators (the
+  green one). It burns diesel and biodiesel in any blend.
+* In worlds started with this version, pickup vans (Dash Bulldriver),
+  six-seat vans, radio vans and ambulances are diesel, and about one
+  station pump in four gives diesel. **Read what this pump gives**, in a
+  pump's menu, says which. Worlds started earlier keep every vehicle and
+  pump on petrol.
+* Fixed: methanol and plant oil could not share a container with fuel, so
+  a can lost them when washed biodiesel was collected into it.
+* The diesel generator's sprite and icon are the game's red generator
+  recoloured; `LICENSE.md` and `NOTICE.md` say so.
+* Checked in game on 42.22.2, in single player and on a dedicated server
+  (launches 229–250 in `docs/test-results.md`). Not checked: driving on
+  diesel or biodiesel, biodiesel in the cold, and a save from 0.1.x played
+  with this version.
+
 ## 0.1.2 (2026-11-10)
 
 * Tested on Project Zomboid 42.22.2 (`3d39148846`), which replaced 42.21.0

@@ -27,8 +27,32 @@ game's own Lua, BC its bytecode.
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
-## Gate details
+## Version 0.2.0 (not released)
 
+The table above describes the released line (0.1.2). Version 0.2.0, on the
+branch `feature/biodiesel`, adds the biodiesel pathway, the diesel
+generator, diesel vehicles and diesel pumps (D-036). Where it stands
+against the same gates:
+
+| # | For 0.2.0 | Evidence and what is open |
+| --- | --- | --- |
+| 1 | PARTIAL | Biodiesel run through the player's menus in single player from logs, water and oil to a can (launch 231), its machines crafted (launch 249). Open: the run repeated with the supplied models, the controls on these machines, the cold |
+| 2, 3 | PARTIAL | Diesel and biodiesel through the mod's pour, vanilla's pump actions and the machine collection, litre for litre (launches 231, 240, 244). Open: siphoning diesel, driving burn on diesel |
+| 5 | PARTIAL | One client on a dedicated server: the loads, the collection, the generator, a diesel vehicle and pump (launch 248). Open: a batch through its hours, two clients, a restart |
+| 6 | PARTIAL | The diesel generator through a save and a reload (launch 236). Open: a biodiesel batch across a save, a machine picked up while working |
+| 7 | OPEN | A save from 0.1.x played with 0.2.0 is not run; diesel vehicles and pumps are for new worlds only (domain-tested) |
+| 8 | PARTIAL | `support-matrix.md` lists the diesel chassis; four of about 42 variants run |
+| 9 | PARTIAL | The five supplied models recorded in `art-src`; the diesel generator's two pictures are made from the game's art (`NOTICE.md`), The Indie Stone's terms for mods not read |
+| 10 | PARTIAL | 316 Italian strings as shipped (launch 250); the player guide covers 0.2.0. Open: the new menus read in Italian in game |
+| 11 | OPEN | Performance not measured with the new machines |
+| 12 | OPEN | No 0.2.0 package built, installed or rehearsed; no upgrade from 0.1.2 run |
+| 13 | PARTIAL | The five machines have supplied models; the diesel generator is vanilla's sprite recoloured, the owner's choice |
+
+The full single-player run passes on the branch as on `main` (launch 245:
+100/0, 14/0). The other older modes and the multiplayer cases written
+before it have not been run on the branch.
+
+## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
 each failure was found and fixed is in `test-results.md`, by run, and in
