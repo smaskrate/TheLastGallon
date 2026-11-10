@@ -650,7 +650,7 @@ this generator** (or **Workshop: convert this vehicle**):
 **Cancel the project** returns three quarters of the parts handed over;
 **Remove the conversion** returns half of them from a finished one. Small
 cars, pickup trucks, step vans and the other generator models have their
-own conversions.
+own conversions. Diesel vehicles and the Diesel Generator have none.
 
 **Checked in game:** a standard car and the basic generator converted
 from this menu, with the walk to the engine, the work stopping once the
@@ -686,7 +686,7 @@ world started with this version, about one pump in four gives diesel
 | A biodiesel machine says "No finished ash barrel within two tiles." (or wood retort, lye leacher, reactor) | the machine it takes from has not finished, or stands more than two tiles away | Read that machine's **Status**; wait for it, or move the two together |
 | The reactor says "The leacher holds too little lye for a batch." or "The retort holds too little methanol for a batch." | the smallest batch is 5 L of oil, which takes 63 g of lye and 0.75 L of methanol | Run another barrel and leacher, or another retort load |
 | "This goes to the next machine, not into a can." | methanol, lye and crude biodiesel are never collected | Load the next machine in the chain |
-| A vehicle or the Diesel Generator will not start after refuelling | petrol in a diesel tank, or diesel in a petrol one | Choose **Read what this pump gives** before filling; siphon a vehicle's tank and refill it with the right fuel |
+| A vehicle or the Diesel Generator will not start after refuelling | petrol in a diesel tank, or diesel in a petrol one | Choose **Read what this pump gives** before filling. Siphon a vehicle's tank, or empty the generator with **Drain the generator into this can** (not checked in game), and refill with the right fuel |
 | A vessel is **Faulted**: "Reason: the batch spoiled while stalled" | it was stopped for 3 days in all, pauses by hand included | **Abort batch** empties it; then load a new mash |
 
 ## Existing saves
@@ -738,8 +738,8 @@ fuel of unknown origin from the next time the mod sees the can.
 batch running and a can of ethanol were gone; a petrol can poured from and
 one topped up read as described above.
 
-**Not checked in game:** the mod's other fluids and items, converted
-engines, and a save whose mod was uninstalled, where the game asks about
-missing mods.
+**Not checked in game:** the mod's other fluids and items, a placed
+Diesel Generator, diesel vehicles and pumps, converted engines, and a
+save whose mod was uninstalled, where the game asks about missing mods.
 
 The technical details are in `docs/migrations.md`.

@@ -45,7 +45,7 @@ against the same gates:
 | 9 | PARTIAL | The five supplied models recorded in `art-src`; the diesel generator's two pictures are made from the game's art (`NOTICE.md`), The Indie Stone's terms for mods not read |
 | 10 | PARTIAL | 316 Italian strings as shipped (launch 250); the player guide covers 0.2.0. Open: the new menus read in Italian in game |
 | 11 | OPEN | Performance not measured with the new machines |
-| 12 | OPEN | No 0.2.0 package built, installed or rehearsed; no upgrade from 0.1.2 run |
+| 12 | OPEN | `tools/package.ps1` builds a 0.2.0 zip (164 files, with the tile sheet `tlg_generators.tiles`, which its file rules now allow); none installed or rehearsed, and no upgrade from 0.1.2 run |
 | 13 | PARTIAL | The five machines have supplied models; the diesel generator is vanilla's sprite recoloured, the owner's choice |
 
 The full single-player run passes on the branch as on `main` (launch 245:

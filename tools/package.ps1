@@ -56,7 +56,7 @@ foreach ($doc in "CHANGELOG.md", "NOTICE.md", "LICENSE.md") {
 }
 
 # Content rules.
-$allowed = @(".lua", ".txt", ".json", ".info", ".png", ".jpg", ".md", ".ogg", ".x", ".fbx", ".xml")
+$allowed = @(".lua", ".txt", ".json", ".info", ".png", ".jpg", ".md", ".ogg", ".x", ".fbx", ".xml", ".tiles")
 $bad = Get-ChildItem -Recurse -File $modOut | Where-Object {
     ($allowed -notcontains $_.Extension.ToLower()) -or ($_.FullName -match 'TLGHarness|\\tests\\|\\tools\\')
 }

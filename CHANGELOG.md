@@ -16,8 +16,6 @@
   station pump in four gives diesel. **Read what this pump gives**, in a
   pump's menu, says which. Worlds started earlier keep every vehicle and
   pump on petrol.
-* Fixed: methanol and plant oil could not share a container with fuel, so
-  a can lost them when washed biodiesel was collected into it.
 * The diesel generator's sprite and icon are the game's red generator
   recoloured; `LICENSE.md` and `NOTICE.md` say so.
 * Checked in game on 42.22.2, in single player and on a dedicated server
