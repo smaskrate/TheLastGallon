@@ -510,8 +510,7 @@ engines tolerate.
   Oil to 17 L of biodiesel in one jerry can, with the hours, the firebox
   wood and the amounts given above; the loads that need a finished machine
   refused while there was none, and the retort's methanol refused to a
-  can. That run was made before the machines got their present models;
-  the models were then seen in game on their own;
+  can;
 * on a server, each of the five loads, the collection into a can and the
   retort's refusal, on machines the test server had set up finished.
 

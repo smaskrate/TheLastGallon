@@ -377,8 +377,8 @@ loaded from its menu (`machine.load`), the last collected into a can.
 | Biodiesel Wash Tank (`TLG.BiodieselWashTank`, `biodiesel_wash_tank`) | the crude of a finished reactor within two tiles, water; firebox; **Collect biodiesel into a fuel can** | **Verified RT-SP** (launch 231): 28 h, grade good, 17.07 L collected into a jerry can, fit for `engine_ci_bio`. **Verified RT-MP** (launch 248): the load, and the collection from a finished tank |
 
 Launch 231 ran the chain with the shape-built models the mod had then;
-the supplied models that replaced them were seen in game on their own
-(launches 241–242). NOT RUN: `Base.OilOlive`, `Base.Lard` and a part-used
+launch 253 ran it again with the supplied models, from the installed
+0.2.0 package, with the same results. NOT RUN: `Base.OilOlive`, `Base.Lard` and a part-used
 bottle; a batch limited by the methanol; the retort's charcoal; a firebox
 running out; Pause, Resume and Abort; a machine picked up while working; a
 save with a batch running; settling in the cold; a batch through its hours

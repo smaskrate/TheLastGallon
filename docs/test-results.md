@@ -5332,3 +5332,41 @@ a bucket holding water as the retort's input.
 Evidence:
 [run 249](evidence/2026-11-10_rt-sp_harness_run249_crafting_42.22.2.txt);
 [run 250](evidence/2026-11-10_rt-sp_harness_run250_italian_42.22.2.txt).
+## 2026-11-10 — RT-SP client harness, launches 251–253 (the 0.2.0 zip installed clean, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `508aa24` (clean tree) built
+`TheLastGallon-0.2.0.zip`: 164 files, 7,854,741 bytes, SHA-256
+`027AF00C…A49804`. `tools\rehearse-install.ps1 -NoBuild` unpacked it,
+found it equal to its manifest both ways, and installed its mod folder
+into a fresh isolated cache.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 251 | full: phase A, save, reload, phase B | 100/0, then 14/0 |
+| 252 | `diesel-generator` (with its save and reload) | 19/0, then 3/0 |
+| 253 | `biodiesel` | 50/0 |
+
+* Launch 251: the game read `mod.info` 0.2.0 with its 590-character
+  description, equal to `TLG.VERSION`; the mod logged "The Last Gallon
+  0.2.0 ready". Two of the station's pumps were drawn as diesel and left
+  alone. The console's only exception is the harness's own deep-recursion
+  probe; no "untested game version" warning.
+* Launch 252: the package's tile sheet gives the diesel generator its
+  sprite and picture, before and after the save, with every other check
+  of launch 243.
+* Launch 253: the whole chain again, now with the supplied models and
+  from the package: the same hours, firebox wood and amounts as launch
+  231, 17.07 L collected into one jerry can, fit for `engine_ci_bio` and
+  `generator_ci_bio`.
+
+Launches 252 and 253 used the repository's harness with one message
+corrected after launch 251 (the recipes check said "all 7" for twelve).
+
+Not run: an install through the Steam Workshop; an upgrade from 0.1.2;
+the `existing` and `removal` scenarios with 0.2.0; the multiplayer cases
+on the package.
+
+Evidence:
+[run 251](evidence/2026-11-10_rt-sp_harness_run251_install_rehearsal_0.2.0_42.22.2.txt);
+[run 252](evidence/2026-11-10_rt-sp_harness_run252_package_diesel_generator_42.22.2.txt);
+[run 253](evidence/2026-11-10_rt-sp_harness_run253_package_biodiesel_chain_42.22.2.txt).

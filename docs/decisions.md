@@ -1404,6 +1404,8 @@ their replacement.
   * NOT RUN in game: a part-used bottle
     of oil (a new bottle gives its 0.9 L: launch 230); lard and olive oil;
     a batch limited by the methanol; the retort emptied (its charcoal);
+    (the chain was run again with the supplied models, from the 0.2.0
+    package, in launch 253);
     Pause, Resume and Abort on these machines; picking one up; a save;
     cold weather; Italian; multiplayer. All five models were
     photographed whole in launch 232.

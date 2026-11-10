@@ -1515,7 +1515,7 @@ add({ name = "loop_craft", timeout = 8000, fn = function(ctx, ticks)
         R:check("LOOP.recipes_listed_for_crafting", function()
             local missing = {}
             for _, n in ipairs(TLG_RECIPES) do if not ctx.listed[n] then missing[#missing + 1] = n end end
-            return #missing == 0, #missing == 0 and "all 7 TLG recipes listed" or ("not listed: " .. table.concat(missing, ","))
+            return #missing == 0, #missing == 0 and ("all " .. #TLG_RECIPES .. " TLG recipes listed") or ("not listed: " .. table.concat(missing, ","))
         end)
         local base = H.pumps[1] or { x = START.x, y = START.y }
         ctx.surface, ctx.stand = findSurface(base.x, base.y, 25)

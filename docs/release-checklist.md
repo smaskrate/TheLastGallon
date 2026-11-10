@@ -36,7 +36,7 @@ against the same gates:
 
 | # | For 0.2.0 | Evidence and what is open |
 | --- | --- | --- |
-| 1 | PARTIAL | Biodiesel run through the player's menus in single player from logs, water and oil to a can (launch 231), its machines crafted (launch 249). Open: the run repeated with the supplied models, the controls on these machines, the cold |
+| 1 | PARTIAL | Biodiesel run through the player's menus in single player from logs, water and oil to a can (launch 231; again with the supplied models, from the package, launch 253), its machines crafted (launch 249). Open: the controls on these machines, the cold |
 | 2, 3 | PARTIAL | Diesel and biodiesel through the mod's pour, vanilla's pump actions and the machine collection, litre for litre (launches 231, 240, 244). Open: siphoning diesel, driving burn on diesel |
 | 5 | PARTIAL | One client on a dedicated server: the loads, the collection, the generator, a diesel vehicle and pump (launch 248). Open: a batch through its hours, two clients, a restart |
 | 6 | PARTIAL | The diesel generator through a save and a reload (launch 236). Open: a biodiesel batch across a save, a machine picked up while working |
@@ -45,7 +45,7 @@ against the same gates:
 | 9 | PARTIAL | The five supplied models recorded in `art-src`; the diesel generator's two pictures are made from the game's art (`NOTICE.md`), The Indie Stone's terms for mods not read |
 | 10 | PARTIAL | 316 Italian strings as shipped (launch 250); the player guide covers 0.2.0. Open: the new menus read in Italian in game |
 | 11 | OPEN | Performance not measured with the new machines |
-| 12 | OPEN | `tools/package.ps1` builds a 0.2.0 zip (164 files, with the tile sheet `tlg_generators.tiles`, which its file rules now allow); none installed or rehearsed, and no upgrade from 0.1.2 run |
+| 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). Open: an install through the Workshop, an upgrade from 0.1.2, the `existing` and `removal` scenarios. A later commit to shipped files needs a new zip |
 | 13 | PARTIAL | The five machines have supplied models; the diesel generator is vanilla's sprite recoloured, the owner's choice |
 
 The full single-player run passes on the branch as on `main` (launch 245:
