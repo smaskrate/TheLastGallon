@@ -4992,3 +4992,52 @@ generator powering anything, its info window, loot, multiplayer.
 Evidence:
 [2026-11-10_rt-sp_harness_run233_diesel_generator_probe_42.22.2.txt](evidence/2026-11-10_rt-sp_harness_run233_diesel_generator_probe_42.22.2.txt);
 [evidence/run233](evidence/run233).
+## 2026-11-10 — RT-SP client harness, launches 234–236 (the diesel generator's own sprite, D-036)
+
+Build 42.22.2, working tree of `feature/biodiesel` after `65cf703`. The
+owner chose a sprite of its own for the diesel generator. The probe mode
+(`-Mode diesel-generator`) now also takes a vanilla and a diesel generator
+with vanilla's `ISTakeGenerator`, saves, exits to the menu, continues the
+save (request `sp-rtdgb`) and takes the diesel generator left on the
+ground. The gate's roll is held at its lowest for the start on biodiesel.
+
+| Launch | The item's `WorldObjectSprite` | Result (pass/fail) |
+| --- | --- | --- |
+| 234 | the picture's path, no tile sheet | 14/3 |
+| 235 | the same, the sprite named from Lua | 17/0, then 0/3 after the save |
+| 236 | `tlg_generators_01_0`, a tile of the mod's own sheet | 17/0, then 3/0 after the save |
+
+* Launch 234: the game made a sprite from the single picture and drew it,
+  but such a sprite has no name: `getGeneratorItemType()` gave
+  `Base.Generator` for the diesel generator and the pickup handed back a
+  vanilla one. The vanilla generator read `Base.Generator` again.
+* Launch 235: with the name set from Lua every check before the save
+  passed. After the save was continued the generator on the ground had
+  no sprite and read `Base.Generator`: the game saves a sprite by its
+  tile-sheet number.
+* Launch 236: the sprite is a tile of `media/tlg_generators.tiles`
+  (`tiledef=tlg_generators 7341` in `mod.info`, written by
+  `tools/make-tile-sprites.ps1`); its picture, a single 128x256 file, is
+  given to it by `Generators.loadSprites`. Before the save: each sprite
+  names its own item, the picture is loaded, biodiesel poured, started and
+  run two game hours, petrol refused at the start gate, the vanilla
+  generator taken as `Base.Generator` and the diesel one as
+  `TLG.DieselGenerator` with its record. After the save: the generator on
+  the ground has its sprite, its picture, its item type, the diesel
+  profile and its 4.98 L of biodiesel; the carried one is still a diesel
+  generator; taken, it comes back as `TLG.DieselGenerator` with its
+  record.
+* The photographs of launch 236 show the diesel generator (a green block
+  and a yellow tank in a dark frame) at about vanilla's size, before and
+  after the save.
+
+Not run: the generator powering anything, its info window, putting a
+carried one down through the game's own drop, the texture on a second
+client or a dedicated server, another mod using tile file number 7341,
+loot, Italian.
+
+Evidence:
+[run 234](evidence/2026-11-10_rt-sp_harness_run234_diesel_generator_own_sprite_42.22.2.txt);
+[run 235](evidence/2026-11-10_rt-sp_harness_run235_diesel_generator_save_42.22.2.txt);
+[run 236](evidence/2026-11-10_rt-sp_harness_run236_diesel_generator_tile_42.22.2.txt);
+screenshots in [evidence/run236](evidence/run236).

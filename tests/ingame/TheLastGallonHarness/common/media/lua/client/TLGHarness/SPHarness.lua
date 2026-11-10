@@ -119,7 +119,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -14601,6 +14601,23 @@ RT.DG.place = { name = "rtdg_place", timeout = 1200, fn = function(ctx, ticks)
         local g = DG.gens[1]
         return g ~= nil and g:getModData().generatorFullType == "TLG.DieselGenerator", lines[1]
     end)
+    -- The game names a generator's item from its sprite: launch 233, with
+    -- vanilla's sprite on the mod's item, read TLG.DieselGenerator here
+    -- for the vanilla generator too.
+    R:check("RTDG.each_sprite_names_its_own_item", function()
+        local a, b = "?", "?"
+        pcall(function() a = DG.gens[1]:getGeneratorItemType() end)
+        pcall(function() b = DG.gens[3]:getGeneratorItemType() end)
+        return a == "TLG.DieselGenerator" and b == "Base.Generator", string.format("the mod's: %s; vanilla's: %s", a, b)
+    end)
+    R:check("RTDG.sprite_has_its_picture", function()
+        local g = DG.gens[1]
+        local name, tex, w, h = "?", nil, -1, -1
+        pcall(function() name = g:getSprite():getName() end)
+        pcall(function() tex = g:getSprite():getTextureForCurrentFrame(g:getDir()) end)
+        pcall(function() w, h = tex:getWidth(), tex:getHeight() end)
+        return name == TLG.Integration.Generators.SPRITES["TLG.DieselGenerator"] and tex ~= nil and w == 128 and h == 256, string.format("sprite %s, texture %s, %sx%s", tostring(name), tostring(tex ~= nil), tostring(w), tostring(h))
+    end)
     R:check("RTDG.diesel_profile", function()
         local g = DG.gens[1]
         return g ~= nil and G.profile(g) == "generator_ci_stock" and G.referenceFuel(g) == "diesel", lines[1]
@@ -14628,12 +14645,39 @@ end, function(ctx)
     end)
     hopEnd(ctx, true)
     player():setPrimaryHandItem(nil)
+    -- The stock diesel profile starts on pure biodiesel 6 times in 10
+    -- (launch 233 lost the roll): the gate's roll is held at its lowest
+    -- for the start that follows, and put back after it.
+    RT.DG.roll = TLG.Integration.Generators.startRoll
+    TLG.Integration.Generators.startRoll = function() return 0 end
 end)
+
+-- Vanilla's pickup: the item it gives must be the generator's own type.
+function RT.DG.take(i, want)
+    return actionStep("rtdg_take_" .. i, function(ctx)
+        if RT.skip("rtdg_take_" .. i) then return nil end
+        local g = RT.DG.gens[i]
+        player():setPrimaryHandItem(nil)
+        player():setSecondaryHandItem(nil)
+        player():teleportTo(g:getSquare():getX() + 1, g:getSquare():getY(), 0)
+        ctx.fuel = g:getFuel()
+        return ISTakeGenerator:new(player(), g)
+    end, function(ctx)
+        local it = player():getPrimaryHandItem()
+        local side = it and it:getModData().tlg
+        R:check("RTDG.take_gives_" .. string.gsub(want, "%.", "_"), function()
+            return it ~= nil and it:getFullType() == want and RT.DG.gens[i]:getObjectIndex() == -1,
+                string.format("in hand: %s \"%s\"; fuel it held %.4f; record on the item: %s", tostring(it and it:getFullType()),
+                    tostring(it and it:getDisplayName()), ctx.fuel, side and brief(side.q) or "none")
+        end)
+    end)
+end
 
 RT.DG.run = { name = "rtdg_run", timeout = 30000, fn = function(ctx, ticks)
     local g = RT.DG.gens[1]
     if not ctx.h0 and RT.skip("rtdg_run") then return true end
     if not ctx.h0 then
+        if RT.DG.roll then TLG.Integration.Generators.startRoll, RT.DG.roll = RT.DG.roll, nil end
         g:setConnected(true)
         g:setActivated(true)
         ctx.h0, ctx.f0 = hours(), g:getFuel()
@@ -14677,7 +14721,66 @@ end)
 RT.dieselGeneratorSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DG.place, RT.DG.pour,
     generatorGateStep("RTDG.gate_biodiesel", function() return RT.DG.gens[1] end, false), RT.DG.run, RT.DG.petrol,
     generatorGateStep("RTDG.gate_petrol", function() return RT.DG.gens[2] end, true),
-    RT.MI.zoomTo("rtdg_zoom", 0.5), RT.MI.shot("rtdg_generators", true), RT.finish }
+    RT.MI.zoomTo("rtdg_zoom", 0.5), RT.MI.shot("rtdg_generators", true),
+    RT.DG.take(3, "Base.Generator"), RT.DG.take(2, "TLG.DieselGenerator"),
+    RT.saveAndExitAs("rtdg_save_and_exit", "sp-rtdgb") }
+
+-- After the save is continued (request "sp-rtdgb"): the diesel generator
+-- left on the ground must still be one, with its sprite, its fuel and its
+-- profile, and the one carried still its own item; then it is taken.
+RT.DG.reload = { name = "rtdgb_reload", timeout = 3000, fn = function(ctx, ticks)
+    local G = TLG.Integration.Generators
+    if not (player() and ticks > 180) then return nil end
+    local px, py = math.floor(player():getX()), math.floor(player():getY())
+    local seen, diesel = {}, nil
+    for dx = -20, 20 do
+        for dy = -20, 20 do
+            local s = sq(px + dx, py + dy, 0)
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                if instanceof(o, "IsoGenerator") then
+                    local name, itemType = "?", "?"
+                    pcall(function() name = o:getSprite():getName() end)
+                    pcall(function() itemType = o:getGeneratorItemType() end)
+                    seen[#seen + 1] = string.format("%d,%d: generatorFullType=%s item type=%s sprite=%s fuel=%.4f profile=%s",
+                        px + dx, py + dy, tostring(o:getModData().generatorFullType), tostring(itemType), tostring(name), o:getFuel(),
+                        tostring(G.profile(o)))
+                    if o:getModData().generatorFullType == "TLG.DieselGenerator" then diesel = o end
+                end
+            end
+        end
+    end
+    for _, line in ipairs(seen) do R:line("OBS  RTDGB.generator %s", line) end
+    R:check("RTDGB.diesel_generator_survives_the_save", function()
+        if diesel == nil then return false, "none found among " .. #seen end
+        local name, itemType, tex = "?", "?", nil
+        pcall(function() name = diesel:getSprite():getName() end)
+        pcall(function() itemType = diesel:getGeneratorItemType() end)
+        pcall(function() tex = diesel:getSprite():getTextureForCurrentFrame(diesel:getDir()) end)
+        local v, status = tlgView("generator", diesel)
+        return name == G.SPRITES["TLG.DieselGenerator"] and itemType == "TLG.DieselGenerator" and tex ~= nil
+            and G.profile(diesel) == "generator_ci_stock" and v ~= nil and (v.q.biodiesel or 0) > 4,
+            string.format("sprite %s, picture %s, item type %s, profile %s, record %s", tostring(name), tostring(tex ~= nil),
+                tostring(itemType), tostring(G.profile(diesel)), viewText(v, status))
+    end)
+    local carried = {}
+    local items = player():getInventory():getItems()
+    for i = 0, items:size() - 1 do
+        if G.ITEM_TYPES[items:get(i):getFullType()] then carried[#carried + 1] = items:get(i):getFullType() end
+    end
+    R:check("RTDGB.carried_generator_is_still_diesel", function()
+        local diesels = 0
+        for _, c in ipairs(carried) do if c == "TLG.DieselGenerator" then diesels = diesels + 1 end end
+        return diesels == 1, table.concat(carried, ",")
+    end)
+    RT.DG.gens[1] = diesel
+    if diesel == nil then RT.abort = "no diesel generator after the reload" end
+    return true
+end }
+
+RT.dieselGeneratorReloadSteps = { RT.DG.reload, RT.MI.zoomTo("rtdgb_zoom", 0.5), RT.MI.shot("rtdg_reloaded", true),
+    RT.DG.take(1, "TLG.DieselGenerator"), RT.finish }
 
 RT.biodieselSteps = { RT.waitWorld, RT.setup, RT.MM.clearSky, RT.BD.row,
     RT.BD.stand("rtbd_stand_row", 0), RT.MI.zoomTo("rtbd_zoom", 0.5), RT.MI.shot("rtbd_row", true),
@@ -14892,7 +14995,7 @@ if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQU
 end
 
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" then
+    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -14923,6 +15026,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "sp-rtmfb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, the fermenter's model, after the reload", true)
             TLGH.Steps.run(R, RT.fermenterReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtdgb" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, the diesel generator probe, after the save", true)
+            TLGH.Steps.run(R, RT.dieselGeneratorReloadSteps, H, nil)
         elseif REQUEST == "sp-rtknb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel, after the save", true)
             TLGH.Steps.run(R, RT.knowledgeReloadSteps, H, nil)

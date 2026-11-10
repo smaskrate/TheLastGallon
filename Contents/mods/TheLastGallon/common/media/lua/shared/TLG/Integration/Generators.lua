@@ -51,6 +51,27 @@ G.ITEM_TYPES = { ["Base.Generator"] = true, ["Base.Generator_Old"] = true, ["Bas
 -- (mod data "generatorFullType").
 G.ITEM_PROFILES = { ["TLG.DieselGenerator"] = "generator_ci_stock" }
 
+-- The mod's own generator sprites (D-036). The game reads a generator's
+-- item type from its sprite's name (BC IsoGenerator.getGeneratorItemType)
+-- and saves an object's sprite by its tile-sheet number, so each is a
+-- tile of the mod's own sheet (media/tlg_generators.tiles, named in
+-- mod.info; tools/make-tile-sprites.ps1 writes it). The mod ships no
+-- texture pack: the tile's picture is a single file, given to the sprite
+-- here. Launch 235, with the picture's path as the sprite's name and no
+-- sheet: the generator lost its sprite and its type when the save was
+-- continued.
+G.SPRITES = { ["TLG.DieselGenerator"] = "tlg_generators_01_0" }
+G.PICTURES = { ["tlg_generators_01_0"] = "media/textures/TLG/Tile_DieselGenerator.png" }
+
+function G.loadSprites()
+    if not getSprite or (isServer and isServer()) then return end
+    for name, picture in pairs(G.PICTURES) do
+        pcall(function()
+            local s = getSprite(name)
+            if s then s:LoadSingleTexture(picture) end
+        end)
+    end
+end
 function G.keyOf(gen)
     local sq = gen:getSquare()
     return string.format("gen:%d,%d,%d", sq and sq:getX() or -1, sq and sq:getY() or -1, sq and sq:getZ() or -1)
@@ -471,6 +492,12 @@ function G.install()
     installPickup()
     installPlacement()
     installStartGate()
+    -- Before a generator of the world is drawn.
+    if Events then
+        for _, e in ipairs({ "OnGameStart", "OnLoad" }) do
+            if Events[e] then Events[e].Add(G.loadSprites) end
+        end
+    end
     TLG.Log.info("generator adapter installed")
 end
 

@@ -261,14 +261,31 @@ module TLG
         WorldStaticModel = TLG.BiodieselWashTank,
     }
 
-    /* The diesel generator (D-036) is not here yet. Launch 233 ran it as a
-       copy of Base.Generator under the type TLG.DieselGenerator with
-       vanilla's sprite (WorldObjectSprite = appliances_misc_01_0, tag
-       base:generator): it became a working generator with the diesel
-       profile, but the game names a generator's item from its sprite, so
-       a vanilla Base.Generator then reported TLG.DieselGenerator as its
-       item type, which vanilla's pickup would hand back. It needs a
-       sprite of its own, or the type put right in Lua at pickup. */
+    /* The diesel generator (D-036): Base.Generator's values under its own
+       type. The tag makes it a generator to the game, and
+       Generators.ITEM_PROFILES gives it the diesel profile. The game names
+       a generator's item from its sprite (BC IsoGenerator
+       .getGeneratorItemType), so it has a sprite of its own: with
+       vanilla's, a vanilla Base.Generator reported this item's type
+       (launch 233). The sprite is a tile of the mod's own sheet
+       (media/tlg_generators.tiles, named in mod.info), so the game saves
+       it; its picture is a single file that Generators.loadSprites gives
+       it (tools/make-tile-sprites.ps1). No recipe and no loot entry yet. */
+    item DieselGenerator
+    {
+        DisplayCategory = Electronics,
+        ItemType = base:normal,
+        Weight = 40.0,
+        Icon = TLG_DieselGenerator,
+        ConditionMax = 100,
+        MetalValue = 500.0,
+        RequiresEquippedBothHands = true,
+        Tags = base:heavyitem;base:generator;base:hasmetal;base:ignorezombiedensity;base:showcondition,
+        WorldObjectSprite = tlg_generators_01_0,
+        ConditionLowerChanceOneIn = 30,
+        SoundRadius = 20,
+        SoundVolume = 1,
+    }
 
     craftRecipe TLG_MakeWoodRetort
     {
