@@ -114,6 +114,183 @@ if MP.only == "gensprite" then
     return
 end
 
+------------------------------------------------------------------------------
+-- handbook (2026-11-11, one client, D-038): the biodiesel recipes on a
+-- server, in a client without -debug. The Ash Barrel (a metal drum, two
+-- steel rods, a hammer; Welding 2) is tried in the game's crafting window
+-- three times with its materials in the inventory: with the recipe not
+-- learned, with the handbook read and Welding 0, and with Welding 2. The
+-- window must offer Craft only the last time, and the barrel must then be
+-- made on the server. The server also rolls its loot lists for the
+-- handbook (MPServer.lua roll_handbook).
+------------------------------------------------------------------------------
+if MP.only == "handbook" then
+    local HB = { recipe = "TLG_MakeAshBarrel" }
+    local function recipes()
+        local out = {}
+        local list = CraftRecipeManager.queryRecipes("InHandCraft;AnySurfaceCraft")
+        for i = 0, list:size() - 1 do
+            local r = list:get(i)
+            out[string.match(r:getName(), "([^%.]+)$")] = r
+        end
+        return out
+    end
+    local function knownSet()
+        local all, learned, actual = recipes(), "", ""
+        for _, n in ipairs(TLG.Integration.Manual.HANDBOOK_RECIPES) do
+            local r = all[n]
+            learned = learned .. ((r and CraftRecipeManager.hasPlayerLearnedRecipe(r, player())) and "1" or "0")
+            actual = actual .. ((r and player():isRecipeActuallyKnown(r)) and "1" or "0")
+        end
+        return learned, actual
+    end
+    local function panel()
+        local w = ISEntityUI.GetWindowInstance(0, "HandcraftWindow")
+        return w, w and w.handCraftPanel
+    end
+    -- Opens the crafting window with its button, picks the Ash Barrel's row
+    -- as a click does, and reports what the window offers; with `press` it
+    -- presses Craft and waits for the action to end.
+    local function tryCraft(name, wantOffered)
+        return { name = "mp_hb_try_" .. name, timeout = 9000, fn = function(ctx, ticks)
+            local p = player()
+            if ticks == 1 then
+                ctx.base = countType("TLG.AshBarrel")
+                triggerEvent("OnContainerUpdate")
+                local pd = getPlayerData(0)
+                local btn = pd and pd.equipped and pd.equipped.craftingBtn
+                if btn then btn:forceClick() end
+                return nil
+            end
+            if ticks < 90 then return nil end
+            local w, hp = panel()
+            if not ctx.picked then
+                ctx.picked = true
+                if hp and not hp.recipesPanel.recipeListMode then hp.recipesPanel.recipeFilterPanel.viewModeButton:forceClick() end
+                local lb = hp and hp.recipesPanel and hp.recipesPanel.recipeListPanel and hp.recipesPanel.recipeListPanel.recipeListPanel
+                local recipe = recipes()[HB.recipe]
+                for i, it in ipairs(lb and lb.items or {}) do
+                    if it.item ~= nil and it.item == recipe then ctx.row = i end
+                end
+                if ctx.row then
+                    lb.selected = ctx.row
+                    lb.onmousedown(lb.target, lb.items[ctx.row].item)
+                end
+                ctx.at = ticks
+                return nil
+            end
+            if ticks - ctx.at < 90 then return nil end
+            local c = hp and hp.recipePanel and hp.recipePanel.craftControl
+            if not ctx.judged then
+                ctx.judged = true
+                local can
+                pcall(function() can = hp.logic:canPerformCurrentRecipe() end)
+                local inputs = "?"
+                pcall(function() inputs = tostring(hp.logic:getRecipeData():areAllInputItemsSatisfied()) end)
+                ctx.offered = ctx.row ~= nil and c ~= nil and c.buttonCraft.enable == true
+                local learned, actual = knownSet()
+                ctx.text = string.format("window open=%s, row listed=%s, Craft enabled=%s, canPerform=%s, inputs satisfied=%s;"
+                    .. " Welding %d; hasPlayerLearnedRecipe %s, actually known %s; debug=%s; dark=%s", tostring(w ~= nil),
+                    tostring(ctx.row ~= nil), tostring(c and c.buttonCraft.enable), tostring(can), inputs,
+                    p:getPerkLevel(Perks.MetalWelding), learned, actual, tostring(getDebug()), tostring(p:tooDarkToRead()))
+                if ctx.offered and wantOffered and c then c.buttonCraft:forceClick() end
+                -- Craft pressed where it must not be offered, as a click on a
+                -- disabled button: nothing may start.
+                if not wantOffered and c then c.buttonCraft:forceClick() end
+                ctx.at = ticks
+                return nil
+            end
+            if ticks - ctx.at < 60 then return nil end
+            local busy = #(ISTimedActionQueue.getTimedActionQueue(p).queue or {}) > 0
+            if busy and ticks - ctx.at < 8000 then return nil end
+            local made = countType("TLG.AshBarrel") - ctx.base
+            check("hb_" .. name, function()
+                return ctx.offered == wantOffered and made == (wantOffered and 1 or 0), string.format(
+                    "%s; Ash Barrels made %d", ctx.text, made)
+            end)
+            if w then w:close() end
+            return true
+        end }
+    end
+    local function serverView(name, judge)
+        return call("hb_probe_" .. name, "probe_handbook", {}, "probe_handbook", function(m)
+            report():line("OBS  MP.hb_%s server: known %s, Welding %s, Ash Barrels %s, handbook read %s", name, tostring(m.known),
+                tostring(m.level), tostring(m.barrels), tostring(m.read))
+            judge(m)
+        end)
+    end
+    HB.read = { name = "mp_hb_read", timeout = 9000, fn = function(ctx, ticks)
+        local p = player()
+        if not ctx.started then
+            local book = p:getInventory():getFirstTypeRecurse("TLG.BiodieselHandbook")
+            if not book and ticks < 600 then return nil end
+            ctx.started, ctx.at = true, ticks
+            if book then ISInventoryPaneContextMenu.readItem(book, 0) end
+            return nil
+        end
+        if ticks - ctx.at < 60 then return nil end
+        local busy = #(ISTimedActionQueue.getTimedActionQueue(p).queue or {}) > 0
+        if busy and ticks - ctx.at < 8000 then return nil end
+        local learned, actual = knownSet()
+        check("hb_handbook_read_teaches_all_five_here", function()
+            return actual == "11111", string.format("after %d ticks: hasPlayerLearnedRecipe %s, actually known %s",
+                ticks - ctx.at, learned, actual)
+        end)
+        return true
+    end }
+    MP.stepsA = { MP.waitWorld,
+        once("mp_hb_start", function()
+            local learned, actual = knownSet()
+            check("hb_nothing_known_at_the_start", function()
+                -- Launch 311: CraftRecipeManager.hasPlayerLearnedRecipe said
+                -- every recipe learned here too, without -debug (the account
+                -- is an admin), while the window refused; it is logged only.
+                return actual == "00000" and getDebug() == false, string.format(
+                    "debug=%s; hasPlayerLearnedRecipe %s, actually known %s; Welding %d", tostring(getDebug()), learned,
+                    actual, player():getPerkLevel(Perks.MetalWelding))
+            end)
+        end),
+        call("hb_give", "give", { items = "Base.MetalDrum;Base.MetalBar;Base.MetalBar;Base.Hammer;TLG.BiodieselHandbook;Base.HandTorch" },
+            "given", function(m) report():line("OBS  MP.hb_given %s", tostring(m.ids)) end),
+        wait("mp_hb_items_arrive", 180),
+        once("mp_hb_light", function()
+            local torch = player():getInventory():getFirstTypeRecurse("Base.HandTorch")
+            if torch and player():tooDarkToRead() then
+                torch:setActivated(true)
+                player():setSecondaryHandItem(torch)
+            end
+        end),
+        tryCraft("refused_recipe_not_learned", false),
+        HB.read,
+        serverView("after_reading", function(m)
+            check("hb_server_knows_the_five_after_the_read", function()
+                return m.known == "11111" and m.read == "true", string.format("known %s, read %s", tostring(m.known), tostring(m.read))
+            end)
+        end),
+        tryCraft("refused_below_welding_2", false),
+        call("hb_level", "handbook_level", { level = 2 }, "handbook_level", function(m)
+            player():setPerkLevelDebug(Perks.MetalWelding, 2)
+            report():line("OBS  MP.hb_level Welding on the server %s, here %d", tostring(m.level),
+                player():getPerkLevel(Perks.MetalWelding))
+        end),
+        wait("mp_hb_level_settles", 120),
+        tryCraft("made_with_the_recipe_and_welding_2", true),
+        serverView("after_crafting", function(m)
+            check("hb_server_holds_the_ash_barrel", function()
+                return tonumber(m.barrels) == 1 and tonumber(m.level) == 2, string.format("Ash Barrels %s, Welding %s",
+                    tostring(m.barrels), tostring(m.level))
+            end)
+        end),
+        call("hb_roll", "roll_handbook", {}, "roll_handbook", function(m)
+            check("hb_handbook_rolled_from_loot_on_the_server", function()
+                return (tonumber(m.total) or 0) > 0, string.format("%s handbooks in %s fills: %s", tostring(m.total),
+                    tostring(m.fills), tostring(m.lists))
+            end)
+        end),
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+    return
+end
+
 local V = "TLG.FermenterVessel"
 local C = {}
 MP.C = C

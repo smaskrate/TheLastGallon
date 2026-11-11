@@ -682,6 +682,49 @@ function services.probe_biodiesel(player, args)
     reply("probe_biodiesel", args, out)
 end
 
+-- handbook (-Only handbook): the sender's welding level set on the server
+-- (the client sets its own, as the conversion cases do), and what the
+-- server holds of the player: the five recipes known, the level, the Ash
+-- Barrels carried. roll_handbook fills containers from the handbook's loot
+-- lists as roll_manual does and counts the handbooks.
+function services.handbook_level(player, args)
+    player:setPerkLevelDebug(Perks.MetalWelding, tonumber(args.level) or 0)
+    reply("handbook_level", args, { level = player:getPerkLevel(Perks.MetalWelding) })
+end
+
+function services.probe_handbook(player, args)
+    local known = {}
+    for _, n in ipairs(TLG.Integration.Manual.HANDBOOK_RECIPES) do
+        known[#known + 1] = player:getKnownRecipes():contains(n) and "1" or "0"
+    end
+    reply("probe_handbook", args, { known = table.concat(known), level = player:getPerkLevel(Perks.MetalWelding),
+        barrels = player:getInventory():getCountTypeRecurse("TLG.AshBarrel"),
+        read = tostring(player:getAlreadyReadBook():contains("TLG.BiodieselHandbook")) })
+end
+
+function services.roll_handbook(player, args)
+    local total, fills, parts = 0, 0, {}
+    for _, l in ipairs({ { "gasstorage", "other", "GasStorageMechanics" }, { "garagestorage", "crate", "CrateMechanics" },
+        { "toolstore", "shelves", "ToolStoreBooks" }, { "library", "shelves", "LibraryMagazines" } }) do
+        local dist = ItemPickerJava.getItemContainer(l[1], l[2], l[3], false)
+        if dist == nil then
+            parts[#parts + 1] = l[3] .. "=unknown"
+        else
+            local n, cont = 0, ItemContainer.new("crate", player:getCurrentSquare(), player)
+            for _ = 1, 300 do
+                cont:removeAllItems()
+                ItemPickerJava.doRollItem(dist, cont, 1, player, true, nil)
+                local got = cont:getItemsFromFullType("TLG.BiodieselHandbook")
+                n = n + (got and got:size() or 0)
+            end
+            cont:removeAllItems()
+            total, fills = total + n, fills + 300
+            parts[#parts + 1] = l[3] .. "=" .. n
+        end
+    end
+    reply("roll_handbook", args, { total = total, fills = fills, lists = table.concat(parts, " ") })
+end
+
 -- gensprite (tools/run-mp-harness.ps1 -Only gensprite -ModAway): a Diesel
 -- Generator put down beside the spawn point, and later what the server
 -- holds of it.

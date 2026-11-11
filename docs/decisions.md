@@ -1565,6 +1565,7 @@ their replacement.
   unchanged: the owner asked for the biodiesel items.
 * Existing saves: no character knows the recipes (`migrations.md`). The
   mod grants nothing on load; the owner was told with the levels.
-* Checked: launches 308–310 (`test-results.md`). Open: the crafting
-  window's refusal outside debug mode, the handbook in loot, a server,
+* Checked: launches 308–312 (`test-results.md`), the last two on a
+  dedicated server with a client without `-debug`. Open: the window's
+  refusal for four of the five machines, a player who is not an admin,
   an upgrade launch.

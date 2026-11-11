@@ -117,10 +117,12 @@ from 0.2.0, 0.3.0 or 0.3.1 with this zip.
 
 On the branch `feature/biodiesel-skills` (D-038): the five biodiesel
 machines' recipes ask skill levels and must be learned, from the new
-Biodiesel Handbook or by level (launches 308–310, `test-results.md`).
-Open: the crafting window refusing a character without the recipe or
-the level outside debug mode; a handbook rolled from loot; a server; an
-upgrade launch; the Italian name read in game. The upload folder, its
+Biodiesel Handbook or by level (launches 308–312, `test-results.md`).
+On a dedicated server, in a client without `-debug`, the crafting window
+refused the Ash Barrel unlearned and below its level and made it with
+both, and the server's loot lists gave handbooks (launch 312, 9/0).
+Open: the window's refusal for the other four machines; a player who is
+not an admin; an upgrade launch; the Italian name read in game. The upload folder, its
 `workshop.txt` and the 0.3.2 change note are as 0.3.2 left them. No
 0.4.0 zip is kept.
 

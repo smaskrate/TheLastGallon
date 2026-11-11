@@ -20,14 +20,17 @@
   made keep working. The handbook appears only in containers the game
   has not filled yet.
 * The ethanol machines and the mod's small items ask nothing new.
-* Checked in single player on 42.22.2 (launches 308–310 in
-  `docs/test-results.md`): what each recipe asks, the levels that allow
-  and teach, the handbook read with the game's Read action, and all five
-  machines made in the crafting window with the levels and recipes in
-  place. Not checked: the crafting window refusing a character without
-  the recipe or the level (the tests run the game in debug mode, where
-  the window counts every recipe as learned), a handbook found in loot,
-  and a server.
+* Checked on 42.22.2 (launches 308–312 in `docs/test-results.md`). In
+  single player: what each recipe asks, the levels that allow and teach,
+  the handbook read with the game's Read action, and all five machines
+  made in the crafting window with the levels and recipes in place. On a
+  dedicated server with one player: the crafting window refused the Ash
+  Barrel with the recipe not learned, refused it with the handbook read
+  and Welding 0, and made it at Welding 2; the server's loot lists gave
+  handbooks. Not checked: the window's refusal for the other four
+  machines, Welding 6 and 7 teaching a recipe, a handbook picked out of
+  a container of the map, a player who is not an admin, and a save from
+  an earlier version.
 * Correction to 0.3.2's entry: a server started without the mod and then
   with it was checked after that release (launch 307), and the Diesel
   Generator had its picture back.

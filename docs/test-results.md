@@ -6111,8 +6111,9 @@ Launch 308's cause is the test's, not the mod's: it asked
 every recipe at level 0 with no book. The harness runs the client with
 `-debug`; launch 310 logs `hasPlayerLearnedRecipe=true`,
 `isRecipeKnown=false` and `isRecipeActuallyKnown=false` for the same
-recipe and character. The crafting window uses the first, so in these
-launches it never refuses for a recipe not learned.
+recipe and character. Launches 311 and 312 show that call answering true
+for an unlearned recipe without `-debug` as well, while the crafting
+window refuses: it does not tell whether a recipe is learned.
 
 Launch 310, in order: the recipes ask Welding 4, 2, 5 and 4 and
 Carpentry 2, and all five must be learned; the mod's seven other recipes
@@ -6128,7 +6129,8 @@ TLG error or warning.
 
 Offline: 280 cases, 0 failed.
 
-Not run: the crafting window refusing a character without the recipe or
+Not run in these launches (launch 312 ran the first and the loot): the
+crafting window refusing a character without the recipe or
 the level in a game without `-debug`; Welding 6 and 7 teaching the
 Retort, the Wash Tank and the Reactor (the same rule taught the Leacher
 and the Ash Barrel); a handbook rolled from loot; the handbook's name
@@ -6139,3 +6141,48 @@ Evidence:
 [run 308](evidence/2026-11-11_rt-sp_harness_run308_handbook_debug_knows_all_42.22.2.txt);
 [run 309](evidence/2026-11-11_rt-sp_harness_run309_crafting_with_skills_42.22.2.txt);
 [run 310](evidence/2026-11-11_rt-sp_harness_run310_handbook_42.22.2.txt).
+
+## 2026-11-11 — RT-MP harness, launches 311–312 (the handbook and the Ash Barrel on a server, 0.4.0)
+
+Build 42.22.2, branch `feature/biodiesel-skills`, the repository's mod,
+one client without `-debug`, its account an admin:
+`tools\run-mp-harness.ps1 -Clients 1 -Only handbook` (new). The server
+gives the Ash Barrel's materials (a metal drum, two steel rods, a
+hammer) and a Biodiesel Handbook. The client opens the crafting window
+with its button, picks the Ash Barrel's row as a click does, and
+presses Craft, three times.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 311 | **8/1**: the test expected `hasPlayerLearnedRecipe` false at the start |
+| 312 | 9/0, that call only logged |
+
+Launch 312, in order:
+
+* At the start the character actually knows none of the five
+  (`isRecipeActuallyKnown`); `getDebug()` is false.
+* Recipe not learned, Welding 0, materials there: the row is listed,
+  Craft is disabled, `canPerformCurrentRecipe` is false, pressing Craft
+  makes nothing.
+* The handbook read with the inventory menu's Read (2,166 ticks): the
+  client knows all five, and the server's player has the five names in
+  its known recipes and the handbook recorded as read.
+* Recipe learned, Welding 0: Craft still disabled, nothing made.
+* Welding set to 2 on the server and on the client (`setPerkLevelDebug`
+  on each, as the conversion cases set skills): Craft enabled, one Ash
+  Barrel made; the server's player holds it.
+* The server filled containers from four of the handbook's loot lists
+  300 times each: 38 handbooks (GasStorageMechanics 8, CrateMechanics 5,
+  ToolStoreBooks 14, LibraryMagazines 11).
+
+Consoles: "biodiesel handbook added to 11 loot lists" on the server and
+the client; no TLG error or warning.
+
+Not run: the other four machines in the window; a level gained by
+experience on a server; a player who is not an admin; two clients; a
+handbook taken from a container of the map; a save from an earlier
+version.
+
+Evidence:
+[run 311](evidence/2026-11-11_rt-mp_harness_run311_handbook_on_a_server_one_wrong_check_42.22.2.txt);
+[run 312](evidence/2026-11-11_rt-mp_harness_run312_handbook_on_a_server_42.22.2.txt).

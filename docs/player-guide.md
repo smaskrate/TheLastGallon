@@ -594,11 +594,15 @@ machines must learn the recipes like anyone else. Machines already made
 keep working. The handbook appears only in containers the game has not
 filled yet, so look in places you have not visited.
 
-**Checked in game** in single player: what each recipe asks, the levels
+**Checked in game.** In single player: what each recipe asks, the levels
 that allow and teach, the handbook read from the inventory menu, and all
 five machines made in the crafting window with the levels and recipes in
-place. **Not checked in game:** the crafting window refusing a character
-without the recipe or the level, a handbook found in loot, and a server.
+place. On a dedicated server: the crafting window refused the Ash Barrel
+without the recipe, refused it with the handbook read and Welding 0, and
+made it at Welding 2; the loot lists gave handbooks. **Not checked in
+game:** the window's refusal for the other four machines, Welding 6 and
+7 teaching a recipe, a handbook picked out of a container of the map, a
+player who is not an admin, and a save from an earlier version.
 
 Like the ethanol machines, each works only while it stands on the ground,
 and its options are under **Machine (The Last Gallon)**.
