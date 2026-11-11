@@ -93,15 +93,15 @@ records and its pumps as 0.1.2 left them (launches 295–298). A clean
 checkout builds the same bytes. Open for gate 12: an install through the
 Workshop; the upgrade from 0.2.0 or 0.3.0 with this zip.
 
-## Version 0.3.2 (not released)
+## Version 0.3.2 (2026-11-11)
 
-On the branch `fix/diesel-generator-sprite`: a placed Diesel Generator
-that lost its sprite to a load without the mod gets it back with the mod
+Version 0.3.2, of 2026-11-11: a placed Diesel Generator that lost its
+sprite to a load without the mod gets it back with the mod
 (launches 299–302, `test-results.md`; gate 7). The sprite stays through
 a save and a reload (launch 301); on a dedicated server the repair ran
 on a sprite the test took away, and the client saw it back (launch 302).
-Open: a server started without the mod and then with it. No 0.3.2 zip is
-kept.
+It has not been uploaded to the Workshop. Open: a server started without
+the mod and then with it.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -542,8 +542,8 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.3.1.txt`, written on 2026-11-11: the changes
-from 0.1.1, which the item serves, to 0.3.1. It is not in the package. NOT RUN:
+`docs/workshop-change-note-0.3.2.txt`, written on 2026-11-11: the changes
+from 0.1.1, which the item serves, to 0.3.2. It is not in the package. NOT RUN:
 pasting a note into the uploader, and how the Workshop page shows its
 `[b]` and `[list]` marks.
 What changed in the package since the last rehearsed one (run 206, 0.1.0):

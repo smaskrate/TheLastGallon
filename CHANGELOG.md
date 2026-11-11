@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.2 (not released)
+## 0.3.2 (2026-11-11)
 
 * Fixed: a placed Diesel Generator lost its picture once its save had
   been loaded without the mod, and putting the mod back did not bring it
