@@ -15,5 +15,7 @@
     "Sandbox_TLG_ProtectIncompatiblePours": "Protezione dai travasi incompatibili",
     "Sandbox_TLG_ProtectIncompatiblePours_tooltip": "Versare un carburante che il motore non può usare richiede un'azione sperimentale esplicita.",
     "Sandbox_TLG_VehicleStalls": "Il carburante scadente può spegnere i motori",
+    "Sandbox_TLG_WrongFuelDamage": "Il carburante sbagliato danneggia i motori",
+    "Sandbox_TLG_WrongFuelDamage_tooltip": "Gasolio in un motore a benzina, o benzina o etanolo in un diesel: il motore funziona male e si usura o si rompe. Disattivata: quel carburante impedisce solo l'avviamento.",
     "Sandbox_TLG_StationContamination": "Le cisterne delle stazioni contengono acqua e sedimenti"
 }

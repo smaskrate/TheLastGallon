@@ -97,6 +97,8 @@
 --              down, fuelled with biodiesel and with petrol, started
 --   sp-rtdv -> diesel vehicles: the chosen chassis' profile and fuel in a
 --              new world, a start on diesel, biodiesel taken, petrol refused
+--   sp-rtwf -> wrong fuel (D-037): the verdict for every band, a refused
+--              start's cost, wear, a failure, the cures, the option off
 --   sp-rtdp -> diesel at some pumps: what a pump gives read from its menu,
 --              a can and vehicles filled at a diesel and a petrol pump
 --   ex-b  -> main menu continues a save played without the mod (the
@@ -124,7 +126,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -970,31 +972,42 @@ end
 
 add(generatorGateStep("G04.gate_petrol", function() return H.gen end, false))
 
--- A third, empty generator receives E100 through the confirmed ("experimental")
--- TLG pour, then must be refused by the start gate.
-add(actionStep("tlg_pour_e100_confirmed_generator", function(ctx)
+-- A third, empty generator receives diesel through the confirmed
+-- ("experimental") TLG pour, then must be refused by the start gate: a spark
+-- engine does not fire on it. Until 0.3.0 the fuel here was E100, which now
+-- runs a stock generator lean instead of blocking it (D-037).
+add(actionStep("tlg_pour_diesel_confirmed_generator", function(ctx)
     local base = H.pumps[1] or { x = START.x, y = START.y }
     local s = sq(base.x - 6, base.y + 6, 0)
     local g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), s)
-    if not g then R:line("SKIP tlg_pour_e100_confirmed_generator: no generator"); return nil end
+    if not g then R:line("SKIP tlg_pour_diesel_confirmed_generator: no generator"); return nil end
     g:setFuel(0)
     g:getModData().tlg = nil
     H.genC = g
-    local can, fc = giveCan("Base.PetrolCan", { { Fluid.Get("TLG_Ethanol"), 3.0 } })
+    local can, fc = giveCan("Base.PetrolCan", { { Fluid.Get("TLG_Diesel"), 3.0 } })
     player():setPrimaryHandItem(can)
     player():teleportTo(s:getX() + 1, s:getY(), 0)
-    hopBegin(ctx, "TLG.pour_e100_confirmed_generator", "item", can, canAmount(fc), "generator", g,
+    hopBegin(ctx, "TLG.pour_diesel_confirmed_generator", "item", can, canAmount(fc), "generator", g,
         function() return g:getFuel() end)
     return ISTLGPourFuel:new(player(), can, TLG.Authority.Resolver.refForObject(g, "generator"), g, true,
         function(reply) ctx.reply = reply end)
 end, function(ctx)
-    R:check("TLG.pour_e100_confirmed_generator.reply_ok", function()
+    R:check("TLG.pour_diesel_confirmed_generator.reply_ok", function()
         return ctx.reply ~= nil and ctx.reply.ok == true, tostring(ctx.reply and ctx.reply.reason)
     end)
     hopEnd(ctx, true)
 end))
 
-add(generatorGateStep("G04.gate_e100", function() return H.genC end, true))
+add(generatorGateStep("G04.gate_diesel", function() return H.genC end, true))
+-- The refused start cost the generator condition (D-037).
+add({ name = "g04_refused_start_cost", timeout = 60, fn = function()
+    local g = H.genC
+    if not g then return true end
+    R:check("G04.refused_start_on_diesel_cost_condition", function()
+        return g:getCondition() < 100 and g:getCondition() >= 98, "condition " .. tostring(g:getCondition()) .. " of 100"
+    end)
+    return true
+end })
 
 -- TLG pours into a vehicle (default vehicle 2, 8 L E25 from the G03 pour)
 -- from a new can with `fills`, or from the can `getCan()` returns. The
@@ -1054,6 +1067,10 @@ end
 add(vehiclePourStep("TLG.pour_petrol_into_vehicle", { { Fluid.Petrol, 3.0 } }, false, true))
 add(vehiclePourStep("TLG.pour_e100_into_vehicle_unconfirmed", { { Fluid.Get("TLG_Ethanol"), 3.0 } }, false, false))
 add(vehiclePourStep("TLG.pour_e100_into_vehicle_confirmed", { { Fluid.Get("TLG_Ethanol"), 3.0 } }, true, true))
+-- Since 0.3.0 that blend, a third ethanol, runs a stock engine lean (D-037).
+-- Diesel still stops it: 8 L more make the tank over 30 % diesel.
+add(vehiclePourStep("TLG.pour_diesel_into_vehicle_unconfirmed", { { Fluid.Get("TLG_Diesel"), 8.0 } }, false, false))
+add(vehiclePourStep("TLG.pour_diesel_into_vehicle_confirmed", { { Fluid.Get("TLG_Diesel"), 8.0 } }, true, true))
 
 -- Starts a vehicle through the vanilla action (ISStartVehicleEngine) as its driver.
 -- mustRun: the engine has to end up running; like a driver, the step retries
@@ -1116,7 +1133,7 @@ local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
     end }
 end
 
-add(vehicleGateStep("G03.gate_e36", function() return H.vehicle2 end, true))
+add(vehicleGateStep("G03.gate_diesel", function() return H.vehicle2 end, true))
 
 -- Stall: start vehicle 2 directly (bypassing the gate) on the incompatible
 -- blend; the per-minute effect handler must stall it.
@@ -9048,7 +9065,8 @@ RT.chassisSteps = {}
 for _, group in ipairs({ RT.V.phaseA({ "wait_world", "find_pumps" }), { RT.V.choose }, RT.V.phaseA({ "vehicles_spawn",
     "chain_1_pump_to_can", "chain_2_can_to_vehicle", "chain_3_vehicle_to_can", "g06_pump_to_vehicle",
     "g03_blend_can_to_vehicle", "g03_vehicle_idle", "g09_two_vehicles", "TLG.pour_petrol_into_vehicle",
-    "TLG.pour_e100_into_vehicle_unconfirmed", "TLG.pour_e100_into_vehicle_confirmed", "G03.gate_e36",
+    "TLG.pour_e100_into_vehicle_unconfirmed", "TLG.pour_e100_into_vehicle_confirmed",
+    "TLG.pour_diesel_into_vehicle_unconfirmed", "TLG.pour_diesel_into_vehicle_confirmed", "G03.gate_diesel",
     "g03_stall_incompatible", "G03.gate_station_fuel" }), { RT.finish } }) do
     for _, s in ipairs(group) do RT.chassisSteps[#RT.chassisSteps + 1] = s end
 end
@@ -9639,7 +9657,8 @@ RT.drivingSteps = { RT.waitWorld, RT.D.setup,
         return { { Fluid.Petrol, 9.0 }, { Fluid.Get("TLG_Ethanol"), 1.0 } }
     end), RT.D.driveStep("drive", {}),
     RT.D.spawnStep("stall"), RT.D.fillStep("stall", function()
-        return { { Fluid.Petrol, 5.0 }, { Fluid.Get("TLG_Ethanol"), 3.0 } }
+        -- Diesel, not ethanol, since 0.3.0: a third ethanol now runs lean (D-037).
+        return { { Fluid.Petrol, 5.0 }, { Fluid.Get("TLG_Diesel"), 3.0 } }
     end), RT.D.driveStep("stall", { stall = true }),
     RT.D.cleanup, RT.finish }
 
@@ -10005,7 +10024,7 @@ RT.effectsSteps = { RT.waitWorld, RT.D.setup,
     RT.D.spawnStep("stale"), RT.D.fillStep("stale", function() return { { Fluid.Petrol, 10.0 } } end), RT.E.ageTank,
     RT.D.driveStep("stale", RT.E.staleOpts), RT.E.powerBack,
     RT.D.spawnStep("off"), RT.D.fillStep("off", function()
-        return { { Fluid.Petrol, 5.0 }, { Fluid.Get("TLG_Ethanol"), 3.0 } }
+        return { { Fluid.Petrol, 5.0 }, { Fluid.Get("TLG_Diesel"), 3.0 } }
     end), RT.D.driveStep("off", RT.E.offOpts), RT.E.powerBack,
     RT.E.genSetup, RT.E.genFirstFuel, RT.E.genAge, RT.E.genRun, RT.E.genCharge, RT.E.genAgain,
     RT.E.cleanup, RT.finish }
@@ -15402,9 +15421,29 @@ end, function(ctx)
     player():setPrimaryHandItem(nil)
 end)
 
+-- Holds both start rolls at `value` (a start then passes only with a start
+-- factor above it), or gives them back with nil. Since 0.3.0 petrol in a
+-- diesel engine no longer blocks the start: it lowers the start factor to
+-- 0.25, so the older modes' refusals need the roll held high.
+function RT.rollStep(name, value)
+    return { name = name, timeout = 60, fn = function()
+        local V, G, WF = TLG.Integration.Vehicles, TLG.Integration.Generators, RT
+        if value ~= nil then
+            WF.rolls = WF.rolls or { V.startRoll, G.startRoll }
+            V.startRoll, G.startRoll = function() return value end, function() return value end
+        elseif WF.rolls then
+            V.startRoll, G.startRoll = WF.rolls[1], WF.rolls[2]
+            WF.rolls = nil
+        end
+        return true
+    end }
+end
+
 RT.dieselGeneratorSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DG.loot, RT.DG.place, RT.DG.pour,
     generatorGateStep("RTDG.gate_biodiesel", function() return RT.DG.gens[1] end, false), RT.DG.run, RT.DG.petrol,
+    RT.rollStep("rtdg_roll_held", 0.999),
     generatorGateStep("RTDG.gate_petrol", function() return RT.DG.gens[2] end, true),
+    RT.rollStep("rtdg_roll_free", nil),
     RT.MI.zoomTo("rtdg_zoom", 0.5), RT.MI.shot("rtdg_generators", true),
     RT.DG.take(3, "Base.Generator"), RT.DG.take(2, "TLG.DieselGenerator"),
     RT.saveAndExitAs("rtdg_save_and_exit", "sp-rtdgb") }
@@ -15718,7 +15757,11 @@ RT.dieselPumpSteps = { RT.waitWorld, RT.BD.photoSetup, RT.DP.find,
     RT.DP.refuel("ambulance_at_the_diesel_pump", function() return RT.DP.diesel end, function() return RT.DP.cars[1] end, "diesel"),
     vehicleGateStep("RTDP.ambulance_starts", function() return RT.DP.cars[1] end, false, true),
     RT.DP.refuel("pickup_van_at_the_petrol_pump", function() return RT.DP.petrol end, function() return RT.DP.cars[2] end, "gasoline"),
+    -- Petrol in a diesel lowers the start factor to 0.25 (D-037): refused
+    -- with the roll held above it.
+    RT.rollStep("rtdp_roll_held", 0.999),
     vehicleGateStep("RTDP.pickup_van_refused", function() return RT.DP.cars[2] end, true),
+    RT.rollStep("rtdp_roll_free", nil),
     RT.finish }
 
 RT.biodieselSteps = { RT.waitWorld, RT.setup, RT.MM.clearSky, RT.BD.row,
@@ -15730,6 +15773,519 @@ RT.biodieselSteps = { RT.waitWorld, RT.setup, RT.MM.clearSky, RT.BD.row,
     RT.MI.zoomTo("rtbd_zoom_back", 1.0), RT.BD.stand("rtbd_stand_back", 0),
     RT.BD.setup, RT.BD.static, RT.BD.run, RT.finish }
 
+------------------------------------------------------------------------------
+-- Wrong fuel damages engines (request "sp-rtwf"; D-037). A new world, so the
+-- ambulance and the fire department's pickup van are diesel. A petrol car, the
+-- two diesels, a petrol generator and a Diesel Generator are given tanks of
+-- known blends (written as the mod's record and the game's litres), and each
+-- mechanism is seen once: the verdict for every band; a start refused by
+-- diesel in the petrol car, which must cost engine condition and battery
+-- charge and tell the driver; engine and exhaust wear by the litre on a
+-- petrol car that runs on a fifth diesel; a pour of petrol into the
+-- ambulance refused until confirmed; the ambulance running on a third petrol
+-- and wearing; the pickup van failing on pure petrol when the draw says so;
+-- the cure the player guide gives (the tank siphoned, diesel poured, a clean
+-- start); the same for the generators, with the mod's drain as the cure; and
+-- the sandbox option off. Every roll is held. Litres "burned" are taken out
+-- of the tank by the step while the engine runs: the mod sees the drop at
+-- its next minute, as it sees the game's own burn.
+------------------------------------------------------------------------------
+RT.WF = { cars = {}, gens = {}, scripts = { "Base.CarNormal", "Base.VanAmbulance", "Base.PickUpVanLightsFire" } }
+
+function RT.WF.fresh(q)
+    local total, deg, copy = 0, {}, {}
+    for id, x in pairs(q) do total, deg[id], copy[id] = total + x, 0, x end
+    return copy, deg, total
+end
+
+-- A tank holding exactly `q` (litres by fuel id), fresh.
+function RT.WF.setTank(v, q)
+    local V = TLG.Integration.Vehicles
+    local tank = v:getPartById("GasTank")
+    local qq, deg, total = RT.WF.fresh(q)
+    tank:setContainerContentAmount(total)
+    tank:getModData().tlg = nil
+    local rec = V.read(v, true)
+    rec.q, rec.deg, rec.rev = qq, deg, (rec.rev or 0) + 1
+    V.writeSidecar(v, rec)
+    V.lastTank[v:getId()] = nil
+end
+
+function RT.WF.setGen(g, q)
+    local G = TLG.Integration.Generators
+    local qq, deg, total = RT.WF.fresh(q)
+    g:setFuel(total)
+    g:getModData().tlg = nil
+    local rec = G.read(g, true)
+    rec.q, rec.deg, rec.rev = qq, deg, (rec.rev or 0) + 1
+    G.writeSidecar(g, rec)
+end
+
+function RT.WF.charge(v)
+    local item = v:getPartById("Battery") and v:getPartById("Battery"):getInventoryItem()
+    return item and item:getCurrentUsesFloat() or -1
+end
+
+-- A part's condition; nil for an exhaust that is not fitted (the engine is
+-- a part without an item).
+function RT.WF.partCondition(v, id)
+    local p = v:getPartById(id)
+    if p == nil or (id ~= "Engine" and p:getInventoryItem() == nil) then return nil end
+    return p:getCondition()
+end
+
+-- The rolls held: starts always pass the roll, nothing fails unless a step
+-- says so.
+function RT.WF.hold()
+    local V, G, WF = TLG.Integration.Vehicles, TLG.Integration.Generators, RT.WF
+    WF.saved = WF.saved or { V.startRoll, V.failRoll, G.startRoll, G.failRoll }
+    V.startRoll, G.startRoll = function() return 0 end, function() return 0 end
+    V.failRoll, G.failRoll = function() return 0.999 end, function() return 0.999 end
+end
+
+function RT.WF.release()
+    local V, G, WF = TLG.Integration.Vehicles, TLG.Integration.Generators, RT.WF
+    if WF.saved then V.startRoll, V.failRoll, G.startRoll, G.failRoll = WF.saved[1], WF.saved[2], WF.saved[3], WF.saved[4] end
+    WF.saved = nil
+end
+
+RT.WF.spawn = { name = "rtwf_spawn", timeout = 1200, fn = function(ctx, ticks)
+    local WF = RT.WF
+    if ticks < 30 then return nil end
+    if not ctx.spawned then
+        captureDialogs(true)
+        WF.hold()
+        local world = TLG.World.get()
+        R:check("RTWF.new_world_with_diesel_and_damage_on", function()
+            return world.dieselVehicles == true and TLG.Integration.Vehicles.wrongFuelDamageEnabled() == true,
+                string.format("dieselVehicles=%s; SandboxVars.TheLastGallon.WrongFuelDamage=%s; the mod loaded is %s",
+                    tostring(world.dieselVehicles), tostring(SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.WrongFuelDamage),
+                    tostring(TLG.VERSION))
+        end)
+        -- The generators north of the start, the vehicles south of it.
+        local spots = {}
+        for _, dx in ipairs({ -2, -4, -6, 2, 4, 6, -8, 8 }) do
+            for _, dy in ipairs({ -3, -5, -2, -4 }) do
+                if #spots < 2 and RT.MI.clear(START.x + dx, START.y + dy) and RT.MI.clear(START.x + dx + 1, START.y + dy) then
+                    local taken = false
+                    for _, s in ipairs(spots) do if s:getX() == START.x + dx then taken = true end end
+                    if not taken then spots[#spots + 1] = sq(START.x + dx, START.y + dy, 0) end
+                end
+            end
+        end
+        for i, t in ipairs({ "Base.Generator", "TLG.DieselGenerator" }) do
+            if spots[i] then
+                local ok, g = pcall(function() return IsoGenerator.new(instanceItem(t), getCell(), spots[i]) end)
+                if ok and g then WF.gens[i] = g else R:line("OBS  RTWF.generator %s not put down: %s", t, tostring(g)) end
+            end
+        end
+        for i, script in ipairs(WF.scripts) do
+            local v = addVehicleDebug(script, IsoDirections.N, nil, sq(START.x + 5 * i - 2, START.y + 3, 0))
+            if v then pcall(function() v:repair() end) end
+            WF.cars[i] = v
+        end
+        ctx.spawned = ticks
+        return nil
+    end
+    if ticks - ctx.spawned < 60 then return nil end
+    local V, G = TLG.Integration.Vehicles, TLG.Integration.Generators
+    local parts = {}
+    for i = 1, 3 do
+        local v = WF.cars[i]
+        parts[#parts + 1] = v and string.format("%s %s engine %s exhaust %s battery %.3f", tostring(v:getScriptName()), tostring(V.profile(v)),
+            tostring(WF.partCondition(v, "Engine")), tostring(WF.partCondition(v, "Muffler")), WF.charge(v)) or "none"
+    end
+    for i = 1, 2 do
+        local g = WF.gens[i]
+        parts[#parts + 1] = g and string.format("%s %s condition %s", tostring(g:getModData().generatorFullType), tostring(G.profile(g)),
+            tostring(g:getCondition())) or "none"
+    end
+    R:check("RTWF.engines_ready", function()
+        return WF.cars[1] ~= nil and WF.cars[2] ~= nil and WF.cars[3] ~= nil and WF.gens[1] ~= nil and WF.gens[2] ~= nil
+            and V.profile(WF.cars[1]) == "engine_si_stock" and V.profile(WF.cars[2]) == "engine_ci_stock"
+            and V.profile(WF.cars[3]) == "engine_ci_stock" and G.profile(WF.gens[1]) == "generator_si_stock"
+            and G.profile(WF.gens[2]) == "generator_ci_bio", table.concat(parts, "; ")
+    end)
+    if not (WF.cars[1] and WF.cars[2] and WF.cars[3] and WF.gens[1] and WF.gens[2]) then RT.abort = "an engine is missing" end
+    return true
+end }
+
+-- The verdict for each band, on the game's own vehicles.
+RT.WF.verdicts = { name = "rtwf_verdicts", timeout = 600, fn = function()
+    local WF, V, Fmt = RT.WF, TLG.Integration.Vehicles, TLG.UI.Format
+    if RT.abort then return true end
+    local cases = {
+        { 1, "petrol_car_5pc_diesel", { gasoline = 9.5, diesel = 0.5 }, true, 1, "diesel" },
+        { 1, "petrol_car_20pc_diesel", { gasoline = 8, diesel = 2 }, true, 2, "diesel" },
+        { 1, "petrol_car_40pc_diesel", { gasoline = 6, diesel = 4 }, false, 4, "diesel" },
+        { 1, "petrol_car_20pc_biodiesel", { gasoline = 8, biodiesel = 2 }, true, 2, "biodiesel" },
+        { 1, "petrol_car_40pc_ethanol", { gasoline = 6, ethanol = 4 }, true, 2, "ethanol" },
+        { 1, "petrol_car_pure_ethanol", { ethanol = 10 }, true, 3, "ethanol" },
+        { 2, "ambulance_10pc_petrol", { diesel = 9, gasoline = 1 }, true, 1, "gasoline" },
+        { 2, "ambulance_30pc_petrol", { diesel = 7, gasoline = 3 }, true, 2, "gasoline" },
+        { 2, "ambulance_pure_petrol", { gasoline = 10 }, true, 3, "gasoline" },
+        { 2, "ambulance_5pc_ethanol", { diesel = 9.5, ethanol = 0.5 }, true, 2, "ethanol" },
+        { 2, "ambulance_20pc_ethanol", { diesel = 8, ethanol = 2 }, true, 3, "ethanol" },
+        { 2, "ambulance_40pc_ethanol", { diesel = 6, ethanol = 4 }, false, 4, "ethanol" },
+        { 2, "ambulance_pure_diesel", { diesel = 10 }, true, nil, nil },
+        { 1, "petrol_car_pure_petrol", { gasoline = 10 }, true, nil, nil },
+    }
+    for _, c in ipairs(cases) do
+        local v = WF.cars[c[1]]
+        WF.setTank(v, c[3])
+        local e = V.evaluate(v)
+        local text = Fmt.evaluation(e)
+        R:check("RTWF.verdict_" .. c[2], function()
+            local line = (not c[4]) and getText("IGUI_TLG_NotCompatible") or (c[5] and getText("IGUI_TLG_Harmful"))
+                or getText("IGUI_TLG_Compatible")
+            return e ~= nil and e.compatible == c[4] and e.wrongLevel == c[5] and e.wrongFuel == c[6]
+                and (e.harmful == true) == (c[5] ~= nil) and has(text, line),
+                string.format("%s; wear %.2f power %.2f failure %s exhaust %s attempt %s; text: %s", evaluationText(e), e.wearFactor,
+                    e.powerFactor, tostring(e.failureChance), tostring(e.exhaustWear), brief(e.attemptDamage), tostring(text))
+        end)
+    end
+    return true
+end }
+
+-- Sets a blend before a step and notes what the engine, exhaust and battery
+-- stand at.
+function RT.WF.prepare(name, i, q)
+    return { name = name, timeout = 60, fn = function()
+        local WF = RT.WF
+        if RT.abort then return true end
+        local v = WF.cars[i]
+        WF.setTank(v, q)
+        TLG.Notify.last = nil
+        WF.before = { engine = WF.partCondition(v, "Engine"), muffler = WF.partCondition(v, "Muffler"), charge = WF.charge(v),
+            tank = v:getPartById("GasTank"):getContainerContentAmount() }
+        return true
+    end }
+end
+
+RT.WF.afterRefused = { name = "rtwf_after_refused", timeout = 60, fn = function()
+    local WF = RT.WF
+    if RT.abort then return true end
+    local v, b = WF.cars[1], WF.before
+    local taken, used = b.engine - WF.partCondition(v, "Engine"), b.charge - WF.charge(v)
+    local note = TLG.Notify.last
+    R:check("RTWF.refused_start_costs_engine_and_battery", function()
+        return (taken == 1 or taken == 2) and used > TLG.Integration.Vehicles.ATTEMPT_BATTERY - 1e-4 and used < 0.05,
+            string.format("engine %s -> %s (%d taken); battery charge %.4f -> %.4f (%.4f used)", tostring(b.engine),
+                tostring(WF.partCondition(v, "Engine")), taken, b.charge, WF.charge(v), used)
+    end)
+    R:check("RTWF.refused_start_tells_the_driver", function()
+        return note ~= nil and note.key == "IGUI_TLG_Note_StartDamage" and note.fuel == "diesel"
+            and has(note.text, getText("IGUI_TLG_Fuel_diesel")), note and tostring(note.text) or "no note"
+    end)
+    return true
+end }
+
+-- The engine started and kept running while `litres` leave the tank; `done`
+-- judges what the mod took for them. `fail` holds the failure draw at 0 for
+-- those litres.
+function RT.WF.burn(name, i, litres, fail, done)
+    return { name = name, timeout = 9000, fn = function(ctx, ticks)
+        local WF, V = RT.WF, TLG.Integration.Vehicles
+        if RT.abort then return true end
+        local v = WF.cars[i]
+        if not ctx.phase then
+            pcall(function() v:setHotwired(true) end)
+            v:enter(0, player())
+            ctx.phase, ctx.tick, ctx.tries = "start", ticks, 0
+            return nil
+        end
+        if ctx.phase == "start" then
+            if v:isEngineRunning() then
+                ctx.phase, ctx.h = "settle", hours()
+                return nil
+            end
+            if (ticks - ctx.tick) % 240 == 30 and ctx.tries < 6 then
+                ctx.tries = ctx.tries + 1
+                ISTimedActionQueue.add(ISStartVehicleEngine:new(player()))
+            end
+            if ticks - ctx.tick > 1800 then
+                R:check(name .. ".engine_started", function()
+                    return false, string.format("not running after %d tries (state %s; %s)", ctx.tries, tostring(v:getEngineState()),
+                        evaluationText(V.evaluate(v)))
+                end)
+                pcall(function() v:exit(player()) end)
+                return true
+            end
+            return nil
+        end
+        if ctx.phase == "settle" then
+            -- A minute's pass of the mod with the engine running, so that it
+            -- knows the tank; then the litres go.
+            if hours() - ctx.h < 2.5 / 60 then return nil end
+            local tank, engine = v:getPartById("GasTank"), v:getPartById("Engine")
+            ctx.e = V.evaluate(v)
+            ctx.tank0 = tank:getContainerContentAmount()
+            ctx.engine0, ctx.muffler0 = engine:getCondition(), WF.partCondition(v, "Muffler")
+            ctx.carry0 = engine:getModData()[V.WEAR_KEY] or 0
+            local muffler = v:getPartById("Muffler")
+            ctx.mcarry0 = muffler and muffler:getModData()[V.WEAR_KEY] or 0
+            if fail then V.failRoll = function() return 0 end end
+            TLG.Notify.last = nil
+            tank:setContainerContentAmount(ctx.tank0 - litres)
+            ctx.phase, ctx.h = "burn", hours()
+            return nil
+        end
+        if hours() - ctx.h < 2.5 / 60 then return nil end
+        local tank, engine = v:getPartById("GasTank"), v:getPartById("Engine")
+        local burned = ctx.tank0 - tank:getContainerContentAmount()
+        local perLitre = TLG.Domain.EngineEffects.vehicleWearPerLitre(SandboxVars and SandboxVars.CarGasConsumption)
+        local r = { v = v, e = ctx.e, burned = burned, running = v:isEngineRunning(),
+            taken = ctx.engine0 - engine:getCondition(), carry = engine:getModData()[V.WEAR_KEY] or 0, carry0 = ctx.carry0,
+            due = ctx.carry0 + burned * (ctx.e.wearFactor - 1) * perLitre, perLitre = perLitre,
+            muffler0 = ctx.muffler0, muffler = WF.partCondition(v, "Muffler"), mcarry0 = ctx.mcarry0,
+            mcarry = v:getPartById("Muffler") and v:getPartById("Muffler"):getModData()[V.WEAR_KEY] or 0, note = TLG.Notify.last }
+        R:line("OBS  %s %s; ran on it: %.4f L gone (%.2f taken by the step); engine %s -> %s, carry %.4f -> %.4f; exhaust %s -> %s; running=%s",
+            name, evaluationText(ctx.e), burned, litres, tostring(ctx.engine0), tostring(engine:getCondition()), ctx.carry0, r.carry,
+            tostring(ctx.muffler0), tostring(r.muffler), tostring(r.running))
+        done(r)
+        V.failRoll = function() return 0.999 end
+        pcall(function() v:shutOff() end)
+        pcall(function() v:engineDoShuttingDown() end)
+        pcall(function() v:exit(player()) end)
+        return true
+    end }
+end
+
+-- A vanilla siphon of the tank into a new empty can, standing at the fuel cap.
+function RT.WF.siphon(name, i)
+    return { name = name, timeout = 4000, fn = function(ctx, ticks)
+        local WF = RT.WF
+        if RT.abort then return true end
+        local v = WF.cars[i]
+        local part = v:getPartById("GasTank")
+        if not ctx.placedAt then
+            local c = v:getAreaCenter(part:getArea())
+            ctx.target = { x = c:getX(), y = c:getY() }
+            player():teleportTo(math.floor(ctx.target.x), math.floor(ctx.target.y), 0)
+            ctx.placedAt = ticks
+            return nil
+        end
+        if ticks - ctx.placedAt == 5 then player():setPosition(ctx.target.x, ctx.target.y, 0) end
+        if ticks - ctx.placedAt < 20 then return nil end
+        if not ctx.queued then
+            if part:getContainerContentAmount() < 0.05 then return true end
+            ctx.can, ctx.fc = giveCan("Base.PetrolCan")
+            player():setPrimaryHandItem(ctx.can)
+            ctx.t0 = part:getContainerContentAmount()
+            ISTimedActionQueue.add(ISTakeGasolineFromVehicle:new(player(), part, ctx.can, nil))
+            ctx.queued, ctx.t1 = true, ticks
+            return nil
+        end
+        if ticks - ctx.t1 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+        local cv, status = tlgView("item", ctx.can)
+        WF.siphoned = WF.siphoned or {}
+        WF.siphoned[#WF.siphoned + 1] = ctx.can
+        R:line("OBS  %s tank %.4f -> %.4f L; the can: %s", name, ctx.t0, part:getContainerContentAmount(), viewText(cv, status))
+        R:check(name .. ".can_holds_the_tanks_blend", function()
+            local moved = ctx.t0 - part:getContainerContentAmount()
+            return cv ~= nil and moved > 0.5 and math.abs(TLG.Domain.Supply.total(cv) - moved) <= 2e-3 and (cv.q.gasoline or 0) > 0
+                and (cv.q.diesel or 0) > 0, string.format("%.4f L moved; %s", moved, viewText(cv, status))
+        end)
+        player():setPrimaryHandItem(nil)
+        return true
+    end }
+end
+
+RT.WF.generators = { name = "rtwf_generators", timeout = 3000, fn = function(ctx, ticks)
+    local WF, G, E = RT.WF, TLG.Integration.Generators, TLG.Domain.EngineEffects
+    if RT.abort then return true end
+    local g1, g2 = WF.gens[1], WF.gens[2]
+    if not ctx.phase then
+        -- The Diesel Generator, which started on pure petrol in the step
+        -- before: a litre gone at 15 times the wear factor, then one that
+        -- fails it.
+        local e = G.evaluate(g2)
+        local perLitre = E.generatorWearPerLitre(G.lowerChanceOneIn(g2), SandboxVars and SandboxVars.GeneratorFuelConsumption)
+        -- Running, so that the failure has something to switch off.
+        g2:setConnected(true)
+        pcall(function() g2:setActivated(true) end)
+        ctx.on0 = g2:isActivated()
+        G.chargeWear(g2)
+        local w = g2:getModData()[G.WEAR_KEY] or {}
+        local carry0, cond0 = w.c or 0, g2:getCondition()
+        g2:setFuel(g2:getFuel() - 1)
+        local whole = G.chargeWear(g2)
+        R:check("RTWF.diesel_generator_wears_on_petrol", function()
+            local want = math.floor(carry0 + 1 * (e.wearFactor - 1) * perLitre + 1e-9)
+            return e.wrongLevel == 3 and whole == want and want >= 4 and g2:getCondition() == cond0 - want and g2:isActivated(),
+                string.format("%s; 1 L (%.1f h at the reference load, GeneratorFuelConsumption %s) at wear factor %.2f, %.4f a litre at factor 2: %d points due, %d taken; condition %d -> %d; still on=%s",
+                    evaluationText(e), 1 / (E.GENERATOR_REFERENCE_LPH * (SandboxVars.GeneratorFuelConsumption or 1)),
+                    tostring(SandboxVars.GeneratorFuelConsumption), e.wearFactor, perLitre, want, whole, cond0, g2:getCondition(),
+                    tostring(g2:isActivated()))
+        end)
+        G.failRoll = function() return 0 end
+        g2:setFuel(g2:getFuel() - 1)
+        G.chargeWear(g2)
+        G.failRoll = function() return 0.999 end
+        player():teleportTo(g2:getSquare():getX() + 1, g2:getSquare():getY(), 0)
+        ctx.phase, ctx.tick = "dead", ticks
+        return nil
+    end
+    if ctx.phase == "dead" then
+        if ticks - ctx.tick < 60 then return nil end
+        local valid = "?"
+        pcall(function() valid = tostring(ISActivateGenerator:new(player(), g2, true):isValid()) end)
+        R:check("RTWF.diesel_generator_fails_on_petrol", function()
+            return ctx.on0 == true and g2:getCondition() == 0 and not g2:isActivated() and valid == "false",
+                string.format("running before=%s; condition %d after the draw fell; running=%s; the game's switch-on valid=%s",
+                    tostring(ctx.on0), g2:getCondition(), tostring(g2:isActivated()), valid)
+        end)
+        g2:setConnected(false)
+        -- The cure for the petrol generator, refused on 40 % diesel: the
+        -- mod's drain into a can, then petrol.
+        player():teleportTo(g1:getSquare():getX() + 1, g1:getSquare():getY(), 0)
+        ctx.phase, ctx.tick = "drain", ticks
+        return nil
+    end
+    if ticks - ctx.tick < 30 then return nil end
+    local can, fc = giveCan("Base.PetrolCan")
+    local f0 = g1:getFuel()
+    local r = ask("RTWF.drain_the_generator", "transfer", { source = TLG.Authority.Resolver.refForObject(g1, "generator"),
+        destination = { kind = "item", id = can:getID() }, amount = fc:getFreeCapacity() })
+    local cv, cstatus = tlgView("item", can)
+    R:check("RTWF.drain_empties_the_generator_into_a_can", function()
+        return r.ok == true and g1:getFuel() < 0.01 and cv ~= nil and math.abs(TLG.Domain.Supply.total(cv) - f0) <= 2e-3
+            and (cv.q.diesel or 0) > 1.9 and (cv.q.gasoline or 0) > 2.9, string.format(
+            "transfer ok=%s; generator %.4f -> %.4f L; the can: %s", tostring(r.ok), f0, g1:getFuel(), viewText(cv, cstatus))
+    end)
+    local petrol = giveCan("Base.PetrolCan", { { Fluid.Petrol, 3.0 } })
+    local r2 = ask("RTWF.petrol_into_the_drained_generator", "transfer", { source = { kind = "item", id = petrol:getID() },
+        destination = TLG.Authority.Resolver.refForObject(g1, "generator"), amount = 3 })
+    local e = G.evaluate(g1)
+    R:check("RTWF.drained_generator_takes_petrol_again", function()
+        return r2.ok == true and e.compatible == true and e.harmful ~= true and g1:getFuel() > 2.9,
+            string.format("transfer ok=%s reason=%s; %s; fuel %.4f L", tostring(r2.ok), tostring(r2.reason), evaluationText(e), g1:getFuel())
+    end)
+    return true
+end }
+
+RT.WF.genBefore = { name = "rtwf_generators_fuelled", timeout = 60, fn = function()
+    local WF = RT.WF
+    if RT.abort then return true end
+    WF.setGen(WF.gens[1], { gasoline = 3, diesel = 2 })
+    WF.setGen(WF.gens[2], { gasoline = 5 })
+    WF.genCond0 = WF.gens[1]:getCondition()
+    TLG.Notify.last = nil
+    return true
+end }
+
+RT.WF.genRefused = { name = "rtwf_generator_refused", timeout = 60, fn = function()
+    local WF = RT.WF
+    if RT.abort then return true end
+    local taken, note = WF.genCond0 - WF.gens[1]:getCondition(), TLG.Notify.last
+    R:check("RTWF.generator_refused_start_costs_condition", function()
+        return (taken == 1 or taken == 2) and note ~= nil and note.key == "IGUI_TLG_Note_StartDamage" and note.fuel == "diesel",
+            string.format("condition %d -> %d; note: %s", WF.genCond0, WF.gens[1]:getCondition(), note and tostring(note.text) or "none")
+    end)
+    return true
+end }
+
+-- The sandbox option off: wrong fuel blocks the start and costs nothing.
+RT.WF.off = { name = "rtwf_option_off", timeout = 60, fn = function()
+    local WF, V, G = RT.WF, TLG.Integration.Vehicles, TLG.Integration.Generators
+    if RT.abort then return true end
+    local v = WF.cars[2]
+    WF.setTank(v, { gasoline = 10 })
+    WF.setGen(WF.gens[1], { gasoline = 3, diesel = 2 })
+    local on, gon = V.evaluate(v), G.evaluate(WF.gens[1])
+    SandboxVars.TheLastGallon.WrongFuelDamage = false
+    local off, goff = V.evaluate(v), G.evaluate(WF.gens[1])
+    local cond0 = v:getPartById("Engine"):getCondition()
+    local taken = V.attemptDamage(v, off, player())
+    SandboxVars.TheLastGallon.WrongFuelDamage = true
+    R:check("RTWF.option_off_blocks_without_damage", function()
+        return on.compatible == true and on.harmful == true and gon.attemptDamage ~= nil and off.compatible == false
+            and off.harmful ~= true and off.wearFactor == 1 and goff.compatible == false and goff.attemptDamage == nil
+            and taken == 0 and v:getPartById("Engine"):getCondition() == cond0 and V.wrongFuelDamageEnabled() == true,
+            string.format("on: %s | off: %s | generator off: %s | points taken by a refused start: %d", evaluationText(on),
+                evaluationText(off), evaluationText(goff), taken)
+    end)
+    WF.release()
+    return true
+end }
+
+RT.wrongFuelSteps = { RT.waitWorld, RT.BD.photoSetup, RT.WF.spawn, RT.WF.verdicts,
+    -- The petrol car: no start on 40 % diesel; wear on 20 %.
+    RT.WF.prepare("rtwf_car_40pc_diesel", 1, { gasoline = 6, diesel = 4 }),
+    vehicleGateStep("RTWF.petrol_car_on_40pc_diesel", function() return RT.WF.cars[1] end, true), RT.WF.afterRefused,
+    RT.WF.prepare("rtwf_car_20pc_diesel", 1, { gasoline = 8, diesel = 2 }),
+    RT.WF.burn("RTWF.petrol_car_runs_on_20pc_diesel", 1, 4, false, function(r)
+        R:check("RTWF.diesel_wears_a_petrol_engine_and_its_exhaust", function()
+            local exhaustDue = r.mcarry0 + r.burned * (r.e.exhaustWear or 0)
+            return r.running and r.e.wrongLevel == 2 and r.taken >= 3 and math.abs(r.taken + r.carry - r.due) <= 0.06
+                and r.muffler0 ~= nil and math.abs((r.muffler0 - r.muffler) + r.mcarry - exhaustDue) <= 0.06
+                and r.muffler0 - r.muffler >= 2, string.format(
+                "%.4f L at wear factor %.2f: engine %d taken + %.4f carried, %.4f due; exhaust %s -> %s + %.4f carried, %.4f due",
+                r.burned, r.e.wearFactor, r.taken, r.carry, r.due, tostring(r.muffler0), tostring(r.muffler), r.mcarry, exhaustDue)
+        end)
+    end),
+    -- The ambulance: petrol refused by the mod's pour, then confirmed.
+    RT.WF.prepare("rtwf_ambulance_diesel", 2, { diesel = 10 }),
+    vehiclePourStep("RTWF.petrol_into_the_ambulance_unconfirmed", { { Fluid.Petrol, 5.0 } }, false, false,
+        function() return RT.WF.cars[2] end),
+    vehiclePourStep("RTWF.petrol_into_the_ambulance_confirmed", { { Fluid.Petrol, 5.0 } }, true, true,
+        function() return RT.WF.cars[2] end),
+    RT.WF.burn("RTWF.ambulance_runs_on_a_third_petrol", 2, 2, false, function(r)
+        R:check("RTWF.petrol_wears_a_diesel_engine", function()
+            return r.running and r.e.wrongLevel == 2 and r.e.wrongFuel == "gasoline" and r.taken >= 2
+                and math.abs(r.taken + r.carry - r.due) <= 0.06, string.format(
+                "%.4f L at wear factor %.2f: %d taken + %.4f carried, %.4f due; still running=%s", r.burned, r.e.wearFactor, r.taken,
+                r.carry, r.due, tostring(r.running))
+        end)
+    end),
+    -- The pickup van on pure petrol: it starts, and the draw fails it.
+    RT.WF.prepare("rtwf_pickup_pure_petrol", 3, { gasoline = 10 }),
+    RT.WF.burn("RTWF.pickup_van_runs_on_pure_petrol", 3, 1, true, function(r)
+        local cond = r.v:getPartById("Engine"):getCondition()
+        R:check("RTWF.diesel_on_petrol_fails_when_the_draw_falls", function()
+            return r.e.wrongLevel == 3 and r.e.failureChance == 0.02 and cond == 0 and not r.running and r.note ~= nil
+                and r.note.key == "IGUI_TLG_Note_EngineFailed" and r.note.fuel == "gasoline",
+                string.format("failure chance %s a litre; engine condition %d; running=%s; note: %s", tostring(r.e.failureChance), cond,
+                    tostring(r.running), r.note and tostring(r.note.text) or "none")
+        end)
+    end),
+    { name = "rtwf_dead_engine", timeout = 1200, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        local v = RT.WF.cars[3]
+        if not ctx.t0 then
+            pcall(function() v:setHotwired(true) end)
+            v:enter(0, player())
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 == 30 then ISTimedActionQueue.add(ISStartVehicleEngine:new(player())) end
+        if ticks - ctx.t0 < 330 then return nil end
+        R:check("RTWF.failed_engine_does_not_start_again", function()
+            return not v:isEngineRunning() and v:getPartById("Engine"):getCondition() == 0,
+                string.format("state %s, running=%s, engine condition %d", tostring(v:getEngineState()), tostring(v:isEngineRunning()),
+                    v:getPartById("Engine"):getCondition())
+        end)
+        pcall(function() v:exit(player()) end)
+        return true
+    end },
+    -- The cure: siphon the ambulance, pour diesel, start.
+    RT.WF.siphon("RTWF.siphon_the_ambulance_1", 2), RT.WF.siphon("RTWF.siphon_the_ambulance_2", 2),
+    vehiclePourStep("RTWF.diesel_into_the_siphoned_ambulance", { { Fluid.Get("TLG_Diesel"), 10.0 } }, false, true,
+        function() return RT.WF.cars[2] end),
+    { name = "rtwf_ambulance_cured", timeout = 60, fn = function()
+        if RT.abort then return true end
+        local e = TLG.Integration.Vehicles.evaluate(RT.WF.cars[2])
+        R:check("RTWF.siphoned_and_refilled_ambulance_is_clean", function()
+            return e.compatible == true and e.harmful ~= true and e.wearFactor == 1, evaluationText(e)
+        end)
+        return true
+    end },
+    vehicleGateStep("RTWF.cured_ambulance_starts", function() return RT.WF.cars[2] end, false, true),
+    -- The generators.
+    RT.WF.genBefore,
+    generatorGateStep("RTWF.petrol_generator_on_40pc_diesel", function() return RT.WF.gens[1] end, true), RT.WF.genRefused,
+    generatorGateStep("RTWF.diesel_generator_on_pure_petrol", function() return RT.WF.gens[2] end, false),
+    RT.WF.generators, RT.WF.off, RT.finish }
 ------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
@@ -15743,7 +16299,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -15824,6 +16380,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtdp" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, diesel at some pumps")
                 TLGH.Steps.run(R, RT.dieselPumpSteps, H, nil)
+            elseif REQUEST == "sp-rtwf" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, wrong fuel damages engines")
+                TLGH.Steps.run(R, RT.wrongFuelSteps, H, nil)
             elseif REQUEST == "sp-rtdv" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, diesel vehicles")
                 TLGH.Steps.run(R, RT.dieselVehicleSteps, H, nil)

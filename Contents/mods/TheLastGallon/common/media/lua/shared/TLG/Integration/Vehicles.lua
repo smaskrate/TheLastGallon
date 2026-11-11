@@ -17,7 +17,11 @@
 --                      through per-instance engine controls only (G09 verified
 --                      RT-SP): the start gate, a stall (both only with the
 --                      sandbox option VehicleStalls), the engine's power while
---                      it runs and the engine part's condition (D-031)
+--                      it runs and the engine part's condition (D-031); wrong
+--                      fuel (D-037, sandbox option WrongFuelDamage) also takes
+--                      engine condition and battery charge at a refused start,
+--                      exhaust condition per litre burned, and can fail the
+--                      engine outright
 --   runtime status     refuel, siphon, idle-burn reconciliation, start gate
 --                      and stall verified RT-SP 2026-10-31; driving burn
 --                      reconciliation and a stall on the move RT-SP
@@ -31,6 +35,7 @@
 -- so hooks snapshot at construction and settle once at complete/stop.
 require "TLG/Integration/Containers"
 require "TLG/Domain/EngineEffects"
+require "TLG/Notify"
 require "TLG/Boot"
 
 TLG.Integration.Vehicles = TLG.Integration.Vehicles or {}
@@ -312,6 +317,78 @@ local function vehicleStallsEnabled()
 end
 V.stallsEnabled = vehicleStallsEnabled
 
+-- The sandbox option "Wrong fuel damages engines" (TheLastGallon.WrongFuelDamage,
+-- D-037). Off: a fuel the engine is not built for blocks the start and does
+-- no harm, as before 0.3.0. The domain asks through this.
+function V.wrongFuelDamageEnabled()
+    local o = SandboxVars and SandboxVars.TheLastGallon and SandboxVars.TheLastGallon.WrongFuelDamage
+    return o ~= false
+end
+Consumers.damageEnabled = V.wrongFuelDamageEnabled
+
+-- Battery charge (0..1) a refused start on wrong fuel costs: the mod's gate
+-- ends the attempt before the game's own start code runs.
+V.ATTEMPT_BATTERY = 0.02
+-- Rolls, replaceable by tests: whole engine condition points for a refused
+-- start, and the draw against the chance of a sudden failure.
+V.attemptRoll = function(min, max) return ZombRand(min, max + 1) end
+V.failRoll = function() return ZombRandFloat(0, 1) end
+
+-- A start the wrong fuel refused (the last band of a rule): engine condition
+-- and battery charge go, and the driver is told why. Other refusals (stale
+-- fuel, water, an unlucky roll) cost nothing. Returns the points taken.
+function V.attemptDamage(vehicle, e, player)
+    if e == nil or e.compatible or e.attemptDamage == nil then return 0 end
+    local engine = vehicle:getPartById("Engine")
+    if engine == nil then return 0 end
+    local n = V.attemptRoll(e.attemptDamage[1], e.attemptDamage[2])
+    if n > 0 then
+        engine:setCondition(math.max(0, engine:getCondition() - n))
+        vehicle:transmitPartCondition(engine)
+    end
+    pcall(function()
+        local battery = vehicle:getPartById("Battery")
+        local item = battery and battery:getInventoryItem()
+        if item then
+            item:setCurrentUsesFloat(math.max(0, item:getCurrentUsesFloat() - V.ATTEMPT_BATTERY))
+            vehicle:transmitPartUsedDelta(battery)
+        end
+    end)
+    TLG.Notify.send(player, "IGUI_TLG_Note_StartDamage", e.wrongFuel)
+    return n
+end
+
+-- Exhaust condition for unburned fuel (diesel in a spark engine), the
+-- fraction carried in the part's mod data. No exhaust fitted: nothing.
+function V.applyExhaust(vehicle, points)
+    local part = vehicle:getPartById("Muffler")
+    if part == nil or part:getInventoryItem() == nil or points <= 0 then return 0 end
+    local md = part:getModData()
+    local total = (md[V.WEAR_KEY] or 0) + points
+    local whole = math.floor(total + 1e-9)
+    md[V.WEAR_KEY] = total - whole
+    if whole > 0 then
+        part:setCondition(math.max(0, part:getCondition() - whole))
+        vehicle:transmitPartCondition(part)
+    end
+    return whole
+end
+
+-- Sudden failure: the engine's condition goes to 0 and it stops. The game
+-- does not start an engine at 0 (BC BaseVehicle.tryStartEngine).
+function V.failEngine(vehicle, e)
+    local engine = vehicle:getPartById("Engine")
+    if engine == nil then return false end
+    engine:setCondition(0)
+    vehicle:transmitPartCondition(engine)
+    vehicle:engineDoStalling()
+    local driver
+    pcall(function() driver = vehicle:getDriver() end)
+    TLG.Notify.send(driver, "IGUI_TLG_Note_EngineFailed", e and e.wrongFuel)
+    TLG.Log.debug("vehicle engine failed on wrong fuel: %s", e and table.concat(e.reasons, ",") or "")
+    return true
+end
+
 function V.evaluate(vehicle)
     local rec = V.read(vehicle, false)
     if rec == nil then return nil end
@@ -361,12 +438,20 @@ function V.applyWear(vehicle, e)
     if last == nil or now >= last or e == nil or e.grade == "empty" then return end
     local md = engine:getModData()
     local perLitre = EngineEffects.vehicleWearPerLitre(SandboxVars and SandboxVars.CarGasConsumption)
-    local carry, whole = EngineEffects.accrue(md[V.WEAR_KEY], last - now, e.wearFactor, perLitre)
+    local burned = last - now
+    local carry, whole = EngineEffects.accrue(md[V.WEAR_KEY], burned, e.wearFactor, perLitre)
     md[V.WEAR_KEY] = carry
     if whole > 0 then
         engine:setCondition(math.max(0, engine:getCondition() - whole))
         vehicle:transmitPartCondition(engine)
     end
+    -- Wrong fuel (D-037): the exhaust, and the chance that the engine fails.
+    local reference = EngineEffects.vehicleReferenceLitres(burned, SandboxVars and SandboxVars.CarGasConsumption)
+    if e.exhaustWear then V.applyExhaust(vehicle, reference * e.exhaustWear) end
+    if e.failureChance and V.failRoll() < EngineEffects.failureOdds(e.failureChance, reference) then
+        return V.failEngine(vehicle, e)
+    end
+    return false
 end
 
 -- Called every in-game minute on the authority for every vehicle in the cell.
@@ -379,7 +464,7 @@ function V.applyEffects(vehicle, rng)
     local e = V.evaluate(vehicle)
     V.applyPower(vehicle, e, true)
     if e == nil or e.grade == "empty" then return end
-    V.applyWear(vehicle, e)
+    if V.applyWear(vehicle, e) then return end
     if not vehicleStallsEnabled() then return end
     local roll = rng and rng:next() or ZombRandFloat(0, 1)
     if not e.compatible or roll < V.STALL_CHANCE_PER_MINUTE * (1 - e.startFactor) then
@@ -401,6 +486,7 @@ local function installStartGate()
                 local ok, e = pcall(V.evaluate, vehicle)
                 if ok and e and e.grade ~= "empty" and (not e.compatible or V.startRoll() > e.startFactor) then
                     vehicle:engineDoStartingFailed()
+                    V.attemptDamage(vehicle, e, self.character)
                     TLG.Log.debug("vehicle start refused: %s", table.concat(e.reasons, ","))
                     return true
                 end

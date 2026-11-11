@@ -79,6 +79,31 @@ function E.powerStep(state, current, factor, running)
     return { base = base, applied = target }, nil
 end
 
+-- The odds that an engine with a failure chance of `perLitre` for each litre
+-- fails while burning `litres` (D-037). The chance, like the exhaust's wear,
+-- is given for a car's litre at the sandbox's normal consumption: an hour's
+-- driving burns VEHICLE_REFERENCE_LPH of them (run 176).
+E.VEHICLE_REFERENCE_LPH = 3.3
+function E.failureOdds(perLitre, litres)
+    if type(perLitre) ~= "number" or perLitre <= 0 or type(litres) ~= "number" or litres <= 0 then return 0 end
+    if perLitre >= 1 then return 1 end
+    return 1 - math.exp(litres * math.log(1 - perLitre))
+end
+
+-- A car's litres as reference litres: the sandbox's consumption multiplier
+-- taken out, so the odds for an hour of driving hold.
+function E.vehicleReferenceLitres(litres, consumption)
+    return litres / positive(consumption, 1)
+end
+
+-- A generator burns far less than a car, and how much depends on the
+-- sandbox (0.1 by default): its litres count as the hours they lasted at the
+-- reference load, each hour as an hour of a car's driving. The odds of a
+-- failure in an hour are then the same for both.
+function E.generatorReferenceLitres(litres, consumption)
+    return litres / (E.GENERATOR_REFERENCE_LPH * positive(consumption, 1)) * E.VEHICLE_REFERENCE_LPH
+end
+
 -- Wear owed for `litres` burned at `wearFactor`, `perLitre` condition per
 -- litre at factor 2. Returns the fraction carried on and the whole points to
 -- take off now.

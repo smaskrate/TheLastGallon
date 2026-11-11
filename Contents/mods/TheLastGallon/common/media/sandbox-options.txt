@@ -46,6 +46,14 @@ option TheLastGallon.VehicleStalls
     translation = TLG_VehicleStalls,
 }
 
+option TheLastGallon.WrongFuelDamage
+{
+    type = boolean,
+    default = true,
+    page = TheLastGallon,
+    translation = TLG_WrongFuelDamage,
+}
+
 option TheLastGallon.StationContamination
 {
     type = boolean,

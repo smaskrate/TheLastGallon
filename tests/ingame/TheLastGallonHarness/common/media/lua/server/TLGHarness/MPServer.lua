@@ -989,15 +989,16 @@ function services.effects_age(player, args)
 end
 
 -- The tank's litres made a blend no stock engine takes (fixture): petrol and
--- ethanol 5 to 3, as the single-player mode's second leg poured them.
+-- diesel 5 to 3, as the single-player mode's second leg poured them (ethanol
+-- until 0.3.0, which now runs a stock engine lean: D-037).
 function services.effects_blend(player, args)
     local V = TLG.Integration.Vehicles
     local v = efCar()
     local rec = V.read(v, true)
     local total = 0
     for _, q in pairs(rec.q) do total = total + q end
-    rec.q = { gasoline = total * 5 / 8, ethanol = total * 3 / 8 }
-    rec.deg = { gasoline = rec.deg.gasoline or 0, ethanol = 0 }
+    rec.q = { gasoline = total * 5 / 8, diesel = total * 3 / 8 }
+    rec.deg = { gasoline = rec.deg.gasoline or 0, diesel = 0 }
     rec.rev = (rec.rev or 0) + 1
     V.writeSidecar(v, rec)
     local out = evaluation(V.evaluate(v))

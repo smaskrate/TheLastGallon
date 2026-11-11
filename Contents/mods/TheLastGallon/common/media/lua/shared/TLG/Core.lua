@@ -4,7 +4,7 @@
 TLG = TLG or {}
 
 TLG.MOD_ID = "TheLastGallon"
-TLG.VERSION = "0.2.0"
+TLG.VERSION = "0.3.0"
 
 -- Persistent/versioned contracts (see docs/migrations.md).
 TLG.SCHEMA = {

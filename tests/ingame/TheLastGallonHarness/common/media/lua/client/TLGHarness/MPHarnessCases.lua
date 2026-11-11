@@ -563,15 +563,17 @@ FU.afterPourPetrol = probeFuel("after_pour_petrol", function(m)
     end)
 end)
 
+-- Can 4 holds diesel since 0.3.0 (ethanol before: it now runs a stock
+-- generator lean, D-037); the step names keep "ethanol".
 FU.afterPourEthanol = probeFuel("after_pour_ethanol", function(m)
-    check("pour_ethanol_refused_nothing_moved", function()
+    check("pour_diesel_refused_nothing_moved", function()
         return near(tonumber(m.g1Fuel), FU.g1b, 1e-6) and near(canL("can4"), 3, 1e-6), string.format(
             "generator %.4f L (was %.4f); can %.4f L", tonumber(m.g1Fuel) or -1, FU.g1b or -1, canL("can4"))
     end)
 end)
 
 FU.afterPourConfirmed = probeFuel("after_pour_ethanol_confirmed", function(m)
-    check("pour_ethanol_confirmed_into_empty_generator", function()
+    check("pour_diesel_confirmed_into_empty_generator", function()
         return near(tonumber(m.g2Fuel), 3, 2e-3) and near(tonumber(m.g2RecL), 3, 2e-3) and near(canL("can4"), 0),
             string.format("generator 2 %.4f L, record %.4f L; can %.4f L", tonumber(m.g2Fuel) or -1,
             tonumber(m.g2RecL) or -1, canL("can4"))
@@ -585,7 +587,7 @@ end
 FU.afterStarts = probeFuel("after_generator_starts", function(m)
     FU.g1c = tonumber(m.g1Fuel)
     check("generator_on_petrol_starts", function() return m.g1On == "true", "g1 on=" .. tostring(m.g1On) end)
-    check("generator_on_ethanol_refused", function() return m.g2On == "false", "g2 on=" .. tostring(m.g2On) end)
+    check("generator_on_diesel_refused", function() return m.g2On == "false", "g2 on=" .. tostring(m.g2On) end)
 end)
 
 -- The generator's record is reconciled with the game's burn when it is
@@ -1577,7 +1579,7 @@ elseif MP.only == "fuel" then
         giveCan("give_pour_can", { petrol = "3" }, "can3"), arrived("can3"),
         walkTo("mp_walk_to_generator_1", function() return site("g1x") + 1, site("g1y") end),
         pour("pour_petrol", "can3", 1, false), pourReached("pour_petrol"), FU.afterPourPetrol,
-        giveCan("give_ethanol_can", { fill = "TLG_Ethanol", litres = "3" }, "can4"), arrived("can4"),
+        giveCan("give_ethanol_can", { fill = "TLG_Diesel", litres = "3" }, "can4"), arrived("can4"),
         pour("pour_ethanol", "can4", 1, false), pourReached("pour_ethanol"), FU.afterPourEthanol,
         walkTo("mp_walk_to_generator_2", function() return site("g2x") + 1, site("g2y") end),
         pour("pour_ethanol_confirmed", "can4", 2, true), pourReached("pour_ethanol_confirmed"), FU.afterPourConfirmed,

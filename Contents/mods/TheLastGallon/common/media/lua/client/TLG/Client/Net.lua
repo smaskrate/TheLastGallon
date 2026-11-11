@@ -3,6 +3,7 @@
 require "TLG/Authority/Handlers"
 require "TLG/Authority/MachineHandlers"
 require "TLG/Authority/ConversionHandlers"
+require "TLG/Notify"
 
 TLG.Net = TLG.Net or { pending = {}, counter = 0 }
 local Net = TLG.Net
@@ -32,6 +33,11 @@ end
 
 Events.OnServerCommand.Add(function(module, command, args)
     if module == "TLG" and command == "reply" then deliver(args) end
+    -- A line from the server about this player's engine (TLG/Notify.lua).
+    if module == "TLG" and command == "note" and type(args) == "table" and type(args.key) == "string"
+        and string.sub(args.key, 1, 14) == "IGUI_TLG_Note_" then
+        TLG.Notify.show(args.key, args.fuel)
+    end
 end)
 
 return Net

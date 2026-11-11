@@ -87,6 +87,8 @@ exists, and decays 0.001/h when dry.
 | generator_si_flex | gasoline 1/1, ethanol 1/1 (cold start below 5 °C) | 4.0 | 0.5 % |
 | engine_ci_stock | diesel 1/1, biodiesel 0.2/1 | 3.5 | 0.1 % |
 | engine_ci_bio | diesel, biodiesel 1/1, fuel heater | 3.5 | 0.15 % |
+| generator_ci_stock | diesel 1/1, biodiesel 0.2/1 | 4.0 | 0.15 % |
+| generator_ci_bio (the Diesel Generator) | diesel, biodiesel 1/1 | 4.0 | 0.15 % |
 | generator_gas | propane, biogas, woodgas | — | — |
 
 Effects:
@@ -102,6 +104,58 @@ Effects:
 
 Stalls and refused starts of cars follow the sandbox option **Bad fuel can
 stall engines** (D-031).
+
+### Wrong fuel (D-037, from 0.3.0)
+
+A fuel the engine is not built for no longer just blocks the start. Each
+rule sums the share of its fuels in the tank and takes the last band the
+share is above. All numbers are game values, first estimates; the order
+of harm follows real engines (petrol or ethanol in a diesel keeps it
+running and wrecks it; diesel in a spark engine mostly stops it).
+
+| Rule | Engines | Share above | Start × | Power × | Wear × | Also |
+| --- | --- | ---: | ---: | ---: | ---: | --- |
+| Diesel + biodiesel in a spark engine | the four `*_si_*` profiles | 1 % | 0.9 | 0.85 | 3 | |
+| | | 10 % | 0.4 | 0.6 | 6 | exhaust 0.5 a litre |
+| | | 30 % | no start | — | 10 | exhaust 1.0 a litre; 1–2 engine condition and 2 % battery charge at each refused start |
+| Petrol in a diesel | the four `*_ci_*` profiles | 2 % | 0.9 | 0.9 | 3 | |
+| | | 15 % | 0.5 | 0.7 | 8 | |
+| | | 50 % | 0.25 | 0.5 | 15 | failure 2 % a litre |
+| Ethanol in a diesel | the four `*_ci_*` profiles | 2 % | 0.5 | 0.7 | 8 | |
+| | | 10 % | 0.25 | 0.5 | 15 | failure 2 % a litre |
+| | | 30 % | no start | — | 20 | failure 4 % a litre; 1–2 condition at each refused start |
+| Ethanol past a stock petrol engine's `max` | `engine_si_stock` (25 %), `generator_si_stock` (15 %) | its max | 0.7 | 0.75 | 4 | |
+| | | 60 % | 0.35 | 0.6 | 8 | no start below 10 °C |
+
+* The first threshold of each rule is the profile's `foreignMax`, the
+  trace tolerated before. A fuel no rule covers (methanol, plant oil,
+  glycerin) still blocks the start above it, and a ruled fuel below its
+  first band still counts toward it.
+* Biodiesel in a spark engine wears a fifth more than diesel, in
+  proportion to its share of the wrong fuel.
+* Where two rules apply (petrol and ethanol in a diesel) the worse value
+  of each factor counts; they do not multiply. The wrong-fuel wear factor
+  does multiply with the factors of stale or dirty fuel.
+* The wear multiplies `wearFactor`, so it is charged like any other wear
+  (the table below): a car at × 8 loses (8 − 1) × 0.15 = 1.05 condition a
+  litre, 3.5 an hour of driving; a generator at × 15 about 0.7 an hour at
+  a fridge's load.
+* The numbers of a no-start band are for an engine kept running with
+  **Bad fuel can stall engines** off: there is no start gate then.
+* Failure: the chance is for a car's litre at the sandbox's normal
+  consumption, 6.4 % for an hour's driving (3.3 L) at 2 %, a little over
+  half for a 40 L tank. A generator's litres count as the hours they
+  lasted at the reference load, so its odds for an hour are the same as
+  a car's. A failure sets the engine's (or the generator's) condition to
+  0 and stops it.
+* The exhaust wear applies to the vehicle's `Muffler` part, when one is
+  fitted, for a car's litre as above.
+* The sandbox option **Wrong fuel damages engines** off: none of this;
+  such fuel blocks the start, as before 0.3.0.
+* Not tuned against play. The ethanol row keeps the flex conversion worth
+  doing only if its wear deters: a stock car loses 0.45 condition a litre
+  between its limit and 60 % ethanol and 1.05 above, 18 and 42 points for
+  a 40 L tank.
 
 ### Engine effects (`TLG/Domain/EngineEffects.lua`, D-031)
 

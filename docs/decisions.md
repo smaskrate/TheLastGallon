@@ -1471,3 +1471,69 @@ their replacement.
 * Not decided here: whether a `TLG` item tagged `base:generator` becomes
   a working `IsoGenerator` with its own profile. That needs a run in game
   before the generator is built.
+
+## D-037 Wrong fuel damages engines: version 0.3.0
+* Decision (the owner, 2026-11-11): a fuel put into an engine built for
+  another must damage it, "and whatever else applicable", flex engines
+  and ethanol considered. The owner was shown a matrix of every fuel in
+  every engine and chose its order of harm "as real engines": petrol or
+  ethanol in a diesel does the most lasting damage, because the engine
+  keeps running; diesel in a spark engine mostly stops it. The owner's
+  first statement was the reverse (diesel in a petrol engine the worst);
+  the matrix said so and offered both.
+* What changes: until 0.2.0 any such fuel above a trace made the engine
+  incompatible, which refused the start and stalled a running engine,
+  and damaged nothing. From 0.3.0 the consumer profiles carry
+  `wrongFuel` rules with bands by the fuel's share (`balance.md` has the
+  table): the engine runs worse and wears faster, and only the last band
+  of some rules refuses the start. Ethanol above a stock petrol engine's
+  limit follows the same idea (`accepts.ethanol.over`).
+* New mechanisms, beside the start, power and wear factors of D-031:
+  engine condition (and, for a car, battery charge) lost at a start the
+  wrong fuel refused; exhaust condition for each litre of unburned
+  diesel; a chance for each litre that the engine fails outright
+  (condition 0). The player is told by a line over the character's head
+  when a start damaged the engine and when an engine failed
+  (`TLG/Notify.lua`, sent by the authority to the player's client).
+* The evaluation has a new result, `harmful`: the engine runs, or tries
+  to, on fuel that damages it. The mod's pours refuse such a blend until
+  confirmed, as they refuse an incompatible one, and the status text says
+  "It runs on this, but the fuel damages the engine" where it said the
+  engine could use it.
+* What the assistant chose and the owner has not seen:
+  * every number of the bands (the matrix's were shown as first
+    estimates), and a harsher top band for ethanol in a stock petrol
+    engine than the matrix had (hard start and wear × 8 above 60 %): at
+    × 4 a stock generator would have run on pure ethanol at little cost
+    and the flex conversion would have lost its purpose;
+  * 10 °C as "cold" for that band's no-start, the flex car's own
+    threshold;
+  * the worst rule decides where two apply, instead of multiplying;
+  * a refused start costs 1–2 condition and 2 % battery charge; the
+    game's own start code, which the mod's gate ends before, was not
+    read for what an attempt costs there;
+  * a generator's failure odds follow the hours its litres lasted, not
+    the litres (launch 261: at the default `GeneratorFuelConsumption`
+    0.1 a litre lasts 67 hours at a fridge's load);
+  * a sandbox option, **Wrong fuel damages engines** (default on), which
+    brings back the plain block when off.
+* Consequences to know:
+  * the game's own actions do not check the fuel. **Add Fuel** offers
+    petrol cans to every generator and three pumps in four give petrol,
+    so they now damage diesel engines without a warning. The mod's pours
+    warn;
+  * a save from 0.2.0 changes behaviour on load: an engine that refused
+    to start on such a blend now starts, or tries to, and is damaged;
+  * a generator's wear and failure are charged when the mod next touches
+    it (D-031): it can stand at condition 0 only once someone refuels,
+    moves or switches it. A failed generator is switched off then; the
+    game does not switch on a generator at condition 0 (SRC
+    `ISActivateGenerator.isValid`).
+* Tests: `tests/domain/test_wrong_fuel.lua` (every band of every rule),
+  `tests/integration/test_wrong_fuel_damage.lua` (the adapters), a case
+  in `tests/authority/test_transactions.lua` (the pour). In game:
+  `tools\run-sp-harness.ps1 -Mode wrong-fuel` (`test-results.md`).
+* The harness's gate tests that relied on ethanol blocking a stock
+  engine use diesel since this decision (the full run's `G03.gate_diesel`
+  and `G04.gate_diesel`, the driving and engine-effects modes' unfit
+  blend, the multiplayer fuel and effects cases).

@@ -101,11 +101,20 @@ end
 function Fmt.evaluation(e)
     if e == nil then return "" end
     local lines = { tr(Fmt.GRADE_KEYS[e.grade] or "IGUI_TLG_Grade_Good") }
-    lines[#lines + 1] = e.compatible and tr("IGUI_TLG_Compatible") or tr("IGUI_TLG_NotCompatible")
+    if not e.compatible then
+        lines[#lines + 1] = tr("IGUI_TLG_NotCompatible")
+    elseif e.harmful then
+        lines[#lines + 1] = tr("IGUI_TLG_Harmful")
+    else
+        lines[#lines + 1] = tr("IGUI_TLG_Compatible")
+    end
     for _, r in ipairs(e.reasons or {}) do
         local key = Fmt.REASON_KEYS[r]
+        local level, wrong = string.match(r, "^wrong_fuel_(%d)_(.+)$")
         if key then
             lines[#lines + 1] = "- " .. tr(key)
+        elseif level then
+            lines[#lines + 1] = "- " .. tr("IGUI_TLG_Reason_Wrong_" .. level, Fmt.componentName(wrong))
         elseif string.find(r, "^marginal_") then
             lines[#lines + 1] = "- " .. tr("IGUI_TLG_Reason_Marginal", Fmt.componentName(string.sub(r, 10)))
         elseif string.find(r, "^too_much_") then

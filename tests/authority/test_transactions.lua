@@ -138,13 +138,29 @@ T.case("authority: incompatible pours need an explicit experimental request", fu
     local r = Tx.transfer(W.ctx, "p", { requestId = "e1", source = { id = "ETH" },
         destination = { id = "TANK", consumer = "engine_si_stock" }, amount = 10 })
     T.eq(r.reason, "incompatible")
-    T.ok(r.evaluation and not r.evaluation.compatible)
+    -- Two thirds ethanol: a stock engine runs on it and is damaged (D-037).
+    T.ok(r.evaluation and r.evaluation.compatible and r.evaluation.harmful)
     T.near(Supply.total(W.records.TANK), 5, 1e-12)
     local r2 = Tx.transfer(W.ctx, "p", { requestId = "e2", source = { id = "ETH" },
         destination = { id = "TANK", consumer = "engine_si_stock" }, amount = 10, experimental = true })
     T.ok(r2.ok and r2.experimental)
 end)
 
+T.case("authority: a pour an engine would run on and be damaged by needs the same request (D-037)", function()
+    local W = world()
+    W.add("CAN", { q = { gasoline = 10 }, deg = { gasoline = 0 } })
+    W.add("TANK", { q = { diesel = 20 }, deg = { diesel = 0 }, storage = "vehicle_tank", cap = 50 })
+    -- A third petrol: the diesel would start and run on it, and wear fast.
+    local r = Tx.transfer(W.ctx, "p", { requestId = "w1", source = { id = "CAN" },
+        destination = { id = "TANK", consumer = "engine_ci_stock" }, amount = 10 })
+    T.eq(r.reason, "incompatible")
+    T.ok(r.evaluation.compatible and r.evaluation.harmful and r.evaluation.wrongLevel == 2)
+    T.near(Supply.total(W.records.TANK), 20, 1e-12, "nothing moved")
+    local r2 = Tx.transfer(W.ctx, "p", { requestId = "w2", source = { id = "CAN" },
+        destination = { id = "TANK", consumer = "engine_ci_stock" }, amount = 10, experimental = true })
+    T.ok(r2.ok and r2.experimental)
+    T.near(Supply.total(W.records.TANK), 30, 1e-9)
+end)
 T.case("authority: participants are advanced to the common authoritative time", function()
     local W = world()
     W.add("A", { q = { gasoline = 10 }, t = 0, deg = { gasoline = 0 } })

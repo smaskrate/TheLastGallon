@@ -117,7 +117,8 @@ function Tx.transfer(ctx, actor, req)
     local evaluation
     if dstEp.consumer then
         evaluation = D.Consumers.evaluate(dstEp.consumer, preview.dst, { ambientC = ctx.ambientC })
-        if not evaluation.compatible and not req.experimental then
+        -- Also fuel the engine would run on and be damaged by (D-037).
+        if (not evaluation.compatible or evaluation.harmful) and not req.experimental then
             return reject("incompatible", { evaluation = evaluation })
         end
     end

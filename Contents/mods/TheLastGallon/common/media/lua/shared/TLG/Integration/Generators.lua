@@ -31,6 +31,7 @@
 --                      audit V-01)
 require "TLG/Integration/Containers"
 require "TLG/Domain/EngineEffects"
+require "TLG/Notify"
 require "TLG/Boot"
 require "TLG/Authority/Vault"
 
@@ -265,6 +266,19 @@ function G.chargeWear(gen)
         carry, whole = EngineEffects.accrue(w.c, due, e.wearFactor, perLitre)
         w.c, w.charged = carry, burned
         if whole > 0 then gen:setCondition(math.max(0, gen:getCondition() - whole)) end
+        -- Wrong fuel (D-037): the chance that it fails, for these litres as
+        -- the hours they lasted. At condition 0 the game does not switch a
+        -- generator on (SRC ISActivateGenerator.isValid) but leaves a running
+        -- one running until its next wear roll (launch 261), so it is
+        -- switched off here.
+        local reference = EngineEffects.generatorReferenceLitres(due, SandboxVars and SandboxVars.GeneratorFuelConsumption)
+        if e.failureChance and G.failRoll() < EngineEffects.failureOdds(e.failureChance, reference) then
+            whole = whole + gen:getCondition()
+            gen:setCondition(0)
+            if gen.setActivated then pcall(function() gen:setActivated(false) end) end
+            if gen.sync then pcall(function() gen:sync() end) end
+            TLG.Log.debug("generator failed on wrong fuel: %s", table.concat(e.reasons, ","))
+        end
     end
     md[G.WEAR_KEY] = w
     Vault.putKeyed("wear", side.id, w)
@@ -507,6 +521,19 @@ end
 
 -- Start gate: the fuel decides whether an activation succeeds.
 G.startRoll = function() return ZombRandFloat(0, 1) end
+-- Wrong fuel (D-037), replaceable by tests: the condition a refused start
+-- costs, and the draw against the chance of a sudden failure.
+G.attemptRoll = function(min, max) return ZombRand(min, max + 1) end
+G.failRoll = function() return ZombRandFloat(0, 1) end
+
+-- A start the wrong fuel refused costs the generator condition.
+function G.attemptDamage(gen, e, player)
+    if e == nil or e.compatible or e.attemptDamage == nil then return 0 end
+    local n = G.attemptRoll(e.attemptDamage[1], e.attemptDamage[2])
+    if n > 0 then gen:setCondition(math.max(0, gen:getCondition() - n)) end
+    TLG.Notify.send(player, "IGUI_TLG_Note_StartDamage", e.wrongFuel)
+    return n
+end
 
 local function installStartGate()
     wrap(ISActivateGenerator, "complete", function(orig, self)
@@ -516,6 +543,7 @@ local function installStartGate()
             local ok, e = pcall(G.evaluate, self.generator)
             if ok and e and e.grade ~= "empty" and (not e.compatible or G.startRoll() > e.startFactor) then
                 self.generator:failToStart()
+                G.attemptDamage(self.generator, e, self.character)
                 self.generator:sync()
                 TLG.Log.debug("generator start refused: %s", table.concat(e.reasons, ","))
                 return true

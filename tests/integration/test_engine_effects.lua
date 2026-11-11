@@ -103,12 +103,12 @@ local ALWAYS = { next = function() return 0 end }
 
 -- Stale petrol: 2.6 of the stock engine's 3.5, power 0.8514, wear 1.7429.
 local STALE = { { gasoline = 10 }, { gasoline = 2.6 } }
--- 3 L of ethanol in 8 L: more than a stock engine takes.
-local E37 = { { gasoline = 5, ethanol = 3 }, { gasoline = 0, ethanol = 0 } }
+-- 3 L of diesel in 8 L: a spark engine does not fire on it (D-037).
+local D37 = { { gasoline = 5, diesel = 3 }, { gasoline = 0, diesel = 0 } }
 
 T.case("integration: with the stall option off a running engine on fuel it cannot take keeps running", function()
     inGame(nil, function()
-        local x = car(E37[1], E37[2])
+        local x = car(D37[1], D37[2])
         SandboxVars.TheLastGallon.VehicleStalls = false
         for _ = 1, 5 do I.Vehicles.applyEffects(x, ALWAYS) end
         T.eq(x.stalls, 0, "never stalled, however the roll fell")
