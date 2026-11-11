@@ -668,10 +668,12 @@ from 0.1.1, which the item serves, to 0.4.1. It is not in the package. The owner
 shows as bold, and each `[list]` showed as a bulleted list, but the
 page's box closed before the first list, so only the title, the first
 line and the heading "New" stood inside it and the rest hung below. The
-note is now written without `[list]`: each entry is a line beginning
-with a dash, a blank line between entries. Why the box closes at a list
-was not looked up; that the dash form stays inside the box is not seen
-yet (the owner edits the note on the page).
+note is now written without `[list]`. A form with each entry on a line
+beginning with a dash stayed inside the box (the owner pasted it and
+said so, 2026-11-12), but the owner liked the list's bullets better, so
+each entry now begins with a bullet character (•), one entry a line.
+That form is not seen on the page yet. Why the box closes at a list was
+not looked up.
 What changed in the package since the last rehearsed one (run 206, 0.1.0):
 the death fix on a server (D-015 amendment, run 210: `Machines.lua`,
 `Boot.lua`), the **Transfer Liquid** fix (D-035, run 215:
