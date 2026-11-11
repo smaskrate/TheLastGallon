@@ -504,12 +504,13 @@ checked against its manifest, its `Contents` mirrored over the folder's,
 and the folder's 163 files checked by hash, both ways. It has not been
 uploaded. Its `preview.png` is the package's. Its `workshop.txt` is the
 owner's, edited by hand (the item's id, `visibility=public`, the tag
-`WIP`, two reworded lines); only its version was changed, to 0.3.0.
-Copying the package's `workshop.txt` over it would lose the hand edits.
-The owner's text is still that of 0.1.2: it lists biodiesel under "Not in
-this version", has no section on biodiesel, diesel or wrong fuel, and
-names five supplied models where the package's text names the supplied
-machine models and the diesel generator's pictures.
+`WIP`, two reworded lines). On 2026-11-11, on the owner's word, its
+version was set to 0.3.0 and the package's lines for 0.2.0 and 0.3.0
+were added to it: the wrong-fuel bullet, the biodiesel section, the
+note on diesel in new worlds and the package's licence line; biodiesel
+left its "Not in this version" line, which keeps the owner's "Coming
+soon". Copying the package's `workshop.txt` over it would lose the hand
+edits.
 
 What changed in the package since the last rehearsed one (run 206, 0.1.0):
 the death fix on a server (D-015 amendment, run 210: `Machines.lua`,
