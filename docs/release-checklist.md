@@ -141,7 +141,11 @@ hand. On the owner's word ("Update whatever is left to update",
 2026-11-11) two of its lines changed: the first description line names
 0.4.1, and its line on building the machines is the package's new one.
 Nothing else in it changed (its id, `visibility=public`, the tag `WIP`
-and the owner's wording stay). Not uploaded.
+and the owner's wording stay).
+
+The owner uploaded 0.4.1 to the Workshop on 2026-11-11 (item
+3835496461), from this folder. Open: an install through the Workshop,
+and how the page shows the description and the change note.
 
 ## Version 0.4.0 (2026-11-11)
 
@@ -629,7 +633,13 @@ restored it. The zip built from `cfae118` on 2026-11-10 has that defect
 and two malformed lines in `workshop.txt`; it was not uploaded. The commit
 itself was pushed.
 
-The Steam Workshop item (id 3835496461) serves 0.1.1, uploaded by the
+The Steam Workshop item (id 3835496461) serves 0.4.1 since 2026-11-11:
+the owner uploaded it from the upload folder that evening and said so.
+After the upload the folder's 166 files still matched the 0.4.1
+package's manifest, and its `workshop.txt` had been written again
+(23:46) with the same lines. The Workshop page itself was not looked at
+from here, and no install through the Workshop has been run. Until then
+the item served 0.1.1, uploaded by the
 owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
