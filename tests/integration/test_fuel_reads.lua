@@ -309,7 +309,7 @@ T.case("integration: a generator with a fuel record is not a pump", function()
     instanceof = function(o, class) return type(o) == "table" and o.class == class end
     local ok, err = pcall(function()
         -- A pump the mod has recorded and emptied is still a pump.
-        local pump = stationPump(1, 0, { v = 1, q = {} })
+        local pump = stationPump(1, 0, { v = 1, q = {}, frac = 0 })
         T.eq(S.isPump(pump), true)
         -- A generator keeps its tank's record under the same mod data key.
         local generator = stationPump(2, 0, { v = 1, q = { gasoline = 5 } })
@@ -318,6 +318,18 @@ T.case("integration: a generator with a fuel record is not a pump", function()
         -- An object with neither piped fuel nor a record is not one either.
         local other = stationPump(3, 0, nil)
         T.eq(S.isPump(other), false)
+        -- A fixed fluid container the mod has recorded (a barrel) keeps its
+        -- record under the same key, without a reservoir's `frac`.
+        local barrel = stationPump(4, 0, { v = 1, id = "S7-3", storage = "drum_steel", q = { gasoline = 40 } })
+        T.eq(S.isPump(barrel), false)
+        -- A pump the mod wrote, run dry: its record has `frac`, as
+        -- Stations.writeSidecar always gives it.
+        local dry = stationPump(5, 0, { v = 1, id = "R7-1", cap = 10000, frac = 0, product = "diesel", q = {} })
+        T.eq(S.isPump(dry), true)
+        -- The game's own key for an exhausted pump still counts.
+        local vanilla = stationPump(7, 0, nil)
+        vanilla.md.fuelAmount = 0
+        T.eq(S.isPump(vanilla), true)
     end)
     instanceof = saved
     if not ok then error(err, 0) end

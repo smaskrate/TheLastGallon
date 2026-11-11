@@ -78,7 +78,7 @@ Italian, and the multiplayer fuel and effects cases (launches 263–285,
 ## Version 0.3.1 (not released)
 
 On the branch `fix/context-menus`: the mod's entries in the world
-right-click menu follow the click (launches 289–293, `test-results.md`).
+right-click menu follow the click (launches 289–294, `test-results.md`).
 No gate changes. Open: the fix seen by a player with the mouse (the
 launches build the menus through the game's builder at chosen screen
 points and give the cursor's position to the game's vehicle pick); a

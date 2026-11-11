@@ -5803,7 +5803,7 @@ Evidence:
 [run 287](evidence/2026-11-11_rt-sp_harness_run287_package_wrong_fuel_0.3.0_42.22.2.txt);
 [run 288](evidence/2026-11-11_rt-mp_harness_run288_package_fuel_0.3.0_42.22.2.txt).
 
-## 2026-11-11 — RT-SP client harness, launches 289–293 (the world menu entries follow the click, 0.3.1)
+## 2026-11-11 — RT-SP client harness, launches 289–294 (the world menu entries follow the click, 0.3.1)
 
 Build 42.22.2, branch `fix/context-menus`, the repository's mod. The
 owner reported the mod's menu entry showing where it should not: after a
@@ -5847,6 +5847,7 @@ position the game's vehicle pick reads is given by the step.
 | 291 | `context-menus`, the mod at 0.3.1 | 17/0 |
 | 292 | full | 105/0, then 14/0 |
 | 293 | `docs-shots` | 65/0 |
+| 294 | `context-menus`, with clicks on the square really under the point | 33/0 |
 
 * The can and the vessel, five clicks each: on the item, 30 pixels off,
   30 pixels off with the next tile's floor clicked, and 100 pixels off
@@ -5869,15 +5870,37 @@ position the game's vehicle pick reads is given by the step.
   guide's four menus built by the game's builder, the Workshop menu on
   the generator's tile.
 
+* Launch 294 added, for the can and the vessel, eight clicks each with
+  the floor of the square under the point as the clicked object, found as
+  the game finds it (SRC `ISMenuContextWorld.createMenu`). A tile is 128
+  by 64 pixels at zoom 1. At 40 pixels to either side, on the item's own
+  tile, the entry shows; at 40 pixels above and below, which is on the
+  next tiles, it shows too, where 0.3.0 showed nothing; at 48.1, 57 and
+  60 pixels it does not. The game's Grab entry agreed in all sixteen. So
+  the entry's area changed from the item's tile to a circle of 48 pixels
+  around the item: ground close beside a can still offers the can's menu.
+  Whether that is close enough is the owner's call; the radius is
+  `Clicked.ITEM_RADIUS`.
+* A review of the change found that `Stations.isPump` took any object
+  carrying the mod's record for a pump: a fixed fluid container the mod
+  has recorded keeps its record under the same key, as a generator does
+  (launch 255). It now requires a reservoir's record (`frac`). One domain
+  case extended; not seen in game.
+
+Launches 289–293 ran before the `isPump` change. Launch 294 ran with it.
+
 Consoles: no TLG error or warning; the only exception is the harness's
 deep-recursion probe (launch 292).
 
 Not run: the fix with a real mouse click by a player; a controller; a
-server; a can inside a fixed container; zoom levels other than 1.
+server; a can inside a fixed container; zoom levels other than 1; a
+recorded barrel beside a pump in game; the full run after the `isPump`
+change.
 
 Evidence:
 [run 289](evidence/2026-11-11_rt-sp_harness_run289_context_menus_first_42.22.2.txt);
 [run 290](evidence/2026-11-11_rt-sp_harness_run290_context_menus_42.22.2.txt);
 [run 291](evidence/2026-11-11_rt-sp_harness_run291_context_menus_0.3.1_42.22.2.txt);
 [run 292](evidence/2026-11-11_rt-sp_harness_run292_full_0.3.1_42.22.2.txt);
-[run 293](evidence/2026-11-11_rt-sp_harness_run293_docs_shots_0.3.1_42.22.2.txt).
+[run 293](evidence/2026-11-11_rt-sp_harness_run293_docs_shots_0.3.1_42.22.2.txt);
+[run 294](evidence/2026-11-11_rt-sp_harness_run294_context_menus_real_clicks_42.22.2.txt).

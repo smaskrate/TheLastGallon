@@ -54,9 +54,9 @@ Fuel Stabilizer, the Yeast Starter Culture and the Fuel Sampling Kit.*
 ## Inspecting fuel
 
 Right-click a fuel can and open **Fuel (The Last Gallon)**. For a can on
-the ground, click on the can itself: the entry shows where the game's own
-**Grab** entry for the can does, not for a click on the ground beside it.
-The entries:
+the ground, click on the can or close beside it: the entry shows where
+the game's own **Grab** entry for the can does, within about a third of a
+tile's width of it. The entries:
 
 * **Look and smell** gives a rough estimate and finds only obvious water.
 * **Take a sample (kit)** needs a Fuel Sampling Kit (3 empty jars and a
@@ -377,7 +377,8 @@ Column Still.*
 Every machine works only while it stands on the ground. Right-click it and
 open **Machine (The Last Gallon)** for its options; **Status** shows what
 it is doing and the temperature at the machine. The entry shows for a
-click on the machine, as the game's **Grab** entry does.
+click on the machine or close beside it, where the game's **Grab** entry
+for it does.
 
 ![A placed Fermentation Vessel's menu with Machine (The Last Gallon) open: Status, Load mash and start fermenting, Pause, Abort batch](images/machine-menu.jpg)
 

@@ -43,7 +43,13 @@ function S.isPump(obj)
     if instanceof and instanceof(obj, "IsoGenerator") then return false end
     if obj:getPipedFuelAmount() > 0 then return true end
     local md = obj:hasModData() and obj:getModData() or nil
-    return md ~= nil and (md.tlg ~= nil or type(md.fuelAmount) == "number")
+    if md == nil then return false end
+    -- Only a reservoir's record makes a pump of an object: it alone keeps
+    -- `frac`, the litres under a whole unit (writeSidecar). A fixed fluid
+    -- container the mod has recorded keeps its record under the same key
+    -- (Containers.lua) and is not one.
+    local side = md.tlg
+    return (type(side) == "table" and side.frac ~= nil) or type(md.fuelAmount) == "number"
 end
 
 function S.keyOf(obj)

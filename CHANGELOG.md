@@ -8,10 +8,16 @@
   or a generator was near the character; **Fuel (The Last Gallon)** and
   **Machine (The Last Gallon)** showed for a click anywhere on the tile a
   can or a machine lay on. Now the Workshop entry shows when the click is
-  on the car, or on the generator or its tile, and the Fuel and Machine
+  on the car, or on the generator or its tile. The Fuel and Machine
   entries show where the game's own **Grab** entry for that can or
-  machine shows. With a controller, which has no cursor, the entries show
-  as before.
+  machine shows: within 48 pixels of it on screen at the closest zoom,
+  about a third of a tile's width. That still includes ground close
+  beside it, and now also ground just above and below it on the next
+  tiles. With a controller, which has no cursor, the entries show as
+  before.
+* Fixed: a fixed container of fuel the mod had recorded, such as a
+  barrel, counted as a station pump, as a generator did before 0.2.0's
+  fix. Found by reading the code; not seen in game.
 
 ## 0.3.0 (2026-11-11)
 

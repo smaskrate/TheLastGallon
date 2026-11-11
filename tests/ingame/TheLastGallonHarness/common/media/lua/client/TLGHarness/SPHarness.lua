@@ -16634,6 +16634,25 @@ RT.CM.items = { name = "rtcm_items", timeout = 300, fn = function()
                     "the item on screen at %.0f,%.0f, the click at %.0f,%.0f: %s", sx, sy, c[3], c[4], CM.text(r))
             end)
         end
+        -- As a real click: the floor of the square under the point is what
+        -- the game hands over (SRC ISMenuContextWorld.createMenu finds it the
+        -- same way). A tile is 128 by 64 pixels at zoom 1, so 48 pixels reach
+        -- most of the item's own tile sideways and the tiles above and below.
+        local zoom = getCore():getZoom(0)
+        for _, off in ipairs({ { 40, 0 }, { 60, 0 }, { -40, 0 }, { 0, -40 }, { 0, 40 }, { 0, -60 }, { 34, 34 }, { 40, 40 } }) do
+            local x, y = sx + off[1], sy + off[2]
+            local wx, wy = ISCoordConversion.ToWorld(x * zoom, y * zoom, 0)
+            local under = sq(math.floor(wx), math.floor(wy), 0)
+            local near = off[1] * off[1] + off[2] * off[2] <= (48 / zoom) * (48 / zoom)
+            local r = under and CM.menuAt({ under:getFloor() }, x, y) or { ok = false, err = "no square under the point" }
+            R:check(string.format("RTCM.%s_real_click_%d_%d", spec[1], off[1], off[2]), function()
+                return r.ok and r[spec[4]] == near and r.grab == near, string.format(
+                    "%.0f pixels from the item, on %s: %s", math.sqrt(off[1] * off[1] + off[2] * off[2]),
+                    under == spec[3] and "its own tile (0.3.0 offered the entry anywhere on it)"
+                        or string.format("the tile %d,%d from its own (0.3.0 offered nothing there)", under and under:getX() - spec[3]:getX() or 0,
+                            under and under:getY() - spec[3]:getY() or 0), CM.text(r))
+            end)
+        end
     end
     return true
 end }
