@@ -1186,7 +1186,9 @@ their replacement.
     tested and what this version leaves out; the tags Build 42, Realistic,
     Vehicles and Items (`media/WorkshopTags.txt`); visibility private.
   * The Workshop preview, `art-src/preview.png` (256×256), is made by
-    `tools/make-preview.ps1` from the mod's own five machine models. The
+    `tools/make-preview.ps1` from the mod's own five machine models
+    (fourteen models since 2026-11-11: the nine machines and five small
+    items; the user asked for "all the items"). The
     package carries it beside `Contents/`, and it is also the poster.
 * Reason: the user asked for the release metadata on 2026-11-04 ("Yes,
   release metadata"). Asked about the licence and the version, they chose

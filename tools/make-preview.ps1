@@ -4,10 +4,12 @@
   mod list's poster and icon (Contents/mods/TheLastGallon/42/poster.png and
   icon.png).
 .DESCRIPTION
-  1. tools/blender/pz_preview.py renders the mod's own five supplied models
-     (the reflux still, the fermenter, the drying column, the pot still and
-     the fuel filter) at their in-game scales, 1024x1024 with a transparent
-     background, into a temporary folder.
+  1. tools/blender/pz_preview.py renders the mod's own fourteen models (the
+     nine machines, and the fuel filter, the sampling kit, the yeast
+     starter, the fuel stabilizer and the manual) at their in-game
+     scales, 1024x1024 with a transparent background, into a temporary
+     folder. The Diesel Generator and the Biodiesel Handbook have no model
+     of their own and are not in the picture.
   2. That render is laid over a dusk gradient with a warm glow behind the
      machines, and the title is drawn above them (Bahnschrift SemiBold
      Condensed and Stencil, fonts installed with Windows and Office), at

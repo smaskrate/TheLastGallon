@@ -1,6 +1,6 @@
 # The Last Gallon
 
-![The Last Gallon: the five machines under the title](art-src/preview.png)
+![The Last Gallon: nine machines and five small items under the title](art-src/preview.png)
 
 A mod for Project Zomboid **Build 42.22.2**. Fuel ages, takes up water and
 gathers dirt; engines start harder, lose power and wear on poor fuel; you

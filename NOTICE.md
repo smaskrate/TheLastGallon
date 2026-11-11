@@ -56,8 +56,9 @@
   (`art-src/carry/PROVENANCE.md`).
 * The Workshop preview and the mod list's poster (`preview.png` beside
   the item's `Contents` folder, and `42/poster.png`, the same picture)
-  were made for the mod by `tools/make-preview.ps1`: the five supplied
-  machine models above rendered in Blender (`tools/blender/pz_preview.py`)
+  were made for the mod by `tools/make-preview.ps1`: the ten supplied
+  models above and the mod's four small item models, rendered in Blender
+  (`tools/blender/pz_preview.py`)
   under the title, set in Bahnschrift (Microsoft) and Stencil (URW and
   Microsoft), fonts installed on the computer it was made on. The picture
   holds only their rendered letters, no font file. The mod list's icon

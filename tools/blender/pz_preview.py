@@ -1,14 +1,18 @@
 """Render the machines for the Workshop preview (tools/make-preview.ps1).
 
-  blender -b --factory-startup --python tools/blender/pz_preview.py -- <media dir> <out.png> [size]
+  blender -b --factory-startup --python tools/blender/pz_preview.py -- <media dir> <out.png> [size] [samples]
 
-Draws the mod's own five supplied models (media/models_X/TLG, each with its
+Draws the mod's own fourteen models (media/models_X/TLG, each with its
 media/textures/TLG texture) at their in-game scales (media/scripts/
 TLG_models.txt) on a shadow-catching floor, in Cycles, with a transparent
-background: the floor keeps only the shadows. A low warm light from behind
-and a cool fill from the front. The camera frames the group in the lower
-part of the picture, leaving the top for the title that make-preview.ps1
-draws. No game asset is drawn.
+background: the floor keeps only the shadows. The machines stand in three
+rows, the tall ones at the back, and the small items lie in front of them:
+a 35 mm lens close to the group draws those larger than a long lens would.
+A low warm light from behind and a cool fill from the front. The camera
+frames the group in the lower part of the picture, leaving the top for the
+title that make-preview.ps1 draws. [samples] (default 96) sets the Cycles
+samples: a low number gives a quick draft while the layout is tuned. No
+game asset is drawn.
 """
 import math
 import os
@@ -21,22 +25,22 @@ from mathutils import Vector
 # name, in-game scale, (x, y) on the floor in metres, turn about Z in degrees
 LAYOUT = (
     # The back row: the tall machines.
-    ("AshBarrel", 0.6, (-1.35, 1.25), 20.0),
-    ("BiodieselReactor", 0.77, (-0.55, 1.35), 0.0),
+    ("WoodRetort", 0.87, (-0.95, 1.30), 0.0),
     ("BiodieselWashTank", 1.0, (0.35, 1.40), 0.0),
-    ("RefluxStill", 0.9, (1.20, 1.20), -15.0),
+    ("RefluxStill", 0.9, (1.05, 1.35), -15.0),
     # The middle row.
-    ("WoodRetort", 0.87, (-0.85, 0.30), 0.0),
-    ("Fermenter", 0.5, (0.30, 0.25), 25.0),
-    ("DryingColumn", 0.55, (0.90, 0.35), -30.0),
+    ("AshBarrel", 0.6, (-1.55, 0.40), 20.0),
+    ("BiodieselReactor", 0.77, (-0.08, 0.30), 0.0),
+    ("Fermenter", 0.5, (0.50, -0.05), 25.0),
+    ("DryingColumn", 0.55, (0.95, 0.40), -30.0),
     ("LyeLeacher", 0.73, (1.55, 0.50), 180.0),
     # The front row, nearest the camera: the pot still and the small items.
     ("PotStill", 0.7, (1.10, -0.55), -25.0),
-    ("ManualFuelSystems", 0.16, (-1.10, -0.95), 20.0),
-    ("FuelSampleKit", 0.225, (-0.65, -1.00), 0.0),
-    ("YeastStarter", 0.108, (-0.25, -1.10), 0.0),
-    ("FuelStabilizer", 0.115, (0.02, -0.95), 0.0),
-    ("FuelFilter", 0.1, (0.30, -1.10), 10.0),
+    ("ManualFuelSystems", 0.16, (-0.80, -0.95), 20.0),
+    ("FuelSampleKit", 0.225, (-0.40, -1.00), 0.0),
+    ("YeastStarter", 0.108, (-0.02, -1.10), 0.0),
+    ("FuelStabilizer", 0.115, (0.25, -0.95), 0.0),
+    ("FuelFilter", 0.1, (0.50, -1.10), 10.0),
 )
 # The group spans this much of the frame's width, its feet this far up.
 SPAN, FEET, TOP = 0.92, 0.05, 0.66
