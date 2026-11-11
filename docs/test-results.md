@@ -5530,10 +5530,10 @@ an install through the Steam Workshop. Not uploaded.
 Evidence:
 [run 260](evidence/2026-11-11_rt-sp_harness_run260_release_zip_0.2.0_42.22.2.txt).
 
-## 2026-11-11 — RT-SP and RT-MP harness, launches 261–279 (wrong fuel damages engines, D-037, version 0.3.0)
+## 2026-11-11 — RT-SP and RT-MP harness, launches 261–282 (wrong fuel damages engines, D-037, version 0.3.0)
 
 Build 42.22.2, branch `feature/wrong-fuel`, the repository's mod (no
-package). The domain suite has 270 cases, 0 failed: 13 new in
+package). The domain suite has 271 cases, 0 failed: 14 new in
 `tests/domain/test_wrong_fuel.lua` (every band of every rule), 7 in
 `tests/integration/test_wrong_fuel_damage.lua` (the adapters) and one in
 `tests/authority/test_transactions.lua` (the pour).
@@ -5565,8 +5565,11 @@ runs.
 | 277 | RT-MP `-Clients 1 -Only fuel` | 21/0 |
 | 278 | full | 104/1, then 14/0 |
 | 279 | full | 105/0, then 14/0 |
+| 280 | `wrong-fuel`, after the review's changes | 45/1 |
+| 281 | `wrong-fuel`, the final code | 46/0 |
+| 282 | full, the final code | 105/0, then 14/0 |
 
-Launch 271, what was seen:
+Launch 271, what was seen (launch 281 the same, with ethanol's two start factors as corrected):
 
 * The verdict for 14 blends on the petrol car and the ambulance, each
   with the text a refused pour shows: the three bands of diesel in a
@@ -5644,13 +5647,39 @@ starts on harmful fuel, the reworded dialog of a refused pour and the
 Field Manual's two corrected lines. Launches 264–267, 269 and 270 ran
 before that and were not repeated.
 
+After launch 279 a review of the rules found two inconsistencies, fixed
+before launch 280:
+
+* ethanol just past a stock petrol engine's limit started better (0.7)
+  than just before it (the marginal blend ends at 0.6): the row's start
+  factors are now 0.5 and, above 60 %, 0.3;
+* diesel together with too much ethanol in a stock petrol engine
+  multiplied their penalties, where two wrong fuels in a diesel did not:
+  the worse value of each factor now counts there too.
+
+The line at the start is now also sent with **Bad fuel can stall engines**
+off. Launch 280 failed one check: the petrol car on a fifth diesel had
+stopped running before the test took its litres, so no wear was due
+(engine 99 to 99). The test had held the start and failure draws but not
+the per-minute stall draw, which that blend's start factor of 0.4 makes
+2.4 % a minute; what stopped the engine was not recorded. The stall draw
+can now be held (`Vehicles.stallRoll`), the test holds it, and launch 281
+passed. Launches 273–277 ran before these changes and were not repeated;
+the Italian strings did not change after launch 275.
+
+The player guide's picture of the Field Manual
+(`docs/images/field-manual-window.jpg`) predates 0.3.0. Its readable
+text, section 1, is unchanged; the dimmed page behind it has the old
+wording of the two corrected lines.
+
 Consoles: no TLG error or warning in any launch; the only exceptions are
 the harness's deep-recursion probe and, in the Italian mode, the game's
 "Missing arguments" warnings for strings the test reads without their
 arguments (29).
 
 Not run: a flex-converted engine with diesel; ethanol's rows beyond the
-verdict, and the cold; a stall on a wrong fuel; driving on one; a failure
+verdict, and the cold; a stall on a wrong fuel seen as such; a car
+started with the stall option off; driving on a wrong fuel; a failure
 by an unforced draw; a repair of a failed engine or generator; a save
 holding a wrong blend, and a 0.2.0 save loaded with 0.3.0; on a server,
 everything but the generator's refused start and its line; the new lines
@@ -5675,4 +5704,7 @@ Evidence:
 [run 276](evidence/2026-11-11_rt-sp_harness_run276_manual_italian_0.3.0_42.22.2.txt);
 [run 277](evidence/2026-11-11_rt-mp_harness_run277_fuel_0.3.0_42.22.2.txt);
 [run 278](evidence/2026-11-11_rt-sp_harness_run278_full_one_failure_0.3.0_42.22.2.txt);
-[run 279](evidence/2026-11-11_rt-sp_harness_run279_full_0.3.0_42.22.2.txt).
+[run 279](evidence/2026-11-11_rt-sp_harness_run279_full_0.3.0_42.22.2.txt);
+[run 280](evidence/2026-11-11_rt-sp_harness_run280_wrong_fuel_car_stopped_0.3.0_42.22.2.txt);
+[run 281](evidence/2026-11-11_rt-sp_harness_run281_wrong_fuel_final_0.3.0_42.22.2.txt);
+[run 282](evidence/2026-11-11_rt-sp_harness_run282_full_final_0.3.0_42.22.2.txt).

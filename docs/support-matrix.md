@@ -6,7 +6,7 @@ build until it is tested there again. The rows below were verified on
 modes were run again and all passed (launches 216–226, `test-results.md`);
 the other modes have not been run again on this build. The biodiesel
 pathway, the diesel generator, the diesel vehicles and the diesel pumps
-(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), and wrong-fuel damage (version 0.3.0, D-037) in launches 261–278.
+(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), and wrong-fuel damage (version 0.3.0, D-037) in launches 261–282.
 
 Evidence levels:
 
@@ -95,11 +95,11 @@ Per-instance part modData and `setEngineFeature` act on one vehicle only
 a blend the engine cannot take is refused and the engine stays off;
 station fuel starts. Stall: the per-minute effect handler stalled an engine
 running on that blend within a game minute. Since 0.3.0 the blend is over
-30 % diesel (launches 263, 272, 278, 279); until 0.2.0 it was 36 % ethanol
+30 % diesel (launches 263, 272, 278, 279, 282); until 0.2.0 it was 36 % ethanol
 (RT-SP run 6, and run 62 on two `Base.PickUpTruck`), which now runs a
 stock engine lean (D-037).
 
-Wrong fuel (D-037, launch 271, `Base.CarNormal`, `Base.VanAmbulance`,
+Wrong fuel (D-037, launches 271 and 281, `Base.CarNormal`, `Base.VanAmbulance`,
 `Base.PickUpVanLightsFire`): the verdict for every band of
 `balance.md`'s table; a start refused on 40 % diesel cost the petrol car 1
 engine condition and 2 % battery charge and showed the driver a line; on
@@ -155,7 +155,7 @@ the Gas2Go pump: 0.22–0.23 %, `startFactor=0.5`). The
   burn is reconciled proportionally into the record.
 - Start gate (`ISActivateGenerator`): activates on petrol, refused on a
   tank of diesel, which costs it condition (launches 263, 272, 278, 279; until
-  0.2.0 the refusal was on E100, RT-SP run 6, which now starts 1 time in 3
+  0.2.0 the refusal was on E100, RT-SP run 6, which now starts 3 times in 10
   and wears: D-037).
 - Wrong fuel (D-037, launch 271): on 40 % diesel the start refused, 1
   condition lost, the line shown; drained into a can by the mod's

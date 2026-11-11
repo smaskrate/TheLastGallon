@@ -43,9 +43,10 @@ local ETHANOL_IN_DIESEL = { fuels = { "ethanol" }, bands = {
     { above = 0.10, level = 3, start = 0.25, power = 0.5, wear = 15, failure = 0.02 },
     { above = 0.30, level = 4, noStart = true, wear = 20, failure = 0.04, attempt = { 1, 2 } },
 } }
--- Ethanol past a stock petrol engine's limit: the mixture is lean.
-local ETHANOL_OVER = { level = 2, start = 0.7, power = 0.75, wear = 4,
-    high = { above = 0.60, level = 3, start = 0.35, power = 0.6, wear = 8, coldBelowC = 10 } }
+-- Ethanol past a stock petrol engine's limit: the mixture is lean. The
+-- start factor continues below the 0.6 a blend reaches at the limit.
+local ETHANOL_OVER = { level = 2, start = 0.5, power = 0.75, wear = 4,
+    high = { above = 0.60, level = 3, start = 0.3, power = 0.6, wear = 8, coldBelowC = 10 } }
 
 R.define("consumer", {
     id = "engine_si_stock", ignition = "spark", referenceFuel = "gasoline",

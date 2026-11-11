@@ -124,8 +124,8 @@ running and wrecks it; diesel in a spark engine mostly stops it).
 | Ethanol in a diesel | the four `*_ci_*` profiles | 2 % | 0.5 | 0.7 | 8 | |
 | | | 10 % | 0.25 | 0.5 | 15 | failure 2 % a litre |
 | | | 30 % | no start | — | 20 | failure 4 % a litre; 1–2 condition at each refused start |
-| Ethanol past a stock petrol engine's `max` | `engine_si_stock` (25 %), `generator_si_stock` (15 %) | its max | 0.7 | 0.75 | 4 | |
-| | | 60 % | 0.35 | 0.6 | 8 | no start below 10 °C |
+| Ethanol past a stock petrol engine's `max` | `engine_si_stock` (25 %), `generator_si_stock` (15 %) | its max | 0.5 | 0.75 | 4 | |
+| | | 60 % | 0.3 | 0.6 | 8 | no start below 10 °C |
 
 * The first threshold of each rule is the profile's `foreignMax`, the
   trace tolerated before. A fuel no rule covers (methanol, plant oil,
@@ -133,9 +133,12 @@ running and wrecks it; diesel in a spark engine mostly stops it).
   first band still counts toward it.
 * Biodiesel in a spark engine wears a fifth more than diesel, in
   proportion to its share of the wrong fuel.
-* Where two rules apply (petrol and ethanol in a diesel) the worse value
-  of each factor counts; they do not multiply. The wrong-fuel wear factor
-  does multiply with the factors of stale or dirty fuel.
+* Where two rules apply (petrol and ethanol in a diesel; diesel and too
+  much ethanol in a stock petrol engine) the worse value of each factor
+  counts; they do not multiply. The wrong-fuel wear factor does multiply
+  with the factors of stale or dirty fuel.
+* The ethanol row starts at 0.5 so that the start factor does not rise
+  where the marginal blend, which ends at 0.6, passes the limit.
 * The wear multiplies `wearFactor`, so it is charged like any other wear
   (the table below): a car at × 8 loses (8 − 1) × 0.15 = 1.05 condition a
   litre, 3.5 an hour of driving; a generator at × 15 about 0.7 an hour at

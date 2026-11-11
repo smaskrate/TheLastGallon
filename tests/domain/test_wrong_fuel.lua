@@ -138,20 +138,38 @@ T.case("wrong fuel: ethanol past a stock petrol engine's limit runs lean instead
         -- 40 %: over the limit.
         local e = C.evaluate(id, tank({ gasoline = 12, ethanol = 8 }), { ambientC = 20 })
         T.ok(e.compatible and e.harmful and has(e, "too_much_ethanol"), id)
-        T.near(e.startFactor, 0.7, 1e-9); T.near(e.powerFactor, 0.75, 1e-9); T.near(e.wearFactor, 4, 1e-9)
+        T.near(e.startFactor, 0.5, 1e-9); T.near(e.powerFactor, 0.75, 1e-9); T.near(e.wearFactor, 4, 1e-9)
         T.eq(e.grade, "poor")
+        -- Just past the limit it does not start better than just before it.
+        local before = C.evaluate(id, tank({ gasoline = 20 * (1 - max + 0.001), ethanol = 20 * (max - 0.001) }))
+        local after = C.evaluate(id, tank({ gasoline = 20 * (1 - max - 0.001), ethanol = 20 * (max + 0.001) }))
+        T.ok(after.startFactor <= before.startFactor and after.powerFactor <= before.powerFactor
+            and after.wearFactor >= before.wearFactor, string.format("%s: start %.3f -> %.3f", id, before.startFactor, after.startFactor))
         -- Pure ethanol, warm: harder still.
         e = C.evaluate(id, tank({ ethanol = 20 }), { ambientC = 20 })
         T.ok(e.compatible and e.harmful, id)
-        T.near(e.startFactor, 0.35, 1e-9); T.near(e.powerFactor, 0.6, 1e-9); T.near(e.wearFactor, 8, 1e-9)
+        T.near(e.startFactor, 0.3, 1e-9); T.near(e.powerFactor, 0.6, 1e-9); T.near(e.wearFactor, 8, 1e-9)
         -- Pure ethanol below 10 C: no start, and no damage for trying.
         e = C.evaluate(id, tank({ ethanol = 20 }), { ambientC = 5 })
         T.ok(e.compatible and e.startFactor == 0 and has(e, "cold_start"), id .. " in the cold")
         T.eq(e.attemptDamage, nil)
         -- 40 % in the cold starts as when warm.
         e = C.evaluate(id, tank({ gasoline = 12, ethanol = 8 }), { ambientC = 5 })
-        T.near(e.startFactor, 0.7, 1e-9)
+        T.near(e.startFactor, 0.5, 1e-9)
     end
+end)
+
+T.case("wrong fuel: diesel and too much ethanol in a stock petrol engine do not multiply either", function()
+    -- 20 % diesel (the second band: 0.4, 0.6, wear 6) and 40 % ethanol (past
+    -- the limit: 0.5, 0.75, wear 4).
+    local e = C.evaluate("engine_si_stock", tank({ gasoline = 8, diesel = 4, ethanol = 8 }))
+    T.ok(e.compatible and e.harmful and e.wrongLevel == 2)
+    T.near(e.startFactor, 0.4, 1e-9); T.near(e.powerFactor, 0.6, 1e-9); T.near(e.wearFactor, 6, 1e-9)
+    T.near(e.exhaustWear, 0.5, 1e-9)
+    T.ok(has(e, "too_much_ethanol") and has(e, "wrong_fuel_2_diesel"), table.concat(e.reasons, ","))
+    -- Petrol and ethanol in a diesel: one line for each.
+    e = C.evaluate("engine_ci_stock", tank({ diesel = 15, gasoline = 4, ethanol = 1 }))
+    T.ok(has(e, "wrong_fuel_2_gasoline") and has(e, "wrong_fuel_2_ethanol"), table.concat(e.reasons, ","))
 end)
 
 T.case("wrong fuel: a fuel no rule covers still blocks, and a ruled trace still counts with it", function()

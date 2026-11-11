@@ -183,6 +183,14 @@ is saved by the game with its tile sprite, `tlg_generators_01_0`, whose
 number comes from `tiledef=tlg_generators 7341` in `mod.info`: changing
 that number would orphan placed generators.
 
+### Wrong fuel (0.3.0, D-037)
+
+No record changes. The sandbox option `TheLastGallon.WrongFuelDamage` is
+new; a save without it reads it as on. A save from 0.2.0 therefore
+behaves differently from its first load with 0.3.0: a tank holding a fuel
+its engine is not built for, which refused the start and did no harm,
+now lets the engine start, or try to, and damages it. Not run in game.
+
 ## Settings changes
 Changing **Fuel ageing speed** appends a dated entry to `balanceHistory`;
 every advance splits at those dates, so the past keeps its old rate.

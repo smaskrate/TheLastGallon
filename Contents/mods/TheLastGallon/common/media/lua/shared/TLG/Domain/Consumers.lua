@@ -72,8 +72,36 @@ function Consumers.evaluate(profileId, s, state)
     end
 
     -- Wrong fuel: each rule sums its fuels' share and picks a band. The worst
-    -- of the rules that apply decides each factor; they do not multiply.
-    local ruled, worst, coldNoStartBelow = {}, nil, nil
+    -- of the rules that apply decides each factor; they do not multiply. An
+    -- accepted fuel past its limit (`over`) is one more such rule.
+    local ruled, over, worst, coldNoStartBelow, banded = {}, {}, nil, nil, false
+    local function merge(level, lead, b, wear)
+        worst = worst or { level = 0, start = 1, power = 1, wear = 1, failure = 0, exhaust = 0 }
+        if level > worst.level then worst.level, worst.fuel = level, lead end
+        worst.start = math.min(worst.start, b.start or 1)
+        worst.power = math.min(worst.power, b.power or 1)
+        worst.wear = math.max(worst.wear, wear)
+        worst.failure = math.max(worst.failure, b.failure or 0)
+        worst.exhaust = math.max(worst.exhaust, b.exhaust or 0)
+        if b.noStart then worst.noStart, worst.attempt = true, b.attempt or worst.attempt end
+    end
+    if damage then
+        for _, id in ipairs(Tables.sortedKeys(p.accepts)) do
+            local rule = p.accepts[id]
+            local frac = (s.q[id] or 0) / fuel
+            if rule.over and frac > rule.max + 1e-9 then
+                -- Past its limit the engine still runs, lean.
+                local o = rule.over
+                if o.high and frac > o.high.above + 1e-9 then
+                    o = o.high
+                    coldNoStartBelow = o.coldBelowC
+                end
+                over[id] = true
+                merge(o.level or 2, id, o, o.wear or 1)
+                reason("too_much_" .. id)
+            end
+        end
+    end
     if damage and p.wrongFuel then
         for _, rule in ipairs(p.wrongFuel) do
             local share, lead, leadShare = 0, nil, 0
@@ -89,14 +117,9 @@ function Consumers.evaluate(profileId, s, state)
                 for id, extra in pairs(rule.extraWear or {}) do
                     wear = wear * (1 + extra * ((s.q[id] or 0) / fuel) / share)
                 end
-                worst = worst or { level = 0, start = 1, power = 1, wear = 1, failure = 0, exhaust = 0 }
-                if band.level > worst.level then worst.level, worst.fuel = band.level, lead end
-                worst.start = math.min(worst.start, band.start or 1)
-                worst.power = math.min(worst.power, band.power or 1)
-                worst.wear = math.max(worst.wear, wear)
-                worst.failure = math.max(worst.failure, band.failure or 0)
-                worst.exhaust = math.max(worst.exhaust, band.exhaust or 0)
-                if band.noStart then worst.noStart, worst.attempt = true, band.attempt or worst.attempt end
+                merge(band.level, lead, band, wear)
+                banded = banded or {}
+                banded[#banded + 1] = "wrong_fuel_" .. band.level .. "_" .. tostring(lead)
             end
         end
     end
@@ -111,7 +134,7 @@ function Consumers.evaluate(profileId, s, state)
             r.compatible = false
             r.attemptDamage = worst.attempt
         end
-        reason("wrong_fuel_" .. worst.level .. "_" .. tostring(worst.fuel))
+        for _, code in ipairs(banded or {}) do reason(code) end
     end
 
     -- Composition against the accepted list.
@@ -125,19 +148,8 @@ function Consumers.evaluate(profileId, s, state)
                 -- A wrong fuel a band already judged is not counted again.
                 if not ruled[id] then foreign = foreign + frac end
             else
-                if frac > rule.max + 1e-9 and damage and rule.over then
-                    -- Past its limit the engine still runs, lean.
-                    local o = rule.over
-                    if o.high and frac > o.high.above + 1e-9 then
-                        o = o.high
-                        coldNoStartBelow = o.coldBelowC
-                    end
-                    r.harmful = true
-                    r.wrongFuel, r.wrongLevel = r.wrongFuel or id, math.max(r.wrongLevel or 0, o.level or 2)
-                    r.startFactor = r.startFactor * (o.start or 1)
-                    r.powerFactor = r.powerFactor * (o.power or 1)
-                    r.wearFactor = r.wearFactor * (o.wear or 1)
-                    reason("too_much_" .. id)
+                if over[id] then
+                    -- Judged above, with the wrong fuels.
                 elseif frac > rule.max + 1e-9 then
                     r.compatible = false
                     reason("too_much_" .. id)

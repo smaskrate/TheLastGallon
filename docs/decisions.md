@@ -1505,7 +1505,10 @@ their replacement.
     estimates), and a harsher top band for ethanol in a stock petrol
     engine than the matrix had (hard start and wear × 8 above 60 %): at
     × 4 a stock generator would have run on pure ethanol at little cost
-    and the flex conversion would have lost its purpose;
+    and the flex conversion would have lost its purpose; and start
+    factors of 0.5 and 0.3 for that row, so that a blend does not start
+    better just past the limit than just before it (the marginal band
+    ends at 0.6);
   * 10 °C as "cold" for that band's no-start, the flex car's own
     threshold;
   * the worst rule decides where two apply, instead of multiplying;

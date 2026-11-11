@@ -227,11 +227,12 @@ lower a generator's power.
 
 | Share | Starts | Power | Engine wear, car | Engine wear, generator |
 | --- | --- | --- | --- | --- |
-| the limit to 60 % | 7 in 10 | 25 % less | 0.45 a litre | 0.15 an hour |
-| over 60 % | 1 in 3, and never below 10 °C | 40 % less | 1.05 a litre | 0.35 an hour |
+| the limit to 60 % | 1 in 2 | 25 % less | 0.45 a litre | 0.15 an hour |
+| over 60 % | 3 in 10, and never below 10 °C | 40 % less | 1.05 a litre | 0.35 an hour |
 
-Where a tank holds two wrong fuels, the worse row counts. This wear adds
-to the wear of stale fuel: both multiply. A car that starts less often
+Where a tank holds two wrong fuels, or a wrong fuel and too much ethanol,
+the worse value of each column counts. This wear adds to the wear of
+stale fuel: both multiply. A car that starts less often
 than usual also stalls now and then while it runs, the more often the
 worse it starts, as on any poor fuel; generators do not stall.
 
@@ -246,8 +247,8 @@ move or switch it, for the fuel it burned since: until then it runs on.
 
 What tells you:
 
-* when an engine starts on fuel that harms it, a line over your character
-  names the wrong fuel;
+* when you start an engine on fuel that harms it, a line over your
+  character names the wrong fuel;
 * when a start is refused and damages the engine, and when an engine
   fails, a line says so;
 * the dialog of a refused pour gives the engine's verdict on the blend.
@@ -269,12 +270,19 @@ damaged without a warning.
 
 The sandbox option **Wrong fuel damages engines** turned off brings back
 the behaviour of version 0.2.0: any such fuel above a trace stops the
-engine from starting and stalls a running one, and damages nothing. With
-**Bad fuel can stall engines** off, no start is refused: an engine then
-runs, at half power, even on fuel listed above as "never", and wears for
-it (a petrol car 1.35 a litre on over 30 % diesel, with its exhaust losing
-1 a litre; a diesel 2.85 a litre on over 30 % ethanol, with 4 chances in
-100 for each litre of failing).
+engine from starting and stalls a running one, and damages nothing.
+
+**Bad fuel can stall engines** is for cars only. With it off, no car's
+start is refused: a car then runs, at half power, even on fuel listed
+above as "never", and wears for it (a petrol car 1.35 a litre on over
+30 % diesel, with its exhaust losing 1 a litre; a diesel 2.85 a litre on
+over 30 % ethanol, with 4 chances in 100 for each litre of failing). A
+generator's start is refused, and costs it, whatever that option says.
+
+A save from version 0.2.0 needs nothing done to it, but it behaves
+differently from the first load: an engine that refused to start on a
+wrong blend under 0.2.0 now starts, or tries to, and is damaged. If a
+tank holds such a blend, siphon or drain it before you start the engine.
 
 **Checked in game** (single player, a new world):
 
@@ -310,7 +318,8 @@ the line reaching the player.
 with diesel; ethanol's rows beyond the verdict, and its refusal to start
 in the cold; a car stalling on such fuel; driving on any of it; an engine
 failing by an unforced draw; repairing a failed engine or generator; a
-save from version 0.2.0 holding such a blend.
+car started with **Bad fuel can stall engines** off; a save from version
+0.2.0 holding such a blend.
 
 ## The field manual
 

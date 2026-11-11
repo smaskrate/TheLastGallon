@@ -15873,14 +15873,19 @@ end
 -- says so.
 function RT.WF.hold()
     local V, G, WF = TLG.Integration.Vehicles, TLG.Integration.Generators, RT.WF
-    WF.saved = WF.saved or { V.startRoll, V.failRoll, G.startRoll, G.failRoll }
+    WF.saved = WF.saved or { V.startRoll, V.failRoll, G.startRoll, G.failRoll, V.stallRoll }
     V.startRoll, G.startRoll = function() return 0 end, function() return 0 end
     V.failRoll, G.failRoll = function() return 0.999 end, function() return 0.999 end
+    -- Nor does a running engine stall on its poor start factor: launch 280's
+    -- petrol car, on a fifth diesel, had stopped before its litres were taken.
+    V.stallRoll = function() return 0.999 end
 end
 
 function RT.WF.release()
     local V, G, WF = TLG.Integration.Vehicles, TLG.Integration.Generators, RT.WF
-    if WF.saved then V.startRoll, V.failRoll, G.startRoll, G.failRoll = WF.saved[1], WF.saved[2], WF.saved[3], WF.saved[4] end
+    if WF.saved then
+        V.startRoll, V.failRoll, G.startRoll, G.failRoll, V.stallRoll = WF.saved[1], WF.saved[2], WF.saved[3], WF.saved[4], WF.saved[5]
+    end
     WF.saved = nil
 end
 

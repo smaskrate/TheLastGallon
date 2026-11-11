@@ -332,6 +332,8 @@ V.ATTEMPT_BATTERY = 0.02
 -- Rolls, replaceable by tests: whole engine condition points for a refused
 -- start, and the draw against the chance of a sudden failure.
 V.attemptRoll = function(min, max) return ZombRand(min, max + 1) end
+-- The draw against a running engine's chance of stalling in this minute.
+V.stallRoll = function() return ZombRandFloat(0, 1) end
 V.failRoll = function() return ZombRandFloat(0, 1) end
 
 -- A start the wrong fuel refused (the last band of a rule): engine condition
@@ -466,7 +468,7 @@ function V.applyEffects(vehicle, rng)
     if e == nil or e.grade == "empty" then return end
     if V.applyWear(vehicle, e) then return end
     if not vehicleStallsEnabled() then return end
-    local roll = rng and rng:next() or ZombRandFloat(0, 1)
+    local roll = rng and rng:next() or V.stallRoll()
     if not e.compatible or roll < V.STALL_CHANCE_PER_MINUTE * (1 - e.startFactor) then
         vehicle:engineDoStalling()
     end
@@ -480,18 +482,22 @@ V.startRoll = function() return ZombRandFloat(0, 1) end
 local function installStartGate()
     wrap(ISStartVehicleEngine, "complete", function(orig, self)
         local vehicle = self.character and self.character:getVehicle()
-        if vehicle and World.isAuthority() and vehicleStallsEnabled() and vehicle:isDriver(self.character) then
+        if vehicle and World.isAuthority() and vehicle:isDriver(self.character) then
             local part = V.tank(vehicle)
             if part and part:getContainerContentAmount() > 0 then
                 local ok, e = pcall(V.evaluate, vehicle)
-                if ok and e and e.grade ~= "empty" and (not e.compatible or V.startRoll() > e.startFactor) then
+                if ok and e and e.grade ~= "empty" and vehicleStallsEnabled()
+                    and (not e.compatible or V.startRoll() > e.startFactor) then
                     vehicle:engineDoStartingFailed()
                     V.attemptDamage(vehicle, e, self.character)
                     TLG.Log.debug("vehicle start refused: %s", table.concat(e.reasons, ","))
                     return true
                 end
-                -- Let through on fuel that harms the engine: the driver is told.
-                if ok and e and e.harmful then TLG.Notify.send(self.character, "IGUI_TLG_Note_WrongFuel", e.wrongFuel) end
+                -- Let through on fuel that harms the engine, also with the
+                -- stall option off: the driver is told.
+                if ok and e and e.grade ~= "empty" and e.harmful then
+                    TLG.Notify.send(self.character, "IGUI_TLG_Note_WrongFuel", e.wrongFuel)
+                end
             end
         end
         return orig(self)
