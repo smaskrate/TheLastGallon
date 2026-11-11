@@ -1,5 +1,38 @@
 # Changelog
 
+## 0.4.1 (2026-11-11)
+
+* Nothing in the game changes: documents, the Workshop picture and the
+  version number.
+* The player guide now says what the skill levels of 0.4.0 come to in
+  play. The levels are what the recipes ask and the crafting window
+  shows. A character who learned a recipe from the Biodiesel Handbook
+  makes the machine from one level below: the Ash Barrel at Welding 1,
+  the Wood Retort and the Wash Tank at Welding 3, the Reactor at
+  Welding 4. Two levels below, the window refuses. The game does the
+  same for its own recipes read from a magazine (Make Metal Sheet, asked
+  Welding 4, made at Welding 3).
+* The Workshop picture and the mod list's poster show nine machines and
+  five small items, where they showed five models.
+* Checked on 42.22.2 since 0.4.0 (launches 318–338 in
+  `docs/test-results.md`), with the mod's random draws left to chance
+  and written down:
+  * driving on diesel, on biodiesel and on wrong fuel, with a stall on
+    the move; biodiesel and ethanol at −5 °C;
+  * a flex-converted engine with diesel; a failed engine and a failed
+    Diesel Generator repaired with the game's own actions; starts,
+    stalls and failures as their draws gave them;
+  * on a dedicated server, as an admin and as a plain player: the
+    wrong-fuel rules seen on the server and on the client, the crafting
+    window for the Ash Barrel, the Wood Retort, the Wash Tank and the
+    Reactor, and the menu entries that follow the click;
+  * the menu entries at zoom 0.5, 0.75, 1.5 and 2; a handbook rolled
+    into a container of the map, taken and read.
+* Not checked: driving in the cold and diesel below −8 °C; on a server,
+  driving, the cold, a converted engine with diesel and a repair; the
+  Lye Leacher's window on a server; the menu entries by a person's own
+  click and with a controller.
+
 ## 0.4.0 (2026-11-11)
 
 * The five biodiesel machines ask a skill level, and their recipes must

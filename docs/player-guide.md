@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.4.0, for Project Zomboid 42.22.2. Each section ends with what
+Version 0.4.1, for Project Zomboid 42.22.2. Each section ends with what
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 
@@ -314,8 +314,39 @@ In these tests the draws were set by the test (a start always passing its
 roll, a failure when the test said so), and the litres were taken out of
 the tank by the test while the engine ran.
 
-On a server, one client: a red generator refused on a tank of diesel, and
-the line reaching the player.
+Checked later with no draw set (each draw was written down, and each
+outcome was the one its draw gives):
+
+* driving at 25 km/h: an Ambulance on diesel (nothing lowered or worn),
+  on biodiesel alone, on 30 % petrol and on petrol alone, and a petrol
+  car on 20 % diesel. Power, engine wear and exhaust wear
+  followed the table. The Ambulance on 30 % petrol stalled on the move
+  and rolled to a stop;
+* a petrol car refused twelve times on 40 % diesel, losing 1 point seven
+  times and 2 points five times; an Ambulance on 30 % petrol started six
+  times of twelve;
+* an Ambulance idling on pure petrol failed, and a petrol car idling on
+  20 % diesel stalled; here the litres were taken out of the tank by the
+  test;
+* a car converted to flex fuel at the workshop: diesel and biodiesel harm
+  it as they harm a petrol engine, in every band; a refused start cost
+  it 2 points and 2 % of the battery; 4 L on 20 % diesel cost 3 points
+  off the engine and 2 off the exhaust;
+* repairs: a Dash Bulldriver's failed engine brought back with the game's
+  engine repair (spare engine parts), then running on diesel at its own
+  power; a failed Diesel Generator brought back with **Fix Generator**
+  and switched on on diesel. One **Fix Generator** uses one piece of
+  scrap electronics, and at condition 50 or less the game itself fails
+  every other start of a generator;
+* in January at −5 °C: a petrol car on pure ethanol refused twelve
+  starts of twelve, at no cost.
+
+On a server, one client, as an admin and as a plain player: the verdicts;
+a refused start's cost and its line; starts on harmful fuel as the
+server's draws gave them; the lowered power; wear of engine and exhaust;
+an engine and a Diesel Generator failing; **Pour into this vehicle's
+tank** refused until confirmed; the option off. Each was seen on the
+server and on the client.
 
 Saves from versions 0.2.0 and 0.1.2, each holding a car with 40 % diesel
 in its petrol (0.2.0 also a Diesel Generator on pure petrol), continued
@@ -324,11 +355,11 @@ before, now costing 1 or 2 engine points and 2 % of the battery, with the
 line; the Diesel Generator, which 0.2.0 would not start, started, with the
 line; the option on without anything set.
 
-**Not checked in game:** the rest on a server; a converted (flex) engine
-with diesel; ethanol's rows beyond the verdict, and its refusal to start
-in the cold; a car stalling on such fuel; driving on any of it; an engine
-failing by an unforced draw; repairing a failed engine or generator; a
-car started with **Bad fuel can stall engines** off.
+**Not checked in game:** on a server, driving, the cold, a converted
+engine with diesel and a repair; ethanol's rows beyond the verdict and
+the cold start; an engine failing while driving (at 25 km/h the odds are
+4 in 10,000 a game minute); a car started with **Bad fuel can stall
+engines** off.
 
 ## The field manual
 
@@ -585,9 +616,14 @@ them:
   Carpentry 4, the Ash Barrel at Welding 4, the Wood Retort and the Wash
   Tank at Welding 6, the Reactor at Welding 7.
 
-A recipe you know still needs its skill level: with the handbook read and
-Welding 4 you can make every machine but the Reactor. Making a machine
-gives Welding experience, the Lye Leacher Carpentry experience.
+A recipe you know still needs skill. The **Skill** column is the level
+the recipe asks, which the crafting window shows. If you learned the
+recipe from the handbook, the window lets you make the machine from one
+level below it: the Ash Barrel at Welding 1, the Wood Retort and the Wash
+Tank at Welding 3, the Reactor at Welding 4. Two levels below, it
+refuses. The game does this for any recipe read from a magazine, its own
+included. Making a machine gives Welding experience, the Lye Leacher
+Carpentry experience.
 
 In a save from a version before 0.4.0, a character who could make these
 machines must learn the recipes like anyone else. Machines already made
@@ -597,12 +633,19 @@ filled yet, so look in places you have not visited.
 **Checked in game.** In single player: what each recipe asks, the levels
 that allow and teach, the handbook read from the inventory menu, and all
 five machines made in the crafting window with the levels and recipes in
-place. On a dedicated server: the crafting window refused the Ash Barrel
-without the recipe, refused it with the handbook read and Welding 0, and
-made it at Welding 2; the loot lists gave handbooks. **Not checked in
-game:** the window's refusal for the other four machines, Welding 6 and
-7 teaching a recipe, a handbook picked out of a container of the map, a
-player who is not an admin, and a save from an earlier version.
+place; a handbook rolled into a shelf of a gas station's storage room,
+taken and read. On a dedicated server, as an admin and as a plain
+player: the crafting window refused the Ash Barrel, the Wood Retort, the
+Wash Tank and the Reactor without the recipe; with the handbook read it
+refused each two levels below the level its recipe asks and made each
+from one level below; the loot lists gave handbooks. The game's own
+**Make Metal Sheet** (Welding 4), its magazine read, was made at Welding
+3 the same way; taught without a magazine, neither it nor the Ash Barrel
+was made below its level. **Not checked in game:** the Lye Leacher's
+window on a server and at Carpentry 1, Welding 6 and 7 teaching a
+recipe, a handbook found in a container at first look (the test filled
+the containers again until one held it), and a save from an earlier
+version.
 
 Like the ethanol machines, each works only while it stands on the ground,
 and its options are under **Machine (The Last Gallon)**.
@@ -796,8 +839,14 @@ cannot be topped up at a pump: bring empty cans.
 The pumps in these tests were set to diesel or petrol by the test; a pump
 left to the world's own draw was read, not filled from.
 
-**Not checked in game:** driving on diesel or biodiesel; a diesel vehicle
-on pure biodiesel; biodiesel in the cold; a
+Driving and the cold: an Ambulance drove 352 tiles at 25 km/h on diesel
+and again on pure biodiesel, where it ran at 85 % of its power. In
+January at −5 °C the Ambulance on pure biodiesel started two times of
+twelve and ran at 60 % of its power, and a Diesel Generator on biodiesel
+started three times of twelve; on a fifth biodiesel or less nothing
+changed.
+
+**Not checked in game:** driving in the cold; diesel below −8 °C; a
 Diesel Generator found in a crate on the map or in a truck bed, or
 powering anything; **Pour into the station reservoir** at a diesel pump;
 a vehicle refuelled at a pump on a server.

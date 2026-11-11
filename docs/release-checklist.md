@@ -113,6 +113,23 @@ zip, 3/0 and 19/0 (launches 303–306). A clean checkout builds the same
 bytes. Open for gate 12: an install through the Workshop; the upgrade
 from 0.2.0, 0.3.0 or 0.3.1 with this zip.
 
+## Version 0.4.1 (2026-11-11)
+
+Version 0.4.1 changes documents, the version number and the Workshop
+picture; no Lua but `TLG.VERSION`, no script. The owner chose, on
+2026-11-11, to say in the texts what the game does with the 0.4.0 skill
+levels rather than to raise them ("Do the reword"): with the handbook
+read, a machine is made from one level below what its recipe asks
+(launches 325–338). The player guide, the changelog, the support matrix
+and the Workshop text of `tools/package.ps1` say so, and the player
+guide and the support matrix now list as checked what launches 318–338
+checked. The change note is `docs/workshop-change-note-0.4.1.txt`.
+
+No 0.4.1 package is built. `dist` and the upload folder hold the 0.4.0
+package of `a0d293e`. Open: build it, rehearse it, put it in the upload
+folder; the first description line of the upload folder's `workshop.txt`
+names 0.4.0.
+
 ## Version 0.4.0 (2026-11-11)
 
 Version 0.4.0, of 2026-11-11 (D-038): the five biodiesel
@@ -621,8 +638,8 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.4.0.txt`, written on 2026-11-11: the changes
-from 0.1.1, which the item serves, to 0.4.0. It is not in the package. NOT RUN:
+`docs/workshop-change-note-0.4.1.txt`, written on 2026-11-11: the changes
+from 0.1.1, which the item serves, to 0.4.1. It is not in the package. NOT RUN:
 pasting a note into the uploader, and how the Workshop page shows its
 `[b]` and `[list]` marks.
 What changed in the package since the last rehearsed one (run 206, 0.1.0):

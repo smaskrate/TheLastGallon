@@ -1,10 +1,10 @@
-[b]Version 0.4.0[/b]
+[b]Version 0.4.1[/b]
 Changes since 0.1.1, the version uploaded here before. Tested on Project Zomboid 42.22.2.
 
 [b]New[/b]
 [list]
 [*]Biodiesel. Five new machines turn wood and cooking oil into biodiesel: the Wood Retort, the Ash Barrel, the Lye Leacher, the Biodiesel Reactor and the Biodiesel Wash Tank. Each takes what it needs from the finished machine beside it, and the wash tank fills a fuel can.
-[*]Building them takes skill: Welding 4 for the Wood Retort and the Wash Tank, Welding 5 for the Reactor, Welding 2 for the Ash Barrel, Carpentry 2 for the Lye Leacher. The recipes are learned from the Biodiesel Handbook, found in gas stations, garages, farms, bookstores, tool stores and libraries, or by reaching two levels above the level a recipe asks.
+[*]Building them takes skill. The recipes ask Welding 4 for the Wood Retort and the Wash Tank, Welding 5 for the Reactor, Welding 2 for the Ash Barrel, Carpentry 2 for the Lye Leacher. With the handbook read, the game lets you build each from one level below, as it does for its own recipes read from a magazine. The recipes are learned from the Biodiesel Handbook, found in gas stations, garages, farms, bookstores, tool stores and libraries, or by reaching two levels above the level a recipe asks.
 [*]The Diesel Generator, found in loot beside the game's generators (the green one). It burns diesel and biodiesel in any blend.
 [*]Diesel vehicles and pumps, in new worlds only: pickup vans, six-seat vans, radio vans and ambulances are diesel, and about one station pump in four gives diesel. "Read what this pump gives", in a pump's menu, says which.
 [*]The wrong fuel damages an engine: diesel or biodiesel in a petrol or converted (flex) engine, petrol or ethanol in a diesel, ethanol past the limit of an engine that is not converted. The more of it is in the tank, the worse the engine starts and runs and the faster it wears. With enough of it some engines do not start, and each try costs engine condition. Diesel in a petrol car wears its exhaust too. A diesel with more than half petrol, or more than a tenth ethanol, in its tank can fail while it runs.
@@ -31,7 +31,7 @@ Changes since 0.1.1, the version uploaded here before. Tested on Project Zomboid
 [list]
 [*]Driving in the cold, and diesel below -8 °C.
 [*]On a server: driving on any of these fuels, the cold, a converted engine with diesel, and a repair after wrong fuel.
-[*]The skill levels above are what the recipes ask. On a server a character who had read the handbook built each machine one Welding level lower (the Ash Barrel at 1, the Wood Retort and the Wash Tank at 3, the Reactor at 4), and two levels lower the window refused. The game does the same for its own recipes read from a magazine. Not tried: the Lye Leacher at Carpentry 1.
+[*]The Lye Leacher in the crafting window on a server, and at Carpentry 1.
 [*]The menu fix by a player's own click and with a controller.
 [/list]
 

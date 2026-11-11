@@ -1571,3 +1571,12 @@ their replacement.
   dedicated server with a client without `-debug`. Open: the window's
   refusal for four of the five machines, a player who is not an admin,
   an upgrade launch.
+* Amended 2026-11-11 (version 0.4.1): with the handbook read, the game
+  makes each machine from one level below what its recipe asks, as it
+  does for its own recipes read from a magazine (launches 325-338: the
+  Ash Barrel at Welding 1, the Wood Retort and the Wash Tank at 3, the
+  Reactor at 4; the game's Make Metal Sheet at 3). The owner was shown
+  both ways out, rewording the texts or asking one level more, and
+  chose the texts ("Do the reword"). The recipes are unchanged. A plain
+  player was checked (launches 327-338); the Lye Leacher's window on a
+  server and an upgrade launch stay open.

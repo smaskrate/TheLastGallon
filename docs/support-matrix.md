@@ -6,7 +6,7 @@ build until it is tested there again. The rows below were verified on
 modes were run again and all passed (launches 216–226, `test-results.md`);
 the other modes have not been run again on this build. The biodiesel
 pathway, the diesel generator, the diesel vehicles and the diesel pumps
-(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), wrong-fuel damage (version 0.3.0, D-037) in launches 261–282, the menus that follow the click (version 0.3.1) in launches 289–294, the Diesel Generator's sprite given back (version 0.3.2) in launches 299–302, and the biodiesel recipes' skill levels and handbook (version 0.4.0, D-038) in launches 308–312.
+(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), wrong-fuel damage (version 0.3.0, D-037) in launches 261–282, the menus that follow the click (version 0.3.1) in launches 289–294, the Diesel Generator's sprite given back (version 0.3.2) in launches 299–302, and the biodiesel recipes' skill levels and handbook (version 0.4.0, D-038) in launches 308–312. Launches 318–338 (version 0.4.1, which changes documents only) ran what those versions had left: driving on diesel, biodiesel and wrong fuel, the cold, a converted engine with diesel, repairs, draws left to chance, wrong fuel and the crafting window on a server.
 
 Evidence levels:
 
@@ -108,9 +108,26 @@ ambulance on a third petrol lost 2 engine condition for 2 L; the pickup
 van on pure petrol failed when the draw was held at 0 (condition 0,
 stopped, no restart); the ambulance siphoned with vanilla's
 `ISTakeGasolineFromVehicle`, refilled with diesel and started clean. The
-draws were held and the litres taken from the tank by the test. NOT RUN:
-a flex-converted engine with diesel, driving on a wrong fuel, a stall on
-it, an unforced failure, a repair, a server.
+draws were held and the litres taken from the tank by the test.
+
+Wrong fuel, the rest (launches 320–322, 324 and 330): a `Base.CarNormal`
+converted to flex through the workshop menu got the spark engine's bands
+for diesel and biodiesel, a refused start's cost and the wear by the
+litre; a failed `Base.PickUpVanLightsFire` was repaired with
+`ISRepairEngine` and a failed Diesel Generator with `ISFixGenerator`,
+and each ran on diesel; with no draw held, twelve starts each of a car
+and a generator on a refusing and on a harming blend, an idling
+ambulance failing on petrol and an idling car stalling on a fifth
+diesel, each as its draw gave; driving (`Base.VanAmbulance` on diesel,
+biodiesel, 30 % petrol and petrol alone, `Base.CarNormal` on a fifth
+diesel) with the table's power, wear and exhaust, and a stall on the
+move; at −5 °C biodiesel gelling above a fifth and ethanol's refused
+start. On a dedicated server, as an admin and as a plain player, the
+server applied the rules and the client saw them (verdicts, refused
+starts, starts as drawn, power, wear, a failed engine and generator,
+the refused pour, the option off). NOT RUN: an engine failing while
+driving, diesel below −8 °C, driving in the cold; on a server, driving,
+the cold, a converted engine and a repair.
 
 Driving (RT-SP run 176, `Base.CarNormal` on a cleared straight road): on
 E10, 352 tiles at 25 km/h burned 0.778 L. All of it was the game's own
