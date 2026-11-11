@@ -85,6 +85,14 @@ mouse (the launches build the menus through the game's builder at chosen
 screen points and give the cursor's position to the game's vehicle
 pick); a controller; a server; zoom levels other than 100 %.
 
+The 0.3.1 package is the zip of `0f2280c` (166 files, 7,869,432 bytes,
+SHA-256 `828B1A40…18BB21BB`): installed clean and played, the full run
+105/0 and 14/0, the context-menus mode 33/0, the multiplayer fuel case
+21/0; and played over a save made with the 0.1.2 zip, 3/0 and 19/0, its
+records and its pumps as 0.1.2 left them (launches 295–298). A clean
+checkout builds the same bytes. Open for gate 12: an install through the
+Workshop; the upgrade from 0.2.0 or 0.3.0 with this zip.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
@@ -507,12 +515,12 @@ The Steam Workshop item (id 3835496461) serves 0.1.1, uploaded by the
 owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.3.0 package's
-`Contents` since 2026-11-11 (the 0.1.2 package's from 2026-11-10 until
-then; 0.2.0 was never put there): the release zip `49B580C0…6201C05` was
-checked against its manifest, its `Contents` mirrored over the folder's,
-and the folder's 163 files checked by hash, both ways. It has not been
-uploaded. Its `preview.png` is the package's. Its `workshop.txt` is the
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.3.1 package's
+`Contents` since 2026-11-11 (the 0.1.2 package's from 2026-11-10, then
+the 0.3.0 package's earlier on 2026-11-11; 0.2.0 was never put there):
+the release zip `828B1A40…18BB21BB` was checked against its manifest,
+its `Contents` mirrored over the folder's, and the folder's 164 files
+checked by hash, both ways. It has not been uploaded. Its `preview.png` is the package's. Its `workshop.txt` is the
 owner's, edited by hand (the item's id, `visibility=public`, the tag
 `WIP`, two reworded lines). On 2026-11-11, on the owner's word, its
 version was set to 0.3.0 and the package's lines for 0.2.0 and 0.3.0
@@ -520,14 +528,12 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits.
+edits. Its first description line still says "Version 0.3.0".
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.3.0.txt`, written on 2026-11-11: the changes
-from 0.1.1, which the item serves, to 0.3.0. `docs/workshop-change-note-0.3.1.txt`
-adds 0.3.1's fixes and is for use only once 0.3.1 is released and its
-package is in the upload folder. Neither file is in the package. NOT RUN:
+`docs/workshop-change-note-0.3.1.txt`, written on 2026-11-11: the changes
+from 0.1.1, which the item serves, to 0.3.1. It is not in the package. NOT RUN:
 pasting a note into the uploader, and how the Workshop page shows its
 `[b]` and `[list]` marks.
 What changed in the package since the last rehearsed one (run 206, 0.1.0):

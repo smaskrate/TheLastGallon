@@ -19,7 +19,7 @@ Changes since 0.1.1, the version uploaded here before. Tested on Project Zomboid
 
 [b]Existing saves[/b]
 [list]
-[*]A save from an earlier version continues with this one: its fuel records stay, and its vehicles and pumps stay on petrol. Diesel vehicles and pumps appear only in worlds started with 0.2.0 or later. Checked with 0.3.0, from a 0.1.2 save; 0.1.2 differs from 0.1.1 only in its version number and documents.
+[*]A save from an earlier version continues with this one: its fuel records stay, and its vehicles and pumps stay on petrol. Diesel vehicles and pumps appear only in worlds started with 0.2.0 or later. Checked from a 0.1.2 save; 0.1.2 differs from 0.1.1 only in its version number and documents.
 [*]An engine holding the wrong fuel, which earlier versions only kept from starting, now starts, or tries to, and is damaged. Siphon or drain the tank first.
 [*]Before you remove the mod, read "Removing the mod" in the player guide: a save loaded without the mod loses the mod's machines and the mod's fluids, ethanol, diesel and biodiesel among them, and a placed Diesel Generator loses its picture.
 [/list]

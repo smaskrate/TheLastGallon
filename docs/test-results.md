@@ -5904,3 +5904,45 @@ Evidence:
 [run 292](evidence/2026-11-11_rt-sp_harness_run292_full_0.3.1_42.22.2.txt);
 [run 293](evidence/2026-11-11_rt-sp_harness_run293_docs_shots_0.3.1_42.22.2.txt);
 [run 294](evidence/2026-11-11_rt-sp_harness_run294_context_menus_real_clicks_42.22.2.txt).
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 295–298 (the 0.3.1 release zip installed clean and over a 0.1.2 save, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `0f2280c` (the release commit,
+clean tree) built `TheLastGallon-0.3.1.zip`: 166 files, 7,869,432 bytes,
+SHA-256 `828B1A40…18BB21BB`. A worktree of `0f2280c` builds the same
+bytes.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 295 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 105/0, then 14/0 |
+| 296 | `context-menus` | 33/0 |
+| 297 | RT-MP `-Clients 1 -Only fuel -ModSource <the unpacked mod folder>` | 21/0 |
+| 298 | `tools\rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.1.2`: a world made with the 0.1.2 zip, continued with the 0.3.1 zip | 3/0, then 19/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.3.1,
+equal to `TLG.VERSION`; the mod logged "The Last Gallon 0.3.1 ready" in
+single player, on the server and on its client.
+
+These are the first launches of the full run and of the upgrade
+scenario since `Stations.isPump` asks for a reservoir record (`f370264`).
+In launch 295 the pump chain passed (pump to can, pump to vehicle). In
+launch 297 the server's pump record carried `frac`. In launch 298 the
+pump recorded by 0.1.2 was read as a pump and gave what it gave
+(`RTU.pump_recorded_earlier_gives_what_it_gave`), the eight pumps of the
+station gave petrol, and every record was as 0.1.2 left it.
+
+Consoles: no TLG error or warning; the only exception in launch 295 is
+the harness's deep-recursion probe. The consoles of launches 296 and 298
+were read for the mod's ready line and its errors and warnings only.
+
+Not run on this zip: the other single-player modes and multiplayer
+cases; the upgrade from 0.2.0 or 0.3.0, the existing-save and the
+removal scenarios; an install through the Steam Workshop. Still not run
+for the menu fix: a player's own click with the mouse, a controller, a
+server, zoom levels other than 100 %. Not uploaded.
+
+Evidence:
+[run 295](evidence/2026-11-11_rt-sp_harness_run295_install_rehearsal_0.3.1_42.22.2.txt);
+[run 296](evidence/2026-11-11_rt-sp_harness_run296_package_context_menus_0.3.1_42.22.2.txt);
+[run 297](evidence/2026-11-11_rt-mp_harness_run297_package_fuel_0.3.1_42.22.2.txt);
+[run 298](evidence/2026-11-11_rt-sp_harness_run298_upgrade_0.1.2_to_0.3.1_42.22.2.txt).
