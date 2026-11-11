@@ -5708,3 +5708,64 @@ Evidence:
 [run 280](evidence/2026-11-11_rt-sp_harness_run280_wrong_fuel_car_stopped_0.3.0_42.22.2.txt);
 [run 281](evidence/2026-11-11_rt-sp_harness_run281_wrong_fuel_final_0.3.0_42.22.2.txt);
 [run 282](evidence/2026-11-11_rt-sp_harness_run282_full_final_0.3.0_42.22.2.txt).
+
+## 2026-11-11 — RT-SP client harness, launches 283–285 (saves from 0.2.0 and 0.1.2 continued with 0.3.0)
+
+Build 42.22.2. `tools\package.ps1` at `6318907` built
+`TheLastGallon-0.3.0.zip`: 165 files, 7,866,107 bytes, SHA-256
+`46815CBD…156B0F05` (the harness had uncommitted changes; nothing that
+ships did). `tools\rehearse-install.ps1 -NoBuild -Scenario upgrade
+-FromVersion <version>` plays a new world with the earlier release's zip
+(0.2.0: `8C8334CD…46BDAAB`; 0.1.2: `E6971619…AC9143FB`, each equal to its
+manifest) and continues the save with the 0.3.0 zip.
+
+The scenario's steps were extended first. Launch 1 also leaves what a
+wrong blend looks like under the earlier release: the car's 10 L recorded
+as 6 L of petrol and 4 L of diesel, and, where the release has the item,
+a Diesel Generator with 5 L recorded as petrol. It writes the world's
+`dieselVehicles`, the ambulance's profile and fuel and the pump's product
+to the expectations, and launch 2 compares with those instead of
+expecting petrol everywhere.
+
+| Launch | From | Result (pass/fail): with the earlier release, then with 0.3.0 |
+| --- | --- | --- |
+| 283 | 0.2.0 | 3/0, then 22/0 |
+| 284 | 0.1.2 | 3/0, then 15/4 |
+| 285 | 0.1.2 | 3/0, then 19/0 |
+
+* Under both earlier releases the car's blend, and under 0.2.0 the Diesel
+  Generator's petrol, were incompatible (`incompatible_fuel`, start
+  factor 0).
+* Launch 283, under 0.3.0: all eight records as 0.2.0 left them before
+  any read; the world record the same one, `dieselVehicles` true,
+  `modVersion` still 0.2.0; `SandboxVars.TheLastGallon.WrongFuelDamage`
+  read true with nothing set. The ambulance kept `engine_ci_stock` and
+  its diesel and started; a new ambulance read as diesel; two of the
+  eight pumps gave diesel; the pump 0.2.0 recorded kept its product. The
+  car's blend read as `wrong_fuel_4_diesel` with a refused start costing
+  1 to 2; its start through the game's action was refused, the engine
+  went from 100 to 98, 2 % of the battery was used and the line was
+  shown. The Diesel Generator's petrol read as `wrong_fuel_3_gasoline`
+  with a failure chance; with the start roll held at 0 it started, and
+  the line for a start on harmful fuel was shown.
+* Launch 284's four failures were the test's: the car it found by its
+  script nearest the start was a parked car of the map (34 L, engine 69),
+  not its own. The test now finds its vehicles by the record launch 1
+  saved.
+* Launch 285, under 0.3.0: as launch 283 for the car (engine 100 to 99);
+  no diesel in that world (`dieselVehicles` nil, the ambulance and all
+  eight pumps petrol, the recorded pump without a product reading
+  petrol); 0.1.2 has no Diesel Generator, so that step was skipped.
+
+Consoles: "The Last Gallon 0.2.0 ready" / "0.1.2 ready" in launch 1,
+"0.3.0 ready" in launch 2; no TLG error or warning and no exception.
+
+Not run: the clean-install rehearsal on the 0.3.0 zip; a second save and
+reload after the upgrade; an engine running on a wrong fuel across a
+save; the removal and existing-save scenarios with 0.3.0; a server. The
+player guide and the migration notes changed after this zip was built.
+
+Evidence:
+[run 283](evidence/2026-11-11_rt-sp_harness_run283_upgrade_0.2.0_to_0.3.0_42.22.2.txt);
+[run 284](evidence/2026-11-11_rt-sp_harness_run284_upgrade_0.1.2_wrong_car_42.22.2.txt);
+[run 285](evidence/2026-11-11_rt-sp_harness_run285_upgrade_0.1.2_to_0.3.0_42.22.2.txt).

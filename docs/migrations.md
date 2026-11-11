@@ -189,7 +189,20 @@ No record changes. The sandbox option `TheLastGallon.WrongFuelDamage` is
 new; a save without it reads it as on. A save from 0.2.0 therefore
 behaves differently from its first load with 0.3.0: a tank holding a fuel
 its engine is not built for, which refused the start and did no harm,
-now lets the engine start, or try to, and damages it. Not run in game.
+now lets the engine start, or try to, and damages it.
+
+Launches 283 and 285 played a world with the 0.2.0 zip and one with the
+0.1.2 zip and continued each with the 0.3.0 zip
+(`tools/rehearse-install.ps1 -Scenario upgrade -FromVersion <version>`).
+Each world held a car with 40 % diesel in its petrol, and the 0.2.0 world
+a Diesel Generator with petrol alone; both releases judged them
+incompatible. Under 0.3.0 the records were unchanged before any read;
+the option read as on; the car's start was refused and cost it 1 to 2
+engine condition and 2 % battery charge; the Diesel Generator started.
+The 0.2.0 world kept `dieselVehicles`, its ambulance's diesel and its
+pumps' products; the 0.1.2 world kept petrol everywhere. The cans, the
+fermenter's batch, the pump and the petrol generator read as in launch
+257.
 
 ## Settings changes
 Changing **Fuel ageing speed** appends a dated entry to `balanceHistory`;

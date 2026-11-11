@@ -279,10 +279,10 @@ above as "never", and wears for it (a petrol car 1.35 a litre on over
 over 30 % ethanol, with 4 chances in 100 for each litre of failing). A
 generator's start is refused, and costs it, whatever that option says.
 
-A save from version 0.2.0 needs nothing done to it, but it behaves
-differently from the first load: an engine that refused to start on a
-wrong blend under 0.2.0 now starts, or tries to, and is damaged. If a
-tank holds such a blend, siphon or drain it before you start the engine.
+A save from version 0.2.0 or 0.1.2 needs nothing done to it, but it
+behaves differently from the first load: an engine that refused to start
+on a wrong blend now starts, or tries to, and is damaged. If a tank holds
+such a blend, siphon or drain it before you start the engine.
 
 **Checked in game** (single player, a new world):
 
@@ -314,12 +314,18 @@ the tank by the test while the engine ran.
 On a server, one client: a red generator refused on a tank of diesel, and
 the line reaching the player.
 
+Saves from versions 0.2.0 and 0.1.2, each holding a car with 40 % diesel
+in its petrol (0.2.0 also a Diesel Generator on pure petrol), continued
+with this version: the records unchanged; the car's start refused as
+before, now costing 1 or 2 engine points and 2 % of the battery, with the
+line; the Diesel Generator, which 0.2.0 would not start, started, with the
+line; the option on without anything set.
+
 **Not checked in game:** the rest on a server; a converted (flex) engine
 with diesel; ethanol's rows beyond the verdict, and its refusal to start
 in the cold; a car stalling on such fuel; driving on any of it; an engine
 failing by an unforced draw; repairing a failed engine or generator; a
-car started with **Bad fuel can stall engines** off; a save from version
-0.2.0 holding such a blend.
+car started with **Bad fuel can stall engines** off.
 
 ## The field manual
 
@@ -867,7 +873,9 @@ stays as it was.
   and the look was remembered; a can first used 6 days later was a fifth
   of the way to the world's age; an Ambulance read as petrol and all eight
   pumps of the station gave petrol;
-* a world started with version 0.1.2, then continued with this version.
+* a world started with version 0.1.2 and one started with 0.2.0, each
+  then continued with this version (the 0.2.0 world keeps its diesel
+  vehicles and pumps).
   Its cans, a pump, an Ambulance, a car and a generator read as 0.1.2 had
   recorded them; a vessel's batch was still running; the Ambulance started
   on its petrol and the pump still gave petrol; this version's machines
