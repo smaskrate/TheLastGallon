@@ -5462,3 +5462,37 @@ Evidence:
 [run 255](evidence/2026-11-11_rt-sp_harness_run255_removal_0.2.0_42.22.2.txt);
 [run 256](evidence/2026-11-11_rt-sp_harness_run256_removal_fixed_0.2.0_42.22.2.txt);
 [run 257](evidence/2026-11-11_rt-sp_harness_run257_upgrade_0.1.2_to_0.2.0_42.22.2.txt).
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 258–259 (the zip of `44bb7eb` installed clean, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `44bb7eb` (clean tree) built
+`TheLastGallon-0.2.0.zip`: 164 files, 7,856,016 bytes, SHA-256
+`52184243…93DBC4`. It has the `Stations.isPump` fix of `ce1f031` and the
+documents as launches 254–257 left them. `tools\rehearse-install.ps1
+-NoBuild` unpacked it, found it equal to its manifest both ways, and
+installed its mod folder into a fresh isolated cache.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 258 | RT-SP full: phase A, save, reload, phase B | 100/0, then 14/0 |
+| 259 | RT-MP `tools\run-mp-harness.ps1 -Clients 1 -Only biodiesel -ModSource <the unpacked mod folder>` | 23/0 |
+
+* Launch 258: the mod logged "The Last Gallon 0.2.0 ready". The
+  console's only exception is the harness's own deep-recursion probe; no
+  TLG error, no "untested game version" warning.
+* Launch 259: the first multiplayer case run from the package. The five
+  loads, the collection (17.07 L into one jerry can), the retort's
+  refusal, the Diesel Generator, the ambulance and the diesel pump as in
+  launch 248. Server and client logged "The Last Gallon 0.2.0 ready". The
+  consoles hold no TLG error and no Lua exception from the mod. The
+  game's own lines: six `AdvancedAnimator … NoSuchFileException` for the
+  `AnimSets` and `actiongroups` folders neither mod has, one
+  `Property Name not found: WindowShape` at world generation on the
+  server, and the harness's deep-recursion probe.
+
+Not run: the other multiplayer cases and the other single-player modes on
+this zip; an install through the Steam Workshop.
+
+Evidence:
+[run 258](evidence/2026-11-11_rt-sp_harness_run258_install_rehearsal_0.2.0_42.22.2.txt);
+[run 259](evidence/2026-11-11_rt-mp_harness_run259_package_biodiesel_42.22.2.txt).

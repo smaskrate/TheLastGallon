@@ -38,20 +38,20 @@ Where it stands against the same gates:
 | --- | --- | --- |
 | 1 | PARTIAL | Biodiesel run through the player's menus in single player from logs, water and oil to a can (launch 231; again with the supplied models, from the package, launch 253), its machines crafted (launch 249). Open: the controls on these machines, the cold |
 | 2, 3 | PARTIAL | Diesel and biodiesel through the mod's pour, vanilla's pump actions and the machine collection, litre for litre (launches 231, 240, 244). Open: siphoning diesel, driving burn on diesel |
-| 5 | PARTIAL | One client on a dedicated server: the loads, the collection, the generator, a diesel vehicle and pump (launch 248). Open: a batch through its hours, two clients, a restart |
+| 5 | PARTIAL | One client on a dedicated server: the loads, the collection, the generator, a diesel vehicle and pump (launch 248; again from the package, launch 259). Open: a batch through its hours, two clients, a restart |
 | 6 | PARTIAL | The diesel generator through a save and a reload (launch 236). Open: a biodiesel batch across a save, a machine picked up while working |
 | 7 | PARTIAL | With the 0.2.0 zip: a save that gains the mod has no diesel (launch 254: 3/0, 15/0, 4/0); the mod removed and put back in a 0.2.0 world keeps the diesel flag and the pumps' products (launches 255–256); a world made with the 0.1.2 zip continues with its records, vehicles and pumps on petrol (launch 257: 2/0, 16/0). Open: a placed Diesel Generator loses its sprite once the save is loaded without the mod; the other two policies; a server; an upgrade from 0.1.0 or 0.1.1 |
 | 8 | PARTIAL | `support-matrix.md` lists the diesel chassis; four of about 42 variants run |
 | 9 | PARTIAL | The five supplied models recorded in `art-src`; the diesel generator's two pictures are made from the game's art (`NOTICE.md`), The Indie Stone's terms for mods not read |
 | 10 | PARTIAL | 316 Italian strings as shipped (launch 250); the player guide covers 0.2.0. Open: the new menus read in Italian in game |
 | 11 | OPEN | Performance not measured with the new machines |
-| 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). The zip of `ce1f031` (SHA-256 `6BA57DA3…`), which differs in `Stations.isPump` and two shipped documents, was played over a 0.1.2 save (launch 257) and through the removal scenario (launch 256); the full run is not repeated on it. Open: an install through the Workshop. A later commit to shipped files needs a new zip |
+| 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). The zip of `ce1f031` (SHA-256 `6BA57DA3…`), which differs in `Stations.isPump` and two shipped documents, was played over a 0.1.2 save (launch 257) and through the removal scenario (launch 256). The zip of `44bb7eb` (164 files, 7,856,016 bytes, SHA-256 `52184243…93DBC4`), with the documents of launches 254–257, installed clean and played: the full run 100/0 and 14/0 (launch 258) and the multiplayer biodiesel case 23/0 (launch 259). Open: an install through the Workshop. A later commit to shipped files needs a new zip |
 | 13 | PARTIAL | The five machines have supplied models; the diesel generator is vanilla's sprite recoloured, the owner's choice |
 
-The full single-player run passes with 0.2.0 (launches 245 and 251:
-100/0, 14/0). It has not been repeated since `Stations.isPump` changed
-(`ce1f031`), nor have the multiplayer cases. The other older modes and
-the multiplayer cases written before 0.2.0 have not been run with it.
+The full single-player run passes with 0.2.0 (launches 245, 251 and 258:
+100/0, 14/0), the last on the zip of `44bb7eb`, after `Stations.isPump`
+changed. The other older modes and the multiplayer cases written before
+0.2.0 have not been run with it.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
