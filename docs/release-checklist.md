@@ -125,11 +125,18 @@ Open: the window's refusal for the other four machines; a player who is
 not an admin; the Italian name read in game. It has not been uploaded to
 the Workshop.
 
-The 0.4.0 package is the zip of `eecd209` (167 files, 7,873,439 bytes,
-SHA-256 `A4B7336D…1BBD7B14`): installed clean and played, the full run
+The 0.4.0 package is the zip of `a0d293e` (167 files, 7,889,723 bytes,
+SHA-256 `87ED49FD…5A47A297`), built on 2026-11-11 after the preview was
+remade with fourteen models. It has not been installed or played. Three
+of its files differ from the zip of `eecd209`, the one rehearsed:
+`42/poster.png`, `preview.png` (the new picture, SHA-256
+`13A1A39F…7309D5D1`) and `docs/NOTICE.md` (the sentence on how the
+picture is made). The zip of `eecd209` (167 files, 7,873,439 bytes,
+SHA-256 `A4B7336D…1BBD7B14`) was installed clean and played, the full run
 105/0 and 14/0, the handbook mode 10/0, the multiplayer handbook case
 9/0; and played over a save made with the 0.1.2 zip, 3/0 and 19/0
-(launches 313–316). A clean checkout builds the same bytes. Open for
+(launches 313–316). A clean checkout of `eecd209` builds its bytes; that
+zip is no longer in `dist`. Open for
 gate 12: an install through the Workshop; the upgrade from 0.2.0 to
 0.3.2 with this zip, where the recipes' learning changes behaviour.
 
@@ -561,7 +568,7 @@ the 0.3.0, 0.3.1 and 0.3.2 packages' earlier on 2026-11-11; 0.2.0 was
 never put there):
 the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
 its `Contents` mirrored over the folder's, and the folder's 165 files
-checked by hash, both ways. It has not been uploaded. Its `preview.png` is the package's. Its `workshop.txt` is the
+checked by hash, both ways. It has not been uploaded. Its `preview.png` and its `42/poster.png` are that zip's, the earlier picture of five models (SHA-256 `0C134CFD…2BFC155E`): the package of `a0d293e` has not been put there. Its `workshop.txt` is the
 owner's, edited by hand (the item's id, `visibility=public`, the tag
 `WIP`, two reworded lines). On 2026-11-11, on the owner's word, its
 version was set to 0.3.0 and the package's lines for 0.2.0 and 0.3.0
