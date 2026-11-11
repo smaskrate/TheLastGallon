@@ -124,7 +124,15 @@ end
 -- made on the server. The server also rolls its loot lists for the
 -- handbook (MPServer.lua roll_handbook).
 ------------------------------------------------------------------------------
-if MP.only == "handbook" then
+-- handbook3 (2026-11-11, one client): the same window for the three other
+-- welded machines. With the materials for all three and Welding 5 (below
+-- the level that teaches any of them): each refused, not learned. Welding
+-- 3 and the handbook read: each refused, below its level. Welding 4: the
+-- Wood Retort and the Wash Tank made, the Reactor (Welding 5) refused.
+-- Welding 5: the Reactor made. The Lye Leacher is not tried: it is made
+-- on a surface, and the harness's ground has none.
+------------------------------------------------------------------------------
+if MP.only == "handbook" or MP.only == "handbook3" then
     local HB = { recipe = "TLG_MakeAshBarrel" }
     local function recipes()
         local out = {}
@@ -151,11 +159,28 @@ if MP.only == "handbook" then
     -- Opens the crafting window with its button, picks the Ash Barrel's row
     -- as a click does, and reports what the window offers; with `press` it
     -- presses Craft and waits for the action to end.
-    local function tryCraft(name, wantOffered)
+    -- A product in the inventory or lying within two squares: a heavy one
+    -- made by an overloaded character falls to the floor.
+    local function have(product)
+        local n, p = countType(product), player()
+        for x = math.floor(p:getX()) - 2, math.floor(p:getX()) + 2 do
+            for y = math.floor(p:getY()) - 2, math.floor(p:getY()) + 2 do
+                local sq = getCell():getGridSquare(x, y, 0)
+                local objs = sq and sq:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getFullType() == product then n = n + 1 end
+                end
+            end
+        end
+        return n
+    end
+    local function tryCraft(name, wantOffered, recipeName, product)
+        recipeName, product = recipeName or HB.recipe, product or "TLG.AshBarrel"
         return { name = "mp_hb_try_" .. name, timeout = 9000, fn = function(ctx, ticks)
             local p = player()
             if ticks == 1 then
-                ctx.base = countType("TLG.AshBarrel")
+                ctx.base = have(product)
                 triggerEvent("OnContainerUpdate")
                 local pd = getPlayerData(0)
                 local btn = pd and pd.equipped and pd.equipped.craftingBtn
@@ -168,7 +193,7 @@ if MP.only == "handbook" then
                 ctx.picked = true
                 if hp and not hp.recipesPanel.recipeListMode then hp.recipesPanel.recipeFilterPanel.viewModeButton:forceClick() end
                 local lb = hp and hp.recipesPanel and hp.recipesPanel.recipeListPanel and hp.recipesPanel.recipeListPanel.recipeListPanel
-                local recipe = recipes()[HB.recipe]
+                local recipe = recipes()[recipeName]
                 for i, it in ipairs(lb and lb.items or {}) do
                     if it.item ~= nil and it.item == recipe then ctx.row = i end
                 end
@@ -203,10 +228,10 @@ if MP.only == "handbook" then
             if ticks - ctx.at < 60 then return nil end
             local busy = #(ISTimedActionQueue.getTimedActionQueue(p).queue or {}) > 0
             if busy and ticks - ctx.at < 8000 then return nil end
-            local made = countType("TLG.AshBarrel") - ctx.base
+            local made = have(product) - ctx.base
             check("hb_" .. name, function()
                 return ctx.offered == wantOffered and made == (wantOffered and 1 or 0), string.format(
-                    "%s; Ash Barrels made %d", ctx.text, made)
+                    "%s; %s made %d", ctx.text, product, made)
             end)
             if w then w:close() end
             return true
@@ -238,6 +263,67 @@ if MP.only == "handbook" then
         end)
         return true
     end }
+    if MP.only == "handbook3" then
+        local function level(name, n)
+            return call("hb_level_" .. name, "handbook_level", { level = n }, "handbook_level", function(m)
+                player():setPerkLevelDebug(Perks.MetalWelding, n)
+                report():line("OBS  MP.hb_level Welding on the server %s, here %d", tostring(m.level),
+                    player():getPerkLevel(Perks.MetalWelding))
+            end)
+        end
+        local M3 = { { "wood_retort", "TLG_MakeWoodRetort", "TLG.WoodRetort" },
+            { "wash_tank", "TLG_MakeBiodieselWashTank", "TLG.BiodieselWashTank" },
+            { "reactor", "TLG_MakeBiodieselReactor", "TLG.BiodieselReactor" } }
+        local function all(suffix, want)
+            local out = {}
+            for _, m in ipairs(M3) do out[#out + 1] = tryCraft(m[1] .. "_" .. suffix, want, m[2], m[3]) end
+            return out
+        end
+        local steps = { MP.waitWorld,
+            once("mp_hb_start", function()
+                local learned, actual = knownSet()
+                check("hb_nothing_known_at_the_start", function()
+                    return actual == "00000" and getDebug() == false, string.format(
+                        "debug=%s; hasPlayerLearnedRecipe %s, actually known %s; Welding %d; role %s", tostring(getDebug()), learned,
+                        actual, player():getPerkLevel(Perks.MetalWelding),
+                        tostring(select(2, pcall(function() return player():getRole():getName() end))))
+                end)
+            end),
+            -- For the three: 3 drums, 5 sheets, 4 pipes, 5 rods, a bucket; a
+            -- blowtorch (2 uses each) and a mask.
+            call("hb_give", "give", { items = "Base.MetalDrum;Base.MetalDrum;Base.MetalDrum;Base.SheetMetal;Base.SheetMetal;"
+                .. "Base.SheetMetal;Base.SheetMetal;Base.SheetMetal;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;"
+                .. "Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.BucketEmpty;Base.BlowTorch;"
+                .. "Base.WeldingMask;TLG.BiodieselHandbook;Base.HandTorch" }, "given",
+                function(m) report():line("OBS  MP.hb_given %s", tostring(m.ids)) end),
+            wait("mp_hb_items_arrive", 240),
+            once("mp_hb_light", function()
+                local torch = player():getInventory():getFirstTypeRecurse("Base.HandTorch")
+                if torch and player():tooDarkToRead() then
+                    torch:setActivated(true)
+                    player():setSecondaryHandItem(torch)
+                end
+            end),
+            level("5_not_learned", 5), wait("mp_hb_level_settles_1", 120) }
+        for _, s in ipairs(all("refused_not_learned_at_welding_5", false)) do steps[#steps + 1] = s end
+        for _, s in ipairs({ level("3", 3), wait("mp_hb_level_settles_2", 120), HB.read,
+            serverView("after_reading", function(m)
+                check("hb_server_knows_the_five_after_the_read", function()
+                    return m.known == "11111" and m.read == "true" and tonumber(m.level) == 3, string.format(
+                        "known %s, read %s, Welding %s", tostring(m.known), tostring(m.read), tostring(m.level))
+                end)
+            end) }) do steps[#steps + 1] = s end
+        for _, s in ipairs(all("refused_at_welding_3", false)) do steps[#steps + 1] = s end
+        for _, s in ipairs({ level("4", 4), wait("mp_hb_level_settles_3", 120),
+            tryCraft("wood_retort_made_at_welding_4", true, M3[1][2], M3[1][3]),
+            tryCraft("wash_tank_made_at_welding_4", true, M3[2][2], M3[2][3]),
+            tryCraft("reactor_refused_at_welding_4", false, M3[3][2], M3[3][3]),
+            level("5", 5), wait("mp_hb_level_settles_4", 120),
+            tryCraft("reactor_made_at_welding_5", true, M3[3][2], M3[3][3]),
+            once("mp_finish_b", function() send("finish", {}) end), MP.finish }) do steps[#steps + 1] = s end
+        MP.stepsA = steps
+        return
+    end
     MP.stepsA = { MP.waitWorld,
         once("mp_hb_start", function()
             local learned, actual = knownSet()
@@ -1828,7 +1914,435 @@ TM.costs = call("timers_costs", "probe_timers", {}, "probe_timers", function(m)
     end
 end)
 
-if MP.only == "machines" then
+------------------------------------------------------------------------------
+-- wrongfuel (2026-11-11, one client; D-037 with a server applying it). The
+-- server puts a petrol car, an ambulance, a petrol generator and a Diesel
+-- Generator by the spawn point (MPServer.lua, the wrong-fuel case). A pours
+-- 10 L of petrol into each vehicle with the game's own action; the server
+-- then rewrites a tank's record in shares (a fixture) and answers with the
+-- verdict, which is checked against docs/balance.md's table.
+-- What must cross the wire, each seen on the server and on A's client:
+-- - a start the fuel refuses (the car on 40 % diesel, three tries): the
+--   engine loses the 1 or 2 points the server drew and the battery 2 %, and
+--   the driver is told;
+-- - starts on fuel that harms (the car on a fifth diesel, the ambulance on
+--   petrol alone), tried until the engine runs: each refused when the
+--   server's draw is above the start factor, and the driver told on a pass;
+-- - the car's power lowered while it runs; 4 L taken from its tank by the
+--   server: the engine's and the exhaust's condition for those litres;
+-- - the ambulance failing on petrol (1 L taken, the failure draw held at 0):
+--   condition 0, stopped, the driver told, no start afterwards;
+-- - the petrol generator refused on 40 % diesel (three tries) and the Diesel
+--   Generator switched on on petrol, then failed by the server (a litre
+--   gone, the draw held at 0);
+-- - the mod's pour of petrol into the ambulance, refused until confirmed;
+-- - the sandbox option off on the server: the same tank blocks the start.
+-- The stall draw is held on the server while an engine must keep running.
+------------------------------------------------------------------------------
+local WFC = (function()
+    local W = {}
+    local function veh(k) return W.site and getVehicleById(tonumber(W.site[k])) or nil end
+    local function num(m, k) return tonumber(m[k]) or -1 end
+    -- "start=0.1234;refused;roll=2.0000" as { { "start", 0.1234 }, ... }.
+    local function draws(m)
+        local out = {}
+        for part in string.gmatch(m.draws or "", "[^;]+") do
+            local k, v = string.match(part, "^([^=]+)=(.*)$")
+            out[#out + 1] = { k or part, tonumber(v) }
+        end
+        return out
+    end
+    local function drawOf(list, key)
+        for _, d in ipairs(list) do
+            if d[1] == key then return d[2] or true end
+        end
+        return nil
+    end
+    local function partCondition(k, id)
+        local v = veh(k)
+        local p = v and v:getPartById(id)
+        if p == nil or (id ~= "Engine" and p:getInventoryItem() == nil) then return -1 end
+        return p:getCondition()
+    end
+    local function noteIs(key, fuel)
+        local n = TLG.Notify and TLG.Notify.last
+        return n ~= nil and n.key == key and n.fuel == fuel
+    end
+    local function noteText()
+        local n = TLG.Notify and TLG.Notify.last
+        return n and tostring(n.text) or "no line reached the client"
+    end
+    local function clearNote()
+        if TLG.Notify then TLG.Notify.last = nil end
+    end
+    local function facts(m)
+        return string.format("compatible=%s harmful=%s level=%s of %s start %s power %s wear %s failure %s exhaust %s attempt %s (%s)",
+            tostring(m.compatible), tostring(m.harmful), tostring(m.level), tostring(m.wrong), tostring(m.start), tostring(m.pf),
+            tostring(m.wear), tostring(m.failure), tostring(m.exhaust), tostring(m.attempt), tostring(m.reasons))
+    end
+
+    local function set(name, k, q, want)
+        return call("wf_set_" .. name, "wf_set", { k = k, q = q }, "wf_set", function(m)
+            W[k] = m
+            report():line("OBS  MP.wf_set %s on the server: %s; condition %s, tank %s L", name, facts(m), tostring(m.cond),
+                tostring(m.tankL or m.fuel))
+            check("wf_verdict_" .. name, function()
+                return m.compatible == tostring(want.compatible) and m.level == tostring(want.level)
+                    and m.wrong == tostring(want.wrong) and math.abs(num(m, "start") - want.start) < 1e-6
+                    and math.abs(num(m, "pf") - want.power) < 1e-6 and math.abs(num(m, "wear") - want.wear) < 1e-6
+                    and m.failure == tostring(want.failure) and m.exhaust == tostring(want.exhaust)
+                    and m.attempt == (want.attempt or "nil"), facts(m)
+            end)
+        end)
+    end
+
+    local function probe(name, k, judge, release)
+        return call("wf_probe_" .. name, "wf_probe", { k = k, release = release and "1" or "0" }, "wf_probe", function(m)
+            report():line("OBS  MP.wf_probe %s on the server: %s; engine %s carry %s exhaust %s carry %s battery %s running %s power %s (%s) tank %s; generator on %s fuel %s; draws %s",
+                name, facts(m), tostring(m.cond), tostring(m.carry), tostring(m.muffler), tostring(m.mcarry), tostring(m.charge),
+                tostring(m.running), tostring(m.power), tostring(m.powerState), tostring(m.tankL), tostring(m.on), tostring(m.fuel),
+                tostring(m.draws))
+            judge(m)
+            W[k] = m
+        end)
+    end
+
+    -- Asks the server from inside a step: sent once, then the answer or nil.
+    local function ask(ctx, k)
+        if not ctx.asked then
+            ctx.asked = "wf_ask_" .. tostring(ctx.name) .. "_" .. tostring(ctx.tries)
+            ctx.n = #(MP.inbox.wf_probe or {})
+            send("wf_probe", { k = k, tag = ctx.asked })
+            return nil
+        end
+        local got = MP.inbox.wf_probe or {}
+        for i = ctx.n + 1, #got do
+            if got[i].role == MP.role and got[i].tag == ctx.asked then
+                ctx.asked = nil
+                return got[i]
+            end
+        end
+        return nil
+    end
+
+    -- Tries through the game's own menu until `stop(m)` or `most` tries:
+    -- `go(p)` queues one, `judge(m, d)` gives ok and a text for it.
+    local function tries(name, k, most, go, judge, stop, after)
+        return { name = "mp_wf_" .. name, timeout = 40000, fn = function(ctx, ticks)
+            local p = player()
+            if not ctx.phase then ctx.phase, ctx.tries, ctx.texts, ctx.name = "try", 0, {}, name end
+            if ctx.phase == "try" then
+                clearNote()
+                ctx.tries = ctx.tries + 1
+                go(p)
+                ctx.phase, ctx.t = "wait", ticks
+                return nil
+            end
+            if ctx.phase == "wait" then
+                if ticks - ctx.t < 300 or not TLGH.Steps.actionsIdle(p) then return nil end
+                ctx.phase = "ask"
+            end
+            local m = ask(ctx, k)
+            if not m then return nil end
+            local ok, text = judge(m, draws(m), W[k] or {})
+            ctx.texts[#ctx.texts + 1] = text
+            if not ok and not ctx.bad then ctx.bad = string.format("try %d: %s", ctx.tries, text) end
+            W[k] = m
+            if not stop(m) and ctx.tries < most then
+                ctx.phase = "try"
+                return nil
+            end
+            report():line("OBS  MP.wf_%s tries: %s", name, table.concat(ctx.texts, " | "))
+            check("wf_" .. name .. "_every_try_as_the_servers_draw_gives", function()
+                return ctx.bad == nil, ctx.bad or string.format("%d tries, each as drawn", ctx.tries)
+            end)
+            if after then after(m, ctx) end
+            return true
+        end }
+    end
+
+    -- A start the fuel refuses: the points the server drew, the battery, the line.
+    local function refusedJudge(k, fuel, generator)
+        return function(m, d, before)
+            local roll = drawOf(d, generator and "groll" or "roll")
+            local refused = drawOf(d, generator and "grefused" or "refused") ~= nil
+            local taken = num(before, "cond") - num(m, "cond")
+            local used = num(before, "charge") - num(m, "charge")
+            local here = generator and (W.gen(generator) and W.gen(generator):getCondition() or -1) or partCondition(k, "Engine")
+            local ok = refused and (roll == 1 or roll == 2) and taken == roll and here == num(m, "cond")
+                and noteIs("IGUI_TLG_Note_StartDamage", fuel)
+                and (generator and m.on == "false" or (not generator and m.running == "false" and used > 0.0199 and used < 0.0201))
+            return ok, string.format("the server drew %s, condition %s -> %s there and %s here%s; line: %s", tostring(roll),
+                tostring(before.cond), tostring(m.cond), tostring(here),
+                generator and "" or string.format(", battery -%.4f", used), noteText())
+        end
+    end
+
+    -- A start on fuel that harms: refused when the server's draw is above the factor.
+    local function harmJudge(k, sf, fuel, generator)
+        return function(m, d, before)
+            local x = drawOf(d, generator and "gstart" or "start")
+            local refused = drawOf(d, generator and "grefused" or "refused") ~= nil
+            local on = generator and m.on or m.running
+            local ok = type(x) == "number" and refused == (x > sf) and num(m, "cond") == num(before, "cond")
+                and (not refused or on == "false") and (refused or noteIs("IGUI_TLG_Note_WrongFuel", fuel))
+            return ok, string.format("drew %s against %s: %s by the server, on %s%s", tostring(x), tostring(sf),
+                refused and "refused" or "passed", tostring(on), refused and "" or ("; line: " .. noteText()))
+        end
+    end
+
+    W.gen = function(n)
+        local sq = W.site and getCell():getGridSquare(tonumber(W.site["g" .. n .. "x"]), tonumber(W.site["g" .. n .. "y"]), 0)
+        local objs = sq and sq:getObjects()
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            if instanceof(objs:get(i), "IsoGenerator") then return objs:get(i) end
+        end
+        return nil
+    end
+
+    W.setup = call("wf_site", "setup_wrongfuel", {}, "wrongfuel_site", function(m)
+        W.site = m
+        FU.site = { car = m.car, g1x = m.g1x, g1y = m.g1y, g2x = m.g2x, g2y = m.g2y }
+        check("wf_site_ready_on_the_server", function()
+            return m.carProfile == "engine_si_stock" and m.ambProfile == "engine_ci_stock" and m.g1Profile == "generator_si_stock"
+                and m.g2Profile == "generator_ci_bio" and m.diesel == "true" and m.damage == "true" and m.stalls == "true",
+                string.format("car %s, ambulance %s, generators %s and %s; dieselVehicles=%s WrongFuelDamage=%s VehicleStalls=%s; CarGasConsumption %s; the mod there is %s",
+                    tostring(m.carProfile), tostring(m.ambProfile), tostring(m.g1Profile), tostring(m.g2Profile), tostring(m.diesel),
+                    tostring(m.damage), tostring(m.stalls), tostring(m.consumption), tostring(m.version))
+        end)
+    end)
+
+    W.seen = once("mp_wf_site_seen", function()
+        check("wf_site_seen", function()
+            return veh("car") ~= nil and veh("amb") ~= nil and W.gen(1) ~= nil and W.gen(2) ~= nil and getDebug() == false,
+                string.format("car=%s ambulance=%s generators=%s,%s debug=%s role=%s", tostring(veh("car") ~= nil),
+                    tostring(veh("amb") ~= nil), tostring(W.gen(1) ~= nil), tostring(W.gen(2) ~= nil), tostring(getDebug()),
+                    tostring(select(2, pcall(function() return player():getRole():getName() end))))
+        end)
+    end)
+
+    W.canToAmb = act("wf_can_to_ambulance", function(ctx, p)
+        ISVehiclePartMenu.onAddGasoline(p, veh("amb"):getPartById("GasTank"))
+    end, 180)
+
+    local function enter(name, k)
+        return act("wf_enter_" .. name, function(ctx, p) ISVehicleMenu.onEnter(p, veh(k), 0) end, 120)
+    end
+    local function startEngine(p) ISVehicleMenu.onStartEngine(p) end
+    local function switchOn(n)
+        return function(p) ISWorldObjectContextMenu.onActivateGenerator(nil, true, W.gen(n), 0) end
+    end
+    local function hold(name, on)
+        return call("wf_hold_" .. name, "wf_hold", { stall = on and "1" or "0" }, "wf_hold", function(m)
+            report():line("OBS  MP.wf stall draw held on the server: %s", tostring(m.stall))
+        end)
+    end
+    local function consumption()
+        local c = W.site and tonumber(W.site.consumption)
+        return (c and c > 0) and c or 1
+    end
+
+    -- The mod's pour into a vehicle, queued as its menu queues it.
+    local function pourInto(name, canKey, k, experimental)
+        return act("wf_" .. name, function(ctx, p)
+            W[name] = nil
+            local v = veh(k)
+            local part = v:getPartById("GasTank")
+            local can = inventoryItem(FU[canKey])
+            ISTimedActionQueue.add(ISPathFindAction:pathToVehicleArea(p, v, part:getArea()))
+            if luautils and luautils.equipItems then luautils.equipItems(p, can, nil) end
+            ISTimedActionQueue.add(ISTLGPourFuel:new(p, can, { kind = "vehicle", id = v:getId() }, v, experimental,
+                function(r) W[name] = r end))
+        end, 180)
+    end
+    -- A generator fuelled with the game's own Add Fuel.
+    local function fuelGen(name, n, canKey)
+        return act("wf_" .. name, function(ctx, p)
+            ISWorldObjectContextMenu.doAddFuelGenerator(nil, W.gen(n), nil, inventoryItem(FU[canKey]), 0)
+        end, 180)
+    end
+
+    W.steps = {
+        MP.waitWorld, W.setup, wait("mp_wf_site_arrives", 300), W.seen,
+        giveCan("wf_give_can_car", { petrol = "10" }, "wfCan1"), arrived("wfCan1"), FU.canToCar,
+        giveCan("wf_give_can_ambulance", { petrol = "10" }, "wfCan2"), arrived("wfCan2"), W.canToAmb,
+        -- The verdicts.
+        set("car_on_a_fifth_diesel", "car", "gasoline=0.8;diesel=0.2",
+            { compatible = true, level = 2, wrong = "diesel", start = 0.4, power = 0.6, wear = 6, exhaust = 0.5 }),
+        set("ambulance_on_30pc_petrol", "amb", "diesel=0.7;gasoline=0.3",
+            { compatible = true, level = 2, wrong = "gasoline", start = 0.5, power = 0.7, wear = 8 }),
+        set("ambulance_on_petrol", "amb", "gasoline=1",
+            { compatible = true, level = 3, wrong = "gasoline", start = 0.25, power = 0.5, wear = 15, failure = 0.02 }),
+        set("car_on_40pc_diesel", "car", "gasoline=0.6;diesel=0.4",
+            { compatible = false, level = 4, wrong = "diesel", start = 0, power = 0, wear = 10, exhaust = 1, attempt = "1-2" }),
+        -- The car: refused, then started on a fifth diesel.
+        enter("car", "car"),
+        tries("car_refused_on_40pc_diesel", "car", 3, startEngine, refusedJudge("car", "diesel"), function() return false end),
+        set("car_back_on_a_fifth_diesel", "car", "gasoline=0.8;diesel=0.2",
+            { compatible = true, level = 2, wrong = "diesel", start = 0.4, power = 0.6, wear = 6, exhaust = 0.5 }),
+        hold("for_the_car", true),
+        tries("car_starts_on_a_fifth_diesel", "car", 14, startEngine, harmJudge("car", 0.4, "diesel"),
+            function(m) return m.running == "true" end, function(m)
+                check("wf_car_running_on_a_fifth_diesel", function()
+                    local v = veh("car")
+                    return m.running == "true" and v ~= nil and v:isEngineRunning(), string.format("server %s, here %s",
+                        tostring(m.running), tostring(v and v:isEngineRunning()))
+                end)
+            end),
+        wait("mp_wf_car_idles", 420),
+        probe("car_power", "car", function(m)
+            check("wf_power_lowered_on_the_server_and_seen_here", function()
+                local base = num(W.site, "carPower")
+                local target = TLG.Domain.EngineEffects.targetPower(base, 0.6)
+                local v = veh("car")
+                return m.running == "true" and num(m, "power") == target and target < base and v ~= nil
+                    and v:getEnginePower() == target, string.format("own %s, x 0.6: %s; the server's %s, here %s; running %s",
+                    tostring(base), tostring(target), tostring(m.power), tostring(v and v:getEnginePower()), tostring(m.running))
+            end)
+        end),
+        call("wf_burn_car", "wf_burn", { k = "car", litres = "4" }, "wf_burn", function(m)
+            W.b0 = m
+            report():line("OBS  MP.wf_burn car: engine %s carry %s exhaust %s carry %s tank %s -> %s L", tostring(m.cond),
+                tostring(m.carry), tostring(m.muffler), tostring(m.mcarry), tostring(m.tankL), tostring(m.tankAfter))
+        end),
+        wait("mp_wf_car_burns", 450),
+        probe("car_wear", "car", function(m)
+            local b, c = W.b0 or {}, consumption()
+            local burned = num(b, "tankL") - num(m, "tankL")
+            check("wf_engine_and_exhaust_worn_by_the_litre_on_the_server", function()
+                local taken = num(b, "cond") - num(m, "cond")
+                local due = num(b, "carry") + burned * (6 - 1) * 0.15 / c
+                local exhaust = (num(b, "muffler") - num(m, "muffler")) + num(m, "mcarry")
+                local exhaustDue = num(b, "mcarry") + burned / c * 0.5
+                return m.running == "true" and burned > 3.9 and taken >= 2 and math.abs(taken + num(m, "carry") - due) <= 0.06
+                    and num(b, "muffler") >= 0 and math.abs(exhaust - exhaustDue) <= 0.06, string.format(
+                    "%.4f L at wear x 6: engine %d taken + %.4f carried, %.4f due; exhaust %s -> %s + %.4f carried, %.4f due",
+                    burned, taken, num(m, "carry"), due, tostring(b.muffler), tostring(m.muffler), num(m, "mcarry"), exhaustDue)
+            end)
+            check("wf_worn_engine_and_exhaust_seen_here", function()
+                return partCondition("car", "Engine") == num(m, "cond") and partCondition("car", "Muffler") == num(m, "muffler"),
+                    string.format("engine %s here, %s there; exhaust %s here, %s there", tostring(partCondition("car", "Engine")),
+                        tostring(m.cond), tostring(partCondition("car", "Muffler")), tostring(m.muffler))
+            end)
+        end, true),
+        act("wf_shut_off_car", function(ctx, p) ISVehicleMenu.onShutOff(p) end, 300),
+        act("wf_exit_car", function(ctx, p) ISVehicleMenu.onExit(p) end, 120),
+        -- The ambulance on petrol alone: started, then failed.
+        enter("ambulance", "amb"),
+        hold("for_the_ambulance", true),
+        tries("ambulance_starts_on_petrol", "amb", 20, startEngine, harmJudge("amb", 0.25, "gasoline"),
+            function(m) return m.running == "true" end, function(m)
+                check("wf_ambulance_running_on_petrol", function()
+                    local v = veh("amb")
+                    return m.running == "true" and v ~= nil and v:isEngineRunning(), string.format("server %s, here %s",
+                        tostring(m.running), tostring(v and v:isEngineRunning()))
+                end)
+            end),
+        wait("mp_wf_ambulance_idles", 300),
+        once("mp_wf_clear_line", clearNote),
+        call("wf_burn_ambulance", "wf_burn", { k = "amb", litres = "1", fail = "1" }, "wf_burn", function(m)
+            W.b0 = m
+            report():line("OBS  MP.wf_burn ambulance: engine %s tank %s -> %s L, the failure draw held at 0", tostring(m.cond),
+                tostring(m.tankL), tostring(m.tankAfter))
+        end),
+        wait("mp_wf_ambulance_burns", 450),
+        probe("ambulance_failed", "amb", function(m)
+            check("wf_engine_failed_on_the_server_and_seen_here", function()
+                local v = veh("amb")
+                return num(W.b0 or {}, "cond") > 0 and num(m, "cond") == 0 and m.running == "false"
+                    and drawOf(draws(m), "failheld") ~= nil and partCondition("amb", "Engine") == 0 and v ~= nil
+                    and not v:isEngineRunning() and noteIs("IGUI_TLG_Note_EngineFailed", "gasoline"), string.format(
+                    "engine %s -> %s on the server, running %s; here engine %s, running %s; line: %s", tostring(W.b0 and W.b0.cond),
+                    tostring(m.cond), tostring(m.running), tostring(partCondition("amb", "Engine")),
+                    tostring(v and v:isEngineRunning()), noteText())
+            end)
+        end, true),
+        tries("failed_ambulance_does_not_start", "amb", 1, startEngine, function(m)
+            return m.running == "false" and num(m, "cond") == 0, string.format("running %s, engine %s on the server",
+                tostring(m.running), tostring(m.cond))
+        end, function() return true end),
+        act("wf_exit_ambulance", function(ctx, p) ISVehicleMenu.onExit(p) end, 120),
+        -- The generators, each fuelled with 5 L of petrol by the game's Add Fuel.
+        giveCan("wf_give_can_generator_1", { petrol = "5" }, "wfCan4"), arrived("wfCan4"),
+        fuelGen("fuel_the_petrol_generator", 1, "wfCan4"),
+        giveCan("wf_give_can_generator_2", { petrol = "5" }, "wfCan5"), arrived("wfCan5"),
+        fuelGen("fuel_the_diesel_generator", 2, "wfCan5"),
+        set("petrol_generator_on_40pc_diesel", "g1", "gasoline=0.6;diesel=0.4",
+            { compatible = false, level = 4, wrong = "diesel", start = 0, power = 0, wear = 10, exhaust = 1, attempt = "1-2" }),
+        tries("petrol_generator_refused", "g1", 3, switchOn(1), refusedJudge("g1", "diesel", 1), function() return false end),
+        set("diesel_generator_on_petrol", "g2", "gasoline=1",
+            { compatible = true, level = 3, wrong = "gasoline", start = 0.25, power = 0.5, wear = 15, failure = 0.02 }),
+        tries("diesel_generator_starts_on_petrol", "g2", 20, switchOn(2), harmJudge("g2", 0.25, "gasoline", 2),
+            function(m) return m.on == "true" end, function(m)
+                check("wf_diesel_generator_running_on_petrol", function()
+                    local g = W.gen(2)
+                    return m.on == "true" and g ~= nil and g:isActivated(), string.format("server %s, here %s", tostring(m.on),
+                        tostring(g and g:isActivated()))
+                end)
+            end),
+        call("wf_generator_fails", "wf_gen_fail", {}, "wf_gen_fail", function(m)
+            W.gf = m
+            check("wf_diesel_generator_failed_on_the_server", function()
+                return m.on0 == "true" and num(m, "cond") == 0 and m.on == "false" and drawOf(draws(m), "gfailheld") ~= nil,
+                    string.format("running before %s; condition %s -> %s, on %s; draws %s", tostring(m.on0), tostring(m.cond0),
+                        tostring(m.cond), tostring(m.on), tostring(m.draws))
+            end)
+        end),
+        wait("mp_wf_generator_failure_arrives", 180),
+        once("mp_wf_generator_failure_seen", function()
+            check("wf_failed_generator_seen_here", function()
+                local g = W.gen(2)
+                return g ~= nil and g:getCondition() == 0 and not g:isActivated(), string.format("condition %s, on %s",
+                    tostring(g and g:getCondition()), tostring(g and g:isActivated()))
+            end)
+        end),
+        -- The mod's pour: petrol into the ambulance's diesel.
+        set("ambulance_on_diesel", "amb", "diesel=1", { compatible = true, start = 1, power = 1, wear = 1 }),
+        giveCan("wf_give_pour_can", { petrol = "5" }, "wfCan3"), arrived("wfCan3"),
+        pourInto("pour_petrol_into_the_ambulance", "wfCan3", "amb", false),
+        probe("after_the_refused_pour", "amb", function(m)
+            local r = W.pour_petrol_into_the_ambulance
+            check("wf_pour_of_petrol_into_a_diesel_refused_by_the_server", function()
+                return r ~= nil and r.ok == false and r.reason == "incompatible" and math.abs(num(m, "tankL") - num(W.amb, "tankL")) < 1e-6
+                    and math.abs(canL("wfCan3") - 5) < 1e-6, string.format("reply %s; tank %s L (was %s); can %.4f L",
+                    r and brief(r) or "none", tostring(m.tankL), tostring(W.amb and W.amb.tankL), canL("wfCan3"))
+            end)
+        end),
+        pourInto("pour_petrol_into_the_ambulance_confirmed", "wfCan3", "amb", true),
+        probe("after_the_confirmed_pour", "amb", function(m)
+            local r = W.pour_petrol_into_the_ambulance_confirmed
+            check("wf_confirmed_pour_goes_in_and_the_tank_harms", function()
+                return r ~= nil and r.ok == true and math.abs(num(m, "tankL") - num(W.amb, "tankL") - 5) < 2e-3
+                    and m.harmful == "true" and m.level == "2" and m.wrong == "gasoline", string.format(
+                    "reply %s; tank %s L (was %s); %s", r and brief(r) or "none", tostring(m.tankL),
+                    tostring(W.amb and W.amb.tankL), facts(m))
+            end)
+        end),
+        -- The option off, then on again.
+        call("wf_option_off", "wf_option", { on = "false" }, "wf_option", function(m)
+            check("wf_option_off_blocks_without_damage_on_the_server", function()
+                return m.on == "false" and m.compatible == "false" and m.harmful == "false" and m.attempt == "nil"
+                    and num(m, "wear") == 1, "option " .. tostring(m.on) .. ": " .. facts(m)
+            end)
+        end),
+        call("wf_option_on", "wf_option", { on = "true" }, "wf_option", function(m)
+            check("wf_option_on_again", function()
+                return m.on == "true" and m.compatible == "true" and m.harmful == "true", "option " .. tostring(m.on) .. ": " .. facts(m)
+            end)
+        end),
+        call("wf_cleanup", "wf_cleanup", {}, "wf_cleanup", function(m)
+            report():line("OBS  MP.wf fixtures undone; WrongFuelDamage %s", tostring(m.damage))
+        end),
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+    }
+    return W
+end)()
+MP.WFC = WFC
+
+if MP.only == "wrongfuel" then
+    MP.stepsA = WFC.steps
+    MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+elseif MP.only == "machines" then
     local bx0, by0, vx, vy = h.bx0, h.by0, h.vx, h.vy
     MP.stepsA = {
         MP.waitWorld, h.zoomTo("mp_zoom", 0.5), h.stand("mp_stand", bx0, by0),

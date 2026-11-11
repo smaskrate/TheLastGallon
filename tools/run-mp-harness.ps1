@@ -55,7 +55,15 @@
   and the player joins again and reads it once more. death: A carries a
   running vessel and dies; B asks the server where the vessel is and what
   its record says, then reads it a while later (two clients, on the
-  shortest day).
+  shortest day). wrongfuel: wrong fuel damages engines (D-037) with the
+  server applying it: a petrol car, an ambulance, a petrol generator and a
+  Diesel Generator; refused starts and what they cost, starts on fuel that
+  harms as the server's draws give, power, wear and exhaust by the litre,
+  a failure, the mod's pour refused until confirmed, and the sandbox
+  option off, each seen on the server and on the client (one client).
+  handbook3: the crafting window for the Wood Retort, the Wash Tank and
+  the Reactor: refused not learned, refused below the level, made at it
+  (one client).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -82,7 +90,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "wrongfuel")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"

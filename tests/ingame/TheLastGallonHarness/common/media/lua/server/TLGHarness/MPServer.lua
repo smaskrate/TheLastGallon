@@ -1265,6 +1265,261 @@ function services.effects_cleanup(player, args)
 end
 
 ------------------------------------------------------------------------------
+-- The wrong-fuel case (-Only wrongfuel; D-037 on a server). A petrol car, an
+-- ambulance, a petrol generator and a Diesel Generator by the spawn point.
+-- The server applies every rule: the start gates, the cost of a refused
+-- start, wear and exhaust by the litre, a failure. Its draws are passed
+-- through and written down (wfRecord), and each answer to the client carries
+-- the draws since the answer before. Fixtures, as the single-player modes':
+-- a tank's record rewritten in shares of the litres it holds (wf_set; the
+-- litres come in through the game's own pour, which the client sees);
+-- litres taken from a running engine's tank (wf_burn), with the stall draw
+-- held meanwhile and, when asked, the failure draw held at 0.
+------------------------------------------------------------------------------
+local WFS = M.WFS or {}
+M.WFS = WFS
+
+local function wfObj(k)
+    if k == "car" or k == "amb" then return WFS[k] and getVehicleById(WFS[k]) or nil, "vehicle" end
+    return generatorAt(WFS[k .. "x"], WFS[k .. "y"]), "generator"
+end
+
+-- "id=number;id=number" as a table.
+local function wfBlend(s)
+    local q = {}
+    for id, x in string.gmatch(s or "", "([^;=]+)=([^;]+)") do q[id] = tonumber(x) end
+    return q
+end
+
+local function wfEval(e, out)
+    out.compatible, out.harmful = tostring(e and e.compatible), tostring(e ~= nil and e.harmful == true)
+    out.level, out.wrong = tostring(e and e.wrongLevel), tostring(e and e.wrongFuel)
+    out.start, out.pf, out.wear = e and e.startFactor or -1, e and e.powerFactor or -1, e and e.wearFactor or -1
+    out.failure, out.exhaust = tostring(e and e.failureChance), tostring(e and e.exhaustWear)
+    out.attempt = e and e.attemptDamage and (tostring(e.attemptDamage[1]) .. "-" .. tostring(e.attemptDamage[2])) or "nil"
+    out.reasons = e and e.reasons and table.concat(e.reasons, ",") or ""
+    return out
+end
+
+-- What the server holds of `k`, with the draws since the last answer.
+local function wfFacts(k, out)
+    local V = TLG.Integration.Vehicles
+    local o, kind = wfObj(k)
+    if kind == "vehicle" and o then
+        local engine, muffler, battery, tank = o:getPartById("Engine"), o:getPartById("Muffler"), o:getPartById("Battery"),
+            o:getPartById("GasTank")
+        local item = battery and battery:getInventoryItem()
+        local fitted = muffler ~= nil and muffler:getInventoryItem() ~= nil
+        out.cond = engine and engine:getCondition() or -1
+        out.carry = engine and type(engine:getModData()[V.WEAR_KEY]) == "number" and engine:getModData()[V.WEAR_KEY] or 0
+        out.muffler = fitted and muffler:getCondition() or -1
+        out.mcarry = fitted and type(muffler:getModData()[V.WEAR_KEY]) == "number" and muffler:getModData()[V.WEAR_KEY] or 0
+        out.charge = item and item:getCurrentUsesFloat() or -1
+        out.running, out.power = tostring(o:isEngineRunning()), o:getEnginePower()
+        out.tankL = tank and tank:getContainerContentAmount() or -1
+        out.powerState = S.text(engine and engine:getModData()[V.POWER_KEY])
+    elseif o then
+        out.cond, out.on, out.fuel = o:getCondition(), tostring(o:isActivated()), o:getFuel()
+    end
+    out.found = tostring(o ~= nil)
+    out.minute = WFS.minute or 0
+    out.draws = table.concat(WFS.draws or {}, ";")
+    WFS.draws = {}
+    return out
+end
+
+local function wfRecord()
+    local V, G = TLG.Integration.Vehicles, TLG.Integration.Generators
+    if WFS.orig then return end
+    local o = { V.startRoll, V.attemptRoll, V.attemptDamage, V.stallRoll, V.failRoll, G.startRoll, G.attemptRoll, G.attemptDamage,
+        G.failRoll }
+    WFS.orig, WFS.draws = o, {}
+    local function note(k, x)
+        local t = k
+        if x ~= nil then t = k .. "=" .. (type(x) == "number" and string.format("%.4f", x) or tostring(x)) end
+        WFS.draws[#WFS.draws + 1] = t
+        return x
+    end
+    V.startRoll = function() return note("start", o[1]()) end
+    V.attemptRoll = function(a, b) return note("roll", o[2](a, b)) end
+    V.attemptDamage = function(v, e, p)
+        note("refused")
+        return note("points", o[3](v, e, p))
+    end
+    V.stallRoll = function()
+        if WFS.holdStall then return 0.999 end
+        return note("stall", o[4]())
+    end
+    V.failRoll = function()
+        if WFS.holdFail then return note("failheld", 0) end
+        return note("fail", o[5]())
+    end
+    G.startRoll = function() return note("gstart", o[6]()) end
+    G.attemptRoll = function(a, b) return note("groll", o[7](a, b)) end
+    G.attemptDamage = function(g, e, p)
+        note("grefused")
+        return note("gpoints", o[8](g, e, p))
+    end
+    G.failRoll = function()
+        if WFS.holdGFail then return note("gfailheld", 0) end
+        return note("gfail", o[9]())
+    end
+    Events.EveryOneMinute.Add(function() WFS.minute = (WFS.minute or 0) + 1 end)
+end
+
+local function wfUnrecord()
+    local V, G, o = TLG.Integration.Vehicles, TLG.Integration.Generators, WFS.orig
+    if o then
+        V.startRoll, V.attemptRoll, V.attemptDamage, V.stallRoll, V.failRoll = o[1], o[2], o[3], o[4], o[5]
+        G.startRoll, G.attemptRoll, G.attemptDamage, G.failRoll = o[6], o[7], o[8], o[9]
+    end
+    WFS.orig = nil
+    WFS.holdStall, WFS.holdFail, WFS.holdGFail = nil, nil, nil
+end
+
+function services.setup_wrongfuel(player, args)
+    local V, G = TLG.Integration.Vehicles, TLG.Integration.Generators
+    local cell, inv = getCell(), player:getInventory()
+    local function vehicle(script, dx)
+        local v = addVehicleDebug(script, IsoDirections.N, nil, cell:getGridSquare(S.CX + dx, S.CY + 3, 0))
+        if v == nil then return nil end
+        -- Repaired as the single-player modes repair theirs, the engine and
+        -- the exhaust sent to the clients, the battery full: the game's own
+        -- start does not fail for them, and an exhaust is fitted.
+        pcall(function() v:repair() end)
+        local tank, engine, battery = v:getPartById("GasTank"), v:getPartById("Engine"), v:getPartById("Battery")
+        tank:setContainerContentAmount(0)
+        tank:getModData().tlg = nil
+        v:transmitPartModData(tank)
+        engine:setCondition(100)
+        v:transmitPartCondition(engine)
+        local muffler = v:getPartById("Muffler")
+        if muffler then pcall(function() v:transmitPartCondition(muffler) end) end
+        local item = battery and battery:getInventoryItem()
+        if item then
+            item:setCurrentUsesFloat(1.0)
+            v:transmitPartUsedDelta(battery)
+        end
+        local key = v:createVehicleKey()
+        if key then sendAddItemToContainer(inv, inv:AddItem(key)) end
+        return v
+    end
+    local car, amb = vehicle("Base.CarNormal", 3), vehicle("Base.VanAmbulance", 9)
+    local g1x, g1y = S.spot(3)
+    local g2x, g2y = S.spot(5)
+    local g1 = emptyGenerator(g1x, g1y)
+    local g2 = IsoGenerator.new(instanceItem("TLG.DieselGenerator"), cell, cell:getGridSquare(g2x, g2y, 0))
+    g2:setFuel(0)
+    g2:getModData().tlg = nil
+    TLG.Authority.Vault.release("supply", G.keyOf(g2))
+    TLG.Authority.Vault.release("project", G.keyOf(g2))
+    for _, g in ipairs({ g1, g2 }) do
+        g:setCondition(100)
+        g:setConnected(true)
+        g:sync()
+        g:transmitModData()
+    end
+    WFS.car, WFS.amb = car and car:getId(), amb and amb:getId()
+    WFS.g1x, WFS.g1y, WFS.g2x, WFS.g2y = g1x, g1y, g2x, g2y
+    wfRecord()
+    reply("wrongfuel_site", args, { car = tostring(WFS.car), amb = tostring(WFS.amb), g1x = g1x, g1y = g1y, g2x = g2x, g2y = g2y,
+        carProfile = tostring(car and V.profile(car)), ambProfile = tostring(amb and V.profile(amb)),
+        g1Profile = tostring(G.profile(g1)), g2Profile = tostring(G.profile(g2)),
+        diesel = tostring(TLG.World.get().dieselVehicles), damage = tostring(V.wrongFuelDamageEnabled()),
+        stalls = tostring(V.stallsEnabled()), carPower = car and car:getEnginePower() or -1,
+        ambPower = amb and amb:getEnginePower() or -1, consumption = tostring(SandboxVars.CarGasConsumption),
+        genConsumption = tostring(SandboxVars.GeneratorFuelConsumption), version = tostring(TLG.VERSION) })
+end
+
+-- A vehicle's or a generator's record rewritten as shares of the litres its
+-- tank holds. Fresh fuel. Then the verdict.
+function services.wf_set(player, args)
+    local V, G = TLG.Integration.Vehicles, TLG.Integration.Generators
+    local o, kind = wfObj(args.k)
+    local q, out = wfBlend(args.q), {}
+    if kind == "vehicle" then
+        local total = o:getPartById("GasTank"):getContainerContentAmount()
+        local rec = V.read(o, true)
+        rec.q, rec.deg = {}, {}
+        for id, share in pairs(q) do rec.q[id], rec.deg[id] = share * total, 0 end
+        rec.rev = (rec.rev or 0) + 1
+        V.writeSidecar(o, rec)
+        V.lastTank[o:getId()] = nil
+        wfEval(V.evaluate(o), out)
+    else
+        local total = o:getFuel()
+        local rec = G.read(o, true)
+        rec.q, rec.deg = {}, {}
+        for id, share in pairs(q) do rec.q[id], rec.deg[id] = share * total, 0 end
+        rec.rev = (rec.rev or 0) + 1
+        G.writeSidecar(o, rec)
+        wfEval((G.evaluate(o)), out)
+    end
+    reply("wf_set", args, wfFacts(args.k, out))
+end
+
+-- What the server holds now; with release, the held draws are let go.
+function services.wf_probe(player, args)
+    local o, kind = wfObj(args.k)
+    local out = {}
+    if o then
+        if kind == "vehicle" then wfEval(TLG.Integration.Vehicles.evaluate(o), out)
+        else wfEval((TLG.Integration.Generators.evaluate(o)), out) end
+    end
+    wfFacts(args.k, out)
+    if args.release == "1" then WFS.holdStall, WFS.holdFail = nil, nil end
+    reply("wf_probe", args, out)
+end
+
+function services.wf_hold(player, args)
+    WFS.holdStall = args.stall == "1" or nil
+    reply("wf_hold", args, { stall = tostring(WFS.holdStall == true), minute = WFS.minute or 0 })
+end
+
+-- Litres taken from a running engine's tank: the mod's next minute sees
+-- them as burned.
+function services.wf_burn(player, args)
+    local v = wfObj(args.k)
+    local tank = v:getPartById("GasTank")
+    local out = wfFacts(args.k, {})
+    WFS.holdStall = true
+    WFS.holdFail = args.fail == "1" or nil
+    tank:setContainerContentAmount(tank:getContainerContentAmount() - tonumber(args.litres))
+    out.tankAfter = tank:getContainerContentAmount()
+    reply("wf_burn", args, out)
+end
+
+-- The Diesel Generator, running: a litre gone, charged with the failure
+-- draw held at 0.
+function services.wf_gen_fail(player, args)
+    local G = TLG.Integration.Generators
+    local g = wfObj("g2")
+    local out = { on0 = tostring(g:isActivated()), cond0 = g:getCondition() }
+    G.chargeWear(g)
+    g:setFuel(g:getFuel() - 1)
+    WFS.holdGFail = true
+    out.whole = G.chargeWear(g)
+    WFS.holdGFail = nil
+    g:sync()
+    reply("wf_gen_fail", args, wfFacts("g2", out))
+end
+
+-- The sandbox option on the server, and the ambulance's verdict under it.
+function services.wf_option(player, args)
+    SandboxVars.TheLastGallon = SandboxVars.TheLastGallon or {}
+    SandboxVars.TheLastGallon.WrongFuelDamage = args.on == "true"
+    local out = wfEval(TLG.Integration.Vehicles.evaluate(wfObj("amb")), {})
+    out.on = tostring(TLG.Integration.Vehicles.wrongFuelDamageEnabled())
+    reply("wf_option", args, out)
+end
+
+function services.wf_cleanup(player, args)
+    wfUnrecord()
+    SandboxVars.TheLastGallon.WrongFuelDamage = true
+    reply("wf_cleanup", args, { damage = tostring(TLG.Integration.Vehicles.wrongFuelDamageEnabled()) })
+end
+
+------------------------------------------------------------------------------
 -- The timers case (-Only timers; D-032 on a server). A campfire the server
 -- builds, fuels and lights as the single-player open fires mode does
 -- (SCampfireSystem.instance:addCampfire; the global object's setFuel and

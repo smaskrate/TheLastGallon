@@ -222,6 +222,34 @@
   and a pickup van, a petrol generator and a Diesel Generator: the verdict
   for every band, what a refused start costs, wear by the litre, a failure,
   the siphon and drain cures, and the sandbox option off (D-037); no save.
+  fuel-drives: the driving mode's road in a new world. An ambulance driven
+  on diesel, on biodiesel alone, on 30 % petrol and on petrol alone, and a
+  petrol car on a fifth diesel. No draw is held: each minute's draws for a
+  stall and a failure are written down, and the engine must stop in the
+  minute a draw says so and in no other. Power, the engine's wear for the
+  litres burned and the exhaust's points are checked against
+  docs/balance.md's table. A last leg holds one draw: a petrol car on a
+  fifth diesel must stall on the move; no save.
+  wrong-fuel-more: a new world. A car converted to flex fuel through the
+  workshop menu, then given diesel and biodiesel: the verdict for every
+  band, a refused start's cost, wear and a refused pour. A pickup van and
+  a Diesel Generator failed on petrol (the draw held) and repaired with
+  the game's ISRepairEngine and ISFixGenerator. Then nothing held: cars
+  and generators started 12 to 30 times, an ambulance idled on petrol
+  until it fails, a petrol car idled on a fifth diesel until it stalls,
+  the Diesel Generator charged until it fails; every outcome must be the
+  one its draw gives; no save.
+  biodiesel-cold: the January world, waited (sped up) until the air is
+  below freezing. The verdict of an ambulance on biodiesel alone, 30 %,
+  a fifth and none, of the Diesel Generator on biodiesel and of a petrol
+  car on ethanol, each against the air at that moment. Nothing held: the
+  ambulance and the generator started 12 to 30 times on biodiesel, the
+  petrol car refused 12 times on ethanol, the ambulance idling at the
+  lowered power; no save.
+  context-menus-zoom: the context-menus mode's can, machine, generator
+  and car at zoom 0.5, 0.75, 1.5 and 2: around each item 77 clicks, the
+  mod's entry exactly where the game's Grab shows; the Workshop entries
+  as at zoom 1; no save.
   removal-a, removal-b, removal-c, removal-d: the four launches of the
   removal rehearsal (tools/rehearse-install.ps1 -Scenario removal): a world
   played with the mod, continued without it (the driver), then with it
@@ -266,7 +294,7 @@
   Mods the client loads (default: the mod and the harness; see setup-devenv.ps1).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "context-menus", "handbook", "controls", "still-pickup",
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
         "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "removal-d", "upgrade-a", "upgrade-b", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
@@ -337,7 +365,7 @@ if ($Mode -eq "italian") {
     Set-Content -Encoding ascii -Path (Join-Path $luaDir "TLG_it_expect.txt") -Value $lines
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "context-menus" { "sp-rtcm" } "handbook" { "sp-rthb" } "controls" { "sp-rtc" }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "fuel-drives" { "sp-rtfd" } "wrong-fuel-more" { "sp-rtwg" } "biodiesel-cold" { "sp-rtbc" } "context-menus" { "sp-rtcm" } "context-menus-zoom" { "sp-rtcz" } "handbook" { "sp-rthb" } "controls" { "sp-rtc" }
     "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "removal-d" { "rm-d" } "upgrade-a" { "up-a" } "upgrade-b" { "up-b" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } "transfer-liquid" { "sp-rttl" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 

@@ -1,0 +1,115 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 96000
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, more of wrong fuel: a converted engine, repairs, draws left to chance
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=9001188378996494721 hours=2.0096 DayLength=4
+STEP rtbdm_setup begin
+STEP rtwg_spawn begin
+PASS RTWG.new_world_with_diesel_damage_and_stalls_on :: dieselVehicles=true WrongFuelDamage=true VehicleStalls=true CarGasConsumption=1 GeneratorFuelConsumption=0.1; the mod loaded is 0.4.0; air 15.385795593261719 C
+PASS RTWG.engines_ready :: Base.CarNormal engine_si_stock engine 100; Base.VanAmbulance engine_ci_stock engine 100; Base.PickUpVanLightsFire engine_ci_stock engine 100; Base.CarNormal engine_si_stock engine 100; Base.Generator generator_si_stock condition 100; TLG.DieselGenerator generator_ci_bio condition 100
+STEP rtwg_convert_car begin
+OBS  RTWG.car_begin menu "Start: Flex-fuel conversion (standard car)" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+OBS  RTWG.car_deliver menu "Hand over parts" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed={Base.ElectricWire=2,Base.EngineParts=2,Base.RubberHose=2,Base.Screws=6}
+OBS  RTWG.car_work menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+PASS RTWG.flex_car_commissioned :: begin=true deliver=true state=Commissioned profile=engine_si_flex; the mod's clock moved on 13.00 h
+STEP rtwg_flex_verdicts begin
+PASS RTWG.flex_verdict_80pc_ethanol :: grade=good compatible=true startFactor=1 reasons=; power 1 wear 1 exhaust nil attempt nil; air 15.467077255249023 C
+PASS RTWG.flex_verdict_petrol_alone :: grade=good compatible=true startFactor=1 reasons=; power 1 wear 1 exhaust nil attempt nil; air 15.467077255249023 C
+PASS RTWG.flex_verdict_5pc_diesel :: grade=weathered compatible=true startFactor=0.9 reasons=wrong_fuel_1_diesel; power 0.85 wear 3 exhaust nil attempt nil; air 15.467077255249023 C
+PASS RTWG.flex_verdict_20pc_diesel_in_ethanol :: grade=poor compatible=true startFactor=0.4 reasons=wrong_fuel_2_diesel; power 0.6 wear 6 exhaust 0.5 attempt nil; air 15.467077255249023 C
+PASS RTWG.flex_verdict_20pc_biodiesel :: grade=poor compatible=true startFactor=0.4 reasons=wrong_fuel_2_biodiesel; power 0.6 wear 7.199999999999999 exhaust 0.5 attempt nil; air 15.467077255249023 C
+PASS RTWG.flex_verdict_40pc_diesel :: grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel; power 0 wear 10 exhaust 1 attempt {1=1,2=2}; air 15.467077255249023 C
+STEP rtwg_flex_40pc_diesel begin
+STEP RTWG.flex_car_on_40pc_diesel begin
+OBS  RTWG.flex_car_on_40pc_diesel driver=true battery=1.00 engine=100 grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+OBS  RTWG.flex_car_on_40pc_diesel state=Idle running=false attempts=1 refusal=vehicle start refused: wrong_fuel_4_diesel
+PASS RTWG.flex_car_on_40pc_diesel.refused_by_tlg :: vehicle start refused: wrong_fuel_4_diesel
+STEP rtwg_after_flex_car begin
+PASS RTWG.flex_car.refused_start_costs_engine_and_battery :: engine 100 -> 98 (2 taken); battery charge 1.0000 -> 0.9800 (0.0200 used)
+PASS RTWG.flex_car.refused_start_tells_the_driver :: Wrong fuel (Diesel): the engine will not start, and trying damages it
+STEP rtwg_flex_20pc_diesel begin
+STEP RTWG.flex_car_runs_on_a_fifth_diesel begin
+PASS RTWG.flex_car_runs_on_a_fifth_diesel.start_names_the_wrong_fuel :: Wrong fuel (Diesel): it damages this engine while it runs
+OBS  RTWG.flex_car_runs_on_a_fifth_diesel grade=poor compatible=true startFactor=0.4 reasons=wrong_fuel_2_diesel; ran on it: 4.0010 L gone (4.00 taken by the step); engine 98 -> 95, carry 0.0008 -> 0.0015; exhaust 100 -> 98; running=true
+PASS RTWG.diesel_wears_a_flex_engine_and_its_exhaust :: 4.0010 L at wear x 6: engine 3 taken + 0.0015 carried, 3.0015 due; exhaust 100 -> 98 + 0.0010 carried, 2.0010 due
+STEP rtwg_flex_ethanol begin
+STEP RTWG.diesel_into_the_flex_car_unconfirmed begin
+OBS  RTWG.diesel_into_the_flex_car_unconfirmed inArea=true
+OBS  RTWG.diesel_into_the_flex_car_unconfirmed.before src initialized id=nil rev=0 total=5.0000 q[diesel=5.0000,water=0.0000] deg[diesel=0.1307] mic=0 stab=0
+OBS  RTWG.diesel_into_the_flex_car_unconfirmed.before dst - id=V1717884693-12 rev=1 total=10.0000 q[ethanol=10.0000] deg[ethanol=0.0000] mic=0 stab=0
+OBS  RTWG.diesel_into_the_flex_car_unconfirmed reply ok=false reason=incompatible
+PASS RTWG.diesel_into_the_flex_car_unconfirmed.refused_nothing_moved :: reason=incompatible dCan=0.00000 dTank=0.00000
+OBS  RTWG.diesel_into_the_flex_car_unconfirmed tank now grade=good compatible=true startFactor=1 reasons=
+STEP RTWG.diesel_into_the_flex_car_confirmed begin
+OBS  RTWG.diesel_into_the_flex_car_confirmed inArea=true
+OBS  RTWG.diesel_into_the_flex_car_confirmed.before src initialized id=nil rev=0 total=5.0000 q[diesel=5.0000,water=0.0000] deg[diesel=0.1043] mic=0 stab=0
+OBS  RTWG.diesel_into_the_flex_car_confirmed.before dst - id=V1717884693-12 rev=1 total=10.0000 q[ethanol=10.0000,water=0.0000] deg[ethanol=0.0000] mic=0 stab=0
+OBS  RTWG.diesel_into_the_flex_car_confirmed reply ok=true reason=nil
+PASS RTWG.diesel_into_the_flex_car_confirmed.reply_ok :: nil
+OBS  RTWG.diesel_into_the_flex_car_confirmed litres src 5.0000->0.0000 dst 10.0000->15.0000
+OBS  RTWG.diesel_into_the_flex_car_confirmed.after src ok id=S1717884693-14 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTWG.diesel_into_the_flex_car_confirmed.after dst ok id=V1717884693-12 rev=2 total=15.0000 q[diesel=5.0000,ethanol=10.0000,water=0.0000] deg[diesel=0.1043,ethanol=0.0000] mic=0 stab=0
+PASS RTWG.diesel_into_the_flex_car_confirmed.litres_conserved :: out=5.00000 in=5.00000
+PASS RTWG.diesel_into_the_flex_car_confirmed.tlg_total_matches_native :: tlg=15.00000 native=15.00000 status=ok
+OBS  RTWG.diesel_into_the_flex_car_confirmed tank now grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+STEP rtwg_pickup_petrol begin
+STEP RTWG.pickup_van_runs_on_petrol begin
+PASS RTWG.pickup_van_runs_on_petrol.start_names_the_wrong_fuel :: Wrong fuel (Gasoline): it damages this engine while it runs
+OBS  RTWG.pickup_van_runs_on_petrol grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline; ran on it: 1.0000 L gone (1.00 taken by the step); engine 100 -> 0, carry 0.0021 -> 0.1031; exhaust 100 -> 100; running=false
+PASS RTWG.pickup_van_failed_on_petrol :: engine condition 0, running=false (the draw held at 0)
+STEP rtwg_repair_engine begin
+PASS RTWG.the_games_repair_brings_the_failed_engine_back :: engine 0 -> 90 with 30 of 30 spare parts (Mechanics 10, the chassis asks 5: 3.5 a part)
+STEP rtwg_pickup_diesel begin
+STEP rtwg_after_repair begin
+PASS RTWG.repaired_engine_runs_on_diesel :: grade=good compatible=true startFactor=1 reasons=; running=true after 2.50 game min; engine 90 -> 90; power 4800 -> 4800, the mod's power state nil
+STEP rtwg_generator_fails begin
+PASS RTWG.diesel_generator_failed_on_petrol :: running before=true; condition 0; running=false; the game's switch-on valid=false
+STEP rtwg_generator_fixed begin
+PASS RTWG.the_games_fix_brings_the_failed_generator_back :: the fix valid at condition 0=true; condition 0 -> 60 with 15 scrap electronics in 15 actions; the game's switch-on valid=true
+STEP RTWG.fixed_generator_on_diesel begin
+OBS  RTWG.fixed_generator_on_diesel fuel=5.0000 grade=good compatible=true startFactor=1 reasons=
+OBS  RTWG.fixed_generator_on_diesel activated=true refusal=nil
+PASS RTWG.fixed_generator_on_diesel.activated :: nil
+STEP rtwg_draws_free begin
+OBS  RTWG.draws free from here: sample draws start 0.8248, fail 0.6311, stall 0.0221, attempt 1; generator start 0.1652, fail 0.2419
+STEP rtwg_petrol_car_refused_on_40pc_diesel begin
+OBS  RTWG.petrol_car_refused_on_40pc_diesel fuel grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+OBS  RTWG.petrol_car_refused_on_40pc_diesel tries: drew 1, lost 1, battery -0.0200 | drew 2, lost 2, battery -0.0200 | drew 1, lost 1, battery -0.0200 | drew 2, lost 2, battery -0.0200 | drew 2, lost 2, battery -0.0200 | drew 2, lost 2, battery -0.0200 | drew 1, lost 1, battery -0.0200 | drew 1, lost 1, battery -0.0200 | drew 1, lost 1, battery -0.0200 | drew 2, lost 2, battery -0.0200 | drew 1, lost 1, battery -0.0200 | drew 1, lost 1, battery -0.0200
+PASS RTWG.petrol_car_refused_on_40pc_diesel.every_try_as_its_draw_gives :: 12 tries, each as drawn
+PASS RTWG.petrol_car_refused_on_40pc_diesel.both_outcomes_seen :: 1: 7, 2: 5, in 12 tries
+STEP rtwg_ambulance_starts_on_30pc_petrol begin
+OBS  RTWG.ambulance_starts_on_30pc_petrol fuel grade=poor compatible=true startFactor=0.5 reasons=wrong_fuel_2_gasoline
+OBS  RTWG.ambulance_starts_on_30pc_petrol tries: drew 0.6580 against 0.5: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.0645 against 0.5: passed by the mod, lost 0, on=true, battery -0.0240 | drew 0.2714 against 0.5: passed by the mod, lost 0, on=false, battery -0.0000 | drew 0.6640 against 0.5: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.5994 against 0.5: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.2696 against 0.5: passed by the mod, lost 0, on=true, battery -0.0250 | drew 0.0053 against 0.5: passed by the mod, lost 0, on=false, battery -0.0000 | drew 0.0846 against 0.5: passed by the mod, lost 0, on=true, battery -0.0240 | drew 0.5414 against 0.5: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.3777 against 0.5: passed by the mod, lost 0, on=true, battery -0.0250 | drew 0.8350 against 0.5: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.5443 against 0.5: refused by the mod, lost 0, on=false, battery -0.0000
+PASS RTWG.ambulance_starts_on_30pc_petrol.every_try_as_its_draw_gives :: 12 tries, each as drawn
+PASS RTWG.ambulance_starts_on_30pc_petrol.both_outcomes_seen :: passed: 6, refused: 6, in 12 tries
+STEP rtwg_ambulance_idles_on_petrol begin
+OBS  RTWG.ambulance_idles_on_petrol 17 minutes with the engine running, 24 written; the lowest failure draw 0.0431056022644043 against odds of 0.09608860760963867 a minute; 10 condition resets
+PASS RTWG.ambulance_idles_on_petrol.the_engine_stops_when_a_draw_says_so_and_only_then :: draws: stall at minute 6 (0.0273 below 0.0300), failure at minute 23 (0.0431 below 0.0961); stops: stall after minute 6, failure after minute 23
+PASS RTWG.ambulance_idles_on_petrol.a_failure_by_a_free_draw_seen :: failure after minute 23
+STEP rtwg_petrol_car_idles_on_a_fifth_diesel begin
+OBS  RTWG.petrol_car_idles_on_a_fifth_diesel 28 minutes with the engine running, 30 written; the lowest stall draw 0.0037017464637756348 against odds of 0.024 a minute; 0 condition resets
+PASS RTWG.petrol_car_idles_on_a_fifth_diesel.the_engine_stops_when_a_draw_says_so_and_only_then :: draws: stall at minute 28 (0.0037 below 0.0240); stops: stall after minute 28
+PASS RTWG.petrol_car_idles_on_a_fifth_diesel.a_stall_by_a_free_draw_seen :: stall after minute 28
+STEP rtwg_petrol_generator_starts_on_a_fifth_diesel begin
+OBS  RTWG.petrol_generator_starts_on_a_fifth_diesel fuel grade=poor compatible=true startFactor=0.4 reasons=wrong_fuel_2_diesel
+OBS  RTWG.petrol_generator_starts_on_a_fifth_diesel tries: drew 0.6541 against 0.4: refused by the mod, lost 0, on=false | drew 0.0442 against 0.4: passed by the mod, lost 0, on=true | drew 0.8045 against 0.4: refused by the mod, lost 0, on=false | drew 0.6161 against 0.4: refused by the mod, lost 0, on=false | drew 0.5471 against 0.4: refused by the mod, lost 0, on=false | drew 0.4499 against 0.4: refused by the mod, lost 0, on=false | drew 0.0927 against 0.4: passed by the mod, lost 0, on=true | drew 0.9293 against 0.4: refused by the mod, lost 0, on=false | drew 0.2973 against 0.4: passed by the mod, lost 0, on=true | drew 0.2639 against 0.4: passed by the mod, lost 0, on=true | drew 0.3250 against 0.4: passed by the mod, lost 0, on=true | drew 0.5242 against 0.4: refused by the mod, lost 0, on=false
+PASS RTWG.petrol_generator_starts_on_a_fifth_diesel.every_try_as_its_draw_gives :: 12 tries, each as drawn
+PASS RTWG.petrol_generator_starts_on_a_fifth_diesel.both_outcomes_seen :: passed: 5, refused: 7, in 12 tries
+STEP rtwg_petrol_generator_refused_on_40pc_diesel begin
+OBS  RTWG.petrol_generator_refused_on_40pc_diesel fuel grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+OBS  RTWG.petrol_generator_refused_on_40pc_diesel tries: drew 1, lost 1 | drew 2, lost 2 | drew 2, lost 2 | drew 2, lost 2 | drew 1, lost 1 | drew 1, lost 1 | drew 2, lost 2 | drew 2, lost 2 | drew 1, lost 1 | drew 2, lost 2 | drew 2, lost 2 | drew 1, lost 1
+PASS RTWG.petrol_generator_refused_on_40pc_diesel.every_try_as_its_draw_gives :: 12 tries, each as drawn
+PASS RTWG.petrol_generator_refused_on_40pc_diesel.both_outcomes_seen :: 1: 5, 2: 7, in 12 tries
+STEP rtwg_generator_free_failure begin
+OBS  RTWG.generator_free_failure grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline; 16 charges of 0.01 L, odds 0.0435 each; lowest draw 0.01365429162979126
+PASS RTWG.generator_fails_when_a_draw_says_so_and_only_then :: 16 charges, each as drawn
+PASS RTWG.generator_failure_by_a_free_draw_seen :: charge 16: drew 0.0137 below 0.0435; condition 0, switched off=true
+STEP rtwg_cleanup begin
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 4.03
+SUMMARY pass=39 fail=0
+DONE

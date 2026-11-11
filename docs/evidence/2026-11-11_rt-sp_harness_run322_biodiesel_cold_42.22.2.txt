@@ -1,0 +1,44 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 58888
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, biodiesel and ethanol in the cold
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=1027618988809185403 hours=2.0096 DayLength=4
+STEP rtbdm_setup begin
+STEP rtbc_spawn begin
+PASS RTBC.new_world_with_diesel_and_stalls_on :: dieselVehicles=true VehicleStalls=true StartMonth=1; the mod loaded is 0.4.0; air -5.399192810058594 C
+PASS RTBC.engines_ready :: ambulance engine_ci_stock, car engine_si_stock, generator generator_ci_bio
+STEP rtbc_wait_for_frost begin
+PASS RTBC.air_below_freezing :: -5.383284568786621 C after 0.0 game hours; by the hour: -5.4
+STEP rtbc_verdicts begin
+PASS RTBC.verdict_ambulance_on_biodiesel_alone :: air -5.38 C: grade=good compatible=true startFactor=0.18 reasons=gelling,marginal_biodiesel; power 0.595; expected start 0.18 power 0.595 gelling true
+PASS RTBC.verdict_ambulance_on_30pc_biodiesel :: air -5.38 C: grade=good compatible=true startFactor=0.285 reasons=gelling,marginal_biodiesel; power 0.6868749999999999; expected start 0.285 power 0.6868749999999999 gelling true
+PASS RTBC.verdict_ambulance_on_a_fifth_biodiesel_does_not_gel :: air -5.38 C: grade=good compatible=true startFactor=1 reasons=; power 1; expected start 1 power 1 gelling false
+PASS RTBC.verdict_ambulance_on_diesel_gels_only_below_minus_8 :: air -5.38 C: grade=good compatible=true startFactor=1 reasons=; power 1; expected start 1 power 1 gelling false
+PASS RTBC.verdict_diesel_generator_on_biodiesel :: air -5.38 C: grade=good compatible=true startFactor=0.3 reasons=gelling; power 0.7; expected start 0.3 power 0.7 gelling true
+PASS RTBC.verdict_petrol_car_on_ethanol_does_not_start_in_the_cold :: air -5.38 C: grade=poor compatible=true startFactor=0 reasons=cold_start,too_much_ethanol; power 0.6; expected start 0 power 0.6 gelling false
+STEP rtwg_ambulance_starts_on_biodiesel_in_the_cold begin
+OBS  RTWG.ambulance_starts_on_biodiesel_in_the_cold fuel grade=good compatible=true startFactor=0.18 reasons=gelling,marginal_biodiesel
+OBS  RTWG.ambulance_starts_on_biodiesel_in_the_cold tries: drew 0.0890 against 0.18: passed by the mod, lost 0, on=true, battery -0.0240 | drew 0.3471 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.8948 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.6556 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.0693 against 0.18: passed by the mod, lost 0, on=true, battery -0.0250 | drew 0.7347 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.7183 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.4336 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.2395 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.6829 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.2431 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.7144 against 0.18: refused by the mod, lost 0, on=false, battery -0.0000
+PASS RTWG.ambulance_starts_on_biodiesel_in_the_cold.every_try_as_its_draw_gives :: 12 tries, each as drawn
+PASS RTWG.ambulance_starts_on_biodiesel_in_the_cold.both_outcomes_seen :: passed: 2, refused: 10, in 12 tries
+STEP rtbc_ambulance_runs_on_biodiesel begin
+PASS RTBC.ambulance_runs_at_the_power_gelled_biodiesel_allows :: air -5.15 C: grade=good compatible=true startFactor=0.18 reasons=gelling,marginal_biodiesel; power 4900 -> 2916 (x 0.595: 2916); stalls by a draw before this: none
+STEP rtwg_diesel_generator_starts_on_biodiesel_in_the_cold begin
+OBS  RTWG.diesel_generator_starts_on_biodiesel_in_the_cold fuel grade=good compatible=true startFactor=0.3 reasons=gelling
+OBS  RTWG.diesel_generator_starts_on_biodiesel_in_the_cold tries: drew 0.7034 against 0.3: refused by the mod, lost 0, on=false | drew 0.6289 against 0.3: refused by the mod, lost 0, on=false | drew 0.5515 against 0.3: refused by the mod, lost 0, on=false | drew 0.8743 against 0.3: refused by the mod, lost 0, on=false | drew 0.8436 against 0.3: refused by the mod, lost 0, on=false | drew 0.4835 against 0.3: refused by the mod, lost 0, on=false | drew 0.7595 against 0.3: refused by the mod, lost 0, on=false | drew 0.7498 against 0.3: refused by the mod, lost 0, on=false | drew 0.2225 against 0.3: passed by the mod, lost 0, on=true | drew 0.2408 against 0.3: passed by the mod, lost 0, on=true | drew 0.0619 against 0.3: passed by the mod, lost 0, on=true | drew 0.9872 against 0.3: refused by the mod, lost 0, on=false
+PASS RTWG.diesel_generator_starts_on_biodiesel_in_the_cold.every_try_as_its_draw_gives :: 12 tries, each as drawn
+PASS RTWG.diesel_generator_starts_on_biodiesel_in_the_cold.both_outcomes_seen :: passed: 3, refused: 9, in 12 tries
+STEP rtwg_petrol_car_on_ethanol_in_the_cold begin
+OBS  RTWG.petrol_car_on_ethanol_in_the_cold fuel grade=poor compatible=true startFactor=0 reasons=cold_start,too_much_ethanol
+OBS  RTWG.petrol_car_on_ethanol_in_the_cold tries: drew 0.5916 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.3127 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.2774 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.5196 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.3428 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.0661 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.4133 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.7605 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.9518 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.2407 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.3758 against 0: refused by the mod, lost 0, on=false, battery -0.0000 | drew 0.3983 against 0: refused by the mod, lost 0, on=false, battery -0.0000
+PASS RTWG.petrol_car_on_ethanol_in_the_cold.every_try_as_its_draw_gives :: 12 tries, each as drawn
+PASS RTWG.petrol_car_on_ethanol_in_the_cold.both_outcomes_seen :: refused: 12, refused: 12, in 12 tries
+STEP rtwg_cleanup begin
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.54
+SUMMARY pass=16 fail=0
+DONE
