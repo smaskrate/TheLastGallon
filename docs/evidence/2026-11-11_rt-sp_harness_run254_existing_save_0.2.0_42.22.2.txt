@@ -1,5 +1,4 @@
-﻿TheLastGallon-0.2.0.zip matches its manifest: 164 files, SHA-256 
-1579A967D1BADE38C1ECABCF4B4B8B1ECFAFEC9C5A515549D1001311904435E3
+TheLastGallon-0.2.0.zip matches its manifest: 164 files, SHA-256 1579A967D1BADE38C1ECABCF4B4B8B1ECFAFEC9C5A515549D1001311904435E3
 Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
 client started, pid 10704
 click-to-start clicks sent: 1

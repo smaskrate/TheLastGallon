@@ -608,8 +608,7 @@ left to the world's own draw was read, not filled from.
 on pure biodiesel; biodiesel in the cold; siphoning a diesel tank; a
 Diesel Generator found in a crate on the map or in a truck bed, or
 powering anything; **Pour into the station reservoir** at a diesel pump;
-a vehicle refuelled at a pump on a server; an older save played with this
-version.
+a vehicle refuelled at a pump on a server.
 
 ## Converting an engine
 
@@ -706,14 +705,27 @@ Diesel vehicles and diesel pumps exist only in a world started as a new
 game with version 0.2.0 or later: in an older save every vehicle and pump
 stays petrol. The biodiesel machines work in any save.
 
-**Checked in game:** a world played 10 days without the mod. A can first
-looked at and a station pump recorded at installation were fresh, and the
-look was remembered; a can first used 6 days later was a fifth of the way
-to the world's age.
+A save made with an earlier version of the mod continues with this one.
+Replace the mod's folder and load the save: the fuel the mod had recorded
+stays as it was.
+
+**Checked in game:**
+
+* a world played 10 days without the mod, then with this version. A can
+  first looked at and a station pump recorded at installation were fresh,
+  and the look was remembered; a can first used 6 days later was a fifth
+  of the way to the world's age; an Ambulance read as petrol and all eight
+  pumps of the station gave petrol;
+* a world started with version 0.1.2, then continued with this version.
+  Its cans, a pump, an Ambulance, a car and a generator read as 0.1.2 had
+  recorded them; a vessel's batch was still running; the Ambulance started
+  on its petrol and the pump still gave petrol; this version's machines
+  and fuels exist in that save, and a Diesel Generator put down there had
+  its picture.
 
 **Not checked in game:** the other two settings (**Age from world start**
-and **Start ageing at installation**), servers, and a save from an
-earlier version played with this one.
+and **Start ageing at installation**), servers, and a save from version
+0.1.0 or 0.1.1.
 
 ## Removing the mod
 
@@ -726,6 +738,11 @@ The machines cannot be kept. Stop every car running on poor fuel before
 your last save with the mod: a car saved while running keeps its lowered
 power without the mod, until a repair.
 
+A Diesel Generator standing on the ground stays in the save, but its
+picture is the mod's: once the save has been loaded without the mod the
+generator cannot be seen, and putting the mod back does not bring the
+picture back. Use up its fuel before you remove the mod.
+
 Petrol stays, and so does what the mod recorded about it. If you put the
 mod back later, it finds that record as it was; the world's fuel history
 does not start again, so nothing comes back fresh. Petrol poured out of a
@@ -734,11 +751,14 @@ fuel of unknown origin from the next time the mod sees the can.
 
 **Checked in game:** the mod taken off a save with the load screen's
 **Choose Mods...**, a day played, and the mod put back. A vessel with a
-batch running and a can of ethanol were gone; a petrol can poured from and
-one topped up read as described above.
+batch running, a Wood Retort and a can of ethanol were gone; a petrol can
+poured from and one topped up read as described above; a Diesel Generator
+on the ground was left without its picture, its fuel record kept; the
+station's pumps gave the same fuel as before.
 
-**Not checked in game:** the mod's other fluids and items, a placed
-Diesel Generator, diesel vehicles and pumps, converted engines, and a
-save whose mod was uninstalled, where the game asks about missing mods.
+**Not checked in game:** the mod's other fluids and items, diesel in a
+vehicle's tank or a can, what can be done with a Diesel Generator that
+cannot be seen, converted engines, and a save whose mod was uninstalled,
+where the game asks about missing mods.
 
 The technical details are in `docs/migrations.md`.

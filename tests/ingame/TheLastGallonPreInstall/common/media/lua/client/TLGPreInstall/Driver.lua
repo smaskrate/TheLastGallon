@@ -10,7 +10,8 @@
 -- to the save and continues it with the harness (requests "ex-b", "ex-c").
 -- Request "rm-b" (tools/rehearse-install.ps1 -Scenario removal) continues
 -- a save the harness made with the mod ("rm-a") with this mod alone: it
--- notes what is left of the cans, the fermenter and the world record, pours
+-- notes what is left of the cans, the fermenter, the world record and (since
+-- 0.2.0) the Diesel Generator's and the Wood Retort's tiles, pours
 -- 2 L out of can P and 3 L of fresh petrol into can Q without the mod, lets
 -- a game day pass, saves and quits; the harness then continues the save
 -- with the mod back ("rm-c"). Never shipped.

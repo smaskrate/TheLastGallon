@@ -84,7 +84,7 @@ the container up first.
 | Other conversion chassis | see `TLG/Content/Conversions.lua` (no diesel chassis, and not `TLG.DieselGenerator`, is among them) | flex / others | domain-tested only, NOT RUN |
 | Base.VanAmbulance, Base.VanSeats, Base.VanRadio, Base.PickUpVanLightsFire, in a world started as a new game with 0.2.0 or later | engine_ci_stock; an unrecorded tank is read as diesel | — | **Verified RT-SP** (launch 240): profile and fuel; the ambulance started on its diesel and took biodiesel through the mod's pour; a petrol pour into the pickup van refused. Refuel at a diesel pump and start, and a pickup van filled at a petrol pump refused at the start (launch 244, `Base.PickUpVan`). **Verified RT-MP** (launch 248): the ambulance read as diesel on the client and started |
 | The other variants of `PickUpVan*`, `VanSeats*`, `VanRadio*`, `VanAmbulance*` (`Vehicles.DIESEL_FAMILIES`, by the script name's beginning) | engine_ci_stock, as above | — | domain-tested (the names), NOT RUN in game |
-| Any chassis in a world started before 0.2.0, or added to a save | engine_si_stock (the world's record has no `dieselVehicles`) | — | domain-tested, NOT RUN in game |
+| Any chassis in a world started before 0.2.0, or in a save the mod was added to | engine_si_stock (the world's record has no `dieselVehicles`, or `false`) | — | domain-tested; an ambulance in a save that gained the mod (launch 254) and in a save made with 0.1.2 (launch 257) read as petrol, and the 0.1.2 save's recorded ambulance started on it |
 
 A tank's capacity varies with the condition of the tank fitted
 (`conditionAffectsCapacity`, SRC `template_gastank.txt`); the mod reads it

@@ -154,8 +154,30 @@ Two optional fields carry it; neither changes a schema version:
   world's seed and the pump's key; elsewhere it is `"gasoline"`. A sidecar
   from an earlier version has no such field and reads as `"gasoline"`.
 
-So a save from 0.1.x keeps its vehicles and pumps on petrol under 0.2.0
-(domain-tested; not run in game). The diesel generator and the biodiesel
+So a save from 0.1.x keeps its vehicles and pumps on petrol under 0.2.0.
+Launch 257 played a new world with the 0.1.2 zip and continued it with the
+0.2.0 zip (`tools/rehearse-install.ps1 -Scenario upgrade`):
+
+* The records 0.1.2 wrote (three cans, a pump, an ambulance, a car and a
+  generator) were unchanged before any read. A petrol can, the ethanol
+  can, both vehicles, the generator and the pump then read as their
+  records. A fermenter's batch was still running.
+* The world record was the same one. It has no `dieselVehicles`, and its
+  `modVersion` stays `0.1.2`: that field is the version that created the
+  record, and nothing updates it.
+* The pump 0.1.2 recorded had no `product`; it read as petrol, delivered
+  2 L of it, and its record then named `"gasoline"`. All eight pumps of
+  the station gave petrol.
+* The recorded ambulance kept `engine_si_stock` and its petrol and
+  started; an ambulance met for the first time read as petrol too.
+* 0.2.0's items and fluids exist in that save, and a Diesel Generator put
+  down there has its sprite and picture: the tile sheet works in a save
+  made without it.
+
+Not run: an upgrade from 0.1.0 or 0.1.1, an upgrade on a server, and a
+second save and reload after the upgrade.
+
+The diesel generator and the biodiesel
 machines are new items and need no migration. A placed diesel generator
 is saved by the game with its tile sprite, `tlg_generators_01_0`, whose
 number comes from `tiledef=tlg_generators 7341` in `mod.info`: changing
@@ -217,8 +239,24 @@ back. What happened:
   condition; an increase is untracked inflow at the baseline of the moment
   it is found.
 
+Launches 255 and 256 repeated it with 0.2.0, in a world started with it:
+
+* The world's `dieselVehicles` and what each of the station's eight pumps
+  gives (from the world's seed; none had a record) were the same with the
+  mod back.
+* A `TLG.WoodRetort` on the ground was gone, like the fermenter.
+* A placed Diesel Generator stays in the save as a generator object, with
+  its fuel amount, its `generatorFullType` and the mod's record. Its
+  sprite, which comes from the mod's tile sheet, is lost on the load
+  without the mod (`getSprite()` is nil) and does not come back with the
+  mod: the object is then saved without one. With the mod back its record
+  and its profile, `generator_ci_bio`, read as before. Nothing restores
+  the sprite. What a player can do with a generator without a sprite was
+  not tried.
+
 Not run: a save that still lists the mod after it was uninstalled (the
-game's missing-mods prompt), a server, converted engines and generators.
+game's missing-mods prompt), a server, converted engines, a vanilla
+generator, diesel in a vehicle's tank or a can.
 
 ## Crash consistency
 

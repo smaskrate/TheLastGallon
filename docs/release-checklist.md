@@ -40,12 +40,12 @@ against the same gates:
 | 2, 3 | PARTIAL | Diesel and biodiesel through the mod's pour, vanilla's pump actions and the machine collection, litre for litre (launches 231, 240, 244). Open: siphoning diesel, driving burn on diesel |
 | 5 | PARTIAL | One client on a dedicated server: the loads, the collection, the generator, a diesel vehicle and pump (launch 248). Open: a batch through its hours, two clients, a restart |
 | 6 | PARTIAL | The diesel generator through a save and a reload (launch 236). Open: a biodiesel batch across a save, a machine picked up while working |
-| 7 | OPEN | A save from 0.1.x played with 0.2.0 is not run; diesel vehicles and pumps are for new worlds only (domain-tested) |
+| 7 | PARTIAL | With the 0.2.0 zip: a save that gains the mod has no diesel (launch 254: 3/0, 15/0, 4/0); the mod removed and put back in a 0.2.0 world keeps the diesel flag and the pumps' products (launches 255–256); a world made with the 0.1.2 zip continues with its records, vehicles and pumps on petrol (launch 257: 2/0, 16/0). Open: a placed Diesel Generator loses its sprite once the save is loaded without the mod; the other two policies; a server; an upgrade from 0.1.0 or 0.1.1 |
 | 8 | PARTIAL | `support-matrix.md` lists the diesel chassis; four of about 42 variants run |
 | 9 | PARTIAL | The five supplied models recorded in `art-src`; the diesel generator's two pictures are made from the game's art (`NOTICE.md`), The Indie Stone's terms for mods not read |
 | 10 | PARTIAL | 316 Italian strings as shipped (launch 250); the player guide covers 0.2.0. Open: the new menus read in Italian in game |
 | 11 | OPEN | Performance not measured with the new machines |
-| 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). Open: an install through the Workshop, an upgrade from 0.1.2, the `existing` and `removal` scenarios. A later commit to shipped files needs a new zip |
+| 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). The zip of `ce1f031` (SHA-256 `6BA57DA3…`), which differs in `Stations.isPump` and two shipped documents, was played over a 0.1.2 save (launch 257) and through the removal scenario (launch 256); the full run is not repeated on it. Open: an install through the Workshop. A later commit to shipped files needs a new zip |
 | 13 | PARTIAL | The five machines have supplied models; the diesel generator is vanilla's sprite recoloured, the owner's choice |
 
 The full single-player run passes on the branch as on `main` (launch 245:
@@ -326,8 +326,18 @@ Death:
   away (D-006 amendment): run 55, on the zip rebuilt with it (1/0, 2/0,
   5/0), matched D-006 exactly and repeated run 54's other results, and
   run 61 repeated it all on the zip with the water fix.
-- NOT RUN: the other two policies, a server, and a save that still lists
-  the mod after it was uninstalled (the missing-mods prompt).
+- With 0.2.0 (launches 254–257, `test-results.md`): the three scenarios
+  above repeated on the 0.2.0 zip with checks of the world's diesel, and
+  a fourth, `-Scenario upgrade`, which plays a world with the 0.1.2 zip
+  and continues it with the 0.2.0 zip. A save that gains the mod and a
+  save made with 0.1.2 have no diesel vehicles or pumps; a 0.2.0 world
+  keeps its diesel flag and its pumps' products across the mod's removal.
+  Launch 255 found a recorded generator counted as a pump (fixed,
+  launch 256). A placed Diesel Generator has no sprite after the save was
+  loaded without the mod, also with the mod back: open.
+- NOT RUN: the other two policies, a server, an upgrade from 0.1.0 or
+  0.1.1, and a save that still lists the mod after it was uninstalled
+  (the missing-mods prompt).
 
 ### Gate 9: required assets verified and licensed
 
@@ -642,6 +652,7 @@ tools\make-preview.ps1                # the Workshop preview, the mod list's pos
 tools\package.ps1                     # the release zip (never uploads)
 tools\rehearse-install.ps1            # that zip installed in a fresh cache and played through a save; ~20 min
 tools\rehearse-install.ps1 -Scenario existing   # a save played 10 days without the mod, then with it; ~30 min
-tools\rehearse-install.ps1 -Scenario removal    # a save with the mod, continued without it, then with it again
-# -Mode existing-a, existing-b and removal-a, -b, -c are the launches the two rehearsals above make; they are not run by hand.
+tools\rehearse-install.ps1 -Scenario removal    # a save with the mod, continued without it, then with it again; ~4 min
+tools\rehearse-install.ps1 -Scenario upgrade    # a world played with the 0.1.2 zip (-FromVersion), continued with this version's; ~2 min
+# -Mode existing-a, existing-b, removal-a, -b, -c and upgrade-a, -b are the launches the three rehearsals above make; they are not run by hand.
 ```

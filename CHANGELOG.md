@@ -18,10 +18,15 @@
   pump on petrol.
 * The diesel generator's sprite and icon are the game's red generator
   recoloured; `LICENSE.md` and `NOTICE.md` say so.
+* Fixed: a generator whose fuel the mod had recorded counted as a station
+  pump, so the Fuel menu near it could offer the pump's entries. Version
+  0.1.2 has the same fault. Found by launch 255; no pump entry was chosen
+  on a generator in game.
+* A save made with 0.1.2 continues with this version: its fuel records,
+  its vehicles and its pumps stay as they were, all on petrol (launch 257).
 * Checked in game on 42.22.2, in single player and on a dedicated server
-  (launches 229–250 in `docs/test-results.md`). Not checked: driving on
-  diesel or biodiesel, biodiesel in the cold, and a save from 0.1.x played
-  with this version.
+  (launches 229–257 in `docs/test-results.md`). Not checked: driving on
+  diesel or biodiesel, and biodiesel in the cold.
 
 ## 0.1.2 (2026-11-10)
 

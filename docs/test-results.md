@@ -16,7 +16,7 @@ runtime tests.
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
-| Upgrade from an earlier release; install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The rehearsal has no upgrade scenario (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: 0.1.1 was uploaded on 2026-11-08, 0.1.2 has not been |
+| Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: 0.1.1 was uploaded on 2026-11-08, 0.1.2 has not been |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -5370,3 +5370,95 @@ Evidence:
 [run 251](evidence/2026-11-10_rt-sp_harness_run251_install_rehearsal_0.2.0_42.22.2.txt);
 [run 252](evidence/2026-11-10_rt-sp_harness_run252_package_diesel_generator_42.22.2.txt);
 [run 253](evidence/2026-11-10_rt-sp_harness_run253_package_biodiesel_chain_42.22.2.txt).
+
+## 2026-11-11 — RT-SP client harness, launches 254–257 (0.2.0 on existing saves: added, removed, upgraded from 0.1.2; gate 7)
+
+Build 42.22.2. `tools\rehearse-install.ps1 -NoBuild -Scenario <name>`
+unpacks the 0.2.0 zip, checks it against its manifest and plays it from a
+fresh isolated cache. Launches 254 and 255 used the zip of `e5e527f`
+(164 files, 7,854,696 bytes, SHA-256 `1579A967…4435E3`); launches 256 and
+257 the zip of `ce1f031` (7,854,790 bytes, SHA-256 `6BA57DA3…E23C32`),
+which differs in `Stations.isPump` (below).
+
+The scenarios' steps gained checks for 0.2.0 before launch 254
+(`RT.OW.step`): the world record's `dieselVehicles`, an ambulance and a
+trade van spawned with 10 L the mod has not recorded, and what each pump
+of the station gives. The removal scenario also leaves a Diesel Generator
+with 5 L of biodiesel and a Wood Retort on the ground. `-Scenario upgrade`
+is new: launch 1 plays a new world with an earlier release's zip (checked
+against its own manifest) under this repository's harness, launch 2
+continues the save with this version's zip.
+
+| Launch | Scenario | Game starts and results (pass/fail) |
+| --- | --- | --- |
+| 254 | `existing`: 10 days without the mod, then with it | without the mod 3/0; first load with it 15/0; after save and continue 4/0 |
+| 255 | `removal`: a new world with the mod, a day without it, the mod back | 6/0; 2/0; 6/0 |
+| 256 | `removal` again, on the zip with the fix | 7/0; 2/0; 6/0 |
+| 257 | `upgrade`: a new world with the 0.1.2 zip, then the 0.2.0 zip | with 0.1.2 2/0; with 0.2.0 16/0 |
+
+* Launch 254. The record was created as an existing save
+  (`createdAsNewGame=false`, `dieselVehicles=false`, `modVersion=0.2.0`).
+  The ambulance and the trade van read as petrol with `engine_si_stock`;
+  all eight pumps gave petrol. The fuel checks of run 40 held: a can and a
+  pump first recorded at installation fresh (0.000013, 0.000010), a can
+  found 6 days later a fifth of the way to the world's age (0.156138,
+  exactly the rule). After save and continue the records and
+  `dieselVehicles=false` stood.
+* Launch 255. In the new world the ambulance read as diesel with
+  `engine_ci_stock`, the trade van as petrol, and three of the eight pumps
+  gave diesel. With the mod away the game skipped `TLG.FermenterVessel`
+  and `TLG.WoodRetort` at load and emptied the ethanol can, as in run 54.
+  The Diesel Generator stayed as a generator object with its fuel amount
+  (5.0), its `generatorFullType` and the mod's record, but without a
+  sprite. With the mod back the world record was the same one,
+  `dieselVehicles` and the eight pumps' products were unchanged, and the
+  petrol cans read as D-006 says. The generator still had no sprite; its
+  record and its profile `generator_ci_bio` read as before.
+* Launch 255 also listed the generator's tile among the pumps (nine
+  "pumps" in launch 3). `Stations.isPump` took any object carrying the
+  mod's record for a pump, and a generator keeps its tank's record under
+  the same mod data key. The Fuel menu's pump entries and the pump
+  endpoint of the authority use that test. Released 0.1.2 has the same
+  code. Fixed in `ce1f031`: a generator is never a pump; one domain test
+  added (249 cases, 0 failed).
+* Launch 256, on the zip with the fix: the fuelled generator has a
+  record, `isPump` is false and its menu does not offer **Read what this
+  pump gives** (`RTM.recorded_generator_is_not_a_pump`); eight pumps
+  before and after. Everything else as in launch 255, sprite included.
+* Launch 257. Launch 1 logged "The Last Gallon 0.1.2 ready"; 0.1.2's own
+  read and write recorded an ambulance and a car with 10 L each, a
+  generator with 5 L and, by a 2 L transfer, a pump; three cans and a
+  fermenter with a batch were recorded as in the removal scenario.
+  Launch 2 logged "The Last Gallon 0.2.0 ready". Before any read the
+  seven records were as 0.1.2 left them. The world record was the same
+  one, with `modVersion` still `0.1.2` and no `dieselVehicles`. The
+  petrol can read as its record aged to now; the ethanol can read 4 L;
+  the batch was still Processing with its start time. Ambulance, car and
+  generator kept their petrol and their petrol profiles, and the
+  ambulance started at the first attempt. The pump's record named no
+  product; the mod read petrol, delivered 2 L of it, and the record then
+  named `gasoline`. An ambulance spawned then read as petrol; all eight
+  pumps gave petrol. The five biodiesel machines, the Diesel Generator and
+  three of this version's fluids exist, and a Diesel Generator put down
+  had the sprite `tlg_generators_01_0` with its 128x256 picture.
+
+Consoles: no TLG error and no Lua exception with the mod loaded. The
+launches without the mod show the dev driver's own exception on the
+emptied ethanol can (inside a `pcall`, as in run 54). Five "missing tile
+vegetation_groundcover_01_*" lines appear when a new world is made, with
+0.1.2 as with 0.2.0.
+
+Open: a placed Diesel Generator has no sprite once its save was loaded
+without the mod, and the mod does not restore it.
+
+Not run: the menu's pump entries chosen on a generator before the fix;
+what a player can do with a generator without a sprite; an upgrade from
+0.1.0 or 0.1.1; a second save and reload after the upgrade; the upgrade
+or the removal on a server; the full run on the zip of `ce1f031`; an
+install through the Steam Workshop.
+
+Evidence:
+[run 254](evidence/2026-11-11_rt-sp_harness_run254_existing_save_0.2.0_42.22.2.txt);
+[run 255](evidence/2026-11-11_rt-sp_harness_run255_removal_0.2.0_42.22.2.txt);
+[run 256](evidence/2026-11-11_rt-sp_harness_run256_removal_fixed_0.2.0_42.22.2.txt);
+[run 257](evidence/2026-11-11_rt-sp_harness_run257_upgrade_0.1.2_to_0.2.0_42.22.2.txt).
