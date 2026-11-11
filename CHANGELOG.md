@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.3.0 (not released)
+## 0.3.0 (2026-11-11)
 
 * Wrong fuel damages engines. Diesel or biodiesel in a petrol or converted
   (flex) engine, petrol or ethanol in a diesel, and ethanol past a stock
@@ -23,6 +23,11 @@
   such a blend now starts, or tries to, and is damaged. Siphon or drain
   the tank first.
 * The Field Manual's two lines on ethanol in stock engines say so.
+* Checked in game on 42.22.2 (launches 261–285 in
+  `docs/test-results.md`), with the random draws held by the tests. Not
+  checked: a converted engine with diesel, driving on a wrong fuel, an
+  engine failing by an unforced draw, a repair, and most of it on a
+  server.
 
 ## 0.2.0 (2026-11-11)
 

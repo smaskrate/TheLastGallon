@@ -53,12 +53,12 @@ The full single-player run passes with 0.2.0 (launches 245, 251 and 258:
 changed. The other older modes and the multiplayer cases written before
 0.2.0 have not been run with it.
 
-## Version 0.3.0 (not released)
+## Version 0.3.0 (2026-11-11)
 
-Version 0.3.0, on the branch `feature/wrong-fuel`, adds wrong-fuel damage
-(D-037): bands by the wrong fuel's share in place of the plain block,
-with engine, exhaust and battery damage and a chance of failure. Where it
-stands against the gates it touches:
+Version 0.3.0, of 2026-11-11, adds wrong-fuel damage (D-037): bands by
+the wrong fuel's share in place of the plain block, with engine, exhaust
+and battery damage and a chance of failure. It has not been uploaded to
+the Workshop. Where it stands against the gates it touches:
 
 | # | For 0.3.0 | Evidence and what is open |
 | --- | --- | --- |
