@@ -127,8 +127,12 @@ the Workshop.
 
 The 0.4.0 package is the zip of `a0d293e` (167 files, 7,889,723 bytes,
 SHA-256 `87ED49FD…5A47A297`), built on 2026-11-11 after the preview was
-remade with fourteen models. It has not been installed or played. Three
-of its files differ from the zip of `eecd209`, the one rehearsed:
+remade with fourteen models: installed clean and played, the full run
+104/0 and 14/0 (launch 317; one check of 313's was not reached, the
+generator's burn in its half hour, because the generator burned
+nothing). The handbook mode, the multiplayer case and the upgrade were
+not run on it. Three
+of its files differ from the zip of `eecd209`, rehearsed before it:
 `42/poster.png`, `preview.png` (the new picture, SHA-256
 `13A1A39F…7309D5D1`) and `docs/NOTICE.md` (the sentence on how the
 picture is made). The zip of `eecd209` (167 files, 7,873,439 bytes,
@@ -568,7 +572,7 @@ the 0.3.0, 0.3.1 and 0.3.2 packages' earlier on 2026-11-11; 0.2.0 was
 never put there):
 the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
 its `Contents` mirrored over the folder's, and the folder's 165 files
-checked by hash, both ways. It has not been uploaded. Its `preview.png` and its `42/poster.png` are that zip's, the earlier picture of five models (SHA-256 `0C134CFD…2BFC155E`): the package of `a0d293e` has not been put there. Its `workshop.txt` is the
+checked by hash, both ways. Later that day the zip of `a0d293e` (`87ED49FD…5A47A297`), unpacked and checked against its manifest by launch 317, replaced it there: its `Contents` mirrored over the folder's and its `preview.png` copied, the folder's 166 files checked by hash, both ways. The folder's `preview.png` and `42/poster.png` are the picture of fourteen models (SHA-256 `13A1A39F…7309D5D1`). It has not been uploaded. Its `workshop.txt` is the
 owner's, edited by hand (the item's id, `visibility=public`, the tag
 `WIP`, two reworded lines). On 2026-11-11, on the owner's word, its
 version was set to 0.3.0 and the package's lines for 0.2.0 and 0.3.0

@@ -6217,3 +6217,35 @@ Evidence:
 [run 314](evidence/2026-11-11_rt-sp_harness_run314_package_handbook_0.4.0_42.22.2.txt);
 [run 315](evidence/2026-11-11_rt-mp_harness_run315_package_handbook_0.4.0_42.22.2.txt);
 [run 316](evidence/2026-11-11_rt-sp_harness_run316_upgrade_0.1.2_to_0.4.0_42.22.2.txt).
+
+## 2026-11-11 — RT-SP harness, launch 317 (the 0.4.0 zip with the new preview, gate 12)
+
+Build 42.22.2. `tools\package.ps1` on a clean tree at `d1552d4`, which
+ships what `a0d293e` ships, built `TheLastGallon-0.4.0.zip`: 167 files,
+7,889,723 bytes, SHA-256 `87ED49FD…5A47A297`. Against the manifest of the
+zip of `eecd209` (launches 313–316) three files differ: `42/poster.png`
+and `preview.png`, the picture of fourteen models (SHA-256
+`13A1A39F…7309D5D1`), and `docs/NOTICE.md`.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 317 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 104/0, then 14/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.4.0
+and loaded the new `42/poster.png` as a 256×256 texture
+(`G01c.mod_info_poster`); the check reads its size, and nobody looked at
+the mod list. The mod logged "The Last Gallon 0.4.0 ready". The console's
+one exception is the harness's deep-recursion probe.
+
+Phase A has one check fewer than in launch 313:
+`G04.native_burn_reconciled_proportionally` runs only when the generator
+burned fuel in its half game hour, and here it burned none (10.0000 L
+before and after; 9.9850 L after in launch 313). The cause was not
+looked for. The launch was not repeated.
+
+Not run on this zip: the handbook mode, the multiplayer handbook case,
+the upgrade from 0.1.2, and everything launches 313–316 list as not run.
+Not uploaded.
+
+Evidence:
+[run 317](evidence/2026-11-11_rt-sp_harness_run317_install_rehearsal_0.4.0_new_preview_42.22.2.txt).
