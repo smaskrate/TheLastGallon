@@ -14,10 +14,9 @@ the mod but has not been seen working in game yet.
 
 To add it to a world you already play, select the save on the load screen,
 press **Choose Mods...** and add *The Last Gallon*; see
-[Existing saves](#existing-saves) for the fuel already in that world. The
-mod is not on the Steam Workshop. Before you remove it, read
-[Removing the mod](#removing-the-mod): the game drops the mod's machines
-and fluids from a save loaded without it.
+[Existing saves](#existing-saves) for the fuel already in that world.
+Before you remove the mod, read [Removing the mod](#removing-the-mod): the
+game drops the mod's machines and fluids from a save loaded without it.
 
 ## How fuel goes bad
 

@@ -14,8 +14,8 @@ stand-ins seen in run 66, none was checked rendering in game.
 
 Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 **B** biodiesel, wood gas, biogas and propane (domain only, not wired,
-except the biodiesel chain's five machines and the diesel generator, which are items in 0.2.0 on
-the branch `feature/biodiesel`, not released; D-036),
+except the biodiesel chain's five machines and the diesel generator, which are items since
+0.2.0; D-036),
 **C** electricity, further vehicle conversions and stations.
 
 ## State of the shipped assets (tier A)

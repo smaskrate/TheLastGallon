@@ -27,12 +27,12 @@ game's own Lua, BC its bytecode.
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
-## Version 0.2.0 (not released)
+## Version 0.2.0 (2026-11-11)
 
-The table above describes the released version (0.1.2). Version 0.2.0,
-merged into `main` on 2026-11-11 and not released, adds the biodiesel
-pathway, the diesel generator, diesel vehicles and diesel pumps (D-036).
-Where it stands against the same gates:
+The table above describes version 0.1.2. Version 0.2.0, of 2026-11-11,
+adds the biodiesel pathway, the diesel generator, diesel vehicles and
+diesel pumps (D-036). It has not been uploaded to the Workshop. Where it
+stands against the same gates:
 
 | # | For 0.2.0 | Evidence and what is open |
 | --- | --- | --- |

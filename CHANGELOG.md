@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.2.0 (not released)
+## 0.2.0 (2026-11-11)
 
 * Biodiesel. Five new machines turn wood and cooking oil into biodiesel:
   the Wood Retort (methanol), the Ash Barrel and the Lye Leacher (lye), the
@@ -25,7 +25,7 @@
 * A save made with 0.1.2 continues with this version: its fuel records,
   its vehicles and its pumps stay as they were, all on petrol (launch 257).
 * Checked in game on 42.22.2, in single player and on a dedicated server
-  (launches 229–257 in `docs/test-results.md`). Not checked: driving on
+  (launches 229–259 in `docs/test-results.md`). Not checked: driving on
   diesel or biodiesel, and biodiesel in the cold.
 
 ## 0.1.2 (2026-11-10)
