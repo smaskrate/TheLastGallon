@@ -100,8 +100,10 @@ sprite to a load without the mod gets it back with the mod
 (launches 299–302, `test-results.md`; gate 7). The sprite stays through
 a save and a reload (launch 301); on a dedicated server the repair ran
 on a sprite the test took away, and the client saw it back (launch 302).
-It has not been uploaded to the Workshop. Open: a server started without
-the mod and then with it.
+It has not been uploaded to the Workshop. A dedicated server played with
+the mod, then without it, then with it again gave the generator its
+sprite back, and the client saw it (launch 307, after the release; the
+shipped changelog and `migrations.md` of 0.3.2 still list it as not run).
 
 The 0.3.2 package is the zip of `7c31473` (166 files, 7,870,260 bytes,
 SHA-256 `7082EC93…AA319B60`): installed clean and played, the full run

@@ -67,6 +67,14 @@
   leave to the main menu, the server is saved, stopped and started again
   on the same world, and both join again (each client waits for
   Lua\TLG_harness_mpgo.txt, written once the server is up again).
+.PARAMETER ModAway
+  With -Only gensprite (one client): the server is saved and stopped
+  twice. Its second session runs without The Last Gallon (the server's
+  Mods line names the harness alone), its third with the mod again. The
+  client leaves before each stop and joins each session. The harness's
+  mod.info loses its "require" line in the deployed copies for the whole
+  run, so the session without the mod does not load it. Each session's
+  server log is kept as server-stdout-<n>.txt.
 .PARAMETER DropVault
   With -Restart: before the restart the server store is saved without the
   vault of TLG/Authority/Vault.lua, as the mod saved it before the V-01
@@ -74,9 +82,9 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite")][string]$Only = "",
     [switch]$NoMod,
-    [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault)
+    [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"
 if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
     Write-Host "The Windows session is locked; unlock the desktop and run again."
@@ -130,7 +138,7 @@ Write-Host "caches: $serverCache; $($clientCaches -join '; ')"
 # Without the mod the harness must not require it (its mod.info does, and
 # run 143's server loaded the mod for it). Only the deployed copies change;
 # the next deploy mirrors the repository's back.
-if ($NoMod) {
+if ($NoMod -or $ModAway) {
     foreach ($c in @($serverCache) + $clientCaches) {
         $info = Join-Path $c "mods\TheLastGallonHarness\42\mod.info"
         (Get-Content $info) | Where-Object { $_ -notmatch "^require=" } | Set-Content -Encoding ascii $info
@@ -229,7 +237,7 @@ for ($i = 0; $i -lt $Clients; $i++) {
     }
     Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_request.txt") -Value $roles[$i]
     @("ip=127.0.0.1", "port=16361", "user=$($users[$i])", "password=$($cred[$users[$i]])",
-        "serverPassword=$($cred.serverPassword)", "only=$Only", "restart=$(if ($Restart) { '1' } else { '0' })",
+        "serverPassword=$($cred.serverPassword)", "only=$Only", "restart=$(if ($Restart -or $ModAway) { '1' } else { '0' })",
         "dropVault=$(if ($DropVault) { '1' } else { '0' })") |
         Set-Content -Encoding ascii (Join-Path $lua "TLG_harness_connect.txt")
 }
@@ -266,6 +274,7 @@ $serverErr = Join-Path $serverCache "server-stderr.txt"
 # The first server's log, kept through a restart for the scan at the end.
 $serverOut1 = Join-Path $serverCache "server-stdout-1.txt"
 Remove-Item $serverOut1 -ErrorAction SilentlyContinue
+foreach ($n in 2, 3) { Remove-Item (Join-Path $serverCache "server-stdout-$n.txt") -ErrorAction SilentlyContinue }
 $psi = New-Object System.Diagnostics.ProcessStartInfo
 $psi.FileName = "cmd.exe"
 $psi.Arguments = "/c """"$java"" $jvm > ""$serverOut"" 2> ""$serverErr"""""
@@ -381,10 +390,32 @@ for ($i = 0; $i -lt $Clients; $i++) {
 
 $clicks = 0
 $restarted = $false
+# -ModAway: the sessions so far, and the Mods line of each next one.
+$session = 1
+function Set-ServerMods([string[]]$mods) {
+    (Get-Content $ini) -replace "^Mods=.*$", "Mods=$($mods -join ';')" | Set-Content -Encoding ascii $ini
+    Write-Host "server Mods=$($mods -join ';')"
+}
 while ((Get-Date) -lt $deadline) {
     Start-Sleep -Seconds 5
     # -Restart: once every client waits at the main menu, the server goes
     # down saved and comes up again on the same world.
+    if ($ModAway) {
+        $goFile = Join-Path $clientCaches[0] "Lua\TLG_harness_mpgo.txt"
+        $state = Read-Shared (Join-Path $clientCaches[0] "Lua\TLG_harness_mpstate.txt")
+        # The go-file goes once the client has taken it, so the next wait
+        # at the main menu waits for the next restart.
+        if ((Test-Path $goFile) -and $state -notmatch "phase=restart_wait") { Remove-Item $goFile -ErrorAction SilentlyContinue }
+        if ($session -lt 3 -and -not (Test-Path $goFile) -and $state -match "phase=restart_wait") {
+            Write-Host "the client left after session ${session}: restarting the server"
+            Stop-HarnessServer
+            Move-Item -Force $serverOut (Join-Path $serverCache "server-stdout-$session.txt")
+            $session++
+            Set-ServerMods $(if ($session -eq 2) { @("TheLastGallonHarness") } else { $active })
+            if (-not (Start-HarnessServer)) { break }
+            Set-Content -Encoding ascii $goFile -Value "go=1"
+        }
+    }
     if ($Restart -and -not $restarted) {
         $left = @($clientCaches | Where-Object {
             (Read-Shared (Join-Path $_ "Lua\TLG_harness_mpstate.txt")) -match "phase=restart_wait" }).Count
@@ -419,6 +450,17 @@ foreach ($p in $procs) { if (-not $p.HasExited) { Write-Host "watchdog: stopping
 if (-not $script:server.HasExited) { Stop-HarnessServer }
 Stop-HarnessServers
 Write-Host "server exited"
+if ($ModAway) {
+    Move-Item -Force $serverOut (Join-Path $serverCache "server-stdout-$session.txt") -ErrorAction SilentlyContinue
+    # Each session's lines of the mod, and of mods loaded; no account line
+    # matches these patterns.
+    foreach ($n in 1..3) {
+        $f = Join-Path $serverCache "server-stdout-$n.txt"
+        Write-Host "===== server session ${n}:"
+        (Read-Shared $f) -split "`n" | Where-Object { $_ -match "\[TLG\]\[(ERROR|WARN)|The Last Gallon .* ready|was missing and is back|loading TheLastGallon|mod .* (is missing|not found)" } |
+            Select-Object -First 12 | ForEach-Object { Write-Host "server: $($_.Trim())" }
+    }
+}
 # A kicked client shows only as missing checks otherwise.
 ((Read-Shared $serverOut1) + "`n" + (Read-Shared $serverOut)) -split "`n" |
     Where-Object { $_ -match "(?i)\bkick(ed)?\b|anti-?cheat|\bbanned\b" } | ForEach-Object {

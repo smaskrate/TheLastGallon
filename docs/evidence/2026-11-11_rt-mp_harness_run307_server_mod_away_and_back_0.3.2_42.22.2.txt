@@ -1,0 +1,118 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 83036)
+server up after 27 s
+server: LOG  : General      f:0 st:621,014,275> command entered via server console (System.in): "adduser "tlga" 
+"********""
+server: LOG  : General      f:0 st:621,015,080> command entered via server console (System.in): "setaccesslevel "tlga" 
+"admin""
+server: LOG  : General      f:0 st:621,015,168> User tlga is now admin
+server: LOG  : General      f:0 st:621,017,088> command entered via server console (System.in): "adduser "tlgb" 
+"********""
+server: LOG  : General      f:0 st:621,019,097> command entered via server console (System.in): "setaccesslevel "tlgb" 
+"admin""
+server: LOG  : General      f:0 st:621,019,170> User tlgb is now admin
+client mp-a started, pid 70732
+the client left after session 1: restarting the server
+server Mods=TheLastGallonHarness
+server started (shell pid 77588)
+server up after 27 s
+the client left after session 2: restarting the server
+server Mods=TheLastGallon;TheLastGallonHarness
+server started (shell pid 62716)
+server up after 27 s
+click-to-start clicks sent: 3
+server exited
+===== server session 1:
+server: LOG  : Mod          f:0 st:620,993,729> loading TheLastGallon
+server: LOG  : Mod          f:0 st:620,993,755> loading TheLastGallonHarness
+server: LOG  : Lua          f:0 st:621,010,929> [TLG][INFO] The Last Gallon 0.3.2 ready (server=true client=false)
+===== server session 2:
+server: LOG  : Mod          f:0 st:621,100,218> loading TheLastGallonHarness
+===== server session 3:
+server: LOG  : Mod          f:0 st:621,166,237> loading TheLastGallon
+server: LOG  : Mod          f:0 st:621,166,265> loading TheLastGallonHarness
+server: LOG  : Lua          f:0 st:621,184,160> [TLG][INFO] The Last Gallon 0.3.2 ready (server=true client=false)
+server: LOG  : Lua          f:6 st:621,201,482> [TLG][INFO] generator TLG.DieselGenerator: its sprite 
+tlg_generators_01_0 was missing and is back
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP gs_setup begin
+STEP mp_gs_generator_arrives begin
+STEP mp_gs_seen_with_the_mod begin
+PASS MP.gs_generator_drawn_before_the_mod_goes_A :: generator true, sprite tlg_generators_01_0, picture true
+STEP mp_gs_leave_1 begin
+OBS  MP.leaving to the main menu for the server's restart (after session 1)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: true)
+OBS  MP.game_start A again
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_gs_settle_without_the_mod begin
+STEP mp_gs_seen_without_the_mod begin
+PASS MP.gs_no_mod_in_this_session_A :: the mod's table on this client: false
+PASS MP.gs_generator_kept_without_its_sprite_A :: generator true, generatorFullType TLG.DieselGenerator, sprite nil, picture false
+STEP mp_gs_leave_2 begin
+OBS  MP.leaving to the main menu for the server's restart (after session 2)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: true)
+OBS  MP.game_start A again
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_gs_settle_with_the_mod_back begin
+STEP gs_probe begin
+PASS MP.gs_server_has_the_sprite_back_A :: server: generator true, type TLG.DieselGenerator, sprite tlg_generators_01_0, profile generator_ci_bio
+STEP mp_gs_seen_with_the_mod_back begin
+PASS MP.gs_client_sees_the_sprite_back_A :: generator true, sprite tlg_generators_01_0, picture true
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=8 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_gensprite role=A tag=gs_setup
+OBS  MPS.reply setup_gensprite gx=10662 gy=10647 role=A tag=gs_setup
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: probe_gensprite gx=10662 gy=10647 role=A tag=gs_probe
+OBS  MPS.reply probe_gensprite found=true fullType=TLG.DieselGenerator profile=generator_ci_bio role=A sprite=tlg_generators_01_0 tag=gs_probe
+OBS  MPS.message from tlga: finish role=A

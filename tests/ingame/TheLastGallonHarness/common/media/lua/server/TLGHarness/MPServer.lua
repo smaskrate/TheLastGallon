@@ -682,6 +682,31 @@ function services.probe_biodiesel(player, args)
     reply("probe_biodiesel", args, out)
 end
 
+-- gensprite (tools/run-mp-harness.ps1 -Only gensprite -ModAway): a Diesel
+-- Generator put down beside the spawn point, and later what the server
+-- holds of it.
+function services.setup_gensprite(player, args)
+    local gx, gy = S.CX + 2, S.CY + 2
+    local g = IsoGenerator.new(instanceItem("TLG.DieselGenerator"), getCell(), getCell():getGridSquare(gx, gy, 0))
+    g:setFuel(0)
+    g:setConnected(true)
+    g:sync()
+    g:transmitModData()
+    reply("setup_gensprite", args, { gx = gx, gy = gy })
+end
+
+function services.probe_gensprite(player, args)
+    local g = generatorAt(tonumber(args.gx), tonumber(args.gy))
+    local name = "none"
+    pcall(function()
+        local s = g:getSprite()
+        name = s and tostring(s:getName()) or "none"
+    end)
+    reply("probe_gensprite", args, { found = tostring(g ~= nil), sprite = name,
+        fullType = tostring(g and g:getModData().generatorFullType),
+        profile = tostring(g and TLG.Integration.Generators.profile(g)) })
+end
+
 -- The Diesel Generator's sprite taken away on the server, as a load without
 -- the mod leaves it (step "strip"), then the mod's repair run as the
 -- server's LoadGridsquare runs it, on the generator's square (step

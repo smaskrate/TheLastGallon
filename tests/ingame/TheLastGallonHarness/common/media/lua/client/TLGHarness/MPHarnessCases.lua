@@ -17,6 +17,103 @@ local report, player, check, send, call, once, wait = h.report, h.player, h.chec
 local waitFrom, nextFrom, request, brief, walkTo, idle = h.waitFrom, h.nextFrom, h.request, h.brief, h.walkTo, h.idle
 local floorItem, inventoryItem, countType, ids = h.floorItem, h.inventoryItem, h.countType, h.ids
 
+------------------------------------------------------------------------------
+-- gensprite (2026-11-11, one client, -Only gensprite -ModAway): the server
+-- played with the mod, then without it, then with it again; A joins each
+-- time. Session 1: the server puts a Diesel Generator down and A sees its
+-- sprite. Session 2, no mod on the server or on A: the game loads the
+-- generator without its tile sheet and saves it. Session 3: the mod's
+-- LoadGridsquare handler on the server must have given the sprite back
+-- (0.3.2), and A must see it with its picture. The session is kept in the
+-- snap file, which outlives the Lua; this block runs before the others and
+-- uses nothing of the mod in session 2.
+------------------------------------------------------------------------------
+if MP.only == "gensprite" then
+    local SNAP = "TLG_harness_mpsnap.txt"
+    local snap = TLGH.readKeyValues(SNAP)
+    local function generator()
+        local e = TLGH.readKeyValues(SNAP)
+        local sq = getCell():getGridSquare(tonumber(e.gx) or -1, tonumber(e.gy) or -1, 0)
+        local objs = sq and sq:getObjects()
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            if instanceof(objs:get(i), "IsoGenerator") then return objs:get(i) end
+        end
+        return nil
+    end
+    local function seen()
+        local g = generator()
+        local name, tex = "none", nil
+        pcall(function()
+            local s = g:getSprite()
+            name = s and tostring(s:getName()) or "none"
+        end)
+        pcall(function() tex = g:getSprite():getTextureForCurrentFrame(g:getDir()) end)
+        return g, name, tex
+    end
+    local function leaveAs(session)
+        return { name = "mp_gs_leave_" .. session, timeout = 600, fn = function(ctx, ticks)
+            if ticks < 60 then return nil end
+            local e = TLGH.readKeyValues(SNAP)
+            TLGH.writeFile(SNAP, { "gx=" .. tostring(e.gx), "gy=" .. tostring(e.gy), "session=" .. tostring(session) })
+            h.setPhase("restart_wait")
+            report():line("OBS  MP.leaving to the main menu for the server's restart (after session %d)", session)
+            setGameSpeed(1)
+            getCore():quit()
+            return true
+        end }
+    end
+    MP.stepsA = { MP.waitWorld,
+        call("gs_setup", "setup_gensprite", {}, "setup_gensprite", function(m)
+            TLGH.writeFile(SNAP, { "gx=" .. tostring(m.gx), "gy=" .. tostring(m.gy), "session=0" })
+        end),
+        wait("mp_gs_generator_arrives", 240),
+        once("mp_gs_seen_with_the_mod", function()
+            local g, name, tex = seen()
+            check("gs_generator_drawn_before_the_mod_goes", function()
+                return g ~= nil and name == "tlg_generators_01_0" and tex ~= nil, string.format(
+                    "generator %s, sprite %s, picture %s", tostring(g ~= nil), name, tostring(tex ~= nil))
+            end)
+        end),
+        leaveAs(1) }
+    if snap.session == "1" then
+        MP.stepsRejoined = { MP.waitWorld, wait("mp_gs_settle_without_the_mod", 300),
+            once("mp_gs_seen_without_the_mod", function()
+                local g, name, tex = seen()
+                check("gs_no_mod_in_this_session", function()
+                    return TLG == nil or TLG.Integration == nil, "the mod's table on this client: " .. tostring(TLG ~= nil
+                        and TLG.Integration ~= nil)
+                end)
+                check("gs_generator_kept_without_its_sprite", function()
+                    return g ~= nil and name ~= "tlg_generators_01_0", string.format(
+                        "generator %s, generatorFullType %s, sprite %s, picture %s", tostring(g ~= nil),
+                        tostring(g and g:getModData().generatorFullType), name, tostring(tex ~= nil))
+                end)
+            end),
+            leaveAs(2) }
+    elseif snap.session == "2" then
+        MP.stepsRejoined = { MP.waitWorld, wait("mp_gs_settle_with_the_mod_back", 300),
+            call("gs_probe", "probe_gensprite", function()
+                local e = TLGH.readKeyValues(SNAP)
+                return { gx = e.gx, gy = e.gy }
+            end, "probe_gensprite", function(m)
+                check("gs_server_has_the_sprite_back", function()
+                    return m.found == "true" and m.sprite == "tlg_generators_01_0" and m.profile == "generator_ci_bio",
+                        string.format("server: generator %s, type %s, sprite %s, profile %s", tostring(m.found),
+                            tostring(m.fullType), tostring(m.sprite), tostring(m.profile))
+                end)
+            end),
+            once("mp_gs_seen_with_the_mod_back", function()
+                local g, name, tex = seen()
+                check("gs_client_sees_the_sprite_back", function()
+                    return g ~= nil and name == "tlg_generators_01_0" and tex ~= nil, string.format(
+                        "generator %s, sprite %s, picture %s", tostring(g ~= nil), name, tostring(tex ~= nil))
+                end)
+            end),
+            once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+    end
+    return
+end
+
 local V = "TLG.FermenterVessel"
 local C = {}
 MP.C = C

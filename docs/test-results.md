@@ -6056,3 +6056,35 @@ Evidence:
 [run 304](evidence/2026-11-11_rt-mp_harness_run304_package_biodiesel_0.3.2_42.22.2.txt);
 [run 305](evidence/2026-11-11_rt-sp_harness_run305_package_removal_0.3.2_42.22.2.txt);
 [run 306](evidence/2026-11-11_rt-sp_harness_run306_upgrade_0.1.2_to_0.3.2_42.22.2.txt).
+
+## 2026-11-11 — RT-MP harness, launch 307 (a server without the mod and with it again, 0.3.2)
+
+Build 42.22.2, the 0.3.2 release zip's mod folder (`-ModSource`), one
+client: `tools\run-mp-harness.ps1 -Clients 1 -Only gensprite -ModAway`,
+both new. The launcher saves and stops the server twice; the second
+session's `Mods` line names the harness alone, the third names the mod
+again. The client leaves before each stop and joins each session. The
+harness's `mod.info` has no `require` line in the deployed copies for
+the run.
+
+| Session | Server's mods (its log) | What the client found |
+| --- | --- | --- |
+| 1 | The Last Gallon, the harness | the Diesel Generator the server put down has the sprite `tlg_generators_01_0` and its picture |
+| 2 | the harness alone | no table of the mod on the client; the generator is there with `generatorFullType` `TLG.DieselGenerator` and no sprite |
+| 3 | The Last Gallon, the harness | the server's generator has the sprite and the profile `generator_ci_bio`; the client sees the sprite with its picture |
+
+Result: 8/0. In session 3 the server logged the mod's line "generator
+TLG.DieselGenerator: its sprite tlg_generators_01_0 was missing and is
+back" at its sixth frame: the repair ran from the game's own
+`LoadGridsquare` on the server. No TLG error or warning in the three
+server logs.
+
+In session 2 the server's harness does not load (it needs the mod), so
+the server's own view of the generator there was not asked; the
+client's was.
+
+The shipped `CHANGELOG.md` and `migrations.md` of 0.3.2 list this as not
+run; they are left as released.
+
+Evidence:
+[run 307](evidence/2026-11-11_rt-mp_harness_run307_server_mod_away_and_back_0.3.2_42.22.2.txt).
