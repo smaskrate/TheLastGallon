@@ -569,7 +569,7 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" later that day; it does not name 0.4.0 or the handbook.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
