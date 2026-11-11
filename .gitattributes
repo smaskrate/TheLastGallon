@@ -9,3 +9,8 @@
 *.png binary
 *.jpg binary
 *.fbx binary
+# Shipped text the game reads: the same bytes on every checkout (launch 260's
+# zip differed from a fresh Windows checkout's in these eight files' line ends).
+*.x text eol=lf
+*.xml text eol=lf
+*.tiles binary
