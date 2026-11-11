@@ -6186,3 +6186,34 @@ version.
 Evidence:
 [run 311](evidence/2026-11-11_rt-mp_harness_run311_handbook_on_a_server_one_wrong_check_42.22.2.txt);
 [run 312](evidence/2026-11-11_rt-mp_harness_run312_handbook_on_a_server_42.22.2.txt).
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 313–316 (the 0.4.0 release zip, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `eecd209` (the release commit,
+clean tree) built `TheLastGallon-0.4.0.zip`: 167 files, 7,873,439 bytes,
+SHA-256 `A4B7336D…1BBD7B14`. A worktree of `eecd209` builds the same
+bytes.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 313 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 105/0, then 14/0 |
+| 314 | `handbook` | 10/0 |
+| 315 | RT-MP `-Clients 1 -Only handbook -ModSource <the unpacked mod folder>` | 9/0 |
+| 316 | `tools\rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.1.2` | 3/0, then 19/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.4.0,
+equal to `TLG.VERSION`; the mod logged "The Last Gallon 0.4.0 ready" in
+single player, on the server and on its client. Consoles were read for
+the mod's ready line and its errors and warnings: none.
+
+Not run on this zip: the other single-player modes and multiplayer
+cases; the removal and existing-save scenarios; the upgrade from 0.2.0
+to 0.3.2, the versions whose characters could make the biodiesel
+machines without learning; an install through the Steam Workshop. Not
+uploaded.
+
+Evidence:
+[run 313](evidence/2026-11-11_rt-sp_harness_run313_install_rehearsal_0.4.0_42.22.2.txt);
+[run 314](evidence/2026-11-11_rt-sp_harness_run314_package_handbook_0.4.0_42.22.2.txt);
+[run 315](evidence/2026-11-11_rt-mp_harness_run315_package_handbook_0.4.0_42.22.2.txt);
+[run 316](evidence/2026-11-11_rt-sp_harness_run316_upgrade_0.1.2_to_0.4.0_42.22.2.txt).

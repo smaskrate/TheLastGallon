@@ -20,14 +20,26 @@ from mathutils import Vector
 
 # name, in-game scale, (x, y) on the floor in metres, turn about Z in degrees
 LAYOUT = (
-    ("RefluxStill", 0.9, (0.0, 0.40), -15.0),
-    ("Fermenter", 0.5, (-0.78, 0.10), 25.0),
-    ("DryingColumn", 0.55, (1.00, 0.45), -30.0),
-    ("PotStill", 0.7, (0.72, -0.30), -25.0),
-    ("FuelFilter", 0.1, (-0.30, -0.40), 10.0),
+    # The back row: the tall machines.
+    ("AshBarrel", 0.6, (-1.35, 1.25), 20.0),
+    ("BiodieselReactor", 0.77, (-0.55, 1.35), 0.0),
+    ("BiodieselWashTank", 1.0, (0.35, 1.40), 0.0),
+    ("RefluxStill", 0.9, (1.20, 1.20), -15.0),
+    # The middle row.
+    ("WoodRetort", 0.87, (-0.85, 0.30), 0.0),
+    ("Fermenter", 0.5, (0.30, 0.25), 25.0),
+    ("DryingColumn", 0.55, (0.90, 0.35), -30.0),
+    ("LyeLeacher", 0.73, (1.55, 0.50), 180.0),
+    # The front row, nearest the camera: the pot still and the small items.
+    ("PotStill", 0.7, (1.10, -0.55), -25.0),
+    ("ManualFuelSystems", 0.16, (-1.10, -0.95), 20.0),
+    ("FuelSampleKit", 0.225, (-0.65, -1.00), 0.0),
+    ("YeastStarter", 0.108, (-0.25, -1.10), 0.0),
+    ("FuelStabilizer", 0.115, (0.02, -0.95), 0.0),
+    ("FuelFilter", 0.1, (0.30, -1.10), 10.0),
 )
 # The group spans this much of the frame's width, its feet this far up.
-SPAN, FEET, TOP = 0.90, 0.07, 0.66
+SPAN, FEET, TOP = 0.92, 0.05, 0.66
 
 
 def _material(name, texture):
@@ -78,7 +90,7 @@ def _bounds(cam, pts):
     return min(c.x for c in uv), max(c.x for c in uv), min(c.y for c in uv), max(c.y for c in uv)
 
 
-def render(media, out, size=1024):
+def render(media, out, size=1024, samples=96):
     bpy.ops.wm.read_factory_settings(use_empty=True)
     scene = bpy.context.scene
     meshes = []
@@ -93,7 +105,7 @@ def render(media, out, size=1024):
 
     scene.render.engine = "CYCLES"
     scene.cycles.device = "CPU"
-    scene.cycles.samples = 96
+    scene.cycles.samples = samples
     scene.cycles.use_denoising = True
     scene.render.film_transparent = True
     scene.render.resolution_x = scene.render.resolution_y = size
@@ -112,13 +124,13 @@ def render(media, out, size=1024):
     _sun("top", (0.0, 0.0, -1.0), 0.6, (1.0, 0.92, 0.82))
 
     cam_data = bpy.data.cameras.new("cam")
-    cam_data.lens = 50.0
+    cam_data.lens = 35.0
     cam_data.sensor_fit = "HORIZONTAL"
     cam = bpy.data.objects.new("cam", cam_data)
     scene.collection.objects.link(cam)
     scene.camera = cam
     centre = Vector((sum(p.x for p in pts) / len(pts), sum(p.y for p in pts) / len(pts), 0.35))
-    view = Vector((0.22, -1.0, 0.36)).normalized()
+    view = Vector((0.22, -1.0, 0.50)).normalized()
     cam.rotation_euler = (-view).to_track_quat("-Z", "Y").to_euler()
     lo, hi = 0.5, 30.0
     for _ in range(40):
@@ -144,4 +156,4 @@ def render(media, out, size=1024):
 
 if __name__ == "__main__":
     args = sys.argv[sys.argv.index("--") + 1:]
-    render(args[0], args[1], int(args[2]) if len(args) > 2 else 1024)
+    render(args[0], args[1], int(args[2]) if len(args) > 2 else 1024, int(args[3]) if len(args) > 3 else 96)

@@ -125,6 +125,14 @@ Open: the window's refusal for the other four machines; a player who is
 not an admin; the Italian name read in game. It has not been uploaded to
 the Workshop.
 
+The 0.4.0 package is the zip of `eecd209` (167 files, 7,873,439 bytes,
+SHA-256 `A4B7336D…1BBD7B14`): installed clean and played, the full run
+105/0 and 14/0, the handbook mode 10/0, the multiplayer handbook case
+9/0; and played over a save made with the 0.1.2 zip, 3/0 and 19/0
+(launches 313–316). A clean checkout builds the same bytes. Open for
+gate 12: an install through the Workshop; the upgrade from 0.2.0 to
+0.3.2 with this zip, where the recipes' learning changes behaviour.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
@@ -547,12 +555,12 @@ The Steam Workshop item (id 3835496461) serves 0.1.1, uploaded by the
 owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.3.2 package's
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.0 package's
 `Contents` since 2026-11-11 (the 0.1.2 package's from 2026-11-10, then
-the 0.3.0 and the 0.3.1 packages' earlier on 2026-11-11; 0.2.0 was never
-put there):
-the release zip `7082EC93…AA319B60` was checked against its manifest,
-its `Contents` mirrored over the folder's, and the folder's 164 files
+the 0.3.0, 0.3.1 and 0.3.2 packages' earlier on 2026-11-11; 0.2.0 was
+never put there):
+the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
+its `Contents` mirrored over the folder's, and the folder's 165 files
 checked by hash, both ways. It has not been uploaded. Its `preview.png` is the package's. Its `workshop.txt` is the
 owner's, edited by hand (the item's id, `visibility=public`, the tag
 `WIP`, two reworded lines). On 2026-11-11, on the owner's word, its
@@ -561,7 +569,7 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" later that day.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" later that day; it does not name 0.4.0 or the handbook.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is

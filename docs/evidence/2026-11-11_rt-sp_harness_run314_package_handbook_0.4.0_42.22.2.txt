@@ -1,0 +1,66 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
+client started, pid 11808
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, the biodiesel recipes: skills and the handbook
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=50529981759367826019 hours=2.0096 DayLength=4
+STEP rthb_setup begin
+OBS  RTHB.debug=true; the retort recipe at level 0: hasPlayerLearnedRecipe=true isRecipeKnown=false isRecipeActuallyKnown=false
+PASS RTHB.recipes_ask_what_the_guide_says :: TLG_MakeWoodRetort asks MetalWelding:4, must be learned=true; TLG_MakeAshBarrel asks MetalWelding:2, must be learned=true; TLG_MakeLyeLeacher asks Woodwork:2, must be learned=true; TLG_MakeBiodieselReactor asks MetalWelding:5, must be learned=true; TLG_MakeBiodieselWashTank asks MetalWelding:4, must be learned=true
+PASS RTHB.the_other_recipes_need_no_learning :: TLG_MakeFermenterVessel=false TLG_MakePotStill=false TLG_MakeRefluxStill=false TLG_MakeDryingColumn=false TLG_MakeSampleKit=false TLG_MakeFuelFilter=false TLG_MakeFuelStabilizer=false
+STEP rthb_at_level_0_nothing_known_or_allowed begin
+PASS RTHB.at_level_0_nothing_known_or_allowed :: known 00000 (want 00000), skill 00000 (want 00000); welding 0, carpentry 0: WoodRetort known=false skill=false; AshBarrel known=false skill=false; LyeLeacher known=false skill=false; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_carpentry_2_allows_the_leacher_unlearned begin
+PASS RTHB.carpentry_2_allows_the_leacher_unlearned :: known 00000 (want 00000), skill 00100 (want 00100); welding 0, carpentry 2: WoodRetort known=false skill=false; AshBarrel known=false skill=false; LyeLeacher known=false skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_carpentry_4_teaches_the_leacher begin
+PASS RTHB.carpentry_4_teaches_the_leacher :: known 00100 (want 00100), skill 00100 (want 00100); welding 0, carpentry 4: WoodRetort known=false skill=false; AshBarrel known=false skill=false; LyeLeacher known=true skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_welding_3_allows_the_ash_barrel_unlearned begin
+PASS RTHB.welding_3_allows_the_ash_barrel_unlearned :: known 00100 (want 00100), skill 01100 (want 01100); welding 3, carpentry 4: WoodRetort known=false skill=false; AshBarrel known=false skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_welding_4_teaches_the_ash_barrel begin
+PASS RTHB.welding_4_teaches_the_ash_barrel :: known 01100 (want 01100), skill 11101 (want 11101); welding 4, carpentry 4: WoodRetort known=false skill=true; AshBarrel known=true skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=true
+STEP rthb_read begin
+OBS  RTHB.handbook TLG.BiodieselHandbook "Biodiesel Handbook" teaches: TLG_MakeWoodRetort, TLG_MakeAshBarrel, TLG_MakeLyeLeacher, TLG_MakeBiodieselReactor, TLG_MakeBiodieselWashTank; too dark to read=false
+PASS RTHB.handbook_read_to_the_end :: the read action ended=true after 751 ticks; recorded as read=true
+STEP rthb_handbook_teaches_all_five begin
+PASS RTHB.handbook_teaches_all_five :: known 11111 (want 11111), skill 11101 (want 11101); welding 4, carpentry 4: WoodRetort known=true skill=true; AshBarrel known=true skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=true skill=false; BiodieselWashTank known=true skill=true
+STEP rthb_welding_5_allows_the_reactor begin
+PASS RTHB.welding_5_allows_the_reactor :: known 11111 (want 11111), skill 11111 (want 11111); welding 5, carpentry 4: WoodRetort known=true skill=true; AshBarrel known=true skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=true skill=true; BiodieselWashTank known=true skill=true
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.20
+SUMMARY pass=10 fail=0
+DONE
+
+--- TLG_harness_sp.txt
+# TLG single-player harness, the biodiesel recipes: skills and the handbook
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=50529981759367826019 hours=2.0096 DayLength=4
+STEP rthb_setup begin
+OBS  RTHB.debug=true; the retort recipe at level 0: hasPlayerLearnedRecipe=true isRecipeKnown=false isRecipeActuallyKnown=false
+PASS RTHB.recipes_ask_what_the_guide_says :: TLG_MakeWoodRetort asks MetalWelding:4, must be learned=true; TLG_MakeAshBarrel asks MetalWelding:2, must be learned=true; TLG_MakeLyeLeacher asks Woodwork:2, must be learned=true; TLG_MakeBiodieselReactor asks MetalWelding:5, must be learned=true; TLG_MakeBiodieselWashTank asks MetalWelding:4, must be learned=true
+PASS RTHB.the_other_recipes_need_no_learning :: TLG_MakeFermenterVessel=false TLG_MakePotStill=false TLG_MakeRefluxStill=false TLG_MakeDryingColumn=false TLG_MakeSampleKit=false TLG_MakeFuelFilter=false TLG_MakeFuelStabilizer=false
+STEP rthb_at_level_0_nothing_known_or_allowed begin
+PASS RTHB.at_level_0_nothing_known_or_allowed :: known 00000 (want 00000), skill 00000 (want 00000); welding 0, carpentry 0: WoodRetort known=false skill=false; AshBarrel known=false skill=false; LyeLeacher known=false skill=false; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_carpentry_2_allows_the_leacher_unlearned begin
+PASS RTHB.carpentry_2_allows_the_leacher_unlearned :: known 00000 (want 00000), skill 00100 (want 00100); welding 0, carpentry 2: WoodRetort known=false skill=false; AshBarrel known=false skill=false; LyeLeacher known=false skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_carpentry_4_teaches_the_leacher begin
+PASS RTHB.carpentry_4_teaches_the_leacher :: known 00100 (want 00100), skill 00100 (want 00100); welding 0, carpentry 4: WoodRetort known=false skill=false; AshBarrel known=false skill=false; LyeLeacher known=true skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_welding_3_allows_the_ash_barrel_unlearned begin
+PASS RTHB.welding_3_allows_the_ash_barrel_unlearned :: known 00100 (want 00100), skill 01100 (want 01100); welding 3, carpentry 4: WoodRetort known=false skill=false; AshBarrel known=false skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthb_welding_4_teaches_the_ash_barrel begin
+PASS RTHB.welding_4_teaches_the_ash_barrel :: known 01100 (want 01100), skill 11101 (want 11101); welding 4, carpentry 4: WoodRetort known=false skill=true; AshBarrel known=true skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=true
+STEP rthb_read begin
+OBS  RTHB.handbook TLG.BiodieselHandbook "Biodiesel Handbook" teaches: TLG_MakeWoodRetort, TLG_MakeAshBarrel, TLG_MakeLyeLeacher, TLG_MakeBiodieselReactor, TLG_MakeBiodieselWashTank; too dark to read=false
+PASS RTHB.handbook_read_to_the_end :: the read action ended=true after 751 ticks; recorded as read=true
+STEP rthb_handbook_teaches_all_five begin
+PASS RTHB.handbook_teaches_all_five :: known 11111 (want 11111), skill 11101 (want 11101); welding 4, carpentry 4: WoodRetort known=true skill=true; AshBarrel known=true skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=true skill=false; BiodieselWashTank known=true skill=true
+STEP rthb_welding_5_allows_the_reactor begin
+PASS RTHB.welding_5_allows_the_reactor :: known 11111 (want 11111), skill 11111 (want 11111); welding 5, carpentry 4: WoodRetort known=true skill=true; AshBarrel known=true skill=true; LyeLeacher known=true skill=true; BiodieselReactor known=true skill=true; BiodieselWashTank known=true skill=true
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.20
+SUMMARY pass=10 fail=0
+DONE
