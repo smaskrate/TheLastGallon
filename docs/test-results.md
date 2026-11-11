@@ -5879,8 +5879,8 @@ position the game's vehicle pick reads is given by the step.
   60 pixels it does not. The game's Grab entry agreed in all sixteen. So
   the entry's area changed from the item's tile to a circle of 48 pixels
   around the item: ground close beside a can still offers the can's menu.
-  Whether that is close enough is the owner's call; the radius is
-  `Clicked.ITEM_RADIUS`.
+  The owner kept that reach, the game's own, over a tighter one
+  (2026-11-11); the radius is `Clicked.ITEM_RADIUS`.
 * A review of the change found that `Stations.isPump` took any object
   carrying the mod's record for a pump: a fixed fluid container the mod
   has recorded keeps its record under the same key, as a generator does

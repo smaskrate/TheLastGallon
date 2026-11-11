@@ -521,6 +521,14 @@ left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
 edits.
 
+The text for the uploader's change-notes box (a box of up to 512 lines on
+the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
+`docs/workshop-change-note-0.3.0.txt`, written on 2026-11-11: the changes
+from 0.1.1, which the item serves, to 0.3.0. `docs/workshop-change-note-0.3.1.txt`
+adds 0.3.1's fixes and is for use only once 0.3.1 is released and its
+package is in the upload folder. Neither file is in the package. NOT RUN:
+pasting a note into the uploader, and how the Workshop page shows its
+`[b]` and `[list]` marks.
 What changed in the package since the last rehearsed one (run 206, 0.1.0):
 the death fix on a server (D-015 amendment, run 210: `Machines.lua`,
 `Boot.lua`), the **Transfer Liquid** fix (D-035, run 215:

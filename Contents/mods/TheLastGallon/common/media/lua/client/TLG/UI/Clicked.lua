@@ -9,7 +9,9 @@
 -- ground is under the click when its position on screen is within 48 pixels,
 -- divided by the zoom, of the click. The same rule is used here, over the
 -- clicked squares and the squares around them, so that the mod's entry for
--- an item shows where the game's Grab entry for it does.
+-- an item shows where the game's Grab entry for it does. The owner kept
+-- that reach over a tighter one (2026-11-11): ground close beside a can
+-- still offers the can's menu, as it offers Grab.
 TLG.UI = TLG.UI or {}
 TLG.UI.Clicked = TLG.UI.Clicked or {}
 local Clicked = TLG.UI.Clicked

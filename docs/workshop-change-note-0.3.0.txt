@@ -1,0 +1,32 @@
+[b]Version 0.3.0[/b]
+Changes since 0.1.1, the version uploaded here before. Tested on Project Zomboid 42.22.2.
+
+[b]New[/b]
+[list]
+[*]Biodiesel. Five new machines turn wood and cooking oil into biodiesel: the Wood Retort, the Ash Barrel, the Lye Leacher, the Biodiesel Reactor and the Biodiesel Wash Tank. Each takes what it needs from the finished machine beside it, and the wash tank fills a fuel can.
+[*]The Diesel Generator, found in loot beside the game's generators (the green one). It burns diesel and biodiesel in any blend.
+[*]Diesel vehicles and pumps, in new worlds only: pickup vans, six-seat vans, radio vans and ambulances are diesel, and about one station pump in four gives diesel. "Read what this pump gives", in a pump's menu, says which.
+[*]The wrong fuel damages an engine: diesel or biodiesel in a petrol or converted (flex) engine, petrol or ethanol in a diesel, ethanol past the limit of an engine that is not converted. The more of it is in the tank, the worse the engine starts and runs and the faster it wears. With enough of it some engines do not start, and each try costs engine condition. Diesel in a petrol car wears its exhaust too. A diesel with more than half petrol, or more than a tenth ethanol, in its tank can fail while it runs.
+[*]A line over your character says when an engine starts on fuel that harms it, when a start damaged it, and when it failed. "Pour into this vehicle's tank" and "Pour into the generator" refuse a pour that would harm the engine until you confirm. The game's own Add Fuel and pumps do not check.
+[*]New sandbox option "Wrong fuel damages engines", on by default. Off, such fuel only stops the engine from starting.
+[/list]
+
+[b]Fixed[/b]
+[list]
+[*]A generator whose fuel the mod had recorded was taken for a station pump, so the Fuel menu near it could offer a pump's entries.
+[/list]
+
+[b]Existing saves[/b]
+[list]
+[*]A save from an earlier version continues with this one: its fuel records stay, and its vehicles and pumps stay on petrol. Diesel vehicles and pumps appear only in worlds started with 0.2.0 or later. Checked from a 0.1.2 save; 0.1.2 differs from 0.1.1 only in its version number and documents.
+[*]An engine holding the wrong fuel, which earlier versions only kept from starting, now starts, or tries to, and is damaged. Siphon or drain the tank first.
+[*]Before you remove the mod, read "Removing the mod" in the player guide: a save loaded without the mod loses the mod's machines and the mod's fluids, ethanol, diesel and biodiesel among them, and a placed Diesel Generator loses its picture.
+[/list]
+
+[b]Not checked in game[/b]
+[list]
+[*]Driving on diesel, on biodiesel or on a wrong fuel, and biodiesel in the cold.
+[*]A converted engine with diesel, a repair after wrong fuel, and most of the wrong-fuel rules on a server. In the tests the random draws were set, not left to chance.
+[/list]
+
+The player guide (docs/player-guide.md in the mod's folder) has the steps and the numbers. docs/CHANGELOG.md lists the changes by version.
