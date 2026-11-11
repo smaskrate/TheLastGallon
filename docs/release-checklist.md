@@ -119,8 +119,8 @@ Version 0.4.0, of 2026-11-11 (D-038): the five biodiesel
 machines' recipes ask skill levels and must be learned, from the new
 Biodiesel Handbook or by level (launches 308–312, `test-results.md`).
 On a dedicated server, in a client without `-debug`, the crafting window
-refused the Ash Barrel unlearned and below its level and made it with
-both, and the server's loot lists gave handbooks (launch 312, 9/0).
+refused the Ash Barrel unlearned and at Welding 0 and made it learned at
+Welding 2, and the server's loot lists gave handbooks (launch 312, 9/0).
 A plain player got the same (launch 329). It has not been uploaded to
 the Workshop.
 
