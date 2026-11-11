@@ -1,0 +1,26 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 52168
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, the client in Italian
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=62161507242704382559 hours=2.0096 DayLength=4
+STEP rti_setup begin
+STEP rti_text begin
+PASS RTI.language_is_italian :: Translator.getLanguage() = IT
+OBS  RTI.strings ContextMenu 41/41, Fluids 8/8, IG_UI 231/231, ItemName 15/15, Recipes 12/12, Sandbox 19/19; samples: Carburante (The Last Gallon) | Condizioni sconosciute: non ancora campionato. Un carburante sconosciuto non Ã¨ necessariamente cattivo. | Salvataggi esistenti
+PASS RTI.every_string_as_shipped :: 326 of 326 as shipped, 0 unresolved, 0 garbled; off: none
+PASS RTI.placeholders_filled :: "Carburante principale: Etanolo" | "Condizioni: Buono (stima 0.1, piÃ¹ o meno 0.3)"
+STEP rti_menus begin
+OBS  RTI.look menu "Osserva e annusa" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTI.fuel_menu "Carburante (The Last Gallon)" > Cosa so di questo carburante / Osserva e annusa / Preleva un campione (kit) / Aggiungi stabilizzante / Filtra / Lascia decantare e scarica l'acqua / Apri; Look and smell: Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.9, piÃ¹ o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+PASS RTI.fuel_menu_italian :: 7 entries; look dialog Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.9, piÃ¹ o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+OBS  RTI.status menu "Stato" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTI.machine_menu Status: Pronto <LINE> Temperatura qui adesso: 67.9 Â°F, all'aperto
+PASS RTI.machine_menu_italian :: Pronto <LINE> Temperatura qui adesso: 67.9 Â°F, all'aperto
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.01
+SUMMARY pass=5 fail=0
+DONE

@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.2.0, for Project Zomboid 42.22.2. Each section ends with what
+Version 0.3.0, for Project Zomboid 42.22.2. Each section ends with what
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 
@@ -125,25 +125,29 @@ also offers, depending on what is near you:
   empty a generator, and a conversion needs its fuel system drained.
 
 These pours move any fuel the mod knows, with its condition, not only
-petrol. If the result would be a blend the engine cannot use, nothing is
-poured and a dialog says why; choose **Yes** in it to pour anyway.
+petrol. If the result would be a blend the engine cannot use, or one that
+would damage it ([Wrong fuel](#wrong-fuel)), nothing is poured and a
+dialog says why; choose **Yes** in it to pour anyway.
 
 **Checked in game:** in single player, pours into generators and a car:
 petrol accepted, a blend the engine cannot use refused (nothing moved)
 and poured after **Yes**, dried ethanol accepted without the dialog by a
-converted generator and car. On a server, a pour with its result shown to
-the player.
+converted generator and car; petrol into a diesel Ambulance refused, then
+poured after **Yes**; a generator drained into a can by the request the
+menu sends. On a server, a pour with its result shown to the player.
 
-**Not checked in game:** **Pour into the station reservoir** and **Drain
-the generator into this can**.
+**Not checked in game:** **Pour into the station reservoir**, and the
+menu entry **Drain the generator into this can** itself.
 
 ## Engines
 
-A stock gasoline engine runs well on up to 15 % ethanol, struggles up to
-25 % and will not run on more. A converted (flex) engine runs on any blend
-of gasoline and ethanol, but starts poorly on near-pure ethanol in the
-cold. Diesel engines run on diesel and biodiesel only; which engines are
-diesel, and how much biodiesel each takes, is under [Diesel](#diesel).
+A stock gasoline engine runs well on up to 15 % ethanol and struggles up
+to 25 %; more than that damages it. A converted (flex) engine runs on any
+blend of gasoline and ethanol, but starts poorly on near-pure ethanol in
+the cold. Diesel engines are built for diesel and biodiesel; which engines
+are diesel, and how much biodiesel each takes, is under [Diesel](#diesel).
+What happens when an engine gets another engine's fuel is under
+[Wrong fuel](#wrong-fuel).
 
 Stale, wet or dirty fuel makes an engine harder to start. A car running on
 it has less power, never below half, so it picks up speed more slowly; the
@@ -167,6 +171,146 @@ generator on stale petrol worn when next refuelled.
 
 **Not checked in game:** the mechanics window (it opens while the car
 stands still and lists the engine's power) while the power is lowered.
+
+### Wrong fuel
+
+An engine that gets another engine's fuel is damaged by it. A trace does
+nothing; beyond that, the more of the wrong fuel is in the tank, the
+worse. Petrol or ethanol in a diesel does the most lasting harm, because
+the diesel keeps running on it. Diesel in a petrol engine mostly stops it.
+
+| Fuel in the tank | Petrol engine (cars, the red generators) | Converted (flex) engine | Diesel vehicle | Diesel Generator |
+| --- | --- | --- | --- | --- |
+| Petrol | its fuel | its fuel | runs badly, wears fast, can fail | the same |
+| Ethanol | its limit is 25 % (generators 15 %); more wears it | its fuel | as petrol, but worse; over 30 % no start | the same |
+| Diesel | wears it; over 30 % no start | as a petrol engine | its fuel | its fuel |
+| Biodiesel | as diesel, with a fifth more wear | as a petrol engine | fine up to 20 % ([Diesel](#diesel)) | its fuel |
+
+A flex conversion widens petrol and ethanol only: diesel and biodiesel
+harm a converted engine as they harm a stock one.
+
+In the tables below, the share is the wrong fuel's part of all the fuel in
+the tank. "Starts" is how often a try succeeds compared with good fuel.
+Engine wear is in condition points, of 100: for a car by the litre burned
+(an hour of driving burns about 3.3 L), for a generator by the hour it
+runs with a fridge plugged in. The power loss is a car's; the mod cannot
+lower a generator's power.
+
+**Diesel or biodiesel in a petrol or flex engine**
+
+| Share | Starts | Power | Engine wear, car | Engine wear, generator | Also |
+| --- | --- | --- | --- | --- | --- |
+| up to 1 % | as usual | full | none | none | |
+| 1 to 10 % | 9 in 10 | 15 % less | 0.3 a litre | 0.1 an hour | |
+| 10 to 30 % | 4 in 10 | 40 % less | 0.75 a litre | 0.25 an hour | a car's exhaust loses 0.5 a litre |
+| over 30 % | never | | | | each try costs the engine 1 or 2 points and a car 2 % of its battery charge |
+
+**Petrol in a diesel**
+
+| Share | Starts | Power | Engine wear, vehicle | Engine wear, Diesel Generator | Also |
+| --- | --- | --- | --- | --- | --- |
+| up to 2 % | as usual | full | none | none | |
+| 2 to 15 % | 9 in 10 | 10 % less | 0.3 a litre | 0.1 an hour | |
+| 15 to 50 % | 1 in 2 | 30 % less | 1.05 a litre | 0.35 an hour | |
+| over 50 % | 1 in 4 | half | 2.1 a litre | 0.7 an hour | the engine can fail: 2 chances in 100 for each litre, about 6 in 100 for an hour |
+
+**Ethanol in a diesel**
+
+| Share | What happens |
+| --- | --- |
+| up to 2 % | nothing |
+| 2 to 10 % | as 15 to 50 % petrol |
+| 10 to 30 % | as over 50 % petrol, the chance of failing included |
+| over 30 % | it never starts, and each try costs the engine 1 or 2 points and a vehicle 2 % of its battery charge |
+
+**Ethanol in a stock petrol engine, past its limit**
+
+| Share | Starts | Power | Engine wear, car | Engine wear, generator |
+| --- | --- | --- | --- | --- |
+| the limit to 60 % | 7 in 10 | 25 % less | 0.45 a litre | 0.15 an hour |
+| over 60 % | 1 in 3, and never below 10 °C | 40 % less | 1.05 a litre | 0.35 an hour |
+
+Where a tank holds two wrong fuels, the worse row counts. This wear adds
+to the wear of stale fuel: both multiply. A car that starts less often
+than usual also stalls now and then while it runs, the more often the
+worse it starts, as on any poor fuel; generators do not stall.
+
+An engine that fails stops, with its condition at 0. A car's engine then
+does not start again until it is repaired. A generator is switched off and
+the game does not switch it on at condition 0: repair it with the game's
+**Fix Generator**. Over a 40 L tank of petrol a diesel vehicle fails a
+little more often than not.
+
+A generator's wear and its failure are counted the next time you refuel,
+move or switch it, for the fuel it burned since: until then it runs on.
+
+What tells you:
+
+* when an engine starts on fuel that harms it, a line over your character
+  names the wrong fuel;
+* when a start is refused and damages the engine, and when an engine
+  fails, a line says so;
+* the dialog of a refused pour gives the engine's verdict on the blend.
+
+The mod has no entry that reads the verdict for a tank already filled.
+
+The cure is to take the fuel out. Siphon a vehicle's tank with the game's
+**Siphon Gasoline** until it is empty, and fill it with the right fuel.
+Empty a generator with **Drain the generator into this can**. The can then
+holds the blend as it was: do not pour it into another engine of the wrong
+kind. Damage already done stays until repaired.
+
+**Pour into this vehicle's tank** and **Pour into the generator** refuse a
+pour that would harm the engine and say why. The game's own actions do not
+check. **Add Fuel** offers petrol cans to every generator, the Diesel
+Generator included, and about three pumps in four give petrol
+([Diesel pumps](#diesel-pumps)): a diesel engine filled that way is
+damaged without a warning.
+
+The sandbox option **Wrong fuel damages engines** turned off brings back
+the behaviour of version 0.2.0: any such fuel above a trace stops the
+engine from starting and stalls a running one, and damages nothing. With
+**Bad fuel can stall engines** off, no start is refused: an engine then
+runs, at half power, even on fuel listed above as "never", and wears for
+it (a petrol car 1.35 a litre on over 30 % diesel, with its exhaust losing
+1 a litre; a diesel 2.85 a litre on over 30 % ethanol, with 4 chances in
+100 for each litre of failing).
+
+**Checked in game** (single player, a new world):
+
+* the verdict the mod gives for every row above on a petrol car and a
+  diesel Ambulance, with its text;
+* a petrol car on 40 % diesel: the start refused, 1 point off the engine
+  and 2 % off the battery, and the line over the character;
+* that car running on 20 % diesel: the line at the start, and for 4 L, 3
+  points off the engine and 2 off the exhaust;
+* 5 L of petrol poured into an Ambulance holding 10 L of diesel: refused,
+  then poured after the confirmation; the Ambulance running on that third
+  of petrol: for 2 L, 2 points off the engine;
+* a Dash Bulldriver running on pure petrol: its engine failed when the
+  draw fell that way, stopped, said so, and did not start again;
+* the cure: that Ambulance siphoned empty into two cans, which held the
+  blend; 10 L of diesel poured in; the verdict clean; a start;
+* a red generator on 40 % diesel: the start refused, 1 or 2 points off,
+  the line shown; drained into a can; petrol poured in; the verdict clean;
+* a Diesel Generator on pure petrol: it started; a litre gone cost it 46
+  points (at the sandbox's default generator consumption a litre lasts
+  67 hours); when the draw fell it failed, was switched off, and the game
+  refused to switch it on;
+* with the option off, the plain refusal and no damage.
+
+In these tests the draws were set by the test (a start always passing its
+roll, a failure when the test said so), and the litres were taken out of
+the tank by the test while the engine ran.
+
+On a server, one client: a red generator refused on a tank of diesel, and
+the line reaching the player.
+
+**Not checked in game:** the rest on a server; a converted (flex) engine
+with diesel; ethanol's rows beyond the verdict, and its refusal to start
+in the cold; a car stalling on such fuel; driving on any of it; an engine
+failing by an unforced draw; repairing a failed engine or generator; a
+save from version 0.2.0 holding such a blend.
 
 ## The field manual
 
@@ -544,12 +688,10 @@ sign of the engine type: go by the model.
 
 A diesel vehicle runs on diesel and on biodiesel. Up to 20 % biodiesel in
 its diesel costs nothing; with more it starts less reliably, has less
-power and wears faster. Petrol or ethanol in its tank stops it from
-starting, and diesel does the same to a petrol engine. **Pour into this
-vehicle's tank** refuses such a pour and says why. The game's own
-refuelling, from a can or at a pump, does not check: if a vehicle will not
-start after it, siphon the tank with the game's **Siphon Gasoline** and
-fill it with the right fuel.
+power and wears faster. Petrol or ethanol in its tank damages it, and
+diesel damages a petrol engine: [Wrong fuel](#wrong-fuel) has the rows.
+**Pour into this vehicle's tank** refuses such a pour and says why. The
+game's own refuelling, from a can or at a pump, does not check.
 
 ### The Diesel Generator
 
@@ -565,7 +707,8 @@ switched on the same way.
 
 It burns diesel or biodiesel in any blend, pure biodiesel included. Fill
 it with **Pour into the generator**. The game's own **Add Fuel** takes
-petrol cans only, and petrol stops the Diesel Generator from starting.
+petrol cans only, and petrol damages the Diesel Generator
+([Wrong fuel](#wrong-fuel)).
 
 ### Diesel pumps
 
@@ -588,14 +731,14 @@ cannot be topped up at a pump: bring empty cans.
   started on the diesel it was found with and took 5 L of biodiesel; a
   petrol pour into the Dash Bulldriver was refused;
 * the Diesel Generator fuelled with biodiesel, started and run for two
-  hours; petrol put in with **Add Fuel** stopped another from starting;
+  hours; petrol put into another with **Add Fuel** went in as petrol;
   one picked up and put down again, and one left on the ground through a
   save and a reload, each still a Diesel Generator with its fuel; rolled
   from the generator crates' loot list as the game fills a container;
 * a pump's **Read what this pump gives**; an empty can and an Ambulance's
   empty tank filled with diesel at a diesel pump with the game's own
   actions, the Ambulance then starting; a Dash Bulldriver filled at a
-  petrol pump refused to start;
+  petrol pump held petrol;
 * on a server: the Diesel Generator seen, fuelled, started, picked up and
   put down; the Ambulance read as diesel and started; a diesel pump read
   and a can filled at it.
@@ -604,7 +747,7 @@ The pumps in these tests were set to diesel or petrol by the test; a pump
 left to the world's own draw was read, not filled from.
 
 **Not checked in game:** driving on diesel or biodiesel; a diesel vehicle
-on pure biodiesel; biodiesel in the cold; siphoning a diesel tank; a
+on pure biodiesel; biodiesel in the cold; a
 Diesel Generator found in a crate on the map or in a truck bed, or
 powering anything; **Pour into the station reservoir** at a diesel pump;
 a vehicle refuelled at a pump on a server.
@@ -674,7 +817,7 @@ world started with this version, about one pump in four gives diesel
 | Symptom | Cause | What to do |
 | --- | --- | --- |
 | "Condition unknown" | the fuel has not been sampled | Choose **Look and smell**, or **Take a sample (kit)** with a sampling kit |
-| An engine will not start on fresh-looking fuel | too much ethanol for a stock engine, or water | Take a sample; drain the water; use gasoline or convert the engine |
+| An engine will not start on fresh-looking fuel | water, or the wrong fuel for it | Take a sample; drain the water; see [Wrong fuel](#wrong-fuel) |
 | A car is slow to pick up speed | stale, wet or dirty fuel lowers its power while the engine runs; it comes back when the engine stops | Take a sample; drain the water or filter the fuel; use better fuel |
 | A vessel is paused: "Reason: too cold here" | below 8 °C at the machine today; **Status** shows the temperature | Move it into a room, or beside a lit fireplace, wood stove or campfire (a barbecue is too weak outdoors on a frosty day). While you are away a fire keeps it warm only as long as its fuel lasts. After 3 days paused in all, the batch spoils |
 | A still is paused: "Reason: the firebox is out of fuel" | the wood ran out | Choose **Feed the firebox** |
@@ -683,7 +826,7 @@ world started with this version, about one pump in four gives diesel
 | A biodiesel machine says "No finished ash barrel within two tiles." (or wood retort, lye leacher, reactor) | the machine it takes from has not finished, or stands more than two tiles away | Read that machine's **Status**; wait for it, or move the two together |
 | The reactor says "The leacher holds too little lye for a batch." or "The retort holds too little methanol for a batch." | the smallest batch is 5 L of oil, which takes 63 g of lye and 0.75 L of methanol | Run another barrel and leacher, or another retort load |
 | "This goes to the next machine, not into a can." | methanol, lye and crude biodiesel are never collected | Load the next machine in the chain |
-| A vehicle or the Diesel Generator will not start after refuelling | petrol in a diesel tank, or diesel in a petrol one | Choose **Read what this pump gives** before filling. Siphon a vehicle's tank, or empty the generator with **Drain the generator into this can** (not checked in game), and refill with the right fuel |
+| After refuelling, an engine starts badly, loses power or will not start, or a line over the character names a wrong fuel | petrol or ethanol in a diesel tank, diesel in a petrol one, or too much ethanol for a stock engine | Stop the engine: it wears while it runs. Siphon a vehicle's tank, or empty the generator with **Drain the generator into this can**, and refill with the right fuel ([Wrong fuel](#wrong-fuel)). Choose **Read what this pump gives** before filling |
 | A vessel is **Faulted**: "Reason: the batch spoiled while stalled" | it was stopped for 3 days in all, pauses by hand included | **Abort batch** empties it; then load a new mash |
 
 ## Existing saves

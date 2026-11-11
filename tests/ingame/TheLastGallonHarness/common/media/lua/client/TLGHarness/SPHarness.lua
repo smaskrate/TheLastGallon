@@ -1069,8 +1069,28 @@ add(vehiclePourStep("TLG.pour_e100_into_vehicle_unconfirmed", { { Fluid.Get("TLG
 add(vehiclePourStep("TLG.pour_e100_into_vehicle_confirmed", { { Fluid.Get("TLG_Ethanol"), 3.0 } }, true, true))
 -- Since 0.3.0 that blend, a third ethanol, runs a stock engine lean (D-037).
 -- Diesel still stops it: 8 L more make the tank over 30 % diesel.
-add(vehiclePourStep("TLG.pour_diesel_into_vehicle_unconfirmed", { { Fluid.Get("TLG_Diesel"), 8.0 } }, false, false))
-add(vehiclePourStep("TLG.pour_diesel_into_vehicle_confirmed", { { Fluid.Get("TLG_Diesel"), 8.0 } }, true, true))
+-- One can for both, taken away afterwards: launch 263 carried two more cans
+-- into the crafting steps, where the made machines then fell to the floor.
+local function dieselCan()
+    if H.dieselCan == nil then H.dieselCan = giveCan("Base.PetrolCan", { { Fluid.Get("TLG_Diesel"), 8.0 } }) end
+    return H.dieselCan
+end
+add(vehiclePourStep("TLG.pour_diesel_into_vehicle_unconfirmed", nil, false, false, nil, dieselCan))
+add(vehiclePourStep("TLG.pour_diesel_into_vehicle_confirmed", nil, true, true, nil, dieselCan))
+add({ name = "tlg_diesel_can_away", timeout = 60, fn = function()
+    local inv = player():getInventory()
+    local function cans() return inv:getCountTypeRecurse("Base.PetrolCan") end
+    local n0, w0 = cans(), inv:getCapacityWeight()
+    if H.dieselCan then
+        player():setPrimaryHandItem(nil)
+        player():setSecondaryHandItem(nil)
+        local holder = H.dieselCan:getContainer() or inv
+        holder:DoRemoveItem(H.dieselCan)
+        H.dieselCan = nil
+    end
+    R:line("OBS  TLG.diesel can taken away: petrol cans %d -> %d, inventory weight %.2f -> %.2f", n0, cans(), w0, inv:getCapacityWeight())
+    return true
+end })
 
 -- Starts a vehicle through the vanilla action (ISStartVehicleEngine) as its driver.
 -- mustRun: the engine has to end up running; like a driver, the step retries
@@ -1531,7 +1551,18 @@ add({ name = "loop_craft", timeout = 8000, fn = function(ctx, ticks)
     if not ctx.t0 then
         -- Two recipes keep a screwdriver; it later serves the conversions.
         give("Base.Screwdriver", 1)
-        R:line("OBS  LOOP.craft_start %s", loadText())
+        -- A crafted item goes to the floor when the inventory, with it, is
+        -- over the character's effective capacity (SRC ActionManager.lua,
+        -- Actions.addOrDropItem). The cans of the steps before leave the
+        -- character close to it either way: by this step's load figure the
+        -- vessel stayed in the inventory at 30.9 (launch 245) and fell at
+        -- 31.5 (launches 263, 272, 278). As the other modes do, the character
+        -- carries without a limit from here (launch 279).
+        local inv = player():getInventory()
+        local cap0 = inv:getEffectiveCapacity(player())
+        pcall(function() player():setUnlimitedCarry(true) end)
+        R:line("OBS  LOOP.craft_start %s; inventory weight %.2f, effective capacity %.2f, %.2f with unlimited carry", loadText(),
+            inv:getCapacityWeight(), cap0, inv:getEffectiveCapacity(player()))
         ctx.listed = windowRecipes()
         R:check("LOOP.recipes_listed_for_crafting", function()
             local missing = {}
@@ -4968,44 +4999,47 @@ RT.pickupSteps = { RT.waitWorld, RT.setup, RT.pickSetup, RT.pickRun, RT.finish }
 -- profile with Consumers.evaluate, the function the start gates call; then
 -- it is dried with quicklime and evaluated again.
 ------------------------------------------------------------------------------
-RT.D = { names = { "fermenter", "pot still", "drying column" }, sugar = 12, water = 60, tol = 1e-6,
+-- RT.PT, not RT.D: the driving section further down took that name on
+-- 2026-11-04 (D-031) and this mode failed at its first phase from then until
+-- launch 268 found it.
+RT.PT = { names = { "fermenter", "pot still", "drying column" }, sugar = 12, water = 60, tol = 1e-6,
     sparks = { "engine_si_stock", "engine_si_flex", "generator_si_stock", "generator_si_flex" } }
 
 -- The still `mid` (the pot still by default) and the fuel its stages burn
 -- per hour, from the definitions.
-function RT.D.def(mid)
+function RT.PT.def(mid)
     local m = TLG.Registry.need("machine", mid or "pot_still")
     local heat = TLG.Registry.need("recipe", "ethanol_distill").stages[1].heatKW
     return m, heat / (m.firebox.kwhPerKg * m.firebox.efficiency)
 end
 
-function RT.D.rec(i) return RT.D.items[i]:getModData().tlgProc or {} end
+function RT.PT.rec(i) return RT.PT.items[i]:getModData().tlgProc or {} end
 
 -- What a run of `wash` (ethanol, water) gives in still `mid` at condition
 -- `cond`, at Cooking 0 (Process.converters.distill and completeBatch).
-function RT.D.expected(eth, water, cond, mid)
-    local m, burn = RT.D.def(mid)
+function RT.PT.expected(eth, water, cond, mid)
+    local m, burn = RT.PT.def(mid)
     local out = eth * m.recovery * (1 - 0.3 * (1 - cond))
     return { hours = 1 + math.max(1, (eth + water) / m.throughputLph), ethanol = out,
         water = out * (1 - m.purity) / m.purity, burn = burn }
 end
 
-function RT.D.near(a, b, tol) return type(a) == "number" and type(b) == "number" and math.abs(a - b) <= (tol or RT.D.tol) end
+function RT.PT.near(a, b, tol) return type(a) == "number" and type(b) == "number" and math.abs(a - b) <= (tol or RT.PT.tol) end
 
 -- Status through the menu, with the dialog text the player reads.
-function RT.D.statusText(i)
+function RT.PT.statusText(i)
     local before = #H.dialogs.texts
-    local r = machineClick("RTPOT.status_" .. string.gsub(RT.D.names[i], " ", "_"), RT.D.items[i], "ContextMenu_TLG_MachineStatus")
+    local r = machineClick("RTPOT.status_" .. string.gsub(RT.PT.names[i], " ", "_"), RT.PT.items[i], "ContextMenu_TLG_MachineStatus")
     local text = H.dialogs.texts[before + 1]
     closeDialogs()
     return r, text
 end
 
 -- The start gates' verdict on a can, per spark-ignition profile.
-function RT.D.verdicts(can)
+function RT.PT.verdicts(can)
     local v = tlgView("item", can)
     local out, parts = {}, {}
-    for _, id in ipairs(RT.D.sparks) do
+    for _, id in ipairs(RT.PT.sparks) do
         local e = v and TLG.Domain.Consumers.evaluate(id, v) or { compatible = false, reasons = { "no_record" } }
         out[id] = e
         parts[#parts + 1] = string.format("%s %s (%s)", id, e.compatible and "fit" or "unfit", table.concat(e.reasons, ","))
@@ -5015,11 +5049,11 @@ end
 
 -- A finished machine's Status: its kind's own state line and no stage (run
 -- 28 showed "Stage: fermenting" on finished wash).
-function RT.D.finishedText(text, stateKey)
+function RT.PT.finishedText(text, stateKey)
     return has(text, getText(stateKey)) and not has(text, getText("IGUI_TLG_Stage", ""))
 end
 
-function RT.D.hasReason(e, code)
+function RT.PT.hasReason(e, code)
     for _, r in ipairs(e.reasons or {}) do
         if r == code then return true end
     end
@@ -5027,7 +5061,7 @@ function RT.D.hasReason(e, code)
 end
 
 RT.potSetup = { name = "rtpot_sites", timeout = 3000, fn = function(ctx, ticks)
-    local D = RT.D
+    local D = RT.PT
     if not ctx.t0 and RT.skip("rtpot_sites") then return true end
     if not ctx.t0 then
         local here = player():getSquare()
@@ -5065,10 +5099,10 @@ RT.potSetup = { name = "rtpot_sites", timeout = 3000, fn = function(ctx, ticks)
     return true
 end }
 
-RT.D.phases = {}
+RT.PT.phases = {}
 
-function RT.D.phases.ferment(ctx)
-    local D = RT.D
+function RT.PT.phases.ferment(ctx)
+    local D = RT.PT
     for _, t in ipairs({ "Base.Sugar", "Base.Yeast", "Base.Log", "Base.Quicklime" }) do removeAll(t) end
     give("Base.Sugar", D.sugar); give("Base.Yeast", 1)
     -- RT.setup gave three 10 L buckets; three more make the 60 L the load takes.
@@ -5087,8 +5121,8 @@ function RT.D.phases.ferment(ctx)
     ctx.phase = "fermenting"
 end
 
-function RT.D.phases.fermenting(ctx)
-    local D = RT.D
+function RT.PT.phases.fermenting(ctx)
+    local D = RT.PT
     RT.speed(RT.waitSpeed)
     if hours() - ctx.h0 < 97.05 then return end
     RT.speed(1)
@@ -5110,14 +5144,14 @@ end
 
 -- Feeds the firebox through the menu with `logs` logs carried (all wood
 -- removed first).
-function RT.D.feed(label, logs)
+function RT.PT.feed(label, logs)
     removeAll("Base.Log")
     give("Base.Log", logs)
-    return machineClick(label, RT.D.items[2], "ContextMenu_TLG_AddFirewood")
+    return machineClick(label, RT.PT.items[2], "ContextMenu_TLG_AddFirewood")
 end
 
-function RT.D.phases.load1(ctx)
-    local D = RT.D
+function RT.PT.phases.load1(ctx)
+    local D = RT.PT
     local m = D.def()
     local fuel = D.feed("RTPOT.feed_one_log", 1)
     R:check("RTPOT.firebox_one_log", function()
@@ -5150,17 +5184,17 @@ end
 
 -- Status every 0.1 game hours until the still's batch is ready; `onPoll`
 -- may act on each reply.
-function RT.D.poll(ctx, onPoll)
+function RT.PT.poll(ctx, onPoll)
     RT.speed(RT.waitSpeed)
     if hours() < ctx.next then return nil end
     ctx.next = hours() + 0.1
-    local s = RT.statusOf(RT.D.items[2])
+    local s = RT.statusOf(RT.PT.items[2])
     if onPoll then onPoll(s) end
     return s
 end
 
-function RT.D.phases.run1(ctx)
-    local D = RT.D
+function RT.PT.phases.run1(ctx)
+    local D = RT.PT
     local e = D.expected(ctx.wash1.ethanol, ctx.wash1.water, ctx.cond1)
     local s = D.poll(ctx, function(s)
         if s.pause == "no_heat" and not ctx.tOut then
@@ -5217,8 +5251,8 @@ function RT.D.phases.run1(ctx)
     ctx.phase = "collect1"
 end
 
-function RT.D.phases.collect1(ctx)
-    local D = RT.D
+function RT.PT.phases.collect1(ctx)
+    local D = RT.PT
     giveCan("Base.JerryCan")
     local before = ethanolCans()
     machineClick("RTPOT.collect_1", D.items[2], "ContextMenu_TLG_CollectEthanol")
@@ -5237,8 +5271,8 @@ function RT.D.phases.collect1(ctx)
     ctx.phase = "load2"
 end
 
-function RT.D.phases.load2(ctx)
-    local D = RT.D
+function RT.PT.phases.load2(ctx)
+    local D = RT.PT
     ctx.cond2 = D.rec(2).cond or 1
     ctx.fire2 = D.rec(2).firebox or 0
     ctx.wash2 = { ethanol = ctx.eth0 - ctx.wash1.ethanol, water = D.water - ctx.wash1.water }
@@ -5259,8 +5293,8 @@ function RT.D.phases.load2(ctx)
     ctx.next, ctx.phase = hours() + 0.1, "run2"
 end
 
-function RT.D.phases.run2(ctx)
-    local D = RT.D
+function RT.PT.phases.run2(ctx)
+    local D = RT.PT
     local e = D.expected(ctx.wash2.ethanol, ctx.wash2.water, ctx.cond2)
     local s = D.poll(ctx)
     if s == nil or (s.state ~= "OutputReady" and s.state ~= "Faulted" and hours() - ctx.t2 < 10) then return end
@@ -5282,8 +5316,8 @@ function RT.D.phases.run2(ctx)
     ctx.phase = "collect2"
 end
 
-function RT.D.phases.collect2(ctx)
-    local D = RT.D
+function RT.PT.phases.collect2(ctx)
+    local D = RT.PT
     machineClick("RTPOT.collect_2", D.items[2], "ContextMenu_TLG_CollectEthanol")
     closeDialogs()
     local verdicts, text, v = D.verdicts(ctx.can)
@@ -5301,8 +5335,8 @@ function RT.D.phases.collect2(ctx)
     ctx.phase = "dry"
 end
 
-function RT.D.phases.dry(ctx)
-    local D = RT.D
+function RT.PT.phases.dry(ctx)
+    local D = RT.PT
     removeAll("Base.Quicklime")
     give("Base.Quicklime", 5)
     local r = machineClick("RTPOT.load_dry", D.items[3], "ContextMenu_TLG_LoadDry")
@@ -5315,8 +5349,8 @@ function RT.D.phases.dry(ctx)
     ctx.next, ctx.phase = hours() + 0.5, "drying"
 end
 
-function RT.D.phases.drying(ctx)
-    local D = RT.D
+function RT.PT.phases.drying(ctx)
+    local D = RT.PT
     RT.speed(RT.waitSpeed)
     if hours() < ctx.next then return end
     ctx.next = hours() + 0.5
@@ -5355,7 +5389,7 @@ end
 RT.potRun = { name = "rtpot_run", timeout = 120000, fn = function(ctx, ticks)
     if not ctx.phase and RT.skip("rtpot_run") then return true end
     if ticks % 30 == 0 then RT.keepFit() end
-    return RT.D.phases[ctx.phase or "ferment"](ctx, ticks) == true
+    return RT.PT.phases[ctx.phase or "ferment"](ctx, ticks) == true
 end }
 
 RT.potSteps = { RT.waitWorld, RT.setup, RT.potSetup, RT.potRun, RT.finish }
@@ -5765,7 +5799,7 @@ function RT.S.expectedFor(rec)
         local removed = math.max(0, math.min(water - eth * p.targetWater, (inputs.quicklime_kg or 0) * p.waterPerKgLime))
         return { hours = dry.stages[1].hours, ethanol = eth, water = water - removed }
     end
-    return RT.D.expected(inputs.ethanol or 0, inputs.water or 0, rec.cond or 1, rec.machine)
+    return RT.PT.expected(inputs.ethanol or 0, inputs.water or 0, rec.cond or 1, rec.machine)
 end
 
 -- Machine i's record as it is now, kept once under ctx[key][i]: taken the
@@ -9066,7 +9100,8 @@ for _, group in ipairs({ RT.V.phaseA({ "wait_world", "find_pumps" }), { RT.V.cho
     "chain_1_pump_to_can", "chain_2_can_to_vehicle", "chain_3_vehicle_to_can", "g06_pump_to_vehicle",
     "g03_blend_can_to_vehicle", "g03_vehicle_idle", "g09_two_vehicles", "TLG.pour_petrol_into_vehicle",
     "TLG.pour_e100_into_vehicle_unconfirmed", "TLG.pour_e100_into_vehicle_confirmed",
-    "TLG.pour_diesel_into_vehicle_unconfirmed", "TLG.pour_diesel_into_vehicle_confirmed", "G03.gate_diesel",
+    "TLG.pour_diesel_into_vehicle_unconfirmed", "TLG.pour_diesel_into_vehicle_confirmed", "tlg_diesel_can_away",
+    "G03.gate_diesel",
     "g03_stall_incompatible", "G03.gate_station_fuel" }), { RT.finish } }) do
     for _, s in ipairs(group) do RT.chassisSteps[#RT.chassisSteps + 1] = s end
 end
@@ -15996,6 +16031,13 @@ function RT.WF.burn(name, i, litres, fail, done)
         end
         if ctx.phase == "start" then
             if v:isEngineRunning() then
+                -- The line a start on harmful fuel shows the driver.
+                local note, e0 = TLG.Notify.last, V.evaluate(v)
+                R:check(name .. ".start_names_the_wrong_fuel", function()
+                    return e0.harmful == true and note ~= nil and note.key == "IGUI_TLG_Note_WrongFuel" and note.fuel == e0.wrongFuel
+                        and has(note.text, getText("IGUI_TLG_Fuel_" .. tostring(e0.wrongFuel))),
+                        note and tostring(note.text) or "no line shown"
+                end)
                 ctx.phase, ctx.h = "settle", hours()
                 return nil
             end
@@ -16100,6 +16142,11 @@ RT.WF.generators = { name = "rtwf_generators", timeout = 3000, fn = function(ctx
         -- before: a litre gone at 15 times the wear factor, then one that
         -- fails it.
         local e = G.evaluate(g2)
+        local note = TLG.Notify.last
+        R:check("RTWF.generator_start_names_the_wrong_fuel", function()
+            return note ~= nil and note.key == "IGUI_TLG_Note_WrongFuel" and note.fuel == "gasoline",
+                note and tostring(note.text) or "no line shown"
+        end)
         local perLitre = E.generatorWearPerLitre(G.lowerChanceOneIn(g2), SandboxVars and SandboxVars.GeneratorFuelConsumption)
         -- Running, so that the failure has something to switch off.
         g2:setConnected(true)

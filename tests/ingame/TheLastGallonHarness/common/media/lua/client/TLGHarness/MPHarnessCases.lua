@@ -588,6 +588,13 @@ FU.afterStarts = probeFuel("after_generator_starts", function(m)
     FU.g1c = tonumber(m.g1Fuel)
     check("generator_on_petrol_starts", function() return m.g1On == "true", "g1 on=" .. tostring(m.g1On) end)
     check("generator_on_diesel_refused", function() return m.g2On == "false", "g2 on=" .. tostring(m.g2On) end)
+    -- The refused start damaged it, and the server told this player's client
+    -- (D-037, TLG/Notify.lua).
+    local note = TLG.Notify and TLG.Notify.last
+    check("refused_start_told_to_the_player_by_the_server", function()
+        return note ~= nil and note.key == "IGUI_TLG_Note_StartDamage" and note.fuel == "diesel",
+            note and tostring(note.text) or "no line reached the client"
+    end)
 end)
 
 -- The generator's record is reconciled with the game's burn when it is

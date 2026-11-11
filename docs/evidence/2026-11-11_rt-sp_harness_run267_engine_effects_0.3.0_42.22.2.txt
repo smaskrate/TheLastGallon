@@ -1,0 +1,146 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 92636
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, engine effects of poor fuel
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=934775535347131936 hours=2.0096 DayLength=4
+STEP rtd_setup begin
+OBS  RTD.sandbox :: Zombies=6 CarSpawnRate=1 TrafficJam=false VehicleStoryChance=1 ZoneStoryChance=1 DayLength=4 CarGasConsumption=1 VehicleStalls=true
+OBS  RTD.route column=10591 clear run=53 tiles from 4 tiles behind y=10815 (ended: unloaded at 10589,10864); vehicles removed 0
+PASS RTD.route_clear :: column 10591, 53 tiles clear (need 44)
+STEP rtd_spawn_stale begin
+OBS  RTD.stale.aligned heading 4.251 -> 0.000 degrees off the road in 2 measurement(s), angles -0.44,0.00,-0.01
+PASS RTD.stale.car_on_the_road_line :: 0.000 degrees
+OBS  RTD.stale.car id=255 at 10591.00,10815.00 forward(x,y,z)=0.0000,0.0078,1.0000 tankCap=59.00 parts Battery=100 BrakeFrontLeft=100 BrakeFrontRight=100 BrakeRearLeft=100 BrakeRearRight=100 DoorFrontLeft=100 DoorFrontRight=100 DoorRearLeft=100 DoorRearRight=100 Engine=100 EngineDoor=100 GasTank=100 GloveBox=100 HeadlightLeft=100 HeadlightRearLeft=100 HeadlightRearRight=100 HeadlightRight=100 Heater=100 Muffler=100 PassengerCompartment=100 Radio=100 SeatFrontLeft=100 SeatFrontRight=100 SeatRearLeft=100 SeatRearRight=100 SuspensionFrontLeft=100 SuspensionFrontRight=100 SuspensionRearLeft=100 SuspensionRearRight=100 TireFrontLeft=100 TireFrontRight=100 TireRearLeft=100 TireRearRight=100 TruckBed=100 TrunkDoor=100 WindowFrontLeft=100 WindowFrontRight=100 WindowRearLeft=100 WindowRearRight=100 Windshield=100 WindshieldRear=100
+STEP rtd_fill_stale begin
+OBS  RTD.stale.can_to_tank.before src initialized id=nil rev=0 total=10.0000 q[gasoline=10.0000,water=0.0000] deg[gasoline=0.2454] mic=0 stab=0
+OBS  RTD.stale.can_to_tank.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTD.stale.can_to_tank litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  RTD.stale.can_to_tank.after src initialized id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTD.stale.can_to_tank.after dst ok id=V264378871-1 rev=1 total=10.0000 q[gasoline=10.0000,water=0.0000] deg[gasoline=0.2454] mic=0 stab=0
+PASS RTD.stale.can_to_tank.litres_conserved :: out=10.00000 in=10.00000
+PASS RTD.stale.can_to_tank.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+PASS RTD.stale.can_to_tank.fuel_state_carried :: worst=2.01e-08 at deg:gasoline
+STEP rte_age_tank begin
+OBS  RTE.stale tank - id=V264378871-1 rev=1 total=10.0000 q[gasoline=10.0000,water=0.0000] deg[gasoline=2.6000] mic=0 stab=0; grade=poor compatible=true startFactor=0.712 reasons=aged powerFactor=0.851429 wearFactor=1.742857
+PASS RTE.stale.fuel_costs_power_and_wear :: compatible=true power 0.851429 wear 1.742857
+STEP rtd_drive_stale begin
+OBS  RTE.sandbox VehicleStalls=false
+OBS  RTD.stale.start driver=true grade=poor compatible=true startFactor=0.712 reasons=aged
+OBS  RTD.stale.before - id=V264378871-1 rev=1 total=10.0000 q[gasoline=10.0000,water=0.0000] deg[gasoline=2.6000] mic=0 stab=0
+OBS  RTD.stale.burn_counter installed=true via getmetatable
+OBS  RTD.stale.cruise set 25 km/h at 10591.00,10815.00 tank 10.0000 h 2.0814 multiplier 1.0
+OBS  RTD.stale.wear rate 15.0000 per litre at factor 2 (x100 fixture), engine 100
+OBS  RTD.stale.power base 4000 quality 100 loudness 48 factor 0.851429 target 3406
+OBS  RTD.stale.reached 24 km/h after 0.62 game min, 8.0 tiles
+OBS  RTD.stale.sample 12.6 tiles lateral -0.50 25.2 km/h tank 9.9920 engine true rpm 1660 regulator true 0.8 game min
+OBS  RTD.stale.sample 33.4 tiles lateral -0.50 24.9 km/h tank 9.9760 engine true rpm 2710 regulator true 1.6 game min
+OBS  RTD.stale.sample 54.2 tiles lateral -0.50 24.8 km/h tank 9.9760 engine true rpm 2669 regulator true 2.4 game min
+OBS  RTD.stale.sample 75.0 tiles lateral -0.50 24.8 km/h tank 9.9232 engine true rpm 3500 regulator true 3.2 game min
+OBS  RTD.stale.sample 95.8 tiles lateral -0.50 24.9 km/h tank 9.8582 engine true rpm 3500 regulator true 4.0 game min
+OBS  RTD.stale.sample 116.6 tiles lateral -0.50 24.7 km/h tank 9.7944 engine true rpm 3500 regulator true 4.8 game min
+OBS  RTD.stale.sample 137.4 tiles lateral -0.50 25.0 km/h tank 9.7296 engine true rpm 3500 regulator true 5.6 game min
+OBS  RTD.stale.sample 158.3 tiles lateral -0.50 24.9 km/h tank 9.7296 engine true rpm 3501 regulator true 6.4 game min
+OBS  RTD.stale.sample 179.0 tiles lateral -0.50 25.0 km/h tank 9.6659 engine true rpm 3500 regulator true 7.2 game min
+OBS  RTD.stale.sample 199.8 tiles lateral -0.50 25.0 km/h tank 9.6013 engine true rpm 3502 regulator true 8.0 game min
+OBS  RTD.stale.sample 220.6 tiles lateral -0.50 25.1 km/h tank 9.5378 engine true rpm 3500 regulator true 8.8 game min
+OBS  RTD.stale.sample 241.4 tiles lateral -0.50 24.9 km/h tank 9.4754 engine true rpm 3500 regulator true 9.6 game min
+OBS  RTD.stale.sample 262.2 tiles lateral -0.50 24.9 km/h tank 9.4754 engine true rpm 3500 regulator true 10.4 game min
+OBS  RTD.stale.sample 283.0 tiles lateral -0.50 25.2 km/h tank 9.4119 engine true rpm 3500 regulator true 11.3 game min
+OBS  RTD.stale.sample 303.8 tiles lateral -0.50 24.8 km/h tank 9.3475 engine true rpm 3500 regulator true 12.1 game min
+OBS  RTD.stale.sample 324.6 tiles lateral -0.50 25.1 km/h tank 9.2822 engine true rpm 3500 regulator true 12.9 game min
+OBS  RTD.stale.sample 345.4 tiles lateral -0.50 24.9 km/h tank 9.2201 engine true rpm 3500 regulator true 13.7 game min
+OBS  RTD.stale.brake (distance) at 350.0 tiles, 24.8 km/h
+PASS RTD.stale.power_lowered_while_running :: 4000 -> 3406 after 0.12 game min, held
+PASS RTD.stale.quality_and_loudness_kept :: quality 100 loudness 48
+OBS  RTD.stale.wear engine 100 -> 92, carry 0.000000 -> 0.689927; counted 14 minute(s), 0.779865 L, 8.689927 points due
+PASS RTD.stale.engine_worn_by_the_litres_burned :: 8 points taken + 0.689927 carried = 8.689927; due 8.689927
+PASS RTD.stale.ran_throughout :: ran
+OBS  RTD.stale.stopped after 352.1 tiles, 14.12 game min, top 25.3 km/h, final lateral -0.50, braked from 24.8 km/h (distance)
+OBS  RTD.stale.burn tank 10.000000 -> 9.220135 (0.779865 L); vanilla's burn 14 calls 0.779865 L (0.779865 L moving), other writes 0 (0.000000 L); first 10.000000->9.991968 at 23.1 km/h; 9.991968->9.975961 at 25.0 km/h; 9.975961->9.923213 at 24.9 km/h
+OBS  RTD.stale.burn_rate 0.0552 L per game minute, 0.2215 L per 100 tiles
+OBS  RTD.stale.after reconciled id=V264378871-1 rev=1 total=9.2201 q[gasoline=9.2201,water=0.0000] deg[gasoline=2.6003] mic=0 stab=0
+OBS  RTD.stale.parts before Battery=100 BrakeFrontLeft=100 BrakeFrontRight=100 BrakeRearLeft=100 BrakeRearRight=100 DoorFrontLeft=100 DoorFrontRight=100 DoorRearLeft=100 DoorRearRight=100 Engine=100 EngineDoor=100 GasTank=100 GloveBox=100 HeadlightLeft=100 HeadlightRearLeft=100 HeadlightRearRight=100 HeadlightRight=100 Heater=100 Muffler=100 PassengerCompartment=100 Radio=100 SeatFrontLeft=100 SeatFrontRight=100 SeatRearLeft=100 SeatRearRight=100 SuspensionFrontLeft=100 SuspensionFrontRight=100 SuspensionRearLeft=100 SuspensionRearRight=100 TireFrontLeft=100 TireFrontRight=100 TireRearLeft=100 TireRearRight=100 TruckBed=100 TrunkDoor=100 WindowFrontLeft=100 WindowFrontRight=100 WindowRearLeft=100 WindowRearRight=100 Windshield=100 WindshieldRear=100
+OBS  RTD.stale.parts after  Battery=100 BrakeFrontLeft=100 BrakeFrontRight=100 BrakeRearLeft=100 BrakeRearRight=100 DoorFrontLeft=100 DoorFrontRight=100 DoorRearLeft=100 DoorRearRight=100 Engine=92 EngineDoor=100 GasTank=100 GloveBox=100 HeadlightLeft=100 HeadlightRearLeft=100 HeadlightRearRight=100 HeadlightRight=100 Heater=100 Muffler=100 PassengerCompartment=100 Radio=100 SeatFrontLeft=100 SeatFrontRight=100 SeatRearLeft=100 SeatRearRight=100 SuspensionFrontLeft=100 SuspensionFrontRight=100 SuspensionRearLeft=100 SuspensionRearRight=100 TireFrontLeft=100 TireFrontRight=100 TireRearLeft=100 TireRearRight=100 TruckBed=100 TrunkDoor=100 WindowFrontLeft=100 WindowFrontRight=100 WindowRearLeft=100 WindowRearRight=100 Windshield=100 WindshieldRear=100
+PASS RTD.stale.burn_counter_reached :: installed=true vanilla calls=14
+PASS RTD.stale.burn_by_vanilla_only :: tank lost 0.779865 L, vanilla burned 0.779865 L, other writes 0 (0.000000 L)
+PASS RTD.stale.burn_reconciled_proportionally :: worst=4.44e-16 at deg:gasoline status=reconciled tlg=9.2201 native=9.2201
+PASS RTD.stale.no_impact :: no speed lost while not braking
+PASS RTD.stale.no_part_damaged :: every part but brakes, tires, suspension and muffler unchanged
+PASS RTD.stale.drove :: 352.1 tiles, top 25.3 km/h, 14.12 game min, stopped for distance
+OBS  RTD.stale.no_stall check skipped: grade=poor compatible=true startFactor=0.712 reasons=aged
+STEP rte_power_back begin
+PASS RTD.stale.power_back_after_the_stop :: power 4000 (own 4000) after 2.00 game min; quality 100 loudness 48; state nil
+STEP rtd_spawn_off begin
+OBS  RTD.off.aligned heading -10.888 -> -0.001 degrees off the road in 2 measurement(s), angles -0.46,-0.00,0.02
+PASS RTD.off.car_on_the_road_line :: -0.001 degrees
+OBS  RTD.off.car id=255 at 10591.00,10815.00 forward(x,y,z)=-0.0000,0.0081,1.0000 tankCap=39.00 parts Battery=100 BrakeFrontLeft=100 BrakeFrontRight=100 BrakeRearLeft=100 BrakeRearRight=100 DoorFrontLeft=100 DoorFrontRight=100 DoorRearLeft=100 DoorRearRight=100 Engine=100 EngineDoor=100 GasTank=100 GloveBox=100 HeadlightLeft=100 HeadlightRearLeft=100 HeadlightRearRight=100 HeadlightRight=100 Heater=100 Muffler=100 PassengerCompartment=100 Radio=100 SeatFrontLeft=100 SeatFrontRight=100 SeatRearLeft=100 SeatRearRight=100 SuspensionFrontLeft=100 SuspensionFrontRight=100 SuspensionRearLeft=100 SuspensionRearRight=100 TireFrontLeft=100 TireFrontRight=100 TireRearLeft=100 TireRearRight=100 TruckBed=100 TrunkDoor=100 WindowFrontLeft=100 WindowFrontRight=100 WindowRearLeft=100 WindowRearRight=100 Windshield=100 WindshieldRear=100
+STEP rtd_fill_off begin
+OBS  RTD.off.can_to_tank.before src initialized id=nil rev=0 total=8.0000 q[diesel=3.0000,gasoline=5.0000,water=0.0000] deg[diesel=0.0642,gasoline=0.1748] mic=0 stab=0
+OBS  RTD.off.can_to_tank.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTD.off.can_to_tank litres src 8.0000->0.0000 dst 0.0000->8.0000
+OBS  RTD.off.can_to_tank.after src initialized id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTD.off.can_to_tank.after dst ok id=V264378871-4 rev=1 total=8.0000 q[diesel=3.0000,gasoline=5.0000,water=0.0000] deg[diesel=0.0642,gasoline=0.1748] mic=0 stab=0
+PASS RTD.off.can_to_tank.litres_conserved :: out=8.00000 in=8.00000
+PASS RTD.off.can_to_tank.tlg_total_matches_native :: tlg=8.00000 native=8.00000 status=ok
+PASS RTD.off.can_to_tank.fuel_state_carried :: worst=1.96e-08 at deg:gasoline
+STEP rtd_drive_off begin
+OBS  RTE.sandbox VehicleStalls=false
+OBS  RTD.off.start driver=true grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+OBS  RTD.off.before - id=V264378871-4 rev=1 total=8.0000 q[diesel=3.0000,gasoline=5.0000,water=0.0000] deg[diesel=0.0642,gasoline=0.1748] mic=0 stab=0
+OBS  RTD.off.burn_counter installed=true via getmetatable
+OBS  RTD.off.cruise set 25 km/h at 10591.00,10815.00 tank 8.0000 h 2.3944 multiplier 1.0
+OBS  RTD.off.power base 4000 quality 100 loudness 40 factor 0.000000 target 2000
+OBS  RTD.off.reached 24 km/h after 0.76 game min, 10.9 tiles
+OBS  RTD.off.sample 12.1 tiles lateral -0.50 25.1 km/h tank 7.9920 engine true rpm 1790 regulator true 0.8 game min
+OBS  RTD.off.sample 32.8 tiles lateral -0.50 24.8 km/h tank 7.9742 engine true rpm 2990 regulator true 1.6 game min
+OBS  RTD.off.sample 53.6 tiles lateral -0.50 24.8 km/h tank 7.9742 engine true rpm 3104 regulator true 2.4 game min
+OBS  RTD.off.sample 74.3 tiles lateral -0.50 24.9 km/h tank 7.9120 engine true rpm 3500 regulator true 3.2 game min
+OBS  RTD.off.sample 95.1 tiles lateral -0.50 24.8 km/h tank 7.8466 engine true rpm 3500 regulator true 4.0 game min
+OBS  RTD.off.sample 115.8 tiles lateral -0.50 25.0 km/h tank 7.7817 engine true rpm 3500 regulator true 4.8 game min
+OBS  RTD.off.brake (distance) at 120.1 tiles, 24.8 km/h
+PASS RTD.off.power_lowered_while_running :: 4000 -> 2000 after 0.34 game min, held
+PASS RTD.off.quality_and_loudness_kept :: quality 100 loudness 40
+PASS RTD.off.fuel_unfit_for_the_engine :: grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+PASS RTD.off.no_stall_with_the_option_off :: ran 5.26 game min
+OBS  RTE.sandbox VehicleStalls=true
+OBS  RTD.off.stopped after 122.2 tiles, 5.26 game min, top 25.2 km/h, final lateral -0.50, braked from 24.8 km/h (distance)
+OBS  RTD.off.burn tank 8.000000 -> 7.781711 (0.218289 L); vanilla's burn 5 calls 0.218289 L (0.218289 L moving), other writes 0 (0.000000 L); first 8.000000->7.991967 at 20.5 km/h; 7.991967->7.974174 at 24.8 km/h; 7.974174->7.911985 at 24.9 km/h
+OBS  RTD.off.burn_rate 0.0415 L per game minute, 0.1787 L per 100 tiles
+OBS  RTD.off.after reconciled id=V264378871-4 rev=1 total=7.7817 q[diesel=2.9181,gasoline=4.8636,water=0.0000] deg[diesel=0.0643,gasoline=0.1748] mic=0 stab=0
+OBS  RTD.off.parts before Battery=100 BrakeFrontLeft=100 BrakeFrontRight=100 BrakeRearLeft=100 BrakeRearRight=100 DoorFrontLeft=100 DoorFrontRight=100 DoorRearLeft=100 DoorRearRight=100 Engine=100 EngineDoor=100 GasTank=100 GloveBox=100 HeadlightLeft=100 HeadlightRearLeft=100 HeadlightRearRight=100 HeadlightRight=100 Heater=100 Muffler=100 PassengerCompartment=100 Radio=100 SeatFrontLeft=100 SeatFrontRight=100 SeatRearLeft=100 SeatRearRight=100 SuspensionFrontLeft=100 SuspensionFrontRight=100 SuspensionRearLeft=100 SuspensionRearRight=100 TireFrontLeft=100 TireFrontRight=100 TireRearLeft=100 TireRearRight=100 TruckBed=100 TrunkDoor=100 WindowFrontLeft=100 WindowFrontRight=100 WindowRearLeft=100 WindowRearRight=100 Windshield=100 WindshieldRear=100
+OBS  RTD.off.parts after  Battery=100 BrakeFrontLeft=100 BrakeFrontRight=100 BrakeRearLeft=100 BrakeRearRight=100 DoorFrontLeft=100 DoorFrontRight=100 DoorRearLeft=100 DoorRearRight=100 Engine=100 EngineDoor=100 GasTank=100 GloveBox=100 HeadlightLeft=100 HeadlightRearLeft=100 HeadlightRearRight=100 HeadlightRight=100 Heater=100 Muffler=100 PassengerCompartment=100 Radio=100 SeatFrontLeft=100 SeatFrontRight=100 SeatRearLeft=100 SeatRearRight=100 SuspensionFrontLeft=100 SuspensionFrontRight=100 SuspensionRearLeft=100 SuspensionRearRight=100 TireFrontLeft=100 TireFrontRight=100 TireRearLeft=100 TireRearRight=100 TruckBed=100 TrunkDoor=100 WindowFrontLeft=100 WindowFrontRight=100 WindowRearLeft=100 WindowRearRight=100 Windshield=100 WindshieldRear=100
+PASS RTD.off.burn_counter_reached :: installed=true vanilla calls=5
+PASS RTD.off.burn_by_vanilla_only :: tank lost 0.218289 L, vanilla burned 0.218289 L, other writes 0 (0.000000 L)
+PASS RTD.off.burn_reconciled_proportionally :: worst=1.39e-16 at deg:gasoline status=reconciled tlg=7.7817 native=7.7817
+PASS RTD.off.no_impact :: no speed lost while not braking
+PASS RTD.off.no_part_damaged :: every part but brakes, tires, suspension and muffler unchanged
+PASS RTD.off.drove :: 122.2 tiles, top 25.2 km/h, 5.26 game min, stopped for distance
+OBS  RTD.off.no_stall check skipped: grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+STEP rte_power_back begin
+PASS RTD.off.power_back_after_the_stop :: power 4000 (own 4000) after 2.00 game min; quality 100 loudness 40; state nil
+STEP rte_gen_setup begin
+OBS  RTE.gen put down at 10598,10805 ok=true err=nil type=Base.Generator fuel=0.0000 condition=100 oneIn=30
+PASS RTE.gen.item_rate_found :: ConditionLowerChanceOneIn 30
+STEP rte_gen_fuel begin
+OBS  rte_gen_fuel fuel 0.0000 -> 8.0000 record - id=G264378871-7 rev=1 total=8.0000 q[gasoline=8.0000,water=0.0000] deg[gasoline=0.3324] mic=0 stab=0
+STEP rte_gen_age begin
+OBS  RTE.gen aged record - id=G264378871-7 rev=1 total=8.0000 q[gasoline=8.0000,water=0.0000] deg[gasoline=3.0000] mic=0 stab=0; grade=poor compatible=true startFactor=0.7000000000000001 reasons=aged wearFactor=1.750000
+PASS RTE.gen.fuel_wears :: wear 1.750000
+STEP rte_gen_run begin
+OBS  RTE.gen ran 6.00 game h activated=true: fuel 8.0000 -> 7.9880, condition 100 -> 100 (vanilla's own wear)
+STEP rte_gen_charge begin
+OBS  RTE.gen fuel at the charge: aged id=G264378871-7 rev=1 total=7.9880 q[gasoline=7.9880,water=0.0000] deg[gasoline=3.0089] mic=0 stab=0 wearFactor=1.752214
+OBS  RTE.gen charge: 0.011999 L burned since the record was written, 333.3333 points a litre at factor 2 (x100 fixture), factor 1.752214: 3.008638 due; condition 100 -> 97, carry 0.000000 -> 0.008638
+PASS RTE.gen.worn_by_the_litres_burned :: 3 points taken + 0.008638 carried; due 3.008638
+OBS  rte_gen_charge fuel 7.9880 -> 9.9880 record - id=G264378871-7 rev=2 total=9.9880 q[gasoline=9.9880,water=0.0000] deg[gasoline=2.4305] mic=0 stab=0
+STEP rte_gen_again begin
+PASS RTE.gen.not_charged_twice :: 0 more point(s), condition 97 -> 97
+STEP rte_cleanup begin
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 8.59
+SUMMARY pass=36 fail=0
+DONE

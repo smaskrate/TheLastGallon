@@ -6,7 +6,7 @@ build until it is tested there again. The rows below were verified on
 modes were run again and all passed (launches 216–226, `test-results.md`);
 the other modes have not been run again on this build. The biodiesel
 pathway, the diesel generator, the diesel vehicles and the diesel pumps
-(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250).
+(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), and wrong-fuel damage (version 0.3.0, D-037) in launches 261–278.
 
 Evidence levels:
 
@@ -91,11 +91,26 @@ A tank's capacity varies with the condition of the tank fitted
 from the part each time.
 
 Per-instance part modData and `setEngineFeature` act on one vehicle only
-(G09, RT-SP with two `Base.CarNormal`). Start gate (`ISStartVehicleEngine`,
-RT-SP run 6): a 36 % ethanol blend is refused and the engine stays off;
+(G09, RT-SP with two `Base.CarNormal`). Start gate (`ISStartVehicleEngine`):
+a blend the engine cannot take is refused and the engine stays off;
 station fuel starts. Stall: the per-minute effect handler stalled an engine
-running on that blend within a game minute. Run 62 repeated all of these
-on two `Base.PickUpTruck`.
+running on that blend within a game minute. Since 0.3.0 the blend is over
+30 % diesel (launches 263, 272, 278, 279); until 0.2.0 it was 36 % ethanol
+(RT-SP run 6, and run 62 on two `Base.PickUpTruck`), which now runs a
+stock engine lean (D-037).
+
+Wrong fuel (D-037, launch 271, `Base.CarNormal`, `Base.VanAmbulance`,
+`Base.PickUpVanLightsFire`): the verdict for every band of
+`balance.md`'s table; a start refused on 40 % diesel cost the petrol car 1
+engine condition and 2 % battery charge and showed the driver a line; on
+20 % diesel 4 L cost it 3 engine and 2 exhaust (`Muffler`) condition; the
+ambulance on a third petrol lost 2 engine condition for 2 L; the pickup
+van on pure petrol failed when the draw was held at 0 (condition 0,
+stopped, no restart); the ambulance siphoned with vanilla's
+`ISTakeGasolineFromVehicle`, refilled with diesel and started clean. The
+draws were held and the litres taken from the tank by the test. NOT RUN:
+a flex-converted engine with diesel, driving on a wrong fuel, a stall on
+it, an unforced failure, a repair, a server.
 
 Driving (RT-SP run 176, `Base.CarNormal` on a cleared straight road): on
 E10, 352 tiles at 25 km/h burned 0.778 L. All of it was the game's own
@@ -138,8 +153,14 @@ the Gas2Go pump: 0.22–0.23 %, `startFactor=0.5`). The
 - **Verified RT-SP** on `Base.Generator`: max fuel 10 L; idle burn 0.015 L
   in 0.5–1.3 game hours, connected with no appliance drawing; the native
   burn is reconciled proportionally into the record.
-- Start gate (`ISActivateGenerator`, RT-SP run 6): activates on petrol,
-  refused on E100.
+- Start gate (`ISActivateGenerator`): activates on petrol, refused on a
+  tank of diesel, which costs it condition (launches 263, 272, 278, 279; until
+  0.2.0 the refusal was on E100, RT-SP run 6, which now starts 1 time in 3
+  and wears: D-037).
+- Wrong fuel (D-037, launch 271): on 40 % diesel the start refused, 1
+  condition lost, the line shown; drained into a can by the mod's
+  transfer, refilled with petrol, the verdict clean. NOT RUN: running on
+  10 to 30 % diesel, a flex generator with diesel.
 - Flex conversion (RT-SP run 8): commissioned on a `Base.Generator`, which
   then took dried ethanol without confirmation, activated on it and kept
   the conversion and fuel across reload.
@@ -162,9 +183,14 @@ list that offers `Base.Generator` offers it at half that weight.
 - **Verified RT-SP** (launches 236–243): put down, it is an `IsoGenerator`
   that keeps its item type; biodiesel through the mod's pour, started, run
   two game hours with its record following; petrol through vanilla's
-  `ISAddFuel` recorded as petrol and refused at the start; taken with
+  `ISAddFuel` recorded as petrol (its start is refused when the roll is
+  lost, launch 264; under 0.2.0 always); taken with
   vanilla's `ISTakeGenerator` as itself, a vanilla generator beside it as
-  `Base.Generator`; sprite, type, profile and fuel kept through a save and
+  `Base.Generator`; on pure petrol (launch 271, D-037) it started, 1 L
+  gone cost it 46 condition (67 hours at the reference load with
+  `GeneratorFuelConsumption` 0.1), it failed when the draw was held at 0,
+  was switched off and vanilla's switch-on was invalid at condition 0;
+  sprite, type, profile and fuel kept through a save and
   a reload; rolled from `CrateGenerator`'s list as the game fills a
   container (27 in 500 fills, launch 239).
 - **Verified RT-MP** (launch 248): drawn on the client with its sprite;
@@ -236,9 +262,11 @@ both on one computer (RT-MP, 2026-11-03 to 2026-11-06):
     dropped from the inventory, it runs again at once where it lands;
   - at the pumps: a pump into a can, a can into a car, a pump into a car,
     a can into a generator, each with its fuel's record; the TLG pour
-    into a generator, ethanol refused into a petrol one and poured on
-    confirmation into another, with the result shown to the player;
-  - a generator started on petrol and refused on ethanol, its burn
+    into a generator, diesel refused into a petrol one and poured on
+    confirmation into another, with the result shown to the player
+    (launches 269 and 277; ethanol until 0.2.0);
+  - a generator started on petrol and refused on diesel, the refusal's
+    line reaching the player's client from the server (launch 277), its burn
     followed, its record carried when it is taken and put back; a car
     started with its key and idling, its burn followed;
   - a generator converted to flex fuel at the workshop

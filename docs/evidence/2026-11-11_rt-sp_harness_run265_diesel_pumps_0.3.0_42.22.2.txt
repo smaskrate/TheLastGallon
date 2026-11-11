@@ -1,0 +1,62 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 95236
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, diesel at some pumps
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=52956844053330447857 hours=2.0096 DayLength=4
+STEP rtbdm_setup begin
+STEP rtdp_find begin
+PASS RTDP.new_world_has_diesel :: dieselVehicles=true
+OBS  RTDP.drawn 8 pumps, 2 diesel by this world's draw (share 0.25): 10636,10622=diesel 10636,10623=gasoline 10636,10629=gasoline 10636,10630=gasoline 10654,10622=gasoline 10654,10623=gasoline 10654,10629=gasoline 10654,10630=diesel
+PASS RTDP.one_pump_diesel_one_petrol :: pump 10636,10622 - id=R29888978-1 rev=0 total=15333.0000 q[diesel=15297.6895,sediment=12.3656,water=22.9449] deg[diesel=0.0764] mic=0.9511193645208742 stab=0 | pump 10636,10623 - id=R29888978-2 rev=0 total=4572.0000 q[gasoline=4551.6237,sediment=3.5257,water=16.8506] deg[gasoline=0.0096] mic=0 stab=0
+STEP label_diesel begin
+PASS RTDP.label_diesel :: entry=true reply ok=true primary=diesel reason=nil dialog=This pump gives Diesel.
+STEP label_petrol begin
+PASS RTDP.label_petrol :: entry=true reply ok=true primary=gasoline reason=nil dialog=This pump gives Gasoline.
+STEP rtdp_pump_to_can begin
+OBS  RTDP.diesel_pump_to_can.before src ok id=R29888978-1 rev=0 total=15333.0000 q[diesel=15297.6895,sediment=12.3656,water=22.9449] deg[diesel=0.0764] mic=0.9511214286429207 stab=0
+OBS  RTDP.diesel_pump_to_can.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTDP.diesel_pump_to_can litres src 15333.0000->15313.0000 dst 0.0000->20.0000
+OBS  RTDP.diesel_pump_to_can.after src ok id=R29888978-1 rev=1 total=15313.0000 q[diesel=15277.7355,sediment=12.3495,water=22.9150] deg[diesel=0.0764] mic=0.9511396167442272 stab=0
+OBS  RTDP.diesel_pump_to_can.after dst ok id=S29888978-3 rev=1 total=20.0000 q[diesel=19.9539,sediment=0.0161,water=0.0299] deg[diesel=0.0764] mic=0.9511396167442272 stab=0
+PASS RTDP.diesel_pump_to_can.litres_conserved :: out=20.00000 in=20.00000
+PASS RTDP.diesel_pump_to_can.tlg_total_matches_native :: tlg=20.00000 native=20.00000 status=ok
+PASS RTDP.diesel_pump_to_can.fuel_state_carried :: worst=4.28e-09 at deg:diesel
+PASS RTDP.can_holds_diesel :: fluids total=20.0000 [TLG_FuelSediment=0.0161,TLG_FuelWater=0.0299,TLG_Diesel=19.9539]; pump units 15333 -> 15313 for 20.0000 L
+STEP ambulance_at_the_diesel_pump begin
+OBS  RTDP.ambulance_at_the_diesel_pump.before src ok id=R29888978-1 rev=1 total=15313.0000 q[diesel=15277.7355,sediment=12.3495,water=22.9150] deg[diesel=0.0764] mic=0.9511399220461138 stab=0
+OBS  RTDP.ambulance_at_the_diesel_pump.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTDP.ambulance_at_the_diesel_pump litres src 15313.0000->15248.0000 dst 0.0000->65.0000
+OBS  RTDP.ambulance_at_the_diesel_pump.after src ok id=R29888978-1 rev=2 total=15248.0000 q[diesel=15212.8849,sediment=12.2971,water=22.8180] deg[diesel=0.0764] mic=0.9511989497906963 stab=0
+OBS  RTDP.ambulance_at_the_diesel_pump.after dst ok id=V29888978-4 rev=1 total=65.0000 q[diesel=64.8503,sediment=0.0524,water=0.0973] deg[diesel=0.0764] mic=0.9511989497906963 stab=0
+PASS RTDP.ambulance_at_the_diesel_pump.litres_conserved :: out=65.00000 in=65.00000
+PASS RTDP.ambulance_at_the_diesel_pump.tlg_total_matches_native :: tlg=65.00000 native=65.00000 status=ok
+PASS RTDP.ambulance_at_the_diesel_pump.fuel_state_carried :: worst=1.32e-08 at deg:diesel
+PASS RTDP.ambulance_at_the_diesel_pump.tank_holds_diesel :: - id=V29888978-4 rev=1 total=65.0000 q[diesel=64.8503,sediment=0.0524,water=0.0973] deg[diesel=0.0764] mic=0.9511989497906963 stab=0; grade=good compatible=true startFactor=0.5 reasons=microbial,water
+STEP RTDP.ambulance_starts begin
+OBS  RTDP.ambulance_starts driver=true battery=1.00 engine=100 grade=good compatible=true startFactor=0.5 reasons=microbial,water
+OBS  RTDP.ambulance_starts state=Running running=true attempts=1 refusal=nil
+PASS RTDP.ambulance_starts.running :: state=Running attempts=1 refusal=nil
+STEP pickup_van_at_the_petrol_pump begin
+OBS  RTDP.pickup_van_at_the_petrol_pump.before src ok id=R29888978-2 rev=0 total=4572.0000 q[gasoline=4551.6236,sediment=3.5257,water=16.8506] deg[gasoline=0.0097] mic=0 stab=0
+OBS  RTDP.pickup_van_at_the_petrol_pump.before dst - id=nil rev=0 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTDP.pickup_van_at_the_petrol_pump litres src 4572.0000->4497.0000 dst 0.0000->75.0000
+OBS  RTDP.pickup_van_at_the_petrol_pump.after src ok id=R29888978-2 rev=1 total=4497.0000 q[gasoline=4476.9579,sediment=3.4679,water=16.5743] deg[gasoline=0.0098] mic=0 stab=0
+OBS  RTDP.pickup_van_at_the_petrol_pump.after dst ok id=V29888978-5 rev=1 total=75.0000 q[gasoline=74.6657,sediment=0.0578,water=0.2764] deg[gasoline=0.0098] mic=0 stab=0
+PASS RTDP.pickup_van_at_the_petrol_pump.litres_conserved :: out=75.00000 in=75.00000
+PASS RTDP.pickup_van_at_the_petrol_pump.tlg_total_matches_native :: tlg=75.00000 native=75.00000 status=ok
+PASS RTDP.pickup_van_at_the_petrol_pump.fuel_state_carried :: worst=3.45e-08 at deg:gasoline
+PASS RTDP.pickup_van_at_the_petrol_pump.tank_holds_gasoline :: - id=V29888978-5 rev=1 total=75.0000 q[gasoline=74.6657,sediment=0.0578,water=0.2764] deg[gasoline=0.0098] mic=0 stab=0; grade=poor compatible=true startFactor=0.125 reasons=water,wrong_fuel_3_gasoline
+STEP rtdp_roll_held begin
+STEP RTDP.pickup_van_refused begin
+OBS  RTDP.pickup_van_refused driver=true battery=1.00 engine=100 grade=poor compatible=true startFactor=0.125 reasons=water,wrong_fuel_3_gasoline
+OBS  RTDP.pickup_van_refused state=Idle running=false attempts=1 refusal=vehicle start refused: water,wrong_fuel_3_gasoline
+PASS RTDP.pickup_van_refused.refused_by_tlg :: vehicle start refused: water,wrong_fuel_3_gasoline
+STEP rtdp_roll_free begin
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.81
+SUMMARY pass=18 fail=0
+DONE

@@ -81,6 +81,7 @@ description=[list]
 description=[*]Fuel left behind by the old world slowly goes stale. How fast depends on what it is, how it is stored, how warm it gets and whether the container is sealed. Water and sediment get in too, and diesel can grow sludge.
 description=[*]Look and smell, or take a sample with a sampling kit, to judge what you found. Filter it, drain the water, add stabilizer, seal it, clean old containers.
 description=[*]Poor fuel makes engines hard to start and stalls them, costs a car power and wears car and generator engines. A sandbox option turns the stalls off.
+description=[*]The wrong fuel damages an engine: diesel in a petrol engine, petrol or ethanol in a diesel, too much ethanol in an engine that is not converted. A sandbox option turns that damage off.
 description=[*]About one gas station in ten holds water-contaminated fuel: sample before you fill up.
 description=[/list]
 description=

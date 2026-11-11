@@ -548,6 +548,8 @@ local function installStartGate()
                 TLG.Log.debug("generator start refused: %s", table.concat(e.reasons, ","))
                 return true
             end
+            -- Let through on fuel that harms it: the player is told.
+            if ok and e and e.harmful then TLG.Notify.send(self.character, "IGUI_TLG_Note_WrongFuel", e.wrongFuel) end
         end
         return orig(self)
     end)

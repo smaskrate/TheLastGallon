@@ -5529,3 +5529,150 @@ an install through the Steam Workshop. Not uploaded.
 
 Evidence:
 [run 260](evidence/2026-11-11_rt-sp_harness_run260_release_zip_0.2.0_42.22.2.txt).
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 261–279 (wrong fuel damages engines, D-037, version 0.3.0)
+
+Build 42.22.2, branch `feature/wrong-fuel`, the repository's mod (no
+package). The domain suite has 270 cases, 0 failed: 13 new in
+`tests/domain/test_wrong_fuel.lua` (every band of every rule), 7 in
+`tests/integration/test_wrong_fuel_damage.lua` (the adapters) and one in
+`tests/authority/test_transactions.lua` (the pour).
+
+`tools\run-sp-harness.ps1 -Mode wrong-fuel` is new: a new world, a petrol
+car, a diesel ambulance and pickup van, a petrol generator and a Diesel
+Generator, each given tanks of known blends. Every roll is held, and the
+litres "burned" are taken out of the tank by the step while the engine
+runs.
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 261 | `wrong-fuel`, first pass (mod still 0.2.0 by version) | 40/0, and one step of the test raised an error |
+| 262 | `wrong-fuel` | 42/0 |
+| 263 | full | 99/6, then 14/0 |
+| 264 | `diesel-generator` (with its save and reload) | 19/0, then 3/0 |
+| 265 | `diesel-pumps` | 18/0 |
+| 266 | `driving` | 26/0 |
+| 267 | `engine-effects` | 36/0 |
+| 268 | `pot-still` | 3/0, then the mode's own error |
+| 269 | RT-MP `-Clients 1 -Only fuel` | 20/0 |
+| 270 | RT-MP `-Clients 2 -Only effects` | A 22/0, B 9/0 |
+| 271 | `wrong-fuel`, the finished code | 46/0 |
+| 272 | full | 104/1, then 14/0 |
+| 273 | `pot-still` | 28/0 |
+| 274 | `manual` | 10/0 |
+| 275 | `italian` | 5/0 |
+| 276 | `manual-italian` | 10/0 |
+| 277 | RT-MP `-Clients 1 -Only fuel` | 21/0 |
+| 278 | full | 104/1, then 14/0 |
+| 279 | full | 105/0, then 14/0 |
+
+Launch 271, what was seen:
+
+* The verdict for 14 blends on the petrol car and the ambulance, each
+  with the text a refused pour shows: the three bands of diesel in a
+  petrol engine, 20 % biodiesel (wear factor 7.2 against diesel's 6),
+  40 % and pure ethanol in the stock petrol engine, the three bands of
+  petrol and of ethanol in the diesel, and each engine's own fuel clean.
+* Petrol car on 40 % diesel: the start refused through
+  `ISStartVehicleEngine`; engine condition 100 to 99, battery charge 1.00
+  to 0.98, the line "Wrong fuel (Diesel): the engine will not start, and
+  trying damages it".
+* The same car on 20 % diesel, started (the line "Wrong fuel (Diesel): it
+  damages this engine while it runs"): 4.001 L gone at wear factor 6 took
+  3 engine condition with 0.0015 carried (3.0015 due) and 2 exhaust
+  condition (2.0010 due).
+* Ambulance with 10 L of diesel: 5 L of petrol refused by the mod's pour
+  (`incompatible`, nothing moved), poured with the confirmation. On that
+  third of petrol, 2.001 L at wear factor 8 took 2 engine condition with
+  0.1021 carried (2.1021 due); the exhaust untouched.
+* Pickup van on pure petrol, the failure draw held at 0: after 1 L the
+  engine's condition was 0, it had stopped, the line "The engine has
+  failed: wrong fuel (Gasoline)" was shown, and a new start through the
+  game's action left it Idle.
+* The cure: the ambulance siphoned with `ISTakeGasolineFromVehicle` into
+  two cans (10.00 and 3.00 L, each two thirds diesel and one third
+  petrol by its record), 10 L of diesel poured without a confirmation,
+  the verdict clean, a start at the first try.
+* Petrol generator on 40 % diesel: the start refused, condition 100 to
+  99, the line shown. Drained into a can by the transfer the menu sends
+  (5.00 L: 2 diesel, 3 petrol), 3 L of petrol poured, the verdict clean.
+* Diesel Generator on pure petrol: started, with the line. 1 L gone
+  (66.7 hours at the reference load with `GeneratorFuelConsumption` 0.1)
+  took 46 condition, as the rule gives. With the failure draw at 0 the
+  next litre put it at condition 0 and switched it off, and the game's
+  `ISActivateGenerator:isValid()` was false.
+* With `WrongFuelDamage` off: pure petrol in the ambulance and 40 %
+  diesel in the generator incompatible (`incompatible_fuel`), nothing
+  harmful, no condition taken by a refused start.
+
+What the launches found and what was changed for it:
+
+* Launch 261: the step after the refused start subtracted from a part
+  the test read wrongly (the test's helper; fixed). A litre in a
+  generator lasts 67 hours at the default sandbox value, so a failure
+  chance by the litre would almost never fall for a generator: its odds
+  now follow the hours the litres lasted. A generator at condition 0
+  stayed switched on when the test switched it on: the mod now switches
+  a failed generator off.
+* Launches 263, 272 and 278, the full run's crafting step: a crafted
+  vessel fell to the floor instead of staying in the inventory. The game
+  drops a crafted item when the inventory, with it, is over the
+  character's effective capacity (SRC `ActionManager.lua`). Launch 263
+  carried two cans more, from the test's two new diesel pours (now one
+  can, taken away), which also failed five later checks; in 272 and 278
+  only the vessel fell. The character now carries without a limit from
+  the crafting step on, as in the other modes, and launch 279 passed.
+  Why the load at that step was 0.5 to 1.4 above the 0.2.0 runs' was not
+  found.
+* Launch 268: the pot-still mode failed at its first phase. The driving
+  section of the harness, added on 2026-11-04, took the name of the pot
+  still's table (`RT.D`), so the mode had not run since. Renamed
+  (`RT.PT`); launch 273 passed 28/0.
+* The gate tests that relied on ethanol blocking a stock engine use
+  diesel since this version: the full run's `G03.gate_diesel` and
+  `G04.gate_diesel` (the generator's refused start cost it 1 condition),
+  the driving and engine-effects modes' unfit blend, the multiplayer
+  fuel and effects cases. The diesel-generator and diesel-pumps modes
+  hold the start roll where they expect petrol to keep a diesel from
+  starting: petrol now gives a start factor of 0.25 (0.125 at the pump,
+  with its water).
+* Launch 277: the server's line for a refused start reached the
+  player's client ("Wrong fuel (Diesel): …").
+
+Between launches 270 and 271 the mod gained the line shown when an engine
+starts on harmful fuel, the reworded dialog of a refused pour and the
+Field Manual's two corrected lines. Launches 264–267, 269 and 270 ran
+before that and were not repeated.
+
+Consoles: no TLG error or warning in any launch; the only exceptions are
+the harness's deep-recursion probe and, in the Italian mode, the game's
+"Missing arguments" warnings for strings the test reads without their
+arguments (29).
+
+Not run: a flex-converted engine with diesel; ethanol's rows beyond the
+verdict, and the cold; a stall on a wrong fuel; driving on one; a failure
+by an unforced draw; a repair of a failed engine or generator; a save
+holding a wrong blend, and a 0.2.0 save loaded with 0.3.0; on a server,
+everything but the generator's refused start and its line; the new lines
+and the dialog read in Italian in game; a package.
+
+Evidence:
+[run 261](evidence/2026-11-11_rt-sp_harness_run261_wrong_fuel_first_42.22.2.txt);
+[run 262](evidence/2026-11-11_rt-sp_harness_run262_wrong_fuel_42.22.2.txt);
+[run 263](evidence/2026-11-11_rt-sp_harness_run263_full_first_0.3.0_42.22.2.txt);
+[run 264](evidence/2026-11-11_rt-sp_harness_run264_diesel_generator_0.3.0_42.22.2.txt);
+[run 265](evidence/2026-11-11_rt-sp_harness_run265_diesel_pumps_0.3.0_42.22.2.txt);
+[run 266](evidence/2026-11-11_rt-sp_harness_run266_driving_0.3.0_42.22.2.txt);
+[run 267](evidence/2026-11-11_rt-sp_harness_run267_engine_effects_0.3.0_42.22.2.txt);
+[run 268](evidence/2026-11-11_rt-sp_harness_run268_pot_still_name_clash_42.22.2.txt);
+[run 269](evidence/2026-11-11_rt-mp_harness_run269_fuel_0.3.0_42.22.2.txt);
+[run 270](evidence/2026-11-11_rt-mp_harness_run270_effects_0.3.0_42.22.2.txt);
+[run 271](evidence/2026-11-11_rt-sp_harness_run271_wrong_fuel_0.3.0_42.22.2.txt);
+[run 272](evidence/2026-11-11_rt-sp_harness_run272_full_one_failure_0.3.0_42.22.2.txt);
+[run 273](evidence/2026-11-11_rt-sp_harness_run273_pot_still_0.3.0_42.22.2.txt);
+[run 274](evidence/2026-11-11_rt-sp_harness_run274_manual_0.3.0_42.22.2.txt);
+[run 275](evidence/2026-11-11_rt-sp_harness_run275_italian_0.3.0_42.22.2.txt);
+[run 276](evidence/2026-11-11_rt-sp_harness_run276_manual_italian_0.3.0_42.22.2.txt);
+[run 277](evidence/2026-11-11_rt-mp_harness_run277_fuel_0.3.0_42.22.2.txt);
+[run 278](evidence/2026-11-11_rt-sp_harness_run278_full_one_failure_0.3.0_42.22.2.txt);
+[run 279](evidence/2026-11-11_rt-sp_harness_run279_full_0.3.0_42.22.2.txt).

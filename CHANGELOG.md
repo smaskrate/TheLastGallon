@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.3.0 (not released)
+
+* Wrong fuel damages engines. Diesel or biodiesel in a petrol or converted
+  (flex) engine, petrol or ethanol in a diesel, and ethanol past a stock
+  petrol engine's limit no longer just stop the engine from starting. The
+  more of the wrong fuel is in the tank, the worse the engine starts and
+  runs and the faster it wears; with enough of it some engines do not
+  start at all, and each try then costs engine condition. Unburned diesel
+  wears a car's exhaust, and a diesel running on mostly petrol or ethanol
+  can fail outright. `docs/player-guide.md`, "Wrong fuel", has every row
+  and its numbers. The order of harm follows real engines: petrol or
+  ethanol in a diesel is the worst case.
+* A line over the character says when a start damaged the engine, when an
+  engine failed, and when an engine starts on fuel that harms it.
+* **Pour into this vehicle's tank** and **Pour into the generator** refuse
+  a pour that would harm the engine until confirmed. The game's own **Add
+  Fuel** and pumps do not check.
+* New sandbox option **Wrong fuel damages engines**, on by default. Off,
+  such fuel only stops the engine from starting, as in 0.2.0.
+* A save from 0.2.0 changes behaviour: an engine that refused to start on
+  such a blend now starts, or tries to, and is damaged. Siphon or drain
+  the tank first.
+* The Field Manual's two lines on ethanol in stock engines say so.
+
 ## 0.2.0 (2026-11-11)
 
 * Biodiesel. Five new machines turn wood and cooking oil into biodiesel:

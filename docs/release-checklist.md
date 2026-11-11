@@ -53,6 +53,28 @@ The full single-player run passes with 0.2.0 (launches 245, 251 and 258:
 changed. The other older modes and the multiplayer cases written before
 0.2.0 have not been run with it.
 
+## Version 0.3.0 (not released)
+
+Version 0.3.0, on the branch `feature/wrong-fuel`, adds wrong-fuel damage
+(D-037): bands by the wrong fuel's share in place of the plain block,
+with engine, exhaust and battery damage and a chance of failure. Where it
+stands against the gates it touches:
+
+| # | For 0.3.0 | Evidence and what is open |
+| --- | --- | --- |
+| 1, 2 | PARTIAL | Every band's verdict and each mechanism once per engine group in single player; the siphon and drain cures (launch 271). The mod's pours refuse a harmful blend until confirmed (launches 271, 277). Open: a flex engine with diesel, ethanol's rows beyond the verdict, driving on a wrong fuel |
+| 3 | PARTIAL | Wear charged for the litres gone, engine and exhaust, to within 0.06 of the rule (launch 271). The litres were taken out of the tank by the test; the draws were held. Open: an unforced failure |
+| 5 | PARTIAL | One client on a server: a generator refused on diesel and the line reaching the player (launch 277); the effects case on the new unfit blend, two clients (launch 270). Open: every other mechanism on a server |
+| 6 | OPEN | A save holding a wrong blend, and a save from 0.2.0 loaded with 0.3.0, are not run |
+| 10 | PARTIAL | 326 Italian strings as shipped (launch 275); the Field Manual's two changed lines read in both languages (launches 274, 276); the player guide's "Wrong fuel" section. Open: the new lines and dialog read in Italian in game |
+| 11 | OPEN | Performance not measured with the new rules (the evaluation runs once a minute for each running vehicle, as before) |
+| 12 | OPEN | No 0.3.0 zip built or rehearsed |
+
+Modes re-run on 0.3.0 because their checks changed: the full run, diesel
+generator, diesel pumps, driving, engine effects, pot still, manual,
+Italian, and the multiplayer fuel and effects cases (launches 263–279,
+`test-results.md`). Not re-run: every other mode.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
@@ -664,6 +686,7 @@ tools\run-mp-harness.ps1 -Clients 1 -Only knowledge -Restart  # the same with th
 tools\run-mp-harness.ps1 -Clients 2 -Only death     # A dies carrying a running vessel; B asks the server where it fell and whether it works from the death; ~4 min
 tools\make-preview.ps1                # the Workshop preview, the mod list's poster and icon (Blender), into art-src and the mod
 tools\package.ps1                     # the release zip (never uploads)
+tools\run-sp-harness.ps1 -Mode wrong-fuel                       # wrong fuel damages engines (D-037): every band's verdict, a refused start's cost, wear, a failure, the cures, the option off; no save; ~3 min
 tools\rehearse-install.ps1            # that zip installed in a fresh cache and played through a save; ~20 min
 tools\rehearse-install.ps1 -Scenario existing   # a save played 10 days without the mod, then with it; ~30 min
 tools\rehearse-install.ps1 -Scenario removal    # a save with the mod, continued without it, then with it again; ~4 min

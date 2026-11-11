@@ -1,0 +1,22 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 31768
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, real game clock, pot still
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=3278316394931195124 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2296 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2296 game h in 300 ticks
+STEP rtpot_sites begin
+OBS  RTPOT.spots character 10618,10628; fermenter 10617,10628 pot still 10617,10629 drying column 10618,10629; grid power=true
+PASS RTPOT.grid_is_on :: isHydroPowerOn=true
+PASS RTPOT.all_in_a_room :: in a room: true,true,true,true
+STEP rtpot_run begin
+STEPERR rtpot_run :: attempted index: ferment of non-table: null java.lang.RuntimeException
+STEP rt_finish begin
+OBS  RT.summary game hours 2.01 -> 4.25
+SUMMARY pass=3 fail=0
+DONE
