@@ -97,6 +97,8 @@
 --              down, fuelled with biodiesel and with petrol, started
 --   sp-rtdv -> diesel vehicles: the chosen chassis' profile and fuel in a
 --              new world, a start on diesel, biodiesel taken, petrol refused
+--   sp-rtcm -> the mod's world menu entries only where the click is on their
+--              thing: a can, a machine, a generator, a car
 --   sp-rtwf -> wrong fuel (D-037): the verdict for every band, a refused
 --              start's cost, wear, a failure, the cures, the option off
 --   sp-rtdp -> diesel at some pumps: what a pump gives read from its menu,
@@ -126,7 +128,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtcm" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -1331,8 +1333,33 @@ local function machineClick(label, item, key)
         getText(key))
 end
 
+-- The Workshop menu is for the generator or vehicle clicked (0.3.1). The
+-- steps stand by the device they work on: the generator within two tiles and
+-- the vehicle within four, which the menu took by itself until 0.3.0, are
+-- handed over as clicked.
+local function workshopDevices()
+    local out, p = {}, player()
+    local here = p:getSquare()
+    for dx = -2, 2 do
+        for dy = -2, 2 do
+            local s = here and sq(here:getX() + dx, here:getY() + dy, here:getZ())
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                if #out == 0 and instanceof(objs:get(i), "IsoGenerator") then out[1] = objs:get(i) end
+            end
+        end
+    end
+    local best, bestD
+    for _, v in ipairs(getCell():getVehicles():toArray()) do
+        local d = p:DistTo(v:getX(), v:getY())
+        if d <= 4 and (bestD == nil or d < bestD) then best, bestD = v, d end
+    end
+    if best then out[#out + 1] = best end
+    return out
+end
+
 local function workshopClick(label, rootKey, text)
-    return menuClick(label, function(c) TLG.UI.WorkshopMenu.fill(0, c, {}, false) end, getText(rootKey), text)
+    return menuClick(label, function(c) TLG.UI.WorkshopMenu.fill(0, c, workshopDevices(), false) end, getText(rootKey), text)
 end
 
 local function takeAway(fullType)
@@ -14221,7 +14248,7 @@ RT.DS.workshopMenu = RT.DS.menuShot({ name = "workshop_menu", rootKey = GEN_MENU
         for i = 0, list:size() - 1 do objs[#objs + 1] = list:get(i) end
         ISWorldObjectContextMenu.createMenu(0, objs, x, y)
     end,
-    fill = function(c) TLG.UI.WorkshopMenu.fill(0, c, {}, false) end,
+    fill = function(c) TLG.UI.WorkshopMenu.fill(0, c, { RT.DS.gen }, false) end,
     want = function() return { getText("ContextMenu_TLG_ConvStatus"), startText("flex_generator"),
         getText("ContextMenu_TLG_ConvDeliver"), getText("ContextMenu_TLG_ConvJoin"), getText("ContextMenu_TLG_ConvCancel"),
         getText("ContextMenu_TLG_ConvRemove") } end })
@@ -16477,6 +16504,182 @@ RT.wrongFuelSteps = { RT.waitWorld, RT.BD.photoSetup, RT.WF.spawn, RT.WF.verdict
     generatorGateStep("RTWF.diesel_generator_on_pure_petrol", function() return RT.WF.gens[2] end, false),
     RT.WF.generators, RT.WF.off, RT.finish }
 ------------------------------------------------------------------------------
+-- The mod's world menu entries follow the click (request "sp-rtcm"; 0.3.1).
+-- The owner found the Workshop entry on bare ground beside a car and the
+-- Fuel entry beside a can. A petrol can and a fermentation vessel lie on the
+-- ground, a generator stands within two tiles of the character and a car
+-- within four. Each menu is built by the game's own right-click builder
+-- (ISWorldObjectContextMenu.createMenu) with the floor tile as the clicked
+-- object, which is what the game hands over for a click on an item or beside
+-- it, at a chosen point of the screen. The Fuel and Machine entries must
+-- show exactly where the game's own Grab entry shows; the Workshop entries
+-- only for the generator's tile and for the car under the cursor, where the
+-- game's own vehicle entries show too. The cursor's position, which the
+-- game's vehicle pick reads, is given by the step.
+------------------------------------------------------------------------------
+RT.CM = {}
+
+function RT.CM.entry(menu, text)
+    for i, o in pairs(menu.options or {}) do
+        if type(i) == "number" and i < (menu.numOptions or 1e9) and type(o) == "table" and o.name ~= nil
+            and string.sub(tostring(o.name), 1, #text) == text then
+            return true
+        end
+    end
+    return false
+end
+
+function RT.CM.exact(menu, text)
+    for i, o in pairs(menu.options or {}) do
+        if type(i) == "number" and i < (menu.numOptions or 1e9) and type(o) == "table" and tostring(o.name) == text then return true end
+    end
+    return false
+end
+
+-- The game's menu for a click at (x, y) on `objects`, the cursor at (mx, my).
+function RT.CM.menuAt(objects, x, y, mx, my)
+    local realX, realY = getMouseXScaled, getMouseYScaled
+    getMouseXScaled, getMouseYScaled = function() return mx or -5000 end, function() return my or -5000 end
+    local ok, err = pcall(ISWorldObjectContextMenu.createMenu, 0, objects, x, y)
+    getMouseXScaled, getMouseYScaled = realX, realY
+    local menu = getPlayerContextMenu(0)
+    local r = { ok = ok, err = err,
+        fuel = RT.CM.entry(menu, getText("ContextMenu_TLG_Fuel")), machine = RT.CM.entry(menu, getText("ContextMenu_TLG_Machine")),
+        grab = RT.CM.entry(menu, getText("ContextMenu_Grab")), gen = RT.CM.entry(menu, getText("ContextMenu_TLG_ConvGenerator")),
+        car = RT.CM.entry(menu, getText("ContextMenu_TLG_ConvVehicle")),
+        -- The game's own entry for a vehicle under the cursor: with the debug
+        -- mode the harness runs in, a "Vehicle" entry (SRC ISVehicleMenu.
+        -- FillMenuOutsideVehicle; launch 289 looked for Vehicle Mechanics,
+        -- which that menu no longer adds).
+        mechanics = RT.CM.exact(menu, "Vehicle") }
+    pcall(function() menu:hideAndChildren() end)
+    return r
+end
+
+function RT.CM.text(r)
+    return string.format("Fuel=%s Machine=%s Grab=%s Workshop generator=%s car=%s, the game's own Vehicle entry=%s%s", tostring(r.fuel),
+        tostring(r.machine), tostring(r.grab), tostring(r.gen), tostring(r.car), tostring(r.mechanics),
+        r.ok and "" or (" (builder error: " .. tostring(r.err) .. ")"))
+end
+
+RT.CM.setup = { name = "rtcm_setup", timeout = 1200, fn = function(ctx, ticks)
+    local CM = RT.CM
+    if ticks < 30 then return nil end
+    if not ctx.placed then
+        captureDialogs(true)
+        CM.car = addVehicleDebug("Base.CarNormal", IsoDirections.N, nil, sq(START.x + 8, START.y + 3, 0))
+        if CM.car then pcall(function() CM.car:repair() end) end
+        -- The character 2.5 tiles west of the car's middle.
+        CM.at = { x = START.x + 5, y = START.y + 3 }
+        player():setPosition(CM.at.x + 0.5, CM.at.y + 0.5, 0)
+        local function clearTile(list)
+            for _, off in ipairs(list) do
+                local x, y = CM.at.x + off[1], CM.at.y + off[2]
+                if RT.MI.clear(x, y) then return sq(x, y, 0) end
+            end
+            return nil
+        end
+        CM.genTile = clearTile({ { -1, -2 }, { -2, -1 }, { -2, 0 }, { -1, 2 }, { -2, 1 }, { 0, -2 } })
+        CM.canTile = clearTile({ { -4, 0 }, { -4, -1 }, { -5, 0 }, { -4, 1 } })
+        CM.vesselTile = clearTile({ { -4, -4 }, { -5, -4 }, { -4, 4 }, { -6, -3 } })
+        CM.bareTile = clearTile({ { -7, 0 }, { -7, -1 }, { -7, 1 }, { -8, 0 } })
+        if not (CM.car and CM.genTile and CM.canTile and CM.vesselTile and CM.bareTile) then
+            RT.abort = "no room for the test's things"
+            R:line("OBS  RTCM.setup car=%s generator tile=%s can tile=%s vessel tile=%s bare tile=%s", tostring(CM.car ~= nil),
+                tostring(CM.genTile ~= nil), tostring(CM.canTile ~= nil), tostring(CM.vesselTile ~= nil), tostring(CM.bareTile ~= nil))
+            return true
+        end
+        CM.gen = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), CM.genTile)
+        local can = instanceItem("Base.PetrolCan")
+        can:getFluidContainer():Empty()
+        can:getFluidContainer():addFluid(Fluid.Petrol, 5)
+        CM.canTile:AddWorldInventoryItem(can, 0.5, 0.5, 0, false)
+        local vessel = instanceItem("TLG.FermenterVessel")
+        CM.vesselTile:AddWorldInventoryItem(vessel, 0.5, 0.5, 0, false)
+        CM.can, CM.vessel = can, vessel
+        ctx.placed = ticks
+        return nil
+    end
+    if ticks - ctx.placed < 90 then return nil end
+    local p = player()
+    local dCar = p:DistTo(CM.car:getX(), CM.car:getY())
+    local dGen = math.max(math.abs(CM.genTile:getX() - CM.at.x), math.abs(CM.genTile:getY() - CM.at.y))
+    R:check("RTCM.everything_within_the_old_menus_reach", function()
+        return CM.can:getWorldItem() ~= nil and CM.vessel:getWorldItem() ~= nil and CM.gen ~= nil and dCar <= 4 and dGen <= 2,
+            string.format("the car %.2f tiles from the character (the old menu took one within 4), the generator %d (within 2); zoom %.2f",
+                dCar, dGen, getCore():getZoom(0))
+    end)
+    return true
+end }
+
+RT.CM.items = { name = "rtcm_items", timeout = 300, fn = function()
+    local CM = RT.CM
+    if RT.abort then return true end
+    for _, spec in ipairs({ { "can", CM.can, CM.canTile, "fuel" }, { "vessel", CM.vessel, CM.vesselTile, "machine" } }) do
+        local w = spec[2]:getWorldItem()
+        local sx, sy = w:getScreenPosX(0), w:getScreenPosY(0)
+        local floor = spec[3]:getFloor()
+        local east = sq(spec[3]:getX() + 1, spec[3]:getY(), 0)
+        local cases = {
+            { "on_it", { floor }, sx, sy, true },
+            { "30_pixels_off", { floor }, sx + 30, sy, true },
+            { "30_pixels_off_from_the_next_tile", { east and east:getFloor() or floor }, sx + 30, sy, true },
+            { "100_pixels_off_on_its_tile", { floor }, sx + 100, sy, false },
+            { "100_pixels_off_the_other_way", { floor }, sx - 70, sy + 70, false },
+        }
+        for _, c in ipairs(cases) do
+            local r = CM.menuAt(c[2], c[3], c[4])
+            R:check("RTCM." .. spec[1] .. "_" .. c[1], function()
+                return r.ok and r[spec[4]] == c[5] and r.grab == c[5] and not r.gen and not r.car, string.format(
+                    "the item on screen at %.0f,%.0f, the click at %.0f,%.0f: %s", sx, sy, c[3], c[4], CM.text(r))
+            end)
+        end
+    end
+    return true
+end }
+
+RT.CM.devices = { name = "rtcm_devices", timeout = 300, fn = function()
+    local CM = RT.CM
+    if RT.abort then return true end
+    local bare, genFloor = CM.bareTile:getFloor(), CM.genTile:getFloor()
+    local cx, cy = isoToScreenX(0, CM.car:getX(), CM.car:getY(), CM.car:getZ()), isoToScreenY(0, CM.car:getX(), CM.car:getY(), CM.car:getZ())
+    local zoom = getCore():getZoom(0)
+    local bx, by = isoToScreenX(0, CM.bareTile:getX() + 0.5, CM.bareTile:getY() + 0.5, 0), isoToScreenY(0, CM.bareTile:getX() + 0.5,
+        CM.bareTile:getY() + 0.5, 0)
+    -- Bare ground, the cursor on it: nothing of the mod's, though the car
+    -- and the generator are in reach.
+    local r = CM.menuAt({ bare }, bx, by, bx * zoom, by * zoom)
+    R:check("RTCM.bare_ground_has_no_entry", function()
+        return r.ok and not r.gen and not r.car and not r.fuel and not r.machine and not r.mechanics, CM.text(r)
+    end)
+    -- The character's own tile.
+    r = CM.menuAt({ sq(CM.at.x, CM.at.y, 0):getFloor() }, bx, by, bx * zoom, by * zoom)
+    R:check("RTCM.the_characters_own_tile_has_no_entry", function() return r.ok and not r.gen and not r.car, CM.text(r) end)
+    -- The generator's tile.
+    r = CM.menuAt({ genFloor }, bx, by, bx * zoom, by * zoom)
+    R:check("RTCM.generator_tile_has_the_generator_entry", function()
+        return r.ok and r.gen and not r.car, CM.text(r)
+    end)
+    r = CM.menuAt({ CM.gen }, bx, by, bx * zoom, by * zoom)
+    R:check("RTCM.generator_clicked_has_the_generator_entry", function() return r.ok and r.gen and not r.car, CM.text(r) end)
+    -- The cursor on the car, the floor under it clicked: the car's entry,
+    -- where the game's own vehicle entries are.
+    local under = sq(math.floor(CM.car:getX()), math.floor(CM.car:getY()), 0)
+    r = CM.menuAt({ under and under:getFloor() or bare }, cx, cy, cx * zoom, cy * zoom)
+    R:check("RTCM.car_under_the_cursor_has_the_car_entry", function()
+        return r.ok and r.car and r.mechanics and not r.gen, string.format("the car on screen at %.0f,%.0f: %s", cx, cy, CM.text(r))
+    end)
+    -- The same floor clicked with the cursor elsewhere: no car.
+    r = CM.menuAt({ under and under:getFloor() or bare }, bx, by, bx * zoom, by * zoom)
+    R:check("RTCM.car_not_under_the_cursor_has_no_entry", function()
+        return r.ok and not r.car and not r.mechanics, CM.text(r)
+    end)
+    return true
+end }
+
+RT.contextMenuSteps = { RT.waitWorld, RT.BD.photoSetup, RT.MI.zoomTo("rtcm_zoom", 1.0), RT.CM.setup, RT.CM.items, RT.CM.devices,
+    RT.finish }
+------------------------------------------------------------------------------
 -- Wiring
 ------------------------------------------------------------------------------
 -- Diagnostics so a stall before the scenario can be located from the log.
@@ -16489,7 +16692,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtcm" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -16573,6 +16776,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtwf" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, wrong fuel damages engines")
                 TLGH.Steps.run(R, RT.wrongFuelSteps, H, nil)
+            elseif REQUEST == "sp-rtcm" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the world menus follow the click")
+                TLGH.Steps.run(R, RT.contextMenuSteps, H, nil)
             elseif REQUEST == "sp-rtdv" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, diesel vehicles")
                 TLGH.Steps.run(R, RT.dieselVehicleSteps, H, nil)

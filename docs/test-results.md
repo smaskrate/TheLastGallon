@@ -5802,3 +5802,82 @@ Evidence:
 [run 286](evidence/2026-11-11_rt-sp_harness_run286_install_rehearsal_0.3.0_42.22.2.txt);
 [run 287](evidence/2026-11-11_rt-sp_harness_run287_package_wrong_fuel_0.3.0_42.22.2.txt);
 [run 288](evidence/2026-11-11_rt-mp_harness_run288_package_fuel_0.3.0_42.22.2.txt).
+
+## 2026-11-11 — RT-SP client harness, launches 289–293 (the world menu entries follow the click, 0.3.1)
+
+Build 42.22.2, branch `fix/context-menus`, the repository's mod. The
+owner reported the mod's menu entry showing where it should not: after a
+right-click on a vehicle, also on the ground; after a right-click on a
+container of fuel on the ground, also where there is nothing.
+
+Two causes, both in the menus as written (nothing was kept from one
+click to the next):
+
+* the Workshop menu (`WorkshopMenu.fill`) did not look at what was
+  clicked: it offered the generator within two tiles of the character and
+  the vehicle within four, for any click;
+* the Fuel and Machine menus (`fillWorld`) took every item lying on the
+  clicked tile. The game hands a menu the floor tile, never the item on
+  it, and since 0.1.1 the mod had answered that by taking the whole tile.
+
+The fix (`TLG/UI/Clicked.lua`): an item on the ground counts when its
+position on screen is within 48 pixels, divided by the zoom, of the
+click, over the clicked squares and the squares around them. That is the
+rule of the game's own Grab entry (BC
+`ISWorldObjectContextMenuLogic.getWorldObjectsInRadius`); the click's
+position is the one the menu was asked for (SRC `ISContextMenu.get`,
+`requestX`/`requestY`). The Workshop entry is for the vehicle under the
+cursor, as the game's vehicle menu finds it (SRC `ISVehicleMenu`,
+`IsoObjectPicker.PickVehicle`), and for a generator clicked or standing
+on a clicked square. With a controller, which has no cursor, the entries
+show as before. The domain suite has 278 cases, 0 failed: 7 new in
+`tests/integration/test_clicked.lua`.
+
+`tools\run-sp-harness.ps1 -Mode context-menus` is new. A petrol can and
+a fermentation vessel lie on the ground, a generator stands two tiles
+from the character and a car three. Each menu is built by the game's
+right-click builder (`ISWorldObjectContextMenu.createMenu`) with a floor
+tile as the clicked object, at a chosen point of the screen; the cursor
+position the game's vehicle pick reads is given by the step.
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 289 | `context-menus` | 16/1 |
+| 290 | `context-menus` | 17/0 |
+| 291 | `context-menus`, the mod at 0.3.1 | 17/0 |
+| 292 | full | 105/0, then 14/0 |
+| 293 | `docs-shots` | 65/0 |
+
+* The can and the vessel, five clicks each: on the item, 30 pixels off,
+  30 pixels off with the next tile's floor clicked, and 100 pixels off
+  two ways with the item's own tile clicked. The Fuel entry (the Machine
+  entry for the vessel) showed in the first three and not in the last
+  two, and so did the game's Grab entry, in all ten.
+* A click on bare ground, and one on the character's own tile, with the
+  car and the generator both within the old menu's reach: no entry of the
+  mod's.
+* The generator's tile clicked, and the generator itself: **Workshop:
+  convert this generator**, not the vehicle's.
+* The cursor on the car, the floor under it clicked: **Workshop: convert
+  this vehicle**, with the game's own vehicle entry. The same floor
+  clicked with the cursor elsewhere: neither.
+* Launch 289's failure was the test's: it looked for the game's Vehicle
+  Mechanics entry, which the vehicle menu no longer adds; the test now
+  looks for the entry it adds in debug mode.
+* Launch 292: the full run, whose conversion steps open the Workshop
+  menu, now with the device handed over as clicked. Launch 293: the
+  guide's four menus built by the game's builder, the Workshop menu on
+  the generator's tile.
+
+Consoles: no TLG error or warning; the only exception is the harness's
+deep-recursion probe (launch 292).
+
+Not run: the fix with a real mouse click by a player; a controller; a
+server; a can inside a fixed container; zoom levels other than 1.
+
+Evidence:
+[run 289](evidence/2026-11-11_rt-sp_harness_run289_context_menus_first_42.22.2.txt);
+[run 290](evidence/2026-11-11_rt-sp_harness_run290_context_menus_42.22.2.txt);
+[run 291](evidence/2026-11-11_rt-sp_harness_run291_context_menus_0.3.1_42.22.2.txt);
+[run 292](evidence/2026-11-11_rt-sp_harness_run292_full_0.3.1_42.22.2.txt);
+[run 293](evidence/2026-11-11_rt-sp_harness_run293_docs_shots_0.3.1_42.22.2.txt).

@@ -1,7 +1,7 @@
 name=The Last Gallon
 id=TheLastGallon
 author=smaskrate
-modversion=0.3.0
+modversion=0.3.1
 versionMin=42.21
 category=features
 poster=poster.png

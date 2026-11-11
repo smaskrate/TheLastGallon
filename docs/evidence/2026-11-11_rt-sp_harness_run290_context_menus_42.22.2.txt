@@ -1,0 +1,36 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 89440
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, the world menus follow the click
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=57979537487306369333 hours=2.0096 DayLength=4
+STEP rtbdm_setup begin
+STEP rtcm_zoom begin
+OBS  RTMI.zoom 1.00 -> 1.00 in 0 scrolls (enabled=true, min 0.25)
+STEP rtcm_setup begin
+PASS RTCM.everything_within_the_old_menus_reach :: the car 3.00 tiles from the character (the old menu took one within 4), the generator 2 (within 2); zoom 1.00
+STEP rtcm_items begin
+PASS RTCM.can_on_it :: the item on screen at 384,280, the click at 384,280: Fuel=true Machine=false Grab=true Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.can_30_pixels_off :: the item on screen at 384,280, the click at 414,280: Fuel=true Machine=false Grab=true Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.can_30_pixels_off_from_the_next_tile :: the item on screen at 384,280, the click at 414,280: Fuel=true Machine=false Grab=true Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.can_100_pixels_off_on_its_tile :: the item on screen at 384,280, the click at 484,280: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.can_100_pixels_off_the_other_way :: the item on screen at 384,280, the click at 314,350: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.vessel_on_it :: the item on screen at 640,152, the click at 640,152: Fuel=false Machine=true Grab=true Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.vessel_30_pixels_off :: the item on screen at 640,152, the click at 670,152: Fuel=false Machine=true Grab=true Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.vessel_30_pixels_off_from_the_next_tile :: the item on screen at 640,152, the click at 670,152: Fuel=false Machine=true Grab=true Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.vessel_100_pixels_off_on_its_tile :: the item on screen at 640,152, the click at 740,152: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.vessel_100_pixels_off_the_other_way :: the item on screen at 640,152, the click at 570,222: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+STEP rtcm_devices begin
+PASS RTCM.bare_ground_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.the_characters_own_tile_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCM.generator_tile_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCM.generator_clicked_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCM.car_under_the_cursor_has_the_car_entry :: the car on screen at 832,480: Fuel=false Machine=false Grab=false Workshop generator=false car=true, the game's own Vehicle entry=true
+PASS RTCM.car_not_under_the_cursor_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.03
+SUMMARY pass=17 fail=0
+DONE

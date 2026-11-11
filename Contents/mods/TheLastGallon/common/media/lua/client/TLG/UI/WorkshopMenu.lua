@@ -1,5 +1,7 @@
--- World context menu: workshop conversions for a nearby generator or
--- vehicle. All steps are authority requests (TLG.Net). "Work on it" walks to
+-- World context menu: workshop conversions for the generator or the vehicle
+-- the click is on (TLG/UI/Clicked.lua; until 0.3.0 for any within reach of
+-- the character, whatever was clicked, so the entry also showed on bare
+-- ground beside a car). All steps are authority requests (TLG.Net). "Work on it" walks to
 -- the device and starts ISTLGConversionWork, which reports while the
 -- character stays there; time away from the device is never credited.
 -- Start, Hand over parts and Work on it used RT-SP 2026-10-31 (run 12) on a
@@ -8,6 +10,7 @@
 require "TLG/Client/Net"
 require "TLG/Authority/Resolver"
 require "TLG/Actions/ISTLGConversionWork"
+require "TLG/UI/Clicked"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.WorkshopMenu = TLG.UI.WorkshopMenu or {}
@@ -126,12 +129,13 @@ function Menu.fill(playerNum, context, worldobjects, test)
     if test then return end
     local player = getSpecificPlayer(playerNum)
     if player == nil or player:getVehicle() ~= nil then return end
-    local gen = nearbyGenerator(player)
+    -- With a controller there is no cursor: the nearest in reach, as before.
+    local gen = TLG.UI.Clicked.generator(playerNum, worldobjects, function() return nearbyGenerator(player) end)
     if gen then
         addDeviceMenu(context, player, "ContextMenu_TLG_ConvGenerator",
             TLG.Authority.Resolver.refForObject(gen, "generator"), gen, "generator", gen:getGeneratorItemType())
     end
-    local v = nearbyVehicle(player)
+    local v = TLG.UI.Clicked.vehicle(playerNum, worldobjects, function() return nearbyVehicle(player) end)
     if v then
         addDeviceMenu(context, player, "ContextMenu_TLG_ConvVehicle", { kind = "vehicle", id = v:getId() }, v,
             "vehicle", v:getScriptName())

@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.3.0, for Project Zomboid 42.22.2. Each section ends with what
+Version 0.3.1, for Project Zomboid 42.22.2. Each section ends with what
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 
@@ -53,7 +53,10 @@ Fuel Stabilizer, the Yeast Starter Culture and the Fuel Sampling Kit.*
 
 ## Inspecting fuel
 
-Right-click a fuel can and open **Fuel (The Last Gallon)**:
+Right-click a fuel can and open **Fuel (The Last Gallon)**. For a can on
+the ground, click on the can itself: the entry shows where the game's own
+**Grab** entry for the can does, not for a click on the ground beside it.
+The entries:
 
 * **Look and smell** gives a rough estimate and finds only obvious water.
 * **Take a sample (kit)** needs a Fuel Sampling Kit (3 empty jars and a
@@ -373,7 +376,8 @@ Column Still.*
 
 Every machine works only while it stands on the ground. Right-click it and
 open **Machine (The Last Gallon)** for its options; **Status** shows what
-it is doing and the temperature at the machine.
+it is doing and the temperature at the machine. The entry shows for a
+click on the machine, as the game's **Grab** entry does.
 
 ![A placed Fermentation Vessel's menu with Machine (The Last Gallon) open: Status, Load mash and start fermenting, Pause, Abort batch](images/machine-menu.jpg)
 
@@ -771,7 +775,8 @@ a vehicle refuelled at a pump on a server.
 
 A flex conversion lets an engine run on any blend of gasoline and
 ethanol. Right-click the generator or car and choose **Workshop: convert
-this generator** (or **Workshop: convert this vehicle**):
+this generator** (or **Workshop: convert this vehicle**). The entry shows
+only for a click on the car, or on the generator or its tile:
 
 1. **Start: …** starts the project. It needs the skills and recipe below
    and a screwdriver, and the engine must be off.

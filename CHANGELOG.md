@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.3.1 (not released)
+
+* Fixed: the mod's entries in the world right-click menu showed where
+  nothing of theirs was clicked. **Workshop: convert this vehicle** and
+  **Workshop: convert this generator** showed for any click while a car
+  or a generator was near the character; **Fuel (The Last Gallon)** and
+  **Machine (The Last Gallon)** showed for a click anywhere on the tile a
+  can or a machine lay on. Now the Workshop entry shows when the click is
+  on the car, or on the generator or its tile, and the Fuel and Machine
+  entries show where the game's own **Grab** entry for that can or
+  machine shows. With a controller, which has no cursor, the entries show
+  as before.
+
 ## 0.3.0 (2026-11-11)
 
 * Wrong fuel damages engines. Diesel or biodiesel in a petrol or converted

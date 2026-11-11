@@ -4,6 +4,7 @@ require "TLG/Client/Net"
 require "TLG/UI/Format"
 require "TLG/Integration/Native"
 require "TLG/Actions/ISTLGPourFuel"
+require "TLG/UI/Clicked"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.FuelMenu = TLG.UI.FuelMenu or {}
@@ -114,6 +115,10 @@ function Menu.askPump(pump)
     end)
 end
 
+-- The Fuel entry for what the click is on: a fixed object that holds fuel,
+-- or a can on the ground under the click (TLG/UI/Clicked.lua; until 0.3.0
+-- any can on the clicked tile, so that a click on the ground beside one
+-- still offered it).
 function Menu.fillWorld(playerNum, context, worldobjects, test)
     if getSpecificPlayer(playerNum) == nil then return end
     local found, seen, squares = {}, {}, {}
@@ -126,14 +131,10 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
         end
     end
     for _, object in ipairs(worldobjects) do
-        collect(object)
-        local square = object:getSquare()
-        if square and not squares[square] then
-            squares[square] = true
-            local items = square:getWorldObjects()
-            for i = 0, items:size() - 1 do collect(items:get(i)) end
-        end
+        if not instanceof(object, "IsoWorldInventoryObject") then collect(object) end
     end
+    for _, object in ipairs(TLG.UI.Clicked.worldItems(playerNum, context, worldobjects)) do collect(object) end
+    for _, square in ipairs(TLG.UI.Clicked.squares(worldobjects)) do squares[square] = true end
     -- A station pump: what it gives (D-036: some give diesel). Asked of the
     -- authority, which makes the pump's record at its first contact.
     local pump

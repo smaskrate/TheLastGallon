@@ -75,6 +75,15 @@ generator, diesel pumps, driving, engine effects, pot still, manual,
 Italian, and the multiplayer fuel and effects cases (launches 263–285,
 `test-results.md`). Not re-run: every other mode.
 
+## Version 0.3.1 (not released)
+
+On the branch `fix/context-menus`: the mod's entries in the world
+right-click menu follow the click (launches 289–293, `test-results.md`).
+No gate changes. Open: the fix seen by a player with the mouse (the
+launches build the menus through the game's builder at chosen screen
+points and give the cursor's position to the game's vehicle pick); a
+controller; a server. No 0.3.1 zip is built.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
@@ -704,6 +713,7 @@ tools\run-mp-harness.ps1 -Clients 1 -Only knowledge -Restart  # the same with th
 tools\run-mp-harness.ps1 -Clients 2 -Only death     # A dies carrying a running vessel; B asks the server where it fell and whether it works from the death; ~4 min
 tools\make-preview.ps1                # the Workshop preview, the mod list's poster and icon (Blender), into art-src and the mod
 tools\package.ps1                     # the release zip (never uploads)
+tools\run-sp-harness.ps1 -Mode context-menus                    # the mod's world menu entries only where the click is on their thing (0.3.1); menus built by the game's builder at chosen screen points; no save; ~2 min
 tools\run-sp-harness.ps1 -Mode wrong-fuel                       # wrong fuel damages engines (D-037): every band's verdict, a refused start's cost, wear, a failure, the cures, the option off; no save; ~3 min
 tools\rehearse-install.ps1            # that zip installed in a fresh cache and played through a save; ~20 min
 tools\rehearse-install.ps1 -Scenario existing   # a save played 10 days without the mod, then with it; ~30 min

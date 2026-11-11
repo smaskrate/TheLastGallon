@@ -10,6 +10,7 @@
 require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"
+require "TLG/UI/Clicked"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.MachineMenu = TLG.UI.MachineMenu or {}
@@ -216,26 +217,18 @@ function Menu.fill(playerNum, context, items)
     end
 end
 
--- The world picker can supply the floor tile instead of its 3D items.
--- Visit each clicked square once, including all machines on that square.
+-- The world picker supplies the floor tile instead of the 3D items on it:
+-- the machines the click is on are found as the game finds the items of its
+-- Grab entry (TLG/UI/Clicked.lua). Until 0.3.0 every machine on the clicked
+-- tile was offered, also for a click on the bare ground beside it.
 function Menu.fillWorld(playerNum, context, worldobjects, test)
     if getSpecificPlayer(playerNum) == nil then return end
-    local items, seenItems, seenSquares = {}, {}, {}
-    local function collect(object)
-        if not instanceof(object, "IsoWorldInventoryObject") then return end
+    local items, seenItems = {}, {}
+    for _, object in ipairs(TLG.UI.Clicked.worldItems(playerNum, context, worldobjects)) do
         local item = object:getItem()
         if Machines.machineFor(item) and not seenItems[item] then
             seenItems[item] = true
             items[#items + 1] = item
-        end
-    end
-    for _, object in ipairs(worldobjects) do
-        collect(object)
-        local square = object:getSquare()
-        if square and not seenSquares[square] then
-            seenSquares[square] = true
-            local objects = square:getWorldObjects()
-            for i = 0, objects:size() - 1 do collect(objects:get(i)) end
         end
     end
     if #items == 0 then return end
