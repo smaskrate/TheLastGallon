@@ -220,6 +220,39 @@ local function rmTick()
         local litresE = cans.E and cans.E:getFluidContainer() and cans.E:getFluidContainer():getAmount() or -1
         RM.lines = { "litresE=" .. tostring(litresE), "fTile=" .. (#onTile > 0 and table.concat(onTile, "/") or "nothing"),
             "worldRecord=" .. world, "canE=" .. canText(cans.E) }
+        -- Version 0.2.0's Diesel Generator and Wood Retort of launch 1: what
+        -- stands or lies on their tiles without the mod.
+        local function tileText(x, y)
+            local t = x and y and getCell():getGridSquare(x, y, 0)
+            if not t then return "no square" end
+            local parts = {}
+            local objs = t:getObjects()
+            for i = 0, objs:size() - 1 do
+                local o = objs:get(i)
+                if instanceof(o, "IsoGenerator") then
+                    local name, tex = "?", nil
+                    pcall(function() name = tostring(o:getSprite():getName()) end)
+                    pcall(function() tex = o:getSprite():getTextureForCurrentFrame(o:getDir()) end)
+                    parts[#parts + 1] = string.format("generator generatorFullType=%s sprite=%s picture=%s fuel=%.4f record %s",
+                        tostring(o:getModData().generatorFullType), name, tostring(tex ~= nil), o:getFuel(),
+                        tostring(o:getModData().tlg ~= nil))
+                end
+            end
+            local ground = t:getWorldObjects()
+            for i = 0, ground:size() - 1 do
+                local it = ground:get(i):getItem()
+                parts[#parts + 1] = "item " .. (it and it:getFullType() or "?")
+            end
+            return #parts > 0 and table.concat(parts, "; ") or "nothing"
+        end
+        for _, k in ipairs({ { "g", "diesel generator" }, { "r", "wood retort" } }) do
+            local x, y = tonumber(e[k[1] .. ".x"]), tonumber(e[k[1] .. ".y"])
+            local text = "?"
+            local ok, err = pcall(function() text = tileText(x, y) end)
+            if not ok then text = "error: " .. tostring(err) end
+            line("OBS  RMB.%s tile %s,%s holds: %s", k[2], tostring(x), tostring(y), text)
+            RM.lines[#RM.lines + 1] = k[1] .. "Tile=" .. text
+        end
         -- Without the mod: 2 L poured out of P, 3 L of fresh petrol into Q.
         if cans.P and cans.Q then
             local out = instanceItem("Base.PetrolCan")

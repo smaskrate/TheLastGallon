@@ -27,6 +27,10 @@
 --   rm-a  -> a new world: cans and a fermenter recorded, saved, quit ("rm-a-done")
 --   rm-c  -> main menu continues that save after the driver's "rm-b" played it
 --            without the mod: the mod back
+--   up-a  -> a new world played with an EARLIER release's package: cans, a
+--            fermenter, a pump, two vehicles and a generator recorded, saved,
+--            quit ("up-a-done")
+--   up-b  -> main menu continues that save with this version
 --   sp-rtcw -> a new world: an opened can of ethanol poured 300 days on (mod
 --             clock), and a full petrol can looked at then
 --   sp-rtv -> phase A's vehicle steps on another chassis (Base.PickUpTruck)
@@ -123,7 +127,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "up-a" or REQUEST == "up-b" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -7866,10 +7870,109 @@ RT.X.reload = { name = "rtx_reload", timeout = 3000, fn = function(ctx, ticks)
         local now = RT.X.sideKey(d and d:getModData().tlg)
         return d ~= nil and now == e2["canD.side"], string.format("%s (before the save %s)", now, tostring(e2["canD.side"]))
     end)
+    R:check("RTX.still_no_diesel_after_reload", function()
+        return md.dieselVehicles == false, "dieselVehicles=" .. tostring(md.dieselVehicles)
+    end)
     return true
 end }
 
-RT.existingSteps = { RT.waitWorld, RT.X.setup, RT.X.load, RT.X.look, RT.X.discover, RT.X.wait, RT.X.late, RT.X.saveExit }
+------------------------------------------------------------------------------
+-- A world's diesel (D-036, version 0.2.0). Only a world started with 0.2.0
+-- has diesel vehicles and diesel pumps (the world record's
+-- `dieselVehicles`); a save that gains the mod and a save made with 0.1.x
+-- keep petrol everywhere. RT.OW.step checks the flag, spawns an ambulance (a
+-- diesel chassis) and a trade van, gives each 10 L the mod has not recorded
+-- and checks what the mod takes them for, removes them, and asks every pump
+-- of the station what it gives.
+------------------------------------------------------------------------------
+RT.OW = {}
+
+-- The station's pumps as "x,y:product", west to east then north to south,
+-- and how many give diesel.
+function RT.OW.pumps()
+    local S = TLG.Integration.Stations
+    local out, diesel = {}, 0
+    for x = STATION.x0, STATION.x1 do
+        for y = STATION.y0, STATION.y1 do
+            local s = sq(x, y, 0)
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                if S.isPump(o) then
+                    local product = S.product(o)
+                    if product == "diesel" then diesel = diesel + 1 end
+                    out[#out + 1] = string.format("%d,%d:%s", x, y, tostring(product))
+                end
+            end
+        end
+    end
+    return out, diesel
+end
+
+-- `scripts`: the vehicles to spawn, the ambulance first (default: it and a
+-- trade van). The upgrade rehearsal's saved vehicles stand where the second
+-- would go.
+function RT.OW.step(prefix, wantDiesel, scripts)
+    scripts = scripts or { "Base.VanAmbulance", "Base.Van" }
+    return { name = string.lower(prefix) .. "_world_diesel", timeout = 1200, fn = function(ctx, ticks)
+        local V = TLG.Integration.Vehicles
+        if not ctx.spawned then
+            local world = TLG.World.get()
+            R:check(prefix .. (wantDiesel and ".new_world_has_diesel" or ".older_world_has_no_diesel"), function()
+                return (world.dieselVehicles == true) == wantDiesel, string.format(
+                    "dieselVehicles=%s createdAsNewGame=%s policy=%s modVersion=%s; the mod loaded is %s",
+                    tostring(world.dieselVehicles), tostring(world.createdAsNewGame), tostring(world.policy),
+                    tostring(world.modVersion), tostring(TLG.VERSION))
+            end)
+            ctx.cars = {}
+            for i, script in ipairs(scripts) do
+                local v = addVehicleDebug(script, IsoDirections.N, nil, sq(START.x + 5 * i - 2, START.y + 3, 0))
+                if v then pcall(function() v:repair() end) end
+                ctx.cars[i] = v
+            end
+            ctx.spawned = ticks
+            return nil
+        end
+        if ticks - ctx.spawned < 60 then return nil end
+        if not ctx.filled then
+            for i = 1, #scripts do
+                local tank = ctx.cars[i] and ctx.cars[i]:getPartById("GasTank")
+                if tank then
+                    tank:setContainerContentAmount(10)
+                    tank:getModData().tlg = nil
+                end
+            end
+            ctx.filled = ticks
+            return nil
+        end
+        if ticks - ctx.filled < 10 then return nil end
+        for i, spec in ipairs({ { "ambulance", wantDiesel }, { "trade_van", false } }) do
+            local v = ctx.cars[i]
+            if i <= #scripts then R:check(prefix .. "." .. spec[1] .. (spec[2] and "_is_diesel" or "_is_petrol"), function()
+                if v == nil then return false, "not spawned" end
+                local rec, status = V.read(v, false)
+                local e = V.evaluate(v)
+                local wantProfile, wantFuel = spec[2] and "engine_ci_stock" or "engine_si_stock", spec[2] and "diesel" or "gasoline"
+                return V.baseProfile(v) == wantProfile and V.profile(v) == wantProfile and rec ~= nil
+                    and (rec.q[wantFuel] or 0) > 9.9 and e ~= nil and e.compatible == true,
+                    string.format("script %s; profile %s; record %s; %s", tostring(v:getScriptName()), tostring(V.profile(v)),
+                        viewText(rec, status), evaluationText(e))
+            end) end
+        end
+        for i = 1, #scripts do
+            if ctx.cars[i] then pcall(function() ctx.cars[i]:permanentlyRemove() end) end
+        end
+        local pumps, diesel = RT.OW.pumps()
+        R:check(prefix .. (wantDiesel and ".pumps_have_a_product" or ".every_pump_gives_petrol"), function()
+            return #pumps > 0 and (wantDiesel or diesel == 0), string.format("%d pumps, %d of them diesel: %s", #pumps, diesel,
+                table.concat(pumps, " "))
+        end)
+        return true
+    end }
+end
+
+RT.existingSteps = { RT.waitWorld, RT.X.setup, RT.X.load, RT.OW.step("RTX", false), RT.X.look, RT.X.discover, RT.X.wait,
+    RT.X.late, RT.X.saveExit }
 RT.existingReloadSteps = { RT.X.reload, RT.finish }
 
 ------------------------------------------------------------------------------
@@ -8087,7 +8190,10 @@ RT.lateFindSteps = { RT.waitWorld, RT.X.setup, RT.N.start, RT.N.wait, RT.N.late,
 -- Run 54 found the inflow mixed in at the record's last write and then aged
 -- over the time away as well (fixed: Tx.reconcile's `at`). What the game
 -- did with the ethanol and the fermenter while the mod was away is
--- observed, not judged.
+-- observed, not judged. Since 0.2.0 launch 1 also checks the new world's
+-- diesel (RT.OW.step) and leaves a fuelled Diesel Generator and a Wood
+-- Retort (RT.M.diesel); launch 3 must find the world's diesel flag and the
+-- pumps' products unchanged, and notes what is left of those two.
 ------------------------------------------------------------------------------
 RT.M = { expect = "TLG_removal_expect.txt", launch2 = "TLG_removal_launch2.txt", tol = 1e-6 }
 
@@ -8124,6 +8230,128 @@ function RT.saveAndQuitAs(name, nextRequest)
         return nil
     end }
 end
+
+-- Two clear outdoor tiles near the character, each with a clear tile east
+-- of it.
+function RT.M.spots(n)
+    local px, py = math.floor(player():getX()), math.floor(player():getY())
+    local spots = {}
+    for r = 2, 12 do
+        for dx = -r, r do
+            for dy = -r, r do
+                if #spots < n and math.max(math.abs(dx), math.abs(dy)) == r and (dx % 2 == 0) and (dy % 2 == 0)
+                    and RT.MI.clear(px + dx, py + dy) and RT.MI.clear(px + dx + 1, py + dy)
+                    and not RT.M.generatorOn(px + dx, py + dy) and not RT.M.generatorOn(px + dx + 1, py + dy) then
+                    spots[#spots + 1] = sq(px + dx, py + dy, 0)
+                end
+            end
+        end
+    end
+    return spots
+end
+
+-- What stands or lies on a tile: generators with their type, sprite and
+-- fuel, and the items on the ground.
+function RT.M.tileText(x, y)
+    local s = x and y and sq(x, y, 0)
+    if not s then return "no square" end
+    local parts = {}
+    local objs = s:getObjects()
+    for i = 0, objs:size() - 1 do
+        local o = objs:get(i)
+        if instanceof(o, "IsoGenerator") then
+            local name, tex = "?", nil
+            pcall(function() name = tostring(o:getSprite():getName()) end)
+            pcall(function() tex = o:getSprite():getTextureForCurrentFrame(o:getDir()) end)
+            parts[#parts + 1] = string.format("generator generatorFullType=%s sprite=%s picture=%s fuel=%.4f",
+                tostring(o:getModData().generatorFullType), name, tostring(tex ~= nil), o:getFuel())
+        end
+    end
+    local wobjs = s:getWorldObjects()
+    for i = 0, wobjs:size() - 1 do
+        local it = wobjs:get(i):getItem()
+        parts[#parts + 1] = "item " .. (it and it:getFullType() or "?")
+    end
+    return #parts > 0 and table.concat(parts, "; ") or "nothing"
+end
+
+function RT.M.generatorOn(x, y)
+    local s = x and y and sq(x, y, 0)
+    local objs = s and s:getObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        if instanceof(objs:get(i), "IsoGenerator") then return objs:get(i) end
+    end
+    return nil
+end
+
+-- Version 0.2.0's own things in the world of launch 1: a Diesel Generator
+-- put down with 5 L of biodiesel poured in by the mod's transfer, and a Wood
+-- Retort on the ground. What the game makes of them while the mod is away is
+-- observed in launches 2 and 3, not judged. The world's diesel flag and what
+-- the station's pumps give go to the expectations: launch 3 must find both
+-- unchanged.
+RT.M.diesel = { name = "rtm_diesel", timeout = 1200, fn = function(ctx, ticks)
+    local M = RT.M
+    if not ctx.phase then
+        M.home = { x = player():getX(), y = player():getY() }
+        local spots = M.spots(2)
+        if #spots < 2 then
+            R:line("OBS  RTM.diesel no clear ground for the generator and the retort (%d tiles found)", #spots)
+            return true
+        end
+        local ok, g = pcall(function() return IsoGenerator.new(instanceItem("TLG.DieselGenerator"), getCell(), spots[1]) end)
+        if ok and g then
+            g:setFuel(0)
+            M.gen = g
+        else
+            R:line("OBS  RTM.diesel the generator was not put down: %s", tostring(g))
+        end
+        M.retort = instanceItem("TLG.WoodRetort")
+        if M.retort then spots[2]:AddWorldInventoryItem(M.retort, 0.5, 0.5, 0, false) end
+        M.gTile, M.rTile = spots[1], spots[2]
+        player():setPosition(spots[1]:getX() + 1.5, spots[1]:getY() + 0.5, 0)
+        ctx.phase, ctx.tick = "fuel", ticks
+        return nil
+    end
+    if ctx.phase == "fuel" then
+        if ticks - ctx.tick < 30 then return nil end
+        local r = {}
+        if M.gen then
+            local can = giveCan("Base.JerryCan", { { Fluid.Get("TLG_Biodiesel"), 5.0 } })
+            r = ask("RTM.biodiesel_into_the_diesel_generator", "transfer", { source = { kind = "item", id = can:getID() },
+                destination = TLG.Authority.Resolver.refForObject(M.gen, "generator"), amount = 5 })
+        end
+        local v, status = nil, "no generator"
+        if M.gen then v, status = tlgView("generator", M.gen) end
+        local pumps = RT.OW.pumps()
+        -- Launch 255: the fuelled generator was counted among the pumps, and
+        -- its menu would have offered what a pump's offers.
+        R:check("RTM.recorded_generator_is_not_a_pump", function()
+            if M.gen == nil then return false, "no generator" end
+            local context = ISContextMenu.get(0, 100, 100)
+            TLG.UI.FuelMenu.fillWorld(0, context, { M.gen }, false)
+            local offered = context:getOptionFromName(getText("ContextMenu_TLG_PumpProduct")) ~= nil
+            context:setVisible(false)
+            local isPump = TLG.Integration.Stations.isPump(M.gen)
+            return M.gen:getModData().tlg ~= nil and isPump == false and not offered, string.format(
+                "the generator has a record=%s; isPump=%s; its menu offers \"%s\"=%s", tostring(M.gen:getModData().tlg ~= nil),
+                tostring(isPump), getText("ContextMenu_TLG_PumpProduct"), tostring(offered))
+        end)
+        R:check("RTM.diesel_generator_and_retort_placed", function()
+            return M.gen ~= nil and r.ok == true and v ~= nil and (v.q.biodiesel or 0) > 4.9 and M.retort ~= nil,
+                string.format("generator tile %d,%d: %s; record %s; retort tile %d,%d: %s", M.gTile:getX(), M.gTile:getY(),
+                    M.tileText(M.gTile:getX(), M.gTile:getY()), viewText(v, status), M.rTile:getX(), M.rTile:getY(),
+                    M.tileText(M.rTile:getX(), M.rTile:getY()))
+        end)
+        M.extra = { "g.x=" .. M.gTile:getX(), "g.y=" .. M.gTile:getY(), "r.x=" .. M.rTile:getX(), "r.y=" .. M.rTile:getY(),
+            "sideG=" .. brief(M.gen and M.gen:getModData().tlg), "dieselVehicles=" .. tostring(TLG.World.get().dieselVehicles),
+            "pumps=" .. table.concat(pumps, " ") }
+        player():setPosition(M.home.x, M.home.y, 0)
+        ctx.phase, ctx.tick = "back", ticks
+        return nil
+    end
+    return ticks - ctx.tick >= 30 or nil
+end }
 
 RT.M.stock = { name = "rtm_stock", timeout = 3000, fn = function(ctx, ticks)
     local M = RT.M
@@ -8182,13 +8410,15 @@ RT.M.stock = { name = "rtm_stock", timeout = 3000, fn = function(ctx, ticks)
         lines[#lines + 1] = "side" .. k .. "=" .. brief(it:getModData().tlg)
         lines[#lines + 1] = "litres" .. k .. "=" .. tostring(M.litres(it))
     end
+    for _, l in ipairs(M.extra or {}) do lines[#lines + 1] = l end
     TLGH.writeFile(M.expect, lines)
     R:line("OBS  RTM.world record seed=%s installedAt=%s policy=%s epoch=%s nextId=%s; saving at world hour %.4f",
         tostring(md.seed), tostring(md.installedAt), tostring(md.policy), tostring(md.epoch), tostring(md.nextId), hours())
     return true
 end }
 
-RT.removalSteps = { RT.waitWorld, RT.X.setup, RT.M.stock, RT.saveAndQuitAs("rtm_save_and_quit", "rm-a-done") }
+RT.removalSteps = { RT.waitWorld, RT.X.setup, RT.OW.step("RTM", true), RT.M.diesel, RT.M.stock,
+    RT.saveAndQuitAs("rtm_save_and_quit", "rm-a-done") }
 
 -- Launch 3: the mod back on the save the driver played without it.
 RT.M.back = { name = "rtm_back", timeout = 3000, fn = function(ctx, ticks)
@@ -8223,11 +8453,29 @@ RT.M.back = { name = "rtm_back", timeout = 3000, fn = function(ctx, ticks)
     local md = TLGH.worldRecord()
     R:check("RTM.world_record_the_same_one", function()
         return tostring(md.seed) == e.seed and tostring(md.installedAt) == e.installedAt and tostring(md.policy) == e.policy
-            and tostring(md.epoch) == e.epoch and (md.nextId or 0) >= (tonumber(e.nextId) or math.huge),
-            string.format("seed %s (%s), installedAt %s (%s), policy %s (%s), epoch %s (%s), nextId %s (%s at launch 1)",
+            and tostring(md.epoch) == e.epoch and (md.nextId or 0) >= (tonumber(e.nextId) or math.huge)
+            and tostring(md.dieselVehicles) == e.dieselVehicles,
+            string.format("seed %s (%s), installedAt %s (%s), policy %s (%s), epoch %s (%s), nextId %s (%s at launch 1), dieselVehicles %s (%s)",
                 tostring(md.seed), e.seed, tostring(md.installedAt), e.installedAt, tostring(md.policy), e.policy,
-                tostring(md.epoch), e.epoch, tostring(md.nextId), e.nextId)
+                tostring(md.epoch), e.epoch, tostring(md.nextId), e.nextId, tostring(md.dieselVehicles), tostring(e.dieselVehicles))
     end)
+    -- 0.2.0: the pumps give what they gave, and what is left of the Diesel
+    -- Generator and the Wood Retort.
+    R:check("RTM.pumps_give_what_they_gave", function()
+        local pumps, diesel = RT.OW.pumps()
+        local nowText = table.concat(pumps, " ")
+        return #pumps > 0 and nowText == e.pumps, string.format("%d pumps, %d of them diesel: %s (launch 1: %s)", #pumps, diesel,
+            nowText, tostring(e.pumps))
+    end)
+    local gx, gy = tonumber(e["g.x"]), tonumber(e["g.y"])
+    local gen = M.generatorOn(gx, gy)
+    local gv, gstatus = nil, "no generator"
+    if gen then gv, gstatus = tlgView("generator", gen) end
+    R:line("OBS  RTM.diesel generator tile %s,%s: %s; record as launch 1 left it=%s; profile %s; read %s (launch 2 saw: %s)",
+        tostring(gx), tostring(gy), M.tileText(gx, gy), tostring(gen ~= nil and brief(gen:getModData().tlg) == e.sideG),
+        gen and tostring(TLG.Integration.Generators.profile(gen)) or "-", viewText(gv, gstatus), tostring(b.gTile))
+    R:line("OBS  RTM.wood retort tile %s,%s: %s (launch 2 saw: %s)", tostring(e["r.x"]), tostring(e["r.y"]),
+        M.tileText(tonumber(e["r.x"]), tonumber(e["r.y"])), tostring(b.rTile))
     local D, env, now = TLG.Domain, TLG.World.env(), TLG.World.now()
     -- P: poured from while the mod was away. A decrease leaves
     -- proportionally: its condition is that of its record aged to now.
@@ -8286,6 +8534,348 @@ RT.M.back = { name = "rtm_back", timeout = 3000, fn = function(ctx, ticks)
 end }
 
 RT.removalBackSteps = { RT.M.back, RT.finish }
+
+------------------------------------------------------------------------------
+-- A save made with an earlier release continued with this version (requests
+-- "up-a" and "up-b"; tools/rehearse-install.ps1 -Scenario upgrade). Launch 1
+-- runs this harness against the EARLIER release's package, so "up-a" uses
+-- only what that release has: the removal rehearsal's cans and fermenter
+-- (RT.M.stock), then a pump recorded by a 2 L transfer into a can, an
+-- ambulance and a car with 10 L each and a generator with 5 L, recorded by
+-- that release's own read and write. What it left goes to
+-- TLG_upgrade_expect.txt, the game is saved and the client quits. Launch 2
+-- has this version's package in the mods folder and continues the save.
+-- Before any read the records must be exactly as the earlier release left
+-- them and the world record the same one, without diesel (D-036: only a
+-- world started with 0.2.0 has diesel vehicles and pumps). The pump recorded
+-- earlier, whose record names no product, must give petrol and still
+-- deliver it; the ambulance, a diesel chassis in a new world, must keep its
+-- petrol and its petrol profile and start. RT.OW.step then checks an
+-- ambulance met for the first time and every pump of the station. This
+-- version's items must exist, and a Diesel Generator put down must have its
+-- sprite's picture: the tile sheet is new to the save.
+------------------------------------------------------------------------------
+RT.U = { expect = "TLG_upgrade_expect.txt" }
+
+-- The vehicle of this script nearest the start, within 30 tiles.
+function RT.U.vehicle(script)
+    local best, bd
+    for _, v in ipairs(getCell():getVehicles():toArray()) do
+        local name = tostring(v:getScriptName())
+        if name == script or ("Base." .. name) == script then
+            local d = (v:getX() - START.x) * (v:getX() - START.x) + (v:getY() - START.y) * (v:getY() - START.y)
+            if d < 900 and (best == nil or d < bd) then best, bd = v, d end
+        end
+    end
+    return best
+end
+
+function RT.U.pumpOn(x, y)
+    local s = x and y and sq(x, y, 0)
+    local objs = s and s:getObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        if TLG.Integration.Stations.isPump(objs:get(i)) then return objs:get(i) end
+    end
+    return nil
+end
+
+RT.U.stock = { name = "rtu_stock", timeout = 3000, fn = function(ctx, ticks)
+    local U, I = RT.U, TLG.Integration
+    if not ctx.phase then
+        U.home = { x = player():getX(), y = player():getY() }
+        U.cars = {}
+        for i, script in ipairs({ "Base.VanAmbulance", "Base.CarNormal" }) do
+            local v = addVehicleDebug(script, IsoDirections.N, nil, sq(START.x + 5 * (i + 1) - 2, START.y + 3, 0))
+            if v then pcall(function() v:repair() end) end
+            U.cars[i] = v
+        end
+        local spots = RT.M.spots(1)
+        if spots[1] then
+            local ok, g = pcall(function() return IsoGenerator.new(instanceItem("Base.Generator"), getCell(), spots[1]) end)
+            if ok and g then U.gen = g end
+        end
+        -- The pump with fuel nearest the start, approached from a free tile.
+        local best
+        for x = STATION.x0, STATION.x1 do
+            for y = STATION.y0, STATION.y1 do
+                local s = sq(x, y, 0)
+                local objs = s and s:getObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local o = objs:get(i)
+                    if o:getPipedFuelAmount() > 0 and I.Stations.isPump(o) then
+                        local d = (x - START.x) * (x - START.x) + (y - START.y) * (y - START.y)
+                        if best == nil or d < best.d then best = { obj = o, x = x, y = y, d = d } end
+                    end
+                end
+            end
+        end
+        U.pump = best
+        if best then
+            local stand
+            for _, off in ipairs({ { 0, 1 }, { 1, 0 }, { -1, 0 }, { 0, -1 } }) do
+                if not stand and RT.W.free(sq(best.x + off[1], best.y + off[2], 0)) then
+                    stand = { x = best.x + off[1], y = best.y + off[2] }
+                end
+            end
+            stand = stand or { x = best.x, y = best.y + 1 }
+            player():setPosition(stand.x + 0.5, stand.y + 0.5, 0)
+        end
+        ctx.phase, ctx.tick = "fill", ticks
+        return nil
+    end
+    if ctx.phase == "fill" then
+        if ticks - ctx.tick < 60 then return nil end
+        for i = 1, 2 do
+            local tank = U.cars[i] and U.cars[i]:getPartById("GasTank")
+            if tank then
+                tank:setContainerContentAmount(10)
+                tank:getModData().tlg = nil
+            end
+        end
+        if U.gen then U.gen:setFuel(5) end
+        ctx.phase, ctx.tick = "record", ticks
+        return nil
+    end
+    if ctx.phase == "record" then
+        if ticks - ctx.tick < 10 then return nil end
+        -- Recorded by the earlier release's own read and write.
+        local sides = {}
+        for i, k in ipairs({ "Amb", "Car" }) do
+            local v = U.cars[i]
+            if v then
+                local rec = I.Vehicles.read(v, true)
+                if rec then I.Vehicles.writeSidecar(v, rec) end
+                sides[k] = v:getPartById("GasTank"):getModData().tlg
+            end
+        end
+        if U.gen then
+            local rec = I.Generators.read(U.gen, true)
+            if rec then I.Generators.writeSidecar(U.gen, rec) end
+            sides.Gen = U.gen:getModData().tlg
+        end
+        local r, can = {}, nil
+        if U.pump then
+            can = player():getInventory():AddItem("Base.PetrolCan")
+            can:getFluidContainer():Empty()
+            r = ask("RTU.pump_to_can", "transfer", { source = TLG.Authority.Resolver.refForObject(U.pump.obj, "pump"),
+                destination = { kind = "item", id = can:getID() }, amount = 2 })
+            sides.Pump = U.pump.obj:getModData().tlg
+        end
+        R:check("RTU.recorded_by_the_earlier_release", function()
+            return sides.Amb ~= nil and sides.Car ~= nil and sides.Gen ~= nil and sides.Pump ~= nil and r.ok == true
+                and sides.Pump.product == nil, string.format(
+                "mod version %s; ambulance %s; car %s; generator %s; pump %s,%s transfer ok=%s, record %s",
+                tostring(TLG.VERSION), brief(sides.Amb), brief(sides.Car), brief(sides.Gen), tostring(U.pump and U.pump.x),
+                tostring(U.pump and U.pump.y), tostring(r.ok), brief(sides.Pump))
+        end)
+        local gs = U.gen and U.gen:getSquare()
+        TLGH.writeFile(U.expect, { "version=" .. tostring(TLG.VERSION), "hours=" .. tostring(hours()),
+            "pump.x=" .. tostring(U.pump and U.pump.x), "pump.y=" .. tostring(U.pump and U.pump.y),
+            "gen.x=" .. tostring(gs and gs:getX()), "gen.y=" .. tostring(gs and gs:getY()),
+            "sidePump=" .. brief(sides.Pump), "sideAmb=" .. brief(sides.Amb), "sideCar=" .. brief(sides.Car),
+            "sideGen=" .. brief(sides.Gen) })
+        player():setPosition(U.home.x, U.home.y, 0)
+        ctx.phase, ctx.tick = "home", ticks
+        return nil
+    end
+    return ticks - ctx.tick >= 30 or nil
+end }
+
+RT.upgradeSteps = { RT.waitWorld, RT.X.setup, RT.M.stock, RT.U.stock, RT.saveAndQuitAs("rtu_save_and_quit", "up-a-done") }
+
+-- Launch 2: this version on the save the earlier release made.
+RT.U.back = { name = "rtu_back", timeout = 3000, fn = function(ctx, ticks)
+    local U, M, I = RT.U, RT.M, TLG.Integration
+    if not ctx.phase then
+        if not (player() and ticks > 180) then return nil end
+        local e, u = TLGH.readKeyValues(M.expect), TLGH.readKeyValues(U.expect)
+        if e.canP == nil or u.version == nil then
+            RT.abort = "no expectations from launch 1"
+            R:line("OBS  RTU.%s", RT.abort)
+            return true
+        end
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        pcall(function() p:setUnlimitedCarry(true) end)
+        captureDialogs(true)
+        U.home = { x = p:getX(), y = p:getY() }
+        R:check("RTU.this_version_on_the_earlier_save", function()
+            return TLG.VERSION ~= u.version, string.format("the save was made with %s (world hour %s); the mod loaded now is %s",
+                u.version, tostring(u.hours), tostring(TLG.VERSION))
+        end)
+        -- Before any read: every record as the earlier release left it.
+        local inv = p:getInventory()
+        local cans = {}
+        for _, k in ipairs({ "P", "Q", "E" }) do cans[k] = inv:getItemWithIDRecursiv(tonumber(e["can" .. k]) or -1) end
+        U.pump = U.pumpOn(tonumber(u["pump.x"]), tonumber(u["pump.y"]))
+        U.amb, U.car = U.vehicle("Base.VanAmbulance"), U.vehicle("Base.CarNormal")
+        U.gen = M.generatorOn(tonumber(u["gen.x"]), tonumber(u["gen.y"]))
+        local function tankSide(v)
+            local tank = v and v:getPartById("GasTank")
+            return tank and tank:getModData().tlg
+        end
+        local kept, parts = true, {}
+        for _, c in ipairs({ { "can P", cans.P and cans.P:getModData().tlg, e.sideP }, { "can Q", cans.Q and cans.Q:getModData().tlg, e.sideQ },
+            { "can E", cans.E and cans.E:getModData().tlg, e.sideE }, { "pump", U.pump and U.pump:getModData().tlg, u.sidePump },
+            { "ambulance", tankSide(U.amb), u.sideAmb }, { "car", tankSide(U.car), u.sideCar },
+            { "generator", U.gen and U.gen:getModData().tlg, u.sideGen } }) do
+            local same = c[2] ~= nil and brief(c[2]) == c[3]
+            kept = kept and same
+            parts[#parts + 1] = c[1] .. (same and " as saved" or (" changed: now " .. brief(c[2]) .. ", saved " .. tostring(c[3])))
+        end
+        R:check("RTU.records_as_the_earlier_release_left_them", function() return kept, table.concat(parts, "; ") end)
+        local md = TLGH.worldRecord()
+        R:check("RTU.world_record_the_same_one_without_diesel", function()
+            return tostring(md.seed) == e.seed and tostring(md.installedAt) == e.installedAt and tostring(md.policy) == e.policy
+                and tostring(md.epoch) == e.epoch and (md.nextId or 0) >= (tonumber(e.nextId) or math.huge)
+                and md.dieselVehicles ~= true,
+                string.format("seed %s (%s), installedAt %s (%s), policy %s (%s), epoch %s (%s), nextId %s (%s at launch 1), modVersion %s, dieselVehicles %s",
+                    tostring(md.seed), e.seed, tostring(md.installedAt), e.installedAt, tostring(md.policy), e.policy,
+                    tostring(md.epoch), e.epoch, tostring(md.nextId), e.nextId, tostring(md.modVersion), tostring(md.dieselVehicles))
+        end)
+        -- The reads.
+        local D, env, now = TLG.Domain, TLG.World.env(), TLG.World.now()
+        if cans.P and cans.P:getModData().tlg then
+            local cap = cans.P:getFluidContainerFromSelfOrWorldItem():getCapacity()
+            local want = D.Aging.advance(M.fromSide(TLG.Tables.deepCopy(cans.P:getModData().tlg), cap), now, env).deg.gasoline or -1
+            local v, status = tlgView("item", cans.P)
+            R:check("RTU.petrol_can_reads_as_its_record_aged", function()
+                local deg = v and v.deg and v.deg.gasoline
+                return status == "ok" and deg ~= nil and math.abs(deg - want) <= M.tol
+                    and math.abs(D.Supply.total(v) - M.litres(cans.P)) < 1e-3,
+                    string.format("read %s; condition %s, its record aged to now %.9f; %.4f L recorded of %.4f L in the can",
+                        tostring(status), deg and string.format("%.9f", deg) or "none", want, v and D.Supply.total(v) or -1,
+                        M.litres(cans.P))
+            end)
+        end
+        local ev, estatus = nil, "no can"
+        if cans.E then ev, estatus = tlgView("item", cans.E) end
+        R:check("RTU.ethanol_can_reads", function()
+            return estatus == "ok" and ev ~= nil and math.abs(D.Supply.total(ev) - M.litres(cans.E)) < 1e-3
+                and (ev.q.ethanol or 0) > 3.9, string.format("%s; %.4f L in the can", viewText(ev, estatus), M.litres(cans.E))
+        end)
+        local fx, fy = tonumber(e["f.x"]), tonumber(e["f.y"])
+        local found
+        local wobjs = sq(fx, fy, 0) and sq(fx, fy, 0):getWorldObjects()
+        for i = 0, (wobjs and wobjs:size() or 0) - 1 do
+            local it = wobjs:get(i):getItem()
+            local rec = it and it:getModData().tlgProc
+            if type(rec) == "table" and tostring(rec.id) == e.pidF then found = it end
+        end
+        local frec = found and found:getModData().tlgProc
+        R:check("RTU.fermenter_batch_kept", function()
+            return frec ~= nil and tostring(frec.startedAt) == e.startedF and found:getFullType() == "TLG.FermenterVessel",
+                string.format("on %s,%s: %s%s", tostring(fx), tostring(fy), found and found:getFullType() or "not found",
+                    frec and string.format(", process %s started %s (%s at launch 1), %s", tostring(frec.id),
+                    tostring(frec.startedAt), tostring(e.startedF), tostring(frec.state)) or "")
+        end)
+        for _, c in ipairs({ { "ambulance", U.amb }, { "car", U.car } }) do
+            R:check("RTU." .. c[1] .. "_keeps_its_petrol", function()
+                local v = c[2]
+                if v == nil then return false, "not found near the start" end
+                local rec, status = I.Vehicles.read(v, false)
+                local evl = I.Vehicles.evaluate(v)
+                return I.Vehicles.baseProfile(v) == "engine_si_stock" and I.Vehicles.profile(v) == "engine_si_stock" and rec ~= nil
+                    and (rec.q.gasoline or 0) > 9.9 and (rec.q.diesel or 0) == 0 and evl ~= nil and evl.compatible == true,
+                    string.format("script %s; profile %s; record %s; %s", tostring(v:getScriptName()),
+                        tostring(I.Vehicles.profile(v)), viewText(rec, status), evaluationText(evl))
+            end)
+        end
+        R:check("RTU.generator_keeps_its_petrol", function()
+            local g = U.gen
+            if g == nil then return false, "not found on " .. tostring(u["gen.x"]) .. "," .. tostring(u["gen.y"]) end
+            local rec, status = I.Generators.read(g, false)
+            return I.Generators.profile(g) == "generator_si_stock" and rec ~= nil and (rec.q.gasoline or 0) > 4.9
+                and (rec.q.diesel or 0) == 0, string.format("%s; profile %s; record %s", M.tileText(g:getSquare():getX(),
+                    g:getSquare():getY()), tostring(I.Generators.profile(g)), viewText(rec, status))
+        end)
+        if U.pump then
+            local px, py = tonumber(u["pump.x"]), tonumber(u["pump.y"])
+            local stand
+            for _, off in ipairs({ { 0, 1 }, { 1, 0 }, { -1, 0 }, { 0, -1 } }) do
+                if not stand and RT.W.free(sq(px + off[1], py + off[2], 0)) then stand = { x = px + off[1], y = py + off[2] } end
+            end
+            stand = stand or { x = px, y = py + 1 }
+            p:setPosition(stand.x + 0.5, stand.y + 0.5, 0)
+        end
+        ctx.phase, ctx.tick = "pump", ticks
+        return nil
+    end
+    if ctx.phase == "pump" then
+        if ticks - ctx.tick < 10 then return nil end
+        local S, pump = I.Stations, U.pump
+        local named, product, rec, status, r, after, cv, cstatus
+        if pump then
+            named = (pump:getModData().tlg or {}).product
+            product = S.product(pump)
+            rec, status = S.read(pump, false)
+            local can = player():getInventory():AddItem("Base.PetrolCan")
+            can:getFluidContainer():Empty()
+            r = ask("RTU.pump_to_can", "transfer", { source = TLG.Authority.Resolver.refForObject(pump, "pump"),
+                destination = { kind = "item", id = can:getID() }, amount = 2 })
+            after = pump:getModData().tlg
+            cv, cstatus = tlgView("item", can)
+        end
+        R:check("RTU.pump_recorded_earlier_gives_petrol", function()
+            if pump == nil then return false, "no pump on the tile of launch 1" end
+            return named == nil and product == "gasoline" and rec ~= nil and (rec.q.gasoline or 0) > 0 and (rec.q.diesel or 0) == 0
+                and r.ok == true and after ~= nil and after.product == "gasoline" and cv ~= nil and (cv.q.gasoline or 0) > 1.8
+                and (cv.q.diesel or 0) == 0, string.format(
+                "its record named product %s before; the mod reads %s; record %s; transfer ok=%s; the record now names %s; the can: %s",
+                tostring(named), tostring(product), viewText(rec, status), tostring(r.ok), tostring(after and after.product),
+                viewText(cv, cstatus))
+        end)
+        player():setPosition(U.home.x, U.home.y, 0)
+        ctx.phase, ctx.tick = "home", ticks
+        return nil
+    end
+    return ticks - ctx.tick >= 30 or nil
+end }
+
+-- This version's own things on the earlier save.
+RT.U.new = { name = "rtu_new_content", timeout = 1200, fn = function(ctx, ticks)
+    local U, G = RT.U, TLG.Integration.Generators
+    if not ctx.placed then
+        local missing = {}
+        for _, t in ipairs({ "TLG.WoodRetort", "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor", "TLG.BiodieselWashTank",
+            "TLG.DieselGenerator" }) do
+            if instanceItem(t) == nil then missing[#missing + 1] = t end
+        end
+        for _, f in ipairs({ "TLG_Biodiesel", "TLG_Methanol", "TLG_PlantOil" }) do
+            if Fluid.Get(f) == nil then missing[#missing + 1] = f end
+        end
+        R:check("RTU.this_versions_items_exist", function()
+            return #missing == 0, #missing == 0 and "the five biodiesel machines, the Diesel Generator, biodiesel, methanol and plant oil"
+                or ("missing: " .. table.concat(missing, ", "))
+        end)
+        local spots = RT.M.spots(1)
+        if spots[1] then
+            local ok, g = pcall(function() return IsoGenerator.new(instanceItem("TLG.DieselGenerator"), getCell(), spots[1]) end)
+            if ok and g then U.dgen = g else R:line("OBS  RTU.new the Diesel Generator was not put down: %s", tostring(g)) end
+        end
+        ctx.placed = ticks
+        return nil
+    end
+    if ticks - ctx.placed < 30 then return nil end
+    R:check("RTU.diesel_generator_on_the_earlier_save", function()
+        local g = U.dgen
+        if g == nil then return false, "not put down" end
+        local name, itemType, tex, w, h = "?", "?", nil, -1, -1
+        pcall(function() name = g:getSprite():getName() end)
+        pcall(function() itemType = g:getGeneratorItemType() end)
+        pcall(function() tex = g:getSprite():getTextureForCurrentFrame(g:getDir()) end)
+        pcall(function() w, h = tex:getWidth(), tex:getHeight() end)
+        return name == G.SPRITES["TLG.DieselGenerator"] and itemType == "TLG.DieselGenerator" and tex ~= nil and w == 128
+            and h == 256 and G.profile(g) == "generator_ci_bio", string.format(
+            "sprite %s, picture %s (%sx%s), item type %s, profile %s", tostring(name), tostring(tex ~= nil), tostring(w),
+            tostring(h), tostring(itemType), tostring(G.profile(g)))
+    end)
+    return true
+end }
+
+RT.upgradeBackSteps = { RT.U.back, RT.OW.step("RTU", false, { "Base.VanAmbulance" }),
+    vehicleGateStep("RTU.ambulance_starts_on_its_petrol", function() return RT.U.amb end, false, true), RT.U.new, RT.finish }
 
 ------------------------------------------------------------------------------
 -- The water a can takes up while it ages (request "sp-rtcw"; D-007, D-024).
@@ -15153,7 +15743,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -15256,6 +15846,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "rm-a" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, removal launch 1: a new world with the mod")
                 TLGH.Steps.run(R, RT.removalSteps, H, nil)
+            elseif REQUEST == "up-a" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, upgrade launch 1: a new world with the earlier release")
+                TLGH.Steps.run(R, RT.upgradeSteps, H, nil)
             elseif REQUEST == "sp-rtn" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, a new world: fuel first found late")
                 TLGH.Steps.run(R, RT.lateFindSteps, H, nil)
@@ -15336,7 +15929,7 @@ else
 end
 
 -- Launch 1 of the removal scenario, back at the menu after its save: leave.
-if REQUEST == "rm-a-done" then
+if REQUEST == "rm-a-done" or REQUEST == "up-a-done" then
     Events.OnMainMenuEnter.Add(function() getCore():quitToDesktop() end)
 end
 
@@ -15350,7 +15943,7 @@ if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQU
 end
 
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" then
+    or REQUEST == "rm-c" or REQUEST == "up-b" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -15369,6 +15962,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "rm-c" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, removal launch 3: the mod back", true)
             TLGH.Steps.run(R, RT.removalBackSteps, H, nil)
+        elseif REQUEST == "up-b" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, upgrade launch 2: this version on the earlier save", true)
+            TLGH.Steps.run(R, RT.upgradeBackSteps, H, nil)
         elseif REQUEST == "sp-rtsb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, stills and column carried, after the save", true)
             TLGH.Steps.run(R, RT.stillReloadSteps, H, nil)

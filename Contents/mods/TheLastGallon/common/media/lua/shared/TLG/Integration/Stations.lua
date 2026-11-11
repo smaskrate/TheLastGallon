@@ -36,8 +36,11 @@ S.LITRES_PER_UNIT = 1.0
 -- stations keep working after the original reserve is exhausted). Exhausted
 -- pumps TLG never touched are recognised by the vanilla "fuelAmount" modData
 -- entry (BC IsoObject.getPipedFuelAmount stores it there; key name NOT RUN).
+-- A generator is never one: it keeps its tank's record under the same key
+-- (launch 255 found a fuelled generator counted among the station's pumps).
 function S.isPump(obj)
     if obj == nil then return false end
+    if instanceof and instanceof(obj, "IsoGenerator") then return false end
     if obj:getPipedFuelAmount() > 0 then return true end
     local md = obj:hasModData() and obj:getModData() or nil
     return md ~= nil and (md.tlg ~= nil or type(md.fuelAmount) == "number")

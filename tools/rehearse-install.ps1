@@ -25,6 +25,12 @@
      launch 3 continues it with the mod back ("rm-c"). Each launch's results
      and console are kept in the cache's Lua folder as
      TLG_removal_launch<n>.results.txt and .console.txt.
+     -Scenario upgrade: launch 1 plays a new world with an EARLIER release's
+     package (dist/TheLastGallon-<FromVersion>.zip, checked against its own
+     manifest) and the harness (request "up-a") and saves it; this version's
+     package then replaces it in the mods folder, as a player replaces the
+     folder; launch 2 continues the save ("up-b"). Results and consoles are
+     kept as TLG_upgrade_launch<n>.results.txt and .console.txt.
   The rehearsal folders are removed and recreated only when they carry this
   script's marker file. Nothing is uploaded.
 .PARAMETER NoBuild
@@ -32,9 +38,12 @@
 .PARAMETER TimeoutMinutes
   Watchdog limit for each game launch (default 40).
 .PARAMETER Scenario
-  clean, existing or removal (see above).
+  clean, existing, removal or upgrade (see above).
+.PARAMETER FromVersion
+  The earlier release the upgrade scenario starts from (default 0.1.2).
 #>
-param([switch]$NoBuild, [int]$TimeoutMinutes = 40, [ValidateSet("clean", "existing", "removal")][string]$Scenario = "clean")
+param([switch]$NoBuild, [int]$TimeoutMinutes = 40,
+    [ValidateSet("clean", "existing", "removal", "upgrade")][string]$Scenario = "clean", [string]$FromVersion = "0.1.2")
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = (Select-String -Path (Join-Path $repo "Contents\mods\TheLastGallon\42\mod.info") -Pattern '^modversion=(.+)$').Matches[0].Groups[1].Value
@@ -59,27 +68,32 @@ foreach ($dir in $cache, $unpacked) {
     Set-Content -Encoding ascii (Join-Path $dir $marker) "Created by tools/rehearse-install.ps1; its next run removes this folder."
 }
 
-# Unpack, then compare with the manifest both ways.
+# Unpacks a release zip into $unpacked\<name>, compares it with its manifest
+# both ways and returns the mod folder inside it.
 Add-Type -AssemblyName System.IO.Compression.FileSystem
-$files = Join-Path $unpacked "zip"
-[System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $files)
-$want = @{}
-foreach ($line in Get-Content $manifest) {
-    if (-not $line) { continue }
-    $hash, $path = $line -split "  ", 2
-    $want[$path] = $hash
+function Expand-Release([string]$zip, [string]$manifest, [string]$name) {
+    $files = Join-Path $unpacked $name
+    [System.IO.Compression.ZipFile]::ExtractToDirectory($zip, $files)
+    $want = @{}
+    foreach ($line in Get-Content $manifest) {
+        if (-not $line) { continue }
+        $hash, $path = $line -split "  ", 2
+        $want[$path] = $hash
+    }
+    $got = @{}
+    Get-ChildItem -Recurse -File $files | ForEach-Object {
+        $got[$_.FullName.Substring($files.Length + 1).Replace('\', '/')] = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
+    }
+    $bad = @()
+    foreach ($p in $want.Keys) { if ($got[$p] -ne $want[$p]) { $bad += "missing from the zip or different: $p" } }
+    foreach ($p in $got.Keys) { if (-not $want.ContainsKey($p)) { $bad += "not in the manifest: $p" } }
+    if ($bad) { $bad | ForEach-Object { Write-Host $_ }; throw "$zip does not match its manifest" }
+    Write-Host "$(Split-Path -Leaf $zip) matches its manifest: $($got.Count) files, SHA-256 $((Get-FileHash -Algorithm SHA256 $zip).Hash)"
+    $modDir = Join-Path $files "Contents\mods\TheLastGallon"
+    if (-not (Test-Path (Join-Path $modDir "42\mod.info"))) { throw "$zip has no Contents/mods/TheLastGallon/42/mod.info" }
+    return $modDir
 }
-$got = @{}
-Get-ChildItem -Recurse -File $files | ForEach-Object {
-    $got[$_.FullName.Substring($files.Length + 1).Replace('\', '/')] = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
-}
-$bad = @()
-foreach ($p in $want.Keys) { if ($got[$p] -ne $want[$p]) { $bad += "missing from the zip or different: $p" } }
-foreach ($p in $got.Keys) { if (-not $want.ContainsKey($p)) { $bad += "not in the manifest: $p" } }
-if ($bad) { $bad | ForEach-Object { Write-Host $_ }; throw "the zip does not match its manifest" }
-Write-Host "zip matches its manifest: $($got.Count) files"
-$mod = Join-Path $files "Contents\mods\TheLastGallon"
-if (-not (Test-Path (Join-Path $mod "42\mod.info"))) { throw "the zip has no Contents/mods/TheLastGallon/42/mod.info" }
+$mod = Expand-Release $zip $manifest "zip"
 
 $harness = Join-Path $PSScriptRoot "run-sp-harness.ps1"
 if ($Scenario -eq "clean") {
@@ -92,6 +106,34 @@ if ($Scenario -eq "clean") {
 function Write-ModsTxt([string]$folder, [string[]]$mods) {
     $lines = @("VERSION = 1,", "", "mods", "{") + ($mods | ForEach-Object { "    mod = $_," }) + @("}", "", "maps", "{", "}")
     $lines | Set-Content -Encoding ascii (Join-Path $folder "mods.txt")
+}
+
+if ($Scenario -eq "upgrade") {
+    $fromZip = Join-Path $repo "dist\TheLastGallon-$FromVersion.zip"
+    $fromManifest = Join-Path $repo "dist\TheLastGallon-$FromVersion.sha256"
+    if (-not (Test-Path $fromZip) -or -not (Test-Path $fromManifest)) { throw "no $fromZip or its manifest" }
+    $fromMod = Expand-Release $fromZip $fromManifest "from"
+    $lua = Join-Path $cache "Lua"
+    function Save-Launch([int]$n) {
+        Copy-Item (Join-Path $lua "TLG_harness_sp.txt") (Join-Path $lua "TLG_upgrade_launch$n.results.txt") -ErrorAction SilentlyContinue
+        Copy-Item (Join-Path $cache "console.txt") (Join-Path $lua "TLG_upgrade_launch$n.console.txt") -ErrorAction SilentlyContinue
+    }
+    # Launch 1: a new world with the earlier release; fuel recorded, saved.
+    & $harness -DevCache $cache -ModSource $fromMod -Mode upgrade-a -TimeoutMinutes $TimeoutMinutes
+    Save-Launch 1
+    $saves = @(Get-ChildItem -Directory (Join-Path $cache "Saves\Sandbox") -ErrorAction SilentlyContinue)
+    if ($saves.Count -ne 1) { throw "expected the one save of launch 1, found $($saves.Count)" }
+    Write-Host "save $($saves[0].Name) made with $FromVersion; the mods folder now gets $version"
+    # Launch 2: this version's package in the mods folder (the harness's setup
+    # mirrors it over the earlier one), the save continued.
+    & $harness -DevCache $cache -ModSource $mod -Mode upgrade-b -TimeoutMinutes $TimeoutMinutes
+    Save-Launch 2
+    foreach ($n in 1, 2) {
+        Select-String -Path (Join-Path $lua "TLG_upgrade_launch$n.console.txt") -Pattern "world fuel history created|TLG\] .*version" -ErrorAction SilentlyContinue |
+            ForEach-Object { Write-Host "launch $n console: $($_.Line.Trim())" }
+    }
+    Write-Host "results and consoles: $lua\TLG_upgrade_launch<n>.results.txt / .console.txt"
+    exit 0
 }
 
 if ($Scenario -eq "removal") {

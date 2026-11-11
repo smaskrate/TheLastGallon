@@ -303,6 +303,26 @@ local function stationPump(x, litres, side)
     return o
 end
 
+T.case("integration: a generator with a fuel record is not a pump", function()
+    local S = I.Stations
+    local saved = instanceof
+    instanceof = function(o, class) return type(o) == "table" and o.class == class end
+    local ok, err = pcall(function()
+        -- A pump the mod has recorded and emptied is still a pump.
+        local pump = stationPump(1, 0, { v = 1, q = {} })
+        T.eq(S.isPump(pump), true)
+        -- A generator keeps its tank's record under the same mod data key.
+        local generator = stationPump(2, 0, { v = 1, q = { gasoline = 5 } })
+        generator.class = "IsoGenerator"
+        T.eq(S.isPump(generator), false)
+        -- An object with neither piped fuel nor a record is not one either.
+        local other = stationPump(3, 0, nil)
+        T.eq(S.isPump(other), false)
+    end)
+    instanceof = saved
+    if not ok then error(err, 0) end
+end)
+
 T.case("domain: about one pump in four holds diesel, the same pump every time", function()
     local W = D.WorldInit
     local world, diesel = { seed = 4242 }, 0

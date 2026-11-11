@@ -1,0 +1,70 @@
+﻿TheLastGallon-0.2.0.zip matches its manifest: 164 files, SHA-256 
+1579A967D1BADE38C1ECABCF4B4B8B1ECFAFEC9C5A515549D1001311904435E3
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
+client started, pid 10704
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG existing save, launch 1: a world played without the mod
+game=42.22.2 3d39148846 classpath=1
+OBS  EXA.stocked world=19103772204540690775 hours=2.0097; can A (carried) id=2003888869 10.00 L petrol; can D on 10663,10645 id=1922118469 10.00 L petrol
+PASS EXA.mod_absent :: TLG loaded=false, listed active=false
+PASS EXA.world_aged :: 240.00 game hours since stocking (2.0097 -> 242.0104)
+PASS EXA.cans_kept :: A 10.0000 L, D 10.0000 L, D still on the ground=true
+OBS  EXA.saving at world hours 242.0104
+SUMMARY pass=3 fail=0
+DONE
+save 19103772204540690775: mods.txt now lists TheLastGallon and TheLastGallonHarness
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
+client started, pid 34440
+click-to-start clicks sent: 2
+finished=True exitCode=
+# TLG single-player harness, an existing save's first load with the mod
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=19103772204540690775 hours=242.0336 DayLength=4
+STEP rtx_setup begin
+STEP rtx_load begin
+PASS RTX.same_world_continued :: world 19103772204540690775 (launch 1: 19103772204540690775), world hour 242.0360 (saved at 242.010406 after 10 days on the clock)
+PASS RTX.record_created_as_existing_save :: v=1 createdAsNewGame=false policy=transition transitionHours=720 installedAt=242.02406311035156 (the game started at 242.0241) seed=194581891 epoch=0 modVersion=0.2.0 nextId=1
+OBS  RTX.sandbox SandboxVars.TheLastGallon as this save has it: {CampaignSpeed=1,ExistingSavePolicy=1,ProtectIncompatiblePours=true,StationContamination=true,TransitionDays=30,VehicleStalls=true}
+STEP rtx_world_diesel begin
+PASS RTX.older_world_has_no_diesel :: dieselVehicles=false createdAsNewGame=false policy=transition modVersion=0.2.0; the mod loaded is 0.2.0
+PASS RTX.ambulance_is_petrol :: script Base.VanAmbulance; profile engine_si_stock; record initialized id=nil rev=0 total=10.0000 q[gasoline=9.9995,water=0.0005] deg[gasoline=0.0000] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTX.trade_van_is_petrol :: script Base.Van; profile engine_si_stock; record initialized id=nil rev=0 total=10.0000 q[gasoline=9.9997,water=0.0003] deg[gasoline=0.0000] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTX.every_pump_gives_petrol :: 8 pumps, 0 of them diesel: 10636,10622:gasoline 10636,10623:gasoline 10636,10629:gasoline 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:gasoline
+STEP rtx_look begin
+PASS RTX.carried_can_untracked_before :: record nil
+OBS  RTX.look menu "Look and smell" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTX.what_i_know menu "What I know about it" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTX.look Look and smell: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough) | What I know about it: What I know about this fuel <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected | observations filed under S194581891-1
+PASS RTX.look_and_smell_answers :: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough)
+PASS RTX.what_i_know_after_a_look :: the can's record {cond=1,deg={gasoline=1.2972289033920387E-5},dirty=0,id=S194581891-1,mic=0,prov={},q={gasoline=10},rev=0,sealed=true,stab=0,storage=gascan_plastic,t=242.0413818359375,v=1}; its observation {visual={degError=1.1199999999999999,method=visual,observedDeg=0,observedSediment=0,observedWater=0,phaseSeparated=false,precision=0.3,primary=gasoline,sampledAt=242.0413818359375,sampledRev=0,supplyId=S194581891-1,waterDetected=false}}
+STEP rtx_discover begin
+PASS RTX.pour_keeps_the_look_record :: after the look S194581891-1|0.000012972|10.0000, after a pour S194581891-1|0.000013010|9.0000
+PASS RTX.found_at_installation_is_fresh :: first recorded by Look and smell: recorded at world hour 242.0414, 0.02 h after installation: condition 0.000012972, the rule 0.000012972 (aged since installation 0.000008510, world-age condition 0.185528599, share 0.0000); record S194581891-1|0.000012972|10.0000
+OBS  RTX.pump_to_can transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTX.pump_found_at_installation_is_fresh :: pump 10654,10630 (11599 units) untouched before=true; transfer ok=true; recorded at world hour 242.0419, 0.02 h after installation: condition 0.000009961, the rule 0.000009961 (aged since installation 0.000004858, world-age condition 0.206332406, share 0.0000); record R194581891-3|0.000009961|11597.0000; water 17.3853 L, sediment 9.1348 L
+STEP rtx_wait begin
+STEP rtx_late begin
+PASS RTX.ground_can_untracked_until_found :: record nil
+PASS RTX.found_later_is_partly_aged :: recorded at world hour 386.0427, 144.02 h after installation: condition 0.156137623, the rule 0.156137623 (aged since installation 0.066932946, world-age condition 0.512898726, share 0.2000); record S194581891-5|0.156137623|9.0000
+PASS RTX.found_at_installation_stays_recorded :: then S194581891-1|0.000013010|9.0000, now S194581891-1|0.000013010|9.0000
+STEP rtx_save_and_exit begin
+SUMMARY pass=15 fail=0
+EXIT phase B -> main menu
+# TLG single-player harness, the existing save continued again
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtx_reload begin
+PASS RTX.record_kept_after_reload :: seed 194581891 (194581891), installedAt 242.024063 (242.024063), policy transition (transition), epoch 0 (0), createdAsNewGame=false
+PASS RTX.carried_can_record_kept :: S194581891-1|0.000013010|9.0000 (before the save S194581891-1|0.000013010|9.0000)
+PASS RTX.ground_can_record_kept :: S194581891-5|0.156137623|9.0000 (before the save S194581891-5|0.156137623|9.0000)
+PASS RTX.still_no_diesel_after_reload :: dieselVehicles=false
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 386.07
+SUMMARY pass=4 fail=0
+DONE
+console: LOG  : Lua          f:0> [TLG][INFO] world fuel history created: policy=transition seed=194581891 epoch=0.00 
+installedAt=242.02 newGame=false
+launch 1 results: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache\Lua\TLG_existing_launch1.txt
