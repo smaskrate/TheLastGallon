@@ -115,7 +115,19 @@ end
 
 function services.spawn(player, args)
     local sq = getCell():getGridSquare(tonumber(args.x), tonumber(args.y), 0)
-    local item = sq and sq:AddWorldInventoryItem(args.item, 0.5, 0.5, 0)
+    local item
+    if sq and args.petrol then
+        -- A can filled before it is put down, so the clients get it full.
+        item = instanceItem(args.item)
+        local fc = item and item:getFluidContainer()
+        if fc then
+            fc:Empty()
+            fc:addFluid(Fluid.Petrol, tonumber(args.petrol))
+        end
+        if item then sq:AddWorldInventoryItem(item, 0.5, 0.5, 0) end
+    else
+        item = sq and sq:AddWorldInventoryItem(args.item, 0.5, 0.5, 0)
+    end
     local rec = item and args.batch and startBatch(item)
     reply("spawned", args, { id = tostring(item and item:getID()), item = args.item, x = args.x, y = args.y,
         batch = tostring(rec and rec.state) })
@@ -687,9 +699,23 @@ end
 -- server holds of the player: the five recipes known, the level, the Ash
 -- Barrels carried. roll_handbook fills containers from the handbook's loot
 -- lists as roll_manual does and counts the handbooks.
+-- With rise = "1" the level is gained one at a time with LevelPerk, as the
+-- single-player handbook mode gains it: launches 325 and 327 set Welding 3
+-- with setPerkLevelDebug, and the crafting window then offered the two
+-- Welding 4 recipes and made them.
 function services.handbook_level(player, args)
-    player:setPerkLevelDebug(Perks.MetalWelding, tonumber(args.level) or 0)
-    reply("handbook_level", args, { level = player:getPerkLevel(Perks.MetalWelding) })
+    local want = tonumber(args.level) or 0
+    if args.rise == "1" then
+        local guard = 0
+        while player:getPerkLevel(Perks.MetalWelding) < want and guard < 12 do
+            player:LevelPerk(Perks.MetalWelding)
+            guard = guard + 1
+        end
+    else
+        player:setPerkLevelDebug(Perks.MetalWelding, want)
+    end
+    reply("handbook_level", args, { level = player:getPerkLevel(Perks.MetalWelding),
+        xp = player:getXp():getXP(Perks.MetalWelding) })
 end
 
 function services.probe_handbook(player, args)

@@ -125,14 +125,14 @@ end
 -- handbook (MPServer.lua roll_handbook).
 ------------------------------------------------------------------------------
 -- handbook3 (2026-11-11, one client): the same window for the three other
--- welded machines. With the materials for all three and Welding 5 (below
--- the level that teaches any of them): each refused, not learned. Welding
--- 3 and the handbook read: each refused, below its level. Welding 4: the
--- Wood Retort and the Wash Tank made, the Reactor (Welding 5) refused.
--- Welding 5: the Reactor made. The Lye Leacher is not tried: it is made
--- on a surface, and the harness's ground has none.
+-- welded machines, with the materials for all three. Welding 3 and the
+-- handbook read: each refused, below its level. Welding 4: the Wood Retort
+-- and the Wash Tank made, the Reactor (Welding 5) refused. Welding 5: the
+-- Reactor made. handbook3u: Welding 5 (below the level that teaches any of
+-- them) and nothing read: each refused, not learned. The Lye Leacher is
+-- not tried: it is made on a surface, and the harness's ground has none.
 ------------------------------------------------------------------------------
-if MP.only == "handbook" or MP.only == "handbook3" then
+if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" then
     local HB = { recipe = "TLG_MakeAshBarrel" }
     local function recipes()
         local out = {}
@@ -214,6 +214,21 @@ if MP.only == "handbook" or MP.only == "handbook3" then
                 pcall(function() inputs = tostring(hp.logic:getRecipeData():areAllInputItemsSatisfied()) end)
                 ctx.offered = ctx.row ~= nil and c ~= nil and c.buttonCraft.enable == true
                 local learned, actual = knownSet()
+                -- What the recipe asks as the game holds it, and the game's
+                -- own answer for this character (launches 325-331: the
+                -- window offered Welding 4 recipes at Welding 3).
+                local asks = "?"
+                pcall(function()
+                    local r, parts = recipes()[recipeName], {}
+                    for i = 0, r:getRequiredSkillCount() - 1 do
+                        local s = r:getRequiredSkill(i)
+                        parts[#parts + 1] = string.format("%s:%s hasPlayerRequiredSkill=%s level here %s xp %s", tostring(s:getPerk():getId()),
+                            tostring(s:getLevel()), tostring(CraftRecipeManager.hasPlayerRequiredSkill(s, p)),
+                            tostring(p:getPerkLevel(s:getPerk())), tostring(p:getXp():getXP(s:getPerk())))
+                    end
+                    asks = table.concat(parts, "; ")
+                end)
+                ctx.asks = asks
                 ctx.text = string.format("window open=%s, row listed=%s, Craft enabled=%s, canPerform=%s, inputs satisfied=%s;"
                     .. " Welding %d; hasPlayerLearnedRecipe %s, actually known %s; debug=%s; dark=%s", tostring(w ~= nil),
                     tostring(ctx.row ~= nil), tostring(c and c.buttonCraft.enable), tostring(can), inputs,
@@ -231,7 +246,7 @@ if MP.only == "handbook" or MP.only == "handbook3" then
             local made = have(product) - ctx.base
             check("hb_" .. name, function()
                 return ctx.offered == wantOffered and made == (wantOffered and 1 or 0), string.format(
-                    "%s; %s made %d", ctx.text, product, made)
+                    "%s; asks %s; %s made %d", ctx.text, tostring(ctx.asks), product, made)
             end)
             if w then w:close() end
             return true
@@ -263,12 +278,18 @@ if MP.only == "handbook" or MP.only == "handbook3" then
         end)
         return true
     end }
-    if MP.only == "handbook3" then
+    if MP.only == "handbook3" or MP.only == "handbook3u" then
+        -- Gained a level at a time with LevelPerk, here and on the server
+        -- (MPServer.lua handbook_level says why).
         local function level(name, n)
-            return call("hb_level_" .. name, "handbook_level", { level = n }, "handbook_level", function(m)
-                player():setPerkLevelDebug(Perks.MetalWelding, n)
-                report():line("OBS  MP.hb_level Welding on the server %s, here %d", tostring(m.level),
-                    player():getPerkLevel(Perks.MetalWelding))
+            return call("hb_level_" .. name, "handbook_level", { level = n, rise = "1" }, "handbook_level", function(m)
+                local p, guard = player(), 0
+                while p:getPerkLevel(Perks.MetalWelding) < n and guard < 12 do
+                    p:LevelPerk(Perks.MetalWelding)
+                    guard = guard + 1
+                end
+                report():line("OBS  MP.hb_level Welding on the server %s (%s XP), here %d (%s XP)", tostring(m.level),
+                    tostring(m.xp), p:getPerkLevel(Perks.MetalWelding), tostring(p:getXp():getXP(Perks.MetalWelding)))
             end)
         end
         local M3 = { { "wood_retort", "TLG_MakeWoodRetort", "TLG.WoodRetort" },
@@ -303,9 +324,20 @@ if MP.only == "handbook" or MP.only == "handbook3" then
                     torch:setActivated(true)
                     player():setSecondaryHandItem(torch)
                 end
-            end),
-            level("5_not_learned", 5), wait("mp_hb_level_settles_1", 120) }
-        for _, s in ipairs(all("refused_not_learned_at_welding_5", false)) do steps[#steps + 1] = s end
+            end) }
+        -- handbook3u: only the refusals of recipes not learned, at Welding 5.
+        -- The level only ever rises in a launch: launch 325 set it to 5 and
+        -- then down to 3 (setPerkLevelDebug), and the window then offered
+        -- the two Welding 4 recipes at 3.
+        if MP.only == "handbook3u" then
+            steps[#steps + 1] = level("5_not_learned", 5)
+            steps[#steps + 1] = wait("mp_hb_level_settles_1", 120)
+            for _, s in ipairs(all("refused_not_learned_at_welding_5", false)) do steps[#steps + 1] = s end
+            steps[#steps + 1] = once("mp_finish_b", function() send("finish", {}) end)
+            steps[#steps + 1] = MP.finish
+            MP.stepsA = steps
+            return
+        end
         for _, s in ipairs({ level("3", 3), wait("mp_hb_level_settles_2", 120), HB.read,
             serverView("after_reading", function(m)
                 check("hb_server_knows_the_five_after_the_read", function()
@@ -2339,7 +2371,147 @@ local WFC = (function()
 end)()
 MP.WFC = WFC
 
-if MP.only == "wrongfuel" then
+------------------------------------------------------------------------------
+-- menus (2026-11-11, one client; 0.3.1 on a server): the mod's world menu
+-- entries follow the click, as the single-player modes context-menus and
+-- context-menus-zoom check it. The server puts down the wrong-fuel case's
+-- car and generators, a full petrol can and a fermentation vessel. On A's
+-- client each menu is built by the game's own right-click builder at a
+-- chosen point: around the can and the vessel 77 clicks each, the mod's
+-- entry exactly where the game's Grab shows (48 pixels over the zoom; a
+-- click within 1.5 pixels of that reach is not judged); bare ground; the
+-- generator's tile; the car with the cursor on it and away from it. At zoom
+-- 1, 0.5 and 1.5. The client runs without -debug.
+------------------------------------------------------------------------------
+local MNC = (function()
+    local M = { canAt = { S.CX - 3, S.CY }, vesselAt = { S.CX - 3, S.CY - 4 }, bareAt = { S.CX - 6, S.CY + 1 } }
+    local function entry(menu, text)
+        for i, o in pairs(menu.options or {}) do
+            if type(i) == "number" and i < (menu.numOptions or 1e9) and type(o) == "table" and o.name ~= nil
+                and string.sub(tostring(o.name), 1, #text) == text then
+                return true
+            end
+        end
+        return false
+    end
+    -- The game's menu for a click at (x, y) on `objects`, the cursor at (mx, my).
+    local function menuAt(objects, x, y, mx, my)
+        local realX, realY = getMouseXScaled, getMouseYScaled
+        getMouseXScaled, getMouseYScaled = function() return mx or -5000 end, function() return my or -5000 end
+        local ok, err = pcall(ISWorldObjectContextMenu.createMenu, 0, objects, x, y)
+        getMouseXScaled, getMouseYScaled = realX, realY
+        local menu = getPlayerContextMenu(0)
+        local r = { ok = ok, err = err, fuel = entry(menu, getText("ContextMenu_TLG_Fuel")),
+            machine = entry(menu, getText("ContextMenu_TLG_Machine")), grab = entry(menu, getText("ContextMenu_Grab")),
+            gen = entry(menu, getText("ContextMenu_TLG_ConvGenerator")), car = entry(menu, getText("ContextMenu_TLG_ConvVehicle")) }
+        pcall(function() menu:hideAndChildren() end)
+        return r
+    end
+    local function text(r)
+        return string.format("Fuel=%s Machine=%s Grab=%s Workshop generator=%s car=%s%s", tostring(r.fuel), tostring(r.machine),
+            tostring(r.grab), tostring(r.gen), tostring(r.car), r.ok and "" or (" (builder error: " .. tostring(r.err) .. ")"))
+    end
+    local function floorOf(x, y)
+        local sq = getCell():getGridSquare(x, y, 0)
+        return sq and sq:getFloor(), sq
+    end
+    local function spawn(name, item, at, petrol)
+        return call("mn_spawn_" .. name, "spawn", { item = item, x = at[1], y = at[2], petrol = petrol }, "spawned", function(m)
+            report():line("OBS  MP.mn %s %s put down at %s,%s by the server", name, tostring(m.item), tostring(m.x), tostring(m.y))
+        end)
+    end
+    local function at(tag)
+        return { name = "mp_mn_at_" .. tag, timeout = 900, fn = function(ctx, ticks)
+            if ticks < 120 then return nil end
+            local zoom = getCore():getZoom(0)
+            local can = floorItem(M.canAt[1], M.canAt[2], "Base.PetrolCan")
+            local vessel = floorItem(M.vesselAt[1], M.vesselAt[2], "TLG.FermenterVessel")
+            local site = WFC.site or {}
+            local car = getVehicleById(tonumber(site.car) or -1)
+            local gx, gy = tonumber(site.g1x), tonumber(site.g1y)
+            if not (can and vessel and car and gx and can:getWorldItem() and vessel:getWorldItem()) then
+                check("mn_" .. tag .. "_everything_here", function()
+                    return false, string.format("can=%s vessel=%s car=%s generator tile=%s", tostring(can ~= nil), tostring(vessel ~= nil),
+                        tostring(car ~= nil), tostring(gx))
+                end)
+                return true
+            end
+            report():line("OBS  MP.mn %s zoom %.2f debug=%s", tag, zoom, tostring(getDebug()))
+            local items = { { "can", can, "fuel" }, { "vessel", vessel, "machine" } }
+            local pos, reach = {}, 48 / zoom
+            for i, spec in ipairs(items) do
+                local w = spec[2]:getWorldItem()
+                pos[i] = { x = w:getScreenPosX(0), y = w:getScreenPosY(0) }
+            end
+            for i, spec in ipairs(items) do
+                local sx, sy = pos[i].x, pos[i].y
+                local shown, hidden, n, edge, bad = 0, 0, 0, 0, {}
+                for _, dx in ipairs({ -120, -80, -50, -30, -15, 0, 15, 30, 50, 80, 120 }) do
+                    for _, dy in ipairs({ -80, -40, -15, 0, 15, 40, 80 }) do
+                        local x, y = sx + dx, sy + dy
+                        local wx, wy = ISCoordConversion.ToWorld(x * zoom, y * zoom, 0)
+                        local floor, under = floorOf(math.floor(wx), math.floor(wy))
+                        if floor then
+                            local r = menuAt({ floor }, x, y)
+                            n = n + 1
+                            local want, onEdge = {}, false
+                            for j, other in ipairs(items) do
+                                local d = math.sqrt((pos[j].x - x) * (pos[j].x - x) + (pos[j].y - y) * (pos[j].y - y))
+                                want[other[3]] = d <= reach
+                                if math.abs(d - reach) <= 1.5 then onEdge = true end
+                            end
+                            local onGen = under:getX() == gx and under:getY() == gy
+                            if onEdge then
+                                edge = edge + 1
+                            elseif r.ok and r.fuel == want.fuel and r.machine == want.machine
+                                and r.grab == (want.fuel or want.machine) and r.gen == onGen and not r.car then
+                                if r[spec[3]] then shown = shown + 1 else hidden = hidden + 1 end
+                            elseif #bad < 6 then
+                                bad[#bad + 1] = string.format("%d,%d: %s", dx, dy, text(r))
+                            end
+                        end
+                    end
+                end
+                check("mn_" .. tag .. "_" .. spec[1] .. "_entry_shows_exactly_where_the_games_grab_shows", function()
+                    return #bad == 0 and shown > 0 and hidden > 0, string.format(
+                        "%d clicks around the item at %.0f,%.0f, reach %.1f pixels: its entry and Grab %d, without it %d, on the reach's edge and not judged %d%s",
+                        n, sx, sy, reach, shown, hidden, edge, #bad > 0 and ("; differing: " .. table.concat(bad, " | ")) or "")
+                end)
+            end
+            local bare = floorOf(M.bareAt[1], M.bareAt[2])
+            local bx, by = isoToScreenX(0, M.bareAt[1] + 0.5, M.bareAt[2] + 0.5, 0), isoToScreenY(0, M.bareAt[1] + 0.5, M.bareAt[2] + 0.5, 0)
+            local cx, cy = isoToScreenX(0, car:getX(), car:getY(), car:getZ()), isoToScreenY(0, car:getX(), car:getY(), car:getZ())
+            local r = menuAt({ bare }, bx, by, bx * zoom, by * zoom)
+            check("mn_" .. tag .. "_bare_ground_has_no_entry", function()
+                return r.ok and not r.gen and not r.car and not r.fuel and not r.machine, text(r)
+            end)
+            r = menuAt({ (floorOf(gx, gy)) }, bx, by, bx * zoom, by * zoom)
+            check("mn_" .. tag .. "_generator_tile_has_the_generator_entry", function() return r.ok and r.gen and not r.car, text(r) end)
+            local under = floorOf(math.floor(car:getX()), math.floor(car:getY())) or bare
+            r = menuAt({ under }, cx, cy, cx * zoom, cy * zoom)
+            check("mn_" .. tag .. "_car_under_the_cursor_has_the_car_entry", function()
+                return r.ok and r.car and not r.gen, string.format("the car on screen at %.0f,%.0f: %s", cx, cy, text(r))
+            end)
+            r = menuAt({ under }, bx, by, bx * zoom, by * zoom)
+            check("mn_" .. tag .. "_car_not_under_the_cursor_has_no_entry", function() return r.ok and not r.car, text(r) end)
+            return true
+        end }
+    end
+    M.steps = { MP.waitWorld, WFC.setup, spawn("can", "Base.PetrolCan", M.canAt, "5"),
+        spawn("vessel", "TLG.FermenterVessel", M.vesselAt), wait("mp_mn_site_arrives", 300),
+        h.zoomTo("mp_mn_zoom_100", 1.0), at("zoom_100"),
+        h.zoomTo("mp_mn_zoom_050", 0.5), at("zoom_050"),
+        h.zoomTo("mp_mn_zoom_150", 1.5), at("zoom_150"),
+        h.zoomTo("mp_mn_zoom_back", 1.0),
+        call("mn_cleanup", "wf_cleanup", {}, "wf_cleanup", function() end),
+        once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+    return M
+end)()
+
+if MP.only == "menus" then
+    MP.stepsA = MNC.steps
+    MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+elseif MP.only == "wrongfuel" then
     MP.stepsA = WFC.steps
     MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
 elseif MP.only == "machines" then

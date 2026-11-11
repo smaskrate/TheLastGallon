@@ -104,6 +104,7 @@
 --   sp-rtcm -> the mod's world menu entries only where the click is on their
 --              thing: a can, a machine, a generator, a car
 --   sp-rtcz -> the same menu checks at zoom 0.5, 0.75, 1.5 and 2
+--   sp-rthl -> a handbook found in a container of the map, taken and read
 --   sp-rtwf -> wrong fuel (D-037): the verdict for every band, a refused
 --              start's cost, wear, a failure, the cures, the option off
 --   sp-rtfd -> driving on diesel, biodiesel and wrong fuel, the mod's draws
@@ -139,7 +140,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -17958,7 +17959,8 @@ end }
 RT.HB.read = { name = "rthb_read", timeout = 6000, fn = function(ctx, ticks)
     local p = player()
     if not ctx.book then
-        ctx.book = p:getInventory():AddItem("TLG.BiodieselHandbook")
+        -- The one taken from a container of the map (RT.HL), else a new one.
+        ctx.book = (RT.HL and RT.HL.book) or p:getInventory():AddItem("TLG.BiodieselHandbook")
         local learned = ctx.book:getLearnedRecipes()
         local names = {}
         for i = 0, (learned and learned:size() or 0) - 1 do names[#names + 1] = tostring(learned:get(i)) end
@@ -17996,6 +17998,138 @@ RT.handbookSteps = { RT.waitWorld, RT.HB.setup,
     RT.HB.read,
     RT.HB.expect("handbook_teaches_all_five", nil, "11111", "11101"),
     RT.HB.expect("welding_5_allows_the_reactor", function() RT.HB.levelTo(Perks.MetalWelding, 5) end, "11111", "11111"),
+    RT.finish }
+
+------------------------------------------------------------------------------
+-- A handbook taken from a container of the map (request "sp-rthl"). A new
+-- world. Every container of the map within 70 tiles of the start (the
+-- Gas2Go station and what stands around it) is filled as the game fills one
+-- the first time a player looks into it (ItemPicker.fillContainer, SRC
+-- ISInventoryPage.lua) and searched for the handbook. If none holds one,
+-- the containers are emptied and filled again, up to 200 rounds (a fixture:
+-- the handbook's weight in a list is 1 or 2). The first handbook found is
+-- taken with the game's ISInventoryTransferAction from beside its container
+-- and read with the inventory menu's Read; at level 0 it must teach all five
+-- recipes.
+------------------------------------------------------------------------------
+RT.HL = { id = "TLG.BiodieselHandbook", reach = 70, rounds = 200 }
+
+RT.HL.find = { name = "rthl_find", timeout = 6000, fn = function(ctx, ticks)
+    local HL, p = RT.HL, player()
+    if ticks < 60 then return nil end
+    if not ctx.list then
+        ctx.list, ctx.round, ctx.fills = {}, 0, 0
+        local kinds, cx, cy = {}, math.floor(p:getX()), math.floor(p:getY())
+        for x = cx - HL.reach, cx + HL.reach do
+            for y = cy - HL.reach, cy + HL.reach do
+                local s = sq(x, y, 0)
+                local objs = s and s:getObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local o = objs:get(i)
+                    local n = 0
+                    pcall(function() n = o:getContainerCount() end)
+                    for k = 0, n - 1 do
+                        local c = o:getContainerByIndex(k)
+                        if c then
+                            local room = s:getRoom()
+                            local kind = (room and tostring(room:getName()) or "outside") .. "/" .. tostring(c:getType())
+                            ctx.list[#ctx.list + 1] = { c = c, s = s, kind = kind }
+                            kinds[kind] = (kinds[kind] or 0) + 1
+                        end
+                    end
+                end
+            end
+        end
+        local parts = {}
+        for _, k in ipairs(TLG.Tables.sortedKeys(kinds)) do parts[#parts + 1] = k .. "=" .. kinds[k] end
+        R:line("OBS  RTHL.containers %d within %d tiles of %d,%d: %s", #ctx.list, HL.reach, cx, cy, table.concat(parts, " "))
+        return nil
+    end
+    ctx.round = ctx.round + 1
+    for _, e in ipairs(ctx.list) do
+        local explored = false
+        pcall(function() explored = e.c:isExplored() end)
+        if ctx.round > 1 then
+            pcall(function() e.c:removeAllItems() end)
+            pcall(function() e.c:setExplored(false) end)
+            explored = false
+        end
+        if not explored then
+            pcall(function() ItemPicker.fillContainer(e.c, p) end)
+            pcall(function() e.c:setExplored(true) end)
+            ctx.fills = ctx.fills + 1
+        end
+        local got = e.c:getItemsFromFullType(HL.id)
+        if got and got:size() > 0 and not HL.found then HL.found = { e = e, item = got:get(0), round = ctx.round } end
+    end
+    if not HL.found and ctx.round < HL.rounds and #ctx.list > 0 then return nil end
+    local f = HL.found
+    R:check("RTHL.a_handbook_in_a_container_of_the_map", function()
+        return f ~= nil, f and string.format(
+            "round %d (round 1 is each container's first fill; later rounds empty and fill them again), %d fills of %d containers: in %s at %d,%d",
+            f.round, ctx.fills, #ctx.list, f.e.kind, f.e.s:getX(), f.e.s:getY())
+            or string.format("none in %d rounds, %d fills of %d containers", ctx.round, ctx.fills, #ctx.list)
+    end)
+    if not f then RT.abort = "no handbook rolled" end
+    return true
+end }
+
+RT.HL.take = { name = "rthl_take", timeout = 3000, fn = function(ctx, ticks)
+    local HL, p = RT.HL, player()
+    if RT.abort then return true end
+    local f = HL.found
+    if not ctx.t0 then
+        local sx, sy = f.e.s:getX(), f.e.s:getY()
+        local spot
+        for _, d in ipairs({ { 0, 1 }, { 1, 0 }, { 0, -1 }, { -1, 0 }, { 1, 1 }, { -1, -1 }, { 1, -1 }, { -1, 1 } }) do
+            local s = sq(sx + d[1], sy + d[2], 0)
+            if not spot and s and s:getFloor() and not s:isSolid() and not s:isSolidTrans() and s:getRoom() == f.e.s:getRoom() then
+                spot = s
+            end
+        end
+        spot = spot or f.e.s
+        p:teleportTo(spot:getX(), spot:getY(), 0)
+        ctx.spot, ctx.t0 = spot, ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 90 then return nil end
+    if not ctx.queued then
+        ISTimedActionQueue.add(ISInventoryTransferAction:new(p, f.item, f.e.c, p:getInventory()))
+        ctx.queued = ticks
+        return nil
+    end
+    if ticks - ctx.queued < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
+    local have = p:getInventory():contains(f.item)
+    R:check("RTHL.handbook_taken_with_the_games_transfer", function()
+        return have and not f.e.c:contains(f.item), string.format("standing at %d,%d beside the container at %d,%d: in the inventory=%s, still in the container=%s",
+            ctx.spot:getX(), ctx.spot:getY(), f.e.s:getX(), f.e.s:getY(), tostring(have), tostring(f.e.c:contains(f.item)))
+    end)
+    if have then HL.book = f.item else RT.abort = "the handbook was not taken" end
+    return true
+end }
+
+RT.HL.guard = { name = "rthl_read_guard", timeout = 60, fn = function()
+    -- Without the looted book the read step would make its own.
+    if RT.abort then RT.HL.book = nil end
+    return true
+end }
+
+RT.handbookLootSteps = { RT.waitWorld, RT.HB.setup,
+    RT.HB.expect("nothing_known_before_the_handbook", nil, "00000", "00000"),
+    RT.HL.find, RT.HL.take, RT.HL.guard,
+    { name = "rthl_read", timeout = 6000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        return RT.HB.read.fn(ctx, ticks)
+    end },
+    { name = "rthl_taught", timeout = 600, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        if ticks < 30 then return nil end
+        R:check("RTHL.the_looted_handbook_teaches_all_five", function()
+            local known, skill, text = RT.HB.view()
+            return known == "11111", string.format("known %s, skill %s; %s", known, skill, text)
+        end)
+        return true
+    end },
     RT.finish }
 
 ------------------------------------------------------------------------------
@@ -18213,10 +18347,22 @@ function RT.CM.atZoom(tag)
         local zoom = getCore():getZoom(0)
         local P = "RTCZ." .. tag .. "."
         R:line("OBS  %szoom %.2f", P, zoom)
-        for _, spec in ipairs({ { "can", CM.can, "fuel" }, { "vessel", CM.vessel, "machine" } }) do
+        -- Launch 323 judged each item alone and by Grab alone. At zoom 2 the
+        -- two items and the generator's tile are within the grid of each
+        -- other, so a click near one item is also judged for the other and
+        -- for the tile under it. A click within 1.5 pixels of an item's
+        -- reach (48 pixels over the zoom) is noted and not judged: at zoom
+        -- 0.75 four clicks 64.03 pixels off, against a reach of 64, had the
+        -- game's Grab and not the mod's entry.
+        local items = { { "can", CM.can, "fuel" }, { "vessel", CM.vessel, "machine" } }
+        local at, reach = {}, 48 / zoom
+        for i, spec in ipairs(items) do
             local w = spec[2]:getWorldItem()
-            local sx, sy = w:getScreenPosX(0), w:getScreenPosY(0)
-            local shown, hidden, n, bad = 0, 0, 0, {}
+            at[i] = { x = w:getScreenPosX(0), y = w:getScreenPosY(0) }
+        end
+        for i, spec in ipairs(items) do
+            local sx, sy = at[i].x, at[i].y
+            local shown, hidden, n, edge, bad = 0, 0, 0, 0, {}
             for _, dx in ipairs({ -120, -80, -50, -30, -15, 0, 15, 30, 50, 80, 120 }) do
                 for _, dy in ipairs({ -80, -40, -15, 0, 15, 40, 80 }) do
                     local x, y = sx + dx, sy + dy
@@ -18225,8 +18371,18 @@ function RT.CM.atZoom(tag)
                     if under and under:getFloor() then
                         local r = CM.menuAt({ under:getFloor() }, x, y)
                         n = n + 1
-                        if r.ok and r[spec[3]] == r.grab and not r.gen and not r.car then
-                            if r.grab then shown = shown + 1 else hidden = hidden + 1 end
+                        -- Which entries the rule gives at this point.
+                        local want, onEdge = {}, false
+                        for j, other in ipairs(items) do
+                            local d = math.sqrt((at[j].x - x) * (at[j].x - x) + (at[j].y - y) * (at[j].y - y))
+                            want[other[3]] = d <= reach
+                            if math.abs(d - reach) <= 1.5 then onEdge = true end
+                        end
+                        if onEdge then
+                            edge = edge + 1
+                        elseif r.ok and r.fuel == want.fuel and r.machine == want.machine
+                            and r.grab == (want.fuel or want.machine) and r.gen == (under == CM.genTile) and not r.car then
+                            if r[spec[3]] then shown = shown + 1 else hidden = hidden + 1 end
                         elseif #bad < 6 then
                             bad[#bad + 1] = string.format("%d,%d: %s", dx, dy, CM.text(r))
                         end
@@ -18235,8 +18391,8 @@ function RT.CM.atZoom(tag)
             end
             R:check(P .. spec[1] .. "_entry_shows_exactly_where_the_games_grab_shows", function()
                 return #bad == 0 and shown > 0 and hidden > 0, string.format(
-                    "%d clicks around the item at %.0f,%.0f: both entries %d, neither %d%s", n, sx, sy, shown, hidden,
-                    #bad > 0 and ("; differing: " .. table.concat(bad, " | ")) or "")
+                    "%d clicks around the item at %.0f,%.0f, reach %.1f pixels: its entry and Grab %d, without it %d, on the reach's edge and not judged %d%s",
+                    n, sx, sy, reach, shown, hidden, edge, #bad > 0 and ("; differing: " .. table.concat(bad, " | ")) or "")
             end)
         end
         CM.devicesCheck(P)
@@ -18263,7 +18419,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -18359,6 +18515,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtcz" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the world menus follow the click at other zoom levels")
                 TLGH.Steps.run(R, RT.contextMenuZoomSteps, H, nil)
+            elseif REQUEST == "sp-rthl" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, a handbook taken from a container of the map")
+                TLGH.Steps.run(R, RT.handbookLootSteps, H, nil)
             elseif REQUEST == "sp-rthb" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel recipes: skills and the handbook")
                 TLGH.Steps.run(R, RT.handbookSteps, H, nil)

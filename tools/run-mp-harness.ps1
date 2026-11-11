@@ -62,8 +62,11 @@
   a failure, the mod's pour refused until confirmed, and the sandbox
   option off, each seen on the server and on the client (one client).
   handbook3: the crafting window for the Wood Retort, the Wash Tank and
-  the Reactor: refused not learned, refused below the level, made at it
-  (one client).
+  the Reactor with the handbook read: refused below the level, made at it.
+  handbook3u: the three refused at Welding 5 with nothing read (one
+  client each). menus: the mod's world menu entries where the click is on
+  their thing, for a can, a machine, a generator and a car the server put
+  down, at zoom 1, 0.5 and 1.5 (one client).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -90,7 +93,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "wrongfuel")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "wrongfuel", "menus")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"

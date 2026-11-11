@@ -250,6 +250,10 @@
   and car at zoom 0.5, 0.75, 1.5 and 2: around each item 77 clicks, the
   mod's entry exactly where the game's Grab shows; the Workshop entries
   as at zoom 1; no save.
+  handbook-loot: a new world; the map's containers within 70 tiles of the
+  start filled as a first look fills them (again and again until one holds
+  a Biodiesel Handbook), the handbook taken with the game's transfer
+  action and read: it must teach the five recipes; no save.
   removal-a, removal-b, removal-c, removal-d: the four launches of the
   removal rehearsal (tools/rehearse-install.ps1 -Scenario removal): a world
   played with the mod, continued without it (the driver), then with it
@@ -294,7 +298,7 @@
   Mods the client loads (default: the mod and the harness; see setup-devenv.ps1).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "controls", "still-pickup",
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "handbook-loot", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
         "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "removal-d", "upgrade-a", "upgrade-b", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
@@ -365,7 +369,7 @@ if ($Mode -eq "italian") {
     Set-Content -Encoding ascii -Path (Join-Path $luaDir "TLG_it_expect.txt") -Value $lines
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "fuel-drives" { "sp-rtfd" } "wrong-fuel-more" { "sp-rtwg" } "biodiesel-cold" { "sp-rtbc" } "context-menus" { "sp-rtcm" } "context-menus-zoom" { "sp-rtcz" } "handbook" { "sp-rthb" } "controls" { "sp-rtc" }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "fuel-drives" { "sp-rtfd" } "wrong-fuel-more" { "sp-rtwg" } "biodiesel-cold" { "sp-rtbc" } "context-menus" { "sp-rtcm" } "context-menus-zoom" { "sp-rtcz" } "handbook-loot" { "sp-rthl" } "handbook" { "sp-rthb" } "controls" { "sp-rtc" }
     "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "removal-d" { "rm-d" } "upgrade-a" { "up-a" } "upgrade-b" { "up-b" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } "transfer-liquid" { "sp-rttl" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 

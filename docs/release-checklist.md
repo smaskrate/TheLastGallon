@@ -121,9 +121,41 @@ Biodiesel Handbook or by level (launches 308–312, `test-results.md`).
 On a dedicated server, in a client without `-debug`, the crafting window
 refused the Ash Barrel unlearned and below its level and made it with
 both, and the server's loot lists gave handbooks (launch 312, 9/0).
-Open: the window's refusal for the other four machines; a player who is
-not an admin; the Italian name read in game. It has not been uploaded to
+A plain player got the same (launch 329). It has not been uploaded to
 the Workshop.
+
+**Open, found in launches 325–333:** on a server the crafting window
+offers a machine one Welding level below what its recipe asks, and the
+server makes it: the Wood Retort and the Wash Tank at Welding 3, the
+Reactor at Welding 4, with the handbook read. The game's own
+`hasPlayerRequiredSkill` answers false there. The recipes not learned
+are refused at Welding 5 (launch 328), and the Reactor at Welding 3.
+The player guide, the changelog and the Workshop text give the levels
+the recipes ask. Not decided: whether to say so in them or to ask one
+level more. Not tried: the Ash Barrel at Welding 1, the Lye Leacher, a
+vanilla recipe, single player without `-debug`.
+
+Checked on 2026-11-11 with the repository's mod, which ships what the
+0.4.0 package ships (launches 318–334, `test-results.md`), of what the
+0.3.0 and 0.4.0 notes listed as not checked:
+
+* driving on diesel, on biodiesel and on wrong fuel, a stall on the
+  move, and biodiesel and ethanol in the cold (321, 322);
+* a flex-converted engine with diesel, a repair of a failed engine and
+  of a failed generator with the game's own actions, and starts, stalls
+  and failures by draws left to chance (320);
+* the wrong-fuel rules on a server, seen on the server and on the
+  client, as an admin and as a plain player (324, 330);
+* a handbook rolled into a container of the map, taken and read (332);
+* the menu fix at zoom 0.5, 0.75, 1.5 and 2, and on a server (326, 334).
+
+Still open: driving in the cold; diesel below −8 °C; on a server,
+driving, the cold, a converted engine with diesel and a repair; the Lye
+Leacher's window on a server; a click by a person and a controller for
+the menu fix; the Italian name read in game. The shipped changelog,
+player guide and support matrix, and the header of `Vehicles.lua`,
+still list as not checked what these launches checked: they change with
+the next version.
 
 The 0.4.0 package is the zip of `a0d293e` (167 files, 7,889,723 bytes,
 SHA-256 `87ED49FD…5A47A297`), built on 2026-11-11 after the preview was

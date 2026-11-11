@@ -6249,3 +6249,294 @@ Not uploaded.
 
 Evidence:
 [run 317](evidence/2026-11-11_rt-sp_harness_run317_install_rehearsal_0.4.0_new_preview_42.22.2.txt).
+
+
+## 2026-11-11 — RT-SP harness, launches 318–322 (driving on diesel, biodiesel and wrong fuel; a converted engine, repairs and free draws; the cold)
+
+Build 42.22.2, the repository's mod (0.4.0, as `a0d293e` ships it), new
+worlds. Three new modes of `tools\run-sp-harness.ps1`. They cover what
+the 0.3.0 and 0.4.0 notes listed as not checked in game for wrong fuel
+and biodiesel.
+
+In these modes the mod's draws are not set, except where a row says so.
+The harness passes each draw through and writes it down
+(`RT.FD.watch`, `RT.WG.record` in `SPHarness.lua`). A check then compares
+the outcome with the draw: a start is refused when the draw is above the
+start factor, an engine stalls or fails in the minute whose draw is
+below its odds, and in no other. Expected factors are
+`docs/balance.md`'s, written into the test.
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 318 | `fuel-drives` | 80/2, both failures the test's |
+| 319 | `wrong-fuel-more` | 37/2, both failures the test's |
+| 320 | `wrong-fuel-more` | 39/0 |
+| 321 | `fuel-drives` | 95/0 |
+| 322 | `biodiesel-cold` | 16/0 |
+
+### Driving (`fuel-drives`, launch 321)
+
+The driving mode's cleared road and cruise control at 25 km/h. Each
+tank is written as the record and the litres (a fixture), and the engine
+is started past the gate.
+
+| Leg | Verdict (start ×, power ×, wear ×) | Drove | What the mod charged |
+| --- | --- | --- | --- |
+| Ambulance on diesel | 1, 1, 1 | 352 tiles, 14 game minutes | nothing: engine 100, power 4900 throughout |
+| Ambulance on biodiesel alone | 0.6, 0.85, 1.5 | 352 tiles | power 4900 → 4165; 0.0179 engine points for 0.239 L |
+| Petrol car on a fifth diesel | 0.4, 0.6, 6 | 202 tiles | power 4000 → 2400; 0.2495 engine points and 0.1663 exhaust points for 0.333 L |
+| Ambulance on 30 % petrol | 0.5, 0.7, 8 | 32 tiles | stalled in its first minute by a free draw (0.0060 below 0.02) and coasted; no litre charged |
+| Ambulance on petrol alone | 0.25, 0.5, 15; failure 2 % a litre | 202 tiles | power 4900 → 2450; 0.2582 engine points for 0.123 L; seven failure draws, none below its odds (0.0004 a minute) |
+| Petrol car on a fifth diesel, the stall draw held at 0 from 80 tiles | 0.4, 0.6, 6 | 100 tiles | stalled at 24.8 km/h and coasted to a stop |
+
+* Every tank lost only what the game burned, and the record followed in
+  proportion. No part but brakes, tires, suspension and exhaust changed.
+* Each engine's own power was back within two game minutes of the stop.
+* No leg burned enough for a whole condition point: at 25 km/h a car
+  burns 0.02–0.05 L a game minute. Whole points are seen in launch 320,
+  where the test takes the litres.
+* In launch 318 the ambulance on 30 % petrol ran two minutes before the
+  test braked it: power 4900 → 3430, 0.0149 engine points for 0.0142 L.
+  Its car had been spawned 3° off the road's line (the alignment gave up
+  after 12 tries; it now takes up to 40), which failed two checks of the
+  test.
+
+### A converted engine, repairs, draws left to chance (`wrong-fuel-more`, launch 320)
+
+1. **Flex conversion.** A petrol car converted through the workshop
+   menu (the mod's clock moved on 13 h while the work action ran, a
+   fixture). Its verdicts: 80 % ethanol and petrol alone clean; 5 %
+   diesel start × 0.9, power × 0.85, wear × 3; a fifth diesel in ethanol
+   0.4, 0.6, 6, exhaust 0.5 a litre; a fifth biodiesel wear × 7.2; 40 %
+   diesel no start. The start on 40 % diesel was refused and cost 2
+   engine points and 2 % battery charge, with the driver's line. On a
+   fifth diesel 4 L cost 3 engine and 2 exhaust points. The mod's pour of
+   diesel into its ethanol was refused until confirmed. Rolls held here
+   and in part 2.
+2. **Repairs.** The pickup van failed on petrol with the draw held at 0
+   (condition 0). The game's `ISRepairEngine`, at Mechanics 10 with 30
+   spare engine parts (a fixture), brought it to 90. On diesel it then
+   ran 2.5 game minutes at its own power, the engine still at 90, the
+   mod's power state empty. The Diesel Generator failed the same way.
+   The game's `ISFixGenerator`, chosen 15 times with 15 scrap
+   electronics, brought it from 0 to 60, and on diesel it switched on.
+3. **Free draws**, every outcome as its draw gives:
+   * a petrol car on 40 % diesel, 12 starts: all refused, 1 point lost
+     seven times and 2 points five times, 2 % battery each time;
+   * the ambulance on 30 % petrol, 12 starts: 6 passed by the mod, 6
+     refused, a refusal costing nothing;
+   * the ambulance idling on petrol alone, 5 L taken each game minute
+     and the engine's condition put back to 100 (fixtures): stalled at
+     minute 6 (0.0273 below 0.03), was started again and failed at
+     minute 23 (0.0431 below 0.0961);
+   * a petrol car idling on a fifth diesel: stalled at minute 28 (0.0037
+     below 0.024);
+   * the petrol generator on a fifth diesel, 12 starts: 5 passed, 7
+     refused; on 40 % diesel, 12 starts: all refused, 1 point five times
+     and 2 points seven times;
+   * the Diesel Generator on petrol alone, charged for 0.01 L at a time:
+     failed at the sixteenth charge (0.0137 below 0.0435), switched off.
+
+Two facts about the game, found in launch 319 and now in the test:
+
+* One **Fix Generator** action uses one piece of scrap and adds 4
+  condition at Electrical 0; it queued no further action.
+* At condition 50 or less the game fails every other start of a
+  generator by itself (`ISActivateGenerator.complete`). The generator
+  repaired to 4 did not start on diesel in launch 319; the mod had not
+  refused it.
+
+### The cold (`biodiesel-cold`, launch 322)
+
+15 January, air −5.4 °C from the first hour.
+
+* Verdicts: an ambulance on biodiesel alone gels (start × 0.18, power
+  × 0.595); on 30 % biodiesel it gels (0.285, 0.687); on exactly a fifth
+  and on diesel it does not (diesel gels below −8 °C, not reached). The
+  Diesel Generator on biodiesel gels (0.3, 0.7). A petrol car on ethanol
+  alone has start factor 0.
+* The ambulance on biodiesel, 12 starts: 2 passed, 10 refused, as drawn.
+  Running, its power was 2916 of 4900.
+* The Diesel Generator on biodiesel, 12 starts: 3 passed, 9 refused.
+* The petrol car on ethanol, 12 starts: all refused, at no cost.
+
+Consoles: no line of the mod at warning or error level and no exception
+in launches 318–322.
+
+Not run: driving in the cold; diesel below −8 °C; a flex engine's cold
+start; a failure on the move by a free draw (the odds are 0.0004 a
+minute at 25 km/h); other chassis; the repair through the mechanics
+window (the action was queued by the test); everything on a server
+(launch 324).
+
+Evidence:
+[run 318](evidence/2026-11-11_rt-sp_harness_run318_fuel_drives_two_failures_of_the_test_42.22.2.txt);
+[run 319](evidence/2026-11-11_rt-sp_harness_run319_wrong_fuel_more_two_failures_of_the_test_42.22.2.txt);
+[run 320](evidence/2026-11-11_rt-sp_harness_run320_wrong_fuel_more_42.22.2.txt);
+[run 321](evidence/2026-11-11_rt-sp_harness_run321_fuel_drives_42.22.2.txt);
+[run 322](evidence/2026-11-11_rt-sp_harness_run322_biodiesel_cold_42.22.2.txt).
+
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 323–334 (wrong fuel on a server, the crafting window, a handbook from the map, the menus at other zooms and on a server)
+
+Build 42.22.2, the repository's mod (0.4.0), new worlds. The multiplayer
+launches are one dedicated server and one client without `-debug`
+(`tools\run-mp-harness.ps1 -Clients 1`); from launch 327 on the account
+is a plain player (`-NonAdmin`, role `user`).
+
+| Launch | Mode or case | Result (pass/fail) |
+| --- | --- | --- |
+| 323 | RT-SP `context-menus-zoom` | 29/4, the failures the test's |
+| 324 | RT-MP `-Only wrongfuel` | 30/0 |
+| 325 | RT-MP `-Only handbook3` (its first form) | 8/6, see below |
+| 326 | RT-SP `context-menus-zoom` | 33/0 |
+| 327 | RT-MP `-Only handbook3 -NonAdmin` | 5/6, see below |
+| 328 | RT-MP `-Only handbook3u -NonAdmin` | 5/0 |
+| 329 | RT-MP `-Only handbook -NonAdmin` | 9/0 |
+| 330 | RT-MP `-Only wrongfuel -NonAdmin` | 30/0 |
+| 331 | RT-MP `-Only handbook3 -NonAdmin`, levels gained with `LevelPerk` | 5/6, see below |
+| 332 | RT-SP `handbook-loot` | 7/0 |
+| 333 | RT-MP `-Only handbook3 -NonAdmin`, with the game's own skill answer logged | 5/6, see below |
+| 334 | RT-MP `-Only menus -NonAdmin` | 20/0 |
+
+### Found: the crafting window makes a machine one Welding level below what its recipe asks
+
+Launches 325, 327, 331 and 333, each on a server with a client without
+`-debug`, the handbook read and the materials carried:
+
+| Welding | Wood Retort (asks 4) | Wash Tank (asks 4) | Reactor (asks 5) |
+| --- | --- | --- | --- |
+| 3 | Craft offered, made | Craft offered, made | refused |
+| 4 | not tried: its materials were used at 3 | the same | Craft offered, made |
+
+* The server made each machine: it was in the character's inventory or
+  on the ground beside the character afterwards.
+* In launch 333 the game's own `CraftRecipeManager.hasPlayerRequiredSkill`
+  answered false for the Welding 4 recipes at Welding 3 and for the
+  Reactor at Welding 4, while the window's `canPerformCurrentRecipe`
+  answered true and Craft was enabled. The recipes read back as asking
+  `MetalWelding:4` and `MetalWelding:5`.
+* How the level was reached makes no difference: set with
+  `setPerkLevelDebug` (325, down from 5; 327, up from 0) or gained a
+  level at a time with `LevelPerk` on the client and the server (331,
+  333).
+* Admin (325) and plain player (327, 331, 333) alike.
+* The six failed checks of each launch are this: two machines made
+  where the test expected a refusal, the Reactor likewise at Welding 4,
+  and the three later tries without materials.
+
+So on 42.22.2 a recipe's `SkillRequired` lets the window craft from one
+level below it. The cause is in the game's Java, which was not read.
+Not tried: the Ash Barrel at Welding 1 and the Lye Leacher at Carpentry
+1; a vanilla recipe; single player without `-debug`. The player guide,
+the changelog and the Workshop text say Welding 4, 5 and 2 and Carpentry
+2. Nothing was changed.
+
+What held as the documents say:
+
+* **Not learned** (launch 328; the first three checks of 325): at
+  Welding 5 with nothing read, the window refused the Wood Retort, the
+  Wash Tank and the Reactor, with their materials carried.
+* **The Ash Barrel** (launch 329, a plain player): refused not learned,
+  refused at Welding 0 with the handbook read, made at Welding 2; the
+  server's loot lists gave handbooks.
+* The Reactor was refused at Welding 3, two levels below.
+
+### Wrong fuel on a server (`wrongfuel`, launches 324 and 330)
+
+The server puts down a petrol car, an ambulance, a petrol generator and
+a Diesel Generator. The client pours 10 L of petrol into each vehicle
+and 5 L into each generator with the game's own actions; the server
+then rewrites a record in shares (a fixture). The server's draws are
+passed through and sent back with each answer. Both launches passed
+every check; the figures are launch 324's.
+
+* **Verdicts** on the server, as `balance.md` gives them: the car on a
+  fifth and on 40 % diesel, the ambulance on 30 % petrol and on petrol
+  alone, the generators.
+* **A refused start costs** (the car on 40 % diesel, three tries): the
+  server drew 2, 1 and 2, the engine went 100 → 98 → 97 → 95 on the
+  server and on the client, the battery lost 2 % each time, and the
+  client showed "Wrong fuel (Diesel): the engine will not start, and
+  trying damages it".
+* **Starts on fuel that harms**, each as the server's draw gives: the
+  car on a fifth diesel refused at 0.9565 and 0.7002 and started at
+  0.2762 (factor 0.4); the ambulance on petrol alone refused twice and
+  started at 0.2243 (factor 0.25); the client showed "it damages this
+  engine while it runs" on each pass.
+* **Power**: the running car's 4000 became 2400 on the server and on
+  the client.
+* **Wear**: 4 L taken from the running car's tank by the server (the
+  stall draw held meanwhile) cost 3 engine points and 2 exhaust points,
+  seen on the client (engine 92, exhaust 98).
+* **A failure**: 1 L taken from the running ambulance with the failure
+  draw held at 0: engine 100 → 0 on both sides, stopped, the client
+  showed "The engine has failed: wrong fuel (Gasoline)", and the next
+  start did nothing.
+* **Generators**: the petrol generator on 40 % diesel refused three
+  times, 1 point each, seen on the client with the line; the Diesel
+  Generator on petrol refused four times and switched on at 0.1346
+  (factor 0.25), then failed by the server (a litre gone, the draw held
+  at 0): condition 0 and off on both sides.
+* **The mod's pour** of 5 L petrol into the ambulance's diesel was
+  refused by the server until confirmed; confirmed, the tank read
+  harmful (wear × 8).
+* **The option off** on the server: the same tank blocks the start, no
+  damage; on again, harmful.
+
+Not run on a server: driving; the cold; a flex-converted engine with
+diesel; a repair; a failure or a stall by a free draw (the single-player
+launch 320 has them); two clients.
+
+### A handbook from a container of the map (`handbook-loot`, launch 332)
+
+58 containers within 70 tiles of the start, the Gas2Go station's among
+them. Each was filled as the game fills one at a player's first look
+(`ItemPicker.fillContainer`). No first fill held a Biodiesel Handbook;
+the containers were then emptied and filled again (a fixture), and the
+eighth round put one on a metal shelf of the station's storage room
+(`gasstorage/metal_shelves`, 406 fills in all). The character took it
+with the game's `ISInventoryTransferAction` standing beside the shelf
+and read it with the inventory menu's Read: all five recipes known, at
+level 0. Not run: a handbook found by a first fill; the same on a
+server.
+
+### The menus at other zooms and on a server (launches 326 and 334)
+
+* Single player (326): at zoom 0.5, 0.75, 1.5 and 2, around the can and
+  around the vessel 77 clicks each on the floor of the square under the
+  click. The mod's entry showed exactly where the game's Grab showed;
+  the Workshop entries as at zoom 1 (bare ground and the character's
+  tile none, the generator's tile and the generator clicked the
+  generator's, the car only under the cursor).
+* On a server (334, a plain player without `-debug`): the same at zoom
+  1, 0.5 and 1.5 for a can, a vessel, a generator and a car the server
+  put down.
+* Clicks within 1.5 pixels of the reach (48 pixels over the zoom) are
+  not judged: 4 at zoom 0.75 and 1 at zoom 2 for each item in launch
+  326. In launch 323 the four clicks at zoom 0.75, 64.03 pixels from an
+  item against a reach of 64, had the game's Grab and not the mod's
+  entry: the game's edge is within a pixel of the mod's. The other
+  failures of 323 were the test's: at zoom 2 a click near one item was
+  also on the other item or on the generator's tile.
+
+Still not run, and not automated: a click by a person; a controller.
+
+Consoles: no line of the mod at warning or error level in these
+launches. The multiplayer clients have the game's own six
+`AdvancedAnimator … NoSuchFileException` lines for folders neither mod
+has.
+
+Evidence:
+[run 323](evidence/2026-11-11_rt-sp_harness_run323_context_menus_zoom_four_failures_of_the_test_42.22.2.txt);
+[run 324](evidence/2026-11-11_rt-mp_harness_run324_wrongfuel_42.22.2.txt);
+[run 325](evidence/2026-11-11_rt-mp_harness_run325_handbook3_six_failures_of_the_test_42.22.2.txt);
+[run 326](evidence/2026-11-11_rt-sp_harness_run326_context_menus_zoom_42.22.2.txt);
+[run 327](evidence/2026-11-11_rt-mp_harness_run327_handbook3_non_admin_six_failures_42.22.2.txt);
+[run 328](evidence/2026-11-11_rt-mp_harness_run328_handbook3u_non_admin_42.22.2.txt);
+[run 329](evidence/2026-11-11_rt-mp_harness_run329_handbook_non_admin_42.22.2.txt);
+[run 330](evidence/2026-11-11_rt-mp_harness_run330_wrongfuel_non_admin_42.22.2.txt);
+[run 331](evidence/2026-11-11_rt-mp_harness_run331_handbook3_non_admin_levelperk_six_failures_42.22.2.txt);
+[run 332](evidence/2026-11-11_rt-sp_harness_run332_handbook_loot_42.22.2.txt);
+[run 333](evidence/2026-11-11_rt-mp_harness_run333_handbook3_non_admin_skill_answer_six_failures_42.22.2.txt);
+[run 334](evidence/2026-11-11_rt-mp_harness_run334_menus_non_admin_42.22.2.txt).
