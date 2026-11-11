@@ -663,9 +663,15 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
 `docs/workshop-change-note-0.4.1.txt`, written on 2026-11-11: the changes
-from 0.1.1, which the item serves, to 0.4.1. It is not in the package. NOT RUN:
-pasting a note into the uploader, and how the Workshop page shows its
-`[b]` and `[list]` marks.
+from 0.1.1, which the item serves, to 0.4.1. It is not in the package. The owner pasted it at the 0.4.1 upload
+(2026-11-11) and sent a picture of the item's change-notes page: `[b]`
+shows as bold, and each `[list]` showed as a bulleted list, but the
+page's box closed before the first list, so only the title, the first
+line and the heading "New" stood inside it and the rest hung below. The
+note is now written without `[list]`: each entry is a line beginning
+with a dash, a blank line between entries. Why the box closes at a list
+was not looked up; that the dash form stays inside the box is not seen
+yet (the owner edits the note on the page).
 What changed in the package since the last rehearsed one (run 206, 0.1.0):
 the death fix on a server (D-015 amendment, run 210: `Machines.lua`,
 `Boot.lua`), the **Transfer Liquid** fix (D-035, run 215:
