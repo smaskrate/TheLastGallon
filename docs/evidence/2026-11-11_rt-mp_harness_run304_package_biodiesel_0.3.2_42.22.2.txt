@@ -1,0 +1,396 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 4832)
+server up after 27 s
+server: LOG  : General      f:0 st:620,135,729> command entered via server console (System.in): "adduser "tlga" 
+"********""
+server: LOG  : General      f:0 st:620,135,729> command entered via server console (System.in): "setaccesslevel "tlga" 
+"admin""
+server: LOG  : General      f:0 st:620,136,027> User tlga is now admin
+server: LOG  : General      f:0 st:620,137,742> command entered via server console (System.in): "adduser "tlgb" 
+"********""
+server: LOG  : General      f:0 st:620,139,756> command entered via server console (System.in): "setaccesslevel "tlgb" 
+"admin""
+server: LOG  : General      f:0 st:620,139,819> User tlgb is now admin
+client mp-a started, pid 50624
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP biodiesel_site begin
+OBS  MP.biodiesel site: blocked squares []; finished machines: barrelDone=OutputReady {wood_ash=1.4850}; leacherDone=OutputReady {lye=0.2228}; reactorDone=OutputReady {biodiesel=16.8435,methanol=0.6766,plant_oil=0.1881,sediment=0.1729}; retortDone=OutputReady {methanol=5.0127}; washDone=OutputReady {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}; generator 10657,10648; van 241; pump 10654,10630 (14066 units, gives diesel); world has diesel=true
+PASS MP.biodiesel_site_made_A :: barrelDone=OutputReady {wood_ash=1.4850}; leacherDone=OutputReady {lye=0.2228}; reactorDone=OutputReady {biodiesel=16.8435,methanol=0.6766,plant_oil=0.1881,sediment=0.1729}; retortDone=OutputReady {methanol=5.0127}; washDone=OutputReady {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}
+STEP mp_biodiesel_site_arrives begin
+STEP mp_biodiesel_site_seen begin
+PASS MP.biodiesel_site_seen_A :: machines missing: ; generator true; van true
+PASS MP.diesel_generator_drawn_on_the_client_A :: sprite tlg_generators_01_0, picture true, item type TLG.DieselGenerator
+PASS MP.client_knows_the_van_is_diesel_A :: client's world record dieselVehicles=true; profile here engine_ci_stock
+STEP give_logs_retort begin
+STEP mp_logs_retort_arrive begin
+STEP mp_walk_to_retort begin
+STEP retort_load begin
+OBS  MP.retort_load reply: ok=true reason=nil duplicate=nil state=Processing wood=18 ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=0 collected=nil
+PASS MP.retort_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_logs_barrel begin
+STEP mp_logs_barrel_arrive begin
+STEP mp_walk_to_barrel begin
+STEP barrel_load begin
+OBS  MP.barrel_load reply: ok=true reason=nil duplicate=nil state=Processing wood=18 ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=0 collected=nil
+PASS MP.barrel_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_water begin
+STEP mp_water_arrives begin
+STEP mp_walk_to_leacher begin
+STEP leacher_load begin
+OBS  MP.leacher_load reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=1.4849999999999999 water=2.9699999999999998 oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=0 collected=nil
+PASS MP.leacher_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_oil begin
+STEP mp_oil_arrives begin
+STEP mp_walk_to_reactor begin
+STEP reactor_load begin
+OBS  MP.reactor_load reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=nil water=nil oil=6.300000000000001 methanol=0.9450000000000001 lye=0.07875000000000001 crude=nil wash=nil firebox=0 collected=nil
+PASS MP.reactor_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_log_reactor begin
+STEP mp_log_reactor_arrives begin
+STEP reactor_firewood begin
+OBS  MP.reactor_firewood reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=9 collected=nil
+PASS MP.reactor_firewood_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_to_wash begin
+STEP wash_load begin
+OBS  MP.wash_load reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=17.881128 wash=5.05305 firebox=0 collected=nil
+PASS MP.wash_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_to_washDone begin
+STEP biodiesel_collect begin
+OBS  MP.biodiesel_collect reply: ok=true reason=nil duplicate=nil state=Ready wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=7.857142857142858 collected={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}
+PASS MP.biodiesel_collect_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP mp_biodiesel_arrives begin
+STEP mp_biodiesel_can begin
+PASS MP.biodiesel_in_the_client_can_A :: fluids {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084} petrol=false; record {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}
+STEP mp_walk_to_retortDone begin
+STEP retort_collect begin
+OBS  MP.retort_collect reply: ok=false reason=use_next_machine duplicate=nil state=nil wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=nil collected=nil
+PASS MP.retort_gives_nothing_to_a_can_A :: ok=false reason=use_next_machine duplicate=nil state=nil
+STEP after_chain begin
+OBS  MP.after_chain server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_chain server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=0 on=false nil; carried nil nil
+OBS  MP.after_chain server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000}
+PASS MP.chain_states_on_the_server_A :: retort Processing barrel Processing leacher Processing reactor Processing wash Processing; finished barrel Ready retort OutputReady leacher OutputReady reactor Ready wash tank Ready
+STEP give_biodiesel_can begin
+STEP mp_bdCan_arrives begin
+OBS  MP.bdCan in the inventory=true, 5.0000 L
+STEP mp_walk_to_diesel_generator begin
+STEP mp_pour_biodiesel begin
+OBS  MP.pour_biodiesel queued: ISTLGPourFuel
+STEP mp_start_diesel_generator begin
+OBS  MP.start_diesel_generator queued: ISActivateGenerator
+STEP after_generator_start begin
+OBS  MP.after_generator_start server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_generator_start server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=true {cond=1.0000,deg={biodiesel=0.2898},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.2489,v=1.0000}; carried nil nil
+OBS  MP.after_generator_start server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.biodiesel_poured_into_the_generator_A :: pour ok=true reason=nil duplicate=nil state=nil; server fuel 5 {cond=1.0000,deg={biodiesel=0.2898},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.2489,v=1.0000}
+PASS MP.diesel_generator_runs_on_the_server_A :: on=true profile=generator_ci_bio type=TLG.DieselGenerator
+STEP mp_stop_diesel_generator begin
+OBS  MP.stop_diesel_generator queued: ISActivateGenerator
+STEP mp_unplug_diesel_generator begin
+OBS  MP.unplug_diesel_generator queued: ISPlugGenerator
+STEP mp_take_diesel_generator begin
+OBS  MP.take_diesel_generator queued: ISTakeGenerator
+STEP after_generator_take begin
+OBS  MP.after_generator_take server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_generator_take server: generator found=false type=nil profile=nil fuel=-1 on=nil nil; carried TLG.DieselGenerator {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,tlgWear={c=0.0000,charged=0.0000,k=5.000000|1|2.248870849609375},v=1.0000}
+OBS  MP.after_generator_take server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.diesel_generator_taken_as_itself_A :: server: object left=false, carried TLG.DieselGenerator {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,tlgWear={c=0.0000,charged=0.0000,k=5.000000|1|2.248870849609375},v=1.0000}; in this client's hands TLG.DieselGenerator
+STEP mp_put_generator_down begin
+OBS  MP.put_generator_down queued: ISDropWorldItemAction
+STEP after_generator_put_down begin
+OBS  MP.after_generator_put_down server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_generator_put_down server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=false {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}; carried nil nil
+OBS  MP.after_generator_put_down server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.diesel_generator_put_down_as_itself_A :: found=true type=TLG.DieselGenerator profile=generator_ci_bio {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}
+STEP generator_sprite_strip begin
+OBS  MP.generator_sprite_strip server: found=true by setSprite(nil) ok=true sent=true sprite tlg_generators_01_0 -> none
+STEP mp_generator_sprite_strip_arrives begin
+STEP mp_generator_sprite_stripped_here begin
+OBS  MP.generator_sprite_strip this client then sees sprite tlg_generators_01_0, picture true
+STEP generator_sprite_repair begin
+PASS MP.server_gives_the_generator_its_sprite_back_A :: server: stripped to none (setSprite(nil)); the handler ok=true err=nil, sprite none -> tlg_generators_01_0
+STEP mp_generator_sprite_repair_arrives begin
+STEP mp_generator_sprite_back_here begin
+PASS MP.client_sees_the_generator_sprite_back_A :: this client saw tlg_generators_01_0 after the strip and sees tlg_generators_01_0 now, picture true
+STEP mp_enter_van begin
+OBS  MP.enter_van queued: ISPathFindAction, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP mp_start_van begin
+OBS  MP.start_van running=true after 1 attempt(s)
+STEP van_status begin
+OBS  MP.van_status reply: ok=true reason=nil duplicate=nil state=nil primary=diesel total=9.999486923217773 compatible=true
+PASS MP.van_holds_diesel_A :: ok=true reason=nil duplicate=nil state=nil
+STEP after_van_start begin
+OBS  MP.after_van_start server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_van_start server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=false {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}; carried nil nil
+OBS  MP.after_van_start server: van profile=engine_ci_stock tank=9.999486923217773 L engine=true nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.van_starts_on_diesel_A :: engine=true profile=engine_ci_stock nil
+STEP mp_leave_van begin
+OBS  MP.leave_van queued: ISOpenVehicleDoor, ISExitVehicle, ISCloseVehicleDoor
+STEP give_can_for_diesel begin
+STEP mp_dCan_arrives begin
+OBS  MP.dCan in the inventory=true, 0.0000 L
+STEP mp_walk_to_diesel_pump begin
+STEP pump_label begin
+OBS  MP.pump_label reply: ok=true reason=nil duplicate=nil state=nil primary=diesel total=14066.000000000002; menu entry=true
+PASS MP.pump_label_reads_diesel_A :: ok=true reason=nil duplicate=nil state=nil
+STEP mp_diesel_pump_to_can begin
+OBS  MP.diesel_pump_to_can queued: ISEquipWeaponAction, ISTakeFuel
+STEP after_diesel_pump begin
+OBS  MP.after_diesel_pump server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_diesel_pump server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=false {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}; carried nil nil
+OBS  MP.after_diesel_pump server: van profile=engine_ci_stock tank=9.995382308959961 L engine=true nil; pump units=14056 {cap=14066.0000,cond=1.0000,deg={diesel=0.0378},frac=0.0000,id=R1282243311-17,mic=0.7733,product=diesel,prov={},q={diesel=14045.5386,sediment=2.1061,water=8.3553},rev=1.0000,stab=0.0000,t=2.5674,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} | 157324069=10.0000 {cond=1.0000,deg={diesel=0.0378},dirty=0.0000,id=S1282243311-27,mic=0.7733,prov={1={from=R1282243311-17,k=pump,n=10.0000,t=2.5674}},q={diesel=9.9926,sediment=0.0015,water=0.0059},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.5674,v=1.0000}
+PASS MP.diesel_from_the_pump_in_the_client_can_A :: this client's can: {diesel=9.9926,sediment=0.0015,water=0.0059} petrol=false; server pump units 14056 (were 14066); server cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} | 157324069=10.0000 {cond=1.0000,deg={diesel=0.0378},dirty=0.0000,id=S1282243311-27,mic=0.7733,prov={1={from=R1282243311-17,k=pump,n=10.0000,t=2.5674}},q={diesel=9.9926,sediment=0.0015,water=0.0059},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.5674,v=1.0000}
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=25 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_biodiesel role=A tag=biodiesel_site
+OBS  MPS.reply biodiesel_site barrel=2080154191 barrelDone=113974192 barrelDoneX=10658 barrelDoneY=10642 barrelX=10655 blocked= dieselWorld=true gx=10657 gy=10648 jerry=649264623 leacher=1513392361 leacherDone=1284028747 leacherDoneX=10663 leacherDoneY=10642 leacherX=10658 pumpProduct=diesel pumpUnits=14066 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 reactorDoneX=10666 reactorDoneY=10642 reactorX=10662 retort=73816537 retortDone=1594494691 retortDoneX=10661 retortDoneY=10642 retortX=10654 role=A states=barrelDone=OutputReady {wood_ash=1.4850}; leacherDone=OutputReady {lye=0.2228}; reactorDone=OutputReady {biodiesel=16.8435,methanol=0.6766,plant_oil=0.1881,sediment=0.1729}; retortDone=OutputReady {methanol=5.0127}; washDone=OutputReady {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084} tag=biodiesel_site van=241 wash=1854399935 washDone=1151425728 washDoneX=10669 washDoneY=10643 washX=10666 y=10643
+OBS  MPS.message from tlga: give items=Base.Log;Base.Log role=A tag=give_logs_retort
+OBS  MPS.reply given ids=Base.Log=1231372223;Base.Log=1298599088 role=A tag=give_logs_retort
+OBS  MPS.message from tlga: give items=Base.Log;Base.Log role=A tag=give_logs_barrel
+OBS  MPS.reply given ids=Base.Log=1248738589;Base.Log=188630639 role=A tag=give_logs_barrel
+OBS  MPS.message from tlga: give items=Base.BucketEmpty role=A tag=give_water water=10
+OBS  MPS.reply given ids=Base.BucketEmpty=625269288 role=A tag=give_water
+OBS  MPS.message from tlga: give items=Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable; role=A tag=give_oil
+OBS  MPS.reply given ids=Base.OilVegetable=357475089;Base.OilVegetable=367536394;Base.OilVegetable=119159677;Base.OilVegetable=830878632;Base.OilVegetable=782443996;Base.OilVegetable=159431637;Base.OilVegetable=629129131 role=A tag=give_oil
+OBS  MPS.ticks 300 OnTick events in 84469 ms
+OBS  MPS.message from tlga: give items=Base.Log role=A tag=give_log_reactor
+OBS  MPS.reply given ids=Base.Log=1697685591 role=A tag=give_log_reactor
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_chain van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=0 gOn=false gProfile=generator_ci_bio gSide=nil gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_chain vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: give fill=TLG_Biodiesel items=Base.PetrolCan litres=5 role=A tag=give_biodiesel_can
+OBS  MPS.reply given ids=Base.PetrolCan=840394470 role=A tag=give_biodiesel_can
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_generator_start van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=true gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2898},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.2489,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_generator_start vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_generator_take van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,tlgWear={c=0.0000,charged=0.0000,k=5.000000|1|2.248870849609375},v=1.0000} carriedType=TLG.DieselGenerator gFound=false gFuel=-1 gOn=nil gProfile=nil gSide=nil gType=nil leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_generator_take vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_generator_put_down van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=false gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_generator_put_down vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: sprite_repair gx=10657 gy=10648 role=A step=strip tag=generator_sprite_strip
+OBS  MPS.reply sprite_repair after=none before=tlg_generators_01_0 found=true how=setSprite(nil) ok=true role=A sent=true step=strip tag=generator_sprite_strip
+OBS  MPS.message from tlga: sprite_repair gx=10657 gy=10648 role=A step=repair tag=generator_sprite_repair
+OBS  MPS.reply sprite_repair after=tlg_generators_01_0 before=none err=nil found=true ok=true role=A step=repair tag=generator_sprite_repair
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_van_start van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=false gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_van_start vanEngine=true vanL=9.999486923217773 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=0 role=A tag=give_can_for_diesel
+OBS  MPS.reply given ids=Base.PetrolCan=157324069 role=A tag=give_can_for_diesel
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470;157324069 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_diesel_pump van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} | 157324069=10.0000 {cond=1.0000,deg={diesel=0.0378},dirty=0.0000,id=S1282243311-27,mic=0.7733,prov={1={from=R1282243311-17,k=pump,n=10.0000,t=2.5674}},q={diesel=9.9926,sediment=0.0015,water=0.0059},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.5674,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=false gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0378},frac=0.0000,id=R1282243311-17,mic=0.7733,product=diesel,prov={},q={diesel=14045.5386,sediment=2.1061,water=8.3553},rev=1.0000,stab=0.0000,t=2.5674,v=1.0000} pumpUnits=14056 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_diesel_pump vanEngine=true vanL=9.995382308959961 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: finish role=A
+
+--- TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP biodiesel_site begin
+OBS  MP.biodiesel site: blocked squares []; finished machines: barrelDone=OutputReady {wood_ash=1.4850}; leacherDone=OutputReady {lye=0.2228}; reactorDone=OutputReady {biodiesel=16.8435,methanol=0.6766,plant_oil=0.1881,sediment=0.1729}; retortDone=OutputReady {methanol=5.0127}; washDone=OutputReady {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}; generator 10657,10648; van 241; pump 10654,10630 (14066 units, gives diesel); world has diesel=true
+PASS MP.biodiesel_site_made_A :: barrelDone=OutputReady {wood_ash=1.4850}; leacherDone=OutputReady {lye=0.2228}; reactorDone=OutputReady {biodiesel=16.8435,methanol=0.6766,plant_oil=0.1881,sediment=0.1729}; retortDone=OutputReady {methanol=5.0127}; washDone=OutputReady {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}
+STEP mp_biodiesel_site_arrives begin
+STEP mp_biodiesel_site_seen begin
+PASS MP.biodiesel_site_seen_A :: machines missing: ; generator true; van true
+PASS MP.diesel_generator_drawn_on_the_client_A :: sprite tlg_generators_01_0, picture true, item type TLG.DieselGenerator
+PASS MP.client_knows_the_van_is_diesel_A :: client's world record dieselVehicles=true; profile here engine_ci_stock
+STEP give_logs_retort begin
+STEP mp_logs_retort_arrive begin
+STEP mp_walk_to_retort begin
+STEP retort_load begin
+OBS  MP.retort_load reply: ok=true reason=nil duplicate=nil state=Processing wood=18 ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=0 collected=nil
+PASS MP.retort_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_logs_barrel begin
+STEP mp_logs_barrel_arrive begin
+STEP mp_walk_to_barrel begin
+STEP barrel_load begin
+OBS  MP.barrel_load reply: ok=true reason=nil duplicate=nil state=Processing wood=18 ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=0 collected=nil
+PASS MP.barrel_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_water begin
+STEP mp_water_arrives begin
+STEP mp_walk_to_leacher begin
+STEP leacher_load begin
+OBS  MP.leacher_load reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=1.4849999999999999 water=2.9699999999999998 oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=0 collected=nil
+PASS MP.leacher_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_oil begin
+STEP mp_oil_arrives begin
+STEP mp_walk_to_reactor begin
+STEP reactor_load begin
+OBS  MP.reactor_load reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=nil water=nil oil=6.300000000000001 methanol=0.9450000000000001 lye=0.07875000000000001 crude=nil wash=nil firebox=0 collected=nil
+PASS MP.reactor_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP give_log_reactor begin
+STEP mp_log_reactor_arrives begin
+STEP reactor_firewood begin
+OBS  MP.reactor_firewood reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=9 collected=nil
+PASS MP.reactor_firewood_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_to_wash begin
+STEP wash_load begin
+OBS  MP.wash_load reply: ok=true reason=nil duplicate=nil state=Processing wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=17.881128 wash=5.05305 firebox=0 collected=nil
+PASS MP.wash_load_A :: ok=true reason=nil duplicate=nil state=Processing
+STEP mp_walk_to_washDone begin
+STEP biodiesel_collect begin
+OBS  MP.biodiesel_collect reply: ok=true reason=nil duplicate=nil state=Ready wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=7.857142857142858 collected={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}
+PASS MP.biodiesel_collect_A :: ok=true reason=nil duplicate=nil state=Ready
+STEP mp_biodiesel_arrives begin
+STEP mp_biodiesel_can begin
+PASS MP.biodiesel_in_the_client_can_A :: fluids {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084} petrol=false; record {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084}
+STEP mp_walk_to_retortDone begin
+STEP retort_collect begin
+OBS  MP.retort_collect reply: ok=false reason=use_next_machine duplicate=nil state=nil wood=nil ash=nil water=nil oil=nil methanol=nil lye=nil crude=nil wash=nil firebox=nil collected=nil
+PASS MP.retort_gives_nothing_to_a_can_A :: ok=false reason=use_next_machine duplicate=nil state=nil
+STEP after_chain begin
+OBS  MP.after_chain server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_chain server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=0 on=false nil; carried nil nil
+OBS  MP.after_chain server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000}
+PASS MP.chain_states_on_the_server_A :: retort Processing barrel Processing leacher Processing reactor Processing wash Processing; finished barrel Ready retort OutputReady leacher OutputReady reactor Ready wash tank Ready
+STEP give_biodiesel_can begin
+STEP mp_bdCan_arrives begin
+OBS  MP.bdCan in the inventory=true, 5.0000 L
+STEP mp_walk_to_diesel_generator begin
+STEP mp_pour_biodiesel begin
+OBS  MP.pour_biodiesel queued: ISTLGPourFuel
+STEP mp_start_diesel_generator begin
+OBS  MP.start_diesel_generator queued: ISActivateGenerator
+STEP after_generator_start begin
+OBS  MP.after_generator_start server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_generator_start server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=true {cond=1.0000,deg={biodiesel=0.2898},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.2489,v=1.0000}; carried nil nil
+OBS  MP.after_generator_start server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.biodiesel_poured_into_the_generator_A :: pour ok=true reason=nil duplicate=nil state=nil; server fuel 5 {cond=1.0000,deg={biodiesel=0.2898},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.2489,v=1.0000}
+PASS MP.diesel_generator_runs_on_the_server_A :: on=true profile=generator_ci_bio type=TLG.DieselGenerator
+STEP mp_stop_diesel_generator begin
+OBS  MP.stop_diesel_generator queued: ISActivateGenerator
+STEP mp_unplug_diesel_generator begin
+OBS  MP.unplug_diesel_generator queued: ISPlugGenerator
+STEP mp_take_diesel_generator begin
+OBS  MP.take_diesel_generator queued: ISTakeGenerator
+STEP after_generator_take begin
+OBS  MP.after_generator_take server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_generator_take server: generator found=false type=nil profile=nil fuel=-1 on=nil nil; carried TLG.DieselGenerator {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,tlgWear={c=0.0000,charged=0.0000,k=5.000000|1|2.248870849609375},v=1.0000}
+OBS  MP.after_generator_take server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.diesel_generator_taken_as_itself_A :: server: object left=false, carried TLG.DieselGenerator {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,tlgWear={c=0.0000,charged=0.0000,k=5.000000|1|2.248870849609375},v=1.0000}; in this client's hands TLG.DieselGenerator
+STEP mp_put_generator_down begin
+OBS  MP.put_generator_down queued: ISDropWorldItemAction
+STEP after_generator_put_down begin
+OBS  MP.after_generator_put_down server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_generator_put_down server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=false {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}; carried nil nil
+OBS  MP.after_generator_put_down server: van profile=engine_ci_stock tank=10 L engine=false nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.diesel_generator_put_down_as_itself_A :: found=true type=TLG.DieselGenerator profile=generator_ci_bio {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}
+STEP generator_sprite_strip begin
+OBS  MP.generator_sprite_strip server: found=true by setSprite(nil) ok=true sent=true sprite tlg_generators_01_0 -> none
+STEP mp_generator_sprite_strip_arrives begin
+STEP mp_generator_sprite_stripped_here begin
+OBS  MP.generator_sprite_strip this client then sees sprite tlg_generators_01_0, picture true
+STEP generator_sprite_repair begin
+PASS MP.server_gives_the_generator_its_sprite_back_A :: server: stripped to none (setSprite(nil)); the handler ok=true err=nil, sprite none -> tlg_generators_01_0
+STEP mp_generator_sprite_repair_arrives begin
+STEP mp_generator_sprite_back_here begin
+PASS MP.client_sees_the_generator_sprite_back_A :: this client saw tlg_generators_01_0 after the strip and sees tlg_generators_01_0 now, picture true
+STEP mp_enter_van begin
+OBS  MP.enter_van queued: ISPathFindAction, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP mp_start_van begin
+OBS  MP.start_van running=true after 1 attempt(s)
+STEP van_status begin
+OBS  MP.van_status reply: ok=true reason=nil duplicate=nil state=nil primary=diesel total=9.999486923217773 compatible=true
+PASS MP.van_holds_diesel_A :: ok=true reason=nil duplicate=nil state=nil
+STEP after_van_start begin
+OBS  MP.after_van_start server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_van_start server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=false {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}; carried nil nil
+OBS  MP.after_van_start server: van profile=engine_ci_stock tank=9.999486923217773 L engine=true nil; pump units=14066 {cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000}
+PASS MP.van_starts_on_diesel_A :: engine=true profile=engine_ci_stock nil
+STEP mp_leave_van begin
+OBS  MP.leave_van queued: ISOpenVehicleDoor, ISExitVehicle, ISCloseVehicleDoor
+STEP give_can_for_diesel begin
+STEP mp_dCan_arrives begin
+OBS  MP.dCan in the inventory=true, 0.0000 L
+STEP mp_walk_to_diesel_pump begin
+STEP pump_label begin
+OBS  MP.pump_label reply: ok=true reason=nil duplicate=nil state=nil primary=diesel total=14066.000000000002; menu entry=true
+PASS MP.pump_label_reads_diesel_A :: ok=true reason=nil duplicate=nil state=nil
+STEP mp_diesel_pump_to_can begin
+OBS  MP.diesel_pump_to_can queued: ISEquipWeaponAction, ISTakeFuel
+STEP after_diesel_pump begin
+OBS  MP.after_diesel_pump server machines: retort=Processing {}; barrel=Processing {}; leacher=Processing {}; reactor=Processing {}; wash=Processing {}; barrelDone=Ready {}; retortDone=OutputReady {methanol=4.0677}; leacherDone=OutputReady {lye=0.1440}; reactorDone=Ready {}; washDone=Ready {}
+OBS  MP.after_diesel_pump server: generator found=true type=TLG.DieselGenerator profile=generator_ci_bio fuel=5 on=false {cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000}; carried nil nil
+OBS  MP.after_diesel_pump server: van profile=engine_ci_stock tank=9.995382308959961 L engine=true nil; pump units=14056 {cap=14066.0000,cond=1.0000,deg={diesel=0.0378},frac=0.0000,id=R1282243311-17,mic=0.7733,product=diesel,prov={},q={diesel=14045.5386,sediment=2.1061,water=8.3553},rev=1.0000,stab=0.0000,t=2.5674,v=1.0000}; cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} | 157324069=10.0000 {cond=1.0000,deg={diesel=0.0378},dirty=0.0000,id=S1282243311-27,mic=0.7733,prov={1={from=R1282243311-17,k=pump,n=10.0000,t=2.5674}},q={diesel=9.9926,sediment=0.0015,water=0.0059},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.5674,v=1.0000}
+PASS MP.diesel_from_the_pump_in_the_client_can_A :: this client's can: {diesel=9.9926,sediment=0.0015,water=0.0059} petrol=false; server pump units 14056 (were 14066); server cans 649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} | 157324069=10.0000 {cond=1.0000,deg={diesel=0.0378},dirty=0.0000,id=S1282243311-27,mic=0.7733,prov={1={from=R1282243311-17,k=pump,n=10.0000,t=2.5674}},q={diesel=9.9926,sediment=0.0015,water=0.0059},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.5674,v=1.0000}
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=25 fail=0
+DONE
+
+--- TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_biodiesel role=A tag=biodiesel_site
+OBS  MPS.reply biodiesel_site barrel=2080154191 barrelDone=113974192 barrelDoneX=10658 barrelDoneY=10642 barrelX=10655 blocked= dieselWorld=true gx=10657 gy=10648 jerry=649264623 leacher=1513392361 leacherDone=1284028747 leacherDoneX=10663 leacherDoneY=10642 leacherX=10658 pumpProduct=diesel pumpUnits=14066 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 reactorDoneX=10666 reactorDoneY=10642 reactorX=10662 retort=73816537 retortDone=1594494691 retortDoneX=10661 retortDoneY=10642 retortX=10654 role=A states=barrelDone=OutputReady {wood_ash=1.4850}; leacherDone=OutputReady {lye=0.2228}; reactorDone=OutputReady {biodiesel=16.8435,methanol=0.6766,plant_oil=0.1881,sediment=0.1729}; retortDone=OutputReady {methanol=5.0127}; washDone=OutputReady {biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084} tag=biodiesel_site van=241 wash=1854399935 washDone=1151425728 washDoneX=10669 washDoneY=10643 washX=10666 y=10643
+OBS  MPS.message from tlga: give items=Base.Log;Base.Log role=A tag=give_logs_retort
+OBS  MPS.reply given ids=Base.Log=1231372223;Base.Log=1298599088 role=A tag=give_logs_retort
+OBS  MPS.message from tlga: give items=Base.Log;Base.Log role=A tag=give_logs_barrel
+OBS  MPS.reply given ids=Base.Log=1248738589;Base.Log=188630639 role=A tag=give_logs_barrel
+OBS  MPS.message from tlga: give items=Base.BucketEmpty role=A tag=give_water water=10
+OBS  MPS.reply given ids=Base.BucketEmpty=625269288 role=A tag=give_water
+OBS  MPS.message from tlga: give items=Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable;Base.OilVegetable; role=A tag=give_oil
+OBS  MPS.reply given ids=Base.OilVegetable=357475089;Base.OilVegetable=367536394;Base.OilVegetable=119159677;Base.OilVegetable=830878632;Base.OilVegetable=782443996;Base.OilVegetable=159431637;Base.OilVegetable=629129131 role=A tag=give_oil
+OBS  MPS.ticks 300 OnTick events in 84469 ms
+OBS  MPS.message from tlga: give items=Base.Log role=A tag=give_log_reactor
+OBS  MPS.reply given ids=Base.Log=1697685591 role=A tag=give_log_reactor
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_chain van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=0 gOn=false gProfile=generator_ci_bio gSide=nil gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_chain vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: give fill=TLG_Biodiesel items=Base.PetrolCan litres=5 role=A tag=give_biodiesel_can
+OBS  MPS.reply given ids=Base.PetrolCan=840394470 role=A tag=give_biodiesel_can
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_generator_start van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=true gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2898},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.2489,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_generator_start vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_generator_take van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,tlgWear={c=0.0000,charged=0.0000,k=5.000000|1|2.248870849609375},v=1.0000} carriedType=TLG.DieselGenerator gFound=false gFuel=-1 gOn=nil gProfile=nil gSide=nil gType=nil leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_generator_take vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_generator_put_down van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=false gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_generator_put_down vanEngine=false vanL=10 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: sprite_repair gx=10657 gy=10648 role=A step=strip tag=generator_sprite_strip
+OBS  MPS.reply sprite_repair after=none before=tlg_generators_01_0 found=true how=setSprite(nil) ok=true role=A sent=true step=strip tag=generator_sprite_strip
+OBS  MPS.message from tlga: sprite_repair gx=10657 gy=10648 role=A step=repair tag=generator_sprite_repair
+OBS  MPS.reply sprite_repair after=tlg_generators_01_0 before=none err=nil found=true ok=true role=A step=repair tag=generator_sprite_repair
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_van_start van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=false gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0377},frac=0.0000,id=R1282243311-17,mic=0.7728,product=diesel,prov={},q={diesel=14055.5316,sediment=2.1075,water=8.3608},rev=0.0000,stab=0.0000,t=2.0096,v=1.0000} pumpUnits=14066 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_van_start vanEngine=true vanL=9.999486923217773 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=0 role=A tag=give_can_for_diesel
+OBS  MPS.reply given ids=Base.PetrolCan=157324069 role=A tag=give_can_for_diesel
+OBS  MPS.message from tlga: probe_biodiesel barrel=2080154191 barrelDone=113974192 gx=10657 gy=10648 ids=649264623;840394470;157324069 keys=retort;barrel;leacher;reactor;wash;barrelDone;retortDone;leacherDone;reactorDone;washDone leacher=1513392361 leacherDone=1284028747 px=10654 py=10630 reactor=2035050576 reactorDone=1890004141 retort=73816537 retortDone=1594494691 role=A tag=after_diesel_pump van=241 wash=1854399935 washDone=1151425728
+OBS  MPS.reply probe_biodiesel barrel=Processing barrelDone=Ready barrelDoneOut={} barrelOut={} cans=649264623=17.0742 {cond=1.0000,deg={biodiesel=0.0000},dirty=0.0000,id=S1282243311-23,mic=0.0000,prov={1={from=P1282243311-16,k=made,n=17.0742,t=2.1694}},q={biodiesel=16.8435,methanol=0.0203,plant_oil=0.1881,sediment=0.0138,water=0.0084},rev=1.0000,sealed=true,stab=0.0000,storage=jerrycan_steel,t=2.1694,v=1.0000} | 840394470=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1282243311-24,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.2489,v=1.0000} | 157324069=10.0000 {cond=1.0000,deg={diesel=0.0378},dirty=0.0000,id=S1282243311-27,mic=0.7733,prov={1={from=R1282243311-17,k=pump,n=10.0000,t=2.5674}},q={diesel=9.9926,sediment=0.0015,water=0.0059},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=2.5674,v=1.0000} carriedSide=nil carriedType=nil gFound=true gFuel=5 gOn=false gProfile=generator_ci_bio gSide={cond=1.0000,deg={biodiesel=0.2900},id=G1282243311-25,kind=generator,mic=0.0000,profile=generator_ci_bio,prov={1={from=S1282243311-24,k=in,n=5.0000,t=2.2489}},q={biodiesel=4.9999,water=0.0001},rev=1.0000,stab=0.0000,t=2.3390,v=1.0000} gType=TLG.DieselGenerator leacher=Processing leacherDone=OutputReady leacherDoneOut={lye=0.1440} leacherOut={} pumpSide={cap=14066.0000,cond=1.0000,deg={diesel=0.0378},frac=0.0000,id=R1282243311-17,mic=0.7733,product=diesel,prov={},q={diesel=14045.5386,sediment=2.1061,water=8.3553},rev=1.0000,stab=0.0000,t=2.5674,v=1.0000} pumpUnits=14056 reactor=Processing reactorDone=Ready reactorDoneOut={} reactorOut={} retort=Processing retortDone=OutputReady retortDoneOut={methanol=4.0677} retortOut={} role=A tag=after_diesel_pump vanEngine=true vanL=9.995382308959961 vanProfile=engine_ci_stock vanSide=nil wash=Processing washDone=Ready washDoneOut={} washOut={}
+OBS  MPS.message from tlga: finish role=A

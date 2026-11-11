@@ -6013,3 +6013,46 @@ this change.
 Evidence:
 [run 301](evidence/2026-11-11_rt-sp_harness_run301_removal_sprite_through_a_save_0.3.2_42.22.2.txt);
 [run 302](evidence/2026-11-11_rt-mp_harness_run302_biodiesel_sprite_repair_0.3.2_42.22.2.txt).
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 303–306 (the 0.3.2 release zip, gates 7 and 12)
+
+Build 42.22.2. `tools\package.ps1` at `7c31473` (the release commit,
+clean tree) built `TheLastGallon-0.3.2.zip`: 166 files, 7,870,260 bytes,
+SHA-256 `7082EC93…AA319B60`. A worktree of `7c31473` builds the same
+bytes.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 303 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 105/0, then 14/0 |
+| 304 | RT-MP `-Clients 1 -Only biodiesel -ModSource <the unpacked mod folder>` | 25/0 |
+| 305 | `tools\rehearse-install.ps1 -NoBuild -Scenario removal`, four game starts | 7/0, 2/0, 7/0, 2/0 |
+| 306 | `tools\rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.1.2` | 3/0, then 19/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.3.2,
+equal to `TLG.VERSION`; the mod logged "The Last Gallon 0.3.2 ready" in
+single player, on the server and on its client.
+
+Launch 305: with the mod back the Diesel Generator had its sprite and
+picture, the console has the mod's line for the repair, and after a
+save and a reload the sprite was there with nothing repaired.
+
+Launch 304: the server's generator lost its sprite to the test and had
+it back after the handler; the server logged the mod's line. This time
+the client still showed the sprite at the step after the strip (in
+launch 302 it showed none by then), so this launch does not show the
+sprite arriving at the client; it shows the client with the sprite and
+its picture at the end.
+
+Consoles were read for the mod's ready line, its repair line and its
+errors and warnings: no TLG error or warning.
+
+Not run on this zip: the other single-player modes and multiplayer
+cases; the existing-save scenario; the upgrade from 0.2.0, 0.3.0 or
+0.3.1; a server started without the mod and then with it; an install
+through the Steam Workshop. Not uploaded.
+
+Evidence:
+[run 303](evidence/2026-11-11_rt-sp_harness_run303_install_rehearsal_0.3.2_42.22.2.txt);
+[run 304](evidence/2026-11-11_rt-mp_harness_run304_package_biodiesel_0.3.2_42.22.2.txt);
+[run 305](evidence/2026-11-11_rt-sp_harness_run305_package_removal_0.3.2_42.22.2.txt);
+[run 306](evidence/2026-11-11_rt-sp_harness_run306_upgrade_0.1.2_to_0.3.2_42.22.2.txt).
