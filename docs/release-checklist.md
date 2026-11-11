@@ -113,18 +113,17 @@ zip, 3/0 and 19/0 (launches 303–306). A clean checkout builds the same
 bytes. Open for gate 12: an install through the Workshop; the upgrade
 from 0.2.0, 0.3.0 or 0.3.1 with this zip.
 
-## Version 0.4.0 (not released)
+## Version 0.4.0 (2026-11-11)
 
-On the branch `feature/biodiesel-skills` (D-038): the five biodiesel
+Version 0.4.0, of 2026-11-11 (D-038): the five biodiesel
 machines' recipes ask skill levels and must be learned, from the new
 Biodiesel Handbook or by level (launches 308–312, `test-results.md`).
 On a dedicated server, in a client without `-debug`, the crafting window
 refused the Ash Barrel unlearned and below its level and made it with
 both, and the server's loot lists gave handbooks (launch 312, 9/0).
 Open: the window's refusal for the other four machines; a player who is
-not an admin; an upgrade launch; the Italian name read in game. The upload folder, its
-`workshop.txt` and the 0.3.2 change note are as 0.3.2 left them. No
-0.4.0 zip is kept.
+not an admin; the Italian name read in game. It has not been uploaded to
+the Workshop.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -566,8 +565,8 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.3.2.txt`, written on 2026-11-11: the changes
-from 0.1.1, which the item serves, to 0.3.2. It is not in the package. NOT RUN:
+`docs/workshop-change-note-0.4.0.txt`, written on 2026-11-11: the changes
+from 0.1.1, which the item serves, to 0.4.0. It is not in the package. NOT RUN:
 pasting a note into the uploader, and how the Workshop page shows its
 `[b]` and `[list]` marks.
 What changed in the package since the last rehearsed one (run 206, 0.1.0):

@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.0 (not released)
+## 0.4.0 (2026-11-11)
 
 * The five biodiesel machines ask a skill level, and their recipes must
   be learned. Wood Retort: Welding 4. Ash Barrel: Welding 2. Lye Leacher:
