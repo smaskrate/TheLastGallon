@@ -460,8 +460,8 @@ phase A passed 105/0 and phase B 14/0, and the console's one exception
 came from the harness's own deep-recursion probe. On the same installed
 package the wrong-fuel mode passed 46/0 (launch 287) and the multiplayer
 fuel case 21/0 (launch 288). A clean checkout of `1165809` in a separate
-worktree builds the same bytes. It has not been uploaded, and the upload
-folder still holds 0.1.2 (below).
+worktree builds the same bytes. It has not been uploaded; the upload
+folder holds its `Contents` (below).
 
 The 0.2.0 package is `TheLastGallon-0.2.0.zip`, the zip of commit
 `d43d667` (the release commit; later commits change nothing that ships):
@@ -473,8 +473,7 @@ came from the harness's own deep-recursion probe. A clean checkout of
 it did not: with `core.autocrlf=true` a fresh checkout wrote the four
 carry clips (`.x`) and their four `AnimSets` files (`.xml`) with CRLF,
 where every package since 0.1.1 has them with LF; `.gitattributes` now
-pins them. It has not been uploaded, and the upload folder still holds
-0.1.2 (below).
+pins them. It has not been uploaded.
 
 The 0.1.2 package is `TheLastGallon-0.1.2.zip`, the zip of commit
 `f674d1c`: SHA-256 `e6971619…`, 4,478,419 bytes, 144 files. Launch 228
@@ -498,12 +497,19 @@ The Steam Workshop item (id 3835496461) serves 0.1.1, uploaded by the
 owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.1.2 package's
-`Contents` since 2026-11-10, its 142 files checked by hash; it has not
-been uploaded. Its `workshop.txt` is the owner's, edited by hand (the
-item's id, `visibility=public`, the tag `WIP`, two reworded lines); only
-its version and build were changed, to 0.1.2 and 42.22.2. Copying the
-package's `workshop.txt` over it would lose the hand edits.
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.3.0 package's
+`Contents` since 2026-11-11 (the 0.1.2 package's from 2026-11-10 until
+then; 0.2.0 was never put there): the release zip `49B580C0…6201C05` was
+checked against its manifest, its `Contents` mirrored over the folder's,
+and the folder's 163 files checked by hash, both ways. It has not been
+uploaded. Its `preview.png` is the package's. Its `workshop.txt` is the
+owner's, edited by hand (the item's id, `visibility=public`, the tag
+`WIP`, two reworded lines); only its version was changed, to 0.3.0.
+Copying the package's `workshop.txt` over it would lose the hand edits.
+The owner's text is still that of 0.1.2: it lists biodiesel under "Not in
+this version", has no section on biodiesel, diesel or wrong fuel, and
+names five supplied models where the package's text names the supplied
+machine models and the diesel generator's pictures.
 
 What changed in the package since the last rehearsed one (run 206, 0.1.0):
 the death fix on a server (D-015 amendment, run 210: `Machines.lua`,
