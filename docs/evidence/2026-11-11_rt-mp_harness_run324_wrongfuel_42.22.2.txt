@@ -1,0 +1,505 @@
+﻿===== launcher
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 37656)
+server up after 24 s
+server: LOG  : General      f:0 st:630,364,997> command entered via server console (System.in): "setaccesslevel "tlga" "admin""
+server: LOG  : General      f:0 st:630,365,076> User tlga is now admin
+server: LOG  : General      f:0 st:630,369,022> command entered via server console (System.in): "setaccesslevel "tlgb" "admin""
+server: LOG  : General      f:0 st:630,369,077> User tlgb is now admin
+client mp-a started, pid 84628
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP wf_site begin
+PASS MP.wf_site_ready_on_the_server_A :: car engine_si_stock, ambulance engine_ci_stock, generators generator_si_stock and generator_ci_bio; dieselVehicles=true WrongFuelDamage=true VehicleStalls=true; CarGasConsumption 1; the mod there is 0.4.0
+STEP mp_wf_site_arrives begin
+STEP mp_wf_site_seen begin
+PASS MP.wf_site_seen_A :: car=true ambulance=true generators=true,true debug=false role=admin
+STEP wf_give_can_car begin
+STEP mp_wfCan1_arrives begin
+OBS  MP.wfCan1 in the inventory=true, 10.0000 L
+STEP mp_can_to_car begin
+OBS  MP.can_to_car queued: ISPathFindAction, ISEquipWeaponAction, ISAddGasolineToVehicle
+STEP wf_give_can_ambulance begin
+STEP mp_wfCan2_arrives begin
+OBS  MP.wfCan2 in the inventory=true, 10.0000 L
+STEP mp_wf_can_to_ambulance begin
+OBS  MP.wf_can_to_ambulance queued: ISPathFindAction, ISEquipWeaponAction, ISAddGasolineToVehicle
+STEP wf_set_car_on_a_fifth_diesel begin
+OBS  MP.wf_set car_on_a_fifth_diesel on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); condition 100, tank 10 L
+PASS MP.wf_verdict_car_on_a_fifth_diesel_A :: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel)
+STEP wf_set_ambulance_on_30pc_petrol begin
+OBS  MP.wf_set ambulance_on_30pc_petrol on the server: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline); condition 100, tank 10 L
+PASS MP.wf_verdict_ambulance_on_30pc_petrol_A :: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline)
+STEP wf_set_ambulance_on_petrol begin
+OBS  MP.wf_set ambulance_on_petrol on the server: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline); condition 100, tank 10 L
+PASS MP.wf_verdict_ambulance_on_petrol_A :: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline)
+STEP wf_set_car_on_40pc_diesel begin
+OBS  MP.wf_set car_on_40pc_diesel on the server: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel); condition 100, tank 10 L
+PASS MP.wf_verdict_car_on_40pc_diesel_A :: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel)
+STEP mp_wf_enter_car begin
+OBS  MP.wf_enter_car queued: ISPathFindAction, ISUnlockVehicleDoor, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP mp_wf_car_refused_on_40pc_diesel begin
+OBS  MP.wf_car_refused_on_40pc_diesel tries: the server drew 2, condition 100 -> 98 there and 98 here, battery -0.0200; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 1, condition 98 -> 97 there and 97 here, battery -0.0200; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 2, condition 97 -> 95 there and 95 here, battery -0.0200; line: Wrong fuel (Diesel): the engine will not start, and trying damages it
+PASS MP.wf_car_refused_on_40pc_diesel_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+STEP wf_set_car_back_on_a_fifth_diesel begin
+OBS  MP.wf_set car_back_on_a_fifth_diesel on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); condition 95, tank 10 L
+PASS MP.wf_verdict_car_back_on_a_fifth_diesel_A :: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel)
+STEP wf_hold_for_the_car begin
+OBS  MP.wf stall draw held on the server: true
+STEP mp_wf_car_starts_on_a_fifth_diesel begin
+OBS  MP.wf_car_starts_on_a_fifth_diesel tries: drew 0.9565 against 0.4: refused by the server, on false | drew 0.7002 against 0.4: refused by the server, on false | drew 0.2762 against 0.4: passed by the server, on true; line: Wrong fuel (Diesel): it damages this engine while it runs
+PASS MP.wf_car_starts_on_a_fifth_diesel_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+PASS MP.wf_car_running_on_a_fifth_diesel_A :: server true, here true
+STEP mp_wf_car_idles begin
+STEP wf_probe_car_power begin
+OBS  MP.wf_probe car_power on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); engine 95 carry 5.671977996826172E-4 exhaust 100 carry 3.781318664550781E-4 battery 0.9180299639701843 running true power 2400 ({applied=2400.0000,base=4000.0000}) tank 9.998744010925293; generator on nil fuel nil; draws 
+PASS MP.wf_power_lowered_on_the_server_and_seen_here_A :: own 4000, x 0.6: 2400; the server's 2400, here 2400; running true
+STEP wf_burn_car begin
+OBS  MP.wf_burn car: engine 95 carry 5.671977996826172E-4 exhaust 100 carry 3.781318664550781E-4 tank 9.998744010925293 -> 5.998744010925293 L
+STEP mp_wf_car_burns begin
+STEP wf_probe_car_wear begin
+OBS  MP.wf_probe car_wear on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); engine 92 carry 0.0013167858123779297 exhaust 98 carry 8.778572082519531E-4 battery 0.9200499653816223 running true power 2400 ({applied=2400.0000,base=4000.0000}) tank 5.997744560241699; generator on nil fuel nil; draws 
+PASS MP.wf_engine_and_exhaust_worn_by_the_litre_on_the_server_A :: 4.0010 L at wear x 6: engine 3 taken + 0.0013 carried, 3.0013 due; exhaust 100 -> 98 + 0.0009 carried, 2.0009 due
+PASS MP.wf_worn_engine_and_exhaust_seen_here_A :: engine 92 here, 92 there; exhaust 98 here, 98 there
+STEP mp_wf_shut_off_car begin
+OBS  MP.wf_shut_off_car queued: ISShutOffVehicleEngine
+STEP mp_wf_exit_car begin
+OBS  MP.wf_exit_car queued: ISOpenVehicleDoor, ISExitVehicle, ISCloseVehicleDoor
+STEP mp_wf_enter_ambulance begin
+OBS  MP.wf_enter_ambulance queued: ISPathFindAction, ISUnlockVehicleDoor, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP wf_hold_for_the_ambulance begin
+OBS  MP.wf stall draw held on the server: true
+STEP mp_wf_ambulance_starts_on_petrol begin
+OBS  MP.wf_ambulance_starts_on_petrol tries: drew 0.4224 against 0.25: refused by the server, on false | drew 0.9782 against 0.25: refused by the server, on false | drew 0.2243 against 0.25: passed by the server, on true; line: Wrong fuel (Gasoline): it damages this engine while it runs
+PASS MP.wf_ambulance_starts_on_petrol_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+PASS MP.wf_ambulance_running_on_petrol_A :: server true, here true
+STEP mp_wf_ambulance_idles begin
+STEP mp_wf_clear_line begin
+STEP wf_burn_ambulance begin
+OBS  MP.wf_burn ambulance: engine 100 tank 9.998708724975586 -> 8.998708724975586 L, the failure draw held at 0
+STEP mp_wf_ambulance_burns begin
+STEP wf_probe_ambulance_failed begin
+OBS  MP.wf_probe ambulance_failed on the server: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline); engine 0 carry 0.10214490890502947 exhaust 100 carry 0 battery 0.9780299663543701 running false power 4900 (nil) tank 8.998708724975586; generator on nil fuel nil; draws failheld=0.0000
+PASS MP.wf_engine_failed_on_the_server_and_seen_here_A :: engine 100 -> 0 on the server, running false; here engine 0, running false; line: The engine has failed: wrong fuel (Gasoline)
+STEP mp_wf_failed_ambulance_does_not_start begin
+OBS  MP.wf_failed_ambulance_does_not_start tries: running false, engine 0 on the server
+PASS MP.wf_failed_ambulance_does_not_start_every_try_as_the_servers_draw_gives_A :: 1 tries, each as drawn
+STEP mp_wf_exit_ambulance begin
+OBS  MP.wf_exit_ambulance queued: ISOpenVehicleDoor, ISExitVehicle, ISCloseVehicleDoor
+STEP wf_give_can_generator_1 begin
+STEP mp_wfCan4_arrives begin
+OBS  MP.wfCan4 in the inventory=true, 5.0000 L
+STEP mp_wf_fuel_the_petrol_generator begin
+OBS  MP.wf_fuel_the_petrol_generator queued: ISWalkToTimedAction, ISEquipWeaponAction, ISAddFuel
+STEP wf_give_can_generator_2 begin
+STEP mp_wfCan5_arrives begin
+OBS  MP.wfCan5 in the inventory=true, 5.0000 L
+STEP mp_wf_fuel_the_diesel_generator begin
+OBS  MP.wf_fuel_the_diesel_generator queued: ISWalkToTimedAction, ISEquipWeaponAction, ISAddFuel
+STEP wf_set_petrol_generator_on_40pc_diesel begin
+OBS  MP.wf_set petrol_generator_on_40pc_diesel on the server: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel); condition 100, tank 5 L
+PASS MP.wf_verdict_petrol_generator_on_40pc_diesel_A :: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel)
+STEP mp_wf_petrol_generator_refused begin
+OBS  MP.wf_petrol_generator_refused tries: the server drew 1, condition 100 -> 99 there and 99 here; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 1, condition 99 -> 98 there and 98 here; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 1, condition 98 -> 97 there and 97 here; line: Wrong fuel (Diesel): the engine will not start, and trying damages it
+PASS MP.wf_petrol_generator_refused_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+STEP wf_set_diesel_generator_on_petrol begin
+OBS  MP.wf_set diesel_generator_on_petrol on the server: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline); condition 100, tank 5 L
+PASS MP.wf_verdict_diesel_generator_on_petrol_A :: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline)
+STEP mp_wf_diesel_generator_starts_on_petrol begin
+OBS  MP.wf_diesel_generator_starts_on_petrol tries: drew 0.7688 against 0.25: refused by the server, on false | drew 0.6891 against 0.25: refused by the server, on false | drew 0.8169 against 0.25: refused by the server, on false | drew 0.4161 against 0.25: refused by the server, on false | drew 0.1346 against 0.25: passed by the server, on true; line: Wrong fuel (Gasoline): it damages this engine while it runs
+PASS MP.wf_diesel_generator_starts_on_petrol_every_try_as_the_servers_draw_gives_A :: 5 tries, each as drawn
+PASS MP.wf_diesel_generator_running_on_petrol_A :: server true, here true
+STEP wf_generator_fails begin
+PASS MP.wf_diesel_generator_failed_on_the_server_A :: running before true; condition 100 -> 0, on false; draws gfailheld=0.0000
+STEP mp_wf_generator_failure_arrives begin
+STEP mp_wf_generator_failure_seen begin
+PASS MP.wf_failed_generator_seen_here_A :: condition 0, on false
+STEP wf_set_ambulance_on_diesel begin
+OBS  MP.wf_set ambulance_on_diesel on the server: compatible=true harmful=false level=nil of nil start 1 power 1 wear 1 failure nil exhaust nil attempt nil (); condition 0, tank 8.998708724975586 L
+PASS MP.wf_verdict_ambulance_on_diesel_A :: compatible=true harmful=false level=nil of nil start 1 power 1 wear 1 failure nil exhaust nil attempt nil ()
+STEP wf_give_pour_can begin
+STEP mp_wfCan3_arrives begin
+OBS  MP.wfCan3 in the inventory=true, 5.0000 L
+STEP mp_wf_pour_petrol_into_the_ambulance begin
+OBS  MP.wf_pour_petrol_into_the_ambulance queued: ISPathFindAction, ISEquipWeaponAction, ISTLGPourFuel
+STEP wf_probe_after_the_refused_pour begin
+OBS  MP.wf_probe after_the_refused_pour on the server: compatible=true harmful=false level=nil of nil start 1 power 1 wear 1 failure nil exhaust nil attempt nil (); engine 0 carry 0.10214490890502947 exhaust 100 carry 0 battery 0.9780299663543701 running false power 4900 (nil) tank 8.998708724975586; generator on nil fuel nil; draws 
+PASS MP.wf_pour_of_petrol_into_a_diesel_refused_by_the_server_A :: reply ok=false reason=incompatible duplicate=nil state=nil; tank 8.998708724975586 L (was 8.998708724975586); can 5.0000 L
+STEP mp_wf_pour_petrol_into_the_ambulance_confirmed begin
+OBS  MP.wf_pour_petrol_into_the_ambulance_confirmed queued: ISPathFindAction, ISTLGPourFuel
+STEP wf_probe_after_the_confirmed_pour begin
+OBS  MP.wf_probe after_the_confirmed_pour on the server: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline); engine 0 carry 0.10214490890502947 exhaust 100 carry 0 battery 0.9780299663543701 running false power 4900 (nil) tank 13.998708724975586; generator on nil fuel nil; draws 
+PASS MP.wf_confirmed_pour_goes_in_and_the_tank_harms_A :: reply ok=true reason=nil duplicate=nil state=nil; tank 13.998708724975586 L (was 8.998708724975586); compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline)
+STEP wf_option_off begin
+PASS MP.wf_option_off_blocks_without_damage_on_the_server_A :: option false: compatible=false harmful=false level=nil of nil start 0 power 0 wear 1 failure nil exhaust nil attempt nil (incompatible_fuel)
+STEP wf_option_on begin
+PASS MP.wf_option_on_again_A :: option true: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline)
+STEP wf_cleanup begin
+OBS  MP.wf fixtures undone; WrongFuelDamage true
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=30 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_wrongfuel role=A tag=wf_site
+OBS  MPS.reply wrongfuel_site amb=237 ambPower=4900 ambProfile=engine_ci_stock car=238 carPower=4000 carProfile=engine_si_stock consumption=1 damage=true diesel=true g1Profile=generator_si_stock g1x=10663 g1y=10642 g2Profile=generator_ci_bio g2x=10665 g2y=10640 genConsumption=0.1 role=A stalls=true tag=wf_site version=0.4.0
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=10 role=A tag=wf_give_can_car
+OBS  MPS.reply given ids=Base.PetrolCan=1679572415 role=A tag=wf_give_can_car
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=10 role=A tag=wf_give_can_ambulance
+OBS  MPS.reply given ids=Base.PetrolCan=1076852708 role=A tag=wf_give_can_ambulance
+OBS  MPS.ticks 300 OnTick events in 85754 ms
+OBS  MPS.message from tlga: wf_set k=car q=gasoline=0.8;diesel=0.2 role=A tag=wf_set_car_on_a_fifth_diesel
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=1 compatible=true cond=100 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=8 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_set_car_on_a_fifth_diesel tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_set k=amb q=diesel=0.7;gasoline=0.3 role=A tag=wf_set_ambulance_on_30pc_petrol
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=1 compatible=true cond=100 draws= exhaust=nil failure=nil found=true harmful=true level=2 mcarry=0 minute=8 muffler=100 pf=0.7 power=4900 powerState=nil reasons=wrong_fuel_2_gasoline role=A running=false start=0.5 tag=wf_set_ambulance_on_30pc_petrol tankL=10 wear=8 wrong=gasoline
+OBS  MPS.message from tlga: wf_set k=amb q=gasoline=1 role=A tag=wf_set_ambulance_on_petrol
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=1 compatible=true cond=100 draws= exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=8 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_set_ambulance_on_petrol tankL=10 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_set k=car q=gasoline=0.6;diesel=0.4 role=A tag=wf_set_car_on_40pc_diesel
+OBS  MPS.reply wf_set attempt=1-2 carry=0 charge=1 compatible=false cond=100 draws= exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=8 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_set_car_on_40pc_diesel tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_refused_on_40pc_diesel_1
+OBS  MPS.reply wf_probe attempt=1-2 carry=0 charge=0.9799999594688416 compatible=false cond=98 draws=refused;roll=2.0000;points=2.0000 exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=12 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_ask_car_refused_on_40pc_diesel_1 tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_refused_on_40pc_diesel_2
+OBS  MPS.reply wf_probe attempt=1-2 carry=0 charge=0.9599999785423279 compatible=false cond=97 draws=refused;roll=1.0000;points=1.0000 exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=13 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_ask_car_refused_on_40pc_diesel_2 tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_refused_on_40pc_diesel_3
+OBS  MPS.reply wf_probe attempt=1-2 carry=0 charge=0.9399999976158142 compatible=false cond=95 draws=refused;roll=2.0000;points=2.0000 exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=14 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_ask_car_refused_on_40pc_diesel_3 tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_set k=car q=gasoline=0.8;diesel=0.2 role=A tag=wf_set_car_back_on_a_fifth_diesel
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=0.9399999976158142 compatible=true cond=95 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=14 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_set_car_back_on_a_fifth_diesel tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_hold role=A stall=1 tag=wf_hold_for_the_car
+OBS  MPS.reply wf_hold minute=14 role=A stall=true tag=wf_hold_for_the_car
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_starts_on_a_fifth_diesel_1
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9399999976158142 compatible=true cond=95 draws=start=0.9565;refused;points=0.0000 exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=16 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_ask_car_starts_on_a_fifth_diesel_1 tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_starts_on_a_fifth_diesel_2
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9399999976158142 compatible=true cond=95 draws=start=0.7002;refused;points=0.0000 exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=17 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_ask_car_starts_on_a_fifth_diesel_2 tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_starts_on_a_fifth_diesel_3
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9160099625587463 compatible=true cond=95 draws=start=0.2762 exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=18 muffler=100 pf=0.6 power=2400 powerState={applied=2400.0000,base=4000.0000} reasons=wrong_fuel_2_diesel role=A running=true start=0.4 tag=wf_ask_car_starts_on_a_fifth_diesel_3 tankL=9.999743461608887 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car release=0 role=A tag=wf_probe_car_power
+OBS  MPS.reply wf_probe attempt=nil carry=5.671977996826172E-4 charge=0.9180299639701843 compatible=true cond=95 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=3.781318664550781E-4 minute=20 muffler=100 pf=0.6 power=2400 powerState={applied=2400.0000,base=4000.0000} reasons=wrong_fuel_2_diesel role=A running=true start=0.4 tag=wf_probe_car_power tankL=9.998744010925293 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_burn k=car litres=4 role=A tag=wf_burn_car
+OBS  MPS.reply wf_burn carry=5.671977996826172E-4 charge=0.9180299639701843 cond=95 draws= found=true mcarry=3.781318664550781E-4 minute=20 muffler=100 power=2400 powerState={applied=2400.0000,base=4000.0000} role=A running=true tag=wf_burn_car tankAfter=5.998744010925293 tankL=9.998744010925293
+OBS  MPS.message from tlga: wf_probe k=car release=1 role=A tag=wf_probe_car_wear
+OBS  MPS.reply wf_probe attempt=nil carry=0.0013167858123779297 charge=0.9200499653816223 compatible=true cond=92 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=8.778572082519531E-4 minute=22 muffler=98 pf=0.6 power=2400 powerState={applied=2400.0000,base=4000.0000} reasons=wrong_fuel_2_diesel role=A running=true start=0.4 tag=wf_probe_car_wear tankL=5.997744560241699 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_hold role=A stall=1 tag=wf_hold_for_the_ambulance
+OBS  MPS.reply wf_hold minute=27 role=A stall=true tag=wf_hold_for_the_ambulance
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_ambulance_starts_on_petrol_1
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=1 compatible=true cond=100 draws=start=0.4224;refused;points=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=28 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_ask_ambulance_starts_on_petrol_1 tankL=10 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_ambulance_starts_on_petrol_2
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=1 compatible=true cond=100 draws=start=0.9782;refused;points=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=29 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_ask_ambulance_starts_on_petrol_2 tankL=10 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_ambulance_starts_on_petrol_3
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9760099649429321 compatible=true cond=100 draws=start=0.2243 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=31 muffler=100 pf=0.5 power=2450 powerState={applied=2450.0000,base=4900.0000} reasons=wrong_fuel_3_gasoline role=A running=true start=0.25 tag=wf_ask_ambulance_starts_on_petrol_3 tankL=9.999730110168457 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_burn fail=1 k=amb litres=1 role=A tag=wf_burn_ambulance
+OBS  MPS.reply wf_burn carry=0.001073455810546875 charge=0.9780299663543701 cond=100 draws=fail=0.5348 found=true mcarry=0 minute=32 muffler=100 power=2450 powerState={applied=2450.0000,base=4900.0000} role=A running=true tag=wf_burn_ambulance tankAfter=8.998708724975586 tankL=9.998708724975586
+OBS  MPS.message from tlga: wf_probe k=amb release=1 role=A tag=wf_probe_ambulance_failed
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws=failheld=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=34 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_probe_ambulance_failed tankL=8.998708724975586 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_failed_ambulance_does_not_start_1
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws=start=0.5690;refused;points=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=35 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_ask_failed_ambulance_does_not_start_1 tankL=8.998708724975586 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=5 role=A tag=wf_give_can_generator_1
+OBS  MPS.reply given ids=Base.PetrolCan=1418670816 role=A tag=wf_give_can_generator_1
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=5 role=A tag=wf_give_can_generator_2
+OBS  MPS.reply given ids=Base.PetrolCan=1366808566 role=A tag=wf_give_can_generator_2
+OBS  MPS.message from tlga: wf_set k=g1 q=gasoline=0.6;diesel=0.4 role=A tag=wf_set_petrol_generator_on_40pc_diesel
+OBS  MPS.reply wf_set attempt=1-2 compatible=false cond=100 draws= exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=43 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_set_petrol_generator_on_40pc_diesel wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=g1 role=A tag=wf_ask_petrol_generator_refused_1
+OBS  MPS.reply wf_probe attempt=1-2 compatible=false cond=99 draws=grefused;groll=1.0000;gpoints=1.0000 exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=45 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_ask_petrol_generator_refused_1 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=g1 role=A tag=wf_ask_petrol_generator_refused_2
+OBS  MPS.reply wf_probe attempt=1-2 compatible=false cond=98 draws=grefused;groll=1.0000;gpoints=1.0000 exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=46 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_ask_petrol_generator_refused_2 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=g1 role=A tag=wf_ask_petrol_generator_refused_3
+OBS  MPS.reply wf_probe attempt=1-2 compatible=false cond=97 draws=grefused;groll=1.0000;gpoints=1.0000 exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=47 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_ask_petrol_generator_refused_3 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_set k=g2 q=gasoline=1 role=A tag=wf_set_diesel_generator_on_petrol
+OBS  MPS.reply wf_set attempt=nil compatible=true cond=100 draws= exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=47 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_set_diesel_generator_on_petrol wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_1
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.7688;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=49 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_1 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_2
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.6891;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=50 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_2 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_3
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.8169;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=51 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_3 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_4
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.4161;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=53 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_4 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_5
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.1346 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=54 on=true pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_5 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_gen_fail role=A tag=wf_generator_fails
+OBS  MPS.reply wf_gen_fail cond=0 cond0=100 draws=gfailheld=0.0000 found=true fuel=4 minute=54 on=false on0=true role=A tag=wf_generator_fails whole=100
+OBS  MPS.message from tlga: wf_set k=amb q=diesel=1 role=A tag=wf_set_ambulance_on_diesel
+OBS  MPS.reply wf_set attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws= exhaust=nil failure=nil found=true harmful=false level=nil mcarry=0 minute=55 muffler=100 pf=1 power=4900 powerState=nil reasons= role=A running=false start=1 tag=wf_set_ambulance_on_diesel tankL=8.998708724975586 wear=1 wrong=nil
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=5 role=A tag=wf_give_pour_can
+OBS  MPS.reply given ids=Base.PetrolCan=1646851673 role=A tag=wf_give_pour_can
+OBS  MPS.message from tlga: wf_probe k=amb release=0 role=A tag=wf_probe_after_the_refused_pour
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws= exhaust=nil failure=nil found=true harmful=false level=nil mcarry=0 minute=58 muffler=100 pf=1 power=4900 powerState=nil reasons= role=A running=false start=1 tag=wf_probe_after_the_refused_pour tankL=8.998708724975586 wear=1 wrong=nil
+OBS  MPS.message from tlga: wf_probe k=amb release=0 role=A tag=wf_probe_after_the_confirmed_pour
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws= exhaust=nil failure=nil found=true harmful=true level=2 mcarry=0 minute=59 muffler=100 pf=0.7 power=4900 powerState=nil reasons=wrong_fuel_2_gasoline role=A running=false start=0.5 tag=wf_probe_after_the_confirmed_pour tankL=13.998708724975586 wear=8 wrong=gasoline
+OBS  MPS.message from tlga: wf_option on=false role=A tag=wf_option_off
+OBS  MPS.reply wf_option attempt=nil compatible=false exhaust=nil failure=nil harmful=false level=nil on=false pf=0 reasons=incompatible_fuel role=A start=0 tag=wf_option_off wear=1 wrong=nil
+OBS  MPS.message from tlga: wf_option on=true role=A tag=wf_option_on
+OBS  MPS.reply wf_option attempt=nil compatible=true exhaust=nil failure=nil harmful=true level=2 on=true pf=0.7 reasons=wrong_fuel_2_gasoline role=A start=0.5 tag=wf_option_on wear=8 wrong=gasoline
+OBS  MPS.message from tlga: wf_cleanup role=A tag=wf_cleanup
+OBS  MPS.reply wf_cleanup damage=true role=A tag=wf_cleanup
+OBS  MPS.message from tlga: finish role=A
+===== client mp-a
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP wf_site begin
+PASS MP.wf_site_ready_on_the_server_A :: car engine_si_stock, ambulance engine_ci_stock, generators generator_si_stock and generator_ci_bio; dieselVehicles=true WrongFuelDamage=true VehicleStalls=true; CarGasConsumption 1; the mod there is 0.4.0
+STEP mp_wf_site_arrives begin
+STEP mp_wf_site_seen begin
+PASS MP.wf_site_seen_A :: car=true ambulance=true generators=true,true debug=false role=admin
+STEP wf_give_can_car begin
+STEP mp_wfCan1_arrives begin
+OBS  MP.wfCan1 in the inventory=true, 10.0000 L
+STEP mp_can_to_car begin
+OBS  MP.can_to_car queued: ISPathFindAction, ISEquipWeaponAction, ISAddGasolineToVehicle
+STEP wf_give_can_ambulance begin
+STEP mp_wfCan2_arrives begin
+OBS  MP.wfCan2 in the inventory=true, 10.0000 L
+STEP mp_wf_can_to_ambulance begin
+OBS  MP.wf_can_to_ambulance queued: ISPathFindAction, ISEquipWeaponAction, ISAddGasolineToVehicle
+STEP wf_set_car_on_a_fifth_diesel begin
+OBS  MP.wf_set car_on_a_fifth_diesel on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); condition 100, tank 10 L
+PASS MP.wf_verdict_car_on_a_fifth_diesel_A :: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel)
+STEP wf_set_ambulance_on_30pc_petrol begin
+OBS  MP.wf_set ambulance_on_30pc_petrol on the server: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline); condition 100, tank 10 L
+PASS MP.wf_verdict_ambulance_on_30pc_petrol_A :: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline)
+STEP wf_set_ambulance_on_petrol begin
+OBS  MP.wf_set ambulance_on_petrol on the server: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline); condition 100, tank 10 L
+PASS MP.wf_verdict_ambulance_on_petrol_A :: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline)
+STEP wf_set_car_on_40pc_diesel begin
+OBS  MP.wf_set car_on_40pc_diesel on the server: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel); condition 100, tank 10 L
+PASS MP.wf_verdict_car_on_40pc_diesel_A :: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel)
+STEP mp_wf_enter_car begin
+OBS  MP.wf_enter_car queued: ISPathFindAction, ISUnlockVehicleDoor, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP mp_wf_car_refused_on_40pc_diesel begin
+OBS  MP.wf_car_refused_on_40pc_diesel tries: the server drew 2, condition 100 -> 98 there and 98 here, battery -0.0200; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 1, condition 98 -> 97 there and 97 here, battery -0.0200; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 2, condition 97 -> 95 there and 95 here, battery -0.0200; line: Wrong fuel (Diesel): the engine will not start, and trying damages it
+PASS MP.wf_car_refused_on_40pc_diesel_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+STEP wf_set_car_back_on_a_fifth_diesel begin
+OBS  MP.wf_set car_back_on_a_fifth_diesel on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); condition 95, tank 10 L
+PASS MP.wf_verdict_car_back_on_a_fifth_diesel_A :: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel)
+STEP wf_hold_for_the_car begin
+OBS  MP.wf stall draw held on the server: true
+STEP mp_wf_car_starts_on_a_fifth_diesel begin
+OBS  MP.wf_car_starts_on_a_fifth_diesel tries: drew 0.9565 against 0.4: refused by the server, on false | drew 0.7002 against 0.4: refused by the server, on false | drew 0.2762 against 0.4: passed by the server, on true; line: Wrong fuel (Diesel): it damages this engine while it runs
+PASS MP.wf_car_starts_on_a_fifth_diesel_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+PASS MP.wf_car_running_on_a_fifth_diesel_A :: server true, here true
+STEP mp_wf_car_idles begin
+STEP wf_probe_car_power begin
+OBS  MP.wf_probe car_power on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); engine 95 carry 5.671977996826172E-4 exhaust 100 carry 3.781318664550781E-4 battery 0.9180299639701843 running true power 2400 ({applied=2400.0000,base=4000.0000}) tank 9.998744010925293; generator on nil fuel nil; draws 
+PASS MP.wf_power_lowered_on_the_server_and_seen_here_A :: own 4000, x 0.6: 2400; the server's 2400, here 2400; running true
+STEP wf_burn_car begin
+OBS  MP.wf_burn car: engine 95 carry 5.671977996826172E-4 exhaust 100 carry 3.781318664550781E-4 tank 9.998744010925293 -> 5.998744010925293 L
+STEP mp_wf_car_burns begin
+STEP wf_probe_car_wear begin
+OBS  MP.wf_probe car_wear on the server: compatible=true harmful=true level=2 of diesel start 0.4 power 0.6 wear 6 failure nil exhaust 0.5 attempt nil (wrong_fuel_2_diesel); engine 92 carry 0.0013167858123779297 exhaust 98 carry 8.778572082519531E-4 battery 0.9200499653816223 running true power 2400 ({applied=2400.0000,base=4000.0000}) tank 5.997744560241699; generator on nil fuel nil; draws 
+PASS MP.wf_engine_and_exhaust_worn_by_the_litre_on_the_server_A :: 4.0010 L at wear x 6: engine 3 taken + 0.0013 carried, 3.0013 due; exhaust 100 -> 98 + 0.0009 carried, 2.0009 due
+PASS MP.wf_worn_engine_and_exhaust_seen_here_A :: engine 92 here, 92 there; exhaust 98 here, 98 there
+STEP mp_wf_shut_off_car begin
+OBS  MP.wf_shut_off_car queued: ISShutOffVehicleEngine
+STEP mp_wf_exit_car begin
+OBS  MP.wf_exit_car queued: ISOpenVehicleDoor, ISExitVehicle, ISCloseVehicleDoor
+STEP mp_wf_enter_ambulance begin
+OBS  MP.wf_enter_ambulance queued: ISPathFindAction, ISUnlockVehicleDoor, ISOpenVehicleDoor, ISEnterVehicle, ISCloseVehicleDoor
+STEP wf_hold_for_the_ambulance begin
+OBS  MP.wf stall draw held on the server: true
+STEP mp_wf_ambulance_starts_on_petrol begin
+OBS  MP.wf_ambulance_starts_on_petrol tries: drew 0.4224 against 0.25: refused by the server, on false | drew 0.9782 against 0.25: refused by the server, on false | drew 0.2243 against 0.25: passed by the server, on true; line: Wrong fuel (Gasoline): it damages this engine while it runs
+PASS MP.wf_ambulance_starts_on_petrol_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+PASS MP.wf_ambulance_running_on_petrol_A :: server true, here true
+STEP mp_wf_ambulance_idles begin
+STEP mp_wf_clear_line begin
+STEP wf_burn_ambulance begin
+OBS  MP.wf_burn ambulance: engine 100 tank 9.998708724975586 -> 8.998708724975586 L, the failure draw held at 0
+STEP mp_wf_ambulance_burns begin
+STEP wf_probe_ambulance_failed begin
+OBS  MP.wf_probe ambulance_failed on the server: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline); engine 0 carry 0.10214490890502947 exhaust 100 carry 0 battery 0.9780299663543701 running false power 4900 (nil) tank 8.998708724975586; generator on nil fuel nil; draws failheld=0.0000
+PASS MP.wf_engine_failed_on_the_server_and_seen_here_A :: engine 100 -> 0 on the server, running false; here engine 0, running false; line: The engine has failed: wrong fuel (Gasoline)
+STEP mp_wf_failed_ambulance_does_not_start begin
+OBS  MP.wf_failed_ambulance_does_not_start tries: running false, engine 0 on the server
+PASS MP.wf_failed_ambulance_does_not_start_every_try_as_the_servers_draw_gives_A :: 1 tries, each as drawn
+STEP mp_wf_exit_ambulance begin
+OBS  MP.wf_exit_ambulance queued: ISOpenVehicleDoor, ISExitVehicle, ISCloseVehicleDoor
+STEP wf_give_can_generator_1 begin
+STEP mp_wfCan4_arrives begin
+OBS  MP.wfCan4 in the inventory=true, 5.0000 L
+STEP mp_wf_fuel_the_petrol_generator begin
+OBS  MP.wf_fuel_the_petrol_generator queued: ISWalkToTimedAction, ISEquipWeaponAction, ISAddFuel
+STEP wf_give_can_generator_2 begin
+STEP mp_wfCan5_arrives begin
+OBS  MP.wfCan5 in the inventory=true, 5.0000 L
+STEP mp_wf_fuel_the_diesel_generator begin
+OBS  MP.wf_fuel_the_diesel_generator queued: ISWalkToTimedAction, ISEquipWeaponAction, ISAddFuel
+STEP wf_set_petrol_generator_on_40pc_diesel begin
+OBS  MP.wf_set petrol_generator_on_40pc_diesel on the server: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel); condition 100, tank 5 L
+PASS MP.wf_verdict_petrol_generator_on_40pc_diesel_A :: compatible=false harmful=true level=4 of diesel start 0 power 0 wear 10 failure nil exhaust 1 attempt 1-2 (wrong_fuel_4_diesel)
+STEP mp_wf_petrol_generator_refused begin
+OBS  MP.wf_petrol_generator_refused tries: the server drew 1, condition 100 -> 99 there and 99 here; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 1, condition 99 -> 98 there and 98 here; line: Wrong fuel (Diesel): the engine will not start, and trying damages it | the server drew 1, condition 98 -> 97 there and 97 here; line: Wrong fuel (Diesel): the engine will not start, and trying damages it
+PASS MP.wf_petrol_generator_refused_every_try_as_the_servers_draw_gives_A :: 3 tries, each as drawn
+STEP wf_set_diesel_generator_on_petrol begin
+OBS  MP.wf_set diesel_generator_on_petrol on the server: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline); condition 100, tank 5 L
+PASS MP.wf_verdict_diesel_generator_on_petrol_A :: compatible=true harmful=true level=3 of gasoline start 0.25 power 0.5 wear 15 failure 0.02 exhaust nil attempt nil (wrong_fuel_3_gasoline)
+STEP mp_wf_diesel_generator_starts_on_petrol begin
+OBS  MP.wf_diesel_generator_starts_on_petrol tries: drew 0.7688 against 0.25: refused by the server, on false | drew 0.6891 against 0.25: refused by the server, on false | drew 0.8169 against 0.25: refused by the server, on false | drew 0.4161 against 0.25: refused by the server, on false | drew 0.1346 against 0.25: passed by the server, on true; line: Wrong fuel (Gasoline): it damages this engine while it runs
+PASS MP.wf_diesel_generator_starts_on_petrol_every_try_as_the_servers_draw_gives_A :: 5 tries, each as drawn
+PASS MP.wf_diesel_generator_running_on_petrol_A :: server true, here true
+STEP wf_generator_fails begin
+PASS MP.wf_diesel_generator_failed_on_the_server_A :: running before true; condition 100 -> 0, on false; draws gfailheld=0.0000
+STEP mp_wf_generator_failure_arrives begin
+STEP mp_wf_generator_failure_seen begin
+PASS MP.wf_failed_generator_seen_here_A :: condition 0, on false
+STEP wf_set_ambulance_on_diesel begin
+OBS  MP.wf_set ambulance_on_diesel on the server: compatible=true harmful=false level=nil of nil start 1 power 1 wear 1 failure nil exhaust nil attempt nil (); condition 0, tank 8.998708724975586 L
+PASS MP.wf_verdict_ambulance_on_diesel_A :: compatible=true harmful=false level=nil of nil start 1 power 1 wear 1 failure nil exhaust nil attempt nil ()
+STEP wf_give_pour_can begin
+STEP mp_wfCan3_arrives begin
+OBS  MP.wfCan3 in the inventory=true, 5.0000 L
+STEP mp_wf_pour_petrol_into_the_ambulance begin
+OBS  MP.wf_pour_petrol_into_the_ambulance queued: ISPathFindAction, ISEquipWeaponAction, ISTLGPourFuel
+STEP wf_probe_after_the_refused_pour begin
+OBS  MP.wf_probe after_the_refused_pour on the server: compatible=true harmful=false level=nil of nil start 1 power 1 wear 1 failure nil exhaust nil attempt nil (); engine 0 carry 0.10214490890502947 exhaust 100 carry 0 battery 0.9780299663543701 running false power 4900 (nil) tank 8.998708724975586; generator on nil fuel nil; draws 
+PASS MP.wf_pour_of_petrol_into_a_diesel_refused_by_the_server_A :: reply ok=false reason=incompatible duplicate=nil state=nil; tank 8.998708724975586 L (was 8.998708724975586); can 5.0000 L
+STEP mp_wf_pour_petrol_into_the_ambulance_confirmed begin
+OBS  MP.wf_pour_petrol_into_the_ambulance_confirmed queued: ISPathFindAction, ISTLGPourFuel
+STEP wf_probe_after_the_confirmed_pour begin
+OBS  MP.wf_probe after_the_confirmed_pour on the server: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline); engine 0 carry 0.10214490890502947 exhaust 100 carry 0 battery 0.9780299663543701 running false power 4900 (nil) tank 13.998708724975586; generator on nil fuel nil; draws 
+PASS MP.wf_confirmed_pour_goes_in_and_the_tank_harms_A :: reply ok=true reason=nil duplicate=nil state=nil; tank 13.998708724975586 L (was 8.998708724975586); compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline)
+STEP wf_option_off begin
+PASS MP.wf_option_off_blocks_without_damage_on_the_server_A :: option false: compatible=false harmful=false level=nil of nil start 0 power 0 wear 1 failure nil exhaust nil attempt nil (incompatible_fuel)
+STEP wf_option_on begin
+PASS MP.wf_option_on_again_A :: option true: compatible=true harmful=true level=2 of gasoline start 0.5 power 0.7 wear 8 failure nil exhaust nil attempt nil (wrong_fuel_2_gasoline)
+STEP wf_cleanup begin
+OBS  MP.wf fixtures undone; WrongFuelDamage true
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=30 fail=0
+DONE
+===== server
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_wrongfuel role=A tag=wf_site
+OBS  MPS.reply wrongfuel_site amb=237 ambPower=4900 ambProfile=engine_ci_stock car=238 carPower=4000 carProfile=engine_si_stock consumption=1 damage=true diesel=true g1Profile=generator_si_stock g1x=10663 g1y=10642 g2Profile=generator_ci_bio g2x=10665 g2y=10640 genConsumption=0.1 role=A stalls=true tag=wf_site version=0.4.0
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=10 role=A tag=wf_give_can_car
+OBS  MPS.reply given ids=Base.PetrolCan=1679572415 role=A tag=wf_give_can_car
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=10 role=A tag=wf_give_can_ambulance
+OBS  MPS.reply given ids=Base.PetrolCan=1076852708 role=A tag=wf_give_can_ambulance
+OBS  MPS.ticks 300 OnTick events in 85754 ms
+OBS  MPS.message from tlga: wf_set k=car q=gasoline=0.8;diesel=0.2 role=A tag=wf_set_car_on_a_fifth_diesel
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=1 compatible=true cond=100 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=8 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_set_car_on_a_fifth_diesel tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_set k=amb q=diesel=0.7;gasoline=0.3 role=A tag=wf_set_ambulance_on_30pc_petrol
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=1 compatible=true cond=100 draws= exhaust=nil failure=nil found=true harmful=true level=2 mcarry=0 minute=8 muffler=100 pf=0.7 power=4900 powerState=nil reasons=wrong_fuel_2_gasoline role=A running=false start=0.5 tag=wf_set_ambulance_on_30pc_petrol tankL=10 wear=8 wrong=gasoline
+OBS  MPS.message from tlga: wf_set k=amb q=gasoline=1 role=A tag=wf_set_ambulance_on_petrol
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=1 compatible=true cond=100 draws= exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=8 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_set_ambulance_on_petrol tankL=10 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_set k=car q=gasoline=0.6;diesel=0.4 role=A tag=wf_set_car_on_40pc_diesel
+OBS  MPS.reply wf_set attempt=1-2 carry=0 charge=1 compatible=false cond=100 draws= exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=8 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_set_car_on_40pc_diesel tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_refused_on_40pc_diesel_1
+OBS  MPS.reply wf_probe attempt=1-2 carry=0 charge=0.9799999594688416 compatible=false cond=98 draws=refused;roll=2.0000;points=2.0000 exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=12 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_ask_car_refused_on_40pc_diesel_1 tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_refused_on_40pc_diesel_2
+OBS  MPS.reply wf_probe attempt=1-2 carry=0 charge=0.9599999785423279 compatible=false cond=97 draws=refused;roll=1.0000;points=1.0000 exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=13 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_ask_car_refused_on_40pc_diesel_2 tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_refused_on_40pc_diesel_3
+OBS  MPS.reply wf_probe attempt=1-2 carry=0 charge=0.9399999976158142 compatible=false cond=95 draws=refused;roll=2.0000;points=2.0000 exhaust=1 failure=nil found=true harmful=true level=4 mcarry=0 minute=14 muffler=100 pf=0 power=4000 powerState=nil reasons=wrong_fuel_4_diesel role=A running=false start=0 tag=wf_ask_car_refused_on_40pc_diesel_3 tankL=10 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_set k=car q=gasoline=0.8;diesel=0.2 role=A tag=wf_set_car_back_on_a_fifth_diesel
+OBS  MPS.reply wf_set attempt=nil carry=0 charge=0.9399999976158142 compatible=true cond=95 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=14 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_set_car_back_on_a_fifth_diesel tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_hold role=A stall=1 tag=wf_hold_for_the_car
+OBS  MPS.reply wf_hold minute=14 role=A stall=true tag=wf_hold_for_the_car
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_starts_on_a_fifth_diesel_1
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9399999976158142 compatible=true cond=95 draws=start=0.9565;refused;points=0.0000 exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=16 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_ask_car_starts_on_a_fifth_diesel_1 tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_starts_on_a_fifth_diesel_2
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9399999976158142 compatible=true cond=95 draws=start=0.7002;refused;points=0.0000 exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=17 muffler=100 pf=0.6 power=4000 powerState=nil reasons=wrong_fuel_2_diesel role=A running=false start=0.4 tag=wf_ask_car_starts_on_a_fifth_diesel_2 tankL=10 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car role=A tag=wf_ask_car_starts_on_a_fifth_diesel_3
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9160099625587463 compatible=true cond=95 draws=start=0.2762 exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=0 minute=18 muffler=100 pf=0.6 power=2400 powerState={applied=2400.0000,base=4000.0000} reasons=wrong_fuel_2_diesel role=A running=true start=0.4 tag=wf_ask_car_starts_on_a_fifth_diesel_3 tankL=9.999743461608887 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=car release=0 role=A tag=wf_probe_car_power
+OBS  MPS.reply wf_probe attempt=nil carry=5.671977996826172E-4 charge=0.9180299639701843 compatible=true cond=95 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=3.781318664550781E-4 minute=20 muffler=100 pf=0.6 power=2400 powerState={applied=2400.0000,base=4000.0000} reasons=wrong_fuel_2_diesel role=A running=true start=0.4 tag=wf_probe_car_power tankL=9.998744010925293 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_burn k=car litres=4 role=A tag=wf_burn_car
+OBS  MPS.reply wf_burn carry=5.671977996826172E-4 charge=0.9180299639701843 cond=95 draws= found=true mcarry=3.781318664550781E-4 minute=20 muffler=100 power=2400 powerState={applied=2400.0000,base=4000.0000} role=A running=true tag=wf_burn_car tankAfter=5.998744010925293 tankL=9.998744010925293
+OBS  MPS.message from tlga: wf_probe k=car release=1 role=A tag=wf_probe_car_wear
+OBS  MPS.reply wf_probe attempt=nil carry=0.0013167858123779297 charge=0.9200499653816223 compatible=true cond=92 draws= exhaust=0.5 failure=nil found=true harmful=true level=2 mcarry=8.778572082519531E-4 minute=22 muffler=98 pf=0.6 power=2400 powerState={applied=2400.0000,base=4000.0000} reasons=wrong_fuel_2_diesel role=A running=true start=0.4 tag=wf_probe_car_wear tankL=5.997744560241699 wear=6 wrong=diesel
+OBS  MPS.message from tlga: wf_hold role=A stall=1 tag=wf_hold_for_the_ambulance
+OBS  MPS.reply wf_hold minute=27 role=A stall=true tag=wf_hold_for_the_ambulance
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_ambulance_starts_on_petrol_1
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=1 compatible=true cond=100 draws=start=0.4224;refused;points=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=28 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_ask_ambulance_starts_on_petrol_1 tankL=10 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_ambulance_starts_on_petrol_2
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=1 compatible=true cond=100 draws=start=0.9782;refused;points=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=29 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_ask_ambulance_starts_on_petrol_2 tankL=10 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_ambulance_starts_on_petrol_3
+OBS  MPS.reply wf_probe attempt=nil carry=0 charge=0.9760099649429321 compatible=true cond=100 draws=start=0.2243 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=31 muffler=100 pf=0.5 power=2450 powerState={applied=2450.0000,base=4900.0000} reasons=wrong_fuel_3_gasoline role=A running=true start=0.25 tag=wf_ask_ambulance_starts_on_petrol_3 tankL=9.999730110168457 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_burn fail=1 k=amb litres=1 role=A tag=wf_burn_ambulance
+OBS  MPS.reply wf_burn carry=0.001073455810546875 charge=0.9780299663543701 cond=100 draws=fail=0.5348 found=true mcarry=0 minute=32 muffler=100 power=2450 powerState={applied=2450.0000,base=4900.0000} role=A running=true tag=wf_burn_ambulance tankAfter=8.998708724975586 tankL=9.998708724975586
+OBS  MPS.message from tlga: wf_probe k=amb release=1 role=A tag=wf_probe_ambulance_failed
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws=failheld=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=34 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_probe_ambulance_failed tankL=8.998708724975586 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=amb role=A tag=wf_ask_failed_ambulance_does_not_start_1
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws=start=0.5690;refused;points=0.0000 exhaust=nil failure=0.02 found=true harmful=true level=3 mcarry=0 minute=35 muffler=100 pf=0.5 power=4900 powerState=nil reasons=wrong_fuel_3_gasoline role=A running=false start=0.25 tag=wf_ask_failed_ambulance_does_not_start_1 tankL=8.998708724975586 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=5 role=A tag=wf_give_can_generator_1
+OBS  MPS.reply given ids=Base.PetrolCan=1418670816 role=A tag=wf_give_can_generator_1
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=5 role=A tag=wf_give_can_generator_2
+OBS  MPS.reply given ids=Base.PetrolCan=1366808566 role=A tag=wf_give_can_generator_2
+OBS  MPS.message from tlga: wf_set k=g1 q=gasoline=0.6;diesel=0.4 role=A tag=wf_set_petrol_generator_on_40pc_diesel
+OBS  MPS.reply wf_set attempt=1-2 compatible=false cond=100 draws= exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=43 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_set_petrol_generator_on_40pc_diesel wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=g1 role=A tag=wf_ask_petrol_generator_refused_1
+OBS  MPS.reply wf_probe attempt=1-2 compatible=false cond=99 draws=grefused;groll=1.0000;gpoints=1.0000 exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=45 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_ask_petrol_generator_refused_1 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=g1 role=A tag=wf_ask_petrol_generator_refused_2
+OBS  MPS.reply wf_probe attempt=1-2 compatible=false cond=98 draws=grefused;groll=1.0000;gpoints=1.0000 exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=46 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_ask_petrol_generator_refused_2 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_probe k=g1 role=A tag=wf_ask_petrol_generator_refused_3
+OBS  MPS.reply wf_probe attempt=1-2 compatible=false cond=97 draws=grefused;groll=1.0000;gpoints=1.0000 exhaust=1 failure=nil found=true fuel=5 harmful=true level=4 minute=47 on=false pf=0 reasons=wrong_fuel_4_diesel role=A start=0 tag=wf_ask_petrol_generator_refused_3 wear=10 wrong=diesel
+OBS  MPS.message from tlga: wf_set k=g2 q=gasoline=1 role=A tag=wf_set_diesel_generator_on_petrol
+OBS  MPS.reply wf_set attempt=nil compatible=true cond=100 draws= exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=47 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_set_diesel_generator_on_petrol wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_1
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.7688;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=49 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_1 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_2
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.6891;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=50 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_2 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_3
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.8169;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=51 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_3 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_4
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.4161;grefused;gpoints=0.0000 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=53 on=false pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_4 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_probe k=g2 role=A tag=wf_ask_diesel_generator_starts_on_petrol_5
+OBS  MPS.reply wf_probe attempt=nil compatible=true cond=100 draws=gstart=0.1346 exhaust=nil failure=0.02 found=true fuel=5 harmful=true level=3 minute=54 on=true pf=0.5 reasons=wrong_fuel_3_gasoline role=A start=0.25 tag=wf_ask_diesel_generator_starts_on_petrol_5 wear=15 wrong=gasoline
+OBS  MPS.message from tlga: wf_gen_fail role=A tag=wf_generator_fails
+OBS  MPS.reply wf_gen_fail cond=0 cond0=100 draws=gfailheld=0.0000 found=true fuel=4 minute=54 on=false on0=true role=A tag=wf_generator_fails whole=100
+OBS  MPS.message from tlga: wf_set k=amb q=diesel=1 role=A tag=wf_set_ambulance_on_diesel
+OBS  MPS.reply wf_set attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws= exhaust=nil failure=nil found=true harmful=false level=nil mcarry=0 minute=55 muffler=100 pf=1 power=4900 powerState=nil reasons= role=A running=false start=1 tag=wf_set_ambulance_on_diesel tankL=8.998708724975586 wear=1 wrong=nil
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=5 role=A tag=wf_give_pour_can
+OBS  MPS.reply given ids=Base.PetrolCan=1646851673 role=A tag=wf_give_pour_can
+OBS  MPS.message from tlga: wf_probe k=amb release=0 role=A tag=wf_probe_after_the_refused_pour
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws= exhaust=nil failure=nil found=true harmful=false level=nil mcarry=0 minute=58 muffler=100 pf=1 power=4900 powerState=nil reasons= role=A running=false start=1 tag=wf_probe_after_the_refused_pour tankL=8.998708724975586 wear=1 wrong=nil
+OBS  MPS.message from tlga: wf_probe k=amb release=0 role=A tag=wf_probe_after_the_confirmed_pour
+OBS  MPS.reply wf_probe attempt=nil carry=0.10214490890502947 charge=0.9780299663543701 compatible=true cond=0 draws= exhaust=nil failure=nil found=true harmful=true level=2 mcarry=0 minute=59 muffler=100 pf=0.7 power=4900 powerState=nil reasons=wrong_fuel_2_gasoline role=A running=false start=0.5 tag=wf_probe_after_the_confirmed_pour tankL=13.998708724975586 wear=8 wrong=gasoline
+OBS  MPS.message from tlga: wf_option on=false role=A tag=wf_option_off
+OBS  MPS.reply wf_option attempt=nil compatible=false exhaust=nil failure=nil harmful=false level=nil on=false pf=0 reasons=incompatible_fuel role=A start=0 tag=wf_option_off wear=1 wrong=nil
+OBS  MPS.message from tlga: wf_option on=true role=A tag=wf_option_on
+OBS  MPS.reply wf_option attempt=nil compatible=true exhaust=nil failure=nil harmful=true level=2 on=true pf=0.7 reasons=wrong_fuel_2_gasoline role=A start=0.5 tag=wf_option_on wear=8 wrong=gasoline
+OBS  MPS.message from tlga: wf_cleanup role=A tag=wf_cleanup
+OBS  MPS.reply wf_cleanup damage=true role=A tag=wf_cleanup
+OBS  MPS.message from tlga: finish role=A

@@ -1,0 +1,141 @@
+﻿===== launcher
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 29476)
+server up after 24 s
+server: LOG  : General      f:0 st:631,652,608> command entered via server console (System.in): "setaccesslevel "tlga" "user""
+server: LOG  : General      f:0 st:631,652,691> User tlga is now user
+server: LOG  : General      f:0 st:631,656,632> command entered via server console (System.in): "setaccesslevel "tlgb" "user""
+server: LOG  : General      f:0 st:631,656,688> User tlgb is now user
+client mp-a started, pid 20496
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.64
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_hb_start begin
+PASS MP.hb_nothing_known_at_the_start_A :: debug=false; hasPlayerLearnedRecipe 11111, actually known 00000; Welding 0
+STEP hb_give begin
+OBS  MP.hb_given Base.MetalDrum=1436099184;Base.MetalBar=1738885689;Base.MetalBar=1964940420;Base.Hammer=337158968;TLG.BiodieselHandbook=2041108594;Base.HandTorch=1557102782
+STEP mp_hb_items_arrive begin
+STEP mp_hb_light begin
+STEP mp_hb_try_refused_recipe_not_learned begin
+PASS MP.hb_refused_recipe_not_learned_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 0; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.AshBarrel made 0
+STEP mp_hb_read begin
+PASS MP.hb_handbook_read_teaches_all_five_here_A :: after 2168 ticks: hasPlayerLearnedRecipe 11111, actually known 11111
+STEP hb_probe_after_reading begin
+OBS  MP.hb_after_reading server: known 11111, Welding 0, Ash Barrels 0, handbook read true
+PASS MP.hb_server_knows_the_five_after_the_read_A :: known 11111, read true
+STEP mp_hb_try_refused_below_welding_2 begin
+PASS MP.hb_refused_below_welding_2_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 0; hasPlayerLearnedRecipe 11111, actually known 11111; debug=false; dark=false; TLG.AshBarrel made 0
+STEP hb_level begin
+OBS  MP.hb_level Welding on the server 2, here 2
+STEP mp_hb_level_settles begin
+STEP mp_hb_try_made_with_the_recipe_and_welding_2 begin
+PASS MP.hb_made_with_the_recipe_and_welding_2_A :: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 11111; debug=false; dark=false; TLG.AshBarrel made 1
+STEP hb_probe_after_crafting begin
+OBS  MP.hb_after_crafting server: known 11111, Welding 2, Ash Barrels 1, handbook read true
+PASS MP.hb_server_holds_the_ash_barrel_A :: Ash Barrels 1, Welding 2
+STEP hb_roll begin
+PASS MP.hb_handbook_rolled_from_loot_on_the_server_A :: 26 handbooks in 1200 fills: GasStorageMechanics=6 CrateMechanics=7 ToolStoreBooks=8 LibraryMagazines=5
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=9 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.MetalBar;Base.MetalBar;Base.Hammer;TLG.BiodieselHandbook;Base.HandTorch role=A tag=hb_give
+OBS  MPS.reply given ids=Base.MetalDrum=1436099184;Base.MetalBar=1738885689;Base.MetalBar=1964940420;Base.Hammer=337158968;TLG.BiodieselHandbook=2041108594;Base.HandTorch=1557102782 role=A tag=hb_give
+OBS  MPS.ticks 300 OnTick events in 80469 ms
+OBS  MPS.message from tlga: probe_handbook role=A tag=hb_probe_after_reading
+OBS  MPS.reply probe_handbook barrels=0 known=11111 level=0 read=true role=A tag=hb_probe_after_reading
+OBS  MPS.message from tlga: handbook_level level=2 role=A tag=hb_level
+OBS  MPS.reply handbook_level level=2 role=A tag=hb_level
+OBS  MPS.message from tlga: probe_handbook role=A tag=hb_probe_after_crafting
+OBS  MPS.reply probe_handbook barrels=1 known=11111 level=2 read=true role=A tag=hb_probe_after_crafting
+OBS  MPS.message from tlga: roll_handbook role=A tag=hb_roll
+OBS  MPS.reply roll_handbook fills=1200 lists=GasStorageMechanics=6 CrateMechanics=7 ToolStoreBooks=8 LibraryMagazines=5 role=A tag=hb_roll total=26
+OBS  MPS.message from tlga: finish role=A
+===== client mp-a
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.64
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_hb_start begin
+PASS MP.hb_nothing_known_at_the_start_A :: debug=false; hasPlayerLearnedRecipe 11111, actually known 00000; Welding 0
+STEP hb_give begin
+OBS  MP.hb_given Base.MetalDrum=1436099184;Base.MetalBar=1738885689;Base.MetalBar=1964940420;Base.Hammer=337158968;TLG.BiodieselHandbook=2041108594;Base.HandTorch=1557102782
+STEP mp_hb_items_arrive begin
+STEP mp_hb_light begin
+STEP mp_hb_try_refused_recipe_not_learned begin
+PASS MP.hb_refused_recipe_not_learned_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 0; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.AshBarrel made 0
+STEP mp_hb_read begin
+PASS MP.hb_handbook_read_teaches_all_five_here_A :: after 2168 ticks: hasPlayerLearnedRecipe 11111, actually known 11111
+STEP hb_probe_after_reading begin
+OBS  MP.hb_after_reading server: known 11111, Welding 0, Ash Barrels 0, handbook read true
+PASS MP.hb_server_knows_the_five_after_the_read_A :: known 11111, read true
+STEP mp_hb_try_refused_below_welding_2 begin
+PASS MP.hb_refused_below_welding_2_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 0; hasPlayerLearnedRecipe 11111, actually known 11111; debug=false; dark=false; TLG.AshBarrel made 0
+STEP hb_level begin
+OBS  MP.hb_level Welding on the server 2, here 2
+STEP mp_hb_level_settles begin
+STEP mp_hb_try_made_with_the_recipe_and_welding_2 begin
+PASS MP.hb_made_with_the_recipe_and_welding_2_A :: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 11111; debug=false; dark=false; TLG.AshBarrel made 1
+STEP hb_probe_after_crafting begin
+OBS  MP.hb_after_crafting server: known 11111, Welding 2, Ash Barrels 1, handbook read true
+PASS MP.hb_server_holds_the_ash_barrel_A :: Ash Barrels 1, Welding 2
+STEP hb_roll begin
+PASS MP.hb_handbook_rolled_from_loot_on_the_server_A :: 26 handbooks in 1200 fills: GasStorageMechanics=6 CrateMechanics=7 ToolStoreBooks=8 LibraryMagazines=5
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=9 fail=0
+DONE
+===== server
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.MetalBar;Base.MetalBar;Base.Hammer;TLG.BiodieselHandbook;Base.HandTorch role=A tag=hb_give
+OBS  MPS.reply given ids=Base.MetalDrum=1436099184;Base.MetalBar=1738885689;Base.MetalBar=1964940420;Base.Hammer=337158968;TLG.BiodieselHandbook=2041108594;Base.HandTorch=1557102782 role=A tag=hb_give
+OBS  MPS.ticks 300 OnTick events in 80469 ms
+OBS  MPS.message from tlga: probe_handbook role=A tag=hb_probe_after_reading
+OBS  MPS.reply probe_handbook barrels=0 known=11111 level=0 read=true role=A tag=hb_probe_after_reading
+OBS  MPS.message from tlga: handbook_level level=2 role=A tag=hb_level
+OBS  MPS.reply handbook_level level=2 role=A tag=hb_level
+OBS  MPS.message from tlga: probe_handbook role=A tag=hb_probe_after_crafting
+OBS  MPS.reply probe_handbook barrels=1 known=11111 level=2 read=true role=A tag=hb_probe_after_crafting
+OBS  MPS.message from tlga: roll_handbook role=A tag=hb_roll
+OBS  MPS.reply roll_handbook fills=1200 lists=GasStorageMechanics=6 CrateMechanics=7 ToolStoreBooks=8 LibraryMagazines=5 role=A tag=hb_roll total=26
+OBS  MPS.message from tlga: finish role=A

@@ -1,0 +1,30 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 11720
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, a handbook taken from a container of the map
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=27071500697973079965 hours=2.0096 DayLength=4
+STEP rthb_setup begin
+OBS  RTHB.debug=true; the retort recipe at level 0: hasPlayerLearnedRecipe=true isRecipeKnown=false isRecipeActuallyKnown=false
+PASS RTHB.recipes_ask_what_the_guide_says :: TLG_MakeWoodRetort asks MetalWelding:4, must be learned=true; TLG_MakeAshBarrel asks MetalWelding:2, must be learned=true; TLG_MakeLyeLeacher asks Woodwork:2, must be learned=true; TLG_MakeBiodieselReactor asks MetalWelding:5, must be learned=true; TLG_MakeBiodieselWashTank asks MetalWelding:4, must be learned=true
+PASS RTHB.the_other_recipes_need_no_learning :: TLG_MakeFermenterVessel=false TLG_MakePotStill=false TLG_MakeRefluxStill=false TLG_MakeDryingColumn=false TLG_MakeSampleKit=false TLG_MakeFuelFilter=false TLG_MakeFuelStabilizer=false
+STEP rthb_nothing_known_before_the_handbook begin
+PASS RTHB.nothing_known_before_the_handbook :: known 00000 (want 00000), skill 00000 (want 00000); welding 0, carpentry 0: WoodRetort known=false skill=false; AshBarrel known=false skill=false; LyeLeacher known=false skill=false; BiodieselReactor known=false skill=false; BiodieselWashTank known=false skill=false
+STEP rthl_find begin
+OBS  RTHL.containers 58 within 70 tiles of 10660,10645: garagestorage/metal_shelves=1 gas2go/bin=1 gas2go/cashregister=1 gas2go/counter=11 gas2go/shelves=20 gas2go/shelvesmag=4 gasstorage/cardboardbox=1 gasstorage/metal_shelves=4 gasstorage/smallbox=1 outside/bin=5 outside/dumpster=2 outside/logs=2 outside/newspaper_dispatch=1 outside/newspaper_knews=1 outside/vendingpop=1 outside/vendingsnack=1 shed/metal_shelves=1
+PASS RTHL.a_handbook_in_a_container_of_the_map :: round 8 (round 1 is each container's first fill; later rounds empty and fill them again), 406 fills of 58 containers: in gasstorage/metal_shelves at 10673,10617
+STEP rthl_take begin
+PASS RTHL.handbook_taken_with_the_games_transfer :: standing at 10674,10617 beside the container at 10673,10617: in the inventory=true, still in the container=false
+STEP rthl_read_guard begin
+STEP rthl_read begin
+OBS  RTHB.handbook TLG.BiodieselHandbook "Biodiesel Handbook" teaches: TLG_MakeWoodRetort, TLG_MakeAshBarrel, TLG_MakeLyeLeacher, TLG_MakeBiodieselReactor, TLG_MakeBiodieselWashTank; too dark to read=false
+PASS RTHB.handbook_read_to_the_end :: the read action ended=true after 751 ticks; recorded as read=true
+STEP rthl_taught begin
+PASS RTHL.the_looted_handbook_teaches_all_five :: known 11111, skill 00000; welding 0, carpentry 0: WoodRetort known=true skill=false; AshBarrel known=true skill=false; LyeLeacher known=true skill=false; BiodieselReactor known=true skill=false; BiodieselWashTank known=true skill=false
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.21
+SUMMARY pass=7 fail=0
+DONE

@@ -1,0 +1,68 @@
+﻿Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache
+client started, pid 43052
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, the world menus follow the click at other zoom levels
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=72830440794041326750 hours=2.0096 DayLength=4
+STEP rtbdm_setup begin
+STEP rtcz_zoom_1 begin
+OBS  RTMI.zoom 1.00 -> 1.00 in 0 scrolls (enabled=true, min 0.25)
+STEP rtcm_setup begin
+PASS RTCM.everything_within_the_old_menus_reach :: the car 3.00 tiles from the character (the old menu took one within 4), the generator 2 (within 2); zoom 1.00
+STEP rtcz_zoom_050 begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtcm_at_zoom_zoom_050 begin
+OBS  RTCZ.zoom_050.zoom 0.50
+PASS RTCZ.zoom_050.can_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 128,200, reach 96.0 pixels: its entry and Grab 59, without it 18, on the reach's edge and not judged 0
+PASS RTCZ.zoom_050.vessel_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 640,-56, reach 96.0 pixels: its entry and Grab 59, without it 18, on the reach's edge and not judged 0
+PASS RTCZ.zoom_050.bare_ground_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_050.the_characters_own_tile_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_050.generator_tile_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_050.generator_clicked_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_050.car_under_the_cursor_has_the_car_entry :: the car on screen at 1024,601: Fuel=false Machine=false Grab=false Workshop generator=false car=true, the game's own Vehicle entry=true
+PASS RTCZ.zoom_050.car_not_under_the_cursor_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+STEP rtcz_zoom_075 begin
+OBS  RTMI.zoom 0.50 -> 0.75 in 1 scrolls (enabled=true, min 0.25)
+STEP rtcm_at_zoom_zoom_075 begin
+OBS  RTCZ.zoom_075.zoom 0.75
+PASS RTCZ.zoom_075.can_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 299,253, reach 64.0 pixels: its entry and Grab 31, without it 42, on the reach's edge and not judged 4
+PASS RTCZ.zoom_075.vessel_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 640,83, reach 64.0 pixels: its entry and Grab 31, without it 42, on the reach's edge and not judged 4
+PASS RTCZ.zoom_075.bare_ground_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_075.the_characters_own_tile_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_075.generator_tile_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_075.generator_clicked_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_075.car_under_the_cursor_has_the_car_entry :: the car on screen at 896,521: Fuel=false Machine=false Grab=false Workshop generator=false car=true, the game's own Vehicle entry=true
+PASS RTCZ.zoom_075.car_not_under_the_cursor_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+STEP rtcz_zoom_150 begin
+OBS  RTMI.zoom 0.75 -> 1.50 in 3 scrolls (enabled=true, min 0.25)
+STEP rtcm_at_zoom_zoom_150 begin
+OBS  RTCZ.zoom_150.zoom 1.50
+PASS RTCZ.zoom_150.can_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 469,307, reach 32.0 pixels: its entry and Grab 11, without it 66, on the reach's edge and not judged 0
+PASS RTCZ.zoom_150.vessel_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 640,221, reach 32.0 pixels: its entry and Grab 11, without it 66, on the reach's edge and not judged 0
+PASS RTCZ.zoom_150.bare_ground_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_150.the_characters_own_tile_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_150.generator_tile_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_150.generator_clicked_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_150.car_under_the_cursor_has_the_car_entry :: the car on screen at 768,440: Fuel=false Machine=false Grab=false Workshop generator=false car=true, the game's own Vehicle entry=true
+PASS RTCZ.zoom_150.car_not_under_the_cursor_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+STEP rtcz_zoom_200 begin
+OBS  RTMI.zoom 1.50 -> 2.00 in 2 scrolls (enabled=true, min 0.25)
+STEP rtcm_at_zoom_zoom_200 begin
+OBS  RTCZ.zoom_200.zoom 2.00
+PASS RTCZ.zoom_200.can_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 512,320, reach 24.0 pixels: its entry and Grab 9, without it 67, on the reach's edge and not judged 1
+PASS RTCZ.zoom_200.vessel_entry_shows_exactly_where_the_games_grab_shows :: 77 clicks around the item at 640,256, reach 24.0 pixels: its entry and Grab 9, without it 67, on the reach's edge and not judged 1
+PASS RTCZ.zoom_200.bare_ground_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_200.the_characters_own_tile_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_200.generator_tile_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_200.generator_clicked_has_the_generator_entry :: Fuel=false Machine=false Grab=false Workshop generator=true car=false, the game's own Vehicle entry=false
+PASS RTCZ.zoom_200.car_under_the_cursor_has_the_car_entry :: the car on screen at 736,420: Fuel=false Machine=false Grab=false Workshop generator=false car=true, the game's own Vehicle entry=true
+PASS RTCZ.zoom_200.car_not_under_the_cursor_has_no_entry :: Fuel=false Machine=false Grab=false Workshop generator=false car=false, the game's own Vehicle entry=false
+STEP rtcz_zoom_back begin
+OBS  RTMI.zoom 2.00 -> 1.00 in 4 scrolls (enabled=true, min 0.25)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.10
+SUMMARY pass=33 fail=0
+DONE

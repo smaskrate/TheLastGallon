@@ -1,0 +1,165 @@
+﻿===== launcher
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 39084)
+server up after 24 s
+server: LOG  : General      f:0 st:632,917,471> command entered via server console (System.in): "setaccesslevel "tlga" "user""
+server: LOG  : General      f:0 st:632,917,542> User tlga is now user
+server: LOG  : General      f:0 st:632,921,495> command entered via server console (System.in): "setaccesslevel "tlgb" "user""
+server: LOG  : General      f:0 st:632,921,544> User tlgb is now user
+client mp-a started, pid 38808
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.98
+PASS MP.joined_A :: isClient=true user=tlga
+STEP wf_site begin
+PASS MP.wf_site_ready_on_the_server_A :: car engine_si_stock, ambulance engine_ci_stock, generators generator_si_stock and generator_ci_bio; dieselVehicles=true WrongFuelDamage=true VehicleStalls=true; CarGasConsumption 1; the mod there is 0.4.0
+STEP mn_spawn_can begin
+OBS  MP.mn can Base.PetrolCan put down at 10657,10645 by the server
+STEP mn_spawn_vessel begin
+OBS  MP.mn vessel TLG.FermenterVessel put down at 10657,10641 by the server
+STEP mp_mn_site_arrives begin
+STEP mp_mn_zoom_100 begin
+OBS  MP.zoom 1.00 -> 1.00
+STEP mp_mn_at_zoom_100 begin
+OBS  MP.mn zoom_100 zoom 1.00 debug=false
+PASS MP.mn_zoom_100_can_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 448,312, reach 48.0 pixels: its entry and Grab 21, without it 56, on the reach's edge and not judged 0
+PASS MP.mn_zoom_100_vessel_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 704,184, reach 48.0 pixels: its entry and Grab 21, without it 56, on the reach's edge and not judged 0
+PASS MP.mn_zoom_100_bare_ground_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+PASS MP.mn_zoom_100_generator_tile_has_the_generator_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=true car=false
+PASS MP.mn_zoom_100_car_under_the_cursor_has_the_car_entry_A :: the car on screen at 640,576: Fuel=false Machine=false Grab=false Workshop generator=false car=true
+PASS MP.mn_zoom_100_car_not_under_the_cursor_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+STEP mp_mn_zoom_050 begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_mn_at_zoom_050 begin
+OBS  MP.mn zoom_050 zoom 0.50 debug=false
+PASS MP.mn_zoom_050_can_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 256,264, reach 96.0 pixels: its entry and Grab 59, without it 18, on the reach's edge and not judged 0
+PASS MP.mn_zoom_050_vessel_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 768,8, reach 96.0 pixels: its entry and Grab 59, without it 18, on the reach's edge and not judged 0
+PASS MP.mn_zoom_050_bare_ground_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+PASS MP.mn_zoom_050_generator_tile_has_the_generator_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=true car=false
+PASS MP.mn_zoom_050_car_under_the_cursor_has_the_car_entry_A :: the car on screen at 640,793: Fuel=false Machine=false Grab=false Workshop generator=false car=true
+PASS MP.mn_zoom_050_car_not_under_the_cursor_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+STEP mp_mn_zoom_150 begin
+OBS  MP.zoom 0.50 -> 1.50
+STEP mp_mn_at_zoom_150 begin
+OBS  MP.mn zoom_150 zoom 1.50 debug=false
+PASS MP.mn_zoom_150_can_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 512,328, reach 32.0 pixels: its entry and Grab 11, without it 66, on the reach's edge and not judged 0
+PASS MP.mn_zoom_150_vessel_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 683,243, reach 32.0 pixels: its entry and Grab 11, without it 66, on the reach's edge and not judged 0
+PASS MP.mn_zoom_150_bare_ground_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+PASS MP.mn_zoom_150_generator_tile_has_the_generator_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=true car=false
+PASS MP.mn_zoom_150_car_under_the_cursor_has_the_car_entry_A :: the car on screen at 640,504: Fuel=false Machine=false Grab=false Workshop generator=false car=true
+PASS MP.mn_zoom_150_car_not_under_the_cursor_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+STEP mp_mn_zoom_back begin
+OBS  MP.zoom 1.50 -> 1.00
+STEP mn_cleanup begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=20 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_wrongfuel role=A tag=wf_site
+OBS  MPS.reply wrongfuel_site amb=240 ambPower=4900 ambProfile=engine_ci_stock car=241 carPower=4000 carProfile=engine_si_stock consumption=1 damage=true diesel=true g1Profile=generator_si_stock g1x=10663 g1y=10642 g2Profile=generator_ci_bio g2x=10665 g2y=10640 genConsumption=0.1 role=A stalls=true tag=wf_site version=0.4.0
+OBS  MPS.message from tlga: spawn item=Base.PetrolCan petrol=5 role=A tag=mn_spawn_can x=10657 y=10645
+OBS  MPS.reply spawned batch=nil id=568353791 item=Base.PetrolCan role=A tag=mn_spawn_can x=10657 y=10645
+OBS  MPS.message from tlga: spawn item=TLG.FermenterVessel role=A tag=mn_spawn_vessel x=10657 y=10641
+OBS  MPS.reply spawned batch=nil id=1461602218 item=TLG.FermenterVessel role=A tag=mn_spawn_vessel x=10657 y=10641
+OBS  MPS.message from tlga: wf_cleanup role=A tag=mn_cleanup
+OBS  MPS.reply wf_cleanup damage=true role=A tag=mn_cleanup
+OBS  MPS.message from tlga: finish role=A
+===== client mp-a
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.98
+PASS MP.joined_A :: isClient=true user=tlga
+STEP wf_site begin
+PASS MP.wf_site_ready_on_the_server_A :: car engine_si_stock, ambulance engine_ci_stock, generators generator_si_stock and generator_ci_bio; dieselVehicles=true WrongFuelDamage=true VehicleStalls=true; CarGasConsumption 1; the mod there is 0.4.0
+STEP mn_spawn_can begin
+OBS  MP.mn can Base.PetrolCan put down at 10657,10645 by the server
+STEP mn_spawn_vessel begin
+OBS  MP.mn vessel TLG.FermenterVessel put down at 10657,10641 by the server
+STEP mp_mn_site_arrives begin
+STEP mp_mn_zoom_100 begin
+OBS  MP.zoom 1.00 -> 1.00
+STEP mp_mn_at_zoom_100 begin
+OBS  MP.mn zoom_100 zoom 1.00 debug=false
+PASS MP.mn_zoom_100_can_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 448,312, reach 48.0 pixels: its entry and Grab 21, without it 56, on the reach's edge and not judged 0
+PASS MP.mn_zoom_100_vessel_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 704,184, reach 48.0 pixels: its entry and Grab 21, without it 56, on the reach's edge and not judged 0
+PASS MP.mn_zoom_100_bare_ground_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+PASS MP.mn_zoom_100_generator_tile_has_the_generator_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=true car=false
+PASS MP.mn_zoom_100_car_under_the_cursor_has_the_car_entry_A :: the car on screen at 640,576: Fuel=false Machine=false Grab=false Workshop generator=false car=true
+PASS MP.mn_zoom_100_car_not_under_the_cursor_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+STEP mp_mn_zoom_050 begin
+OBS  MP.zoom 1.00 -> 0.50
+STEP mp_mn_at_zoom_050 begin
+OBS  MP.mn zoom_050 zoom 0.50 debug=false
+PASS MP.mn_zoom_050_can_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 256,264, reach 96.0 pixels: its entry and Grab 59, without it 18, on the reach's edge and not judged 0
+PASS MP.mn_zoom_050_vessel_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 768,8, reach 96.0 pixels: its entry and Grab 59, without it 18, on the reach's edge and not judged 0
+PASS MP.mn_zoom_050_bare_ground_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+PASS MP.mn_zoom_050_generator_tile_has_the_generator_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=true car=false
+PASS MP.mn_zoom_050_car_under_the_cursor_has_the_car_entry_A :: the car on screen at 640,793: Fuel=false Machine=false Grab=false Workshop generator=false car=true
+PASS MP.mn_zoom_050_car_not_under_the_cursor_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+STEP mp_mn_zoom_150 begin
+OBS  MP.zoom 0.50 -> 1.50
+STEP mp_mn_at_zoom_150 begin
+OBS  MP.mn zoom_150 zoom 1.50 debug=false
+PASS MP.mn_zoom_150_can_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 512,328, reach 32.0 pixels: its entry and Grab 11, without it 66, on the reach's edge and not judged 0
+PASS MP.mn_zoom_150_vessel_entry_shows_exactly_where_the_games_grab_shows_A :: 77 clicks around the item at 683,243, reach 32.0 pixels: its entry and Grab 11, without it 66, on the reach's edge and not judged 0
+PASS MP.mn_zoom_150_bare_ground_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+PASS MP.mn_zoom_150_generator_tile_has_the_generator_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=true car=false
+PASS MP.mn_zoom_150_car_under_the_cursor_has_the_car_entry_A :: the car on screen at 640,504: Fuel=false Machine=false Grab=false Workshop generator=false car=true
+PASS MP.mn_zoom_150_car_not_under_the_cursor_has_no_entry_A :: Fuel=false Machine=false Grab=false Workshop generator=false car=false
+STEP mp_mn_zoom_back begin
+OBS  MP.zoom 1.50 -> 1.00
+STEP mn_cleanup begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=20 fail=0
+DONE
+===== server
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_wrongfuel role=A tag=wf_site
+OBS  MPS.reply wrongfuel_site amb=240 ambPower=4900 ambProfile=engine_ci_stock car=241 carPower=4000 carProfile=engine_si_stock consumption=1 damage=true diesel=true g1Profile=generator_si_stock g1x=10663 g1y=10642 g2Profile=generator_ci_bio g2x=10665 g2y=10640 genConsumption=0.1 role=A stalls=true tag=wf_site version=0.4.0
+OBS  MPS.message from tlga: spawn item=Base.PetrolCan petrol=5 role=A tag=mn_spawn_can x=10657 y=10645
+OBS  MPS.reply spawned batch=nil id=568353791 item=Base.PetrolCan role=A tag=mn_spawn_can x=10657 y=10645
+OBS  MPS.message from tlga: spawn item=TLG.FermenterVessel role=A tag=mn_spawn_vessel x=10657 y=10641
+OBS  MPS.reply spawned batch=nil id=1461602218 item=TLG.FermenterVessel role=A tag=mn_spawn_vessel x=10657 y=10641
+OBS  MPS.message from tlga: wf_cleanup role=A tag=mn_cleanup
+OBS  MPS.reply wf_cleanup damage=true role=A tag=mn_cleanup
+OBS  MPS.message from tlga: finish role=A

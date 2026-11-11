@@ -1,0 +1,107 @@
+﻿===== launcher
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 87428)
+server up after 21 s
+server: LOG  : General      f:0 st:631,534,280> command entered via server console (System.in): "setaccesslevel "tlga" "user""
+server: LOG  : General      f:0 st:631,534,575> User tlga is now user
+server: LOG  : General      f:0 st:631,537,989> command entered via server console (System.in): "setaccesslevel "tlgb" "user""
+server: LOG  : General      f:0 st:631,538,072> User tlgb is now user
+client mp-a started, pid 60516
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_hb_start begin
+PASS MP.hb_nothing_known_at_the_start_A :: debug=false; hasPlayerLearnedRecipe 11111, actually known 00000; Welding 0; role user
+STEP hb_give begin
+OBS  MP.hb_given Base.MetalDrum=217941105;Base.MetalDrum=1106243704;Base.MetalDrum=1020483315;Base.SheetMetal=855657729;Base.SheetMetal=1160491371;Base.SheetMetal=354655805;Base.SheetMetal=112137420;Base.SheetMetal=169783958;Base.MetalPipe=2023161294;Base.MetalPipe=1286959821;Base.MetalPipe=1194501057;Base.MetalPipe=1190705856;Base.MetalBar=1685718709;Base.MetalBar=224765602;Base.MetalBar=408069374;Base.MetalBar=457614580;Base.MetalBar=616951740;Base.BucketEmpty=780097072;Base.BlowTorch=1717007502;Base.WeldingMask=1920063723;TLG.BiodieselHandbook=76304773;Base.HandTorch=1526429256
+STEP mp_hb_items_arrive begin
+STEP mp_hb_light begin
+STEP hb_level_5_not_learned begin
+OBS  MP.hb_level Welding on the server 5, here 5
+STEP mp_hb_level_settles_1 begin
+STEP mp_hb_try_wood_retort_refused_not_learned_at_welding_5 begin
+PASS MP.hb_wood_retort_refused_not_learned_at_welding_5_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 5; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.WoodRetort made 0
+STEP mp_hb_try_wash_tank_refused_not_learned_at_welding_5 begin
+PASS MP.hb_wash_tank_refused_not_learned_at_welding_5_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 5; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.BiodieselWashTank made 0
+STEP mp_hb_try_reactor_refused_not_learned_at_welding_5 begin
+PASS MP.hb_reactor_refused_not_learned_at_welding_5_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 5; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.BiodieselReactor made 0
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=5 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.MetalDrum;Base.MetalDrum;Base.SheetMetal;Base.SheetMetal;Base.SheetMetal;Base.SheetMetal;Base.SheetMetal;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.BucketEmpty;Base.BlowTorch;Base.WeldingMask;TLG.BiodieselHandbook;Base.HandTorch role=A tag=hb_give
+OBS  MPS.reply given ids=Base.MetalDrum=217941105;Base.MetalDrum=1106243704;Base.MetalDrum=1020483315;Base.SheetMetal=855657729;Base.SheetMetal=1160491371;Base.SheetMetal=354655805;Base.SheetMetal=112137420;Base.SheetMetal=169783958;Base.MetalPipe=2023161294;Base.MetalPipe=1286959821;Base.MetalPipe=1194501057;Base.MetalPipe=1190705856;Base.MetalBar=1685718709;Base.MetalBar=224765602;Base.MetalBar=408069374;Base.MetalBar=457614580;Base.MetalBar=616951740;Base.BucketEmpty=780097072;Base.BlowTorch=1717007502;Base.WeldingMask=1920063723;TLG.BiodieselHandbook=76304773;Base.HandTorch=1526429256 role=A tag=hb_give
+OBS  MPS.message from tlga: handbook_level level=5 role=A tag=hb_level_5_not_learned
+OBS  MPS.reply handbook_level level=5 role=A tag=hb_level_5_not_learned
+OBS  MPS.message from tlga: finish role=A
+===== client mp-a
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_hb_start begin
+PASS MP.hb_nothing_known_at_the_start_A :: debug=false; hasPlayerLearnedRecipe 11111, actually known 00000; Welding 0; role user
+STEP hb_give begin
+OBS  MP.hb_given Base.MetalDrum=217941105;Base.MetalDrum=1106243704;Base.MetalDrum=1020483315;Base.SheetMetal=855657729;Base.SheetMetal=1160491371;Base.SheetMetal=354655805;Base.SheetMetal=112137420;Base.SheetMetal=169783958;Base.MetalPipe=2023161294;Base.MetalPipe=1286959821;Base.MetalPipe=1194501057;Base.MetalPipe=1190705856;Base.MetalBar=1685718709;Base.MetalBar=224765602;Base.MetalBar=408069374;Base.MetalBar=457614580;Base.MetalBar=616951740;Base.BucketEmpty=780097072;Base.BlowTorch=1717007502;Base.WeldingMask=1920063723;TLG.BiodieselHandbook=76304773;Base.HandTorch=1526429256
+STEP mp_hb_items_arrive begin
+STEP mp_hb_light begin
+STEP hb_level_5_not_learned begin
+OBS  MP.hb_level Welding on the server 5, here 5
+STEP mp_hb_level_settles_1 begin
+STEP mp_hb_try_wood_retort_refused_not_learned_at_welding_5 begin
+PASS MP.hb_wood_retort_refused_not_learned_at_welding_5_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 5; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.WoodRetort made 0
+STEP mp_hb_try_wash_tank_refused_not_learned_at_welding_5 begin
+PASS MP.hb_wash_tank_refused_not_learned_at_welding_5_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 5; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.BiodieselWashTank made 0
+STEP mp_hb_try_reactor_refused_not_learned_at_welding_5 begin
+PASS MP.hb_reactor_refused_not_learned_at_welding_5_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 5; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; TLG.BiodieselReactor made 0
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=5 fail=0
+DONE
+===== server
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.MetalDrum;Base.MetalDrum;Base.SheetMetal;Base.SheetMetal;Base.SheetMetal;Base.SheetMetal;Base.SheetMetal;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.BucketEmpty;Base.BlowTorch;Base.WeldingMask;TLG.BiodieselHandbook;Base.HandTorch role=A tag=hb_give
+OBS  MPS.reply given ids=Base.MetalDrum=217941105;Base.MetalDrum=1106243704;Base.MetalDrum=1020483315;Base.SheetMetal=855657729;Base.SheetMetal=1160491371;Base.SheetMetal=354655805;Base.SheetMetal=112137420;Base.SheetMetal=169783958;Base.MetalPipe=2023161294;Base.MetalPipe=1286959821;Base.MetalPipe=1194501057;Base.MetalPipe=1190705856;Base.MetalBar=1685718709;Base.MetalBar=224765602;Base.MetalBar=408069374;Base.MetalBar=457614580;Base.MetalBar=616951740;Base.BucketEmpty=780097072;Base.BlowTorch=1717007502;Base.WeldingMask=1920063723;TLG.BiodieselHandbook=76304773;Base.HandTorch=1526429256 role=A tag=hb_give
+OBS  MPS.message from tlga: handbook_level level=5 role=A tag=hb_level_5_not_learned
+OBS  MPS.reply handbook_level level=5 role=A tag=hb_level_5_not_learned
+OBS  MPS.message from tlga: finish role=A
