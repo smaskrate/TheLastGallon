@@ -5769,3 +5769,36 @@ Evidence:
 [run 283](evidence/2026-11-11_rt-sp_harness_run283_upgrade_0.2.0_to_0.3.0_42.22.2.txt);
 [run 284](evidence/2026-11-11_rt-sp_harness_run284_upgrade_0.1.2_wrong_car_42.22.2.txt);
 [run 285](evidence/2026-11-11_rt-sp_harness_run285_upgrade_0.1.2_to_0.3.0_42.22.2.txt).
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 286–288 (the 0.3.0 release zip installed clean, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `1165809` (the release commit,
+clean tree) built `TheLastGallon-0.3.0.zip`: 165 files, 7,866,572 bytes,
+SHA-256 `49B580C0…6201C05`. Its manifest differs from the zip of
+`6318907` (launches 283–285) in three files: the shipped `CHANGELOG.md`
+(0.3.0 dated 2026-11-11, what was checked), `player-guide.md` and
+`migrations.md` (the saves of launches 283 and 285). A worktree of
+`1165809` builds the same bytes.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 286 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 105/0, then 14/0 |
+| 287 | `wrong-fuel` | 46/0 |
+| 288 | RT-MP `-Clients 1 -Only fuel -ModSource <the unpacked mod folder>` | 21/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.3.0,
+equal to `TLG.VERSION`; the mod logged "The Last Gallon 0.3.0 ready" in
+single player, on the server and on its client. In launch 288 the
+server's line for a start refused on diesel reached the player's client.
+Consoles: no TLG error or warning; the only exception in the
+single-player launches is the harness's deep-recursion probe.
+
+Not run on this zip: the other single-player modes and multiplayer
+cases; the upgrade scenario (launches 283 and 285 used the zip of
+`6318907`, with the same mod files); an install through the Steam
+Workshop. Not uploaded.
+
+Evidence:
+[run 286](evidence/2026-11-11_rt-sp_harness_run286_install_rehearsal_0.3.0_42.22.2.txt);
+[run 287](evidence/2026-11-11_rt-sp_harness_run287_package_wrong_fuel_0.3.0_42.22.2.txt);
+[run 288](evidence/2026-11-11_rt-mp_harness_run288_package_fuel_0.3.0_42.22.2.txt).

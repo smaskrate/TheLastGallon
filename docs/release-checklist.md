@@ -68,7 +68,7 @@ the Workshop. Where it stands against the gates it touches:
 | 6, 7 | PARTIAL | Saves made with the 0.2.0 and the 0.1.2 zip, each holding a wrong blend, continued with the 0.3.0 zip: records unchanged, the blend now judged as damage, a refused start's cost, the Diesel Generator starting on petrol (launches 283, 285). Open: a save and reload under 0.3.0 with an engine running on a wrong fuel; the removal and existing-save scenarios with 0.3.0 |
 | 10 | PARTIAL | 326 Italian strings as shipped (launch 275); the Field Manual's two changed lines read in both languages (launches 274, 276); the player guide's "Wrong fuel" section. Open: the new lines and dialog read in Italian in game |
 | 11 | OPEN | Performance not measured with the new rules (the evaluation runs once a minute for each running vehicle, as before) |
-| 12 | PARTIAL | The 0.3.0 zip of `6318907` (165 files, 7,866,107 bytes, SHA-256 `46815CBD…156B0F05`) matched its manifest and was played over a 0.2.0 and a 0.1.2 save (launches 283, 285). Open: the clean-install rehearsal (the full run) on a 0.3.0 zip; an install through the Workshop. The guide changed after that zip was built: a release needs a new one |
+| 12 | PARTIAL | The 0.3.0 package is the zip of `1165809` (165 files, 7,866,572 bytes, SHA-256 `49B580C0…6201C05`): installed clean and played, the full run 105/0 and 14/0, the wrong-fuel mode 46/0, the multiplayer fuel case 21/0 (launches 286–288); a clean checkout builds the same bytes. The zip of `6318907` (`46815CBD…`), which differs in three shipped documents, was played over a 0.2.0 and a 0.1.2 save (launches 283, 285). Open: an install through the Workshop |
 
 Modes re-run on 0.3.0 because their checks changed: the full run, diesel
 generator, diesel pumps, driving, engine effects, pot still, manual,
@@ -451,6 +451,17 @@ changed.
   networks are not built in game in this build.
 
 ### Gate 12: clean install and upgrade pass with the packaged artifact
+
+The 0.3.0 package is `TheLastGallon-0.3.0.zip`, the zip of commit
+`1165809` (the release commit; later commits change nothing that ships):
+SHA-256 `49B580C0…6201C05`, 7,866,572 bytes, 165 files. Launch 286
+rehearsed its manual install on 42.22.2: the zip matched its manifest,
+phase A passed 105/0 and phase B 14/0, and the console's one exception
+came from the harness's own deep-recursion probe. On the same installed
+package the wrong-fuel mode passed 46/0 (launch 287) and the multiplayer
+fuel case 21/0 (launch 288). A clean checkout of `1165809` in a separate
+worktree builds the same bytes. It has not been uploaded, and the upload
+folder still holds 0.1.2 (below).
 
 The 0.2.0 package is `TheLastGallon-0.2.0.zip`, the zip of commit
 `d43d667` (the release commit; later commits change nothing that ships):

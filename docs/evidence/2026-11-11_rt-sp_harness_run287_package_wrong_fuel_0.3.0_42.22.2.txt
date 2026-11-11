@@ -1,0 +1,121 @@
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
+client started, pid 87912
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, wrong fuel damages engines
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=11217727074249194649 hours=2.0097 DayLength=4
+STEP rtbdm_setup begin
+STEP rtwf_spawn begin
+PASS RTWF.new_world_with_diesel_and_damage_on :: dieselVehicles=true; SandboxVars.TheLastGallon.WrongFuelDamage=true; the mod loaded is 0.3.0
+PASS RTWF.engines_ready :: Base.CarNormal engine_si_stock engine 100 exhaust 100 battery 1.000; Base.VanAmbulance engine_ci_stock engine 100 exhaust 100 battery 1.000; Base.PickUpVanLightsFire engine_ci_stock engine 100 exhaust 100 battery 1.000; Base.Generator generator_si_stock condition 100; TLG.DieselGenerator generator_ci_bio condition 100
+STEP rtwf_verdicts begin
+PASS RTWF.verdict_petrol_car_5pc_diesel :: grade=weathered compatible=true startFactor=0.9 reasons=wrong_fuel_1_diesel; wear 3.00 power 0.85 failure nil exhaust nil attempt nil; text: Weathered <LINE> It runs on this, but the fuel damages the engine <LINE> - Some Diesel in the fuel: less power, faster wear
+PASS RTWF.verdict_petrol_car_20pc_diesel :: grade=poor compatible=true startFactor=0.4 reasons=wrong_fuel_2_diesel; wear 6.00 power 0.60 failure nil exhaust 0.5 attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - A lot of Diesel in the fuel: hard starts, much less power, heavy wear
+PASS RTWF.verdict_petrol_car_40pc_diesel :: grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel; wear 10.00 power 0.00 failure nil exhaust 1 attempt {1=1,2=2}; text: Unsuitable for this engine <LINE> This engine cannot run on it <LINE> - Too much Diesel: it will not start, and every try damages the engine
+PASS RTWF.verdict_petrol_car_20pc_biodiesel :: grade=poor compatible=true startFactor=0.4 reasons=wrong_fuel_2_biodiesel; wear 7.20 power 0.60 failure nil exhaust 0.5 attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - A lot of Biodiesel in the fuel: hard starts, much less power, heavy wear
+PASS RTWF.verdict_petrol_car_40pc_ethanol :: grade=poor compatible=true startFactor=0.5 reasons=too_much_ethanol; wear 4.00 power 0.75 failure nil exhaust nil attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - Far too much Ethanol for this engine
+PASS RTWF.verdict_petrol_car_pure_ethanol :: grade=poor compatible=true startFactor=0.3 reasons=too_much_ethanol; wear 8.00 power 0.60 failure nil exhaust nil attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - Far too much Ethanol for this engine
+PASS RTWF.verdict_ambulance_10pc_petrol :: grade=weathered compatible=true startFactor=0.9 reasons=wrong_fuel_1_gasoline; wear 3.00 power 0.90 failure nil exhaust nil attempt nil; text: Weathered <LINE> It runs on this, but the fuel damages the engine <LINE> - Some Gasoline in the fuel: less power, faster wear
+PASS RTWF.verdict_ambulance_30pc_petrol :: grade=poor compatible=true startFactor=0.5 reasons=wrong_fuel_2_gasoline; wear 8.00 power 0.70 failure nil exhaust nil attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - A lot of Gasoline in the fuel: hard starts, much less power, heavy wear
+PASS RTWF.verdict_ambulance_pure_petrol :: grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline; wear 15.00 power 0.50 failure 0.02 exhaust nil attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - Mostly Gasoline: it runs badly, wears very fast and the engine can fail
+PASS RTWF.verdict_ambulance_5pc_ethanol :: grade=poor compatible=true startFactor=0.5 reasons=wrong_fuel_2_ethanol; wear 8.00 power 0.70 failure nil exhaust nil attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - A lot of Ethanol in the fuel: hard starts, much less power, heavy wear
+PASS RTWF.verdict_ambulance_20pc_ethanol :: grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_ethanol; wear 15.00 power 0.50 failure 0.02 exhaust nil attempt nil; text: Poor <LINE> It runs on this, but the fuel damages the engine <LINE> - Mostly Ethanol: it runs badly, wears very fast and the engine can fail
+PASS RTWF.verdict_ambulance_40pc_ethanol :: grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_ethanol; wear 20.00 power 0.00 failure 0.04 exhaust nil attempt {1=1,2=2}; text: Unsuitable for this engine <LINE> This engine cannot run on it <LINE> - Too much Ethanol: it will not start, and every try damages the engine
+PASS RTWF.verdict_ambulance_pure_diesel :: grade=good compatible=true startFactor=1 reasons=; wear 1.00 power 1.00 failure nil exhaust nil attempt nil; text: Good <LINE> This engine can use it
+PASS RTWF.verdict_petrol_car_pure_petrol :: grade=good compatible=true startFactor=1 reasons=; wear 1.00 power 1.00 failure nil exhaust nil attempt nil; text: Good <LINE> This engine can use it
+STEP rtwf_car_40pc_diesel begin
+STEP RTWF.petrol_car_on_40pc_diesel begin
+OBS  RTWF.petrol_car_on_40pc_diesel driver=true battery=1.00 engine=100 grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+OBS  RTWF.petrol_car_on_40pc_diesel state=Idle running=false attempts=1 refusal=vehicle start refused: wrong_fuel_4_diesel
+PASS RTWF.petrol_car_on_40pc_diesel.refused_by_tlg :: vehicle start refused: wrong_fuel_4_diesel
+STEP rtwf_after_refused begin
+PASS RTWF.refused_start_costs_engine_and_battery :: engine 100 -> 98 (2 taken); battery charge 1.0000 -> 0.9800 (0.0200 used)
+PASS RTWF.refused_start_tells_the_driver :: Wrong fuel (Diesel): the engine will not start, and trying damages it
+STEP rtwf_car_20pc_diesel begin
+STEP RTWF.petrol_car_runs_on_20pc_diesel begin
+PASS RTWF.petrol_car_runs_on_20pc_diesel.start_names_the_wrong_fuel :: Wrong fuel (Diesel): it damages this engine while it runs
+OBS  RTWF.petrol_car_runs_on_20pc_diesel grade=poor compatible=true startFactor=0.4 reasons=wrong_fuel_2_diesel; ran on it: 4.0010 L gone (4.00 taken by the step); engine 98 -> 95, carry 0.0008 -> 0.0015; exhaust 100 -> 98; running=true
+PASS RTWF.diesel_wears_a_petrol_engine_and_its_exhaust :: 4.0010 L at wear factor 6.00: engine 3 taken + 0.0015 carried, 3.0015 due; exhaust 100 -> 98 + 0.0010 carried, 2.0010 due
+STEP rtwf_ambulance_diesel begin
+STEP RTWF.petrol_into_the_ambulance_unconfirmed begin
+OBS  RTWF.petrol_into_the_ambulance_unconfirmed inArea=true
+OBS  RTWF.petrol_into_the_ambulance_unconfirmed.before src initialized id=nil rev=0 total=5.0000 q[gasoline=5.0000,water=0.0000] deg[gasoline=0.0131] mic=0 stab=0
+OBS  RTWF.petrol_into_the_ambulance_unconfirmed.before dst - id=V1507915329-17 rev=1 total=10.0000 q[diesel=10.0000] deg[diesel=0.0000] mic=0 stab=0
+OBS  RTWF.petrol_into_the_ambulance_unconfirmed reply ok=false reason=incompatible
+PASS RTWF.petrol_into_the_ambulance_unconfirmed.refused_nothing_moved :: reason=incompatible dCan=0.00000 dTank=0.00000
+OBS  RTWF.petrol_into_the_ambulance_unconfirmed tank now grade=good compatible=true startFactor=1 reasons=
+STEP RTWF.petrol_into_the_ambulance_confirmed begin
+OBS  RTWF.petrol_into_the_ambulance_confirmed inArea=true
+OBS  RTWF.petrol_into_the_ambulance_confirmed.before src initialized id=nil rev=0 total=5.0000 q[gasoline=5.0000,water=0.0000] deg[gasoline=0.2082] mic=0 stab=0
+OBS  RTWF.petrol_into_the_ambulance_confirmed.before dst - id=V1507915329-17 rev=1 total=10.0000 q[diesel=10.0000] deg[diesel=0.0000] mic=0 stab=0
+OBS  RTWF.petrol_into_the_ambulance_confirmed reply ok=true reason=nil
+PASS RTWF.petrol_into_the_ambulance_confirmed.reply_ok :: nil
+OBS  RTWF.petrol_into_the_ambulance_confirmed litres src 5.0000->0.0000 dst 10.0000->15.0000
+OBS  RTWF.petrol_into_the_ambulance_confirmed.after src ok id=S1507915329-19 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTWF.petrol_into_the_ambulance_confirmed.after dst ok id=V1507915329-17 rev=2 total=15.0000 q[diesel=10.0000,gasoline=5.0000,water=0.0000] deg[diesel=0.0000,gasoline=0.2082] mic=0 stab=0
+PASS RTWF.petrol_into_the_ambulance_confirmed.litres_conserved :: out=5.00000 in=5.00000
+PASS RTWF.petrol_into_the_ambulance_confirmed.tlg_total_matches_native :: tlg=15.00000 native=15.00000 status=ok
+OBS  RTWF.petrol_into_the_ambulance_confirmed tank now grade=poor compatible=true startFactor=0.5 reasons=wrong_fuel_2_gasoline
+STEP RTWF.ambulance_runs_on_a_third_petrol begin
+PASS RTWF.ambulance_runs_on_a_third_petrol.start_names_the_wrong_fuel :: Wrong fuel (Gasoline): it damages this engine while it runs
+OBS  RTWF.ambulance_runs_on_a_third_petrol grade=poor compatible=true startFactor=0.5 reasons=wrong_fuel_2_gasoline; ran on it: 2.0010 L gone (2.00 taken by the step); engine 100 -> 98, carry 0.0011 -> 0.1021; exhaust 100 -> 100; running=true
+PASS RTWF.petrol_wears_a_diesel_engine :: 2.0010 L at wear factor 8.00: 2 taken + 0.1021 carried, 2.1021 due; still running=true
+STEP rtwf_pickup_pure_petrol begin
+STEP RTWF.pickup_van_runs_on_pure_petrol begin
+PASS RTWF.pickup_van_runs_on_pure_petrol.start_names_the_wrong_fuel :: Wrong fuel (Gasoline): it damages this engine while it runs
+OBS  RTWF.pickup_van_runs_on_pure_petrol grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline; ran on it: 1.0000 L gone (1.00 taken by the step); engine 100 -> 0, carry 0.0021 -> 0.1032; exhaust 100 -> 100; running=false
+PASS RTWF.diesel_on_petrol_fails_when_the_draw_falls :: failure chance 0.02 a litre; engine condition 0; running=false; note: The engine has failed: wrong fuel (Gasoline)
+STEP rtwf_dead_engine begin
+PASS RTWF.failed_engine_does_not_start_again :: state Idle, running=false, engine condition 0
+STEP RTWF.siphon_the_ambulance_1 begin
+OBS  RTWF.siphon_the_ambulance_1 tank 12.9975 -> 2.9975 L; the can: ok id=S1507915329-21 rev=1 total=10.0000 q[diesel=6.6667,gasoline=3.3333] deg[diesel=0.0001,gasoline=0.2084] mic=0 stab=0
+PASS RTWF.siphon_the_ambulance_1.can_holds_the_tanks_blend :: 10.0000 L moved; ok id=S1507915329-21 rev=1 total=10.0000 q[diesel=6.6667,gasoline=3.3333] deg[diesel=0.0001,gasoline=0.2084] mic=0 stab=0
+STEP RTWF.siphon_the_ambulance_2 begin
+OBS  RTWF.siphon_the_ambulance_2 tank 2.9975 -> 0.0000 L; the can: ok id=S1507915329-22 rev=1 total=2.9975 q[diesel=1.9983,gasoline=0.9992] deg[diesel=0.0001,gasoline=0.2084] mic=0 stab=0
+PASS RTWF.siphon_the_ambulance_2.can_holds_the_tanks_blend :: 2.9975 L moved; ok id=S1507915329-22 rev=1 total=2.9975 q[diesel=1.9983,gasoline=0.9992] deg[diesel=0.0001,gasoline=0.2084] mic=0 stab=0
+STEP RTWF.diesel_into_the_siphoned_ambulance begin
+OBS  RTWF.diesel_into_the_siphoned_ambulance inArea=true
+OBS  RTWF.diesel_into_the_siphoned_ambulance.before src initialized id=nil rev=0 total=10.0000 q[diesel=9.9999,water=0.0001] deg[diesel=0.1000] mic=0 stab=0
+OBS  RTWF.diesel_into_the_siphoned_ambulance.before dst - id=V1507915329-17 rev=4 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTWF.diesel_into_the_siphoned_ambulance reply ok=true reason=nil
+PASS RTWF.diesel_into_the_siphoned_ambulance.reply_ok :: nil
+OBS  RTWF.diesel_into_the_siphoned_ambulance litres src 10.0000->0.0000 dst 0.0000->10.0000
+OBS  RTWF.diesel_into_the_siphoned_ambulance.after src ok id=S1507915329-23 rev=1 total=0.0000 q[] deg[] mic=0 stab=0
+OBS  RTWF.diesel_into_the_siphoned_ambulance.after dst ok id=V1507915329-17 rev=5 total=10.0000 q[diesel=9.9999,water=0.0001] deg[diesel=0.1000] mic=0 stab=0
+PASS RTWF.diesel_into_the_siphoned_ambulance.litres_conserved :: out=10.00000 in=10.00000
+PASS RTWF.diesel_into_the_siphoned_ambulance.tlg_total_matches_native :: tlg=10.00000 native=10.00000 status=ok
+OBS  RTWF.diesel_into_the_siphoned_ambulance tank now grade=good compatible=true startFactor=1 reasons=
+STEP rtwf_ambulance_cured begin
+PASS RTWF.siphoned_and_refilled_ambulance_is_clean :: grade=good compatible=true startFactor=1 reasons=
+STEP RTWF.cured_ambulance_starts begin
+OBS  RTWF.cured_ambulance_starts driver=true battery=0.98 engine=98 grade=good compatible=true startFactor=1 reasons=
+OBS  RTWF.cured_ambulance_starts state=Running running=true attempts=1 refusal=nil
+PASS RTWF.cured_ambulance_starts.running :: state=Running attempts=1 refusal=nil
+STEP rtwf_generators_fuelled begin
+STEP RTWF.petrol_generator_on_40pc_diesel begin
+OBS  RTWF.petrol_generator_on_40pc_diesel fuel=5.0000 grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+OBS  RTWF.petrol_generator_on_40pc_diesel activated=false refusal=generator start refused: wrong_fuel_4_diesel
+PASS RTWF.petrol_generator_on_40pc_diesel.refused_by_tlg :: generator start refused: wrong_fuel_4_diesel
+STEP rtwf_generator_refused begin
+PASS RTWF.generator_refused_start_costs_condition :: condition 100 -> 98; note: Wrong fuel (Diesel): the engine will not start, and trying damages it
+STEP RTWF.diesel_generator_on_pure_petrol begin
+OBS  RTWF.diesel_generator_on_pure_petrol fuel=5.0000 grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline
+OBS  RTWF.diesel_generator_on_pure_petrol activated=true refusal=nil
+PASS RTWF.diesel_generator_on_pure_petrol.activated :: nil
+STEP rtwf_generators begin
+PASS RTWF.generator_start_names_the_wrong_fuel :: Wrong fuel (Gasoline): it damages this engine while it runs
+PASS RTWF.diesel_generator_wears_on_petrol :: grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline; 1 L (66.7 h at the reference load, GeneratorFuelConsumption 0.1) at wear factor 15.00, 3.3333 a litre at factor 2: 46 points due, 46 taken; condition 100 -> 54; still on=true
+PASS RTWF.diesel_generator_fails_on_petrol :: running before=true; condition 0 after the draw fell; running=false; the game's switch-on valid=false
+OBS  RTWF.drain_the_generator transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTWF.drain_empties_the_generator_into_a_can :: transfer ok=true; generator 5.0000 -> 0.0000 L; the can: ok id=S1507915329-26 rev=1 total=5.0000 q[diesel=2.0000,gasoline=3.0000] deg[diesel=0.0000,gasoline=0.0000] mic=0 stab=0
+OBS  RTWF.petrol_into_the_drained_generator transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTWF.drained_generator_takes_petrol_again :: transfer ok=true reason=nil; grade=good compatible=true startFactor=1 reasons=; fuel 3.0000 L
+STEP rtwf_option_off begin
+PASS RTWF.option_off_blocks_without_damage :: on: grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline | off: grade=unsuitable compatible=false startFactor=0 reasons=incompatible_fuel | generator off: grade=unsuitable compatible=false startFactor=0 reasons=incompatible_fuel | points taken by a refused start: 0
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.50
+SUMMARY pass=46 fail=0
+DONE
