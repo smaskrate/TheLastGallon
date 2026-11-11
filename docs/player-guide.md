@@ -740,8 +740,8 @@ power without the mod, until a repair.
 
 A Diesel Generator standing on the ground stays in the save, but its
 picture is the mod's: once the save has been loaded without the mod the
-generator cannot be seen, and putting the mod back does not bring the
-picture back. Use up its fuel before you remove the mod.
+generator has no picture, and putting the mod back does not bring it
+back. Use up its fuel before you remove the mod.
 
 Petrol stays, and so does what the mod recorded about it. If you put the
 mod back later, it finds that record as it was; the world's fuel history
@@ -757,8 +757,9 @@ on the ground was left without its picture, its fuel record kept; the
 station's pumps gave the same fuel as before.
 
 **Not checked in game:** the mod's other fluids and items, diesel in a
-vehicle's tank or a can, what can be done with a Diesel Generator that
-cannot be seen, converted engines, and a save whose mod was uninstalled,
+vehicle's tank or a can, how a Diesel Generator without its picture looks
+and what can be done with it, converted engines, and a save whose mod was
+uninstalled,
 where the game asks about missing mods.
 
 The technical details are in `docs/migrations.md`.

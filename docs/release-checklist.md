@@ -29,10 +29,10 @@ game's own Lua, BC its bytecode.
 
 ## Version 0.2.0 (not released)
 
-The table above describes the released line (0.1.2). Version 0.2.0, on the
-branch `feature/biodiesel`, adds the biodiesel pathway, the diesel
-generator, diesel vehicles and diesel pumps (D-036). Where it stands
-against the same gates:
+The table above describes the released version (0.1.2). Version 0.2.0,
+merged into `main` on 2026-11-11 and not released, adds the biodiesel
+pathway, the diesel generator, diesel vehicles and diesel pumps (D-036).
+Where it stands against the same gates:
 
 | # | For 0.2.0 | Evidence and what is open |
 | --- | --- | --- |
@@ -48,9 +48,10 @@ against the same gates:
 | 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). The zip of `ce1f031` (SHA-256 `6BA57DA3…`), which differs in `Stations.isPump` and two shipped documents, was played over a 0.1.2 save (launch 257) and through the removal scenario (launch 256); the full run is not repeated on it. Open: an install through the Workshop. A later commit to shipped files needs a new zip |
 | 13 | PARTIAL | The five machines have supplied models; the diesel generator is vanilla's sprite recoloured, the owner's choice |
 
-The full single-player run passes on the branch as on `main` (launch 245:
-100/0, 14/0). The other older modes and the multiplayer cases written
-before it have not been run on the branch.
+The full single-player run passes with 0.2.0 (launches 245 and 251:
+100/0, 14/0). It has not been repeated since `Stations.isPump` changed
+(`ce1f031`), nor have the multiplayer cases. The other older modes and
+the multiplayer cases written before 0.2.0 have not been run with it.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
