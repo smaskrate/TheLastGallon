@@ -1,0 +1,137 @@
+﻿===== launcher
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 32308)
+server up after 24 s
+server: LOG  : General      f:0 st:634,214,517> command entered via server console (System.in): "setaccesslevel "tlga" "user""
+server: LOG  : General      f:0 st:634,214,593> User tlga is now user
+server: LOG  : General      f:0 st:634,218,541> command entered via server console (System.in): "setaccesslevel "tlgb" "user""
+server: LOG  : General      f:0 st:634,218,596> User tlgb is now user
+client mp-a started, pid 91516
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP hb_give begin
+OBS  MP.hb_given Base.SmallSheetMetal=917582250;Base.SmallSheetMetal=1358367671;Base.SmallSheetMetal=1134830822;Base.SmallSheetMetal=1678224416;Base.SmallSheetMetal=2048608154;Base.SmallSheetMetal=1412870333;Base.SmallSheetMetal=341513650;Base.SmallSheetMetal=298759322;Base.BlowTorch=421317644;Base.WeldingMask=1130221634;Base.MetalworkMag4=1185235745;Base.HandTorch=1947673615
+STEP mp_hb_items_arrive begin
+STEP mp_hb_light begin
+STEP hb_level_welding_2 begin
+OBS  MP.hb_level Welding on the server 2, here 2
+STEP mp_ob_settle_1 begin
+STEP mp_hb_try_metal_sheet_refused_not_learned_at_welding_2 begin
+PASS MP.hb_metal_sheet_refused_not_learned_at_welding_2_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=false level here 2 xp 0; Base.SheetMetal made 0
+STEP mp_ob_read_the_games_magazine begin
+PASS MP.ob_the_games_magazine_read_teaches_its_recipe_A :: after 2163 ticks: Make Metal Sheet actually known=true, the magazine recorded as read=true
+STEP mp_hb_try_metal_sheet_refused_at_welding_2 begin
+PASS MP.hb_metal_sheet_refused_at_welding_2_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=false level here 2 xp 0; Base.SheetMetal made 0
+STEP hb_level_welding_3 begin
+OBS  MP.hb_level Welding on the server 3, here 3
+STEP mp_ob_settle_2 begin
+STEP mp_hb_try_metal_sheet_from_the_magazine_at_welding_3 begin
+OBS  MP.hb_metal_sheet_from_the_magazine_at_welding_3 offered=true made=1: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 3; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=false level here 3 xp 0
+STEP hb_level_welding_4 begin
+OBS  MP.hb_level Welding on the server 4, here 4
+STEP mp_ob_settle_3 begin
+STEP mp_hb_try_metal_sheet_at_welding_4 begin
+OBS  MP.hb_metal_sheet_at_welding_4 offered=true made=1: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 4; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=true level here 4 xp 6.25
+STEP mp_ob_verdict begin
+PASS MP.ob_the_games_magazine_recipe_one_level_below_A :: Make Metal Sheet (Welding 4), its magazine read: at Welding 3 offered=true made=1; at Welding 4 offered=true made=1
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=5 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.BlowTorch;Base.WeldingMask;Base.MetalworkMag4;Base.HandTorch role=A tag=hb_give
+OBS  MPS.reply given ids=Base.SmallSheetMetal=917582250;Base.SmallSheetMetal=1358367671;Base.SmallSheetMetal=1134830822;Base.SmallSheetMetal=1678224416;Base.SmallSheetMetal=2048608154;Base.SmallSheetMetal=1412870333;Base.SmallSheetMetal=341513650;Base.SmallSheetMetal=298759322;Base.BlowTorch=421317644;Base.WeldingMask=1130221634;Base.MetalworkMag4=1185235745;Base.HandTorch=1947673615 role=A tag=hb_give
+OBS  MPS.message from tlga: handbook_level level=2 rise=1 role=A tag=hb_level_welding_2
+OBS  MPS.reply handbook_level level=2 role=A tag=hb_level_welding_2 xp=0
+OBS  MPS.ticks 300 OnTick events in 85868 ms
+OBS  MPS.message from tlga: handbook_level level=3 rise=1 role=A tag=hb_level_welding_3
+OBS  MPS.reply handbook_level level=3 role=A tag=hb_level_welding_3 xp=0
+OBS  MPS.message from tlga: handbook_level level=4 rise=1 role=A tag=hb_level_welding_4
+OBS  MPS.reply handbook_level level=4 role=A tag=hb_level_welding_4 xp=6.25
+OBS  MPS.message from tlga: finish role=A
+===== client mp-a
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP hb_give begin
+OBS  MP.hb_given Base.SmallSheetMetal=917582250;Base.SmallSheetMetal=1358367671;Base.SmallSheetMetal=1134830822;Base.SmallSheetMetal=1678224416;Base.SmallSheetMetal=2048608154;Base.SmallSheetMetal=1412870333;Base.SmallSheetMetal=341513650;Base.SmallSheetMetal=298759322;Base.BlowTorch=421317644;Base.WeldingMask=1130221634;Base.MetalworkMag4=1185235745;Base.HandTorch=1947673615
+STEP mp_hb_items_arrive begin
+STEP mp_hb_light begin
+STEP hb_level_welding_2 begin
+OBS  MP.hb_level Welding on the server 2, here 2
+STEP mp_ob_settle_1 begin
+STEP mp_hb_try_metal_sheet_refused_not_learned_at_welding_2 begin
+PASS MP.hb_metal_sheet_refused_not_learned_at_welding_2_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=false level here 2 xp 0; Base.SheetMetal made 0
+STEP mp_ob_read_the_games_magazine begin
+PASS MP.ob_the_games_magazine_read_teaches_its_recipe_A :: after 2163 ticks: Make Metal Sheet actually known=true, the magazine recorded as read=true
+STEP mp_hb_try_metal_sheet_refused_at_welding_2 begin
+PASS MP.hb_metal_sheet_refused_at_welding_2_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=false level here 2 xp 0; Base.SheetMetal made 0
+STEP hb_level_welding_3 begin
+OBS  MP.hb_level Welding on the server 3, here 3
+STEP mp_ob_settle_2 begin
+STEP mp_hb_try_metal_sheet_from_the_magazine_at_welding_3 begin
+OBS  MP.hb_metal_sheet_from_the_magazine_at_welding_3 offered=true made=1: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 3; hasPlayerLearnedRecipe 11111, actually known 00000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=false level here 3 xp 0
+STEP hb_level_welding_4 begin
+OBS  MP.hb_level Welding on the server 4, here 4
+STEP mp_ob_settle_3 begin
+STEP mp_hb_try_metal_sheet_at_welding_4 begin
+OBS  MP.hb_metal_sheet_at_welding_4 offered=true made=1: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 4; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:4 hasPlayerRequiredSkill=true level here 4 xp 6.25
+STEP mp_ob_verdict begin
+PASS MP.ob_the_games_magazine_recipe_one_level_below_A :: Make Metal Sheet (Welding 4), its magazine read: at Welding 3 offered=true made=1; at Welding 4 offered=true made=1
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=5 fail=0
+DONE
+===== server
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.BlowTorch;Base.WeldingMask;Base.MetalworkMag4;Base.HandTorch role=A tag=hb_give
+OBS  MPS.reply given ids=Base.SmallSheetMetal=917582250;Base.SmallSheetMetal=1358367671;Base.SmallSheetMetal=1134830822;Base.SmallSheetMetal=1678224416;Base.SmallSheetMetal=2048608154;Base.SmallSheetMetal=1412870333;Base.SmallSheetMetal=341513650;Base.SmallSheetMetal=298759322;Base.BlowTorch=421317644;Base.WeldingMask=1130221634;Base.MetalworkMag4=1185235745;Base.HandTorch=1947673615 role=A tag=hb_give
+OBS  MPS.message from tlga: handbook_level level=2 rise=1 role=A tag=hb_level_welding_2
+OBS  MPS.reply handbook_level level=2 role=A tag=hb_level_welding_2 xp=0
+OBS  MPS.ticks 300 OnTick events in 85868 ms
+OBS  MPS.message from tlga: handbook_level level=3 rise=1 role=A tag=hb_level_welding_3
+OBS  MPS.reply handbook_level level=3 role=A tag=hb_level_welding_3 xp=0
+OBS  MPS.message from tlga: handbook_level level=4 rise=1 role=A tag=hb_level_welding_4
+OBS  MPS.reply handbook_level level=4 role=A tag=hb_level_welding_4 xp=6.25
+OBS  MPS.message from tlga: finish role=A

@@ -31,7 +31,7 @@ Changes since 0.1.1, the version uploaded here before. Tested on Project Zomboid
 [list]
 [*]Driving in the cold, and diesel below -8 °C.
 [*]On a server: driving on any of these fuels, the cold, a converted engine with diesel, and a repair after wrong fuel.
-[*]The skill levels did not hold as written above: on a server the crafting window let a character one Welding level lower build the Wood Retort and the Wash Tank (at Welding 3) and the Reactor (at Welding 4). Two levels lower it refused. Not tried: the Ash Barrel at Welding 1 and the Lye Leacher at Carpentry 1.
+[*]The skill levels above are what the recipes ask. On a server a character who had read the handbook built each machine one Welding level lower (the Ash Barrel at 1, the Wood Retort and the Wash Tank at 3, the Reactor at 4), and two levels lower the window refused. The game does the same for its own recipes read from a magazine. Not tried: the Lye Leacher at Carpentry 1.
 [*]The menu fix by a player's own click and with a controller.
 [/list]
 

@@ -1,0 +1,127 @@
+﻿===== launcher
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+caches: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver; C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1
+server started (shell pid 62924)
+server up after 21 s
+server: LOG  : General      f:0 st:634,030,294> command entered via server console (System.in): "setaccesslevel "tlga" "user""
+server: LOG  : General      f:0 st:634,030,589> User tlga is now user
+server: LOG  : General      f:0 st:634,034,206> command entered via server console (System.in): "setaccesslevel "tlgb" "user""
+server: LOG  : General      f:0 st:634,034,287> User tlgb is now user
+client mp-a started, pid 93900
+click-to-start clicks sent: 1
+server exited
+===== client mp-a: C:\Users\Manuel\AppData\Local\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP hb_give begin
+OBS  MP.hb_given Base.MetalDrum=627148918;Base.MetalDrum=1330793825;Base.MetalBar=2012458415;Base.MetalBar=1691002527;Base.MetalBar=846885446;Base.MetalBar=1387692637;Base.Hammer=789888047
+STEP mp_hb_items_arrive begin
+STEP ob_learn begin
+PASS MP.ob_ash_barrel_learned_without_the_handbook_A :: server knows it=true; here actually known=true; handbook read=false
+STEP mp_ob_settle_1 begin
+STEP mp_hb_try_ash_barrel_refused_at_welding_0 begin
+PASS MP.hb_ash_barrel_refused_at_welding_0_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 0; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:2 hasPlayerRequiredSkill=false level here 0 xp 0; TLG.AshBarrel made 0
+STEP hb_level_welding_1 begin
+OBS  MP.hb_level Welding on the server 1, here 1
+STEP mp_ob_settle_2 begin
+STEP mp_hb_try_ash_barrel_taught_at_welding_1 begin
+OBS  MP.hb_ash_barrel_taught_at_welding_1 offered=false made=0: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 1; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:2 hasPlayerRequiredSkill=false level here 1 xp 0
+STEP hb_level_welding_2 begin
+OBS  MP.hb_level Welding on the server 2, here 2
+STEP mp_ob_settle_3 begin
+STEP mp_hb_try_ash_barrel_made_at_welding_2 begin
+PASS MP.hb_ash_barrel_made_at_welding_2_A :: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:2 hasPlayerRequiredSkill=true level here 2 xp 0; TLG.AshBarrel made 1
+STEP mp_ob_verdict begin
+PASS MP.ob_the_ash_barrel_taught_one_level_below_A :: the Ash Barrel (Welding 2), taught with learnRecipe, at Welding 1: offered=false made=0
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=5 fail=0
+DONE
+===== server: C:\Users\Manuel\AppData\Local\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.MetalDrum;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.Hammer role=A tag=hb_give
+OBS  MPS.reply given ids=Base.MetalDrum=627148918;Base.MetalDrum=1330793825;Base.MetalBar=2012458415;Base.MetalBar=1691002527;Base.MetalBar=846885446;Base.MetalBar=1387692637;Base.Hammer=789888047 role=A tag=hb_give
+OBS  MPS.message from tlga: learn_recipe recipe=TLG_MakeAshBarrel role=A tag=ob_learn
+OBS  MPS.reply learn_recipe known=true recipe=TLG_MakeAshBarrel role=A tag=ob_learn
+OBS  MPS.message from tlga: handbook_level level=1 rise=1 role=A tag=hb_level_welding_1
+OBS  MPS.reply handbook_level level=1 role=A tag=hb_level_welding_1 xp=0
+OBS  MPS.message from tlga: handbook_level level=2 rise=1 role=A tag=hb_level_welding_2
+OBS  MPS.reply handbook_level level=2 role=A tag=hb_level_welding_2 xp=0
+OBS  MPS.ticks 300 OnTick events in 83145 ms
+OBS  MPS.message from tlga: finish role=A
+===== client mp-a
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=user zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP hb_give begin
+OBS  MP.hb_given Base.MetalDrum=627148918;Base.MetalDrum=1330793825;Base.MetalBar=2012458415;Base.MetalBar=1691002527;Base.MetalBar=846885446;Base.MetalBar=1387692637;Base.Hammer=789888047
+STEP mp_hb_items_arrive begin
+STEP ob_learn begin
+PASS MP.ob_ash_barrel_learned_without_the_handbook_A :: server knows it=true; here actually known=true; handbook read=false
+STEP mp_ob_settle_1 begin
+STEP mp_hb_try_ash_barrel_refused_at_welding_0 begin
+PASS MP.hb_ash_barrel_refused_at_welding_0_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 0; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:2 hasPlayerRequiredSkill=false level here 0 xp 0; TLG.AshBarrel made 0
+STEP hb_level_welding_1 begin
+OBS  MP.hb_level Welding on the server 1, here 1
+STEP mp_ob_settle_2 begin
+STEP mp_hb_try_ash_barrel_taught_at_welding_1 begin
+OBS  MP.hb_ash_barrel_taught_at_welding_1 offered=false made=0: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 1; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:2 hasPlayerRequiredSkill=false level here 1 xp 0
+STEP hb_level_welding_2 begin
+OBS  MP.hb_level Welding on the server 2, here 2
+STEP mp_ob_settle_3 begin
+STEP mp_hb_try_ash_barrel_made_at_welding_2 begin
+PASS MP.hb_ash_barrel_made_at_welding_2_A :: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 2; hasPlayerLearnedRecipe 11111, actually known 01000; debug=false; dark=false; asks MetalWelding:2 hasPlayerRequiredSkill=true level here 2 xp 0; TLG.AshBarrel made 1
+STEP mp_ob_verdict begin
+PASS MP.ob_the_ash_barrel_taught_one_level_below_A :: the Ash Barrel (Welding 2), taught with learnRecipe, at Welding 1: offered=false made=0
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=5 fail=0
+DONE
+===== server
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.MetalDrum;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.Hammer role=A tag=hb_give
+OBS  MPS.reply given ids=Base.MetalDrum=627148918;Base.MetalDrum=1330793825;Base.MetalBar=2012458415;Base.MetalBar=1691002527;Base.MetalBar=846885446;Base.MetalBar=1387692637;Base.Hammer=789888047 role=A tag=hb_give
+OBS  MPS.message from tlga: learn_recipe recipe=TLG_MakeAshBarrel role=A tag=ob_learn
+OBS  MPS.reply learn_recipe known=true recipe=TLG_MakeAshBarrel role=A tag=ob_learn
+OBS  MPS.message from tlga: handbook_level level=1 rise=1 role=A tag=hb_level_welding_1
+OBS  MPS.reply handbook_level level=1 role=A tag=hb_level_welding_1 xp=0
+OBS  MPS.message from tlga: handbook_level level=2 rise=1 role=A tag=hb_level_welding_2
+OBS  MPS.reply handbook_level level=2 role=A tag=hb_level_welding_2 xp=0
+OBS  MPS.ticks 300 OnTick events in 83145 ms
+OBS  MPS.message from tlga: finish role=A

@@ -64,7 +64,14 @@
   handbook3: the crafting window for the Wood Retort, the Wash Tank and
   the Reactor with the handbook read: refused below the level, made at it.
   handbook3u: the three refused at Welding 5 with nothing read (one
-  client each). menus: the mod's world menu entries where the click is on
+  client each). onebelow: the game's own Make Bone Spoon (Carving 2) and
+  the Ash Barrel (Welding 2), each tried two levels below, one below and
+  at its level (one client). onebelow2: the game's own Make Metal Sheet
+  (Welding 4, must be learned), taught, at Welding 2, 3 and 4 (one
+  client). onebelow3: the Ash Barrel taught without the handbook, at
+  Welding 0, 1 and 2 (one client). onebelow4: Make Metal Sheet learned
+  by reading the game's own magazine, at Welding 2, 3 and 4 (one client).
+  menus: the mod's world menu entries where the click is on
   their thing, for a can, a machine, a generator and a car the server put
   down, at zoom 1, 0.5 and 1.5 (one client).
 .PARAMETER NoMod
@@ -93,7 +100,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "wrongfuel", "menus")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "wrongfuel", "menus")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"

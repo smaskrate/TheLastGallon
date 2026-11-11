@@ -6540,3 +6540,47 @@ Evidence:
 [run 332](evidence/2026-11-11_rt-sp_harness_run332_handbook_loot_42.22.2.txt);
 [run 333](evidence/2026-11-11_rt-mp_harness_run333_handbook3_non_admin_skill_answer_six_failures_42.22.2.txt);
 [run 334](evidence/2026-11-11_rt-mp_harness_run334_menus_non_admin_42.22.2.txt).
+
+
+## 2026-11-11 — RT-MP harness, launches 335–338 (one level below a recipe's skill: the game's rule for a recipe read from a magazine)
+
+Build 42.22.2, the repository's mod (0.4.0), a dedicated server and one
+client without `-debug`, a plain player (`-NonAdmin`). Levels gained a
+level at a time with `LevelPerk` on the client and the server. Four
+cases of `tools\run-mp-harness.ps1`, written to find out why launches
+325–333 made the mod's machines one Welding level below what their
+recipes ask.
+
+| Launch | Case | Recipe | How it was learned | Two below | One below | At its level |
+| --- | --- | --- | --- | --- | --- | --- |
+| 335 | `onebelow` | the game's Make Bone Spoon (Carving 2) | needs no learning | refused | refused | made |
+| 335 | `onebelow` | the mod's Ash Barrel (Welding 2) | the Biodiesel Handbook read | refused | **made** | made |
+| 336 | `onebelow2` | the game's Make Metal Sheet (Welding 4, must be learned) | `learnRecipe`, client and server | refused | refused | made |
+| 337 | `onebelow3` | the mod's Ash Barrel | `learnRecipe`, no handbook carried or read | refused | refused | made |
+| 338 | `onebelow4` | the game's Make Metal Sheet | the game's magazine `Base.MetalworkMag4` read | refused | **made** | made |
+
+Results: 335 7/1, 336 6/0, 337 5/0, 338 5/0. The one failed check of 335
+compares the two recipes of that launch, which got different answers;
+launches 336–338 explain it.
+
+The same recipe is refused one level below when it was taught with
+`learnRecipe` and made when its magazine was read; the game's own recipe
+and magazine behave as the mod's. So this is the game's rule on 42.22.2,
+not the mod's: a recipe a character learned by reading its magazine can
+be crafted from one level below its `SkillRequired`. In every "made"
+row the window enabled Craft, `canPerformCurrentRecipe` answered true,
+`CraftRecipeManager.hasPlayerRequiredSkill` answered false, and the
+server made the item. The game's Java was not read for the reason.
+
+For the mod this means: a character who read the Biodiesel Handbook
+builds the Ash Barrel at Welding 1, the Wood Retort and the Wash Tank at
+Welding 3 and the Reactor at Welding 4 (launches 325–335); one who
+reached the level that teaches a recipe without the book is above its
+level anyway. The Lye Leacher at Carpentry 1 was not tried. Not tried in
+single player without `-debug`.
+
+Evidence:
+[run 335](evidence/2026-11-11_rt-mp_harness_run335_onebelow_non_admin_42.22.2.txt);
+[run 336](evidence/2026-11-11_rt-mp_harness_run336_onebelow2_non_admin_42.22.2.txt);
+[run 337](evidence/2026-11-11_rt-mp_harness_run337_onebelow3_non_admin_42.22.2.txt);
+[run 338](evidence/2026-11-11_rt-mp_harness_run338_onebelow4_non_admin_42.22.2.txt).

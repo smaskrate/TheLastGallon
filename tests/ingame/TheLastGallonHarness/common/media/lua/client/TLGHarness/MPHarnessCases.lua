@@ -132,7 +132,8 @@ end
 -- them) and nothing read: each refused, not learned. The Lye Leacher is
 -- not tried: it is made on a surface, and the harness's ground has none.
 ------------------------------------------------------------------------------
-if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" then
+if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" or MP.only == "onebelow"
+    or MP.only == "onebelow2" or MP.only == "onebelow3" or MP.only == "onebelow4" then
     local HB = { recipe = "TLG_MakeAshBarrel" }
     local function recipes()
         local out = {}
@@ -235,7 +236,8 @@ if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" th
                     p:getPerkLevel(Perks.MetalWelding), learned, actual, tostring(getDebug()), tostring(p:tooDarkToRead()))
                 if ctx.offered and wantOffered and c then c.buttonCraft:forceClick() end
                 -- Craft pressed where it must not be offered, as a click on a
-                -- disabled button: nothing may start.
+                -- disabled button: nothing may start. With nothing expected
+                -- (nil) it is pressed too.
                 if not wantOffered and c then c.buttonCraft:forceClick() end
                 ctx.at = ticks
                 return nil
@@ -244,10 +246,18 @@ if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" th
             local busy = #(ISTimedActionQueue.getTimedActionQueue(p).queue or {}) > 0
             if busy and ticks - ctx.at < 8000 then return nil end
             local made = have(product) - ctx.base
-            check("hb_" .. name, function()
-                return ctx.offered == wantOffered and made == (wantOffered and 1 or 0), string.format(
-                    "%s; asks %s; %s made %d", ctx.text, tostring(ctx.asks), product, made)
-            end)
+            if wantOffered == nil then
+                -- Nothing expected: what the window did is kept (onebelow).
+                HB.seen = HB.seen or {}
+                HB.seen[name] = { offered = ctx.offered, made = made }
+                report():line("OBS  MP.hb_%s offered=%s made=%d: %s; asks %s", name, tostring(ctx.offered), made, ctx.text,
+                    tostring(ctx.asks))
+            else
+                check("hb_" .. name, function()
+                    return ctx.offered == wantOffered and made == (wantOffered and 1 or 0), string.format(
+                        "%s; asks %s; %s made %d", ctx.text, tostring(ctx.asks), product, made)
+                end)
+            end
             if w then w:close() end
             return true
         end }
@@ -278,6 +288,225 @@ if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" th
         end)
         return true
     end }
+    -- onebelow (2026-11-11, one client): is a recipe craftable one level
+    -- below its SkillRequired by the game's rule, or only the mod's? A
+    -- recipe of the game's own, Make Bone Spoon (Carving 2, nothing to
+    -- learn; a file, a hunting knife, a sharp bone fragment), is tried at
+    -- Carving 0, 1 and 2, then the Ash Barrel (Welding 2), the handbook
+    -- read, at Welding 0, 1 and 2. Two below must be refused and the level
+    -- itself must make it; what the window does one below is written down,
+    -- and the two recipes must have got the same answer.
+    -- onebelow2: the game's own Make Metal Sheet, a recipe of the mod's kind
+    -- (MetalWelding 4, must be learned, learned without the book at 6; four
+    -- small metal sheets, a blowtorch, a mask), taught on the server and
+    -- here with learnRecipe, tried at Welding 2, 3 and 4.
+    -- onebelow4: the game's own Make Metal Sheet again, now learned as a
+    -- player learns it: its magazine (Base.MetalworkMag4) read with the
+    -- inventory menu's Read. Tried at Welding 2, 3 and 4.
+    if MP.only == "onebelow4" then
+        local function level(name, n)
+            return call("hb_level_" .. name, "handbook_level", { level = n, rise = "1" }, "handbook_level", function(m)
+                local p, guard = player(), 0
+                while p:getPerkLevel(Perks.MetalWelding) < n and guard < 12 do
+                    p:LevelPerk(Perks.MetalWelding)
+                    guard = guard + 1
+                end
+                report():line("OBS  MP.hb_level Welding on the server %s, here %d", tostring(m.level), p:getPerkLevel(Perks.MetalWelding))
+            end)
+        end
+        local R4, P4, MAG = "MakeMetalSheet", "Base.SheetMetal", "Base.MetalworkMag4"
+        MP.stepsA = { MP.waitWorld,
+            call("hb_give", "give", { items = "Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;"
+                .. "Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.BlowTorch;Base.WeldingMask;"
+                .. MAG .. ";Base.HandTorch" }, "given", function(m) report():line("OBS  MP.hb_given %s", tostring(m.ids)) end),
+            wait("mp_hb_items_arrive", 240),
+            once("mp_hb_light", function()
+                local torch = player():getInventory():getFirstTypeRecurse("Base.HandTorch")
+                if torch and player():tooDarkToRead() then
+                    torch:setActivated(true)
+                    player():setSecondaryHandItem(torch)
+                end
+            end),
+            level("welding_2", 2), wait("mp_ob_settle_1", 120),
+            tryCraft("metal_sheet_refused_not_learned_at_welding_2", false, R4, P4),
+            { name = "mp_ob_read_the_games_magazine", timeout = 9000, fn = function(ctx, ticks)
+                local p = player()
+                if not ctx.started then
+                    local book = p:getInventory():getFirstTypeRecurse(MAG)
+                    if not book and ticks < 600 then return nil end
+                    ctx.started, ctx.at = true, ticks
+                    if book then ISInventoryPaneContextMenu.readItem(book, 0) end
+                    return nil
+                end
+                if ticks - ctx.at < 60 then return nil end
+                local busy = #(ISTimedActionQueue.getTimedActionQueue(p).queue or {}) > 0
+                if busy and ticks - ctx.at < 8000 then return nil end
+                local r = recipes()[R4]
+                check("ob_the_games_magazine_read_teaches_its_recipe", function()
+                    return r ~= nil and p:isRecipeActuallyKnown(r) == true and p:getAlreadyReadBook():contains(MAG), string.format(
+                        "after %d ticks: Make Metal Sheet actually known=%s, the magazine recorded as read=%s", ticks - ctx.at,
+                        tostring(r and p:isRecipeActuallyKnown(r)), tostring(p:getAlreadyReadBook():contains(MAG)))
+                end)
+                return true
+            end },
+            tryCraft("metal_sheet_refused_at_welding_2", false, R4, P4),
+            level("welding_3", 3), wait("mp_ob_settle_2", 120),
+            tryCraft("metal_sheet_from_the_magazine_at_welding_3", nil, R4, P4),
+            level("welding_4", 4), wait("mp_ob_settle_3", 120),
+            tryCraft("metal_sheet_at_welding_4", nil, R4, P4),
+            once("mp_ob_verdict", function()
+                local s = (HB.seen or {}).metal_sheet_from_the_magazine_at_welding_3 or {}
+                local t = (HB.seen or {}).metal_sheet_at_welding_4 or {}
+                check("ob_the_games_magazine_recipe_one_level_below", function()
+                    return s.offered ~= nil, string.format(
+                        "Make Metal Sheet (Welding 4), its magazine read: at Welding 3 offered=%s made=%s; at Welding 4 offered=%s made=%s",
+                        tostring(s.offered), tostring(s.made), tostring(t.offered), tostring(t.made))
+                end)
+            end),
+            once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+        return
+    end
+    -- onebelow3: the Ash Barrel taught with learnRecipe, the handbook never
+    -- carried or read, at Welding 1 and 2.
+    if MP.only == "onebelow3" then
+        local function level(name, n)
+            return call("hb_level_" .. name, "handbook_level", { level = n, rise = "1" }, "handbook_level", function(m)
+                local p, guard = player(), 0
+                while p:getPerkLevel(Perks.MetalWelding) < n and guard < 12 do
+                    p:LevelPerk(Perks.MetalWelding)
+                    guard = guard + 1
+                end
+                report():line("OBS  MP.hb_level Welding on the server %s, here %d", tostring(m.level), p:getPerkLevel(Perks.MetalWelding))
+            end)
+        end
+        MP.stepsA = { MP.waitWorld,
+            call("hb_give", "give", { items = "Base.MetalDrum;Base.MetalDrum;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.Hammer" },
+                "given", function(m) report():line("OBS  MP.hb_given %s", tostring(m.ids)) end),
+            wait("mp_hb_items_arrive", 240),
+            call("ob_learn", "learn_recipe", { recipe = HB.recipe }, "learn_recipe", function(m)
+                player():learnRecipe(HB.recipe)
+                local r = recipes()[HB.recipe]
+                check("ob_ash_barrel_learned_without_the_handbook", function()
+                    return m.known == "true" and r ~= nil and player():isRecipeActuallyKnown(r) == true
+                        and not player():getAlreadyReadBook():contains("TLG.BiodieselHandbook"),
+                        string.format("server knows it=%s; here actually known=%s; handbook read=%s", tostring(m.known),
+                            tostring(r and player():isRecipeActuallyKnown(r)),
+                            tostring(player():getAlreadyReadBook():contains("TLG.BiodieselHandbook")))
+                end)
+            end),
+            wait("mp_ob_settle_1", 120),
+            tryCraft("ash_barrel_refused_at_welding_0", false),
+            level("welding_1", 1), wait("mp_ob_settle_2", 120),
+            tryCraft("ash_barrel_taught_at_welding_1", nil),
+            level("welding_2", 2), wait("mp_ob_settle_3", 120),
+            tryCraft("ash_barrel_made_at_welding_2", true),
+            once("mp_ob_verdict", function()
+                local s = (HB.seen or {}).ash_barrel_taught_at_welding_1 or {}
+                check("ob_the_ash_barrel_taught_one_level_below", function()
+                    return s.offered ~= nil, string.format("the Ash Barrel (Welding 2), taught with learnRecipe, at Welding 1: offered=%s made=%s",
+                        tostring(s.offered), tostring(s.made))
+                end)
+            end),
+            once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+        return
+    end
+    if MP.only == "onebelow2" then
+        local function level(name, n)
+            return call("hb_level_" .. name, "handbook_level", { level = n, rise = "1" }, "handbook_level", function(m)
+                local p, guard = player(), 0
+                while p:getPerkLevel(Perks.MetalWelding) < n and guard < 12 do
+                    p:LevelPerk(Perks.MetalWelding)
+                    guard = guard + 1
+                end
+                report():line("OBS  MP.hb_level Welding on the server %s, here %d", tostring(m.level), p:getPerkLevel(Perks.MetalWelding))
+            end)
+        end
+        local R2, P2 = "MakeMetalSheet", "Base.SheetMetal"
+        MP.stepsA = { MP.waitWorld,
+            call("hb_give", "give", { items = "Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;"
+                .. "Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.SmallSheetMetal;Base.BlowTorch;Base.WeldingMask" },
+                "given", function(m) report():line("OBS  MP.hb_given %s", tostring(m.ids)) end),
+            wait("mp_hb_items_arrive", 240),
+            level("welding_2", 2), wait("mp_ob_settle_1", 120),
+            tryCraft("metal_sheet_refused_not_learned_at_welding_2", false, R2, P2),
+            call("ob_learn", "learn_recipe", { recipe = R2 }, "learn_recipe", function(m)
+                player():learnRecipe(R2)
+                local r = recipes()[R2]
+                check("ob_the_games_recipe_learned_on_both_sides", function()
+                    return m.known == "true" and r ~= nil and player():isRecipeActuallyKnown(r) == true and r:needToBeLearn() == true,
+                        string.format("server knows %s=%s; here actually known=%s, must be learned=%s", tostring(m.recipe), tostring(m.known),
+                            tostring(r and player():isRecipeActuallyKnown(r)), tostring(r and r:needToBeLearn()))
+                end)
+            end),
+            wait("mp_ob_settle_2", 120),
+            tryCraft("metal_sheet_refused_at_welding_2", false, R2, P2),
+            level("welding_3", 3), wait("mp_ob_settle_3", 120),
+            tryCraft("metal_sheet_at_welding_3", nil, R2, P2),
+            level("welding_4", 4), wait("mp_ob_settle_4", 120),
+            tryCraft("metal_sheet_made_at_welding_4", true, R2, P2),
+            once("mp_ob_verdict", function()
+                local s = (HB.seen or {}).metal_sheet_at_welding_3 or {}
+                check("ob_the_games_learned_welding_recipe_one_level_below", function()
+                    return s.offered ~= nil, string.format("Make Metal Sheet (Welding 4, learned) at Welding 3: offered=%s made=%s",
+                        tostring(s.offered), tostring(s.made))
+                end)
+            end),
+            once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+        return
+    end
+    if MP.only == "onebelow" then
+        local function level(name, perk, n)
+            return call("hb_level_" .. name, "handbook_level", { level = n, rise = "1", perk = perk }, "handbook_level", function(m)
+                local p, guard = player(), 0
+                while p:getPerkLevel(Perks[perk]) < n and guard < 12 do
+                    p:LevelPerk(Perks[perk])
+                    guard = guard + 1
+                end
+                report():line("OBS  MP.hb_level %s on the server %s, here %d", perk, tostring(m.level), p:getPerkLevel(Perks[perk]))
+            end)
+        end
+        MP.stepsA = { MP.waitWorld,
+            call("hb_give", "give", { items = "Base.File;Base.HuntingKnife;Base.SharpBoneFragment;Base.SharpBoneFragment;"
+                .. "Base.SharpBoneFragment;Base.MetalDrum;Base.MetalDrum;Base.MetalBar;Base.MetalBar;Base.MetalBar;Base.MetalBar;"
+                .. "Base.Hammer;TLG.BiodieselHandbook;Base.HandTorch" }, "given",
+                function(m) report():line("OBS  MP.hb_given %s", tostring(m.ids)) end),
+            wait("mp_hb_items_arrive", 240),
+            once("mp_hb_light", function()
+                local torch = player():getInventory():getFirstTypeRecurse("Base.HandTorch")
+                if torch and player():tooDarkToRead() then
+                    torch:setActivated(true)
+                    player():setSecondaryHandItem(torch)
+                end
+                check("ob_starts_at_level_0_without_debug", function()
+                    local p = player()
+                    return getDebug() == false and p:getPerkLevel(Perks.Carving) == 0 and p:getPerkLevel(Perks.MetalWelding) == 0,
+                        string.format("debug=%s Carving %d Welding %d role %s", tostring(getDebug()), p:getPerkLevel(Perks.Carving),
+                            p:getPerkLevel(Perks.MetalWelding), tostring(select(2, pcall(function() return p:getRole():getName() end))))
+                end)
+            end),
+            tryCraft("bone_spoon_refused_at_carving_0", false, "MakeBoneSpoon", "Base.Spoon_Bone"),
+            level("carving_1", "Carving", 1), wait("mp_ob_settle_1", 120),
+            tryCraft("bone_spoon_at_carving_1", nil, "MakeBoneSpoon", "Base.Spoon_Bone"),
+            level("carving_2", "Carving", 2), wait("mp_ob_settle_2", 120),
+            tryCraft("bone_spoon_made_at_carving_2", true, "MakeBoneSpoon", "Base.Spoon_Bone"),
+            HB.read,
+            tryCraft("ash_barrel_refused_at_welding_0", false),
+            level("welding_1", "MetalWelding", 1), wait("mp_ob_settle_3", 120),
+            tryCraft("ash_barrel_at_welding_1", nil),
+            level("welding_2", "MetalWelding", 2), wait("mp_ob_settle_4", 120),
+            tryCraft("ash_barrel_made_at_welding_2", true),
+            once("mp_ob_verdict", function()
+                local s = HB.seen or {}
+                local spoon, barrel = s.bone_spoon_at_carving_1 or {}, s.ash_barrel_at_welding_1 or {}
+                check("ob_one_level_below_the_mods_recipe_gets_the_games_answer", function()
+                    return spoon.offered ~= nil and spoon.offered == barrel.offered and (spoon.made == 1) == (barrel.made == 1),
+                        string.format("the game's Make Bone Spoon (Carving 2) at Carving 1: offered=%s made=%s; the Ash Barrel (Welding 2) at Welding 1: offered=%s made=%s",
+                            tostring(spoon.offered), tostring(spoon.made), tostring(barrel.offered), tostring(barrel.made))
+                end)
+            end),
+            once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+        return
+    end
     if MP.only == "handbook3" or MP.only == "handbook3u" then
         -- Gained a level at a time with LevelPerk, here and on the server
         -- (MPServer.lua handbook_level says why).

@@ -130,10 +130,15 @@ server makes it: the Wood Retort and the Wash Tank at Welding 3, the
 Reactor at Welding 4, with the handbook read. The game's own
 `hasPlayerRequiredSkill` answers false there. The recipes not learned
 are refused at Welding 5 (launch 328), and the Reactor at Welding 3.
-The player guide, the changelog and the Workshop text give the levels
-the recipes ask. Not decided: whether to say so in them or to ask one
-level more. Not tried: the Ash Barrel at Welding 1, the Lye Leacher, a
-vanilla recipe, single player without `-debug`.
+Launches 335–338 found why: it is the game's rule for a recipe learned
+by reading its magazine. The game's own Make Metal Sheet (Welding 4) was
+made at Welding 3 after its magazine was read, and refused there when
+taught with `learnRecipe`; the Ash Barrel likewise at Welding 1 with the
+handbook read, and refused there without it. The mod's recipes behave as
+the game's. The player guide, the changelog and the Workshop text give
+the levels the recipes ask, which a handbook reader undercuts by one.
+Not decided: whether to say so in them or to ask one level more. Not
+tried: the Lye Leacher, single player without `-debug`.
 
 Checked on 2026-11-11 with the repository's mod, which ships what the
 0.4.0 package ships (launches 318–334, `test-results.md`), of what the

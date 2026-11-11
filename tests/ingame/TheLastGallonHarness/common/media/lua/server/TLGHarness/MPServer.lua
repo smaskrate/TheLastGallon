@@ -705,17 +705,25 @@ end
 -- Welding 4 recipes and made them.
 function services.handbook_level(player, args)
     local want = tonumber(args.level) or 0
+    -- `perk`: another skill than Welding (the onebelow case's Carving).
+    local perk = args.perk and Perks[args.perk] or Perks.MetalWelding
     if args.rise == "1" then
         local guard = 0
-        while player:getPerkLevel(Perks.MetalWelding) < want and guard < 12 do
-            player:LevelPerk(Perks.MetalWelding)
+        while player:getPerkLevel(perk) < want and guard < 12 do
+            player:LevelPerk(perk)
             guard = guard + 1
         end
     else
-        player:setPerkLevelDebug(Perks.MetalWelding, want)
+        player:setPerkLevelDebug(perk, want)
     end
-    reply("handbook_level", args, { level = player:getPerkLevel(Perks.MetalWelding),
-        xp = player:getXp():getXP(Perks.MetalWelding) })
+    reply("handbook_level", args, { level = player:getPerkLevel(perk), xp = player:getXp():getXP(perk) })
+end
+
+-- A recipe taught to the sender on the server, as a read magazine teaches it
+-- (the onebelow2 case: a recipe of the game's own that must be learned).
+function services.learn_recipe(player, args)
+    player:learnRecipe(args.recipe)
+    reply("learn_recipe", args, { recipe = args.recipe, known = tostring(player:getKnownRecipes():contains(args.recipe)) })
 end
 
 function services.probe_handbook(player, args)
