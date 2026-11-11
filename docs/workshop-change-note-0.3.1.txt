@@ -28,7 +28,7 @@ Changes since 0.1.1, the version uploaded here before. Tested on Project Zomboid
 [list]
 [*]Driving on diesel, on biodiesel or on a wrong fuel, and biodiesel in the cold.
 [*]A converted engine with diesel, a repair after wrong fuel, and most of the wrong-fuel rules on a server. In the tests the random draws were set, not left to chance.
-[*]The menu fix with a controller, on a server and at other zoom levels than the closest.
+[*]The menu fix by a player's own click, with a controller, on a server and at zoom levels other than 100 %.
 [/list]
 
 The player guide (docs/player-guide.md in the mod's folder) has the steps and the numbers. docs/CHANGELOG.md lists the changes by version.

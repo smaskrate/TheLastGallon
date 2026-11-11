@@ -75,14 +75,15 @@ generator, diesel pumps, driving, engine effects, pot still, manual,
 Italian, and the multiplayer fuel and effects cases (launches 263–285,
 `test-results.md`). Not re-run: every other mode.
 
-## Version 0.3.1 (not released)
+## Version 0.3.1 (2026-11-11)
 
-On the branch `fix/context-menus`: the mod's entries in the world
-right-click menu follow the click (launches 289–294, `test-results.md`).
-No gate changes. Open: the fix seen by a player with the mouse (the
-launches build the menus through the game's builder at chosen screen
-points and give the cursor's position to the game's vehicle pick); a
-controller; a server. No 0.3.1 zip is built.
+Version 0.3.1, of 2026-11-11: the mod's entries in the world right-click
+menu follow the click, and a recorded fixed container of fuel is not a
+pump (launches 289–294, `test-results.md`). It has not been uploaded to
+the Workshop. No gate changes. Open: the fix seen by a player with the
+mouse (the launches build the menus through the game's builder at chosen
+screen points and give the cursor's position to the game's vehicle
+pick); a controller; a server; zoom levels other than 100 %.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is

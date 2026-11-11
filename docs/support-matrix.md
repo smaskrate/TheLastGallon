@@ -6,7 +6,7 @@ build until it is tested there again. The rows below were verified on
 modes were run again and all passed (launches 216–226, `test-results.md`);
 the other modes have not been run again on this build. The biodiesel
 pathway, the diesel generator, the diesel vehicles and the diesel pumps
-(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), and wrong-fuel damage (version 0.3.0, D-037) in launches 261–282.
+(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), wrong-fuel damage (version 0.3.0, D-037) in launches 261–282, and the menus that follow the click (version 0.3.1) in launches 289–294.
 
 Evidence levels:
 
