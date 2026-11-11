@@ -136,9 +136,12 @@ mod at 0.4.0, which differs from it in the version number.
 
 The upload folder holds this package since 2026-11-11: its `Contents`
 mirrored and its `preview.png` copied from the unpacked zip, 166 files
-checked by hash, both ways. Its `workshop.txt`, the owner's, was not
-touched: its first description line names 0.4.0 and its line on
-building the machines is the earlier wording. Not uploaded.
+checked by hash, both ways. Its `workshop.txt` is the owner's, edited by
+hand. On the owner's word ("Update whatever is left to update",
+2026-11-11) two of its lines changed: the first description line names
+0.4.1, and its line on building the machines is the package's new one.
+Nothing else in it changed (its id, `visibility=public`, the tag `WIP`
+and the owner's wording stay). Not uploaded.
 
 ## Version 0.4.0 (2026-11-11)
 
@@ -630,10 +633,11 @@ The Steam Workshop item (id 3835496461) serves 0.1.1, uploaded by the
 owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.0 package's
-`Contents` since 2026-11-11 (the 0.1.2 package's from 2026-11-10, then
-the 0.3.0, 0.3.1 and 0.3.2 packages' earlier on 2026-11-11; 0.2.0 was
-never put there):
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.1 package's
+`Contents` and `preview.png` since 2026-11-11 (launch 339; "Version
+0.4.1" above). Before it, the 0.1.2 package's from 2026-11-10, then the
+0.3.0, 0.3.1, 0.3.2 and 0.4.0 packages' earlier on 2026-11-11; 0.2.0 was
+never put there. For 0.4.0:
 the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
 its `Contents` mirrored over the folder's, and the folder's 165 files
 checked by hash, both ways. Later that day the zip of `a0d293e` (`87ED49FD…5A47A297`), unpacked and checked against its manifest by launch 317, replaced it there: its `Contents` mirrored over the folder's and its `preview.png` copied, the folder's 166 files checked by hash, both ways. The folder's `preview.png` and `42/poster.png` are the picture of fourteen models (SHA-256 `13A1A39F…7309D5D1`). It has not been uploaded. Its `workshop.txt` is the
@@ -644,7 +648,7 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is

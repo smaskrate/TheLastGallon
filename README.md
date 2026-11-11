@@ -20,7 +20,8 @@ describes.
   (`tools/run-tests.ps1`).
 * In game, unattended, on this computer:
   * single player through the player's menus: the fuel adapters, start
-    gates, stalls, poor fuel's effects on engines, the ethanol loop from
+    gates, stalls, poor and wrong fuel's effects on engines (driving, the
+    cold and repairs included), the ethanol loop from
     crafting the machines to a converted generator and car running on the
     ethanol, the biodiesel chain from logs and oil to a can, the diesel
     generator, diesel vehicles and diesel pumps, every recipe made through
@@ -28,8 +29,9 @@ describes.
     saves and reloads;
   * a dedicated server with two players on this computer: the same paths,
     carrying the vessel, a carrier's death and the machines' timers; the
-    biodiesel machines' loads, the diesel generator, a diesel vehicle and a
-    diesel pump with one player.
+    biodiesel machines' loads, the diesel generator, a diesel vehicle, a
+    diesel pump, the wrong-fuel rules and the crafting window with one
+    player.
 * The zip from `tools/package.ps1` is installed into a fresh game folder
   and played (`tools/rehearse-install.ps1`).
 
