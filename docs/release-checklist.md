@@ -125,10 +125,20 @@ and the Workshop text of `tools/package.ps1` say so, and the player
 guide and the support matrix now list as checked what launches 318–338
 checked. The change note is `docs/workshop-change-note-0.4.1.txt`.
 
-No 0.4.1 package is built. `dist` and the upload folder hold the 0.4.0
-package of `a0d293e`. Open: build it, rehearse it, put it in the upload
-folder; the first description line of the upload folder's `workshop.txt`
-names 0.4.0.
+The 0.4.1 package is the zip of `d7543de` (167 files, 7,891,672 bytes,
+SHA-256 `588563F4…EE9D9C6B`), built from a clean tree. Six files differ
+from the 0.4.0 package: `42/mod.info`, `TLG/Core.lua`, the shipped
+changelog, player guide and support matrix, and `workshop.txt`. It was
+installed clean and played: the full run 105/0 and 14/0, the game
+reading 0.4.1 (launch 339). The handbook mode, the multiplayer cases and
+the upgrade were not run on it; launches 318–338 ran on the repository's
+mod at 0.4.0, which differs from it in the version number.
+
+The upload folder holds this package since 2026-11-11: its `Contents`
+mirrored and its `preview.png` copied from the unpacked zip, 166 files
+checked by hash, both ways. Its `workshop.txt`, the owner's, was not
+touched: its first description line names 0.4.0 and its line on
+building the machines is the earlier wording. Not uploaded.
 
 ## Version 0.4.0 (2026-11-11)
 

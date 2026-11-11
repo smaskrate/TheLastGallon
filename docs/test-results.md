@@ -6584,3 +6584,29 @@ Evidence:
 [run 336](evidence/2026-11-11_rt-mp_harness_run336_onebelow2_non_admin_42.22.2.txt);
 [run 337](evidence/2026-11-11_rt-mp_harness_run337_onebelow3_non_admin_42.22.2.txt);
 [run 338](evidence/2026-11-11_rt-mp_harness_run338_onebelow4_non_admin_42.22.2.txt).
+
+## 2026-11-11 — RT-SP harness, launch 339 (the 0.4.1 release zip, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `d7543de` (the release commit,
+clean tree) built `TheLastGallon-0.4.1.zip`: 167 files, 7,891,672 bytes,
+SHA-256 `588563F4…EE9D9C6B`. Six files differ from the 0.4.0 package:
+`42/mod.info`, `TLG/Core.lua` (the version), the shipped changelog,
+player guide and support matrix, and `workshop.txt`.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 339 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 105/0, then 14/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.4.1,
+equal to `TLG.VERSION`, and loaded the poster as a 256×256 texture; the
+mod logged "The Last Gallon 0.4.1 ready". The console's one exception is
+the harness's deep-recursion probe; no line of the mod at warning or
+error level. The generator burned in its half hour (10.0000 to 9.9850 L),
+so the check launch 317 did not reach ran here.
+
+Not run on this zip: every other mode and case, the upgrade scenarios,
+an install through the Steam Workshop. Launches 318338 ran on the
+repository's mod at 0.4.0. Not uploaded.
+
+Evidence:
+[run 339](evidence/2026-11-11_rt-sp_harness_run339_install_rehearsal_0.4.1_42.22.2.txt).
