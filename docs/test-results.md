@@ -5496,3 +5496,36 @@ this zip; an install through the Steam Workshop.
 Evidence:
 [run 258](evidence/2026-11-11_rt-sp_harness_run258_install_rehearsal_0.2.0_42.22.2.txt);
 [run 259](evidence/2026-11-11_rt-mp_harness_run259_package_biodiesel_42.22.2.txt).
+
+## 2026-11-11 — RT-SP client harness, launch 260 (the 0.2.0 release zip installed clean, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `d43d667` (the release commit,
+clean tree) built `TheLastGallon-0.2.0.zip`: 164 files, 7,855,993 bytes,
+SHA-256 `8C8334CD…46BDAAB`. Its manifest differs from the zip of
+`44bb7eb` (launches 258–259) in two files: the shipped `CHANGELOG.md`
+(0.2.0 dated 2026-11-11) and `player-guide.md` (the sentence "The mod is
+not on the Steam Workshop" removed).
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 260 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 100/0, then 14/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.2.0,
+equal to `TLG.VERSION`, and the mod logged "The Last Gallon 0.2.0 ready".
+The console's only exception is the harness's own deep-recursion probe.
+
+A clean checkout builds the same zip. A worktree of `d43d667` first built
+another one (7,857,645 bytes): `core.autocrlf=true` with `* text=auto`
+wrote the four carry clips (`anims_X/Bob/*.x`) and their four `AnimSets`
+files (`.xml`) with CRLF, where the working copy, and the 0.1.1 and 0.1.2
+manifests, have them with LF. `c4a5678` pins both types to LF and marks
+the tile sheet binary in `.gitattributes`; a worktree of `c4a5678` then
+built `8C8334CD…46BDAAB`. The game has not been run with those eight
+files in CRLF.
+
+Not run on this zip: the multiplayer cases and the other single-player
+modes (the zip of `44bb7eb`, with the same mod files: launches 258–259);
+an install through the Steam Workshop. Not uploaded.
+
+Evidence:
+[run 260](evidence/2026-11-11_rt-sp_harness_run260_release_zip_0.2.0_42.22.2.txt).

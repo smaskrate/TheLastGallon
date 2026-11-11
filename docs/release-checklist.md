@@ -45,7 +45,7 @@ stands against the same gates:
 | 9 | PARTIAL | The five supplied models recorded in `art-src`; the diesel generator's two pictures are made from the game's art (`NOTICE.md`), The Indie Stone's terms for mods not read |
 | 10 | PARTIAL | 316 Italian strings as shipped (launch 250); the player guide covers 0.2.0. Open: the new menus read in Italian in game |
 | 11 | OPEN | Performance not measured with the new machines |
-| 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). The zip of `ce1f031` (SHA-256 `6BA57DA3…`), which differs in `Stations.isPump` and two shipped documents, was played over a 0.1.2 save (launch 257) and through the removal scenario (launch 256). The zip of `44bb7eb` (164 files, 7,856,016 bytes, SHA-256 `52184243…93DBC4`), with the documents of launches 254–257, installed clean and played: the full run 100/0 and 14/0 (launch 258) and the multiplayer biodiesel case 23/0 (launch 259). Open: an install through the Workshop. A later commit to shipped files needs a new zip |
+| 12 | PARTIAL | The 0.2.0 zip of `508aa24` (164 files, SHA-256 `027AF00C…`) installed clean and played: the full run 100/0 and 14/0, the diesel generator through a save, the biodiesel chain (launches 251–253). The zip of `ce1f031` (SHA-256 `6BA57DA3…`), which differs in `Stations.isPump` and two shipped documents, was played over a 0.1.2 save (launch 257) and through the removal scenario (launch 256). The zip of `44bb7eb` (164 files, 7,856,016 bytes, SHA-256 `52184243…93DBC4`), with the documents of launches 254–257, installed clean and played: the full run 100/0 and 14/0 (launch 258) and the multiplayer biodiesel case 23/0 (launch 259). The 0.2.0 package is the zip of `d43d667` (164 files, 7,855,993 bytes, SHA-256 `8C8334CD…46BDAAB`), which differs from it in the shipped changelog and player guide only: installed clean and played, 100/0 and 14/0 (launch 260); a clean checkout builds the same bytes. Open: an install through the Workshop. A later commit to shipped files needs a new zip |
 | 13 | PARTIAL | The five machines have supplied models; the diesel generator is vanilla's sprite recoloured, the owner's choice |
 
 The full single-player run passes with 0.2.0 (launches 245, 251 and 258:
@@ -430,7 +430,20 @@ changed.
 
 ### Gate 12: clean install and upgrade pass with the packaged artifact
 
-The current package is `TheLastGallon-0.1.2.zip`, the zip of commit
+The 0.2.0 package is `TheLastGallon-0.2.0.zip`, the zip of commit
+`d43d667` (the release commit; later commits change nothing that ships):
+SHA-256 `8C8334CD…46BDAAB`, 7,855,993 bytes, 164 files. Launch 260
+rehearsed its manual install on 42.22.2: the zip matched its manifest,
+phase A passed 100/0 and phase B 14/0, and the console's one exception
+came from the harness's own deep-recursion probe. A clean checkout of
+`c4a5678` in a separate worktree builds the same bytes. Until `c4a5678`
+it did not: with `core.autocrlf=true` a fresh checkout wrote the four
+carry clips (`.x`) and their four `AnimSets` files (`.xml`) with CRLF,
+where every package since 0.1.1 has them with LF; `.gitattributes` now
+pins them. It has not been uploaded, and the upload folder still holds
+0.1.2 (below).
+
+The 0.1.2 package is `TheLastGallon-0.1.2.zip`, the zip of commit
 `f674d1c`: SHA-256 `e6971619…`, 4,478,419 bytes, 144 files. Launch 228
 rehearsed the manual install (`tools/rehearse-install.ps1 -NoBuild`) on
 42.22.2, from a zip that differs from it in one file outside the mod:
