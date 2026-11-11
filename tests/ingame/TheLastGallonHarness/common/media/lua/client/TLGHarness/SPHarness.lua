@@ -25,7 +25,9 @@
 --   sp-rtn -> a new world: fuel first found 7 days in, and a can found at the
 --             start read again
 --   rm-a  -> a new world: cans and a fermenter recorded, saved, quit ("rm-a-done")
---   rm-c  -> main menu continues that save after the driver's "rm-b" played it
+--   rm-c  -> main menu continues that save after the driver's "rm-b" played it;
+--            saved again, quit ("rm-c-done")
+--   rm-d  -> main menu continues it once more: what the mod repaired stayed
 --            without the mod: the mod back
 --   up-a  -> a new world played with an EARLIER release's package: cans, a
 --            fermenter, a pump, two vehicles and a generator recorded, saved,
@@ -131,7 +133,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "s
     or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtcm" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
-    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "up-a" or REQUEST == "up-b" then
+    or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
     unattended()
     Events.OnGameStart.Add(unattended)
 end
@@ -8625,7 +8627,47 @@ RT.M.back = { name = "rtm_back", timeout = 3000, fn = function(ctx, ticks)
     return true
 end }
 
-RT.removalBackSteps = { RT.M.back, RT.finish }
+RT.removalBackSteps = { RT.M.back, RT.saveAndQuitAs("rtm_back_save_and_quit", "rm-c-done") }
+
+-- Launch 4: the save of launch 3 continued. The sprite the mod gave back to
+-- the Diesel Generator was saved with it: the generator has it and the mod
+-- had nothing to repair this time (RT.M.repairs counts its repairs from
+-- the load of this file).
+RT.M.repairs = 0
+do
+    local G = TLG.Integration.Generators
+    local orig = G.restoreSprite
+    G.restoreSprite = function(gen)
+        local did = orig(gen)
+        if did then RT.M.repairs = RT.M.repairs + 1 end
+        return did
+    end
+end
+RT.M.again = { name = "rtm_again", timeout = 3000, fn = function(ctx, ticks)
+    local M = RT.M
+    if not (player() and ticks > 120) then return nil end
+    local e = TLGH.readKeyValues(M.expect)
+    local gx, gy = tonumber(e["g.x"]), tonumber(e["g.y"])
+    local gen = M.generatorOn(gx, gy)
+    R:check("RTM.repaired_sprite_stays_through_a_save", function()
+        local name, tex = nil, nil
+        if gen and gen:getSprite() then
+            name = tostring(gen:getSprite():getName())
+            pcall(function() tex = gen:getSprite():getTextureForCurrentFrame(gen:getDir()) end)
+        end
+        return name == TLG.Integration.Generators.SPRITES["TLG.DieselGenerator"] and tex ~= nil and M.repairs == 0,
+            string.format("tile %s,%s: %s; repairs by the mod in this launch: %d", tostring(gx), tostring(gy),
+                M.tileText(gx, gy), M.repairs)
+    end)
+    R:check("RTM.repaired_generator_keeps_its_record", function()
+        local rec = gen and gen:getModData().tlg
+        return type(rec) == "table" and TLG.Integration.Generators.profile(gen) == "generator_ci_bio",
+            string.format("record %s; profile %s", rec and brief(rec) or "none",
+                gen and tostring(TLG.Integration.Generators.profile(gen)) or "-")
+    end)
+    return true
+end }
+RT.removalAgainSteps = { RT.M.again, RT.finish }
 
 ------------------------------------------------------------------------------
 -- A save made with an earlier release continued with this version (requests
@@ -16914,7 +16956,7 @@ else
 end
 
 -- Launch 1 of the removal scenario, back at the menu after its save: leave.
-if REQUEST == "rm-a-done" or REQUEST == "up-a-done" then
+if REQUEST == "rm-a-done" or REQUEST == "rm-c-done" or REQUEST == "up-a-done" then
     Events.OnMainMenuEnter.Add(function() getCore():quitToDesktop() end)
 end
 
@@ -16928,7 +16970,7 @@ if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQU
 end
 
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" or REQUEST == "up-b" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" then
+    or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-b" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -16947,6 +16989,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "rm-c" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, removal launch 3: the mod back", true)
             TLGH.Steps.run(R, RT.removalBackSteps, H, nil)
+        elseif REQUEST == "rm-d" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, removal launch 4: the repaired save continued", true)
+            TLGH.Steps.run(R, RT.removalAgainSteps, H, nil)
         elseif REQUEST == "up-b" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, upgrade launch 2: this version on the earlier save", true)
             TLGH.Steps.run(R, RT.upgradeBackSteps, H, nil)

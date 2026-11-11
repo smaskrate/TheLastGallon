@@ -97,8 +97,11 @@ Workshop; the upgrade from 0.2.0 or 0.3.0 with this zip.
 
 On the branch `fix/diesel-generator-sprite`: a placed Diesel Generator
 that lost its sprite to a load without the mod gets it back with the mod
-(launches 299–300, `test-results.md`; gate 7). Open: a save and a reload
-after the repair; a server. No 0.3.2 zip is kept.
+(launches 299–302, `test-results.md`; gate 7). The sprite stays through
+a save and a reload (launch 301); on a dedicated server the repair ran
+on a sprite the test took away, and the client saw it back (launch 302).
+Open: a server started without the mod and then with it. No 0.3.2 zip is
+kept.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is

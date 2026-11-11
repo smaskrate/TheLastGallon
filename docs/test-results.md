@@ -5978,3 +5978,38 @@ and every other mode with this change.
 Evidence:
 [run 299](evidence/2026-11-11_rt-sp_harness_run299_removal_sprite_not_back_42.22.2.txt);
 [run 300](evidence/2026-11-11_rt-sp_harness_run300_removal_sprite_repair_42.22.2.txt).
+
+## 2026-11-11 — RT-SP and RT-MP harness, launches 301–302 (the repaired sprite through a save, and on a server, 0.3.2)
+
+Build 42.22.2, branch `fix/diesel-generator-sprite`, version 0.3.2.
+
+| Launch | What ran | Result (pass/fail) |
+| --- | --- | --- |
+| 301 | `tools\rehearse-install.ps1 -Scenario removal`, now four game starts: the third saves after the repair, the fourth (`removal-d`) continues that save | 7/0, 2/0, 7/0, 2/0 |
+| 302 | RT-MP `-Clients 1 -Only biodiesel`, the repository's mod, with new steps on the Diesel Generator the case puts down | 25/0 |
+
+Launch 301, fourth start: the generator had the sprite
+`tlg_generators_01_0` with its picture, the mod's repair ran no time in
+that start (the harness counts the calls of `Generators.restoreSprite`
+that gave a sprite, from the load of its file), and the generator's
+record and profile read as before.
+
+Launch 302: the server's harness took the generator's sprite away with
+`setSprite(nil)` and sent the change; the client then saw no sprite. The
+harness then called `Generators.onLoadSquare` on the generator's square,
+as the server's `LoadGridsquare` does: the server's generator had
+`tlg_generators_01_0` again, the server logged the mod's line, and the
+client saw the sprite with its picture. The case's 23 older checks
+passed.
+
+Consoles: no TLG error or warning in the mod's starts of launch 301, on
+the server or on its client.
+
+Not run: a server started without the mod and then with it (the sprite
+lost by the game's own load, and the repair run by the game's own
+`LoadGridsquare` on a server); the full run and the other modes with
+this change.
+
+Evidence:
+[run 301](evidence/2026-11-11_rt-sp_harness_run301_removal_sprite_through_a_save_0.3.2_42.22.2.txt);
+[run 302](evidence/2026-11-11_rt-mp_harness_run302_biodiesel_sprite_repair_0.3.2_42.22.2.txt).

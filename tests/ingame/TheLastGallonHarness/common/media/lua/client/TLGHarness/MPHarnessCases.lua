@@ -2053,6 +2053,48 @@ if MP.only == "biodiesel" then
         end)
     end)
 
+    -- The repair of a generator that lost its sprite (0.3.2), on the server
+    -- with this client connected: the server takes the sprite away and
+    -- runs the mod's LoadGridsquare handler on the generator's square.
+    local function clientSprite()
+        local g = bgen()
+        local name, tex = "none", nil
+        pcall(function() name = tostring(g:getSprite():getName()) end)
+        pcall(function() tex = g:getSprite():getTextureForCurrentFrame(g:getDir()) end)
+        return name, tex
+    end
+    local function spriteCall(step, onAnswer)
+        return call("generator_sprite_" .. step, "sprite_repair", function()
+            return { gx = bsite("gx"), gy = bsite("gy"), step = step }
+        end, "sprite_repair", onAnswer)
+    end
+    BM.strip = spriteCall("strip", function(m)
+        BM.stripped = m
+        report():line("OBS  MP.generator_sprite_strip server: found=%s by %s ok=%s sent=%s sprite %s -> %s", tostring(m.found),
+            tostring(m.how), tostring(m.ok), tostring(m.sent), tostring(m.before), tostring(m.after))
+    end)
+    BM.stripSeen = once("mp_generator_sprite_stripped_here", function()
+        local name, tex = clientSprite()
+        BM.strippedHere = name
+        report():line("OBS  MP.generator_sprite_strip this client then sees sprite %s, picture %s", name, tostring(tex ~= nil))
+    end)
+    BM.repair = spriteCall("repair", function(m)
+        check("server_gives_the_generator_its_sprite_back", function()
+            local s = BM.stripped or {}
+            return s.after ~= "tlg_generators_01_0" and m.ok == "true" and m.after == "tlg_generators_01_0",
+                string.format("server: stripped to %s (%s); the handler ok=%s err=%s, sprite %s -> %s", tostring(s.after),
+                    tostring(s.how), tostring(m.ok), tostring(m.err), tostring(m.before), tostring(m.after))
+        end)
+    end)
+    BM.repairSeen = once("mp_generator_sprite_back_here", function()
+        local name, tex = clientSprite()
+        check("client_sees_the_generator_sprite_back", function()
+            return name == "tlg_generators_01_0" and tex ~= nil, string.format(
+                "this client saw %s after the strip and sees %s now, picture %s", tostring(BM.strippedHere), name,
+                tostring(tex ~= nil))
+        end)
+    end)
+
     BM.enter = act("enter_van", function(ctx, p) ISVehicleMenu.onEnter(p, van(), 0) end, 120)
     BM.start = startCar("start_van", van)
     BM.status = request("van_status", "status", function()
@@ -2128,6 +2170,8 @@ if MP.only == "biodiesel" then
         giveCan("give_biodiesel_can", { fill = "TLG_Biodiesel", litres = "5" }, "bdCan"), arrived("bdCan"),
         walkTo("mp_walk_to_diesel_generator", function() return bsite("gx") + 1, bsite("gy") end),
         BM.pour, BM.on, BM.afterOn, BM.off, BM.unplug, BM.take, BM.afterTake, BM.drop, BM.afterDrop,
+        BM.strip, wait("mp_generator_sprite_strip_arrives", 180), BM.stripSeen,
+        BM.repair, wait("mp_generator_sprite_repair_arrives", 180), BM.repairSeen,
         BM.enter, BM.start, BM.status, BM.afterStart, BM.exit,
         giveCan("give_can_for_diesel", { petrol = "0" }, "dCan"), arrived("dCan"),
         walkTo("mp_walk_to_diesel_pump", function() return bsite("px") + 1, bsite("py") end),

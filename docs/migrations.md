@@ -276,9 +276,13 @@ Launches 255 and 256 repeated it with 0.2.0, in a world started with it:
   no sprite, or a sprite with no name, the sprite of its
   `generatorFullType` when the game loads its square
   (`Generators.restoreSprite`, hooked to `LoadGridsquare` as the file
-  loads; launch 300). On a server it also sends the sprite to the
-  clients; not run. Not run: a save and a reload after the repair. What
-  a player can do with a generator without a sprite was not tried.
+  loads; launch 300). The sprite given back is saved with the object:
+  after a save and a reload the generator had it and the mod repaired
+  nothing (launch 301). On a server the mod also sends the sprite to the
+  clients: with the sprite taken away by the test on a running server,
+  the handler gave it back and the connected client saw it (launch 302).
+  Not run: a server started without the mod and then with it. What a
+  player can do with a generator without a sprite was not tried.
 
 Not run: a save that still lists the mod after it was uninstalled (the
 game's missing-mods prompt), a server, converted engines, a vanilla

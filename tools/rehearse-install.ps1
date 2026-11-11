@@ -22,7 +22,8 @@
      mod and the harness (request "rm-a") and saves it; the save's mods.txt
      then lists only the driver; launch 2 continues it without the mod
      ("rm-b") and saves; mods.txt lists the mod and the harness again;
-     launch 3 continues it with the mod back ("rm-c"). Each launch's results
+     launch 3 continues it with the mod back ("rm-c") and saves; launch 4
+     continues it once more ("rm-d"). Each launch's results
      and console are kept in the cache's Lua folder as
      TLG_removal_launch<n>.results.txt and .console.txt.
      -Scenario upgrade: launch 1 plays a new world with an EARLIER release's
@@ -160,7 +161,10 @@ if ($Scenario -eq "removal") {
     # Launch 3: the save continued with the mod.
     & $harness -DevCache $cache -ModSource $mod -Mode removal-c -TimeoutMinutes $TimeoutMinutes
     Save-Launch 3
-    foreach ($n in 1, 2, 3) {
+    # Launch 4: the save of launch 3 continued, the mod still on it.
+    & $harness -DevCache $cache -ModSource $mod -Mode removal-d -TimeoutMinutes $TimeoutMinutes
+    Save-Launch 4
+    foreach ($n in 1, 2, 3, 4) {
         Select-String -Path (Join-Path $lua "TLG_removal_launch$n.console.txt") -Pattern "world fuel history created" -ErrorAction SilentlyContinue |
             ForEach-Object { Write-Host "launch $n console: $($_.Line.Trim())" }
     }

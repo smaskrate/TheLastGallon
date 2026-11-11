@@ -682,6 +682,40 @@ function services.probe_biodiesel(player, args)
     reply("probe_biodiesel", args, out)
 end
 
+-- The Diesel Generator's sprite taken away on the server, as a load without
+-- the mod leaves it (step "strip"), then the mod's repair run as the
+-- server's LoadGridsquare runs it, on the generator's square (step
+-- "repair"). A restart of the server without the mod is not played.
+function services.sprite_repair(player, args)
+    local g = generatorAt(tonumber(args.gx), tonumber(args.gy))
+    local out = { found = tostring(g ~= nil), step = tostring(args.step) }
+    local function name()
+        local n = "none"
+        pcall(function()
+            local s = g:getSprite()
+            n = s and tostring(s:getName()) or "none"
+        end)
+        return n
+    end
+    if g and args.step == "strip" then
+        out.before = name()
+        local ok = pcall(function() g:setSprite(nil) end)
+        out.how = "setSprite(nil)"
+        if not ok or name() == out.before then
+            ok = pcall(function() g:setSprite(IsoSprite.new()) end)
+            out.how = "a new sprite without a name"
+        end
+        out.ok = tostring(ok)
+        out.sent = tostring(pcall(function() g:transmitUpdatedSpriteToClients() end))
+        out.after = name()
+    elseif g and args.step == "repair" then
+        out.before = name()
+        local ok, err = pcall(function() TLG.Integration.Generators.onLoadSquare(g:getSquare()) end)
+        out.ok, out.err, out.after = tostring(ok), tostring(err), name()
+    end
+    reply("sprite_repair", args, out)
+end
+
 -- The take a second player's action makes when it completes after the
 -- first's has taken the vessel: ISEquipHeavyItem:new(player, vessel):complete()
 -- run here as the server runs a completed action (NetTimedAction.perform
