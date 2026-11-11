@@ -143,3 +143,43 @@ T.case("integration: a generator's profile follows the item it was, a record's o
     T.eq(G.referenceFuel(gen("Base.Generator")), "gasoline")
     T.eq(G.baseProfile(gen(nil)), "generator_si_stock", "a generator of the map has no type recorded")
 end)
+-- A placed generator of the mod's that lost its sprite gets it back.
+T.case("integration: a diesel generator without a sprite gets its sprite back", function()
+    local savedGetSprite, savedIsServer = getSprite, isServer
+    local asked = {}
+    getSprite = function(name)
+        asked[#asked + 1] = name
+        return { name = name, getName = function(s) return s.name end }
+    end
+    isServer = function() return false end
+    local function gen(fullType, sprite)
+        local o = { md = { generatorFullType = fullType }, sprite = sprite, sets = 0 }
+        function o:getModData() return self.md end
+        function o:getSprite() return self.sprite end
+        function o:setSprite(s) self.sprite, self.sets = s, self.sets + 1 end
+        return o
+    end
+    local lost = gen("TLG.DieselGenerator", nil)
+    T.eq(G.restoreSprite(lost), true)
+    T.eq(lost.sprite.name, G.SPRITES["TLG.DieselGenerator"])
+    T.eq(G.restoreSprite(lost), false)
+    T.eq(lost.sets, 1)
+    -- One that has its sprite, and a vanilla one without, are left alone.
+    local fine = gen("TLG.DieselGenerator", { name = "other", getName = function(s) return s.name end })
+    T.eq(G.restoreSprite(fine), false)
+    T.eq(fine.sprite.name, "other")
+    -- A sprite without a name counts as none.
+    local nameless = gen("TLG.DieselGenerator", { getName = function() return nil end })
+    T.eq(G.restoreSprite(nameless), true)
+    T.eq(nameless.sprite.name, G.SPRITES["TLG.DieselGenerator"])
+    local vanilla = gen("Base.Generator", nil)
+    T.eq(G.restoreSprite(vanilla), false)
+    T.eq(vanilla.sprite, nil)
+    -- Through the square, as the game hands it over; a square without a
+    -- generator does nothing.
+    local again = gen("TLG.DieselGenerator", nil)
+    G.onLoadSquare({ getGenerator = function() return again end })
+    T.eq(again.sets, 1)
+    G.onLoadSquare({ getGenerator = function() return nil end })
+    getSprite, isServer = savedGetSprite, savedIsServer
+end)

@@ -73,6 +73,34 @@ function G.loadSprites()
         end)
     end
 end
+-- A save loaded without the mod drops the sprite of a placed generator of
+-- the mod's, whose tile sheet it no longer has, and saves the object
+-- without one (launches 255 and 256). The object keeps its item type in
+-- its mod data: a generator with no sprite and a type of G.SPRITES gets
+-- that sprite back. Returns true when it gave one.
+function G.restoreSprite(gen)
+    if not gen or not getSprite then return false end
+    local has = gen:getSprite()
+    if has ~= nil and has:getName() ~= nil then return false end
+    local md = gen:getModData()
+    local name = G.SPRITES[md and md.generatorFullType or ""]
+    local sprite = name and getSprite(name)
+    if not sprite then return false end
+    gen:setSprite(sprite)
+    if isServer and isServer() and gen.transmitUpdatedSpriteToClients then gen:transmitUpdatedSpriteToClients() end
+    TLG.Log.info("generator %s: its sprite %s was missing and is back", tostring(md.generatorFullType), name)
+    return true
+end
+
+-- For each square as the game loads it. Hooked as this file loads: the
+-- squares around the player load before OnGameStart, when the adapter is
+-- installed (launch 299).
+function G.onLoadSquare(square)
+    local gen = square and square:getGenerator()
+    if gen then G.restoreSprite(gen) end
+end
+if Events and Events.LoadGridsquare then Events.LoadGridsquare.Add(G.onLoadSquare) end
+
 -- The diesel generator in loot (D-036: loot only). Wherever a loot list
 -- offers vanilla's Base.Generator, it offers the diesel one at half that
 -- weight: in a list's items, its junk, or its junk's items (42.22.2: the

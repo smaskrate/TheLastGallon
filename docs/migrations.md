@@ -271,9 +271,14 @@ Launches 255 and 256 repeated it with 0.2.0, in a world started with it:
   sprite, which comes from the mod's tile sheet, is lost on the load
   without the mod (`getSprite()` is nil) and does not come back with the
   mod: the object is then saved without one. With the mod back its record
-  and its profile, `generator_ci_bio`, read as before. Nothing restores
-  the sprite. What a player can do with a generator without a sprite was
-  not tried.
+  and its profile, `generator_ci_bio`, read as before. Up to 0.3.1
+  nothing restored the sprite. From 0.3.2 the mod gives a generator with
+  no sprite, or a sprite with no name, the sprite of its
+  `generatorFullType` when the game loads its square
+  (`Generators.restoreSprite`, hooked to `LoadGridsquare` as the file
+  loads; launch 300). On a server it also sends the sprite to the
+  clients; not run. Not run: a save and a reload after the repair. What
+  a player can do with a generator without a sprite was not tried.
 
 Not run: a save that still lists the mod after it was uninstalled (the
 game's missing-mods prompt), a server, converted engines, a vanilla

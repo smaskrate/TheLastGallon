@@ -8555,6 +8555,17 @@ RT.M.back = { name = "rtm_back", timeout = 3000, fn = function(ctx, ticks)
     R:line("OBS  RTM.diesel generator tile %s,%s: %s; record as launch 1 left it=%s; profile %s; read %s (launch 2 saw: %s)",
         tostring(gx), tostring(gy), M.tileText(gx, gy), tostring(gen ~= nil and brief(gen:getModData().tlg) == e.sideG),
         gen and tostring(TLG.Integration.Generators.profile(gen)) or "-", viewText(gv, gstatus), tostring(b.gTile))
+    -- The save loaded without the mod lost the generator's sprite (launches
+    -- 255 and 256); with the mod back it must have it again, with its picture.
+    R:check("RTM.diesel_generator_has_its_sprite_back", function()
+        local name, tex = nil, nil
+        if gen and gen:getSprite() then
+            name = tostring(gen:getSprite():getName())
+            pcall(function() tex = gen:getSprite():getTextureForCurrentFrame(gen:getDir()) end)
+        end
+        return name == TLG.Integration.Generators.SPRITES["TLG.DieselGenerator"] and tex ~= nil,
+            string.format("sprite %s, picture %s (launch 2 saw: %s)", tostring(name), tostring(tex ~= nil), tostring(b.gTile))
+    end)
     R:line("OBS  RTM.wood retort tile %s,%s: %s (launch 2 saw: %s)", tostring(e["r.x"]), tostring(e["r.y"]),
         M.tileText(tonumber(e["r.x"]), tonumber(e["r.y"])), tostring(b.rTile))
     local D, env, now = TLG.Domain, TLG.World.env(), TLG.World.now()

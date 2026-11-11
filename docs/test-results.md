@@ -5946,3 +5946,35 @@ Evidence:
 [run 296](evidence/2026-11-11_rt-sp_harness_run296_package_context_menus_0.3.1_42.22.2.txt);
 [run 297](evidence/2026-11-11_rt-mp_harness_run297_package_fuel_0.3.1_42.22.2.txt);
 [run 298](evidence/2026-11-11_rt-sp_harness_run298_upgrade_0.1.2_to_0.3.1_42.22.2.txt).
+
+## 2026-11-11 — RT-SP client harness, launches 299–300 (a Diesel Generator gets its sprite back, 0.3.2)
+
+Build 42.22.2, branch `fix/diesel-generator-sprite`. Both launches ran
+`tools\rehearse-install.ps1 -Scenario removal`, which builds the package
+of the working tree and plays three game starts: a new world with the
+mod and a placed Diesel Generator, the save continued without the mod,
+the save continued with the mod back. The third start has a new check,
+`RTM.diesel_generator_has_its_sprite_back`: the generator's sprite is
+`tlg_generators_01_0` and has its picture.
+
+| Launch | The repair | Result (pass/fail by game start) |
+| --- | --- | --- |
+| 299 | `Generators.restoreSprite` hooked to `LoadGridsquare` when the adapter is installed, at `OnGameStart` | 7/0, 2/0, **6/1**: sprite nil, the repair never ran |
+| 300 | hooked as the file loads; a sprite with no name counts as none | 7/0, 2/0, 7/0 |
+
+Launch 299's cause: the squares around the player load before
+`OnGameStart`. In launch 300 the console of the third start has the
+mod's line "generator TLG.DieselGenerator: its sprite
+tlg_generators_01_0 was missing and is back", and the generator's record
+and profile read as before. The second start's console has two
+exceptions of the dev driver's own probe of a can's fluid (inside its
+`pcall`); no TLG error or warning in the first and third.
+
+Offline: 279 cases, 0 failed. Both launches ran with the version still set to 0.3.1; it was set to 0.3.2 afterwards, with no other change to the mod's files.
+
+Not run: a save and a reload after the repair; a server; the full run
+and every other mode with this change.
+
+Evidence:
+[run 299](evidence/2026-11-11_rt-sp_harness_run299_removal_sprite_not_back_42.22.2.txt);
+[run 300](evidence/2026-11-11_rt-sp_harness_run300_removal_sprite_repair_42.22.2.txt).

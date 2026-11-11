@@ -93,6 +93,13 @@ records and its pumps as 0.1.2 left them (launches 295–298). A clean
 checkout builds the same bytes. Open for gate 12: an install through the
 Workshop; the upgrade from 0.2.0 or 0.3.0 with this zip.
 
+## Version 0.3.2 (not released)
+
+On the branch `fix/diesel-generator-sprite`: a placed Diesel Generator
+that lost its sprite to a load without the mod gets it back with the mod
+(launches 299–300, `test-results.md`; gate 7). Open: a save and a reload
+after the repair; a server. No 0.3.2 zip is kept.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How

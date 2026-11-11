@@ -1,0 +1,163 @@
+      calibration: UST weathered d150 unsuitable d415; vehicle weathered d50; can weathered d93
+      station water: 404 of 4000 stations contaminated
+[TLG][INFO] generator adapter installed
+[TLG][INFO] generator TLG.DieselGenerator: its sprite tlg_generators_01_0 was missing and is back
+[TLG][INFO] generator TLG.DieselGenerator: its sprite tlg_generators_01_0 was missing and is back
+[TLG][INFO] machine move hooks installed
+[TLG][INFO] machine move hooks installed
+[TLG][INFO] machine move hooks installed
+[TLG][INFO] machine move hooks installed
+[TLG][INFO] a carrier died: 1 machine(s) in the hands, 0 already at the feet
+[TLG][INFO] a carrier died: 1 machine(s) in the hands, 0 already at the feet
+[TLG][INFO] a carrier died: 0 machine(s) in the hands, 1 already at the feet
+[TLG][INFO] machine move hooks installed
+[TLG][INFO] machine move hooks installed
+[TLG][INFO] container adapter installed (FluidContainer.Transfer wrapped)
+[TLG][INFO] container adapter: the game's pour action followed once per pour
+modules=33 cases=279 passed=279 failed=0 assertions=63521 seed=20261030
+compiled=134 errors=0
+translations: OK (326 EN keys, 243 referenced, IT parity)
+WARNING: uncommitted changes to shipped files: this zip is not the one commit 722d946 builds.
+package: G:\SteamLibrary\steamapps\common\ProjectZomboid\mods\TheLastGallon\dist\TheLastGallon-0.3.1.zip (166 files, 
+commit 722d946 plus uncommitted changes), manifest 
+G:\SteamLibrary\steamapps\common\ProjectZomboid\mods\TheLastGallon\dist\TheLastGallon-0.3.1.sha256. Not uploaded.
+TheLastGallon-0.3.1.zip matches its manifest: 166 files, SHA-256 
+F144067D85E0033464CC65B57C350A34CBF37E0DAC22210D65BB4239A0E10399
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
+client started, pid 96740
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, removal launch 1: a new world with the mod
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=30020168897202789222 hours=2.0097 DayLength=4
+STEP rtx_setup begin
+STEP rtm_world_diesel begin
+PASS RTM.new_world_has_diesel :: dieselVehicles=true createdAsNewGame=true policy=new_world modVersion=0.3.1; the mod loaded is 0.3.1
+PASS RTM.ambulance_is_diesel :: script Base.VanAmbulance; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9997,water=0.0003] deg[diesel=0.0440] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTM.trade_van_is_petrol :: script Base.Van; profile engine_si_stock; record initialized id=nil rev=0 total=10.0000 q[gasoline=9.9996,water=0.0004] deg[gasoline=0.2831] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTM.pumps_have_a_product :: 8 pumps, 2 of them diesel: 10636,10622:diesel 10636,10623:gasoline 10636,10629:gasoline 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:diesel
+STEP rtm_diesel begin
+OBS  RTM.biodiesel_into_the_diesel_generator transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTM.recorded_generator_is_not_a_pump :: the generator has a record=true; isPump=false; its menu offers "Read what this pump gives"=false
+PASS RTM.diesel_generator_and_retort_placed :: generator tile 10658,10643: generator generatorFullType=TLG.DieselGenerator sprite=tlg_generators_01_0 picture=true fuel=5.0000; record ok id=G1754869479-2 rev=1 total=5.0000 q[biodiesel=5.0000,water=0.0000] deg[biodiesel=0.0564] mic=0 stab=0; retort tile 10658,10645: item TLG.WoodRetort
+STEP rtm_stock begin
+OBS  RTM.load_mash_F menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTM.stocked_and_recorded :: P 9.0000 L, Q 4.0000 L, E 4.0000 L, each recorded=true; fermenter on 10661,10645 Processing since 2.0241098403930664
+OBS  RTM.world record seed=1754869479 installedAt=2 policy=new_world epoch=0 nextId=10; saving at world hour 2.0241
+STEP rtm_save_and_quit begin
+EXIT -> main menu, then the desktop
+SUMMARY pass=7 fail=0
+DONE
+save 30020168897202789222: mods.txt now lists only TheLastGallonPreInstall
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
+client started, pid 73592
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG removal, launch 2: the save continued without the mod
+game=42.22.2 3d39148846 classpath=1
+PASS RMB.mod_away :: TLG loaded=false, listed active=false
+OBS  RMB.can P: 9.0000 L, fluid Petrol, record true
+OBS  RMB.can Q: 4.0000 L, fluid Petrol, record true
+OBS  RMB.can E: 0.0000 L, fluid -, record true
+OBS  RMB.fermenter tile 10661,10645 holds: nothing; the world record in global mod data: true
+PASS RMB.petrol_cans_and_records_kept :: P 9.0000 L, fluid Petrol, record true; Q 4.0000 L, fluid Petrol, record true
+OBS  RMB.diesel generator tile 10658,10643 holds: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true
+OBS  RMB.wood retort tile 10658,10645 holds: nothing
+OBS  RMB.poured without the mod: P 7.0000 L, fluid Petrol, record true; Q 7.0000 L, fluid Petrol, record true
+OBS  RMB.saving at world hour 26.0493, 24.00 game hours after continuing
+SUMMARY pass=2 fail=0
+DONE
+save 30020168897202789222: mods.txt lists TheLastGallon and TheLastGallonHarness again
+Dev cache ready: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache
+client started, pid 3132
+click-to-start clicks sent: 1
+finished=True exitCode=
+# TLG single-player harness, removal launch 3: the mod back
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtm_back begin
+OBS  RTM.launch 2 (the mod away) saw: {canE=0.0000 L, fluid -, record true,fTile=nothing,gTile=generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true,litresE=0,litresP=7,litresQ=7,rTile=nothing,worldRecord=true}
+PASS RTM.records_survive_the_mod_away :: P as saved, 7.0000 L now; Q as saved, 7.0000 L now; E as saved, 0.0000 L now
+PASS RTM.world_record_the_same_one :: seed 1754869479 (1754869479), installedAt 2 (2), policy new_world (new_world), epoch 0 (0), nextId 10 (10 at launch 1), dieselVehicles true (true)
+PASS RTM.pumps_give_what_they_gave :: 8 pumps, 2 of them diesel: 10636,10622:diesel 10636,10623:gasoline 10636,10629:gasoline 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:diesel (launch 1: 10636,10622:diesel 10636,10623:gasoline 10636,10629:gasoline 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:diesel)
+OBS  RTM.diesel generator tile 10658,10643: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000; record as launch 1 left it=true; profile generator_ci_bio; read ok id=G1754869479-2 rev=1 total=5.0000 q[biodiesel=4.9999,water=0.0001] deg[biodiesel=0.0919] mic=0 stab=0 (launch 2 saw: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true)
+FAIL RTM.diesel_generator_has_its_sprite_back :: sprite nil, picture false (launch 2 saw: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true)
+OBS  RTM.wood retort tile 10658,10645: nothing (launch 2 saw: nothing)
+PASS RTM.poured_from_while_away_keeps_its_condition :: condition 0.263011698, its record aged to now 0.263011698; 7.0000 L recorded of 7.0000 L in the can (9 L at launch 1)
+PASS RTM.design_inflow_while_away_mixed_in_at_the_world_baseline :: condition 0.410117873; its own fuel aged to now with 3.0000 L at the untracked baseline 0.474612841 mixed in: 0.410117873; mixed in at the record's last write (world hour 2.0219) and then aged: 0.415967177
+PASS RTM.inflow_while_away_reconciled :: 7.0000 L recorded of 7.0000 L in the can; 3.0000 L came in while the mod was away
+OBS  RTM.ethanol can E: 0 L in it now (4 at launch 1, 0 at launch 2); read reconciled S1754869479-7|-1.000000000|0.0000
+OBS  RTM.fermenter on 10661,10645: not found (launch 2 saw: nothing)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 26.07
+SUMMARY pass=6 fail=1
+DONE
+launch 1 console: LOG  : Lua          f:0> [TLG][INFO] world fuel history created: policy=new_world seed=1754869479 
+epoch=0.00 installedAt=2.00 newGame=true
+results and consoles: C:\Users\Manuel\AppData\Local\TheLastGallon\installcache\Lua\TLG_removal_launch<n>.results.txt / 
+.console.txt
+
+--- TLG_removal_launch1.results.txt
+# TLG single-player harness, removal launch 1: a new world with the mod
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=30020168897202789222 hours=2.0097 DayLength=4
+STEP rtx_setup begin
+STEP rtm_world_diesel begin
+PASS RTM.new_world_has_diesel :: dieselVehicles=true createdAsNewGame=true policy=new_world modVersion=0.3.1; the mod loaded is 0.3.1
+PASS RTM.ambulance_is_diesel :: script Base.VanAmbulance; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9997,water=0.0003] deg[diesel=0.0440] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTM.trade_van_is_petrol :: script Base.Van; profile engine_si_stock; record initialized id=nil rev=0 total=10.0000 q[gasoline=9.9996,water=0.0004] deg[gasoline=0.2831] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTM.pumps_have_a_product :: 8 pumps, 2 of them diesel: 10636,10622:diesel 10636,10623:gasoline 10636,10629:gasoline 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:diesel
+STEP rtm_diesel begin
+OBS  RTM.biodiesel_into_the_diesel_generator transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTM.recorded_generator_is_not_a_pump :: the generator has a record=true; isPump=false; its menu offers "Read what this pump gives"=false
+PASS RTM.diesel_generator_and_retort_placed :: generator tile 10658,10643: generator generatorFullType=TLG.DieselGenerator sprite=tlg_generators_01_0 picture=true fuel=5.0000; record ok id=G1754869479-2 rev=1 total=5.0000 q[biodiesel=5.0000,water=0.0000] deg[biodiesel=0.0564] mic=0 stab=0; retort tile 10658,10645: item TLG.WoodRetort
+STEP rtm_stock begin
+OBS  RTM.load_mash_F menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTM.stocked_and_recorded :: P 9.0000 L, Q 4.0000 L, E 4.0000 L, each recorded=true; fermenter on 10661,10645 Processing since 2.0241098403930664
+OBS  RTM.world record seed=1754869479 installedAt=2 policy=new_world epoch=0 nextId=10; saving at world hour 2.0241
+STEP rtm_save_and_quit begin
+EXIT -> main menu, then the desktop
+SUMMARY pass=7 fail=0
+DONE
+
+--- TLG_removal_launch2.results.txt
+# TLG removal, launch 2: the save continued without the mod
+game=42.22.2 3d39148846 classpath=1
+PASS RMB.mod_away :: TLG loaded=false, listed active=false
+OBS  RMB.can P: 9.0000 L, fluid Petrol, record true
+OBS  RMB.can Q: 4.0000 L, fluid Petrol, record true
+OBS  RMB.can E: 0.0000 L, fluid -, record true
+OBS  RMB.fermenter tile 10661,10645 holds: nothing; the world record in global mod data: true
+PASS RMB.petrol_cans_and_records_kept :: P 9.0000 L, fluid Petrol, record true; Q 4.0000 L, fluid Petrol, record true
+OBS  RMB.diesel generator tile 10658,10643 holds: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true
+OBS  RMB.wood retort tile 10658,10645 holds: nothing
+OBS  RMB.poured without the mod: P 7.0000 L, fluid Petrol, record true; Q 7.0000 L, fluid Petrol, record true
+OBS  RMB.saving at world hour 26.0493, 24.00 game hours after continuing
+SUMMARY pass=2 fail=0
+DONE
+
+--- TLG_removal_launch3.results.txt
+# TLG single-player harness, removal launch 3: the mod back
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtm_back begin
+OBS  RTM.launch 2 (the mod away) saw: {canE=0.0000 L, fluid -, record true,fTile=nothing,gTile=generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true,litresE=0,litresP=7,litresQ=7,rTile=nothing,worldRecord=true}
+PASS RTM.records_survive_the_mod_away :: P as saved, 7.0000 L now; Q as saved, 7.0000 L now; E as saved, 0.0000 L now
+PASS RTM.world_record_the_same_one :: seed 1754869479 (1754869479), installedAt 2 (2), policy new_world (new_world), epoch 0 (0), nextId 10 (10 at launch 1), dieselVehicles true (true)
+PASS RTM.pumps_give_what_they_gave :: 8 pumps, 2 of them diesel: 10636,10622:diesel 10636,10623:gasoline 10636,10629:gasoline 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:diesel (launch 1: 10636,10622:diesel 10636,10623:gasoline 10636,10629:gasoline 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:diesel)
+OBS  RTM.diesel generator tile 10658,10643: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000; record as launch 1 left it=true; profile generator_ci_bio; read ok id=G1754869479-2 rev=1 total=5.0000 q[biodiesel=4.9999,water=0.0001] deg[biodiesel=0.0919] mic=0 stab=0 (launch 2 saw: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true)
+FAIL RTM.diesel_generator_has_its_sprite_back :: sprite nil, picture false (launch 2 saw: generator generatorFullType=TLG.DieselGenerator sprite=nil picture=false fuel=5.0000 record true)
+OBS  RTM.wood retort tile 10658,10645: nothing (launch 2 saw: nothing)
+PASS RTM.poured_from_while_away_keeps_its_condition :: condition 0.263011698, its record aged to now 0.263011698; 7.0000 L recorded of 7.0000 L in the can (9 L at launch 1)
+PASS RTM.design_inflow_while_away_mixed_in_at_the_world_baseline :: condition 0.410117873; its own fuel aged to now with 3.0000 L at the untracked baseline 0.474612841 mixed in: 0.410117873; mixed in at the record's last write (world hour 2.0219) and then aged: 0.415967177
+PASS RTM.inflow_while_away_reconciled :: 7.0000 L recorded of 7.0000 L in the can; 3.0000 L came in while the mod was away
+OBS  RTM.ethanol can E: 0 L in it now (4 at launch 1, 0 at launch 2); read reconciled S1754869479-7|-1.000000000|0.0000
+OBS  RTM.fermenter on 10661,10645: not found (launch 2 saw: nothing)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 26.07
+SUMMARY pass=6 fail=1
+DONE

@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.3.1, for Project Zomboid 42.22.2. Each section ends with what
+Version 0.3.2, for Project Zomboid 42.22.2. Each section ends with what
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 
@@ -904,9 +904,9 @@ your last save with the mod: a car saved while running keeps its lowered
 power without the mod, until a repair.
 
 A Diesel Generator standing on the ground stays in the save, but its
-picture is the mod's: once the save has been loaded without the mod the
-generator has no picture, and putting the mod back does not bring it
-back. Use up its fuel before you remove the mod.
+picture is the mod's: while the save is played without the mod the
+generator has no picture. If you put the mod back, the picture comes
+back when the game loads the generator's tile.
 
 Petrol stays, and so does what the mod recorded about it. If you put the
 mod back later, it finds that record as it was; the world's fuel history

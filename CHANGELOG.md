@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.3.2 (not released)
+
+* Fixed: a placed Diesel Generator lost its picture once its save had
+  been loaded without the mod, and putting the mod back did not bring it
+  back. Now the mod gives the generator its picture again when the game
+  loads its tile. Checked in single player on 42.22.2 (launch 300 in
+  `docs/test-results.md`). Not checked: a save and a reload after the
+  repair, and a server.
+
 ## 0.3.1 (2026-11-11)
 
 * Fixed: the mod's entries in the world right-click menu showed where
