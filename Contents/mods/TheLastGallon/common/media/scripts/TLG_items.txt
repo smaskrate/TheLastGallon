@@ -55,6 +55,25 @@ module TLG
         OnCreate = TLG.Integration.Manual.onCreate,
     }
 
+    /* The biodiesel handbook (0.4.0): reading it teaches the recipes of the
+       five biodiesel machines (TLG_machines.txt), as a vanilla recipe
+       magazine does. Found where the field manual is (Integration/Manual.lua).
+       On the ground it uses the field manual's model. */
+    item BiodieselHandbook
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.5,
+        Icon = TLG_BiodieselHandbook,
+        BoredomChange = -20,
+        StressChange = -15,
+        LearnedRecipes = TLG_MakeWoodRetort;TLG_MakeAshBarrel;TLG_MakeLyeLeacher;TLG_MakeBiodieselReactor;TLG_MakeBiodieselWashTank,
+        StaticModel = Magazine,
+        WorldStaticModel = TLG.ManualFuelSystems,
+        Tags = base:magazine,
+        OnCreate = ItemCodeOnCreate.onCreateRecipeMagazine,
+    }
+
     /* Saved from a finished ferment (>= 5 kg sugar): replaces bought yeast,
        so the ethanol chain has a renewable starter culture. */
     item YeastStarter

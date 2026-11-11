@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.3.2, for Project Zomboid 42.22.2. Each section ends with what
+Version 0.4.0, for Project Zomboid 42.22.2. Each section ends with what
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 
@@ -566,13 +566,39 @@ The crafting window lists them as **Make Wood Retort**, **Make Ash
 Barrel**, **Make Lye Leacher**, **Make Biodiesel Reactor** and **Make
 Biodiesel Wash Tank**.
 
-| Machine | Ingredients and tools | Where you make it |
-| --- | --- | --- |
-| Wood Retort | a metal drum, two sheets of metal, two metal pipes, a bucket; a blowtorch and a welding mask | welded in hand |
-| Ash Barrel | a metal drum, two steel rods; a hammer | in hand |
-| Lye Leacher | six planks, twelve nails, a cheese cloth, a cooking pot; a hammer; Carpentry 2 | a table or counter within two tiles |
-| Biodiesel Reactor | a metal drum, a sheet of metal, two steel rods, a metal pipe; a blowtorch and a welding mask | welded in hand |
-| Biodiesel Wash Tank | a metal drum, two sheets of metal, three steel rods, a metal pipe; a blowtorch and a welding mask | welded in hand |
+| Machine | Ingredients and tools | Skill | Where you make it |
+| --- | --- | --- | --- |
+| Wood Retort | a metal drum, two sheets of metal, two metal pipes, a bucket; a blowtorch and a welding mask | Welding 4 | welded in hand |
+| Ash Barrel | a metal drum, two steel rods; a hammer | Welding 2 | in hand |
+| Lye Leacher | six planks, twelve nails, a cheese cloth, a cooking pot; a hammer | Carpentry 2 | a table or counter within two tiles |
+| Biodiesel Reactor | a metal drum, a sheet of metal, two steel rods, a metal pipe; a blowtorch and a welding mask | Welding 5 | welded in hand |
+| Biodiesel Wash Tank | a metal drum, two sheets of metal, three steel rods, a metal pipe; a blowtorch and a welding mask | Welding 4 | welded in hand |
+
+Your character must also know each recipe. There are two ways to learn
+them:
+
+* Read the **Biodiesel Handbook**. It teaches all five at once and asks
+  no skill to read. It is found where the Field Manual is: gas station
+  storage, garages, farms, generator crates, bookstores, tool stores and
+  libraries.
+* Reach two levels above the level a recipe asks: the Lye Leacher at
+  Carpentry 4, the Ash Barrel at Welding 4, the Wood Retort and the Wash
+  Tank at Welding 6, the Reactor at Welding 7.
+
+A recipe you know still needs its skill level: with the handbook read and
+Welding 4 you can make every machine but the Reactor. Making a machine
+gives Welding experience, the Lye Leacher Carpentry experience.
+
+In a save from a version before 0.4.0, a character who could make these
+machines must learn the recipes like anyone else. Machines already made
+keep working. The handbook appears only in containers the game has not
+filled yet, so look in places you have not visited.
+
+**Checked in game** in single player: what each recipe asks, the levels
+that allow and teach, the handbook read from the inventory menu, and all
+five machines made in the crafting window with the levels and recipes in
+place. **Not checked in game:** the crafting window refusing a character
+without the recipe or the level, a handbook found in loot, and a server.
 
 Like the ethanol machines, each works only while it stands on the ground,
 and its options are under **Machine (The Last Gallon)**.

@@ -53,3 +53,17 @@ T.case("integration: every chosen weight is a plain positive number", function()
     end
     T.eq(n, 11)
 end)
+
+T.case("integration: the biodiesel handbook joins the manual's loot lists once, beside the manual", function()
+    local Manual = TLG.Integration.Manual
+    local lists = { GasStorageMechanics = { items = { "MechanicMag1", 4 } }, Unknown = { items = {} } }
+    Manual.addToLoot(lists)
+    local added = Manual.addToLoot(lists, Manual.HANDBOOK)
+    T.eq(#added, 1); T.eq(added[1], "GasStorageMechanics")
+    local items = lists.GasStorageMechanics.items
+    T.eq(#items, 6)
+    T.eq(items[3], Manual.ITEM); T.eq(items[5], "TLG.BiodieselHandbook"); T.eq(items[6], Manual.LOOT.GasStorageMechanics)
+    T.eq(#Manual.addToLoot(lists, Manual.HANDBOOK), 0)
+    T.eq(#items, 6)
+    T.eq(#Manual.HANDBOOK_RECIPES, 5)
+end)

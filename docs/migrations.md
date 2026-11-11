@@ -183,6 +183,21 @@ is saved by the game with its tile sprite, `tlg_generators_01_0`, whose
 number comes from `tiledef=tlg_generators 7341` in `mod.info`: changing
 that number would orphan placed generators.
 
+### Biodiesel recipes are learned (0.4.0, D-038)
+
+No record changes. The five biodiesel machines' recipes have
+`NeedToBeLearn` from 0.4.0, and four of them a welding level they did
+not ask. The game keeps what a character knows by recipe name, and no
+earlier version taught these names: in a save from 0.2.0 to 0.3.2 no
+character knows them, whatever they built. The mod grants nothing on
+load. A character learns them from `TLG.BiodieselHandbook` or at the
+recipe's `AutoLearnAny` level, which the game checks when a level is
+gained (SRC `XpUpdate.lua` `levelPerk`); a character already at or above
+that level learns the recipe at their next level gained in any skill.
+That last sentence follows from the game's code and was not run. Loot is
+rolled when a container is first filled, so the handbook is not in
+containers already filled. No upgrade launch was run with 0.4.0.
+
 ### Wrong fuel (0.3.0, D-037)
 
 No record changes. The sandbox option `TheLastGallon.WrongFuelDamage` is
@@ -281,8 +296,10 @@ Launches 255 and 256 repeated it with 0.2.0, in a world started with it:
   nothing (launch 301). On a server the mod also sends the sprite to the
   clients: with the sprite taken away by the test on a running server,
   the handler gave it back and the connected client saw it (launch 302).
-  Not run: a server started without the mod and then with it. What a
-  player can do with a generator without a sprite was not tried.
+  A server played with the mod, then without it, then with it again
+  repaired the sprite from its own `LoadGridsquare`, and the client saw
+  it (launch 307). What a player can do with a generator without a
+  sprite was not tried.
 
 Not run: a save that still lists the mod after it was uninstalled (the
 game's missing-mods prompt), a server, converted engines, a vanilla

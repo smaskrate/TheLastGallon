@@ -9,6 +9,10 @@
   by `tools/make-model-icons.ps1`, and the sampling kit's, the yeast
   starter's, the stabilizer's and the manual's rendered by the same tool
   from simple shapes built for them (`tools/blender/pz_icon_props.py`).
+  The Biodiesel Handbook's icon (`Item_TLG_BiodieselHandbook.png`) is the
+  manual's with its colour channels exchanged and scaled (red from green
+  times 1.25, green from red times 0.85, blue times 0.6), made on
+  2026-11-11; on the ground the handbook uses the manual's model.
 * The floor models of the sampling kit, the yeast starter, the stabilizer
   and the manual (`FuelSampleKit`, `YeastStarter`, `FuelStabilizer` and
   `ManualFuelSystems` in `media/models_X/TLG` and `media/textures/TLG`)

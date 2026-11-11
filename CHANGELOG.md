@@ -1,5 +1,37 @@
 # Changelog
 
+## 0.4.0 (not released)
+
+* The five biodiesel machines ask a skill level, and their recipes must
+  be learned. Wood Retort: Welding 4. Ash Barrel: Welding 2. Lye Leacher:
+  Carpentry 2, as before. Biodiesel Reactor: Welding 5. Biodiesel Wash
+  Tank: Welding 4. The levels follow the game's own welded drum recipes.
+* New item, the **Biodiesel Handbook**: reading it teaches the five
+  recipes. It is found where the Field Manual is: gas station storage,
+  garages, farms, generator crates, bookstores, tool stores and
+  libraries. Without it a character learns a recipe on reaching two
+  levels above the level the recipe asks (the Lye Leacher at Carpentry 4,
+  the Ash Barrel at Welding 4, the Wood Retort and the Wash Tank at
+  Welding 6, the Reactor at Welding 7). Making a machine gives Welding or
+  Carpentry experience.
+* A save from an earlier version changes behaviour: a character who
+  could make these machines can no longer make them until they read the
+  handbook or have the level that teaches the recipe. Machines already
+  made keep working. The handbook appears only in containers the game
+  has not filled yet.
+* The ethanol machines and the mod's small items ask nothing new.
+* Checked in single player on 42.22.2 (launches 308–310 in
+  `docs/test-results.md`): what each recipe asks, the levels that allow
+  and teach, the handbook read with the game's Read action, and all five
+  machines made in the crafting window with the levels and recipes in
+  place. Not checked: the crafting window refusing a character without
+  the recipe or the level (the tests run the game in debug mode, where
+  the window counts every recipe as learned), a handbook found in loot,
+  and a server.
+* Correction to 0.3.2's entry: a server started without the mod and then
+  with it was checked after that release (launch 307), and the Diesel
+  Generator had its picture back.
+
 ## 0.3.2 (2026-11-11)
 
 * Fixed: a placed Diesel Generator lost its picture once its save had

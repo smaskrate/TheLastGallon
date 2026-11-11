@@ -113,6 +113,17 @@ zip, 3/0 and 19/0 (launches 303–306). A clean checkout builds the same
 bytes. Open for gate 12: an install through the Workshop; the upgrade
 from 0.2.0, 0.3.0 or 0.3.1 with this zip.
 
+## Version 0.4.0 (not released)
+
+On the branch `feature/biodiesel-skills` (D-038): the five biodiesel
+machines' recipes ask skill levels and must be learned, from the new
+Biodiesel Handbook or by level (launches 308–310, `test-results.md`).
+Open: the crafting window refusing a character without the recipe or
+the level outside debug mode; a handbook rolled from loot; a server; an
+upgrade launch; the Italian name read in game. The upload folder, its
+`workshop.txt` and the 0.3.2 change note are as 0.3.2 left them. No
+0.4.0 zip is kept.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How

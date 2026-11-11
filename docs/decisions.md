@@ -1540,3 +1540,31 @@ their replacement.
   engine use diesel since this decision (the full run's `G03.gate_diesel`
   and `G04.gate_diesel`, the driving and engine-effects modes' unfit
   blend, the multiplayer fuel and effects cases).
+
+## D-038 The biodiesel machines ask skill levels and a learned recipe: version 0.4.0
+* Decision (the owner, 2026-11-11): "add the appropriate skill levels
+  required to craft the biodiesel items. Also add a book to learn these
+  recipes". The levels were left to the implementation.
+* Levels, from the game's own recipes that weld a metal drum or sheet
+  metal (42.22.2: `MakeSmallMetalSheet` MetalWelding 4, learned at 6;
+  `MakeScrapChopper` 5; the scrap armour 5 and 6, learned two levels
+  higher): Wood Retort and Wash Tank MetalWelding 4, Reactor 5 (the
+  pressure-tight vessel of the chain), Ash Barrel 2 (no torch; eight of
+  the game's torch-free Metalworking recipes ask this perk, 28 ask
+  none), Lye Leacher Woodwork 2 as before. Each recipe is learned
+  without the book two levels higher (`AutoLearnAny`), as the game's are.
+* The book is `TLG.BiodieselHandbook`, a recipe magazine of the game's
+  kind (`LearnedRecipes`, vanilla's `onCreateRecipeMagazine`), in the
+  Field Manual's eleven loot lists at the manual's weights. Its icon is
+  the manual's with its colours turned; on the ground it uses the
+  manual's model.
+* This qualifies the rule the Field Manual was built under ("other ways
+  to learn must stay open", `Integration/Manual.lua`): the handbook
+  gates the recipes, and the second way is the skill level. The Field
+  Manual still teaches and gates nothing. The ethanol machines are
+  unchanged: the owner asked for the biodiesel items.
+* Existing saves: no character knows the recipes (`migrations.md`). The
+  mod grants nothing on load; the owner was told with the levels.
+* Checked: launches 308–310 (`test-results.md`). Open: the crafting
+  window's refusal outside debug mode, the handbook in loot, a server,
+  an upgrade launch.

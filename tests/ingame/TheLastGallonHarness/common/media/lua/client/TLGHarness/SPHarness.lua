@@ -99,6 +99,8 @@
 --              down, fuelled with biodiesel and with petrol, started
 --   sp-rtdv -> diesel vehicles: the chosen chassis' profile and fuel in a
 --              new world, a start on diesel, biodiesel taken, petrol refused
+--   sp-rthb -> the biodiesel machines' recipes: skill levels, learned from
+--              the handbook or by skill (RT.HB)
 --   sp-rtcm -> the mod's world menu entries only where the click is on their
 --              thing: a can, a machine, a generator, a car
 --   sp-rtwf -> wrong fuel (D-037): the verdict for every band, a refused
@@ -130,7 +132,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtcm" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -12405,6 +12407,10 @@ RT.CR.setup = { name = "rtcr_setup", timeout = 1200, fn = function(ctx, ticks)
         p:setInvisible(true)
         pcall(function() p:setUnlimitedCarry(true) end)
         p:setPerkLevelDebug(Perks.Woodwork, 2)
+        -- The biodiesel machines ask welding levels and a learned recipe
+        -- (0.4.0; request "sp-rthb" checks both): given here.
+        p:setPerkLevelDebug(Perks.MetalWelding, 5)
+        for _, n in ipairs(TLG.Integration.Manual.HANDBOOK_RECIPES) do p:learnRecipe(n) end
         for _, t in ipairs(RT.CR.cleared) do removeAll(t) end
         RT.CR.surface, RT.CR.stand = findSurface(10625, 10630, 25)
         if RT.CR.stand then p:teleportTo(RT.CR.stand:getX(), RT.CR.stand:getY(), RT.CR.stand:getZ()) end
@@ -16557,6 +16563,157 @@ RT.wrongFuelSteps = { RT.waitWorld, RT.BD.photoSetup, RT.WF.spawn, RT.WF.verdict
     generatorGateStep("RTWF.diesel_generator_on_pure_petrol", function() return RT.WF.gens[2] end, false),
     RT.WF.generators, RT.WF.off, RT.finish }
 ------------------------------------------------------------------------------
+-- The biodiesel machines' recipes (request "sp-rthb"; 0.4.0): each asks a
+-- skill level and must be learned, from the handbook or by reaching a
+-- higher level. A new character at level 0 knows none. Levels are gained
+-- with LevelPerk, which fires the event the game checks auto-learning on
+-- (SRC XpUpdate.lua levelPerk -> ScriptManager.checkAutoLearn). The
+-- handbook is read with the inventory menu's Read (SRC
+-- ISInventoryPaneContextMenu.readItem). Nothing is crafted here: request
+-- "sp-rtcr" crafts all five through the crafting window.
+------------------------------------------------------------------------------
+RT.HB = {
+    -- { recipe, perk, level asked, level it is learned at without the book }
+    want = { { "TLG_MakeWoodRetort", "MetalWelding", 4, 6 }, { "TLG_MakeAshBarrel", "MetalWelding", 2, 4 },
+        { "TLG_MakeLyeLeacher", "Woodwork", 2, 4 }, { "TLG_MakeBiodieselReactor", "MetalWelding", 5, 7 },
+        { "TLG_MakeBiodieselWashTank", "MetalWelding", 4, 6 } },
+}
+function RT.HB.recipe(name)
+    RT.HB.byName = RT.HB.byName or windowRecipes()
+    return RT.HB.byName[name]
+end
+function RT.HB.known(name)
+    local r = RT.HB.recipe(name)
+    -- Not CraftRecipeManager.hasPlayerLearnedRecipe: launch 308's character,
+    -- at level 0 with no book, had every recipe "learned" by it (the harness
+    -- runs the client with -debug).
+    return r ~= nil and player():isRecipeActuallyKnown(r) == true
+end
+-- Whether the character has every skill the recipe asks, and what it asks.
+function RT.HB.skill(name)
+    local r = RT.HB.recipe(name)
+    if not r then return false, "no recipe" end
+    local ok, parts = true, {}
+    for i = 0, r:getRequiredSkillCount() - 1 do
+        local s = r:getRequiredSkill(i)
+        ok = ok and CraftRecipeManager.hasPlayerRequiredSkill(s, player()) == true
+        parts[#parts + 1] = tostring(s:getPerk():getId()) .. ":" .. tostring(s:getLevel())
+    end
+    return ok, table.concat(parts, ";")
+end
+-- "name known=… skill=…" for each of the five, and the two sets as strings
+-- of 1 and 0 in RT.HB.want's order.
+function RT.HB.view()
+    local known, skill, parts = "", "", {}
+    for _, w in ipairs(RT.HB.want) do
+        local k, s = RT.HB.known(w[1]), RT.HB.skill(w[1])
+        known, skill = known .. (k and "1" or "0"), skill .. (s and "1" or "0")
+        parts[#parts + 1] = string.format("%s known=%s skill=%s", string.gsub(w[1], "TLG_Make", ""), tostring(k), tostring(s))
+    end
+    return known, skill, string.format("welding %d, carpentry %d: %s", player():getPerkLevel(Perks.MetalWelding),
+        player():getPerkLevel(Perks.Woodwork), table.concat(parts, "; "))
+end
+function RT.HB.levelTo(perk, level)
+    local p = player()
+    local guard = 0
+    while p:getPerkLevel(perk) < level and guard < 12 do
+        p:LevelPerk(perk)
+        guard = guard + 1
+    end
+end
+-- A step that checks the two sets after `before` has run.
+function RT.HB.expect(name, before, wantKnown, wantSkill)
+    return { name = "rthb_" .. name, timeout = 600, fn = function(ctx, ticks)
+        if ticks == 1 and before then before() end
+        if ticks < 30 then return nil end
+        R:check("RTHB." .. name, function()
+            local known, skill, text = RT.HB.view()
+            return known == wantKnown and skill == wantSkill, string.format("known %s (want %s), skill %s (want %s); %s",
+                known, wantKnown, skill, wantSkill, text)
+        end)
+        return true
+    end }
+end
+RT.HB.setup = { name = "rthb_setup", timeout = 600, fn = function(ctx, ticks)
+    if not (player() and ticks > 120) then return nil end
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    p:setPerkLevelDebug(Perks.MetalWelding, 0)
+    p:setPerkLevelDebug(Perks.Woodwork, 0)
+    local r0 = RT.HB.recipe("TLG_MakeWoodRetort")
+    R:line("OBS  RTHB.debug=%s; the retort recipe at level 0: hasPlayerLearnedRecipe=%s isRecipeKnown=%s isRecipeActuallyKnown=%s",
+        tostring(getDebug()), tostring(CraftRecipeManager.hasPlayerLearnedRecipe(r0, p)), tostring(p:isRecipeKnown(r0, true)),
+        tostring(p:isRecipeActuallyKnown(r0)))
+    R:check("RTHB.recipes_ask_what_the_guide_says", function()
+        local bad, parts = {}, {}
+        for _, w in ipairs(RT.HB.want) do
+            local r = RT.HB.recipe(w[1])
+            local _, asks = RT.HB.skill(w[1])
+            local learn = r and r:needToBeLearn()
+            parts[#parts + 1] = string.format("%s asks %s, must be learned=%s", w[1], asks, tostring(learn))
+            if not (r and learn == true and asks == w[2] .. ":" .. w[3]) then bad[#bad + 1] = w[1] end
+        end
+        return #bad == 0, table.concat(parts, "; ")
+    end)
+    -- The mod's other recipes ask no learning.
+    R:check("RTHB.the_other_recipes_need_no_learning", function()
+        local parts, ok = {}, true
+        for _, n in ipairs({ "TLG_MakeFermenterVessel", "TLG_MakePotStill", "TLG_MakeRefluxStill", "TLG_MakeDryingColumn",
+            "TLG_MakeSampleKit", "TLG_MakeFuelFilter", "TLG_MakeFuelStabilizer" }) do
+            local r = RT.HB.recipe(n)
+            local learn = r and r:needToBeLearn()
+            ok = ok and r ~= nil and learn == false
+            parts[#parts + 1] = n .. "=" .. tostring(learn)
+        end
+        return ok, table.concat(parts, " ")
+    end)
+    return true
+end }
+RT.HB.read = { name = "rthb_read", timeout = 6000, fn = function(ctx, ticks)
+    local p = player()
+    if not ctx.book then
+        ctx.book = p:getInventory():AddItem("TLG.BiodieselHandbook")
+        local learned = ctx.book:getLearnedRecipes()
+        local names = {}
+        for i = 0, (learned and learned:size() or 0) - 1 do names[#names + 1] = tostring(learned:get(i)) end
+        R:line("OBS  RTHB.handbook %s \"%s\" teaches: %s; too dark to read=%s", ctx.book:getFullType(),
+            ctx.book:getDisplayName(), table.concat(names, ", "), tostring(p:tooDarkToRead()))
+        if p:tooDarkToRead() then
+            local torch = p:getInventory():AddItem("Base.HandTorch")
+            torch:setActivated(true)
+            p:setSecondaryHandItem(torch)
+        end
+        ISInventoryPaneContextMenu.readItem(ctx.book, 0)
+        RT.speed(3)
+        ctx.t0 = ticks
+        return nil
+    end
+    local queue = ISTimedActionQueue.getTimedActionQueue(p)
+    local busy = queue and queue.queue and #queue.queue > 0
+    if busy and ticks - ctx.t0 < 5000 then return nil end
+    if ticks - ctx.t0 < 60 then return nil end
+    RT.speed(1)
+    R:check("RTHB.handbook_read_to_the_end", function()
+        return not busy and p:getAlreadyReadBook():contains("TLG.BiodieselHandbook"), string.format(
+            "the read action ended=%s after %d ticks; recorded as read=%s", tostring(not busy), ticks - ctx.t0,
+            tostring(p:getAlreadyReadBook():contains("TLG.BiodieselHandbook")))
+    end)
+    return true
+end }
+-- Order of the sets: retort, ash barrel, leacher, reactor, wash tank.
+RT.handbookSteps = { RT.waitWorld, RT.HB.setup,
+    RT.HB.expect("at_level_0_nothing_known_or_allowed", nil, "00000", "00000"),
+    RT.HB.expect("carpentry_2_allows_the_leacher_unlearned", function() RT.HB.levelTo(Perks.Woodwork, 2) end, "00000", "00100"),
+    RT.HB.expect("carpentry_4_teaches_the_leacher", function() RT.HB.levelTo(Perks.Woodwork, 4) end, "00100", "00100"),
+    RT.HB.expect("welding_3_allows_the_ash_barrel_unlearned", function() RT.HB.levelTo(Perks.MetalWelding, 3) end, "00100", "01100"),
+    RT.HB.expect("welding_4_teaches_the_ash_barrel", function() RT.HB.levelTo(Perks.MetalWelding, 4) end, "01100", "11101"),
+    RT.HB.read,
+    RT.HB.expect("handbook_teaches_all_five", nil, "11111", "11101"),
+    RT.HB.expect("welding_5_allows_the_reactor", function() RT.HB.levelTo(Perks.MetalWelding, 5) end, "11111", "11111"),
+    RT.finish }
+
+------------------------------------------------------------------------------
 -- The mod's world menu entries follow the click (request "sp-rtcm"; 0.3.1).
 -- The owner found the Workshop entry on bare ground beside a car and the
 -- Fuel entry beside a can. A petrol can and a fermentation vessel lie on the
@@ -16764,7 +16921,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtcm" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -16848,6 +17005,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtwf" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, wrong fuel damages engines")
                 TLGH.Steps.run(R, RT.wrongFuelSteps, H, nil)
+            elseif REQUEST == "sp-rthb" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel recipes: skills and the handbook")
+                TLGH.Steps.run(R, RT.handbookSteps, H, nil)
             elseif REQUEST == "sp-rtcm" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the world menus follow the click")
                 TLGH.Steps.run(R, RT.contextMenuSteps, H, nil)

@@ -290,12 +290,20 @@ module TLG
         SoundVolume = 1,
     }
 
+    /* The five recipes below must be learned (0.4.0): from the handbook
+       TLG.BiodieselHandbook, or without it at the AutoLearnAny level, two
+       above the level the recipe asks, as vanilla's welded drum recipes do
+       (MakeSmallMetalSheet: MetalWelding 4, learned at 6). */
     craftRecipe TLG_MakeWoodRetort
     {
         time = 400,
         timedAction = Making,
         category = Welding,
         Tags = InHandCraft;Welding,
+        SkillRequired = MetalWelding:4,
+        NeedToBeLearn = true,
+        AutoLearnAny = MetalWelding:6,
+        xpAward = MetalWelding:25,
         inputs
         {
             item 1 [Base.MetalDrum],
@@ -317,6 +325,10 @@ module TLG
         timedAction = Making,
         category = Metalworking,
         Tags = InHandCraft,
+        SkillRequired = MetalWelding:2,
+        NeedToBeLearn = true,
+        AutoLearnAny = MetalWelding:4,
+        xpAward = MetalWelding:10,
         inputs
         {
             item 1 [Base.MetalDrum],
@@ -336,6 +348,9 @@ module TLG
         category = Carpentry,
         Tags = AnySurfaceCraft;Carpentry,
         SkillRequired = Woodwork:2,
+        NeedToBeLearn = true,
+        AutoLearnAny = Woodwork:4,
+        xpAward = Woodwork:10,
         inputs
         {
             item 1 tags[base:hammer] mode:keep flags[Prop1;MayDegradeLight],
@@ -356,6 +371,10 @@ module TLG
         timedAction = Making,
         category = Welding,
         Tags = InHandCraft;Welding,
+        SkillRequired = MetalWelding:5,
+        NeedToBeLearn = true,
+        AutoLearnAny = MetalWelding:7,
+        xpAward = MetalWelding:25,
         inputs
         {
             item 1 [Base.MetalDrum],
@@ -377,6 +396,10 @@ module TLG
         timedAction = Making,
         category = Welding,
         Tags = InHandCraft;Welding,
+        SkillRequired = MetalWelding:4,
+        NeedToBeLearn = true,
+        AutoLearnAny = MetalWelding:6,
+        xpAward = MetalWelding:25,
         inputs
         {
             item 1 [Base.MetalDrum],

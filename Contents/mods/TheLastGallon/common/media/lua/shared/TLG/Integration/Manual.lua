@@ -48,10 +48,19 @@ function Manual.onCreate(item)
     md.literatureTitle = Manual.TITLE
 end
 
--- Adds the manual to `lists` (ProceduralDistributions.list) before the game
--- parses them. A list this build lacks is skipped and one that has the
--- manual already is left as it is. Returns the names it was added to.
-function Manual.addToLoot(lists)
+-- The biodiesel handbook (TLG_items.txt): a recipe magazine of the game's
+-- kind, which teaches the five biodiesel machines' recipes. It goes into
+-- the same lists as the manual, at the same weights.
+Manual.HANDBOOK = "TLG.BiodieselHandbook"
+Manual.HANDBOOK_RECIPES = { "TLG_MakeWoodRetort", "TLG_MakeAshBarrel", "TLG_MakeLyeLeacher",
+    "TLG_MakeBiodieselReactor", "TLG_MakeBiodieselWashTank" }
+
+-- Adds `itemType` (the manual when nil) to `lists`
+-- (ProceduralDistributions.list) before the game parses them. A list this
+-- build lacks is skipped and one that has the item already is left as it
+-- is. Returns the names it was added to.
+function Manual.addToLoot(lists, itemType)
+    itemType = itemType or Manual.ITEM
     local added = {}
     for name, weight in pairs(Manual.LOOT) do
         local list = type(lists) == "table" and lists[name] or nil
@@ -59,10 +68,10 @@ function Manual.addToLoot(lists)
         if type(items) == "table" then
             local present = false
             for i = 1, #items, 2 do
-                if items[i] == Manual.ITEM then present = true end
+                if items[i] == itemType then present = true end
             end
             if not present then
-                items[#items + 1] = Manual.ITEM
+                items[#items + 1] = itemType
                 items[#items + 1] = weight
                 added[#added + 1] = name
             end

@@ -6088,3 +6088,54 @@ run; they are left as released.
 
 Evidence:
 [run 307](evidence/2026-11-11_rt-mp_harness_run307_server_mod_away_and_back_0.3.2_42.22.2.txt).
+
+## 2026-11-11 — RT-SP client harness, launches 308–310 (the biodiesel recipes: skill levels and the handbook, 0.4.0)
+
+Build 42.22.2, branch `feature/biodiesel-skills`, the repository's mod
+(D-038). New mode `handbook` (request `sp-rthb`): a new character at
+Welding 0 and Carpentry 0; levels gained with `LevelPerk`, which fires
+the event the game checks auto-learning on; the Biodiesel Handbook read
+with the inventory menu's Read (`ISInventoryPaneContextMenu.readItem`).
+Each step compares, for the five recipes, which the character knows
+(`isRecipeActuallyKnown`) and which their skills allow
+(`CraftRecipeManager.hasPlayerRequiredSkill`).
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 308 | `handbook` | **5/5**: every "known" set was all five from level 0 |
+| 309 | `crafting`, its character given Welding 5 and the five recipes | 40/0 |
+| 310 | `handbook`, asking `isRecipeActuallyKnown` | 10/0 |
+
+Launch 308's cause is the test's, not the mod's: it asked
+`CraftRecipeManager.hasPlayerLearnedRecipe`, which answered true for
+every recipe at level 0 with no book. The harness runs the client with
+`-debug`; launch 310 logs `hasPlayerLearnedRecipe=true`,
+`isRecipeKnown=false` and `isRecipeActuallyKnown=false` for the same
+recipe and character. The crafting window uses the first, so in these
+launches it never refuses for a recipe not learned.
+
+Launch 310, in order: the recipes ask Welding 4, 2, 5 and 4 and
+Carpentry 2, and all five must be learned; the mod's seven other recipes
+need no learning; at level 0 nothing is known or allowed; Carpentry 2
+allows the Lye Leacher, still unlearned; Carpentry 4 teaches it; Welding
+3 allows the Ash Barrel, unlearned; Welding 4 teaches it and allows the
+Wood Retort and the Wash Tank; the handbook, read to the end in 751
+ticks at speed 3, teaches all five and is recorded as read; the Reactor
+stays out of reach at Welding 4 and is allowed at 5.
+
+Both modes' consoles: "biodiesel handbook added to 11 loot lists"; no
+TLG error or warning.
+
+Offline: 280 cases, 0 failed.
+
+Not run: the crafting window refusing a character without the recipe or
+the level in a game without `-debug`; Welding 6 and 7 teaching the
+Retort, the Wash Tank and the Reactor (the same rule taught the Leacher
+and the Ash Barrel); a handbook rolled from loot; the handbook's name
+and the recipes in Italian in game; a server; a save from an earlier
+version; the full run with this change.
+
+Evidence:
+[run 308](evidence/2026-11-11_rt-sp_harness_run308_handbook_debug_knows_all_42.22.2.txt);
+[run 309](evidence/2026-11-11_rt-sp_harness_run309_crafting_with_skills_42.22.2.txt);
+[run 310](evidence/2026-11-11_rt-sp_harness_run310_handbook_42.22.2.txt).
