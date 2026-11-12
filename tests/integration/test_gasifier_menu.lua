@@ -1,7 +1,9 @@
 require "support/fixtures"
 -- The gasifier's menu (client UI, D-040): which entries it offers in each
 -- state, the requests they send, and its Status text. The menu registers
--- game events when it loads; a stand-in event list takes them.
+-- game events when it loads; a stand-in event list takes them, the last
+-- one registered for each event kept: the Gas menu's, loaded for its
+-- Status text, before the gasifier's.
 local savedEvents = Events
 local callbacks = {}
 Events = setmetatable({}, { __index = function(t, k)
@@ -9,6 +11,7 @@ Events = setmetatable({}, { __index = function(t, k)
     rawset(t, k, e)
     return e
 end })
+require "TLG/UI/GasMenu"
 require "TLG/UI/GasifierMenu"
 Events = savedEvents
 local Menu, GZ, Gasifier = TLG.UI.GasifierMenu, TLG.Integration.Gasifiers, TLG.Domain.Gas.Gasifier
@@ -163,6 +166,30 @@ T.case("integration: the gasifier's Status says what it does and what keeps it l
         text = Menu.describe({ state = "Processing", mode = "warming", warm = 0.4, hopperKg = 30, buffer = 0,
             bufferCap = 2, filter = 0, held = {} })
         T.ok(string.find(text, "[IGUI_TLG_GasifierWarm:40%]", 1, true) ~= nil, text)
+    end)
+    getText = saved
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: Gas status names propane only when there is some, and a wood-gas buffer to the millilitre", function()
+    local saved = getText
+    getText = function(key, ...)
+        local args = { ... }
+        return "[" .. key .. (#args > 0 and (":" .. table.concat(args, ",")) or "") .. "]"
+    end
+    local ok, err = pcall(function()
+        local GasMenu = TLG.UI.GasMenu
+        local wood = GasMenu.describe({ fuel = 0.006, propaneKg = 0, woodgasNm3 = 0.0384, gasifiers = 1 })
+        T.ok(string.find(wood, "[IGUI_TLG_GasBufferOnly:0.006]", 1, true) ~= nil, wood)
+        T.ok(string.find(wood, "IGUI_TLG_GasBuffer:", 1, true) == nil, "no propane named: " .. wood)
+        T.ok(string.find(wood, "[IGUI_TLG_GasWoodgas:0.038]", 1, true) ~= nil, wood)
+        T.ok(string.find(wood, "[IGUI_TLG_GasGasifiers:1]", 1, true) ~= nil, wood)
+        T.ok(string.find(wood, "[IGUI_TLG_GasNoTank]", 1, true) ~= nil, wood)
+        local propane = GasMenu.describe({ fuel = 9.99936, propaneKg = 6.917, tankUses = 1160, tankKg = 2.089,
+            gasifiers = 0 })
+        T.ok(string.find(propane, "[IGUI_TLG_GasBuffer:9.999,6.917]", 1, true) ~= nil, propane)
+        T.ok(string.find(propane, "IGUI_TLG_GasWoodgas", 1, true) == nil, propane)
+        T.ok(string.find(propane, "[IGUI_TLG_GasTank:1160,2.09]", 1, true) ~= nil, propane)
     end)
     getText = saved
     if not ok then error(err, 0) end

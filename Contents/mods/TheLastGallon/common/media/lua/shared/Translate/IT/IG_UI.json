@@ -78,6 +78,7 @@
     "IGUI_TLG_GasNoTank": "Nessuna bombola di propano collegata.",
     "IGUI_TLG_GasConnected": "Bombola di propano collegata: %1 usi.",
     "IGUI_TLG_GasRemoved": "Bombola di propano tolta, con %1 usi dentro.",
+    "IGUI_TLG_GasBufferOnly": "Nel generatore: carburante pari a %1 L di benzina",
     "IGUI_TLG_GasWoodgas": "Gas di legna nel generatore: %1 m³",
     "IGUI_TLG_GasGasifiers": "Gassificatori accesi entro due caselle: %1",
     "IGUI_TLG_GasifierState_Ready": "Freddo",

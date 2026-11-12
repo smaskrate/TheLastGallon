@@ -48,6 +48,13 @@ T.case("wood gas: the litres a step leaves above the margin still read as gas", 
     T.ok(F.holdsGas(r.rec, r.fuel - step), "after the hour's step")
     local e = Consumers.evaluate("generator_gas", F.supply(r.rec, r.fuel - step), {})
     T.ok(e.compatible, table.concat(e.reasons, ","))
+    -- The wood-gas derate lowers an engine's power only: a generator's
+    -- start (the gate rolls against startFactor) and its wear are as on
+    -- propane (D-040).
+    T.eq(e.grade, "good")
+    T.eq(e.startFactor, 1)
+    T.eq(e.wearFactor, 1)
+    T.near(e.powerFactor, 0.6, 1e-12)
     -- With the fuel setting at 0 the step is 0 and the cap is the margin
     -- alone, which a refill still fills.
     local zero = F.feed(F.new({ id = "GS-W3" }), 0, F.MARGIN, "woodgas", 10, 0)

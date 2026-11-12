@@ -78,6 +78,7 @@
     "IGUI_TLG_GasNoTank": "No propane tank connected.",
     "IGUI_TLG_GasConnected": "Propane tank connected: %1 uses.",
     "IGUI_TLG_GasRemoved": "Propane tank removed, with %1 uses in it.",
+    "IGUI_TLG_GasBufferOnly": "In the generator: fuel worth %1 L of petrol",
     "IGUI_TLG_GasWoodgas": "Wood gas in it: %1 m³",
     "IGUI_TLG_GasGasifiers": "Lit gasifiers within two tiles: %1",
     "IGUI_TLG_GasifierState_Ready": "Cold",

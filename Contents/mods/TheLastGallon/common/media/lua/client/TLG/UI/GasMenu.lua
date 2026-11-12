@@ -22,8 +22,15 @@ end
 
 -- The text of a gas.status reply.
 function Menu.describe(r)
-    local lines = { getText("IGUI_TLG_GasTitle"),
-        getText("IGUI_TLG_GasBuffer", string.format("%.2f", r.fuel or 0), string.format("%.2f", r.propaneKg or 0)) }
+    -- A wood-gas generator holds a few millilitres (one hourly step): three
+    -- decimals, and propane named only when there is some.
+    local lines = { getText("IGUI_TLG_GasTitle") }
+    local litres = string.format("%.3f", r.fuel or 0)
+    if (r.propaneKg or 0) > 0 then
+        lines[2] = getText("IGUI_TLG_GasBuffer", litres, string.format("%.3f", r.propaneKg))
+    else
+        lines[2] = getText("IGUI_TLG_GasBufferOnly", litres)
+    end
     if (r.woodgasNm3 or 0) > 0 then
         lines[#lines + 1] = getText("IGUI_TLG_GasWoodgas", string.format("%.3f", r.woodgasNm3))
     end

@@ -7240,13 +7240,21 @@ Launch 358 (**18/0, then 4/0**):
   (0.0256 Nm3, two steps of 0.002 L: the gas pump in range, counted
   before the save, no longer was).
 
-The console holds one warning of the mod's own: the gasifier's Status
-asked the game for `IGUI_TLG_GasifierHot_buffer_full` without its
-argument (`MissingFormatArgumentException` logged, the text shown right).
-The menu now asks with the argument; not run again in game.
+The console (both phases) holds one warning of the mod's own and no
+exception: the gasifier's Status asked the game for
+`IGUI_TLG_GasifierHot_buffer_full` without its argument
+(`MissingFormatArgumentException` logged, the text shown right). The menu
+now asks with the argument. Since the launch, Gas status also shows its
+litres to three decimals and names propane only when there is some.
+Neither is run again in game.
 
-Not run: a server; crafting the gasifier and reading the handbook in
-game; a gasifier feeding two generators; the performance mode.
+Not run: a server; propane and the full run since the refill was
+reworked for wood gas; crafting the gasifier and reading the handbook in
+game; the gasifier's model looked at in game (it stood in the world, but
+nothing checked how it drew); its menu from a right-click on the floor
+(the harness built it from the item); a wood-gas generator taken up and
+put down; whether the game's font draws "m³"; a gasifier feeding two
+generators; the performance mode.
 
 Evidence:
 [run 358](evidence/2026-11-13_rt-sp_harness_run358_gas_wood_42.22.2.txt).

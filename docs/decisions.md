@@ -1838,9 +1838,14 @@ gas probe (launch 342).
     asleep with the minute refill to one step plus 1e-3, no stop (launch
     357).
   * A generator never switched on reports a load of 0, so its first fill
-    is the margin alone (1e-3 L). That is enough to start it; switching on
-    counts the load, and the next minute's refill fills to it before the
-    first step (launch 358).
+    is the margin alone (1e-3 L). That is enough to start it: the game
+    offers Turn On to a connected generator holding more than 0 L (BC
+    `ISWorldObjectContextMenuLogic`; `ISActivateGenerator.isValid` asks the
+    same). Switching on counts the load, and the next minute's refill
+    fills to it before the first step (launch 358).
+  * A wood-gas generator holds a few millilitres, one step and the margin,
+    so the game's own generator window shows it all but empty. The player
+    guide must say so before 0.5.0 ships.
   * One source at a time, which the design above did not say: a propane
     tank with uses left is the source; a generator without one takes wood
     gas. To run on wood gas with a tank in, take the tank out. Put to the
@@ -1859,6 +1864,9 @@ gas probe (launch 342).
     the generator stopping at its second step; lit again; taken up while
     lit and put down a tile away, out with its wood; a trip that unloaded
     both, the generator off and the gasifier out on return; saved and
-    continued, lit again and refilling. Not run: a server; crafting the
-    gasifier and reading the handbook in game; a gasifier feeding two
-    generators; the performance mode.
+    continued, lit again and refilling. Not run: a server; propane and the
+    full run since the refill was reworked for wood gas; crafting the
+    gasifier and reading the handbook in game; the gasifier's model looked
+    at in game; its menu from a right-click on the floor (the harness built
+    it from the item); a wood-gas generator taken up and put down; a
+    gasifier feeding two generators; the performance mode.
