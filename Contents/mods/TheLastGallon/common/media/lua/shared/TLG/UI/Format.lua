@@ -26,6 +26,10 @@ Fmt.FAILURE_KEYS = {
     already_saturated = "IGUI_TLG_Fail_Saturated", not_sealable = "IGUI_TLG_Fail_NotSealable",
     not_empty = "IGUI_TLG_Fail_NotEmpty", no_access = "IGUI_TLG_Fail_NoAccess", stale = "IGUI_TLG_Fail_Stale",
     incompatible = "IGUI_TLG_Fail_Incompatible",
+    -- The gas feed (D-040).
+    gas_generator = "IGUI_TLG_Fail_GasGenerator", not_gas_generator = "IGUI_TLG_Fail_NotGasGenerator",
+    tank_connected = "IGUI_TLG_Fail_TankConnected", no_tank = "IGUI_TLG_Fail_NoTank",
+    no_propane_tank = "IGUI_TLG_Fail_NoPropaneTank", not_drained = "IGUI_TLG_Fail_NotDrained",
 }
 
 local function pct(x) return string.format("%.1f%%", (x or 0) * 100) end

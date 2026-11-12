@@ -215,15 +215,17 @@ T.case("clicked: the Workshop menu shows for the clicked generator or car, not f
         T.eq(entries({ at.floor }), "", "the character's own tile")
         T.eq(entries({ w.square(11, 10).floor }), "ContextMenu_TLG_ConvGenerator", "the generator's tile")
         T.eq(entries({ g }), "ContextMenu_TLG_ConvGenerator")
-        -- 0.4.2: the generator's Start entries offer the flex conversion
-        -- only; the gas one waits for its feed (D-040).
+        -- The generator's Start entries: the flex conversion and, with the
+        -- propane feed, the gas one again (0.4.2 hid it; D-040).
         local c = context()
         TLG.UI.WorkshopMenu.fill(0, c, { g }, false)
         local starts = {}
         for _, o in ipairs(c.options[1] and c.options[1].sub and c.options[1].sub.options or {}) do
             if string.find(o.name, "ContextMenu_TLG_ConvBegin", 1, true) then starts[#starts + 1] = o.name end
         end
-        T.eq(table.concat(starts, ","), "ContextMenu_TLG_ConvBegin:IGUI_TLG_Conversion_flex_generator", "Start entries")
+        table.sort(starts)
+        T.eq(table.concat(starts, ","), "ContextMenu_TLG_ConvBegin:IGUI_TLG_Conversion_flex_generator," ..
+            "ContextMenu_TLG_ConvBegin:IGUI_TLG_Conversion_gas_generator", "Start entries")
         w.picked = car
         T.eq(entries({ w.square(12, 10).floor }), "ContextMenu_TLG_ConvVehicle", "the car under the cursor")
         w.picked = nil

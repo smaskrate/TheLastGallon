@@ -94,6 +94,14 @@ local function list(t)
 end
 function Square:getObjects() return list(self.objects) end
 function Square:getWorldObjects() return list(self.worldObjects) end
+function Square:transmitRemoveItemFromSquare(wi) self.transmittedRemovals = (self.transmittedRemovals or 0) + 1 end
+function Square:removeWorldObject(wi)
+    for i, x in ipairs(self.worldObjects) do if x == wi then table.remove(self.worldObjects, i); return end end
+end
+function Square:getGenerator()
+    for _, o in ipairs(self.objects) do if o.class == "IsoGenerator" then return o end end
+    return nil
+end
 function Square:isInARoom() return false end
 function Square:add(o)
     self.objects[#self.objects + 1] = o
@@ -156,8 +164,35 @@ function Item:getFluidContainerFromSelfOrWorldItem() return self.fc end
 function Item:syncItemFields() self.synced = self.synced + 1 end
 function Item:getContainer() return self.container end
 function Item:getOutermostContainer() return self.container end
-function Item:getWorldItem() return nil end
+function Item:getWorldItem() return self.worldItem end
+function Item:setWorldItem(wi) self.worldItem = wi end
 function Item:getStaticModel() return nil end
+-- Drainables (a propane tank: 5000 uses, BC/RT launch 342).
+function Item:getUseDelta() return self.useDelta or 0.0002 end
+function Item:getCurrentUsesFloat() return self.usedDelta or 1 end
+function Item:setUsedDelta(f) self.usedDelta = f end
+
+-- A propane tank item with `uses` left.
+function M.tank(uses)
+    local it = M.item("Base.PropaneTank")
+    it.usedDelta = uses * it:getUseDelta()
+    return it
+end
+instanceItem = function(fullType)
+    if fullType == "Base.PropaneTank" then return M.tank(0) end
+    return M.item(fullType)
+end
+sendAddItemToContainer = function() end
+
+-- An item lying on a square, as an IsoWorldInventoryObject holds it.
+function M.onFloor(sq, item)
+    local wi = { class = "IsoWorldInventoryObject", item = item, square = sq }
+    function wi:getItem() return self.item end
+    function wi:getSquare() return self.square end
+    item.worldItem = wi
+    sq.worldObjects[#sq.worldObjects + 1] = wi
+    return wi
+end
 
 -- A container (a player's inventory).
 local Inv = {}
@@ -182,6 +217,11 @@ function Inv:getItemWithID(id) return self:getItemWithIDRecursiv(id) end
 function Inv:getFirstTypeRecurse(t)
     for _, x in ipairs(self.items) do if x.fullType == t then return x end end
     return nil
+end
+function Inv:getAllTypeRecurse(t)
+    local out = {}
+    for _, x in ipairs(self.items) do if x.fullType == t then out[#out + 1] = x end end
+    return list(out)
 end
 function Inv:getCountTypeRecurse(t)
     local n = 0

@@ -238,10 +238,16 @@ end
 
 -- Vanilla has no way to empty a generator; conversions require a drained
 -- fuel system, so TLG offers an authoritative drain into a can.
+-- A generator whose fuel is gas takes and gives no liquid (D-040).
+local function holdsGas(g)
+    local ok, gas = pcall(TLG.Integration.Generators.holdsGas, g)
+    return ok and gas
+end
+
 function Menu.addDrainOptions(player, sub, item)
     local free = Containers.fluidOf(item, "item"):getFreeCapacity()
     local g = nearbyGenerator(player)
-    if g and free > 0.05 and g:getFuel() > 0 then
+    if g and free > 0.05 and g:getFuel() > 0 and not holdsGas(g) then
         sub:addOption(getText("ContextMenu_TLG_DrainGenerator"), nil, function()
             request("transfer", { source = TLG.Authority.Resolver.refForObject(g, "generator"),
                 destination = itemRef(item), amount = free })
@@ -266,7 +272,7 @@ function Menu.addPourOptions(player, sub, item)
         end)
     end
     local g = nearbyGenerator(player)
-    if g then
+    if g and not holdsGas(g) then
         sub:addOption(getText("ContextMenu_TLG_PourGenerator"), nil, function()
             queuePour(player, item, TLG.Authority.Resolver.refForObject(g, "generator"), g, false)
         end)

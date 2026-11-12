@@ -3,6 +3,7 @@
 require "TLG/Authority/Handlers"
 require "TLG/Authority/MachineHandlers"
 require "TLG/Authority/ConversionHandlers"
+require "TLG/Authority/GasHandlers"
 require "TLG/Notify"
 
 TLG.Net = TLG.Net or { pending = {}, counter = 0 }

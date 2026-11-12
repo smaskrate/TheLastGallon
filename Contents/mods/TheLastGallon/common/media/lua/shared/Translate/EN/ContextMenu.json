@@ -39,5 +39,9 @@
     "ContextMenu_TLG_ConvDeliver": "Hand over parts",
     "ContextMenu_TLG_ConvCancel": "Cancel the project",
     "ContextMenu_TLG_ConvRemove": "Remove the conversion",
-    "ContextMenu_TLG_DrainGenerator": "Drain the generator into this can"
+    "ContextMenu_TLG_DrainGenerator": "Drain the generator into this can",
+    "ContextMenu_TLG_Gas": "Gas (The Last Gallon)",
+    "ContextMenu_TLG_GasConnectTank": "Connect a propane tank",
+    "ContextMenu_TLG_GasRemoveTank": "Remove the propane tank",
+    "ContextMenu_TLG_GasStatus": "Gas status"
 }

@@ -39,5 +39,9 @@
     "ContextMenu_TLG_ConvDeliver": "Consegna i pezzi",
     "ContextMenu_TLG_ConvCancel": "Annulla il progetto",
     "ContextMenu_TLG_ConvRemove": "Rimuovi la conversione",
-    "ContextMenu_TLG_DrainGenerator": "Svuota il generatore in questa tanica"
+    "ContextMenu_TLG_DrainGenerator": "Svuota il generatore in questa tanica",
+    "ContextMenu_TLG_Gas": "Gas (The Last Gallon)",
+    "ContextMenu_TLG_GasConnectTank": "Collega una bombola di propano",
+    "ContextMenu_TLG_GasRemoveTank": "Togli la bombola di propano",
+    "ContextMenu_TLG_GasStatus": "Stato del gas"
 }

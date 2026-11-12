@@ -58,8 +58,10 @@ local function takeItems(player, list)
     end
 end
 
--- Runs one ConversionService call and commits the resulting project.
-local function run(player, args, fn)
+-- Runs one ConversionService call and commits the resulting project; `after`,
+-- given the device, runs once that is committed (a refused call never
+-- reaches it).
+local function run(player, args, fn, after)
     local bad = TLG.Authority.Transactions.validateRequest(args, { "device" })
     if bad then return bad end
     local seen = H.ledger:lookup(H.actorKey(player), args.requestId)
@@ -81,6 +83,10 @@ local function run(player, args, fn)
     if not r.unchanged then CD.store(d.md, d.holder, r.project, d.vaultHolder) end
     takeItems(player, r.consumed)
     giveItems(player, r.returned)
+    if after then
+        local ok, why = pcall(after, d)
+        if not ok then TLG.Log.error("conversion: after %s: %s", tostring(r.project.state), tostring(why)) end
+    end
     local s = CS.status(r.project, actor, d.device)
     local reply = { ok = true, requestId = args.requestId, state = r.project.state, rev = r.project.rev,
         stage = s and s.stage, blocked = r.project.blocked, consumed = r.consumed, returned = r.returned,
@@ -122,8 +128,23 @@ H.commands["conversion.cancel"] = function(player, args)
     return run(player, args, function(p, a, d, req) return CS.cancel(p, a, d, req) end)
 end
 
+-- A gas generator gives its propane tank back, as Remove the propane tank
+-- does, and lets out what its buffer holds (D-040); the feed record goes.
+local function ventGas(player, d)
+    if d.device.kind ~= "generator" then return end
+    local G, gen = TLG.Integration.Generators, d.holder
+    local rec = G.gasRecord(gen)
+    if rec == nil then return end
+    if rec.tank and H.gasTakeTank then H.gasTakeTank(player, gen, rec) end
+    gen:setFuel(0)
+    gen:getModData()[G.GAS_KEY] = nil
+    TLG.Authority.Vault.release("gas", function() return G.keyOf(gen) end)
+    gen:transmitModData()
+end
+
 H.commands["conversion.remove"] = function(player, args)
-    return run(player, args, function(p, a, d, req) return CS.remove(p, a, d, req) end)
+    return run(player, args, function(p, a, d, req) return CS.remove(p, a, d, req) end,
+        function(d) ventGas(player, d) end)
 end
 
 H.commands["conversion.status"] = function(player, args)

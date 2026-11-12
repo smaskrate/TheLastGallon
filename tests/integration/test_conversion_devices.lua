@@ -16,20 +16,20 @@ local function fakePlayer(counts, recipes)
     return p
 end
 
-T.case("integration: no conversion to gas is offered until its feed exists (0.4.2)", function()
-    T.eq(CD.offered("gas_generator"), false, "its engine burns gas from an outside vessel")
-    for _, id in ipairs({ "flex_generator", "flex_car_normal", "flex_small_car", "flex_pickup_truck", "flex_step_van" }) do
+T.case("integration: every conversion is offered, the gas one again with the propane feed (D-040)", function()
+    for _, id in ipairs({ "gas_generator", "flex_generator", "flex_car_normal", "flex_small_car", "flex_pickup_truck",
+        "flex_step_van" }) do
         T.eq(CD.offered(id), true, id)
     end
     T.eq(CD.offered("no_such_conversion"), true, "an unknown id is left to the domain")
 end)
 
-T.case("integration: conversion.begin refuses a conversion the game does not offer, before anything else", function()
+T.case("integration: conversion.begin no longer refuses the gas conversion as not offered", function()
     require "TLG/Authority/ConversionHandlers"
     local begin = TLG.Authority.Handlers.commands["conversion.begin"]
     local r = begin(fakePlayer({}), { conversion = "gas_generator", device = { kind = "generator" } })
-    T.eq(r.ok, false)
-    T.eq(r.reason, "not_offered")
+    T.eq(r.ok, false, "this stand-in names no generator")
+    T.ok(r.reason ~= "not_offered", "refused for " .. tostring(r.reason))
     T.eq(begin(fakePlayer({}), { conversion = 7 }).reason, "malformed_request", "the type check still comes first")
 end)
 
