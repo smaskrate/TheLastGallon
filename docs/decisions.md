@@ -1725,3 +1725,15 @@ gas probe (launch 342).
 * **The owner's choices** (2026-11-12): wood gas capped at one hourly
   step; the propane tank inserted, as in the barbecue, not lying beside
   the generator; a new Wood Gas Handbook for the gasifier.
+* Amended 2026-11-12 (version 0.4.2): versions 0.1.0 to 0.4.1 offer
+  **Start: Gas generator conversion**, which leaves a generator that
+  takes gas only, and nothing gives it gas before this design is built.
+  The owner chose to hide it in a 0.4.2 ("Hide it in a 0.4.2 now", over
+  "Leave it until 0.5.0"): the
+  Workshop menu no longer lists it, and `conversion.begin` refuses it
+  (`not_offered`), both through `ConversionDevices.offered`, which hides
+  every conversion whose `fuelStorageChanges` has `external`. A project
+  already begun and a generator already converted are left as they are,
+  to **Cancel the project** or **Remove the conversion** (the domain's
+  test; not run in game). Building the feed includes offering the
+  conversion again through that function.

@@ -339,6 +339,40 @@ T.case("conversion: gas generator conversion yields the gaseous profile and exte
     T.eq(table.concat(b.fuelStorage.external.storages, ","), "propane_cylinder,gas_holder")
 end)
 
+-- 0.4.2 offers no gas conversion (ConversionDevices.offered); a project
+-- begun with 0.1.0 to 0.4.1 is left to Cancel and Remove, as any other.
+T.case("conversion: a gas project begun before 0.4.2 can be cancelled, and a finished one removed", function()
+    local dev = gen()
+    local p, a = prepared("gas_generator", dev, 0)
+    p = must(P.work(p, a, dev, { now = 2 }))
+    T.near(p.hours.install, 0.5, 1e-12)
+    local r = P.cancel(p, a, dev, { now = 2 })
+    T.ok(r.ok)
+    T.eq(r.project.state, "Cancelled")
+    -- install started (cancelReturn 0.75): hoses 2 -> 1, screws 6 -> 4; configure unstarted: wire 1 -> 1
+    T.eq(r.returned["Base.RubberHose"], 1)
+    T.eq(r.returned["Base.Screws"], 4)
+    T.eq(r.returned["Base.ElectricWire"], 1)
+    T.eq(P.effectiveProfile(r.project, dev), "generator_si_stock")
+    noProblems(r.project)
+
+    dev = gen()
+    p, a = prepared("gas_generator", dev, 0)
+    p = must(P.work(p, a, dev, { now = 9 }))
+    T.eq(p.state, "Commissioned")
+    T.eq(P.effectiveProfile(p, dev), "generator_gas")
+    r = P.remove(p, a, dev, { now = 10 })
+    T.ok(r.ok)
+    T.eq(r.project.state, "Removed")
+    -- removeReturn 0.5 floored per item: hoses 2 -> 1, screws 6 -> 3, wire 1 -> 0
+    T.eq(r.returned["Base.RubberHose"], 1)
+    T.eq(r.returned["Base.Screws"], 3)
+    T.eq(r.returned["Base.ElectricWire"], nil)
+    T.eq(P.benefits(r.project, dev), nil)
+    T.eq(P.effectiveProfile(r.project, dev), "generator_si_stock")
+    noProblems(r.project)
+end)
+
 T.case("conversion: interrupted installation keeps partial hours", function()
     local dev = gen()
     local p, a = prepared("flex_generator", dev, 0)
