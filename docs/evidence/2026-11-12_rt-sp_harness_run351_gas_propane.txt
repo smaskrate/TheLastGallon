@@ -1,0 +1,64 @@
+# TLG single-player harness, a gas generator on propane, before the save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=46006690725163612566 hours=2.0096 DayLength=4
+STEP rtpr_setup begin
+OBS  RTPR.placed A at 10648,10649: conversion Commissioned (begin=true deliver=true join=true work=true); setting 0.09999999776482582
+PASS RTPR.converted_to_gas :: A true, project Commissioned, profile generator_gas
+STEP rtpr_connect begin
+OBS  RTPR.connect_without_a_tank menu "Connect a propane tank" -> ok=false reason=entry_disabled state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPR.connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPR.connected at 2.0187 h: A true fuel 9.999360 running false load 0.000000 profile generator_gas; record: tank 1160 uses, buffer 3.440640 Nm3 propane, written at 9.999360 L; tanks carried []
+PASS RTPR.connect_greyed_without_a_tank :: without a tank: entry_disabled
+PASS RTPR.tank_connected_and_buffer_filled :: reply ok=true uses=5000 moved=3840 from=inventory; tanks carried 0; record tank 1160; fuel 9.999360
+STEP rtpr_start begin
+PASS RTPR.started_on_propane :: running true; evaluation compatible true grade good reasons 
+STEP rtpr_run begin
+OBS  RTPR.after_hours at 6.0251 h: A true fuel 9.997587 running true load 0.005000 profile generator_gas; record: tank 1153 uses, buffer 3.440030 Nm3 propane, written at 9.997587 L; tanks carried []
+OBS  RTPR.run: 4.001 game h, 4 steps of 0.020000 L in all; the propane gone from tank and buffer is worth 0.020000 L; 0 stops
+PASS RTPR.ran_on_the_tank :: running true, 0 stops, 4 steps; burned by the record 0.020000 L against 0.020000 L of steps
+STEP rtpr_add_fuel begin
+OBS  RTPR.pour transfer -> ok=false reason=gas_generator state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTPR.no_liquid_goes_in :: after Add fuel: A 9.997587 (was 9.997587), can 4.000 (was 4.000); the pour: ok=false reason=gas_generator; Pour into the generator offered false
+STEP rtpr_take begin
+PASS RTPR.taken_up_with_its_record :: item Base.Generator; carried record tank 1153 (was 1153); liquid record 0.0000 L; item fuel 9.997587203979492 (was 9.997587)
+STEP rtpr_put begin
+PASS RTPR.put_down_with_its_record :: A true; record tank 1153; holds gas true; watched true
+STEP rtpr_restart begin
+PASS RTPR.started_again :: running true
+STEP rtpr_trip begin
+OBS  RTPR.leaving at 6.0398 h: A true fuel 9.997587 running true load 0.005000 profile generator_gas; record: tank 1153 uses, buffer 3.440030 Nm3 propane, written at 9.997587 L; tanks carried []
+OBS  RTPR.back at 10.1219 h: A true fuel 9.998419 running true load 0.005000 profile generator_gas; record: tank 1145 uses, buffer 3.440316 Nm3 propane, written at 9.998419 L; tanks carried []
+PASS RTPR.trip_unloaded_and_refilled_after :: unloaded true; running true; tank 1145 uses (was 1153)
+STEP rtpr_before_save begin
+OBS  RTPR.saving at 10.1220 h: A true fuel 9.998419 running true load 0.005000 profile generator_gas; record: tank 1145 uses, buffer 3.440316 Nm3 propane, written at 9.998419 L; tanks carried []
+STEP rtpr_save_and_exit begin
+SUMMARY pass=10 fail=0
+EXIT phase 1 -> main menu
+# TLG single-player harness, a gas generator on propane, after the save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtprb_reload begin
+OBS  RTPR.continued at 10.1591 h: A true fuel 9.998419 running true load 0.005000 profile generator_gas; record: tank 1145 uses, buffer 3.440316 Nm3 propane, written at 9.998419 L; tanks carried []
+PASS RTPRB.record_as_saved :: A true; record GS1347284513-4 (saved GS1347284513-4); tank 1145 (saved 1145); holds gas true; watched true
+STEP rtprb_refills begin
+PASS RTPRB.refills_go_on :: running true; tank 1145 -> 1141 uses
+STEP rtprb_remove begin
+OBS  RTPRB.remove menu "Remove the propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPR.removed at 12.2103 h: A true fuel 0.002079 running true load 0.005000 profile generator_gas; record: tank nil uses, buffer 0.000715 Nm3 propane, written at 0.002079 L; tanks carried [4980]
+PASS RTPRB.tank_back_less_at_most_a_use :: reply ok=true uses=4980; the tank carried holds 4980 (expected 4980 or one less); A left with 0.002079 L
+PASS RTPRB.runs_dry_without_its_tank :: running false, fuel 0.000000 after 0.79 h
+STEP rtprb_empty_tank begin
+OBS  RTPRB.connect_small menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPRB.remove_empty menu "Remove the propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+PASS RTPRB.empty_tank_given_back :: connected ok=true uses=3; record tank before removal 0; removed ok=true uses=0; tank item true with 0 uses
+STEP rtprb_remove_conversion begin
+OBS  RTPRB.connect_again menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPRB.remove_conversion menu "Remove the conversion" -> ok=false reason=missing_recipe state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPR.conversion_removed at 15.0025 h: A true fuel 9.999360 running false load 0.005000 profile generator_gas; record: tank 1140 uses, buffer 3.440640 Nm3 propane, written at 9.999360 L; tanks carried []
+FAIL RTPRB.conversion_removed_with_the_tank_back :: connected ok=true; removal ok=false state=nil; tanks 0 (were 1), one with nil uses (expected 4980 or one less); A fuel 9.999360; record true; profile generator_gas; rubber hoses 0 (were 0)
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 15.00
+SUMMARY pass=5 fail=1
+DONE

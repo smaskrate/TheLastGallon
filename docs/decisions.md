@@ -1772,3 +1772,29 @@ gas probe (launch 342).
     object in range of two generators. `setFuel` clamps at 10 L, so a
     step above 10 L less the margin cannot be held (a load of 100 at the
     default setting).
+* Built 2026-11-12 on `feature/gas-generators`, the propane half (launches
+  350–352, `test-results.md`):
+  * The record is `tlgGas` (`TLG/Domain/GasFeed`, record kind `gas`),
+    kept by the vault on a server and carried with the generator. The
+    authority's minute pass refills each generator it watches, by square,
+    from the tank inserted: whole uses, energy for energy, up to its
+    capacity (at most 10 L).
+  * Gas and liquid exclude each other, which the design above did not
+    say: the liquid paths (Add fuel, the mod's pour and drain, sample and
+    status) are refused only while the buffer holds gas. A converted
+    generator that still holds petrol, from a save of before the feed, is
+    drained as any other before a tank goes in, and liquid written where
+    the gas burned out lets the gas record's buffer go.
+  * The tank's entries are Connect a propane tank, Remove the propane tank
+    and Gas status, under a world entry Gas (The Last Gallon) on a
+    generator converted to gas. Connect takes a tank from the inventory,
+    else from the floor beside the generator. There is no What I know
+    entry for a generator: Gas status stands for it.
+  * The gas conversion is offered again (`ConversionDevices.offered`).
+  * In game (launch 352, single player): converted, connected through the
+    menu, started through the start gate, four hours with the propane
+    taken equal to the steps, liquid refused, taken up and put down with
+    the tank in, a trip, saved and continued, the tank removed (4980 uses
+    back, as computed), run dry, a tank burned empty and given back with 0
+    uses, and Remove the conversion with a tank in. Not run: a server, and
+    sleep. Wood gas is the other half.

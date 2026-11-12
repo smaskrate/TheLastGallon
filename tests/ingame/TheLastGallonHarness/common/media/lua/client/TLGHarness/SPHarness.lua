@@ -127,6 +127,11 @@
 --              switched within the hour; exactly one step left; refills on
 --              each tick and on each minute event against late switch-ons;
 --              a propane tank item's uses (RT.GM)
+--   sp-rtpr -> a gas generator on propane (D-040): converted, a tank
+--              connected through the Gas menu, hours run, liquid refused,
+--              taken up and put down, a trip; saved ("sp-rtprb")
+--   sp-rtprb -> main menu continues that save: the record, refills, the
+--              tank removed, an emptied tank, Remove the conversion (RT.PR)
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -152,7 +157,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -17567,6 +17572,552 @@ RT.gasMeasureSteps = { RT.waitWorld, RT.GM.setup, RT.GM.chargerCheck, RT.GM.step
     RT.finish }
 
 ------------------------------------------------------------------------------
+-- Gas generator on propane (requests "sp-rtpr", then "sp-rtprb"; D-040). A
+-- vanilla generator, A, converted to gas by the conversion service's own
+-- steps (begun, every part handed over, worked to Commissioned by an actor
+-- that has what the definition asks; the player's part in a conversion is
+-- the full run's), then fed from propane tanks through the mod's Gas menu,
+-- at the default generator fuel setting:
+--   phase A  the Gas menu; a tank connected from the inventory; started with
+--            the game's own action through the start gate; hours run, with
+--            the propane taken from the tank against the hourly steps seen;
+--            the game's Add fuel, the mod's pour and the Fuel menu refused;
+--            taken up and put down with the tank in; a trip that unloads its
+--            chunk; saved.
+--   phase B  the save continued: the record as saved, refills going on; the
+--            tank removed (with the propane not burned, less at most a use)
+--            and A running dry; a tank of 3 uses burned to empty and given
+--            back empty; a tank connected again, then Remove the conversion
+--            from the Workshop menu: the tank back, the buffer let out, the
+--            record gone, the stock profile, half the parts.
+------------------------------------------------------------------------------
+RT.PR = { hours = 4, tripHours = 3 }
+
+local function prGen()
+    local s = RT.PR.spot and sq(RT.PR.spot.x, RT.PR.spot.y, 0)
+    return s and s:getGenerator() or nil
+end
+
+local function prRecord(g)
+    g = g or prGen()
+    return g and g:getModData()[TLG.Integration.Generators.GAS_KEY] or nil
+end
+
+local function prTanks()
+    local out = {}
+    local list = player():getInventory():getAllTypeRecurse("Base.PropaneTank")
+    for i = 0, list:size() - 1 do out[#out + 1] = list:get(i) end
+    return out
+end
+
+local function prUses(it) return math.floor(it:getCurrentUsesFloat() / it:getUseDelta() + 0.5) end
+
+function RT.PR.state(label)
+    local g = prGen()
+    local rec = prRecord(g)
+    local GasFeed = TLG.Domain.GasFeed
+    local cur = rec and g and GasFeed.current(rec, g:getFuel()) or {}
+    R:line("OBS  RTPR.%s at %.4f h: A %s fuel %.6f running %s load %.6f profile %s; record: tank %s uses, buffer %.6f Nm3 " ..
+        "propane, written at %.6f L; tanks carried %s", label, hours(), tostring(g ~= nil), g and g:getFuel() or -1,
+        tostring(g and g:isActivated()), g and RT.GM.power(g) or -1, tostring(g and TLG.Integration.Generators.profile(g)),
+        tostring(rec and rec.tank and rec.tank.uses), cur.propane or 0, rec and rec.fuel or -1,
+        (function()
+            local t = {}
+            for _, it in ipairs(prTanks()) do t[#t + 1] = tostring(prUses(it)) end
+            return "[" .. table.concat(t, ",") .. "]"
+        end)())
+end
+
+local function prMenu(label, key, g)
+    return menuClick(label, function(c) TLG.UI.GasMenu.fill(0, c, { g or prGen() }, false) end,
+        getText("ContextMenu_TLG_Gas"), getText(key))
+end
+
+-- The propane that left the tanks and is not in the buffer: what burned,
+-- as petrol-equivalent litres, since the tank of `uses` went in.
+local function prBurnedLitres(uses, g)
+    local rec = prRecord(g)
+    local Gas, GasFeed = TLG.Domain.Gas, TLG.Domain.GasFeed
+    local left = (rec and rec.tank and rec.tank.uses or 0) * Gas.NM3_PER_USE
+        + (GasFeed.current(rec or { buf = {} }, (g or prGen()):getFuel()).propane or 0)
+    return GasFeed.propaneLitres(uses * Gas.NM3_PER_USE - left)
+end
+
+-- The hourly steps seen on A (each a drop of its fuel between two ticks).
+function RT.PR.watch(on)
+    local PR = RT.PR
+    if on and not PR.hooked then
+        PR.steps, PR.stepLitres, PR.lastFuel, PR.stops = 0, 0, nil, 0
+        PR.tick = function()
+            local g = prGen()
+            if g == nil then return end
+            local f = g:getFuel()
+            if PR.lastFuel and f < PR.lastFuel - 1e-7 then
+                PR.steps, PR.stepLitres = PR.steps + 1, PR.stepLitres + (PR.lastFuel - f)
+            end
+            if PR.wasOn and not g:isActivated() then PR.stops = PR.stops + 1 end
+            PR.lastFuel, PR.wasOn = f, g:isActivated()
+        end
+        Events.OnTick.Add(PR.tick)
+        PR.hooked = true
+    elseif not on and PR.hooked then
+        Events.OnTick.Remove(PR.tick)
+        PR.hooked = false
+    end
+end
+
+-- The gas conversion made the way the conversion service makes it.
+function RT.PR.commission(g)
+    local CS, CD, World = TLG.Domain.ConversionService, TLG.Integration.ConversionDevices, TLG.World
+    local def = TLG.Registry.need("conversion", "gas_generator")
+    local actor = { id = "harness", skills = { Mechanics = 10, Electricity = 10, MetalWelding = 10 }, recipes = {},
+        inventory = {} }
+    for _, r in ipairs(def.requiredKnowledge.recipes or {}) do actor.recipes[r] = true end
+    for _, list in pairs(def.requiredTools or {}) do
+        for _, id in ipairs(list) do actor.inventory[id] = 1 end
+    end
+    for _, mods in pairs(def.requiredModules or {}) do
+        for id, n in pairs(mods) do actor.inventory[id] = (actor.inventory[id] or 0) + n end
+    end
+    local device = CD.describeGenerator(g, false)
+    local now = World.now()
+    local steps = {}
+    local p = CS.new({ id = World.newId("C"), conversion = "gas_generator", t = now })
+    local function go(name, r)
+        steps[#steps + 1] = name .. "=" .. tostring(r and r.ok) .. (r and r.reason and ("/" .. r.reason) or "")
+        if r and r.ok then p = r.project end
+    end
+    go("begin", CS.begin(p, actor, device, { now = now }))
+    go("deliver", CS.deliver(p, actor, device, { now = now }))
+    go("join", CS.join(p, actor, device, { now = now, workerTimeoutHours = 24 }))
+    go("work", CS.work(p, actor, device, { now = now + 12, workerTimeoutHours = 24 }))
+    CD.store(g:getModData(), g, p, TLG.Integration.Generators.keyOf(g))
+    return p.state, table.concat(steps, " ")
+end
+
+RT.PR.setup = { name = "rtpr_setup", timeout = 1200, fn = function(ctx, ticks)
+    local PR = RT.PR
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        captureDialogs(true)
+        RT.keepFit()
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    if not ctx.placed then
+        local spot
+        for dy = 4, 16 do
+            for dx = -12, 12 do
+                local x, y = START.x + dx, START.y + dy
+                if spot == nil and RT.MI.clear(x, y) and RT.MI.clear(x + 1, y) and RT.MI.clear(x + 1, y + 1) then
+                    spot = { x = x, y = y }
+                end
+            end
+        end
+        if spot == nil then
+            RT.abort = "no clear squares for the generator"
+            R:check("RTPR.placed", function() return false, "no clear squares near the start" end)
+            return true
+        end
+        PR.spot = spot
+        pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(spot.x, spot.y, 0)) end)
+        local g = prGen()
+        if g then
+            g:setConnected(true)
+            g:setFuel(0)
+            PR.convState, PR.convSteps = PR.commission(g)
+        end
+        player():teleportTo(spot.x + 1, spot.y + 1, 0)
+        ctx.placed = ticks
+        return nil
+    end
+    if ticks - ctx.placed < 60 then return nil end
+    local g = prGen()
+    local G = TLG.Integration.Generators
+    R:line("OBS  RTPR.placed A at %d,%d: conversion %s (%s); setting %s", PR.spot.x, PR.spot.y, tostring(PR.convState),
+        tostring(PR.convSteps), tostring(g and RT.GM.setting(g)))
+    R:check("RTPR.converted_to_gas", function()
+        return g ~= nil and PR.convState == "Commissioned" and G.isGas(g) and G.profile(g) == "generator_gas",
+            string.format("A %s, project %s, profile %s", tostring(g ~= nil), tostring(PR.convState),
+                tostring(g and G.profile(g)))
+    end)
+    if not (g and G.isGas(g)) then RT.abort = "A is not a gas generator" end
+    return true
+end }
+
+-- The Gas menu, then a full tank connected from the inventory through it.
+RT.PR.connect = { name = "rtpr_connect", timeout = 600, fn = function(ctx, ticks)
+    local PR = RT.PR
+    if RT.abort then return true end
+    local g = prGen()
+    local before = prMenu("RTPR.connect_without_a_tank", "ContextMenu_TLG_GasConnectTank", g)
+    local tank = player():getInventory():AddItem("Base.PropaneTank")
+    tank:setUsedDelta(1.0)
+    PR.uses0 = prUses(tank)
+    local r = prMenu("RTPR.connect", "ContextMenu_TLG_GasConnectTank", g)
+    PR.state("connected")
+    local rec = prRecord(g)
+    R:check("RTPR.connect_greyed_without_a_tank", function()
+        return before.reason == "entry_disabled", "without a tank: " .. tostring(before.reason)
+    end)
+    R:check("RTPR.tank_connected_and_buffer_filled", function()
+        return r.ok == true and r.uses == 5000 and r.moved == 3840 and #prTanks() == 0 and rec ~= nil and rec.tank ~= nil
+            and rec.tank.uses == 1160 and math.abs(g:getFuel() - 3840 * TLG.Domain.Gas.NM3_PER_USE * 93 / 32) < 1e-5,
+            string.format("reply ok=%s uses=%s moved=%s from=%s; tanks carried %d; record tank %s; fuel %.6f",
+                tostring(r.ok), tostring(r.uses), tostring(r.moved), tostring(r.from), #prTanks(),
+                tostring(rec and rec.tank and rec.tank.uses), g:getFuel())
+    end)
+    return true
+end }
+
+-- Started with the game's own action: the start gate reads the gas record.
+RT.PR.start = actionStep("rtpr_start", function(ctx)
+    if RT.abort then return nil end
+    player():teleportTo(RT.PR.spot.x + 1, RT.PR.spot.y, 0)
+    return ISActivateGenerator:new(player(), prGen(), true)
+end, function(ctx)
+    local g = prGen()
+    local e = TLG.Integration.Generators.evaluate(g)
+    R:check("RTPR.started_on_propane", function()
+        return g:isActivated() and e.compatible == true and e.grade == "good", string.format(
+            "running %s; evaluation compatible %s grade %s reasons %s", tostring(g:isActivated()), tostring(e.compatible),
+            tostring(e.grade), table.concat(e.reasons or {}, ","))
+    end)
+end)
+
+-- Hours at speed 20: A runs on its buffer, refilled each minute from the tank.
+RT.PR.run = { name = "rtpr_run", timeout = 60000, fn = function(ctx, ticks)
+    local PR = RT.PR
+    if RT.abort then return true end
+    if not ctx.h0 then
+        -- What burned before the watcher starts is not its to count.
+        ctx.h0, ctx.b0 = hours(), prBurnedLitres(PR.uses0, prGen())
+        PR.watch(true)
+        RT.speed(20)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if hours() - ctx.h0 < PR.hours then return nil end
+    RT.speed(1)
+    PR.watch(false)
+    local g = prGen()
+    local burned = prBurnedLitres(PR.uses0, g) - ctx.b0
+    PR.state("after_hours")
+    R:line("OBS  RTPR.run: %.3f game h, %d steps of %.6f L in all; the propane gone from tank and buffer is worth %.6f L; " ..
+        "%d stops", hours() - ctx.h0, PR.steps, PR.stepLitres, burned, PR.stops)
+    R:check("RTPR.ran_on_the_tank", function()
+        return g:isActivated() and PR.stops == 0 and PR.steps >= PR.hours - 1 and math.abs(burned - PR.stepLitres) < 1e-4,
+            string.format("running %s, %d stops, %d steps; burned by the record %.6f L against %.6f L of steps",
+                tostring(g:isActivated()), PR.stops, PR.steps, burned, PR.stepLitres)
+    end)
+    return true
+end }
+
+-- The game's Add fuel, the mod's pour and the Fuel menu: no liquid goes in.
+RT.PR.refusals = actionStep("rtpr_add_fuel", function(ctx)
+    if RT.abort then return nil end
+    local g = prGen()
+    ctx.can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 4.0 } })
+    ctx.fuel, ctx.canL = g:getFuel(), ctx.can:getFluidContainer():getAmount()
+    return ISAddFuel:new(player(), g, ctx.can, 100)
+end, function(ctx)
+    local g = prGen()
+    local pour = ask("RTPR.pour", "transfer", { source = TLG.Authority.Resolver.refForItem(ctx.can),
+        destination = TLG.Authority.Resolver.refForObject(g, "generator"), amount = 2 })
+    local c = ISContextMenu.get(0, 100, 100)
+    TLG.UI.FuelMenu.addPourOptions(player(), c, ctx.can)
+    local offered = c:getOptionFromName(getText("ContextMenu_TLG_PourGenerator")) ~= nil
+    c:setVisible(false)
+    R:check("RTPR.no_liquid_goes_in", function()
+        return math.abs(g:getFuel() - ctx.fuel) < 1e-6 and math.abs(ctx.can:getFluidContainer():getAmount() - ctx.canL) < 1e-6
+            and pour.ok == false and pour.reason == "gas_generator" and not offered, string.format(
+            "after Add fuel: A %.6f (was %.6f), can %.3f (was %.3f); the pour: ok=%s reason=%s; Pour into the generator " ..
+            "offered %s", g:getFuel(), ctx.fuel, ctx.can:getFluidContainer():getAmount(), ctx.canL, tostring(pour.ok),
+            tostring(pour.reason), tostring(offered))
+    end)
+    player():getInventory():Remove(ctx.can)
+end)
+
+-- Taken up with the tank in (switched off and unplugged first, as the game
+-- asks: SRC ISTakeGenerator.isValid) and put down again: the record travels
+-- in the item and comes back.
+RT.PR.take = actionStep("rtpr_take", function(ctx)
+    if RT.abort then return nil end
+    local g = prGen()
+    g:setActivated(false)
+    g:setConnected(false)
+    ctx.rec = TLG.Tables.deepCopy(prRecord(g))
+    ctx.fuel = g:getFuel()
+    player():setPrimaryHandItem(nil)
+    player():setSecondaryHandItem(nil)
+    player():teleportTo(RT.PR.spot.x + 1, RT.PR.spot.y, 0)
+    return ISTakeGenerator:new(player(), g)
+end, function(ctx)
+    local it = player():getPrimaryHandItem()
+    RT.PR.item = it
+    local side = it and it:getModData().tlg
+    local carried = side and side[TLG.Integration.Generators.GAS_KEY]
+    local liquid = 0
+    for _, q in pairs(side and side.q or {}) do liquid = liquid + q end
+    R:check("RTPR.taken_up_with_its_record", function()
+        return carried ~= nil and ctx.rec ~= nil and carried.tank and carried.tank.uses == ctx.rec.tank.uses
+            and liquid == 0 and math.abs((tonumber(it:getModData().fuel) or -1) - ctx.fuel) < 1e-4, string.format(
+            "item %s; carried record tank %s (was %s); liquid record %.4f L; item fuel %s (was %.6f)",
+            tostring(it and it:getFullType()), tostring(carried and carried.tank and carried.tank.uses),
+            tostring(ctx.rec and ctx.rec.tank and ctx.rec.tank.uses), liquid, tostring(it and it:getModData().fuel), ctx.fuel)
+    end)
+end)
+
+RT.PR.put = actionStep("rtpr_put", function(ctx)
+    if RT.abort or RT.PR.item == nil then return nil end
+    return ISDropWorldItemAction:new(player(), RT.PR.item, sq(RT.PR.spot.x, RT.PR.spot.y, 0), 0.5, 0.5, 0, 0, false)
+end, function(ctx)
+    local g = prGen()
+    local G = TLG.Integration.Generators
+    local rec = prRecord(g)
+    local key = RT.PR.spot.x .. "," .. RT.PR.spot.y .. ",0"
+    R:check("RTPR.put_down_with_its_record", function()
+        return g ~= nil and rec ~= nil and rec.tank ~= nil and G.holdsGas(g) and G.gasSquares[key] == true, string.format(
+            "A %s; record tank %s; holds gas %s; watched %s", tostring(g ~= nil), tostring(rec and rec.tank and rec.tank.uses),
+            tostring(g and G.holdsGas(g)), tostring(G.gasSquares[key]))
+    end)
+end)
+
+RT.PR.restart = actionStep("rtpr_restart", function(ctx)
+    if RT.abort then return nil end
+    player():teleportTo(RT.PR.spot.x + 1, RT.PR.spot.y, 0)
+    prGen():setConnected(true)
+    return ISActivateGenerator:new(player(), prGen(), true)
+end, function(ctx)
+    R:check("RTPR.started_again", function()
+        return prGen():isActivated(), "running " .. tostring(prGen():isActivated())
+    end)
+end)
+
+-- Away for three hours: the chunk unloads, the game burns the hours on
+-- return, and the minute pass takes up again.
+RT.PR.trip = { name = "rtpr_trip", timeout = 30000, fn = function(ctx, ticks)
+    local PR = RT.PR
+    if RT.abort then return true end
+    if not ctx.at then
+        ctx.rec = TLG.Tables.deepCopy(prRecord())
+        PR.state("leaving")
+        player():teleportTo(PR.spot.x, PR.spot.y - RT.away, 0)
+        ctx.at = ticks
+        return nil
+    end
+    if not ctx.from then
+        if ticks - ctx.at < 120 then return nil end
+        ctx.from = hours()
+        RT.speed(RT.waitSpeed)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if not ctx.back then
+        if sq(PR.spot.x, PR.spot.y, 0) == nil then ctx.unloaded = true end
+        if hours() - ctx.from < PR.tripHours then return nil end
+        RT.speed(1)
+        player():teleportTo(PR.spot.x + 1, PR.spot.y + 1, 0)
+        ctx.back = ticks
+        return nil
+    end
+    -- An hour's boundary and a refill after it.
+    if not ctx.settle then
+        if ticks - ctx.back < 180 then return nil end
+        ctx.settle, ctx.h = ticks, hours()
+        RT.speed(20)
+        return nil
+    end
+    if hours() - ctx.h < 1.05 then return nil end
+    RT.speed(1)
+    local g, rec = prGen(), prRecord()
+    PR.state("back")
+    R:check("RTPR.trip_unloaded_and_refilled_after", function()
+        return ctx.unloaded == true and g ~= nil and g:isActivated() and rec ~= nil and ctx.rec ~= nil
+            and rec.tank.uses < ctx.rec.tank.uses, string.format("unloaded %s; running %s; tank %s uses (was %s)",
+            tostring(ctx.unloaded == true), tostring(g and g:isActivated()), tostring(rec and rec.tank.uses),
+            tostring(ctx.rec and ctx.rec.tank.uses))
+    end)
+    return true
+end }
+
+RT.PR.beforeSave = { name = "rtpr_before_save", fn = function()
+    local g = prGen()
+    RT.speed(1)
+    if RT.abort or g == nil then return true end
+    local rec = prRecord(g)
+    TLGH.writeFile("TLG_harness_expect.txt", { "pr.x=" .. RT.PR.spot.x, "pr.y=" .. RT.PR.spot.y,
+        "pr.uses=" .. tostring(rec.tank.uses), "pr.fuel=" .. string.format("%.6f", g:getFuel()),
+        "pr.recfuel=" .. string.format("%.6f", rec.fuel), "pr.id=" .. tostring(rec.id), "pr.h=" .. string.format("%.6f", hours()) })
+    RT.PR.state("saving")
+    return true
+end }
+
+RT.gasPropaneSteps = { RT.waitWorld, RT.PR.setup, RT.PR.connect, RT.PR.start, RT.PR.run, RT.PR.refusals, RT.PR.take,
+    RT.PR.put, RT.PR.restart, RT.PR.trip, RT.PR.beforeSave, RT.saveAndExitAs("rtpr_save_and_exit", "sp-rtprb") }
+
+-- Phase B: the save continued.
+RT.PR.reload = { name = "rtprb_reload", timeout = 3000, fn = function(ctx, ticks)
+    if not (player() and ticks > 180) then return nil end
+    local e = TLGH.readKeyValues("TLG_harness_expect.txt")
+    RT.PR.spot = { x = tonumber(e["pr.x"]), y = tonumber(e["pr.y"]) }
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    captureDialogs(true)
+    if not ctx.near then
+        p:teleportTo(RT.PR.spot.x + 1, RT.PR.spot.y + 1, 0)
+        ctx.near = ticks
+        return nil
+    end
+    if ticks - ctx.near < 120 then return nil end
+    local g, rec = prGen(), prRecord()
+    local G = TLG.Integration.Generators
+    RT.PR.state("continued")
+    R:check("RTPRB.record_as_saved", function()
+        return g ~= nil and rec ~= nil and tostring(rec.id) == e["pr.id"] and rec.tank ~= nil
+            and rec.tank.uses <= tonumber(e["pr.uses"]) and G.holdsGas(g) and G.isGas(g)
+            and G.gasSquares[RT.PR.spot.x .. "," .. RT.PR.spot.y .. ",0"] == true, string.format(
+            "A %s; record %s (saved %s); tank %s (saved %s); holds gas %s; watched %s", tostring(g ~= nil),
+            tostring(rec and rec.id), tostring(e["pr.id"]), tostring(rec and rec.tank and rec.tank.uses), tostring(e["pr.uses"]),
+            tostring(g and G.holdsGas(g)), tostring(G.gasSquares[RT.PR.spot.x .. "," .. RT.PR.spot.y .. ",0"]))
+    end)
+    if g == nil or rec == nil then RT.abort = "A or its record is missing after the continue" end
+    return true
+end }
+
+-- Refills go on after the continue.
+RT.PR.after = { name = "rtprb_refills", timeout = 30000, fn = function(ctx, ticks)
+    if RT.abort then return true end
+    if not ctx.h then
+        ctx.h, ctx.uses = hours(), prRecord().tank.uses
+        RT.speed(20)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if hours() - ctx.h < 2.05 then return nil end
+    RT.speed(1)
+    local g, rec = prGen(), prRecord()
+    R:check("RTPRB.refills_go_on", function()
+        return g:isActivated() and rec.tank.uses < ctx.uses, string.format("running %s; tank %d -> %d uses",
+            tostring(g:isActivated()), ctx.uses, rec.tank.uses)
+    end)
+    return true
+end }
+
+-- Removed through the menu: the propane not burned goes back into the tank;
+-- A runs on what is left in its buffer, then stops.
+RT.PR.remove = { name = "rtprb_remove", timeout = 40000, fn = function(ctx, ticks)
+    local PR = RT.PR
+    if RT.abort then return true end
+    if not ctx.r then
+        local g, rec = prGen(), prRecord()
+        local GasFeed, Gas = TLG.Domain.GasFeed, TLG.Domain.Gas
+        ctx.expect = rec.tank.uses + (Gas.nm3ToUses(GasFeed.current(rec, g:getFuel()).propane or 0) or 0)
+        ctx.r = prMenu("RTPRB.remove", "ContextMenu_TLG_GasRemoveTank", g)
+        ctx.fuel, ctx.h = g:getFuel(), hours()
+        PR.state("removed")
+        RT.speed(20)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    local g = prGen()
+    if g:isActivated() and hours() - ctx.h < 3 then return nil end
+    RT.speed(1)
+    local tanks = prTanks()
+    local back = tanks[1] and prUses(tanks[1])
+    R:check("RTPRB.tank_back_less_at_most_a_use", function()
+        return ctx.r.ok == true and back ~= nil and back <= ctx.expect and back >= ctx.expect - 1 and ctx.r.uses == back
+            and ctx.fuel < TLG.Domain.Gas.NM3_PER_USE * 93 / 32 + 1e-6, string.format(
+            "reply ok=%s uses=%s; the tank carried holds %s (expected %s or one less); A left with %.6f L",
+            tostring(ctx.r.ok), tostring(ctx.r.uses), tostring(back), tostring(ctx.expect), ctx.fuel)
+    end)
+    R:check("RTPRB.runs_dry_without_its_tank", function()
+        return not g:isActivated() and g:getFuel() <= 1e-6, string.format("running %s, fuel %.6f after %.2f h",
+            tostring(g:isActivated()), g:getFuel(), hours() - ctx.h)
+    end)
+    PR.full = tanks[1]
+    return true
+end }
+
+-- A tank of 3 uses, burned to empty, comes back empty.
+RT.PR.empty = { name = "rtprb_empty_tank", timeout = 40000, fn = function(ctx, ticks)
+    local PR = RT.PR
+    if RT.abort then return true end
+    if not ctx.r then
+        -- The full tank put aside, so the small one is the one taken.
+        if PR.full then player():getInventory():Remove(PR.full) end
+        local small = player():getInventory():AddItem("Base.PropaneTank")
+        small:setUsedDelta(3 * small:getUseDelta())
+        ctx.r = prMenu("RTPRB.connect_small", "ContextMenu_TLG_GasConnectTank")
+        local g = prGen()
+        g:setActivated(true)
+        ctx.h = hours()
+        RT.speed(20)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if prGen():isActivated() and hours() - ctx.h < 4 then return nil end
+    RT.speed(1)
+    local rec = prRecord()
+    local r = prMenu("RTPRB.remove_empty", "ContextMenu_TLG_GasRemoveTank")
+    local tanks = prTanks()
+    local back = tanks[1]
+    R:check("RTPRB.empty_tank_given_back", function()
+        return ctx.r.ok == true and ctx.r.uses == 3 and r.ok == true and r.uses == 0 and back ~= nil and prUses(back) == 0,
+            string.format("connected ok=%s uses=%s; record tank before removal %s; removed ok=%s uses=%s; tank item %s with %s uses",
+                tostring(ctx.r.ok), tostring(ctx.r.uses), tostring(rec and rec.tank and rec.tank.uses), tostring(r.ok),
+                tostring(r.uses), tostring(back ~= nil), tostring(back and prUses(back)))
+    end)
+    if back then player():getInventory():Remove(back) end
+    if PR.full then player():getInventory():AddItem(PR.full) end
+    return true
+end }
+
+-- Remove the conversion with a tank in: the tank back, the buffer let out,
+-- the record gone, the stock profile and half the parts.
+RT.PR.unconvert = { name = "rtprb_remove_conversion", timeout = 1200, fn = function(ctx, ticks)
+    if RT.abort then return true end
+    local g = prGen()
+    local G = TLG.Integration.Generators
+    local inv = player():getInventory()
+    local tanksBefore = #prTanks()
+    local c = prMenu("RTPRB.connect_again", "ContextMenu_TLG_GasConnectTank", g)
+    local rec = prRecord(g)
+    local expect = (rec and rec.tank and rec.tank.uses or 0)
+        + (TLG.Domain.Gas.nm3ToUses(TLG.Domain.GasFeed.current(rec or { buf = {} }, g:getFuel()).propane or 0) or 0)
+    -- What the removal asks: its tools, the skills and the recipe of the
+    -- conversion (launch 351 lacked the recipe and was refused,
+    -- missing_recipe, with nothing changed).
+    for _, id in ipairs({ "Base.PipeWrench", "Base.Screwdriver" }) do inv:AddItem(id) end
+    player():setPerkLevelDebug(Perks.Mechanics, 4)
+    player():setPerkLevelDebug(Perks.Electricity, 4)
+    player():getKnownRecipes():add("Generator")
+    local hoses = inv:getCountTypeRecurse("Base.RubberHose")
+    local r = menuClick("RTPRB.remove_conversion", function(cm) TLG.UI.WorkshopMenu.fill(0, cm, { g }, false) end,
+        getText("ContextMenu_TLG_ConvGenerator"), getText("ContextMenu_TLG_ConvRemove"))
+    local tanks = prTanks()
+    local back
+    for _, it in ipairs(tanks) do if prUses(it) >= expect - 1 then back = it end end
+    RT.PR.state("conversion_removed")
+    R:check("RTPRB.conversion_removed_with_the_tank_back", function()
+        return c.ok == true and r.ok == true and r.state == "Removed" and #tanks == tanksBefore and back ~= nil
+            and g:getFuel() == 0 and prRecord(g) == nil and G.profile(g) == "generator_si_stock" and not G.isGas(g)
+            and inv:getCountTypeRecurse("Base.RubberHose") == hoses + 1, string.format(
+            "connected ok=%s; removal ok=%s state=%s; tanks %d (were %d), one with %s uses (expected %s or one less); A fuel " ..
+            "%.6f; record %s; profile %s; rubber hoses %d (were %d)", tostring(c.ok), tostring(r.ok), tostring(r.state),
+            #tanks, tanksBefore, tostring(back and prUses(back)), tostring(expect), g:getFuel(), tostring(prRecord(g) ~= nil),
+            tostring(G.profile(g)), inv:getCountTypeRecurse("Base.RubberHose"), hoses)
+    end)
+    return true
+end }
+
+RT.gasPropaneBSteps = { RT.PR.reload, RT.PR.after, RT.PR.remove, RT.PR.empty, RT.PR.unconvert, RT.finish }
+
+------------------------------------------------------------------------------
 -- Diesel vehicles (request "sp-rtdv", D-036). A new world, so its record
 -- says diesel chassis exist. Three vehicles at a time are spawned beside
 -- the start (the squares phase A parks on), repaired and given 10 L with
@@ -20209,7 +20760,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtpr" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -20330,6 +20881,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgm" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the gas measures (D-040)")
                 TLGH.Steps.run(R, RT.gasMeasureSteps, H, nil)
+            elseif REQUEST == "sp-rtpr" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, a gas generator on propane, before the save")
+                TLGH.Steps.run(R, RT.gasPropaneSteps, H, nil)
             elseif REQUEST == "sp-rtbdm" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel chain's models")
                 TLGH.Steps.run(R, RT.biodieselModelSteps, H, nil)
@@ -20443,7 +20997,7 @@ if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQU
 end
 
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-b" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtgpb" then
+    or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-b" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtprb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -20486,6 +21040,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "sp-rtgpb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, the gas probe, after the save", true)
             TLGH.Steps.run(R, RT.gasProbeReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtprb" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, a gas generator on propane, after the save", true)
+            TLGH.Steps.run(R, RT.gasPropaneBSteps, H, nil)
         elseif REQUEST == "sp-rtknb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel, after the save", true)
             TLGH.Steps.run(R, RT.knowledgeReloadSteps, H, nil)

@@ -7014,3 +7014,69 @@ harness reports of launch 349 hold no step error.
 Evidence:
 [run 348](evidence/2026-11-12_rt-sp_harness_run348_gas_measures.txt);
 [run 349](evidence/2026-11-12_rt-mp_harness_run349_gasfeed_42.22.2.txt).
+
+## 2026-11-12 — RT-SP launches 350–352 (a gas generator on propane, D-040)
+
+Command: `tools/run-sp-harness.ps1 -Mode gas-propane` (request `sp-rtpr`,
+then `sp-rtprb` after a save and its continue), the repository's mod on
+branch `feature/gas-generators` (the propane feed, commits `d1743ed`,
+`0611e08`, `ea4e7fc`), 42.22.2, the default generator fuel setting (0.1).
+About 6 minutes.
+
+A vanilla generator, A, at 10648,10649 (its load 0.005 L an hour while
+running: the generator and a gas pump in range), converted to gas by the
+conversion service's own steps (begun, every part handed over, worked to
+Commissioned by an actor holding what the definition asks); the player's
+part in a conversion is the full run's.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 350 | none: the game stayed at the main menu |
+| 351 | 10/0, then 5/1 |
+| 352 | 10/0, then 6/0 |
+
+Launch 350 never started its scenario: the request was missing from the
+harness's list of debug scenarios (an edit that matched nothing). Launch
+351's failure was the probe's too: it gave the player the tools and skills
+for Remove the conversion but not the conversion's recipe (Generator), and
+the authority refused (`missing_recipe`) with nothing changed (the tank
+still in, the record and the fuel as they were). Launch 352 teaches the
+recipe. Launch 352, the same as 351 elsewhere:
+- **Converted and connected.** The project was Commissioned and A's
+  profile `generator_gas`. The Gas menu's Connect a propane tank was greyed
+  with no tank about, and with a full tank (5000 uses) in the inventory it
+  took the tank and filled the buffer at once: 3840 uses, 9.99936 L, the
+  tank in the record with 1160.
+- **Started through the start gate** with the game's own action: the gas
+  buffer evaluated compatible, grade good.
+- **Four hours at ×20**: four steps of 0.005 L, 0.020000 L in all, and the
+  propane gone from tank and buffer worth 0.020000 L; A never stopped.
+- **No liquid goes in.** The game's Add fuel with 4 L of petrol: A's fuel
+  and the can unchanged. The mod's pour: refused, `gas_generator`. The Fuel
+  menu offered no Pour into the generator.
+- **Taken up and put down** (switched off and unplugged first, as the
+  game's take asks) with the tank in: the item carried the gas record
+  (1153 uses) and no liquid, and its fuel the buffer's litres; put down,
+  the generator had its record, held gas and was watched again; started
+  again.
+- **A trip** of three game hours that unloaded A's square: on return A was
+  running and the next refill took uses (1153 → 1145).
+- **Saved and continued**: the record as saved (its id, 1145 uses),
+  watched again, holding gas; refills went on (1145 → 1141 in two hours).
+- **The tank removed** through the menu: 4980 uses back (the tank's 1141
+  and the buffer's 3839 whole uses), 0.002079 L left in A, which then ran
+  dry and stopped within 0.79 h.
+- **An emptied tank**: a tank of 3 uses connected, burned out, and given
+  back with 0 uses.
+- **Remove the conversion with a tank in**, from the Workshop menu: the
+  tank back with 4980 uses, A's fuel 0, the feed record gone, the profile
+  `generator_si_stock`, and half the parts (one rubber hose of two).
+
+Launch 352's console shows no exception and no warning of the mod.
+
+Not run: a server (the commands, the refills and the item moves there),
+sleep, wood gas.
+
+Evidence:
+[run 351](evidence/2026-11-12_rt-sp_harness_run351_gas_propane.txt);
+[run 352](evidence/2026-11-12_rt-sp_harness_run352_gas_propane.txt).
