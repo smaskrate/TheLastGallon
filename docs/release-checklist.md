@@ -263,10 +263,14 @@ gas begin asked anyway was refused (`not_offered`). The other modes, the
 multiplayer cases and the upgrade were not run on it. The shipped
 changelog, written before launch 344, lists the refusal as not checked.
 
-The upload folder still holds the 0.4.1 package, which the Workshop item
-serves. Putting 0.4.2 there, and the first description line of the
-folder's `workshop.txt`, which names 0.4.1, wait for the owner's word.
-Not uploaded.
+The upload folder holds this package since 2026-11-12, on the owner's
+word ("Yes, prepare it"): its `Contents` mirrored and its `preview.png`
+copied from the zip, unpacked and checked against its manifest, and the
+folder's 166 files checked by hash, both ways. The first description
+line of its `workshop.txt`, the owner's file, now names 0.4.2: one byte
+changed; the rest of the file (its id, `visibility=public`, the tag
+`WIP`, the owner's wording) and its CRLF line ends stay. Not uploaded:
+the Workshop item serves 0.4.1.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -722,10 +726,10 @@ the item served 0.1.1, uploaded by the
 owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.1 package's
-`Contents` and `preview.png` since 2026-11-11 (launch 339; "Version
-0.4.1" above). Before it, the 0.1.2 package's from 2026-11-10, then the
-0.3.0, 0.3.1, 0.3.2 and 0.4.0 packages' earlier on 2026-11-11; 0.2.0 was
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.2 package's
+`Contents` and `preview.png` since 2026-11-12 (launch 344; "Version
+0.4.2" above). Before it, the 0.1.2 package's from 2026-11-10, then the
+0.3.0, 0.3.1, 0.3.2, 0.4.0 and 0.4.1 packages' on 2026-11-11; 0.2.0 was
 never put there. For 0.4.0:
 the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
 its `Contents` mirrored over the folder's, and the folder's 165 files
@@ -737,7 +741,7 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
