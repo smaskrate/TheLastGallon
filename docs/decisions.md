@@ -1796,5 +1796,11 @@ gas probe (launch 342).
     taken equal to the steps, liquid refused, taken up and put down with
     the tank in, a trip, saved and continued, the tank removed (4980 uses
     back, as computed), run dry, a tank burned empty and given back with 0
-    uses, and Remove the conversion with a tank in. Not run: a server, and
+    uses, and Remove the conversion with a tank in. On a dedicated server
+    (launches 354–356): connect, the refills, the pour and Add fuel
+    refused, Gas status, the tank removed into the client's inventory and
+    Remove the conversion, each seen in the client's copies. Not run:
     sleep. Wood gas is the other half.
+  * Remove the conversion also switches a running generator off: with its
+    gas let out, the game would leave it running on no fuel until its next
+    hourly step (launch 355).

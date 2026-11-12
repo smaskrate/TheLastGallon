@@ -139,7 +139,15 @@ local function ventGas(player, d)
     -- after the gas burned out stays.
     local gas = G.holdsGas(gen)
     if rec.tank and H.gasTakeTank then H.gasTakeTank(player, gen, rec) end
-    if gas then gen:setFuel(0) end
+    if gas then
+        gen:setFuel(0)
+        -- With nothing left to burn it stops now: the game would leave it
+        -- running until its next hourly step (launch 355).
+        if gen:isActivated() then
+            gen:setActivated(false)
+            gen:sync()
+        end
+    end
     gen:getModData()[G.GAS_KEY] = nil
     TLG.Authority.Vault.release("gas", function() return G.keyOf(gen) end)
     gen:transmitModData()

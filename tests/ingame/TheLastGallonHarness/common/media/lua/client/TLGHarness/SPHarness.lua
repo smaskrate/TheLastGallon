@@ -17691,6 +17691,12 @@ function RT.PR.commission(g)
     go("deliver", CS.deliver(p, actor, device, { now = now }))
     go("join", CS.join(p, actor, device, { now = now, workerTimeoutHours = 24 }))
     go("work", CS.work(p, actor, device, { now = now + 12, workerTimeoutHours = 24 }))
+    -- The work is finished 12 hours ahead (a world this young has no 9 hours
+    -- behind it); its commit time is set back to now, or a request before
+    -- then is refused as time_regression (MP launch 354; launch 352's
+    -- removal came after it).
+    if p.t and p.t > now then p.t = now end
+    if p.commissionedAt and p.commissionedAt > now then p.commissionedAt = now end
     CD.store(g:getModData(), g, p, TLG.Integration.Generators.keyOf(g))
     return p.state, table.concat(steps, " ")
 end

@@ -1119,6 +1119,96 @@ function services.probe_gasfeed(player, args)
     reply("probe_gasfeed", args, out)
 end
 
+------------------------------------------------------------------------------
+-- gaspropane (tools/run-mp-harness.ps1 -Only gaspropane, one client, the
+-- shortest day; D-040): a gas generator on propane where a server keeps the
+-- feed. The server puts a vanilla generator beside the spawn point and makes
+-- its gas conversion by the conversion service's own steps (as SPHarness
+-- RT.PR.commission), and gives the player what removing it asks (tools,
+-- Mechanics and Electricity 4, the Generator recipe). The client does the
+-- rest through the mod's menus and the game's actions
+-- (MPHarnessCases.lua); give_tank hands it a propane tank of a set number
+-- of uses, probe_gaspropane says what the server holds.
+------------------------------------------------------------------------------
+local function commissionGas(g)
+    local CS, CD = TLG.Domain.ConversionService, TLG.Integration.ConversionDevices
+    local def = TLG.Registry.need("conversion", "gas_generator")
+    local actor = { id = "harness", skills = { Mechanics = 10, Electricity = 10, MetalWelding = 10 }, recipes = {},
+        inventory = {} }
+    for _, r in ipairs(def.requiredKnowledge.recipes or {}) do actor.recipes[r] = true end
+    for _, list in pairs(def.requiredTools or {}) do
+        for _, id in ipairs(list) do actor.inventory[id] = 1 end
+    end
+    for _, mods in pairs(def.requiredModules or {}) do
+        for id, n in pairs(mods) do actor.inventory[id] = (actor.inventory[id] or 0) + n end
+    end
+    local device = CD.describeGenerator(g, false)
+    local now = TLG.World.now()
+    local p = CS.new({ id = TLG.World.newId("C"), conversion = "gas_generator", t = now })
+    local steps = {}
+    local function go(name, r)
+        steps[#steps + 1] = name .. "=" .. tostring(r and r.ok) .. (r and r.reason and ("/" .. r.reason) or "")
+        if r and r.ok then p = r.project end
+    end
+    go("begin", CS.begin(p, actor, device, { now = now }))
+    go("deliver", CS.deliver(p, actor, device, { now = now }))
+    go("join", CS.join(p, actor, device, { now = now, workerTimeoutHours = 24 }))
+    go("work", CS.work(p, actor, device, { now = now + 12, workerTimeoutHours = 24 }))
+    -- The work is finished 12 hours ahead (a world this young has no 9 hours
+    -- behind it); its commit time is set back to now, or every later request
+    -- is refused as time_regression (launch 354).
+    if p.t and p.t > now then p.t = now end
+    if p.commissionedAt and p.commissionedAt > now then p.commissionedAt = now end
+    CD.store(g:getModData(), g, p, TLG.Integration.Generators.keyOf(g))
+    return p.state, table.concat(steps, " ")
+end
+
+function services.setup_gaspropane(player, args)
+    local gx, gy = S.CX + 6, S.CY + 6
+    local g = generatorAt(gx, gy)
+    if g == nil then
+        g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), getCell():getGridSquare(gx, gy, 0))
+    end
+    g:setConnected(true)
+    g:setFuel(0)
+    local state, steps = commissionGas(g)
+    g:sync()
+    g:transmitModData()
+    local inv = player:getInventory()
+    for _, id in ipairs({ "Base.PipeWrench", "Base.Screwdriver" }) do
+        local it = inv:AddItem(id)
+        sendAddItemToContainer(inv, it)
+    end
+    player:setPerkLevelDebug(Perks.Mechanics, 4)
+    player:setPerkLevelDebug(Perks.Electricity, 4)
+    player:getKnownRecipes():add("Generator")
+    reply("setup_gaspropane", args, { gx = gx, gy = gy, state = tostring(state), steps = steps,
+        profile = tostring(TLG.Integration.Generators.profile(g)),
+        setting = string.format("%.4f", g:getBasePowerConsumption() / 0.02) })
+end
+
+-- A propane tank of `uses` uses into the player's inventory, its uses set
+-- before it is sent.
+function services.give_tank(player, args)
+    local inv = player:getInventory()
+    local item = inv:AddItem("Base.PropaneTank")
+    item:setUsedDelta((tonumber(args.uses) or 5000) * item:getUseDelta())
+    sendAddItemToContainer(inv, item)
+    reply("give_tank", args, { id = item:getID(),
+        uses = math.floor(item:getCurrentUsesFloat() / item:getUseDelta() + 0.5) })
+end
+
+function services.probe_gaspropane(player, args)
+    local G = TLG.Integration.Generators
+    local g = generatorAt(tonumber(args.gx), tonumber(args.gy))
+    local rec = g and G.gasRecord(g)
+    reply("probe_gaspropane", args, { found = tostring(g ~= nil), fuel = g and string.format("%.7f", g:getFuel()) or "-",
+        on = tostring(g and g:isActivated()), tank = tostring(rec and rec.tank and rec.tank.uses),
+        record = tostring(rec ~= nil), holds = tostring(g and G.holdsGas(g)), profile = tostring(g and G.profile(g)),
+        watched = tostring(g and G.gasSquares[g:getSquare():getX() .. "," .. g:getSquare():getY() .. "," ..
+            g:getSquare():getZ()] == true) })
+end
+
 -- The Diesel Generator's sprite taken away on the server, as a load without
 -- the mod leaves it (step "strip"), then the mod's repair run as the
 -- server's LoadGridsquare runs it, on the generator's square (step

@@ -227,6 +227,194 @@ if MP.only == "gasfeed" then
 end
 
 ------------------------------------------------------------------------------
+-- gaspropane (one client, the shortest day; D-040): a gas generator on
+-- propane where the server keeps the feed. The server puts a generator down
+-- converted to gas (MPServer.lua setup_gaspropane); the client takes every
+-- other step through the mod's menus and the game's actions, and compares
+-- its own copy of the generator, of its record and of its inventory with
+-- what the server holds.
+------------------------------------------------------------------------------
+if MP.only == "gaspropane" then
+    local GP = {}
+    local G = TLG.Integration.Generators
+    local function gen()
+        local s = GP.x and getCell():getGridSquare(GP.x, GP.y, 0)
+        return s and s:getGenerator() or nil
+    end
+    local function tanks()
+        local out = {}
+        local list = player():getInventory():getAllTypeRecurse("Base.PropaneTank")
+        for i = 0, list:size() - 1 do out[#out + 1] = list:get(i) end
+        return out
+    end
+    local function uses(it) return math.floor(it:getCurrentUsesFloat() / it:getUseDelta() + 0.5) end
+    local function ref() return TLG.Authority.Resolver.refForObject(gen(), "generator") end
+    -- A menu entry chosen as a player does, its reply caught (the dialog it
+    -- would open is not).
+    local function menuStep(name, fill, rootKey, key, judge)
+        return { name = "mp_gp_" .. name, timeout = 1800, fn = function(ctx, ticks)
+            if ticks == 1 then
+                local c = ISContextMenu.get(0, 100, 100)
+                fill(c)
+                local root = c:getOptionFromName(getText(rootKey))
+                local sub = root and root.subOption and c:getSubMenu(root.subOption)
+                local opt = sub and sub:getOptionFromName(getText(key))
+                c:setVisible(false)
+                if opt == nil or opt.notAvailable then
+                    ctx.reply = { ok = false, reason = opt == nil and "no_menu_entry" or "entry_disabled" }
+                else
+                    local orig = TLG.Net.request
+                    TLG.Net.request = function(command, args) return orig(command, args, function(r) ctx.reply = r end) end
+                    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+                    TLG.Net.request = orig
+                    if not ok then ctx.reply = { ok = false, reason = "raised: " .. tostring(err) } end
+                end
+                return nil
+            end
+            if not ctx.reply then return nil end
+            report():line("OBS  MP.gp %s -> %s uses=%s moved=%s", name, brief(ctx.reply), tostring(ctx.reply.uses),
+                tostring(ctx.reply.moved))
+            judge(ctx.reply, ctx)
+            return true
+        end }
+    end
+    local function gasMenu(name, key, judge)
+        return menuStep(name, function(c) TLG.UI.GasMenu.fill(0, c, { gen() }, false) end, "ContextMenu_TLG_Gas", key,
+            judge)
+    end
+    local function probe(name, judge)
+        return call("gp_" .. name, "probe_gaspropane", function() return { gx = GP.x, gy = GP.y } end,
+            "probe_gaspropane", judge)
+    end
+    MP.stepsA = { MP.waitWorld,
+        call("gp_setup", "setup_gaspropane", {}, "setup_gaspropane", function(m)
+            GP.x, GP.y = tonumber(m.gx), tonumber(m.gy)
+            report():line("OBS  MP.gp the server converted G at %s,%s: %s (%s), profile %s, setting %s", tostring(m.gx),
+                tostring(m.gy), tostring(m.state), tostring(m.steps), tostring(m.profile), tostring(m.setting))
+            check("gp_converted_on_the_server", function()
+                return m.state == "Commissioned" and m.profile == "generator_gas", string.format("project %s, profile %s",
+                    tostring(m.state), tostring(m.profile))
+            end)
+        end),
+        wait("mp_gp_sync", 180),
+        walkTo("mp_gp_walk", function() return GP.x + 1, GP.y end),
+        once("mp_gp_seen", function()
+            local g = gen()
+            local ok, gas = pcall(G.isGas, g)
+            check("gp_client_sees_a_gas_generator", function()
+                return g ~= nil and ok and gas == true, string.format("generator %s, gas %s", tostring(g ~= nil),
+                    tostring(gas))
+            end)
+        end),
+        gasMenu("connect_without_a_tank", "ContextMenu_TLG_GasConnectTank", function(r)
+            check("gp_connect_greyed_without_a_tank", function()
+                return r.reason == "entry_disabled", "without a tank: " .. tostring(r.reason)
+            end)
+        end),
+        call("gp_give_tank", "give_tank", { uses = 5000 }, "give_tank", function(m) GP.given = tonumber(m.uses) end),
+        wait("mp_gp_tank_arrives", 120),
+        gasMenu("connect", "ContextMenu_TLG_GasConnectTank", function(r) GP.connect = r end),
+        wait("mp_gp_connect_settles", 180),
+        once("mp_gp_connected", function()
+            local g, r = gen(), GP.connect or {}
+            local rec = g and g:getModData()[G.GAS_KEY]
+            local want = 3840 * TLG.Domain.Gas.NM3_PER_USE * 93 / 32
+            check("gp_connected_and_seen_by_the_client", function()
+                return r.ok == true and r.uses == 5000 and r.moved == 3840 and #tanks() == 0 and g ~= nil
+                    and math.abs(g:getFuel() - want) < 1e-4 and rec ~= nil and rec.tank ~= nil and rec.tank.uses == 1160
+                    and G.holdsGas(g), string.format("reply ok=%s uses=%s moved=%s; tanks in this inventory %d; this " ..
+                    "client's copy: fuel %.6f, record tank %s, holds gas %s", tostring(r.ok), tostring(r.uses),
+                    tostring(r.moved), #tanks(), g and g:getFuel() or -1, tostring(rec and rec.tank and rec.tank.uses),
+                    tostring(g and G.holdsGas(g)))
+            end)
+        end),
+        { name = "mp_gp_start", timeout = 1800, fn = function(ctx, ticks)
+            if ticks == 1 then
+                ISTimedActionQueue.add(ISActivateGenerator:new(player(), gen(), true))
+                return nil
+            end
+            if ticks < 60 or not TLGH.Steps.actionsIdle(player()) then return nil end
+            ctx.idle = ctx.idle or ticks
+            if ticks - ctx.idle < 120 then return nil end
+            check("gp_started_through_the_server_gate", function()
+                return gen():isActivated(), "running on this client's copy: " .. tostring(gen():isActivated())
+            end)
+            return true
+        end },
+        -- About two and a half game hours on the shortest day (37.5 s each).
+        wait("mp_gp_hours", 6000),
+        probe("after_hours", function(m)
+            local g = gen()
+            local rec = g and g:getModData()[G.GAS_KEY]
+            GP.tank = tonumber(m.tank)
+            check("gp_refills_on_the_server_seen_by_the_client", function()
+                return m.on == "true" and GP.tank ~= nil and GP.tank < 1160 and m.watched == "true"
+                    and math.abs(g:getFuel() - (tonumber(m.fuel) or -1)) < 1e-6 and tostring(g:isActivated()) == m.on
+                    and rec ~= nil and rec.tank ~= nil and rec.tank.uses == GP.tank, string.format(
+                    "server: fuel %s running %s tank %s watched %s; this client's copy: fuel %.7f running %s tank %s",
+                    tostring(m.fuel), tostring(m.on), tostring(m.tank), tostring(m.watched), g:getFuel(),
+                    tostring(g:isActivated()), tostring(rec and rec.tank and rec.tank.uses))
+            end)
+        end),
+        call("gp_give_can", "give", { items = "Base.PetrolCan", petrol = 4 }, "given", function() end),
+        wait("mp_gp_can_arrives", 120),
+        request("gp_pour", "transfer", function(ctx)
+            local can = player():getInventory():getFirstTypeRecurse("Base.PetrolCan")
+            GP.can = can
+            return can and { source = TLG.Authority.Resolver.refForItem(can), destination = ref(), amount = 2 } or nil
+        end, function(r)
+            local valid = ISAddFuel:new(player(), gen(), GP.can, 100):isValid()
+            check("gp_no_liquid_goes_in", function()
+                return r.ok == false and r.reason == "gas_generator" and valid == false, string.format(
+                    "the pour: ok=%s reason=%s; the game's Add fuel valid on this client %s", tostring(r.ok),
+                    tostring(r.reason), tostring(valid))
+            end)
+        end),
+        request("gp_status", "gas.status", function() return { device = ref() } end, function(r)
+            check("gp_status_from_the_server", function()
+                return r.ok == true and r.holdsGas == true and r.tankUses ~= nil and GP.tank ~= nil
+                    and r.tankUses <= GP.tank, string.format("ok=%s holds gas %s fuel %s tank %s (the server's at the " ..
+                    "probe %s)", tostring(r.ok), tostring(r.holdsGas), tostring(r.fuel), tostring(r.tankUses),
+                    tostring(GP.tank))
+            end)
+        end),
+        gasMenu("remove", "ContextMenu_TLG_GasRemoveTank", function(r) GP.removed = r end),
+        wait("mp_gp_tank_back_arrives", 180),
+        once("mp_gp_tank_back", function()
+            local r, t = GP.removed or {}, tanks()
+            check("gp_tank_given_back_to_the_client", function()
+                return r.ok == true and #t == 1 and uses(t[1]) == r.uses and r.uses >= 4990, string.format(
+                    "reply ok=%s uses=%s; tanks in this inventory %d, the one with %s uses", tostring(r.ok),
+                    tostring(r.uses), #t, tostring(t[1] and uses(t[1])))
+            end)
+        end),
+        gasMenu("connect_again", "ContextMenu_TLG_GasConnectTank", function(r) GP.again = r end),
+        wait("mp_gp_connect_again_settles", 180),
+        menuStep("remove_conversion", function(c) TLG.UI.WorkshopMenu.fill(0, c, { gen() }, false) end,
+            "ContextMenu_TLG_ConvGenerator", "ContextMenu_TLG_ConvRemove", function(r) GP.unconvert = r end),
+        wait("mp_gp_removal_settles", 180),
+        once("mp_gp_unconverted", function()
+            local g, r, t = gen(), GP.unconvert or {}, tanks()
+            local ok, profile = pcall(G.profile, g)
+            check("gp_conversion_removed_seen_by_the_client", function()
+                return (GP.again or {}).ok == true and r.ok == true and r.state == "Removed" and #t == 1
+                    and uses(t[1]) >= 4980 and g:getFuel() == 0 and not g:isActivated()
+                    and g:getModData()[G.GAS_KEY] == nil and ok and profile == "generator_si_stock", string.format(
+                    "connected again ok=%s; removal ok=%s state=%s; tanks %d with %s uses; this client's copy: fuel %s, " ..
+                    "running %s, record %s, profile %s", tostring((GP.again or {}).ok), tostring(r.ok), tostring(r.state),
+                    #t, tostring(t[1] and uses(t[1])), tostring(g:getFuel()), tostring(g:isActivated()),
+                    tostring(g:getModData()[G.GAS_KEY] ~= nil), tostring(profile))
+            end)
+        end),
+        probe("end", function(m)
+            report():line("OBS  MP.gp the server at the end: fuel %s running %s record %s profile %s", tostring(m.fuel),
+                tostring(m.on), tostring(m.record), tostring(m.profile))
+        end),
+        once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+    return
+end
+
+------------------------------------------------------------------------------
 -- handbook (2026-11-11, one client, D-038): the biodiesel recipes on a
 -- server, in a client without -debug. The Ash Barrel (a metal drum, two
 -- steel rods, a hammer; Welding 2) is tried in the game's crafting window

@@ -7103,3 +7103,61 @@ harness's deep-recursion probe; no warning of the mod.
 
 Evidence:
 [run 353](evidence/2026-11-12_rt-sp_harness_run353_full_gas_branch.txt).
+
+## 2026-11-12 — RT-MP launches 354–356 (a gas generator on propane on a dedicated server, D-040)
+
+Command: `tools/run-mp-harness.ps1 -Only gaspropane`: the TLGDev dedicated
+server and one client on this computer, branch `feature/gas-generators`,
+42.22.2, the shortest day (DayLength 1) and the default fuel setting.
+About 8 minutes each. The server put down a vanilla generator, G, at
+10666,10651, made its gas conversion by the conversion service's own
+steps, and gave the player what removing it asks (a pipe wrench and a
+screwdriver, Mechanics and Electricity 4, the Generator recipe). The
+client took every other step through the mod's menus and the game's
+actions.
+
+| Launch | Result (pass/fail, client A) |
+| --- | --- |
+| 354 | 10/1 |
+| 355 | 11/0 |
+| 356 | 11/0 |
+
+Launch 354's failure was the probe's: the server finished the
+conversion's work 12 hours ahead (a world two hours old has no 9 hours
+behind it) and kept that as the project's time, so Remove the conversion
+three game hours later was refused as `time_regression`, with nothing
+changed. From launch 355 the time is set back to the present (in the
+single-player harness too). Launch 355 then showed G still running on no
+fuel after Remove the conversion: the game switches such a generator off
+only at its next hourly step. The removal now switches it off, and launch
+356 checks that. Launch 356, the same as 355 elsewhere:
+- **The conversion and the menu.** The client read the gas profile from
+  its copy of the project. The Gas menu's Connect was greyed with no tank
+  about. With a tank of 5000 uses the server put in the client's
+  inventory, Connect took it: 3840 uses into the buffer, the tank gone
+  from the client's inventory, and the client's copy of G at 9.99936 L,
+  its record at 1160 uses.
+- **Started** with the game's action, through the server's start gate.
+- **Refills on the server**: about 2.5 game hours later two uses had been
+  taken (1160 → 1158), and the client's copy of G's fuel (9.9985676 L),
+  state and record matched the server's.
+- **No liquid**: the mod's pour refused (`gas_generator`); the game's Add
+  fuel not valid on the client.
+- **Gas status** from the server: holding gas, 1158 uses.
+- **The tank removed**: a tank of 4997 uses came into the client's
+  inventory.
+- **Remove the conversion** from the Workshop menu, with the tank
+  connected again: the tank back with 4997 uses, G's fuel 0 and switched
+  off, the feed record gone and the stock profile, on the server and in
+  the client's copy.
+
+The harness reports hold no step error. The server's console was not
+kept: it holds the test accounts' passwords.
+
+Not run: two clients, a real network, Add fuel refused at complete on the
+server (the client's own check stopped it first), sleep.
+
+Evidence:
+[run 354](evidence/2026-11-12_rt-mp_harness_run354_gaspropane_42.22.2.txt);
+[run 355](evidence/2026-11-12_rt-mp_harness_run355_gaspropane_42.22.2.txt);
+[run 356](evidence/2026-11-12_rt-mp_harness_run356_gaspropane_42.22.2.txt).

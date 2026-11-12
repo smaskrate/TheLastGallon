@@ -1,0 +1,84 @@
+===== launch 356: tools/run-mp-harness.ps1 -Only gaspropane (one client, DayLength 1). The launcher's own lines were not kept; the client's and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP gp_setup begin
+OBS  MP.gp the server converted G at 10666,10651: Commissioned (begin=true deliver=true join=true work=true), profile generator_gas, setting 0.1000
+PASS MP.gp_converted_on_the_server_A :: project Commissioned, profile generator_gas
+STEP mp_gp_sync begin
+STEP mp_gp_walk begin
+STEP mp_gp_seen begin
+PASS MP.gp_client_sees_a_gas_generator_A :: generator true, gas true
+STEP mp_gp_connect_without_a_tank begin
+OBS  MP.gp connect_without_a_tank -> ok=false reason=entry_disabled duplicate=nil state=nil uses=nil moved=nil
+PASS MP.gp_connect_greyed_without_a_tank_A :: without a tank: entry_disabled
+STEP gp_give_tank begin
+STEP mp_gp_tank_arrives begin
+STEP mp_gp_connect begin
+OBS  MP.gp connect -> ok=true reason=nil duplicate=nil state=nil uses=5000 moved=3840
+STEP mp_gp_connect_settles begin
+STEP mp_gp_connected begin
+PASS MP.gp_connected_and_seen_by_the_client_A :: reply ok=true uses=5000 moved=3840; tanks in this inventory 0; this client's copy: fuel 9.999360, record tank 1160, holds gas true
+STEP mp_gp_start begin
+PASS MP.gp_started_through_the_server_gate_A :: running on this client's copy: true
+STEP mp_gp_hours begin
+STEP gp_after_hours begin
+PASS MP.gp_refills_on_the_server_seen_by_the_client_A :: server: fuel 9.9985676 running true tank 1158 watched true; this client's copy: fuel 9.9985676 running true tank 1158
+STEP gp_give_can begin
+STEP mp_gp_can_arrives begin
+STEP gp_pour begin
+PASS MP.gp_no_liquid_goes_in_A :: the pour: ok=false reason=gas_generator; the game's Add fuel valid on this client false
+STEP gp_status begin
+PASS MP.gp_status_from_the_server_A :: ok=true holds gas true fuel 9.998567581176758 tank 1158 (the server's at the probe 1158)
+STEP mp_gp_remove begin
+OBS  MP.gp remove -> ok=true reason=nil duplicate=nil state=nil uses=4997 moved=nil
+STEP mp_gp_tank_back_arrives begin
+STEP mp_gp_tank_back begin
+PASS MP.gp_tank_given_back_to_the_client_A :: reply ok=true uses=4997; tanks in this inventory 1, the one with 4997 uses
+STEP mp_gp_connect_again begin
+OBS  MP.gp connect_again -> ok=true reason=nil duplicate=nil state=nil uses=4997 moved=3839
+STEP mp_gp_connect_again_settles begin
+STEP mp_gp_remove_conversion begin
+OBS  MP.gp remove_conversion -> ok=true reason=nil duplicate=nil state=Removed uses=nil moved=nil
+STEP mp_gp_removal_settles begin
+STEP mp_gp_unconverted begin
+PASS MP.gp_conversion_removed_seen_by_the_client_A :: connected again ok=true; removal ok=true state=Removed; tanks 1 with 4997 uses; this client's copy: fuel 0, running false, record false, profile generator_si_stock
+STEP gp_end begin
+OBS  MP.gp the server at the end: fuel 0.0000000 running false record false profile generator_si_stock
+STEP mp_finish_a begin
+STEP mp_finish begin
+SUMMARY pass=11 fail=0
+DONE
+
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_gaspropane role=A tag=gp_setup
+OBS  MPS.reply setup_gaspropane gx=10666 gy=10651 profile=generator_gas role=A setting=0.1000 state=Commissioned steps=begin=true deliver=true join=true work=true tag=gp_setup
+OBS  MPS.message from tlga: give_tank role=A tag=gp_give_tank uses=5000
+OBS  MPS.reply give_tank id=1271931154 role=A tag=gp_give_tank uses=5000
+OBS  MPS.ticks 300 OnTick events in 85183 ms
+OBS  MPS.message from tlga: probe_gaspropane gx=10666 gy=10651 role=A tag=gp_after_hours
+OBS  MPS.reply probe_gaspropane found=true fuel=9.9985676 holds=true on=true profile=generator_gas record=true role=A tag=gp_after_hours tank=1158 watched=true
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=4 role=A tag=gp_give_can
+OBS  MPS.reply given ids=Base.PetrolCan=208139665 role=A tag=gp_give_can
+OBS  MPS.message from tlga: probe_gaspropane gx=10666 gy=10651 role=A tag=gp_end
+OBS  MPS.reply probe_gaspropane found=true fuel=0.0000000 holds=false on=false profile=generator_si_stock record=false role=A tag=gp_end tank=nil watched=false
+OBS  MPS.message from tlga: finish role=A
