@@ -100,6 +100,12 @@ function Res.resolve(ref, ctx)
             return false, "out_of_reach"
         end
         function ep:read()
+            -- While its fuel is gas the generator takes and gives no liquid
+            -- (D-040): pours, drains, samples and status are refused.
+            if G.holdsGas(obj) then
+                self.readStatus = "gas_generator"
+                return nil, "gas_generator"
+            end
             -- What burned since the record was written wears it first (D-031).
             pcall(G.chargeWear, obj)
             local rec, status = G.read(obj, true)

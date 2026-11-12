@@ -31,6 +31,7 @@
 --                      audit V-01)
 require "TLG/Integration/Containers"
 require "TLG/Domain/EngineEffects"
+require "TLG/Domain/GasFeed"
 require "TLG/Notify"
 require "TLG/Boot"
 require "TLG/Authority/Vault"
@@ -43,6 +44,7 @@ local Supply, Mixing, Aging, Tx, Consumers = TLG.Domain.Supply, TLG.Domain.Mixin
 local Tables = TLG.Tables
 local EngineEffects = TLG.Domain.EngineEffects
 local Vault = TLG.Authority.Vault
+local GasFeed = TLG.Domain.GasFeed
 
 G.DEFAULT_PROFILE = "generator_si_stock"
 G.ITEM_TYPES = { ["Base.Generator"] = true, ["Base.Generator_Old"] = true, ["Base.Generator_Yellow"] = true,
@@ -94,10 +96,13 @@ end
 
 -- For each square as the game loads it. Hooked as this file loads: the
 -- squares around the player load before OnGameStart, when the adapter is
--- installed (launch 299).
+-- installed (launch 299). A gas generator joins the refills' list.
 function G.onLoadSquare(square)
     local gen = square and square:getGenerator()
-    if gen then G.restoreSprite(gen) end
+    if gen then
+        G.restoreSprite(gen)
+        if gen:getModData()[G.GAS_KEY] ~= nil then G.watchGas(gen) end
+    end
 end
 if Events and Events.LoadGridsquare then Events.LoadGridsquare.Add(G.onLoadSquare) end
 
@@ -180,10 +185,104 @@ function G.profile(gen)
     return G.baseProfile(gen)
 end
 
--- Device identity, conversion projects and the wear fraction travel with the
--- generator.
+-- A gas generator (D-040): its effective profile burns gas. Its own fuel
+-- then holds gas already taken from its source, recorded in mod data
+-- "tlgGas" (TLG/Domain/GasFeed), checked against the vault on a server as
+-- the fuel record is, and carried with the generator.
+G.GAS_KEY = "tlgGas"
+
+function G.isGas(gen)
+    local def = TLG.Registry.get("consumer", G.profile(gen))
+    return def ~= nil and def.ignition == "gaseous"
+end
+
+-- The gas record after the vault's check and the schema check: nil when
+-- there is none, or one written by a newer build (left as it is).
+function G.gasRecord(gen)
+    local raw = Vault.guard("gas", function() return G.keyOf(gen) end, gen:getModData(), G.GAS_KEY, sendFn(gen))
+    if raw == nil then return nil end
+    return (TLG.Persistence.Migrations.sidecar("gas", raw))
+end
+
+-- Whether the generator's fuel is gas. Only then are its liquid paths
+-- refused: a converted generator that still holds petrol, from a save of
+-- before the feed, is drained as any other.
+function G.holdsGas(gen)
+    return GasFeed.holdsGas(G.gasRecord(gen), gen:getFuel())
+end
+
+-- The litres a refill fills to: the generator's capacity, at most the 10 L
+-- setFuel keeps (BC IsoGenerator.setFuel, MaximumGeneratorFuel).
+function G.gasCap(gen)
+    return math.min(gen:getMaxFuel(), 10)
+end
+
+-- The gas generators the authority refills, by square ("x,y,z"). The game
+-- gives Lua no list of its generators, and the object is looked up again
+-- at each refill rather than held across its chunk's unloading.
+G.gasSquares = G.gasSquares or {}
+
+function G.watchGas(gen)
+    local sq = gen and gen:getSquare()
+    if sq then G.gasSquares[sq:getX() .. "," .. sq:getY() .. "," .. sq:getZ()] = true end
+end
+
+-- Writes the gas record as given (callers set its litres, read back after
+-- setFuel).
+function G.writeGas(gen, rec)
+    gen:getModData()[G.GAS_KEY] = rec
+    Vault.put("gas", function() return G.keyOf(gen) end, rec)
+    gen:transmitModData()
+    G.watchGas(gen)
+end
+
+-- One refill on the authority. What burned since the record was written is
+-- charged as wear first (the record changes), then the buffer is topped up
+-- from the tank. Nothing is written when no gas moves, and nothing goes
+-- into a generator that holds other fuel. Returns the uses moved.
+function G.gasRefill(gen)
+    if not World.isAuthority() then return 0 end
+    local rec = G.gasRecord(gen)
+    if rec == nil or rec.tank == nil or rec.tank.uses < 1 then return 0 end
+    local fuel = gen:getFuel()
+    if fuel > GasFeed.TOLERANCE and not GasFeed.holdsGas(rec, fuel) then return 0 end
+    if not G.isGas(gen) then return 0 end
+    local r = GasFeed.refill(rec, fuel, G.gasCap(gen), World.now())
+    if r.moved < 1 then return 0 end
+    pcall(G.chargeWear, gen)
+    gen:setFuel(r.fuel)
+    r.rec.fuel = gen:getFuel()
+    G.writeGas(gen, r.rec)
+    return r.moved
+end
+
+-- The authority's minute pass over the gas generators whose squares are
+-- loaded (D-040: the hour's first minute event runs before its burn,
+-- launches 345-349). A square without its generator, or a generator
+-- without its record, leaves the list.
+function G.gasMinute()
+    if not World.isAuthority() then return end
+    local cell = getCell()
+    if cell == nil then return end
+    for _, key in ipairs(Tables.sortedKeys(G.gasSquares)) do
+        local x, y, z = string.match(key, "^(-?%d+),(-?%d+),(-?%d+)$")
+        local sq = x and cell:getGridSquare(tonumber(x), tonumber(y), tonumber(z))
+        if sq ~= nil then
+            local gen = sq:getGenerator()
+            if gen == nil or gen:getModData()[G.GAS_KEY] == nil then
+                G.gasSquares[key] = nil
+            else
+                local ok, err = pcall(G.gasRefill, gen)
+                if not ok then TLG.Log.error("gas refill at %s: %s", key, tostring(err)) end
+            end
+        end
+    end
+end
+
+-- Device identity, conversion projects, the wear fraction and the gas
+-- record travel with the generator.
 G.WEAR_KEY = "tlgWear"
-G.CARRIED_KEYS = { "tlgConv", "tlgDeviceId", "tlgEngineId", G.WEAR_KEY }
+G.CARRIED_KEYS = { "tlgConv", "tlgDeviceId", "tlgEngineId", G.WEAR_KEY, G.GAS_KEY }
 
 local function fromSidecar(side, cap)
     local rec = Supply.new({ storage = "generator_tank", cap = cap, t = side.t, cond = side.cond, stab = side.stab,
@@ -231,15 +330,30 @@ end
 
 function G.writeSidecar(gen, rec)
     local side = sidecarOf(rec, G.baseProfile(gen))
-    gen:getModData().tlg = side
+    local md = gen:getModData()
+    md.tlg = side
     Vault.put("supply", function() return G.keyOf(gen) end, side)
+    -- Liquid came in where the gas had burned out: the gas record no longer
+    -- stands for the litres (its tank stays).
+    local gas = md[G.GAS_KEY] ~= nil and G.gasRecord(gen) or nil
+    if gas and (gas.fuel or 0) > 0 then
+        local vented = GasFeed.vent(gas, World.now())
+        md[G.GAS_KEY] = vented
+        Vault.put("gas", function() return G.keyOf(gen) end, vented)
+    end
     gen:transmitModData()
 end
 
+-- While the buffer holds gas, the gas record is the fuel (D-040).
 function G.evaluate(gen)
-    local rec = G.read(gen, false)
     local ambient
     pcall(function() ambient = getClimateManager():getTemperature() end)
+    local gas, fuel = G.gasRecord(gen), gen:getFuel()
+    if GasFeed.holdsGas(gas, fuel) then
+        local s = GasFeed.supply(gas, fuel)
+        return Consumers.evaluate(G.profile(gen), s, { ambientC = ambient }), s
+    end
+    local rec = G.read(gen, false)
     return Consumers.evaluate(G.profile(gen), rec, { ambientC = ambient }), rec
 end
 
@@ -264,18 +378,33 @@ end
 -- the record as written, aged to now: a tank run dry still tells what it
 -- burned. Called on the authority before the mod acts on the generator.
 -- Returns the whole points taken off.
+-- What the wear is charged on: the gas record when it held gas at its last
+-- write (D-040: its litres are petrol-equivalent, worn as petrol's), else
+-- the fuel record. Returns the record's id, the litres written, the key of
+-- that write and a function giving the fuel to evaluate; nil without one.
+local function wearBasis(gen, fuel)
+    local gas = G.gasRecord(gen)
+    if gas ~= nil and (gas.fuel or 0) > GasFeed.TOLERANCE then
+        return gas.id, gas.fuel, string.format("%.6f|%s|%s", gas.fuel, tostring(gas.id), tostring(gas.t)),
+            function() return GasFeed.supply(gas, gas.fuel) end
+    end
+    local side = sidecarIn(gen)
+    if type(side) ~= "table" or side.q == nil then return nil end
+    local rec = fromSidecar(side, math.max(gen:getMaxFuel(), fuel))
+    local written = Supply.total(rec)
+    return side.id, written, string.format("%.6f|%s|%s", written, tostring(side.rev), tostring(side.t)),
+        function() return Aging.advance(rec, World.now(), World.env()) end
+end
+
 function G.chargeWear(gen)
     if not World.isAuthority() then return 0 end
     local md = gen:getModData()
-    local side = sidecarIn(gen)
-    if type(side) ~= "table" or side.q == nil then return 0 end
     local fuel = gen:getFuel()
-    local rec = fromSidecar(side, math.max(gen:getMaxFuel(), fuel))
-    local written = Supply.total(rec)
-    local key = string.format("%.6f|%s|%s", written, tostring(side.rev), tostring(side.t))
+    local id, written, key, fuelOf = wearBasis(gen, fuel)
+    if written == nil then return 0 end
     -- Kept in the vault under the record's id; one the vault does not know
     -- yet (a save from before it) is taken as found once.
-    local w = Vault.guardKeyed("wear", side.id, md, G.WEAR_KEY, sendFn(gen))
+    local w = Vault.guardKeyed("wear", id, md, G.WEAR_KEY, sendFn(gen))
     if type(w) ~= "table" then w = { c = 0 } end
     if w.k ~= key then w.k, w.charged = key, 0 end
     local burned = written - fuel
@@ -287,7 +416,7 @@ function G.chargeWear(gen)
     elseif due > 1e-6 then
         local ambient
         pcall(function() ambient = getClimateManager():getTemperature() end)
-        local e = Consumers.evaluate(G.profile(gen), Aging.advance(rec, World.now(), World.env()), { ambientC = ambient })
+        local e = Consumers.evaluate(G.profile(gen), fuelOf(), { ambientC = ambient })
         local perLitre = EngineEffects.generatorWearPerLitre(G.lowerChanceOneIn(gen),
             SandboxVars and SandboxVars.GeneratorFuelConsumption)
         local carry
@@ -309,7 +438,7 @@ function G.chargeWear(gen)
         end
     end
     md[G.WEAR_KEY] = w
-    Vault.putKeyed("wear", side.id, w)
+    Vault.putKeyed("wear", id, w)
     return whole
 end
 
@@ -332,6 +461,8 @@ local function installAddFuel()
         local o = orig(class, character, generator, petrol, maxTime)
         if World.isAuthority() and o and generator and petrol and petrol:getFluidContainer() then
             pcall(function()
+                -- A generator that holds gas takes no liquid (refused below).
+                if G.holdsGas(generator) then return end
                 -- Before the refuel moves the tank past what burned.
                 G.chargeWear(generator)
                 o.tlgGenBefore = G.read(generator, true)
@@ -341,7 +472,22 @@ local function installAddFuel()
         end
         return o
     end
+    -- A generator whose fuel is gas takes no liquid (D-040): the menu's
+    -- action is not valid, and the authority refuses it at complete, which a
+    -- server runs for a client's action (engine-capabilities, RT-MP).
+    wrap(ISAddFuel, "isValid", function(orig, self, ...)
+        local ok, gas = pcall(G.holdsGas, self.generator)
+        if ok and gas then return false end
+        return orig(self, ...)
+    end)
     wrap(ISAddFuel, "complete", function(orig, self)
+        if World.isAuthority() and self.generator then
+            local ok, gas = pcall(G.holdsGas, self.generator)
+            if ok and gas then
+                TLG.Notify.send(self.character, "IGUI_TLG_Note_GasOnly")
+                return true
+            end
+        end
         local r = orig(self)
         if self.tlgGenBefore and self.tlgCanBefore and not self.tlgSettled then
             self.tlgSettled = true
@@ -373,16 +519,21 @@ local function installPickup()
         if World.isAuthority() then
             pcall(function()
                 G.chargeWear(self.generator)
+                local gas = G.holdsGas(self.generator)
                 local rec = Aging.advance((G.read(self.generator, true)), World.now(), World.env())
+                -- Litres that are gas carry no petrol-looking fuel record:
+                -- the gas record goes with the carried keys (D-040).
+                if gas then rec.q, rec.deg = {}, {} end
                 side = sidecarOf(rec, G.baseProfile(self.generator))
                 local omd = self.generator:getModData()
                 -- Taken before the generator leaves its square.
                 from = Vault.active() and G.keyOf(self.generator) or nil
-                -- The project and the wear as the vault has them (they are
-                -- put back in omd when they differ).
+                -- The project, the wear and the gas record as the vault has
+                -- them (they are put back in omd when they differ).
                 local CD = TLG.Integration.ConversionDevices
                 if CD then CD.project(omd, from, sendFn(self.generator)) end
                 Vault.guardKeyed("wear", rec.id, omd, G.WEAR_KEY, sendFn(self.generator))
+                if from then Vault.guard("gas", from, omd, G.GAS_KEY, sendFn(self.generator)) end
                 for _, k in ipairs(G.CARRIED_KEYS) do side[k] = TLG.Tables.deepCopy(omd[k]) end
             end)
         end
@@ -411,6 +562,7 @@ local function installPickup()
             -- The records travel with the item; the tile keeps none.
             Vault.release("supply", from)
             Vault.release("project", from)
+            Vault.release("gas", from)
         end
         return r
     end)
@@ -428,6 +580,12 @@ local function attach(obj, side)
     Vault.put("supply", holder, copy)
     if omd.tlgConv ~= nil then Vault.put("project", holder, omd.tlgConv) else Vault.release("project", holder) end
     if omd[G.WEAR_KEY] ~= nil then Vault.putKeyed("wear", copy.id, omd[G.WEAR_KEY]) end
+    if omd[G.GAS_KEY] ~= nil then
+        Vault.put("gas", holder, omd[G.GAS_KEY])
+        G.watchGas(obj)
+    else
+        Vault.release("gas", holder)
+    end
 end
 
 -- A carried generator's record, checked against the vault on a server.
@@ -593,6 +751,8 @@ function G.install()
         for _, e in ipairs({ "OnGameStart", "OnLoad" }) do
             if Events[e] then Events[e].Add(G.loadSprites) end
         end
+        -- The gas generators' refills (D-040).
+        if Events.EveryOneMinute then Events.EveryOneMinute.Add(G.gasMinute) end
     end
     TLG.Log.info("generator adapter installed")
 end

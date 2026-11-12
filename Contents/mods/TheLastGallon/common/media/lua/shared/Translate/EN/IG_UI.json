@@ -50,6 +50,7 @@
     "IGUI_TLG_Reason_Wrong_4": "Too much %1: it will not start, and every try damages the engine",
     "IGUI_TLG_Harmful": "It runs on this, but the fuel damages the engine",
     "IGUI_TLG_Note_StartDamage": "Wrong fuel (%1): the engine will not start, and trying damages it",
+    "IGUI_TLG_Note_GasOnly": "This generator runs on gas: it takes no liquid fuel",
     "IGUI_TLG_Note_EngineFailed": "The engine has failed: wrong fuel (%1)",
     "IGUI_TLG_Note_WrongFuel": "Wrong fuel (%1): it damages this engine while it runs",
     "IGUI_TLG_Fail_NeedsKit": "You need a fuel sampling kit.",

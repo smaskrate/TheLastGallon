@@ -50,6 +50,7 @@
     "IGUI_TLG_Reason_Wrong_4": "Troppo %1: non parte, e ogni tentativo danneggia il motore",
     "IGUI_TLG_Harmful": "Funziona, ma questo carburante danneggia il motore",
     "IGUI_TLG_Note_StartDamage": "Carburante sbagliato (%1): il motore non parte, e provarci lo danneggia",
+    "IGUI_TLG_Note_GasOnly": "Questo generatore va a gas: non prende carburante liquido",
     "IGUI_TLG_Note_EngineFailed": "Il motore ha ceduto: carburante sbagliato (%1)",
     "IGUI_TLG_Note_WrongFuel": "Carburante sbagliato (%1): danneggia questo motore mentre funziona",
     "IGUI_TLG_Fail_NeedsKit": "Ti serve un kit di campionamento carburante.",

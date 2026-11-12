@@ -575,6 +575,27 @@ T.case("audit V-01 fixed: a pump's and a generator's records, project and wear a
     end)
 end)
 
+T.case("audit V-01 fixed: a gas generator's feed record is kept on the server (D-040)", function()
+    asServer(function()
+        local G, GasFeed = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local gen = generatorAt(96, 96, 0)
+        local r = GasFeed.connect(GasFeed.new({ id = TLG.World.newId("GS"), t = 0 }), 100, 0)
+        G.writeGas(gen, r.rec)
+        local gmd = gen:getModData()
+        local forged = TLG.Tables.deepCopy(gmd.tlgGas)
+        forged.tank.uses = 5000
+        gmd.tlgGas = forged
+        T.eq(G.gasRecord(gen).tank.uses, 100, "a tank refilled in mod data is put back")
+        T.eq(gmd.tlgGas.tank.uses, 100)
+        -- A feed record nobody wrote, on a generator without one, is dropped.
+        local other = generatorAt(95, 96, 0)
+        other:getModData().tlgGas = { v = 1, id = "AUDIT-GS", buf = { propane = 3 }, fuel = 9,
+            tank = { uses = 5000 }, t = 0 }
+        T.eq(G.gasRecord(other), nil, "a forged feed record is dropped")
+        T.eq(other:getModData().tlgGas, nil)
+    end)
+end)
+
 T.case("audit V-01 fixed: a machine's process record rewritten in its mod data is put back", function()
     asServer(function()
         local p = M.player("brewer", M.square(99, 99, 0))
