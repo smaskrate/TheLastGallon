@@ -17039,9 +17039,9 @@ end
 function RT.GM.clear()
     local GM = RT.GM
     GM.drops, GM.boundaries, GM.marks, GM.attempts = {}, {}, {}, {}
-    GM.minutes, GM.refills, GM.offTicks, GM.stops = 0, 0, 0, 0
+    GM.minutes, GM.refills, GM.offTicks, GM.stops, GM.trims = 0, 0, 0, 0, 0
     GM.attempt, GM.lastAttempt, GM.attemptHour, GM.min59Hour, GM.onStageTick = nil, nil, nil, nil, nil
-    GM.boundary, GM.lastFuel, GM.minuteFuel = nil, nil, nil
+    GM.boundary, GM.lastFuel, GM.minuteFuel, GM.trimFrom = nil, nil, nil, nil
 end
 
 -- The tick watcher. A drop of A's fuel is a step: its size against the load
@@ -17062,7 +17062,10 @@ function RT.GM.onTick()
         GM.boundaries[#GM.boundaries + 1] = b
         GM.boundary = b
         if GM.attempt then
+            -- A refill between the rise and here: the minute event of the
+            -- boundary's frame runs before this watcher (launch 345).
             GM.attempt.boundary = b
+            GM.attempt.refilledBetween = GM.attempt.refillsAtRise ~= nil and GM.refills > GM.attempt.refillsAtRise
             GM.lastAttempt, GM.attempt = GM.attempt, nil
         end
     end
@@ -17093,9 +17096,26 @@ function RT.GM.onTick()
             GM.attempts[#GM.attempts + 1] = GM.attempt
             GM.attemptHour = fl
         elseif GM.attempt and not GM.attempt.rose and p > GM.attempt.powerBefore + GM.chargerStep / 2 then
+            -- The test means something only if the buffer is short of the
+            -- new step when the rise is seen: a refill must then land
+            -- between the rise and the burn.
             GM.attempt.rose, GM.attempt.roseAt = true, age
+            GM.attempt.short, GM.attempt.fuelAtRise, GM.attempt.refillsAtRise = f < p, f, GM.refills
         end
-        if GM.attemptHour ~= fl and age - fl >= 0.5 and GM.charger:isActivated() then GM.charging(false) end
+        if GM.attemptHour ~= fl and age - fl >= 0.5 and GM.charger:isActivated() then
+            GM.charging(false)
+            GM.trimFrom = p
+        end
+        -- Once the load has fallen back, the buffer is set down to it, so
+        -- the next switch-on finds it sized for the lower load (launches
+        -- 345-347 kept the higher one, and most switch-ons tested nothing).
+        if GM.trimFrom and p < GM.trimFrom - GM.chargerStep / 2 then
+            if a:getFuel() > p + GM.eps then
+                a:setFuel(p + GM.eps)
+                GM.trims = GM.trims + 1
+            end
+            GM.trimFrom = nil
+        end
     end
     if GM.refill == "tick" and a:isActivated() then
         local cap = GM.power(a) + GM.eps
@@ -17420,8 +17440,11 @@ RT.GM.exact = { name = "rtgm_exact", timeout = 60000, fn = function(ctx, ticks)
 end }
 
 -- 5. A refill policy against late switch-ons, over `want` counted attempts
--- and at least 3 boundaries (at most 8). At speed 100 a game minute is about
--- 1.5 ticks, so few switch-ons can count there: it wants none.
+-- and at least 3 boundaries (at most 8). An attempt counts when the load
+-- rose before the boundary while the buffer was short of the new step, so
+-- that a refill had to land between the rise and the burn. At speed 100 a
+-- game minute is about 1.5 ticks, so few switch-ons can count there: it
+-- wants none.
 function RT.GM.policy(mode, speed, want)
     return { name = "rtgm_policy_" .. mode .. "_x" .. speed, timeout = 120000, fn = function(ctx, ticks)
         local GM = RT.GM
@@ -17433,17 +17456,27 @@ function RT.GM.policy(mode, speed, want)
             GM.stage = label
             GM.charging(false)
             if not a:isActivated() then a:setActivated(true) end
+            ctx.started = ticks
+            return nil
+        end
+        -- The buffer is sized once the charger's going off has reached the
+        -- load (the server's launch 347 sized it from the load before).
+        if not ctx.sized then
+            if ticks - ctx.started < 10 then return nil end
             a:setFuel(GM.power(a) + GM.eps)
             GM.lastFuel = a:getFuel()
             GM.refill, GM.late = mode, true
-            ctx.started, ctx.h0, ctx.m0 = ticks, hours(), GM.minutes
+            ctx.sized, ctx.h0, ctx.m0 = ticks, hours(), GM.minutes
             RT.speed(speed)
             return nil
         end
         if ticks % 30 == 0 then RT.keepFit() end
-        local counted = 0
+        local counted, refilled = 0, 0
         for _, at in ipairs(GM.attempts) do
-            if at.rose and at.boundary then counted = counted + 1 end
+            if at.rose and at.short and at.boundary then
+                counted = counted + 1
+                if at.refilledBetween then refilled = refilled + 1 end
+            end
         end
         -- A stop needs restarting, or the next attempts measure nothing.
         if not a:isActivated() then
@@ -17465,30 +17498,34 @@ function RT.GM.policy(mode, speed, want)
         local gone = hours() - ctx.h0
         local stoppedCounted, parts = 0, {}
         for _, at in ipairs(GM.attempts) do
-            if at.rose and at.boundary and at.stopped then stoppedCounted = stoppedCounted + 1 end
-            parts[#parts + 1] = string.format("[hour %d: on at %.5f h, load rose %s%s, boundary %s, stopped %s]", at.hour,
-                at.at, tostring(at.rose), at.roseAt and string.format(" at %.5f h", at.roseAt) or "",
-                at.boundary and string.format("%.5f h", at.boundary.age) or "-", tostring(at.stopped == true))
+            if at.rose and at.short and at.boundary and at.stopped then stoppedCounted = stoppedCounted + 1 end
+            parts[#parts + 1] = string.format("[hour %d: on at %.5f h, load rose %s%s, fuel then %s (short of the step %s), " ..
+                "boundary %s, a refill between %s, stopped %s]", at.hour, at.at, tostring(at.rose),
+                at.roseAt and string.format(" at %.5f h", at.roseAt) or "",
+                at.fuelAtRise and string.format("%.7f", at.fuelAtRise) or "-", tostring(at.short == true),
+                at.boundary and string.format("%.5f h", at.boundary.age) or "-", tostring(at.refilledBetween == true),
+                tostring(at.stopped == true))
         end
-        GM.results = GM.results or {}
-        GM.results[label] = { counted = counted, stopped = stoppedCounted, stops = GM.stops }
-        R:line("OBS  RTGM.%s: %.3f game h, %d minute events (%.1f an hour), %d boundaries, %d refills, %d stops, %d ticks " ..
-            "not running; attempts %s", label, gone, GM.minutes - ctx.m0, (GM.minutes - ctx.m0) / math.max(gone, 1e-9),
-            #GM.boundaries, GM.refills, GM.stops, GM.offTicks, table.concat(parts, " "))
+        R:line("OBS  RTGM.%s: %.3f game h, %d minute events (%.1f an hour), %d boundaries, %d refills, %d trims, %d stops, " ..
+            "%d ticks not running; attempts %s", label, gone, GM.minutes - ctx.m0,
+            (GM.minutes - ctx.m0) / math.max(gone, 1e-9), #GM.boundaries, GM.refills, GM.trims, GM.stops, GM.offTicks,
+            table.concat(parts, " "))
         if mode == "tick" then
             R:check("RTGM." .. label .. "_runs_through", function()
-                return counted >= want and GM.stops == 0 and #GM.boundaries >= 3, string.format(
-                    "%d counted attempts (of %d), %d stops, %d boundaries", counted, #GM.attempts, GM.stops, #GM.boundaries)
+                return counted >= want and refilled == counted and GM.stops == 0 and #GM.boundaries >= 3, string.format(
+                    "%d counted attempts (of %d), a refill between the rise and the burn at %d, %d stops, %d boundaries",
+                    counted, #GM.attempts, refilled, GM.stops, #GM.boundaries)
             end)
         else
             -- What the minute refill must do follows from stage 2's order: a
             -- minute event before the step refills for the new load.
             local expectStops = GM.minuteSawStep == true
             R:check("RTGM." .. label .. "_as_the_order_says", function()
-                return counted >= want and GM.minuteSawStep ~= nil
-                    and ((expectStops and stoppedCounted > 0) or (not expectStops and GM.stops == 0)), string.format(
-                    "%d counted attempts, %d of them stopped A, %d stops in all; the first minute event of the hour saw " ..
-                    "the step already: %s", counted, stoppedCounted, GM.stops, tostring(GM.minuteSawStep))
+                return counted >= want and GM.minuteSawStep ~= nil and ((expectStops and stoppedCounted > 0)
+                    or (not expectStops and GM.stops == 0 and refilled == counted)), string.format(
+                    "%d counted attempts, a refill between the rise and the burn at %d, %d of them stopped A, %d stops " ..
+                    "in all; the first minute event of the hour saw the step already: %s", counted, refilled,
+                    stoppedCounted, GM.stops, tostring(GM.minuteSawStep))
             end)
         end
         return true

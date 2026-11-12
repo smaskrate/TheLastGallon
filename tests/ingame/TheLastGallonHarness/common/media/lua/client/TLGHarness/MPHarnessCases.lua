@@ -198,18 +198,22 @@ if MP.only == "gasfeed" then
                     "%d boundaries, %s first minute events; the tick watcher saw the step at %d, the minute event at %d",
                     b, tostring(m.marks), ts, ms)
             end)
+            -- A counted switch-on found the buffer short of the new step, so a
+            -- refill had to land between the rise and the burn.
             check("gf_server_policy_tick_runs_through", function()
-                return n("tick_counted") >= 3 and n("tick_stops") == 0, string.format(
-                    "%s counted switch-ons, %s stops, %s boundaries, %s minute events an hour", tostring(m.tick_counted),
-                    tostring(m.tick_stops), tostring(m.tick_bounds), tostring(m.tick_minutes_an_hour))
+                return n("tick_counted") >= 3 and n("tick_refilled") == n("tick_counted") and n("tick_stops") == 0,
+                    string.format("%s counted switch-ons, a refill between the rise and the burn at %s, %s stops, %s " ..
+                        "boundaries, %s minute events an hour", tostring(m.tick_counted), tostring(m.tick_refilled),
+                        tostring(m.tick_stops), tostring(m.tick_bounds), tostring(m.tick_minutes_an_hour))
             end)
             check("gf_server_policy_minute_as_the_order_says", function()
                 local expectStops = ms == b and b > 0
                 return n("minute_counted") >= 3 and ((expectStops and n("minute_stopped") > 0)
-                    or (not expectStops and n("minute_stops") == 0)), string.format(
-                    "%s counted switch-ons, %s of them stopped G, %s stops in all; the first minute event saw the step " ..
-                    "at %d of %d boundaries", tostring(m.minute_counted), tostring(m.minute_stopped),
-                    tostring(m.minute_stops), ms, b)
+                    or (not expectStops and n("minute_stops") == 0 and n("minute_refilled") == n("minute_counted"))),
+                    string.format("%s counted switch-ons, a refill between the rise and the burn at %s, %s of them " ..
+                        "stopped G, %s stops in all; the first minute event saw the step at %d of %d boundaries",
+                        tostring(m.minute_counted), tostring(m.minute_refilled), tostring(m.minute_stopped),
+                        tostring(m.minute_stops), ms, b)
             end)
             check("gf_client_copy_follows_the_server", function()
                 return C.probes >= 20 and C.same >= 0.9 * C.probes and C.sameOn >= 0.95 * C.probes and C.offSeen == 0

@@ -1,0 +1,211 @@
+===== launch 349: tools/run-mp-harness.ps1 -Only gasfeed (one client, DayLength 1). The launcher's own lines were not kept; the client's and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP gf_setup begin
+OBS  MP.gf the server put G at 10666,10651: setting 0.1000 (SandboxVars 0.1), DayLength 1, AllowExteriorGenerator true, charger true
+STEP mp_gf_follow begin
+OBS  MP.gf probe 1 (settle, 2.19330 h): server fuel 1.0000000 running true load 0.0020000; this client's copy fuel 1.0000000 running true
+OBS  MP.gf probe 3 (steps, 2.45976 h): server fuel 1.0000000 running true load 0.0020000; this client's copy fuel 1.0000000 running true
+OBS  MP.gf probe 11 (steps, 3.52593 h): server fuel 0.9980000 running true load 0.0020000; this client's copy fuel 0.9980000 running true
+OBS  MP.gf probe 21 (steps, 4.85861 h): server fuel 0.9960001 running true load 0.0020000; this client's copy fuel 0.9960001 running true
+OBS  MP.gf probe 23 (policy_tick, 5.12513 h): server fuel 0.0021000 running true load 0.0020000; this client's copy fuel 0.0021000 running true
+OBS  MP.gf probe 31 (policy_tick, 6.19118 h): server fuel 0.0071000 running true load 0.0070000; this client's copy fuel 0.0071000 running true
+OBS  MP.gf probe 41 (policy_tick, 7.52385 h): server fuel 0.0021000 running true load 0.0020000; this client's copy fuel 0.0021000 running true
+OBS  MP.gf probe 45 (policy_minute, 8.05697 h): server fuel 0.0021000 running true load 0.0020000; this client's copy fuel 0.0021000 running true
+OBS  MP.gf probe 51 (policy_minute, 8.85658 h): server fuel 0.0021000 running true load 0.0020000; this client's copy fuel 0.0021000 running true
+OBS  MP.gf probe 61 (policy_minute, 10.18930 h): server fuel 0.0071000 running true load 0.0070000; this client's copy fuel 0.0071000 running true
+OBS  MP.gf probe 68 (done, 11.12225 h): server fuel 0.0071000 running true load 0.0020000; this client's copy fuel 0.0071000 running true
+STEP mp_gf_results begin
+OBS  MP.gf the server's results: ok=nil reason=nil duplicate=nil state=nil; this client: 68 probes, the fuel the same at 68, running the same at 68, not running at 0 of 22 probes in the per-tick policy
+PASS MP.gf_server_charger_switches_the_load_A :: rise 0.0050000 for a setting of 0.1, back true
+PASS MP.gf_server_step_is_the_load_read_before_A :: 3 drops, 0 off the load read before, 3 in the hour's first game minute
+PASS MP.gf_server_order_observed_A :: 3 boundaries, 3 first minute events; the tick watcher saw the step at 0, the minute event at 0
+PASS MP.gf_server_policy_tick_runs_through_A :: 3 counted switch-ons, a refill between the rise and the burn at 3, 0 stops, 3 boundaries, 60.2 minute events an hour
+PASS MP.gf_server_policy_minute_as_the_order_says_A :: 3 counted switch-ons, a refill between the rise and the burn at 3, 0 of them stopped G, 0 stops in all; the first minute event saw the step at 0 of 3 boundaries
+PASS MP.gf_client_copy_follows_the_server_A :: 68 probes: the fuel the same at 68, running the same at 68; not running at 0 of 22 probes in the per-tick policy
+STEP mp_finish_a begin
+STEP mp_finish begin
+SUMMARY pass=7 fail=0
+DONE
+
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_gasfeed role=A tag=gf_setup
+OBS  MPS.reply setup_gasfeed charger=true daylength=1 exterior=true gx=10666 gy=10651 role=A sandbox=0.1 setting=0.1000 tag=gf_setup
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_300
+OBS  MPS.reply probe_gasfeed age=2.19330 found=true fuel=1.0000000 load=0.0020000 on=true phase=settle role=A tag=gf_probe_300
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_600
+OBS  MPS.reply probe_gasfeed age=2.32650 found=true fuel=1.0000000 load=0.0020000 on=true phase=settle role=A tag=gf_probe_600
+OBS  MPS.gf placed: fuel 1.0000000, running true, load 0.0020000, setting 0.1000 (SandboxVars 0.1), powering []; charger true
+OBS  MPS.gf charger: load 0.0020000 -> 0.0070000 within 1 ticks, back to 0.0020000 within 1 ticks; expected rise 0.0050000
+OBS  MPS.gf enter steps at 2.38513 h: fuel 1.0000000, running true, load 0.0020000
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_900
+OBS  MPS.reply probe_gasfeed age=2.45976 charger_back=true charger_rise=0.0050000 found=true fuel=1.0000000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_900
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_1200
+OBS  MPS.reply probe_gasfeed age=2.59303 charger_back=true charger_rise=0.0050000 found=true fuel=1.0000000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_1200
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_1500
+OBS  MPS.reply probe_gasfeed age=2.72630 charger_back=true charger_rise=0.0050000 found=true fuel=1.0000000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_1500
+OBS  MPS.ticks 300 OnTick events in 84612 ms
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_1800
+OBS  MPS.reply probe_gasfeed age=2.85954 charger_back=true charger_rise=0.0050000 found=true fuel=1.0000000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_1800
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_2100
+OBS  MPS.reply probe_gasfeed age=2.99283 charger_back=true charger_rise=0.0050000 found=true fuel=1.0000000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_2100
+OBS  MPS.gf steps drop at 3.00350 h: 0.0020000 L (load read the tick before 0.0020000), fuel now 0.9980000, running true, 1 ticks after the boundary was seen
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_2400
+OBS  MPS.reply probe_gasfeed age=3.12610 charger_back=true charger_rise=0.0050000 found=true fuel=0.9980000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_2400
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_2700
+OBS  MPS.reply probe_gasfeed age=3.25938 charger_back=true charger_rise=0.0050000 found=true fuel=0.9980000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_2700
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_3000
+OBS  MPS.reply probe_gasfeed age=3.39264 charger_back=true charger_rise=0.0050000 found=true fuel=0.9980000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_3000
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_3300
+OBS  MPS.reply probe_gasfeed age=3.52593 charger_back=true charger_rise=0.0050000 found=true fuel=0.9980000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_3300
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_3600
+OBS  MPS.reply probe_gasfeed age=3.65920 charger_back=true charger_rise=0.0050000 found=true fuel=0.9980000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_3600
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_3900
+OBS  MPS.reply probe_gasfeed age=3.79249 charger_back=true charger_rise=0.0050000 found=true fuel=0.9980000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_3900
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_4200
+OBS  MPS.reply probe_gasfeed age=3.92577 charger_back=true charger_rise=0.0050000 found=true fuel=0.9980000 load=0.0020000 on=true phase=steps role=A tag=gf_probe_4200
+OBS  MPS.gf steps drop at 4.00306 h: 0.0020000 L (load read the tick before 0.0020000), fuel now 0.9960001, running true, 1 ticks after the boundary was seen
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_4500
+OBS  MPS.reply probe_gasfeed age=4.05903 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_4500
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_4800
+OBS  MPS.reply probe_gasfeed age=4.19230 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_4800
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_5100
+OBS  MPS.reply probe_gasfeed age=4.32558 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_5100
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_5400
+OBS  MPS.reply probe_gasfeed age=4.45886 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_5400
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_5700
+OBS  MPS.reply probe_gasfeed age=4.59211 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_5700
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_6000
+OBS  MPS.reply probe_gasfeed age=4.72535 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_6000
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_6300
+OBS  MPS.reply probe_gasfeed age=4.85861 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_6300
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_6600
+OBS  MPS.reply probe_gasfeed age=4.99186 charger_back=true charger_rise=0.0050000 found=true fuel=0.9960001 load=0.0020000 on=true phase=steps role=A tag=gf_probe_6600
+OBS  MPS.gf steps drop at 5.00519 h: 0.0020000 L (load read the tick before 0.0020000), fuel now 0.9940001, running true, 1 ticks after the boundary was seen
+OBS  MPS.gf steps: 3 drops, 0 off the load read before by more than 2e-07, 3 in the hour's first game minute; order [boundary 3.00082 h tick 353: tick watcher saw the step false; first minute event at 3.00082 h tick 352 saw it false, 0 ms after the tick watcher] [boundary 4.00039 h tick 728: tick watcher saw the step false; first minute event at 4.00039 h tick 727 saw it false, 0 ms after the tick watcher] [boundary 5.00252 h tick 1104: tick watcher saw the step false; first minute event at 5.00252 h tick 1103 saw it false, 0 ms after the tick watcher]
+OBS  MPS.gf enter policy_tick at 5.00519 h: fuel 0.9940001, running true, load 0.0020000
+OBS  MPS.gf policy_tick sized at 5.03185 h: fuel 0.0021000 for a load of 0.0020000
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_6900
+OBS  MPS.reply probe_gasfeed age=5.12513 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_6900 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_7200
+OBS  MPS.reply probe_gasfeed age=5.25839 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_7200 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_7500
+OBS  MPS.reply probe_gasfeed age=5.39163 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_7500 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_7800
+OBS  MPS.reply probe_gasfeed age=5.52488 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_7800 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_8100
+OBS  MPS.reply probe_gasfeed age=5.65813 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_8100 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_8400
+OBS  MPS.reply probe_gasfeed age=5.79141 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_8400 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_8700
+OBS  MPS.reply probe_gasfeed age=5.92466 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_8700 tick_saw=0
+OBS  MPS.gf policy_tick drop at 6.00462 h: 0.0070000 L (load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_9000
+OBS  MPS.reply probe_gasfeed age=6.05794 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_9000 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_9300
+OBS  MPS.reply probe_gasfeed age=6.19118 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_9300 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_9600
+OBS  MPS.reply probe_gasfeed age=6.32445 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_9600 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_9900
+OBS  MPS.reply probe_gasfeed age=6.45771 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_9900 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_10200
+OBS  MPS.reply probe_gasfeed age=6.59098 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_10200 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_10500
+OBS  MPS.reply probe_gasfeed age=6.72426 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_10500 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_10800
+OBS  MPS.reply probe_gasfeed age=6.85752 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_10800 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_11100
+OBS  MPS.reply probe_gasfeed age=6.99077 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_11100 tick_saw=0
+OBS  MPS.gf policy_tick drop at 7.00410 h: 0.0070000 L (load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_11400
+OBS  MPS.reply probe_gasfeed age=7.12405 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_11400 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_11700
+OBS  MPS.reply probe_gasfeed age=7.25730 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_11700 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_12000
+OBS  MPS.reply probe_gasfeed age=7.39055 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_12000 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_12300
+OBS  MPS.reply probe_gasfeed age=7.52385 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_12300 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_12600
+OBS  MPS.reply probe_gasfeed age=7.65712 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_12600 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_12900
+OBS  MPS.reply probe_gasfeed age=7.79041 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_12900 tick_saw=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_13200
+OBS  MPS.reply probe_gasfeed age=7.92369 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_tick role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_13200 tick_saw=0
+OBS  MPS.gf policy_tick drop at 8.00366 h: 0.0070000 L (load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen
+OBS  MPS.gf policy_tick: 2.988 game h, 3 boundaries, 6 refills, 2 trims, 0 stops, 0 ticks not running, 60.2 minute events an hour; attempts [hour 5: on at 5.98595 h, load rose true, fuel then 0.0021000 (short of the step true), boundary 6.00195 h, a refill between true, stopped false] [hour 6: on at 6.98544 h, load rose true, fuel then 0.0021000 (short of the step true), boundary 7.00143 h, a refill between true, stopped false] [hour 7: on at 7.98499 h, load rose true, fuel then 0.0021000 (short of the step true), boundary 8.00099 h, a refill between true, stopped false]
+OBS  MPS.gf enter policy_minute at 8.01966 h: fuel 0.0071000, running true, load 0.0070000
+OBS  MPS.gf policy_minute sized at 8.04631 h: fuel 0.0021000 for a load of 0.0020000
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_13500
+OBS  MPS.reply probe_gasfeed age=8.05697 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_13500 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_13800
+OBS  MPS.reply probe_gasfeed age=8.19022 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_13800 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_14100
+OBS  MPS.reply probe_gasfeed age=8.32352 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_14100 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_14400
+OBS  MPS.reply probe_gasfeed age=8.45678 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_14400 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_14700
+OBS  MPS.reply probe_gasfeed age=8.59004 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_14700 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_15000
+OBS  MPS.reply probe_gasfeed age=8.72331 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_15000 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_15300
+OBS  MPS.reply probe_gasfeed age=8.85658 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_15300 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_15600
+OBS  MPS.reply probe_gasfeed age=8.98985 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_15600 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.gf policy_minute drop at 9.00318 h: 0.0070000 L (load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_15900
+OBS  MPS.reply probe_gasfeed age=9.12312 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_15900 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_16200
+OBS  MPS.reply probe_gasfeed age=9.25640 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_16200 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_16500
+OBS  MPS.reply probe_gasfeed age=9.38969 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_16500 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_16800
+OBS  MPS.reply probe_gasfeed age=9.52297 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_16800 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_17100
+OBS  MPS.reply probe_gasfeed age=9.65623 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_17100 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_17400
+OBS  MPS.reply probe_gasfeed age=9.78950 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_17400 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_17700
+OBS  MPS.reply probe_gasfeed age=9.92273 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_17700 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.gf policy_minute drop at 10.00271 h: 0.0070000 L (load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_18000
+OBS  MPS.reply probe_gasfeed age=10.05602 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_18000 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_18300
+OBS  MPS.reply probe_gasfeed age=10.18930 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_18300 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_18600
+OBS  MPS.reply probe_gasfeed age=10.32258 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_18600 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_18900
+OBS  MPS.reply probe_gasfeed age=10.45585 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_18900 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_19200
+OBS  MPS.reply probe_gasfeed age=10.58914 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_19200 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_19500
+OBS  MPS.reply probe_gasfeed age=10.72242 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_19500 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_19800
+OBS  MPS.reply probe_gasfeed age=10.85571 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0020000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_19800 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_20100
+OBS  MPS.reply probe_gasfeed age=10.98898 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0021000 load=0.0070000 marks=3 minute_saw=0 on=true phase=policy_minute role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_20100 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.gf policy_minute drop at 11.00497 h: 0.0070000 L (load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen
+OBS  MPS.gf policy_minute: 2.975 game h, 3 boundaries, 6 refills, 2 trims, 0 stops, 0 ticks not running, 60.2 minute events an hour; attempts [hour 8: on at 8.98452 h, load rose true, fuel then 0.0021000 (short of the step true), boundary 9.00052 h, a refill between true, stopped false] [hour 9: on at 9.98404 h, load rose true, fuel then 0.0021000 (short of the step true), boundary 10.00004 h, a refill between true, stopped false] [hour 10: on at 10.98365 h, load rose true, fuel then 0.0021000 (short of the step true), boundary 11.00231 h, a refill between true, stopped false]
+OBS  MPS.gf done
+OBS  MPS.message from tlga: probe_gasfeed role=A tag=gf_probe_20400
+OBS  MPS.reply probe_gasfeed age=11.12225 bounds=3 charger_back=true charger_rise=0.0050000 found=true fuel=0.0071000 load=0.0020000 marks=3 minute_bounds=3 minute_counted=3 minute_minutes_an_hour=60.2 minute_refilled=3 minute_saw=0 minute_stopped=0 minute_stops=0 on=true phase=done role=A steps_bad=0 steps_edge=3 steps_n=3 tag=gf_probe_20400 tick_bounds=3 tick_counted=3 tick_minutes_an_hour=60.2 tick_refilled=3 tick_saw=0 tick_stopped=0 tick_stops=0
+OBS  MPS.message from tlga: finish role=A

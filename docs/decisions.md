@@ -1737,7 +1737,7 @@ gas probe (launch 342).
   to **Cancel the project** or **Remove the conversion** (the domain's
   test; not run in game). Building the feed includes offering the
   conversion again through that function.
-* Measured 2026-11-12, what the list above asked (launches 345–347,
+* Measured 2026-11-12, what the list above asked (launches 345–349,
   `test-results.md`; BC `IsoGenerator` 42.22.2; engine-capabilities
   G04/G05):
   * The step is `getTotalPowerUsing()`: the generator's load (0.02, plus
@@ -1754,10 +1754,12 @@ gas probe (launch 342).
   * The hour's first minute event runs at the start of the frame in which
     the hour turns, before the burn, in single player and on a dedicated
     server. A refill on the game-minute pass to one step plus 1e-4 L kept
-    a generator running through every hour with a battery charger switched
-    on in its last minute (three such hours in single player, three on a
-    server). The refill therefore stays on the minute pass, and the
-    margin is 1e-4 L: the wood-gas cap is one step plus 1e-4 L, read from
+    a generator running through every hour in which a battery charger came
+    on in its last minute while the buffer was short of the new step: the
+    hour's minute-0 event refilled it before the burn (three such hours in
+    single player, launch 348, and three on a server, launch 349). The
+    refill therefore stays on the minute pass, and the margin is 1e-4 L:
+    the wood-gas cap is one step plus 1e-4 L, read from
     `getTotalPowerUsing()` at each refill.
   * `setFuel` on a server keeps a running generator running and sends it
     to the clients: a client's copy matched the server's fuel and state at
@@ -1765,6 +1767,8 @@ gas probe (launch 342).
   * A propane tank item given a number of uses keeps it in whole uses
     (1234.5 read 1235), so **Remove the propane tank** can give back a tank
     with the uses left.
-  * Not measured: sleep and speeds above ×100; an object in range of two
-    generators. `setFuel` clamps at 10 L, so a step above 10 L less the
-    margin cannot be held (a load of 100 at the default setting).
+  * Not measured: sleep, the commonest way a player crosses hours beside
+    a generator, to be run before 0.5.0 ships; speeds above ×100; an
+    object in range of two generators. `setFuel` clamps at 10 L, so a
+    step above 10 L less the margin cannot be held (a load of 100 at the
+    default setting).

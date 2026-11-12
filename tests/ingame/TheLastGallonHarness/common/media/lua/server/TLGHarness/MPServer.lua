@@ -829,11 +829,14 @@ end
 
 function GF.clear()
     GF.drops, GF.boundaries, GF.marks, GF.attempts = {}, {}, {}, {}
-    GF.minutes, GF.refills, GF.offTicks, GF.stops, GF.off = 0, 0, 0, 0, 0
+    GF.minutes, GF.refills, GF.offTicks, GF.stops, GF.off, GF.trims = 0, 0, 0, 0, 0, 0
     GF.attempt, GF.lastAttempt, GF.attemptHour, GF.min59Hour = nil, nil, nil, nil
-    GF.boundary, GF.lastFuel, GF.minuteFuel = nil, nil, nil
+    GF.boundary, GF.lastFuel, GF.minuteFuel, GF.trimFrom, GF.sizeAt = nil, nil, nil, nil, nil
 end
 
+-- A policy phase sizes its buffer 10 ticks after it begins, once the
+-- charger's going off has reached the load (launch 347 sized it from the
+-- load before, and its minute phase tested nothing).
 function GF.enter(phase)
     local g = GF.g
     GF.clear()
@@ -844,9 +847,7 @@ function GF.enter(phase)
         g:setFuel(1.0)
     elseif phase == "policy_tick" or phase == "policy_minute" then
         if not g:isActivated() then g:setActivated(true) end
-        g:setFuel(GF.power(g) + GF.eps)
-        GF.refill, GF.late = phase == "policy_tick" and "tick" or "minute", true
-        GF.h0, GF.m0 = getGameTime():getWorldAgeHours(), GF.minutes
+        GF.sizeAt = (GF.tick or 0) + 10
     end
     GF.lastFuel = g:getFuel()
     report():line("OBS  MPS.gf enter %s at %.5f h: fuel %.7f, running %s, load %.7f", phase,
@@ -876,23 +877,31 @@ function GF.closeSteps()
         "minute; order %s", #GF.drops, bad, GF.tol, atEdge, table.concat(parts, " "))
 end
 
+-- An attempt counts when the load rose before the boundary while the
+-- buffer was short of the new step, so that a refill had to land between
+-- the rise and the burn.
 function GF.closePolicy()
-    local counted, stoppedCounted, parts = 0, 0, {}
+    local counted, stoppedCounted, refilled, parts = 0, 0, 0, {}
     for _, at in ipairs(GF.attempts) do
-        if at.rose and at.boundary then
+        if at.rose and at.short and at.boundary then
             counted = counted + 1
             if at.stopped then stoppedCounted = stoppedCounted + 1 end
+            if at.refilledBetween then refilled = refilled + 1 end
         end
-        parts[#parts + 1] = string.format("[hour %d: on at %.5f h, load rose %s, boundary %s, stopped %s]", at.hour, at.at,
-            tostring(at.rose), at.boundary and string.format("%.5f h", at.boundary.age) or "-", tostring(at.stopped == true))
+        parts[#parts + 1] = string.format("[hour %d: on at %.5f h, load rose %s, fuel then %s (short of the step %s), " ..
+            "boundary %s, a refill between %s, stopped %s]", at.hour, at.at, tostring(at.rose),
+            at.fuelAtRise and string.format("%.7f", at.fuelAtRise) or "-", tostring(at.short == true),
+            at.boundary and string.format("%.5f h", at.boundary.age) or "-", tostring(at.refilledBetween == true),
+            tostring(at.stopped == true))
     end
     local gone = getGameTime():getWorldAgeHours() - (GF.h0 or 0)
     local key = GF.phase == "policy_tick" and "tick" or "minute"
     GF.res[key .. "_counted"], GF.res[key .. "_stopped"], GF.res[key .. "_stops"] = counted, stoppedCounted, GF.stops
+    GF.res[key .. "_refilled"] = refilled
     GF.res[key .. "_bounds"], GF.res[key .. "_minutes_an_hour"] = #GF.boundaries,
         string.format("%.1f", (GF.minutes - (GF.m0 or 0)) / math.max(gone, 1e-9))
-    report():line("OBS  MPS.gf %s: %.3f game h, %d boundaries, %d refills, %d stops, %d ticks not running, %s minute events " ..
-        "an hour; attempts %s", GF.phase, gone, #GF.boundaries, GF.refills, GF.stops, GF.offTicks,
+    report():line("OBS  MPS.gf %s: %.3f game h, %d boundaries, %d refills, %d trims, %d stops, %d ticks not running, %s " ..
+        "minute events an hour; attempts %s", GF.phase, gone, #GF.boundaries, GF.refills, GF.trims, GF.stops, GF.offTicks,
         GF.res[key .. "_minutes_an_hour"], table.concat(parts, " "))
 end
 
@@ -909,6 +918,7 @@ function GF.onTick()
         GF.boundary = b
         if GF.attempt then
             GF.attempt.boundary = b
+            GF.attempt.refilledBetween = GF.attempt.refillsAtRise ~= nil and GF.refills > GF.attempt.refillsAtRise
             GF.lastAttempt, GF.attempt = GF.attempt, nil
         end
     end
@@ -954,6 +964,14 @@ function GF.onTick()
             GF.closeSteps()
             GF.enter("policy_tick")
         end
+    elseif (GF.phase == "policy_tick" or GF.phase == "policy_minute") and GF.sizeAt then
+        if GF.tick >= GF.sizeAt then
+            g:setFuel(GF.power(g) + GF.eps)
+            GF.refill, GF.late = GF.phase == "policy_tick" and "tick" or "minute", true
+            GF.h0, GF.m0, GF.sizeAt = age, GF.minutes, nil
+            report():line("OBS  MPS.gf %s sized at %.5f h: fuel %.7f for a load of %.7f", GF.phase, age, g:getFuel(),
+                GF.power(g))
+        end
     elseif GF.phase == "policy_tick" or GF.phase == "policy_minute" then
         if not on then
             GF.off = GF.off + 1
@@ -967,7 +985,7 @@ function GF.onTick()
         end
         local counted = 0
         for _, at in ipairs(GF.attempts) do
-            if at.rose and at.boundary then counted = counted + 1 end
+            if at.rose and at.short and at.boundary then counted = counted + 1 end
         end
         local settled = not (GF.lastAttempt and GF.lastAttempt.boundary and GF.tick - GF.lastAttempt.boundary.tick <= 6)
         if ((counted >= 3 and #GF.boundaries >= 3) or #GF.boundaries >= 8) and settled then
@@ -990,8 +1008,21 @@ function GF.onTick()
             GF.attemptHour = fl
         elseif GF.attempt and not GF.attempt.rose and p > GF.attempt.powerBefore + GF.chargerStep / 2 then
             GF.attempt.rose = true
+            GF.attempt.short, GF.attempt.fuelAtRise, GF.attempt.refillsAtRise = f < p, f, GF.refills
         end
-        if GF.attemptHour ~= fl and age - fl >= 0.5 and GF.charger:isActivated() then GF.charging(false) end
+        if GF.attemptHour ~= fl and age - fl >= 0.5 and GF.charger:isActivated() then
+            GF.charging(false)
+            GF.trimFrom = p
+        end
+        -- Once the load has fallen back, the buffer is set down to it, so the
+        -- next switch-on finds it sized for the lower load.
+        if GF.trimFrom and p < GF.trimFrom - GF.chargerStep / 2 then
+            if g:getFuel() > p + GF.eps then
+                g:setFuel(p + GF.eps)
+                GF.trims = GF.trims + 1
+            end
+            GF.trimFrom = nil
+        end
     end
     if GF.refill == "tick" and g:isActivated() then
         local cap = GF.power(g) + GF.eps

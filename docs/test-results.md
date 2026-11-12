@@ -6910,11 +6910,16 @@ gave the same values:
   running.
 - **Refills** to one step plus 1e-4, `setFuel` only below that, while the
   charger was switched on after the hour's minute-59 event, its load
-  risen before the boundary (a counted attempt): on each tick at ×20, on
-  each minute event at ×20 and on each tick at ×100, three counted
-  attempts each. A never stopped and no tick found it off; each step
-  left 0.0001 L, so the refill had topped up for the new load before the
-  burn. 60 minute events a game hour at ×20 and at ×100.
+  risen before the boundary: on each tick at ×20, on each minute event at
+  ×20 and on each tick at ×100, three such hours each. A never stopped
+  and no tick found it off. These stages tested less than they seemed:
+  the charger went off only half way through the next hour and a refill
+  never lowers the fuel, so the buffer kept the higher load. Only the
+  first hour of the per-tick stage at ×20 found it short of the new step,
+  needing a refill between the rise and the burn. The steps left
+  0.0001 L, except at 17.00 h (0.0031 L: the gas pump had left the load).
+  Launch 348 tests every hour. 60 minute events a game hour at ×20 and at
+  ×100.
 - **A propane tank item** in the inventory, given 1234 uses, read 1234
   (`getCurrentUses` 1234); given 1234.5, 1235; given 1, 1.
 
@@ -6954,9 +6959,13 @@ Launch 347 (**7/0**, client A):
   watcher counted 375 ticks a game hour, about 6 a game minute.
 - **Refills** to one step plus 1e-4, against the charger switched on
   after the hour's minute-59 event with its load risen before the
-  boundary: on each server tick and on each minute event, three counted
-  attempts each. G never stopped, and each step left 0.0001 L. 60 minute
-  events a game hour.
+  boundary: on each server tick and on each minute event, three such
+  hours each. G never stopped, and each step left 0.0001 L. As in
+  launches 345–346 the buffer kept the higher load: only the first hour
+  of the per-tick phase found it short of the new step. The per-minute
+  phase began with a buffer sized from the load read before the charger's
+  going off had reached it, and none of its hours needed a refill. Launch
+  349 tests every hour. 60 minute events a game hour.
 - **`setFuel` on the server** kept G running, and the client's copy
   followed it: at each of 68 probes its fuel equalled the server's
   (within 1e-6) and it ran as the server's did; at none of the 22 probes
@@ -6970,3 +6979,38 @@ a server, sleep.
 
 Evidence:
 [run 347](evidence/2026-11-12_rt-mp_harness_run347_gasfeed_42.22.2.txt).
+
+## 2026-11-12 — RT-SP launch 348 and RT-MP launch 349 (the refill stages retested, D-040)
+
+The refill stages of launches 345–347 tested less than they seemed
+(above). The probe now sets the buffer down to the lower load plus 1e-4
+once the charger's going off has reached the load, and sizes a stage's
+buffer only after the load has settled. A switch-on counts only when the
+buffer is short of the new step at the rise, so that a refill must land
+between the rise and the burn, and the probe records whether one did.
+Commands as for launches 346 and 347; the other stages ran as before and
+gave the same values.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 348, single player | 11/0 |
+| 349, dedicated server, client A | 7/0 |
+
+- **Single player**: on each tick at ×20, on each minute event at ×20 and
+  on each tick at ×100, three hours each in which the charger's load rose
+  after the hour's minute-59 event while the buffer was short of the new
+  step (0.0051 L against 0.010 L, or 0.0021 L against 0.007 L). In all
+  nine a refill landed between the rise and the burn, A never stopped,
+  and each step left 0.0001 L. For the per-minute refill the only minute
+  event between the rise and the boundary was the hour's minute 0.
+- **On the server**: on each tick and on each minute event, three such
+  hours each (0.0021 L against 0.007 L); a refill between the rise and
+  the burn in all six, and G never stopped. The order, the steps and the
+  client's copy as in launch 347 (the same at 68 reads of 68).
+
+Launch 348's console shows no exception and no warning of the mod; the
+harness reports of launch 349 hold no step error.
+
+Evidence:
+[run 348](evidence/2026-11-12_rt-sp_harness_run348_gas_measures.txt);
+[run 349](evidence/2026-11-12_rt-mp_harness_run349_gasfeed_42.22.2.txt).

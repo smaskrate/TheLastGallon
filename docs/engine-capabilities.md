@@ -517,11 +517,12 @@ RT-SP (runs 3–6, `Base.Generator`, max fuel 10 L):
     step plus 1e-4 left 1e-4 and ran on. `setActivated(true)` starts the
     hour count again, so the first step comes at the next whole hour.
   * The load (`setSurroundingElectricity`) is 0.02 plus each powered
-    object's `getGeneratorPowerConsumption()`: a fridge-freezer 0.13, a
-    single fridge or freezer 0.08, a stove 0.09, a clothing washer or
-    dryer 0.09, a stacked washer-dryer 0.9, a television 0.03, a radio
-    0.01, a gas pump 0.03, a battery charger 0.05 while on, a light
-    switch 0.002 (`getItemsPowered()` lists them). An object already
+    object's `getGeneratorPowerConsumption()`. The game's constants: a
+    fridge-freezer 0.13, a single fridge or freezer 0.08, a stove 0.09, a
+    clothing washer or dryer 0.09, a stacked washer-dryer 0.9, a
+    television 0.03, a radio 0.01, a gas pump 0.03, a battery charger 0.05
+    while on, a light switch 0.002; only the charger and a gas pump were
+    seen in game (`getItemsPowered()` lists what is counted). An object already
     powered otherwise (`ItemContainer.isObjectPowered`) is not counted,
     nor one on an exterior square without `AllowExteriorGenerator`.
   * Switching an appliance (light switch, stove, radio and television,
@@ -538,20 +539,22 @@ RT-SP (runs 3–6, `Base.Generator`, max fuel 10 L):
   * The hour's first minute event runs at the start of the frame in which
     the hour turns, before `OnTick`, and neither has the step yet: it
     shows at the next tick. So in single player (three boundaries of
-    three, at ×20) and on a dedicated server (RT-MP run 347, three of
-    three, about 6 server ticks a game minute). A refill on either, to one
-    step plus 1e-4 with `setFuel` only below that, kept a generator
-    running through every hour with a battery charger switched on in the
-    hour's last minute: three such hours each on the tick at ×20 and ×100
-    and on the minute event at ×20 in single player, on the tick and on
-    the minute event on the server. 60 minute events a game hour at ×20,
-    at ×100 and on the server.
+    three, at ×20) and on a dedicated server (RT-MP runs 347 and 349,
+    three of three, about 6 server ticks a game minute). A refill on
+    either, to one step plus 1e-4 with `setFuel` only below that, kept a
+    generator running through every hour in which a battery charger came
+    on in the hour's last minute while the buffer was short of the new
+    step, the refill landing between the rise and the burn: three such
+    hours each on the tick at ×20 and ×100 and on the minute event at ×20
+    in single player (RT-SP run 348), on the tick and on the minute event
+    on the server (RT-MP run 349). 60 minute events a game hour at ×20, at
+    ×100 and on the server.
   * `setFuel` clamps to 0–10 L (`MaximumGeneratorFuel`, not
     `getMaxFuel`) and calls `sync()` on a server and on a client. A
     client's `update()` returns before the burn: only the server burns.
     On a server, `setFuel` kept a running generator running, and a
     client's copy matched the server's fuel and state at each of 68 reads
-    (run 347).
+    (runs 347 and 349).
   * A propane tank item in the inventory keeps whole uses: given 1234.5 it
     read 1235, given 1234 or 1, the same.
 * Multiplayer (RT-MP runs 160, 162): the burn is reconciled and the start
