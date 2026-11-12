@@ -113,52 +113,6 @@ zip, 3/0 and 19/0 (launches 303–306). A clean checkout builds the same
 bytes. Open for gate 12: an install through the Workshop; the upgrade
 from 0.2.0, 0.3.0 or 0.3.1 with this zip.
 
-## Version 0.4.1 (2026-11-11)
-
-Version 0.4.1 changes documents, the version number and the Workshop
-picture; no Lua but `TLG.VERSION`, no script. The owner chose, on
-2026-11-11, to say in the texts what the game does with the 0.4.0 skill
-levels rather than to raise them ("Do the reword"): with the handbook
-read, a machine is made from one level below what its recipe asks
-(launches 325–338). The player guide, the changelog, the support matrix
-and the Workshop text of `tools/package.ps1` say so, and the player
-guide and the support matrix now list as checked what launches 318–338
-checked. The change note is `docs/workshop-change-note-0.4.1.txt`.
-
-The 0.4.1 package is the zip of `d7543de` (167 files, 7,891,672 bytes,
-SHA-256 `588563F4…EE9D9C6B`), built from a clean tree. Six files differ
-from the 0.4.0 package: `42/mod.info`, `TLG/Core.lua`, the shipped
-changelog, player guide and support matrix, and `workshop.txt`. It was
-installed clean and played: the full run 105/0 and 14/0, the game
-reading 0.4.1 (launch 339). The handbook mode, the multiplayer cases and
-the upgrade were not run on it; launches 318–338 ran on the repository's
-mod at 0.4.0, which differs from it in the version number.
-
-The upload folder holds this package since 2026-11-11: its `Contents`
-mirrored and its `preview.png` copied from the unpacked zip, 166 files
-checked by hash, both ways. Its `workshop.txt` is the owner's, edited by
-hand. On the owner's word ("Update whatever is left to update",
-2026-11-11) two of its lines changed: the first description line names
-0.4.1, and its line on building the machines is the package's new one.
-Nothing else in it changed (its id, `visibility=public`, the tag `WIP`
-and the owner's wording stay).
-
-The owner uploaded 0.4.1 to the Workshop on 2026-11-11 (item
-3835496461), from this folder. Steam's download of it on this computer
-held exactly the package's mod files (2026-11-12, gate 12). Open: the
-game loading the mod from a Workshop download, and how the page shows
-the description and the bullet form of the change note.
-
-Checked on 2026-11-12 with the repository's mod, whose Lua is the 0.4.1
-package's (launches 340–341, `test-results.md`), of what the 0.2.0 and
-0.3.0 tables list as OPEN for gate 11: the biodiesel machines, diesel
-vehicles and the wrong-fuel rules timed against a baseline, and the
-square-load hook of 0.3.2 (gate 11 below). The fuel menu's budget had
-most likely been set from a menu that never opened; it went from 0.08 to
-1.1 ms, set from launch 341.
-Open for gate 11: the same on a server, and the minute's work for litres
-burned.
-
 ## Version 0.4.0 (2026-11-11)
 
 Version 0.4.0, of 2026-11-11 (D-038): the five biodiesel
@@ -226,6 +180,81 @@ SHA-256 `A4B7336D…1BBD7B14`) was installed clean and played, the full run
 zip is no longer in `dist`. Open for
 gate 12: an install through the Workshop; the upgrade from 0.2.0 to
 0.3.2 with this zip, where the recipes' learning changes behaviour.
+
+## Version 0.4.1 (2026-11-11)
+
+Version 0.4.1 changes documents, the version number and the Workshop
+picture; no Lua but `TLG.VERSION`, no script. The owner chose, on
+2026-11-11, to say in the texts what the game does with the 0.4.0 skill
+levels rather than to raise them ("Do the reword"): with the handbook
+read, a machine is made from one level below what its recipe asks
+(launches 325–338). The player guide, the changelog, the support matrix
+and the Workshop text of `tools/package.ps1` say so, and the player
+guide and the support matrix now list as checked what launches 318–338
+checked. The change note was `docs/workshop-change-note-0.4.1.txt`,
+renamed for 0.4.2 (gate 12 below says what the Workshop page did with
+it).
+
+The 0.4.1 package is the zip of `d7543de` (167 files, 7,891,672 bytes,
+SHA-256 `588563F4…EE9D9C6B`), built from a clean tree. Six files differ
+from the 0.4.0 package: `42/mod.info`, `TLG/Core.lua`, the shipped
+changelog, player guide and support matrix, and `workshop.txt`. It was
+installed clean and played: the full run 105/0 and 14/0, the game
+reading 0.4.1 (launch 339). The handbook mode, the multiplayer cases and
+the upgrade were not run on it; launches 318–338 ran on the repository's
+mod at 0.4.0, which differs from it in the version number.
+
+The upload folder holds this package since 2026-11-11: its `Contents`
+mirrored and its `preview.png` copied from the unpacked zip, 166 files
+checked by hash, both ways. Its `workshop.txt` is the owner's, edited by
+hand. On the owner's word ("Update whatever is left to update",
+2026-11-11) two of its lines changed: the first description line names
+0.4.1, and its line on building the machines is the package's new one.
+Nothing else in it changed (its id, `visibility=public`, the tag `WIP`
+and the owner's wording stay).
+
+The owner uploaded 0.4.1 to the Workshop on 2026-11-11 (item
+3835496461), from this folder. Steam's download of it on this computer
+held exactly the package's mod files (2026-11-12, gate 12). Open: the
+game loading the mod from a Workshop download, and how the page shows
+the description and the bullet form of the change note.
+
+Checked on 2026-11-12 with the repository's mod, whose Lua is the 0.4.1
+package's (launches 340–341, `test-results.md`), of what the 0.2.0 and
+0.3.0 tables list as OPEN for gate 11: the biodiesel machines, diesel
+vehicles and the wrong-fuel rules timed against a baseline, and the
+square-load hook of 0.3.2 (gate 11 below). The fuel menu's budget had
+most likely been set from a menu that never opened; it went from 0.08 to
+1.1 ms, set from launch 341.
+Open for gate 11: the same on a server, and the minute's work for litres
+burned.
+
+## Version 0.4.2 (2026-11-12)
+
+Version 0.4.2 takes **Start: Gas generator conversion** off a
+generator's Workshop menu, where 0.1.0 to 0.4.1 offer it, and
+`conversion.begin` refuses it (`not_offered`): a generator converted to
+gas takes gas only, and nothing gives it gas before D-040 is built. The
+owner chose, on 2026-11-12, to hide it in a 0.4.2 rather than leave it
+until 0.5.0 ("Hide it in a 0.4.2 now"; D-040, amended). A project
+already begun and a generator already converted are left to **Cancel
+the project** and **Remove the conversion**; a domain test now runs both
+on a gas project, and neither has been run in game for any conversion.
+
+What ships changes in three Lua files (`ConversionDevices.lua`,
+`WorkshopMenu.lua`, `ConversionHandlers.lua`), one string in English and
+Italian (`IGUI_TLG_ConvReason_not_offered`), `TLG.VERSION` and
+`mod.info`, the player guide's picture of the Workshop menu and its
+text, the changelog, the support matrix and `migrations.md`. No script.
+Launch 343 showed the menu without the entry, with the change in the
+repository's mod. The full run's new `LOOP.gen_start_offers_flex_only`
+checks the menu and the refusal; it has not run yet. The change note is
+`docs/workshop-change-note-0.4.2.txt`.
+
+No 0.4.2 package is built: `dist` and the upload folder hold the 0.4.1
+package of `d7543de`. Open: build it and rehearse it. Putting it in the
+upload folder, and the first description line of that folder's
+`workshop.txt`, which names 0.4.1, wait for the owner's word.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -700,9 +729,12 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.4.1.txt`, written on 2026-11-11: the changes
-from 0.1.1, which the item serves, to 0.4.1. It is not in the package. The owner pasted it at the 0.4.1 upload
-(2026-11-11) and sent a picture of the item's change-notes page: `[b]`
+`docs/workshop-change-note-0.4.2.txt`, written on 2026-11-12: the changes
+from 0.4.1, which the item serves, to 0.4.2, in the form with bullet
+characters described below. It is not in the package. Its 0.4.1 form,
+`docs/workshop-change-note-0.4.1.txt` (the changes from 0.1.1), was
+pasted by the owner at the 0.4.1 upload
+(2026-11-11), who sent a picture of the item's change-notes page: `[b]`
 shows as bold, and each `[list]` showed as a bulleted list, but the
 page's box closed before the first list, so only the title, the first
 line and the heading "New" stood inside it and the rest hung below. The

@@ -6,7 +6,7 @@ build until it is tested there again. The rows below were verified on
 modes were run again and all passed (launches 216–226, `test-results.md`);
 the other modes have not been run again on this build. The biodiesel
 pathway, the diesel generator, the diesel vehicles and the diesel pumps
-(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), wrong-fuel damage (version 0.3.0, D-037) in launches 261–282, the menus that follow the click (version 0.3.1) in launches 289–294, the Diesel Generator's sprite given back (version 0.3.2) in launches 299–302, and the biodiesel recipes' skill levels and handbook (version 0.4.0, D-038) in launches 308–312. Launches 318–338 (version 0.4.1, which changes documents only) ran what those versions had left: driving on diesel, biodiesel and wrong fuel, the cold, a converted engine with diesel, repairs, draws left to chance, wrong fuel and the crafting window on a server.
+(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), wrong-fuel damage (version 0.3.0, D-037) in launches 261–282, the menus that follow the click (version 0.3.1) in launches 289–294, the Diesel Generator's sprite given back (version 0.3.2) in launches 299–302, and the biodiesel recipes' skill levels and handbook (version 0.4.0, D-038) in launches 308–312. Launches 318–338 (version 0.4.1, which changes documents only) ran what those versions had left: driving on diesel, biodiesel and wrong fuel, the cold, a converted engine with diesel, repairs, draws left to chance, wrong fuel and the crafting window on a server. Version 0.4.2 takes the gas conversion off the generator's Workshop menu (D-040, amended); launch 343 showed the menu without it.
 
 Evidence levels:
 
@@ -348,7 +348,7 @@ their changes are reconciled conservatively.
 | --- | --- | --- | --- |
 | Base.Generator | flex_generator | generator_si_stock → generator_si_flex | **Verified RT-SP** (run 8) |
 | Base.Generator_Old, _Yellow, _Blue | flex_generator | same | domain-tested; runtime NOT RUN |
-| Base.Generator, _Old, _Yellow, _Blue | gas_generator | generator_si_stock → generator_gas | domain-tested; runtime NOT RUN |
+| Base.Generator, _Old, _Yellow, _Blue | gas_generator | generator_si_stock → generator_gas | Not offered since 0.4.2: nothing gives a gas generator gas yet (D-040). Domain-tested, cancel and remove included; runtime NOT RUN |
 | Base.CarNormal | flex_car_normal | engine_si_stock → engine_si_flex | **Verified RT-SP** (run 8) |
 | Base.SmallCar | flex_small_car | same | domain-tested; runtime NOT RUN |
 | Base.PickUpTruck | flex_pickup_truck | same | domain-tested; runtime NOT RUN |

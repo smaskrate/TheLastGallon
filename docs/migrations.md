@@ -219,6 +219,21 @@ pumps' products; the 0.1.2 world kept petrol everywhere. The cans, the
 fermenter's batch, the pump and the petrol generator read as in launch
 257.
 
+### The gas conversion is not offered (0.4.2, D-040)
+
+No record changes. From 0.4.2 the Workshop menu lists no **Start: Gas
+generator conversion**, and `conversion.begin` refuses it
+(`not_offered`). A save from 0.1.0 to 0.4.1 may hold a gas conversion,
+in progress or finished, and the mod leaves it as it is: **Hand over
+parts** and **Work on it** still apply to one in progress. **Cancel the
+project** ends it; the parts of stages not begun come back in full,
+those of a begun stage three quarters, rounded down for each item. A
+finished one leaves a generator that takes gas only, which nothing gives
+it yet; **Remove the conversion** gives back the stock engine and half of
+the parts, rounded down. The domain test cancels and removes a gas
+project (`tests/domain/test_conversions.lua`). None of this was run in
+game with a gas project, and no save holding one was loaded with 0.4.2.
+
 ## Settings changes
 Changing **Fuel ageing speed** appends a dated entry to `balanceHistory`;
 every advance splits at those dates, so the past keeps its old rate.

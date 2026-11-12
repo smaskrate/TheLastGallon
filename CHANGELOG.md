@@ -1,5 +1,22 @@
 # Changelog
 
+## 0.4.2 (2026-11-12)
+
+* Fixed: a generator's **Workshop: convert this generator** menu offered
+  **Start: Gas generator conversion**. A generator converted to gas takes
+  gas only, and nothing in the mod gives it gas yet, so it could not run.
+  The entry is gone, and the mod refuses to begin that conversion if
+  asked anyway.
+* A save from an earlier version keeps its gas conversions as they are.
+  **Cancel the project** ends one in progress and returns three quarters
+  of the parts handed over. **Remove the conversion** turns a converted
+  generator back into a petrol generator and returns half of its parts.
+* Checked on 42.22.2 in single player (launch 343 in
+  `docs/test-results.md`): the basic generator's Workshop menu without
+  the entry. Not checked in game: the refusal; a server; **Cancel the
+  project** and **Remove the conversion**, which have not been tried in
+  game for any conversion.
+
 ## 0.4.1 (2026-11-11)
 
 * Nothing in the game changes: documents, the Workshop picture and the
