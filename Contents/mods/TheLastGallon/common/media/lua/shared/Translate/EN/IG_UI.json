@@ -214,6 +214,7 @@
     "IGUI_TLG_ConvReason_missing_module": "Parts are missing:",
     "IGUI_TLG_ConvReason_missing_skill": "Your skills are not enough yet:",
     "IGUI_TLG_ConvReason_missing_recipe": "You do not know how yet (read the manual or a mechanics magazine):",
+    "IGUI_TLG_ConvReason_not_offered": "This conversion is not available in this version.",
     "IGUI_TLG_ConvReason_tank_not_empty": "Drain the fuel tank first.",
     "IGUI_TLG_ConvReason_tank_unknown": "The tank level cannot be checked.",
     "IGUI_TLG_ConvReason_device_unavailable": "Switch it off (and keep it in place) to work on it.",

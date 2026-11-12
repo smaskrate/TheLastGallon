@@ -102,6 +102,18 @@ function CD.project(md, holder, sync)
     return TLG.Persistence.Migrations.sidecar("project", raw)
 end
 
+-- Whether the game offers a conversion (0.4.2). One whose engine burns gas
+-- from an outside vessel (fuelStorageChanges.external: gas_generator) has
+-- nothing to run on until the gas feed of 0.5.0 (D-040), so its Start entry
+-- is hidden and the authority refuses to begin it. A project already begun
+-- can still be cancelled or removed. An unknown id is left to the domain.
+function CD.offered(conversionId)
+    local def = TLG.Registry.get("conversion", conversionId)
+    if def == nil then return true end
+    local fs = def.fuelStorageChanges
+    return not (type(fs) == "table" and fs.external ~= nil)
+end
+
 -- Effective profile for a stored project (nil unless Commissioned and valid).
 function CD.effective(md, device, holder)
     local p = CD.project(md, holder)

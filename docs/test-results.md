@@ -6788,3 +6788,27 @@ gasifier.
 
 Evidence:
 [run 342](evidence/2026-11-12_rt-sp_harness_run342_gas_probe.txt).
+
+## 2026-11-12 — RT-SP launch 343 (the player guide's Workshop picture for 0.4.2)
+
+Command: `tools/run-sp-harness.ps1 -Mode docs-shots` (`sp-rtds`), the
+repository's mod on 42.22.2 with the 0.4.2 change in the working tree,
+not committed: the Workshop menu offers no conversion whose engine burns
+gas from an outside vessel (`ConversionDevices.offered`). About 70
+seconds.
+
+Launch 343 (**65/0**). The generator's Workshop submenu, built by the
+game's right-click builder, read: Project status, Start: Flex-fuel
+generator conversion, Hand over parts, Work on it, Cancel the project,
+Remove the conversion. Start: Gas generator conversion, in launch 212's
+picture, was not there. `docs/images/workshop-menu.jpg` is cut again from
+this shot, at launch 212's frame (639 pixels wide from 556,37; now 321
+high, one entry less). The other pictures of this run were not used.
+
+Not run: the authority refusing a gas begin asked anyway (the full run's
+check, `LOOP.gen_start_offers_flex_only`, added for 0.4.2), the menu on a
+server, the Italian text in game.
+
+Evidence:
+[run 343](evidence/2026-11-12_rt-sp_harness_run343_docs_shots.txt);
+[the full shot](evidence/2026-11-12_run343_workshop_menu.jpg).

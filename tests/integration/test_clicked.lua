@@ -191,7 +191,9 @@ T.case("clicked: the Workshop menu shows for the clicked generator or car, not f
             return c
         end
         ISContextMenu = { getNew = context }
-        getText = function(key) return key end
+        -- An argument shows after the key, so each Start entry names its
+        -- conversion.
+        getText = function(key, a) if a ~= nil then return key .. ":" .. tostring(a) end return key end
         -- The character stands at 10,10; a generator one tile off and a car
         -- two tiles off are both within the old menu's reach.
         local at = w.square(10, 10)
@@ -213,6 +215,15 @@ T.case("clicked: the Workshop menu shows for the clicked generator or car, not f
         T.eq(entries({ at.floor }), "", "the character's own tile")
         T.eq(entries({ w.square(11, 10).floor }), "ContextMenu_TLG_ConvGenerator", "the generator's tile")
         T.eq(entries({ g }), "ContextMenu_TLG_ConvGenerator")
+        -- 0.4.2: the generator's Start entries offer the flex conversion
+        -- only; the gas one waits for its feed (D-040).
+        local c = context()
+        TLG.UI.WorkshopMenu.fill(0, c, { g }, false)
+        local starts = {}
+        for _, o in ipairs(c.options[1] and c.options[1].sub and c.options[1].sub.options or {}) do
+            if string.find(o.name, "ContextMenu_TLG_ConvBegin", 1, true) then starts[#starts + 1] = o.name end
+        end
+        T.eq(table.concat(starts, ","), "ContextMenu_TLG_ConvBegin:IGUI_TLG_Conversion_flex_generator", "Start entries")
         w.picked = car
         T.eq(entries({ w.square(12, 10).floor }), "ContextMenu_TLG_ConvVehicle", "the car under the cursor")
         w.picked = nil

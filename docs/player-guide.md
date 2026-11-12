@@ -872,9 +872,9 @@ only for a click on the car, or on the generator or its tile:
    has reached. When it reads **Converted and commissioned**, the engine
    is flex.
 
-![A generator's menu with Workshop: convert this generator open: Project status, Start: Flex-fuel generator conversion, Start: Gas generator conversion, Hand over parts, Work on it, Cancel the project, Remove the conversion](images/workshop-menu.jpg)
+![A generator's menu with Workshop: convert this generator open: Project status, Start: Flex-fuel generator conversion, Hand over parts, Work on it, Cancel the project, Remove the conversion](images/workshop-menu.jpg)
 
-*A basic generator's menu; this guide covers its flex-fuel conversion.*
+*A basic generator's menu: the flex-fuel conversion is the one it offers.*
 
 ![Project status of the generator: Conversion in progress, Flex-fuel generator conversion, Stage: inspect, Engine now: stock gasoline generator](images/project-status.jpg)
 
@@ -891,6 +891,13 @@ only for a click on the car, or on the generator or its tile:
 **Remove the conversion** returns half of them from a finished one. Small
 cars, pickup trucks, step vans and the other generator models have their
 own conversions. Diesel vehicles and the Diesel Generator have none.
+
+Versions 0.1.0 to 0.4.1 also offered **Start: Gas generator conversion**,
+which leaves a generator with nothing to run on until a later version
+brings its gas. A generator converted to gas then can be given back with
+**Remove the conversion**, which returns half of its parts; a gas
+project still in progress can be ended with **Cancel the project**,
+which returns three quarters of them.
 
 **Checked in game:** a standard car and the basic generator converted
 from this menu, with the walk to the engine, the work stopping once the

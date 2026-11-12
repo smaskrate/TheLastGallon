@@ -1,0 +1,143 @@
+# TLG single-player harness, the player guide's screenshots
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=62197825044284079776 hours=2.0096 DayLength=4
+STEP rtds_setup begin
+OBS  RTDS.screen 1280x720; the character's window open=false (closed if so)
+OBS  RTDS.load_mash menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTDS.spots character 10670,10631; vessel 10670,10630; grid power=true; game hour 9.01
+PASS RTDS.vessel_loaded :: reason=nil sugar=6 kg water=30 L
+STEP rtds_fuel_spot begin
+OBS  RTDS.fuel shots at 10670,10631 (the vessel's room tile: true); full can 6.020 L, water 0.0200 L; empty can 0.000 L
+PASS RTDS.nothing_to_pour_into :: no pump or generator within two tiles
+STEP rtds_menu_fuel_menu begin
+OBS floor fuel Base.PetrolCan_Petrol itemFluid=nil worldFluid=[component: FluidContainer]
+PASS RTDS.fuel_floor_Base.PetrolCan_Petrol_false :: native floor inventory menu
+PASS RTDS.fuel_floor_Base.PetrolCan_Petrol_true :: native floor inventory menu
+PASS RTDS.fuel_world_Base.PetrolCan_Petrol :: native world menu
+PASS RTDS.fuel_floor_action_Base.PetrolCan_Petrol_known :: nil
+PASS RTDS.fuel_floor_action_Base.PetrolCan_Petrol_sample :: nil
+PASS RTDS.fuel_floor_action_Base.PetrolCan_Petrol_treat :: nil
+OBS floor fuel Base.PetrolCan_nil itemFluid=nil worldFluid=[component: FluidContainer]
+PASS RTDS.fuel_floor_Base.PetrolCan_nil_false :: native floor inventory menu
+PASS RTDS.fuel_floor_Base.PetrolCan_nil_true :: native floor inventory menu
+PASS RTDS.fuel_world_Base.PetrolCan_nil :: native world menu
+PASS RTDS.fuel_floor_action_Base.PetrolCan_nil_known :: nil
+PASS RTDS.fuel_floor_action_Base.PetrolCan_nil_sample :: nil
+PASS RTDS.fuel_floor_action_Base.PetrolCan_nil_treat :: nil
+OBS floor fuel Base.WaterBottle_Petrol itemFluid=nil worldFluid=[component: FluidContainer]
+PASS RTDS.fuel_floor_Base.WaterBottle_Petrol_false :: native floor inventory menu
+PASS RTDS.fuel_floor_Base.WaterBottle_Petrol_true :: native floor inventory menu
+PASS RTDS.fuel_world_Base.WaterBottle_Petrol :: native world menu
+PASS RTDS.fuel_floor_action_Base.WaterBottle_Petrol_known :: nil
+PASS RTDS.fuel_floor_action_Base.WaterBottle_Petrol_sample :: nil
+PASS RTDS.fuel_floor_action_Base.WaterBottle_Petrol_treat :: nil
+OBS floor fuel Base.BucketEmpty_TLG_Ethanol itemFluid=nil worldFluid=[component: FluidContainer]
+PASS RTDS.fuel_floor_Base.BucketEmpty_TLG_Ethanol_false :: native floor inventory menu
+PASS RTDS.fuel_floor_Base.BucketEmpty_TLG_Ethanol_true :: native floor inventory menu
+PASS RTDS.fuel_world_Base.BucketEmpty_TLG_Ethanol :: native world menu
+PASS RTDS.fuel_floor_action_Base.BucketEmpty_TLG_Ethanol_known :: nil
+PASS RTDS.fuel_floor_action_Base.BucketEmpty_TLG_Ethanol_sample :: nil
+PASS RTDS.fuel_floor_action_Base.BucketEmpty_TLG_Ethanol_treat :: not_sealable
+OBS floor fuel Base.WaterBottle_Water itemFluid=nil worldFluid=[component: FluidContainer]
+PASS RTDS.fuel_floor_Base.WaterBottle_Water_false :: native floor inventory menu
+PASS RTDS.fuel_floor_Base.WaterBottle_Water_true :: native floor inventory menu
+PASS RTDS.fuel_world_Base.WaterBottle_Water :: native world menu
+OBS  RTDS.fuel_menu menu (the game's right-click builder) at 700,40 263x280: Equip Primary | Equip Secondary | Fluid | Drop | Place Item | Put in Container (Cupboard) | More | Fuel (The Last Gallon)
+OBS  RTDS.fuel_menu submenu at 964,285 251x245, visible=true: What I know about it | Look and smell | Take a sample (kit) | Add stabilizer | Filter | Let settle and drain water | Open
+OBS  RTDS.screenshot tlg_rtds_fuel_menu.png ok=true; console visible=false x=-5000
+PASS RTDS.menu_fuel_menu :: the game's right-click builder; submenu visible=true; missing: none; greyed entries: false; debug entries: 0
+STEP rtds_menu_fuel_menu_empty_can begin
+OBS  RTDS.fuel_menu_empty_can menu (the game's right-click builder) at 700,40 263x280: Equip Primary | Equip Secondary | Fluid | Drop | Place Item | Put in Container (Cupboard) | More | Fuel (The Last Gallon)
+OBS  RTDS.fuel_menu_empty_can submenu at 964,285 251x280, visible=true: What I know about it | Look and smell | Take a sample (kit) | Add stabilizer | Filter | Let settle and drain water | Open | Clean empty container
+OBS  RTDS.screenshot tlg_rtds_fuel_menu_empty_can.png ok=true; console visible=false x=-5000
+PASS RTDS.menu_fuel_menu_empty_can :: the game's right-click builder; submenu visible=true; missing: none; greyed entries: false; debug entries: 0
+STEP rtds_dialog_kit_result begin
+OBS  RTDS.kit menu "Take a sample (kit)" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTDS.kit_result dialog at 430,230 420x260: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.3) <LINE> Free water detected (about 0.3%) <LINE> Composition: Gasoline 100.0% <LINE> Method: sampling kit
+OBS  RTDS.screenshot tlg_rtds_kit_result.png ok=true; console visible=false x=-5000
+PASS RTDS.dialog_kit_result :: reply ok=true reason=nil; missing: none
+STEP rtds_wait begin
+OBS  RTDS.waited 2.01 game h since the kit sample
+STEP rtds_dialog_look_result begin
+OBS  RTDS.look menu "Look and smell" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTDS.look_result dialog at 430,230 420x260: Fuel inspection <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.0) <LINE> No free water detected <LINE> Method: look and smell (rough)
+OBS  RTDS.screenshot tlg_rtds_look_result.png ok=true; console visible=false x=-5000
+PASS RTDS.dialog_look_result :: reply ok=true reason=nil; missing: none
+STEP rtds_dialog_what_i_know begin
+OBS  RTDS.known menu "What I know about it" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTDS.what_i_know dialog at 430,230 420x260: What I know about this fuel <LINE> <LINE> Sampling kit, 2 hours ago: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 0.3) <LINE> Free water detected (about 0.3%) <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.0, give or take 1.0) <LINE> No free water detected
+OBS  RTDS.screenshot tlg_rtds_what_i_know.png ok=true; console visible=false x=-5000
+PASS RTDS.dialog_what_i_know :: reply ok=true reason=nil; missing: none
+STEP rtds_to_vessel begin
+STEP rtds_menu_machine_menu begin
+PASS RTDS.machine_world_menu :: world right-click builder
+PASS RTDS.floor_menu_TLG.FermenterVessel_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.FermenterVessel_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.PotStill_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.PotStill_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.RefluxStill_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.RefluxStill_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.DryingColumn_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.DryingColumn_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.WoodRetort_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.WoodRetort_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.AshBarrel_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.AshBarrel_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.LyeLeacher_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.LyeLeacher_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.BiodieselReactor_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.BiodieselReactor_true :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.BiodieselWashTank_false :: floor inventory right-click builder
+PASS RTDS.floor_menu_TLG.BiodieselWashTank_true :: floor inventory right-click builder
+OBS  RTDS.machine_menu menu (the game's right-click builder) at 700,40 250x140: Equip in Both Hands | Place Item | More | Machine (The Last Gallon)
+OBS  RTDS.machine_menu submenu at 951,145 295x140, visible=true: Status | Load mash and start fermenting | Pause | Abort batch
+OBS  RTDS.screenshot tlg_rtds_machine_menu.png ok=true; console visible=false x=-5000
+PASS RTDS.menu_machine_menu :: the game's right-click builder; submenu visible=true; missing: none; greyed entries: false; debug entries: 0
+STEP rtds_dialog_vessel_status begin
+OBS  RTDS.status menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+OBS  RTDS.vessel_status dialog at 430,240 420x240: Working <LINE> Stage: fermenting <LINE> Temperature here today: 22.0 °C, in a room
+OBS  RTDS.screenshot tlg_rtds_vessel_status.png ok=true; console visible=false x=-5000
+PASS RTDS.dialog_vessel_status :: reply ok=true reason=nil; missing: none
+STEP rtds_generator begin
+PASS RTDS.generator_placed :: at 10670,10632
+STEP rtds_floor_pour begin
+OBS  RTDS.floor_pour menu "Pour into the generator" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+PASS RTDS.floor_pour_queued :: queued
+PASS RTDS.floor_pour_completed :: onGround=false generator=0.500
+STEP rtds_menu_workshop_menu begin
+OBS  RTDS.workshop_menu menu (the game's right-click builder) at 560,40 305x140: Generator | Sit on ground | Walk to | Workshop: convert this generator
+OBS  RTDS.workshop_menu submenu at 866,145 325x210, visible=true: Project status | Start: Flex-fuel generator conversion | Hand over parts | Work on it | Cancel the project | Remove the conversion
+OBS  RTDS.screenshot tlg_rtds_workshop_menu.png ok=true; console visible=false x=-5000
+PASS RTDS.menu_workshop_menu :: the game's right-click builder; submenu visible=true; missing: none; greyed entries: false; debug entries: 0
+STEP rtds_project begin
+OBS  RTDS.gen_begin menu "Start: Flex-fuel generator conversion" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+OBS  RTDS.gen_deliver menu "Hand over parts" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed={Base.ElectricWire=1,Base.RubberHose=1,Base.Screws=4}
+PASS RTDS.project_started :: begin ok=true reason=nil; deliver ok=true reason=nil consumed={Base.ElectricWire=1,Base.RubberHose=1,Base.Screws=4}
+STEP rtds_dialog_project_status begin
+OBS  RTDS.project_status menu "Project status" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+OBS  RTDS.project_status dialog at 420,230 440x260: Conversion in progress <LINE> Flex-fuel generator conversion <LINE> Stage: inspect <LINE> Engine now: stock gasoline generator
+OBS  RTDS.screenshot tlg_rtds_project_status.png ok=true; console visible=false x=-5000
+PASS RTDS.dialog_project_status :: reply ok=true reason=nil; missing: none
+STEP rtcr_setup begin
+PASS RTCR.workbench_found :: industry_01_23 at 10619,10630, standing at 10619,10629
+OBS  RTCR.dark (light 0.15 at 11.10 o'clock): a torch switched on in hand, dark now=false
+STEP rtds_player_view_on begin
+OBS  RTDS.isDebugEnabled answers false
+STEP rtcr_open begin
+OBS  RTCR.button craftingBtn=true visible=true
+PASS RTCR.window_opens :: title=Crafting on Barrel query=InHandCraft;AnySurfaceCraft recipes=679 surface=true listMode=true
+STEP rtds_crafting begin
+OBS  RTDS.crafting window at 179,0 890x516, list at 5,5 323x339 scrolled to 0; the mod's first row 1, the vessel's 1; selected=TLG_MakeFermenterVessel inputsSatisfied=true craftEnabled=true inProgress=false surface=true
+OBS  RTDS.crafting rows for "Make": 1=Make Fermentation Vessel | 2=Make Nail-Spiked Weapon | 3=Make Ash Barrel | 4=Make Biodiesel Reactor | 5=Make Biodiesel Wash Tank | 6=Make Block Bludgeon | 7=Make Bowl of Beans | 8=Make Bowl of Brain Tan | 9=Make Can Pipe | 10=Make Ethanol Drying Column | 11=Make Firewood Bundle | 12=Make Fuel Filter Cartridge | 13=Make Fuel Sampling Kit | 14=Make Fuel Stabilizer | 15=Make Garbage Bag Apron | 16=Make Garbage Bag Bandeau | 17=Make Garbage Bag Briefs | 18=Make Garbage Bag Dress | 19=Make Garbage Bag Head Sack | 20=Make Garbage Bag Skirt | 21=Make Garbage Bag Tank Top | 22=Make Gravy | 23=Make Knee-Length Garbage Bag Skirt | 24=Make Knee-Length Tarp Skirts | 25=Make Large Bellows | 26=Make Long Garbage Bag Skirt | 27=Make Long Tarp Skirts | 28=Make Lye Leacher | 29=Make Magazine Limb Armor | 30=Make Magnesium Shavings | 31=Make Meat Patty | 32=Make Molotov Cocktail | 33=Make Nail-Spiked Small Weapon | 34=Make Newspaper Hat | 35=Make Oil Press | 36=Make Pot Still | 37=Make Reflux Column Still | 38=Make Sawblade Hatchet | 39=Make Scrap Metal Chopper | 40=Make Scrap Metal Cleaver | 41=Make Scrap Metal Knife | 42=Make Scrap Metal Weapon | 43=Make Sheet | 44=Make Sheet Sling Bag | 45=Make Shingle Mold | 46=Make Short Garbage Bag Skirt | 47=Make Short Tarp Skirts | 48=Make Sinew Thread | 49=Make Splint | 50=Make Tarp Aprons | 51=Make Tarp Bandeau | 52=Make Tarp Briefs | 53=Make Tarp Dresses | 54=Make Tarp Footwraps | 55=Make Tarp Handwraps | 56=Make Tarp Hat | 57=Make Tarp Head Sacks | 58=Make Tarp Sack | 59=Make Tarp Skirts | 60=Make Tarp Sling Bag | 61=Make Tent Kit | 62=Make Tile Mold | 63=Make Tin Foil Hat | 64=Make Twig Broom | 65=Make Wire from Barbed Wire | 66=Make Wood Retort | 67=Make Wooden Bar Cast Mold | 68=Make Wooden Blacksmith Anvil Mold | 69=Make Wooden Brick Mold | 70=Make Wooden Bucket | 71=Make Wooden Crude Bench Vise Parts Mold | 72=Make Wooden Ingot Cast Mold | 73=Make Wooden Shingle Mold | 74=Make Wooden Tile Mold | 75=Make Wooden Toolbox | 76=Make bottle of milk | 77=Make bucket of milk | 78=Make 4 Cabbage Rolls | 79=Make Advanced Framepack Frame | 80=Make Advanced Large Framepack Frame | 81=Make Aerosol Bomb | 82=Make Animal Skull Necklace | 83=Make Aphids Cure | 84=Make Barbed Wire from Wire | 85=Make Bird Skull Earrings | 86=Make Blank ID | 87=Make Bolt Metal Bat | 88=Make Bone Armored Gloves | 89=Make Bone Body Armor | 90=Make Bone Choker | 91=Make Bone Club | 92=Make Bone Forearm Armor | 93=Make Bone Mask | 94=Make Bone Pectoral | 95=Make Bone Shin Armor | 96=Make Bone Shoulder Armor | 97=Make Bone Thigh Armor | 98=Make Bone War Hatchet | 99=Make Box Trap | 100=Make Brake Disc Weapon | 101=Make Bucket Maul | 102=Make Bulletproof Forearm Armor | 103=Make Bulletproof Shin Armor | 104=Make Bulletproof Thigh Armor | 105=Make Cage Trap | 106=Make Cake Batter | 107=Make Champagne Glass | 108=Make Chum Base | 109=Make Crate Trap | 110=Make Crude Stone Axe | 111=Make Drinking Glass | 112=Make Duct Tape Holster | 113=Make Fire Bomb | 114=Make Firecracker | 115=Make Fishing Net | 116=Make Fishing Rod | 117=Make Flies Cure from Chewing Tobacco | 118=Make Flies Cure from Cigarettes | 119=Make Flies Cure from Loose Tobacco | 120=Make Garbage Bag Poncho | 121=Make Garden Fork Head Weapon | 122=Make Gas Mask Filter | 123=Make Glass Bottle | 124=Make Glass Jar | 125=Make Glass Pane | 126=Make Glass Shiv | 127=Make Guacamole | 128=Make Improvised Flashlight | 129=Make Improvised Gas Mask | 130=Make Improvised Lantern | 131=Make Improvised Lighter | 132=Make Improvised Screwdriver | 133=Make Improvised Whetstone | 134=Make Jar of Preserved Food | 135=Make Jawbone Axe | 136=Make Jawbone Club | 137=Make Kettle Maul | 138=Make Knife From Machete Blade | 139=Make Lantern Glass | 140=Make Large Stone Axe | 141=Make Long Animal Skulls Necklace | 142=Make Long Tooth Necklace | 143=Make Magazine Body Armor | 144=Make Makeshift Ham Radio | 145=Make Makeshift Radio | 146=Make Makeshift Walkie Talkie | 147=Make Metal Sheet | 148=Make Mildew Cure | 149=Make Mirror | 150=Make Noise Maker | 151=Make Pig Tusk Earrings | 152=Make Pig Tusk Necklace | 153=Make Pig Tusks Necklace | 154=Make Pipe Bomb | 155=Make Plank with Saw | 156=Make Railspike Baseball Bat | 157=Make Railspike Cudgel | 158=Make Railspike Iron Pipe | 159=Make Railspike Large Handle | 160=Make Railspike Weapon | 161=Make Rake-Head-Spiked Weapon | 162=Make Remote Controller (Long-Range) | 163=Make Remote Controller (Medium-Range) | 164=Make Remote Controller (Short-Range) | 165=Make Remote Trigger | 166=Make Sawblade Cudgel | 167=Make Sawblade Large Handle | 168=Make Sawblade Metal Bat | 169=Make Sawblade Plank | 170=Make Sawblade Table Leg | 171=Make Sawblade Wooden Bat | 172=Make Scarecrow | 173=Make Scrap Metal Body Armor | 174=Make Scrap Metal Forearm Armor | 175=Make Scrap Metal Gloves | 176=Make Scrap Metal Helmet | 177=Make Scrap Metal Mask | 178=Make Scrap Metal Morningstar | 179=Make Scrap Metal Shin Armor | 180=Make Scrap Metal Shortsword | 181=Make Scrap Metal Shoulder Armor | 182=Make Scrap Metal Sword | 183=Make Scrap Metal Thigh Armor | 184=Make Shiv | 185=Make Small Stone Wheel | 186=Make Smoke Bomb | 187=Make Snare Trap | 188=Make Spade Head Cudgel | 189=Make Stag Head Trophy | 190=Make Stick Trap | 191=Make Stone Anvil | 192=Make Stone Block from Stone | 193=Make Stone Hammer | 194=Make Stone Mace Head | 195=Make Stone Maul | 196=Make Stone Wheel | 197=Make Tarp Chest Rig | 198=Make Tarp Poncho | 199=Make Tarp Tank Tops | 200=Make Timer | 201=Make Tire Body Armor | 202=Make Tire Forearm Armor | 203=Make Tire Sandals | 204=Make Tire Shin Armor | 205=Make Tire Shoulder Armor - Left | 206=Make Tire Shoulder Armor - Right | 207=Make Tire Thigh Armor | 208=Make Tooth Necklace | 209=Make Toothbrush Shiv | 210=Make Western Boots | 211=Make Wine Glass | 212=Make Wooden Body Armor | 213=Make Wooden Forearm Armor | 214=Make Wooden Shin Armor | 215=Make Wooden Shoulder Armor | 216=Make Wooden Thigh Armor | 217=Remake Long Stone Blade
+OBS  RTDS.screenshot tlg_rtds_crafting_window.png ok=true; console visible=false x=-5000
+PASS RTDS.crafting_window :: 12 of the mod's 12 recipes listed; the vessel's picked=true; Craft enabled=true; Force Action=false
+STEP rtcr_close begin
+PASS RTCR.window_closes :: open=nil
+STEP rtds_player_view_off begin
+OBS  RTDS.isDebugEnabled answers true
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 4.11
+SUMMARY pass=65 fail=0
+DONE

@@ -16,6 +16,23 @@ local function fakePlayer(counts, recipes)
     return p
 end
 
+T.case("integration: no conversion to gas is offered until its feed exists (0.4.2)", function()
+    T.eq(CD.offered("gas_generator"), false, "its engine burns gas from an outside vessel")
+    for _, id in ipairs({ "flex_generator", "flex_car_normal", "flex_small_car", "flex_pickup_truck", "flex_step_van" }) do
+        T.eq(CD.offered(id), true, id)
+    end
+    T.eq(CD.offered("no_such_conversion"), true, "an unknown id is left to the domain")
+end)
+
+T.case("integration: conversion.begin refuses a conversion the game does not offer, before anything else", function()
+    require "TLG/Authority/ConversionHandlers"
+    local begin = TLG.Authority.Handlers.commands["conversion.begin"]
+    local r = begin(fakePlayer({}), { conversion = "gas_generator", device = { kind = "generator" } })
+    T.eq(r.ok, false)
+    T.eq(r.reason, "not_offered")
+    T.eq(begin(fakePlayer({}), { conversion = 7 }).reason, "malformed_request", "the type check still comes first")
+end)
+
 T.case("integration: conversion.begin's actor counts the requested conversion's tools", function()
     local p = fakePlayer({ ["Base.Screwdriver"] = 1, ["Base.Wrench"] = 2, ["Base.RubberHose"] = 3 }, { "Generator" })
     local a = CD.actor(p, nil, "flex_generator")

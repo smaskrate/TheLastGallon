@@ -9,6 +9,7 @@
 -- are NOT RUN.
 require "TLG/Client/Net"
 require "TLG/Authority/Resolver"
+require "TLG/Integration/ConversionDevices"
 require "TLG/Actions/ISTLGConversionWork"
 require "TLG/UI/Clicked"
 
@@ -114,7 +115,7 @@ local function addDeviceMenu(context, player, titleKey, deviceRef, device, kind,
         end)
     end)
     for _, row in ipairs(TLG.Domain.ConversionService.matrix()) do
-        if row.deviceKind == kind and row.chassis == chassis then
+        if row.deviceKind == kind and row.chassis == chassis and TLG.Integration.ConversionDevices.offered(row.conversion) then
             sub:addOption(getText("ContextMenu_TLG_ConvBegin", getText("IGUI_TLG_Conversion_" .. row.conversion)), nil,
                 function() req("conversion.begin", { device = deviceRef, conversion = row.conversion }) end)
         end

@@ -1962,6 +1962,22 @@ add({ name = "loop_convert_generator", timeout = 4000, fn = function(ctx, ticks)
     if ticks - ctx.t0 < 20 then return nil end
     if not ctx.phase then
         local ref = TLG.Authority.Resolver.refForObject(g, "generator")
+        -- 0.4.2: Start offers the flex conversion and not the gas one, which
+        -- has nothing to run on until the gas feed of 0.5.0 (D-040); a
+        -- request that names it is refused.
+        local menu = ISContextMenu.get(0, 100, 100)
+        TLG.UI.WorkshopMenu.fill(0, menu, workshopDevices(), false)
+        local root = menu:getOptionFromName(getText(GEN_MENU))
+        local sub = root and root.subOption and menu:getSubMenu(root.subOption)
+        local flex = sub and sub:getOptionFromName(startText("flex_generator"))
+        local gas = sub and sub:getOptionFromName(startText("gas_generator"))
+        menu:setVisible(false)
+        local refused = ask("LOOP.gen_gas_begin", "conversion.begin", { device = ref, conversion = "gas_generator" })
+        R:check("LOOP.gen_start_offers_flex_only", function()
+            return flex ~= nil and gas == nil and refused.ok == false and refused.reason == "not_offered",
+                string.format("Start flex %s, Start gas %s; a gas begin asked anyway: ok=%s reason=%s", tostring(flex ~= nil),
+                    tostring(gas ~= nil), tostring(refused.ok), tostring(refused.reason))
+        end)
         ctx.b = workshopClick("LOOP.gen_begin", GEN_MENU, startText("flex_generator"))
         ctx.d = workshopClick("LOOP.gen_deliver", GEN_MENU, getText("ContextMenu_TLG_ConvDeliver"))
         -- A bare report three hours later, without the work action: at most

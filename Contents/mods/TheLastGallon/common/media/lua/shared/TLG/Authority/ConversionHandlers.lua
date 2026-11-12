@@ -92,6 +92,8 @@ end
 
 H.commands["conversion.begin"] = function(player, args)
     if type(args.conversion) ~= "string" then return fail("malformed_request") end
+    -- The menu hides it; a request that names it anyway is refused (0.4.2).
+    if not CD.offered(args.conversion) then return fail("not_offered") end
     return run(player, args, function(project, actor, device, req)
         if project == nil or project.state ~= "InProgress" and project.state ~= "Commissioned" then
             project = CS.new({ id = World.newId("C"), conversion = args.conversion, t = req.now })

@@ -214,6 +214,7 @@
     "IGUI_TLG_ConvReason_missing_module": "Mancano dei pezzi:",
     "IGUI_TLG_ConvReason_missing_skill": "Le tue abilità non bastano ancora:",
     "IGUI_TLG_ConvReason_missing_recipe": "Non sai ancora come fare (leggi il manuale o una rivista di meccanica):",
+    "IGUI_TLG_ConvReason_not_offered": "Questa conversione non è disponibile in questa versione.",
     "IGUI_TLG_ConvReason_tank_not_empty": "Prima svuota il serbatoio.",
     "IGUI_TLG_ConvReason_tank_unknown": "Non è possibile controllare il livello del serbatoio.",
     "IGUI_TLG_ConvReason_device_unavailable": "Spegnilo (e lascialo sul posto) per lavorarci.",
