@@ -7080,3 +7080,26 @@ sleep, wood gas.
 Evidence:
 [run 351](evidence/2026-11-12_rt-sp_harness_run351_gas_propane.txt);
 [run 352](evidence/2026-11-12_rt-sp_harness_run352_gas_propane.txt).
+
+## 2026-11-12 — RT-SP launch 353 (the full run on the gas branch)
+
+Command: `tools/run-sp-harness.ps1 -Mode full`, the repository's mod on
+branch `feature/gas-generators` at `b76284b` (the propane feed and its
+fixes), 42.22.2. About 10 minutes. The feed changed paths every
+generator uses (the wear charge, the game's Add fuel, pickup, the
+evaluation, the liquid record's write), which launch 352 ran on gas
+only.
+
+Launch 353 (**106/0, then 14/0**): the game's Add fuel moved 10 L from a
+can into an empty generator with its record (chain hop 4); the native
+burn reconciled; pickup carried the record; the start gate started the
+generator on petrol and refused it on diesel (`wrong_fuel_4_diesel`);
+the mod's confirmed pour put diesel into a generator; the flex
+conversions of a generator and a car ran on ethanol; the save continued.
+The Workshop menu offered both the flex and the gas conversion
+(`LOOP.gen_start_offers_flex_and_gas`, which replaces 0.4.2's
+`LOOP.gen_start_offers_flex_only`). The console's one exception is the
+harness's deep-recursion probe; no warning of the mod.
+
+Evidence:
+[run 353](evidence/2026-11-12_rt-sp_harness_run353_full_gas_branch.txt).
