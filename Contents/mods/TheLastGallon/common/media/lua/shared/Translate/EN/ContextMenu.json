@@ -43,5 +43,11 @@
     "ContextMenu_TLG_Gas": "Gas (The Last Gallon)",
     "ContextMenu_TLG_GasConnectTank": "Connect a propane tank",
     "ContextMenu_TLG_GasRemoveTank": "Remove the propane tank",
-    "ContextMenu_TLG_GasStatus": "Gas status"
+    "ContextMenu_TLG_GasStatus": "Gas status",
+    "ContextMenu_TLG_Gasifier": "Gasifier (The Last Gallon)",
+    "ContextMenu_TLG_GasifierLoad": "Load the hopper with wood",
+    "ContextMenu_TLG_GasifierLight": "Light",
+    "ContextMenu_TLG_GasifierPutOut": "Put out",
+    "ContextMenu_TLG_GasifierService": "Clean out tar and ash",
+    "ContextMenu_TLG_GasifierStatus": "Status"
 }

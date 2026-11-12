@@ -24,11 +24,15 @@ end
 function Menu.describe(r)
     local lines = { getText("IGUI_TLG_GasTitle"),
         getText("IGUI_TLG_GasBuffer", string.format("%.2f", r.fuel or 0), string.format("%.2f", r.propaneKg or 0)) }
+    if (r.woodgasNm3 or 0) > 0 then
+        lines[#lines + 1] = getText("IGUI_TLG_GasWoodgas", string.format("%.3f", r.woodgasNm3))
+    end
     if r.tankUses then
         lines[#lines + 1] = getText("IGUI_TLG_GasTank", tostring(r.tankUses), string.format("%.2f", r.tankKg or 0))
     else
         lines[#lines + 1] = getText("IGUI_TLG_GasNoTank")
     end
+    lines[#lines + 1] = getText("IGUI_TLG_GasGasifiers", tostring(r.gasifiers or 0))
     return table.concat(lines, " <LINE> ")
 end
 

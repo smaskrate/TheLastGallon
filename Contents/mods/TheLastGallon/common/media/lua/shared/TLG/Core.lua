@@ -13,6 +13,7 @@ TLG.SCHEMA = {
     process = 1,    -- production processes
     project = 1,    -- workshop conversion projects
     gas = 1,        -- a gas generator's feed (D-040, Domain/GasFeed)
+    gasifier = 1,   -- a gasifier item's state (D-040, Domain/Gas Gasifier)
     network = 1,    -- energy networks
     adapter = 1,    -- adapter definition set
 }

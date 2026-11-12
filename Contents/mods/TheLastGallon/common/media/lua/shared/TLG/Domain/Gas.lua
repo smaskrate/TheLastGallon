@@ -583,6 +583,40 @@ function Gasifier.unload(st)
     return { ok = true, st = out, returned = returned }
 end
 
+-- Puts the fire out now (D-040, a generator's gasifier): warm-up lost, the
+-- buffer let out, the hopper kept. `why` names the reason in the event list
+-- (the player's "put_out" unless given). Returns the gas let out.
+function Gasifier.putOut(st, now, why)
+    if st.state ~= "Processing" and st.state ~= "Paused" then return fail("not_lit") end
+    if now ~= nil and math.abs(now - st.t) > 1e-6 then return fail("time_mismatch") end
+    local out = Tables.deepCopy(st)
+    local info = { events = {}, vented = 0 }
+    extinguish(out, info, "Ready", why or "put_out")
+    return { ok = true, st = out, vented = info.vented }
+end
+
+-- An engine that takes its gas in lumps (D-040: a generator's hourly
+-- refill) draws up to `nm3` from the buffer of a gasifier brought to `now`.
+-- It gets what the buffer holds, in any state that has a buffer (a paused
+-- gasifier keeps the gas it made until it goes out, as stepPaused serves
+-- it). One paused on buffer_full resumes, its buffer no longer full; one
+-- paused for another reason stays paused. Returns the state and the Nm3
+-- taken.
+function Gasifier.draw(st, nm3, now)
+    if not Num.isFinite(nm3) or nm3 < 0 then return fail("invalid_amount") end
+    if now ~= nil and math.abs(now - st.t) > 1e-6 then return fail("time_mismatch") end
+    local taken = math.min(nm3, st.buffer)
+    if taken <= 0 then return { ok = true, st = st, taken = 0 } end
+    local out = Tables.deepCopy(st)
+    out.buffer = st.buffer - taken
+    if out.buffer <= Gasifier.EPS then out.buffer = 0 end
+    out.totals.delivered = out.totals.delivered + taken
+    if out.state == "Paused" and out.pause == "buffer_full" then
+        out.state, out.pause, out.idle = "Processing", nil, 0
+    end
+    return { ok = true, st = out, taken = taken }
+end
+
 function Gasifier.decommission(st)
     if st.state ~= "Ready" and st.state ~= "Faulted" then return fail("busy") end
     if hopperMass(st.hopper) > Num.DUST or not Tables.isEmpty(st.held) then return fail("not_empty") end
@@ -601,11 +635,13 @@ end
 
 function Gasifier.status(st)
     local m = Registry.need("machine", st.machine)
+    -- A paused gasifier is still hot: it goes out after holdLeft hours.
+    local holdLeft = st.state == "Paused" and math.max(0, m.holdHours - st.idle) or nil
     return {
         state = st.state, reason = st.pause, mode = st.mode,
         hopperKg = hopperMass(st.hopper), moisture = moistureOf(st.hopper),
         warm = math.min(1, st.warm / m.warmupHours), buffer = st.buffer, bufferCap = m.bufferNm3,
-        filter = st.filter / m.filterKg,
+        filter = st.filter / m.filterKg, holdLeft = holdLeft, held = Tables.copy(st.held), cond = st.cond,
     }
 end
 

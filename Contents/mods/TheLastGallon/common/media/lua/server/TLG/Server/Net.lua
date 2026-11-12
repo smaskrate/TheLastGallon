@@ -5,6 +5,7 @@ require "TLG/Authority/Handlers"
 require "TLG/Authority/MachineHandlers"
 require "TLG/Authority/ConversionHandlers"
 require "TLG/Authority/GasHandlers"
+require "TLG/Authority/GasifierHandlers"
 
 local Handlers = TLG.Authority.Handlers
 

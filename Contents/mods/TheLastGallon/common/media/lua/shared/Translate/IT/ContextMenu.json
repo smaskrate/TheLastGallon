@@ -43,5 +43,11 @@
     "ContextMenu_TLG_Gas": "Gas (The Last Gallon)",
     "ContextMenu_TLG_GasConnectTank": "Collega una bombola di propano",
     "ContextMenu_TLG_GasRemoveTank": "Togli la bombola di propano",
-    "ContextMenu_TLG_GasStatus": "Stato del gas"
+    "ContextMenu_TLG_GasStatus": "Stato del gas",
+    "ContextMenu_TLG_Gasifier": "Gassificatore (The Last Gallon)",
+    "ContextMenu_TLG_GasifierLoad": "Carica la tramoggia di legna",
+    "ContextMenu_TLG_GasifierLight": "Accendi",
+    "ContextMenu_TLG_GasifierPutOut": "Spegni",
+    "ContextMenu_TLG_GasifierService": "Togli catrame e cenere",
+    "ContextMenu_TLG_GasifierStatus": "Stato"
 }

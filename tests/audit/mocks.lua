@@ -144,6 +144,9 @@ function Obj:getCondition() return self.condition or 100 end
 function Obj:setCondition(c) self.condition = c end
 function Obj:isActivated() return self.activated == true end
 function Obj:getGeneratorItemType() return self.itemType or "Base.Generator" end
+-- The hourly step: load x fuel setting (BC getTotalPowerUsing); 0.02 x 0.1
+-- for a generator powering nothing at the default setting.
+function Obj:getTotalPowerUsing() return self.step or 0.002 end
 function Obj:getName() return self.name end
 
 -- An inventory item with a fluid container, inside a player's inventory.

@@ -10,6 +10,7 @@ TEST_SEED = tonumber(__TLG_ARGS[2] or "") or 20261030
 
 require("audit/test_audit")
 require("audit/test_gas_handlers")
+require("audit/test_gasifier_handlers")
 
 local ok = T.run(filter)
 print(string.format("audit cases=%d passed=%d failed=%d assertions=%d", T.passed + T.failed, T.passed, T.failed,

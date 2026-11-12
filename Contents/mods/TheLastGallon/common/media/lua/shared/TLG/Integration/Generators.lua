@@ -32,6 +32,7 @@
 require "TLG/Integration/Containers"
 require "TLG/Domain/EngineEffects"
 require "TLG/Domain/GasFeed"
+require "TLG/Integration/Gasifiers"
 require "TLG/Notify"
 require "TLG/Boot"
 require "TLG/Authority/Vault"
@@ -96,12 +97,14 @@ end
 
 -- For each square as the game loads it. Hooked as this file loads: the
 -- squares around the player load before OnGameStart, when the adapter is
--- installed (launch 299). A gas generator joins the refills' list.
+-- installed (launch 299). A gas generator, or one with a conversion that
+-- may be gas, joins the refills' list (the minute pass drops the others).
 function G.onLoadSquare(square)
     local gen = square and square:getGenerator()
     if gen then
         G.restoreSprite(gen)
-        if gen:getModData()[G.GAS_KEY] ~= nil then G.watchGas(gen) end
+        local md = gen:getModData()
+        if md[G.GAS_KEY] ~= nil or md.tlgConv ~= nil then G.watchGas(gen) end
     end
 end
 if Events and Events.LoadGridsquare then Events.LoadGridsquare.Add(G.onLoadSquare) end
@@ -211,20 +214,45 @@ function G.holdsGas(gen)
     return GasFeed.holdsGas(G.gasRecord(gen), gen:getFuel())
 end
 
--- The litres a refill fills to: the generator's capacity, at most the 10 L
--- setFuel keeps (BC IsoGenerator.setFuel, MaximumGeneratorFuel).
+-- The litres a refill from a propane tank fills to: the generator's
+-- capacity, at most the 10 L setFuel keeps (BC IsoGenerator.setFuel,
+-- MaximumGeneratorFuel).
 function G.gasCap(gen)
     return math.min(gen:getMaxFuel(), 10)
+end
+
+-- The litres a refill of wood gas fills to (D-040): the generator's hourly
+-- step now and a margin (GasFeed.MARGIN). getTotalPowerUsing is its load
+-- times the fuel setting, which the game counts switched on or off (BC
+-- setSurroundingElectricity, 0.02 at least), so a generator that is off
+-- gets enough to start on.
+function G.woodgasCap(gen)
+    local step = 0
+    local ok, v = pcall(function() return gen:getTotalPowerUsing() end)
+    if ok and type(v) == "number" and v == v and v > 0 then step = v end
+    return math.min(step + GasFeed.MARGIN, G.gasCap(gen))
 end
 
 -- The gas generators the authority refills, by square ("x,y,z"). The game
 -- gives Lua no list of its generators, and the object is looked up again
 -- at each refill rather than held across its chunk's unloading.
 G.gasSquares = G.gasSquares or {}
+-- Wood gas looked for and none found: the time before which a generator's
+-- square is not scanned again (G.woodgasRefill), cleared when it is watched.
+G.woodgasWait = G.woodgasWait or {}
+G.WOODGAS_RETRY = 10 / 60
+
+local function squareKey(sq)
+    return sq:getX() .. "," .. sq:getY() .. "," .. sq:getZ()
+end
 
 function G.watchGas(gen)
     local sq = gen and gen:getSquare()
-    if sq then G.gasSquares[sq:getX() .. "," .. sq:getY() .. "," .. sq:getZ()] = true end
+    if sq then
+        local key = squareKey(sq)
+        G.gasSquares[key] = true
+        G.woodgasWait[key] = nil
+    end
 end
 
 -- Writes the gas record as given (callers set its litres, read back after
@@ -236,18 +264,49 @@ function G.writeGas(gen, rec)
     G.watchGas(gen)
 end
 
--- One refill on the authority. What burned since the record was written is
--- charged as wear first (the record changes), then the buffer is topped up
--- from the tank. Nothing is written when no gas moves, and nothing goes
--- into a generator that holds other fuel. Returns the uses moved.
+-- Wood gas for a generator with room below the wood-gas cap, drawn from the
+-- gasifiers beside it (TLG/Integration/Gasifiers). A scan that finds none
+-- with gas waits WOODGAS_RETRY before the next. Returns the Nm3 taken.
+function G.woodgasRefill(gen, rec, fuel, cap)
+    local key, now = squareKey(gen:getSquare()), World.now()
+    local wait = G.woodgasWait[key]
+    if wait ~= nil and now < wait then return 0 end
+    local got = TLG.Integration.Gasifiers.drawNear(gen:getSquare(), GasFeed.nm3For("woodgas", cap - fuel), now)
+    if got <= 0 then
+        G.woodgasWait[key] = now + G.WOODGAS_RETRY
+        return 0
+    end
+    G.woodgasWait[key] = nil
+    rec = rec or GasFeed.new({ id = World.newId("GS"), t = now })
+    pcall(G.chargeWear, gen)
+    local f = GasFeed.feed(rec, fuel, cap, "woodgas", got, now)
+    gen:setFuel(f.fuel)
+    f.rec.fuel = gen:getFuel()
+    G.writeGas(gen, f.rec)
+    return got
+end
+
+-- One refill on the authority, from one source: a propane tank with uses
+-- left when one is in (to the generator's capacity), else the gasifiers
+-- beside it (to one hourly step and a margin, D-040). What burned since the
+-- record was written is charged as wear first (the record changes), then
+-- the buffer is topped up. Nothing is written when no gas moves, and nothing
+-- goes into a generator that holds other fuel. The cheap tests come first:
+-- this runs every game minute. Returns the uses moved, or the Nm3 of wood
+-- gas taken.
 function G.gasRefill(gen)
     if not World.isAuthority() then return 0 end
     local rec = G.gasRecord(gen)
-    if rec == nil or rec.tank == nil or rec.tank.uses < 1 then return 0 end
+    -- A newer build's record is left as it is.
+    if rec == nil and gen:getModData()[G.GAS_KEY] ~= nil then return 0 end
     local fuel = gen:getFuel()
+    local tank = rec ~= nil and rec.tank ~= nil and rec.tank.uses >= 1
+    local cap = tank and G.gasCap(gen) or G.woodgasCap(gen)
+    if cap - fuel <= GasFeed.TOLERANCE then return 0 end
     if fuel > GasFeed.TOLERANCE and not GasFeed.holdsGas(rec, fuel) then return 0 end
     if not G.isGas(gen) then return 0 end
-    local r = GasFeed.refill(rec, fuel, G.gasCap(gen), World.now())
+    if not tank then return G.woodgasRefill(gen, rec, fuel, cap) end
+    local r = GasFeed.refill(rec, fuel, cap, World.now())
     if r.moved < 1 then return 0 end
     pcall(G.chargeWear, gen)
     gen:setFuel(r.fuel)
@@ -258,8 +317,8 @@ end
 
 -- The authority's minute pass over the gas generators whose squares are
 -- loaded (D-040: the hour's first minute event runs before its burn,
--- launches 345-349). A square without its generator, or a generator
--- without its record, leaves the list.
+-- launches 345-349). A square without its generator, or with one that has
+-- no gas record and is not converted to gas, leaves the list.
 function G.gasMinute()
     if not World.isAuthority() then return end
     local cell = getCell()
@@ -269,8 +328,10 @@ function G.gasMinute()
         local sq = x and cell:getGridSquare(tonumber(x), tonumber(y), tonumber(z))
         if sq ~= nil then
             local gen = sq:getGenerator()
-            if gen == nil or gen:getModData()[G.GAS_KEY] == nil then
+            local md = gen and gen:getModData()
+            if gen == nil or (md[G.GAS_KEY] == nil and (md.tlgConv == nil or not G.isGas(gen))) then
                 G.gasSquares[key] = nil
+                G.woodgasWait[key] = nil
             else
                 local ok, err = pcall(G.gasRefill, gen)
                 if not ok then TLG.Log.error("gas refill at %s: %s", key, tostring(err)) end

@@ -81,6 +81,11 @@ local function run(player, args, fn, after)
     local r = fn(project, actor, d.device, req, d)
     if not r.ok then return fail(r.reason, { missing = r.missing, rev = r.rev, state = r.state }) end
     if not r.unchanged then CD.store(d.md, d.holder, r.project, d.vaultHolder) end
+    -- A generator converted joins the gas refills' list (D-040; the minute
+    -- pass drops one whose conversion is not to gas).
+    if r.project.state == "Commissioned" and d.device.kind == "generator" and TLG.Integration.Generators then
+        pcall(TLG.Integration.Generators.watchGas, d.holder)
+    end
     takeItems(player, r.consumed)
     giveItems(player, r.returned)
     if after then

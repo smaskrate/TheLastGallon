@@ -13,8 +13,10 @@
 -- the litres held now over `fuel`. A refill tops the litres up to the cap
 -- with whole uses from the tank, and the uses taken are the propane added:
 -- nothing is made or lost. The buffer stays less than one use below the
--- cap; the next refill's room includes the rest. Pure functions; the
--- adapter is TLG/Integration/Generators.
+-- cap; the next refill's room includes the rest. Without a tank with uses
+-- left, wood gas drawn from a gasifier beside the generator fills the
+-- buffer the same way (F.feed), to a lower cap: one hourly step and a margin
+-- (D-040). Pure functions; the adapter is TLG/Integration/Generators.
 require "TLG/Domain/Gas"
 
 TLG.Domain = TLG.Domain or {}
@@ -26,6 +28,11 @@ local Registry, Tables = TLG.Registry, TLG.Tables
 F.SCHEMA = 1
 -- Litres taken as equal, as TLG.Integration.Generators.read takes them.
 F.TOLERANCE = 1e-4
+-- What a wood-gas buffer holds above one hourly step, so that a step
+-- leaves fuel and the generator runs on (D-040: one step plus 1e-4 L ran on,
+-- launch 346). Ten times TOLERANCE, so that the litres a step leaves still
+-- read as gas.
+F.MARGIN = 1e-3
 
 local function fail(reason) return { ok = false, reason = reason } end
 
@@ -94,6 +101,30 @@ function F.refill(rec, fuelNow, cap, now)
     out.fuel = fuelNow + F.propaneLitres(add)
     out.t = now or out.t
     return { ok = true, moved = uses, rec = out, fuel = out.fuel }
+end
+
+-- Tops the buffer up towards `cap` litres with up to `nm3` of gas `id`
+-- drawn from a producer (D-040, wood gas from a gasifier), energy for
+-- energy, never past the cap. Returns the record, the litres to set and the
+-- Nm3 taken (0: nothing to write).
+function F.feed(rec, fuelNow, cap, id, nm3, now)
+    local room = cap - fuelNow
+    if room <= 0 or not (type(nm3) == "number" and nm3 > 0) then
+        return { ok = true, taken = 0, rec = rec, fuel = fuelNow }
+    end
+    local mj = Registry.need("fuel", id).energyMJ
+    local take = math.min(nm3, room * litreMJ() / mj)
+    local out = Tables.deepCopy(rec)
+    out.buf = F.current(rec, fuelNow)
+    out.buf[id] = (out.buf[id] or 0) + take
+    out.fuel = math.min(cap, fuelNow + take * mj / litreMJ())
+    out.t = now or out.t
+    return { ok = true, taken = take, rec = out, fuel = out.fuel }
+end
+
+-- Nm3 of gas `id` with the energy of `litres` of petrol.
+function F.nm3For(id, litres)
+    return litres * litreMJ() / Registry.need("fuel", id).energyMJ
 end
 
 -- Takes the tank out. The propane the buffer has not burned goes back into

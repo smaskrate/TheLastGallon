@@ -173,9 +173,16 @@ H.commands["gas.status"] = function(player, args)
     local held = GasFeed.holdsGas(rec, fuel)
     local cur = held and GasFeed.current(rec, fuel) or {}
     local tank = rec and rec.tank
+    -- The gasifiers beside it that are lit now (wood gas).
+    local GZ, lit = TLG.Integration.Gasifiers, 0
+    for _, item in ipairs(GZ.near(gen:getSquare(), GZ.RADIUS)) do
+        local st = GZ.read(item, false)
+        if st and GZ.lit(GZ.advance(item, st, World.now())) then lit = lit + 1 end
+    end
     return { ok = true, requestId = args.requestId, gas = G.isGas(gen), holdsGas = held, fuel = fuel,
-        cap = G.gasCap(gen), propaneKg = Gas.toKg("propane", cur.propane or 0), tankUses = tank and tank.uses,
-        tankKg = tank and Gas.toKg("propane", Gas.usesToNm3(tank.uses)) }
+        cap = G.gasCap(gen), propaneKg = Gas.toKg("propane", cur.propane or 0), woodgasNm3 = cur.woodgas or 0,
+        tankUses = tank and tank.uses, tankKg = tank and Gas.toKg("propane", Gas.usesToNm3(tank.uses)),
+        gasifiers = lit }
 end
 
 return H
