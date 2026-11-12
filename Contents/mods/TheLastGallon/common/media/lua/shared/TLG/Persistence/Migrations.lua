@@ -13,10 +13,10 @@ local M = TLG.Persistence.Migrations
 local Tables = TLG.Tables
 
 -- Current schema per record kind (mirrors TLG.SCHEMA in Core.lua).
-M.CURRENT = { supply = 1, process = 1, project = 1, world = 1, network = 1 }
+M.CURRENT = { supply = 1, process = 1, project = 1, world = 1, network = 1, gas = 1 }
 
 -- steps[kind][from] = function(record) -> record at version from + 1
-M.steps = M.steps or { supply = {}, process = {}, project = {}, world = {}, network = {} }
+M.steps = M.steps or { supply = {}, process = {}, project = {}, world = {}, network = {}, gas = {} }
 
 -- v0: pre-release development sidecars (before schema numbers existed):
 -- condition stored as `age` (hours) and composition under `comp`.

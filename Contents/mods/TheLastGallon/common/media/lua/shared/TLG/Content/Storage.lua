@@ -35,5 +35,9 @@ R.define("storage", { id = "propane_cylinder", phase = "gas", capacity = 4.48, a
     breathing = 0, thermal = "sheltered", leakPerHour = 0 })
 R.define("storage", { id = "gas_holder", phase = "gas", capacity = 20, agingMul = 1.0, sealable = false,
     breathing = 0, thermal = "outdoor", leakPerHour = 0.0005 })
+-- A gas generator's buffer (D-040, TLG/Domain/GasFeed): the gas its own
+-- fuel stands for, read for its shares. The capacity bounds nothing there.
+R.define("storage", { id = "gas_buffer", phase = "gas", capacity = 100, agingMul = 1.0, sealable = false,
+    breathing = 0, thermal = "sheltered", leakPerHour = 0 })
 
 return true

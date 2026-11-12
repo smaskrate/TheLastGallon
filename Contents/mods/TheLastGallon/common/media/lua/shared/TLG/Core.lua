@@ -12,6 +12,7 @@ TLG.SCHEMA = {
     world = 1,      -- world fuel-history epoch and init policy
     process = 1,    -- production processes
     project = 1,    -- workshop conversion projects
+    gas = 1,        -- a gas generator's feed (D-040, Domain/GasFeed)
     network = 1,    -- energy networks
     adapter = 1,    -- adapter definition set
 }
