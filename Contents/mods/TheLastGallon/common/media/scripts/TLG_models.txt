@@ -184,4 +184,14 @@ module TLG
         texture = TLG/BiodieselWashTank,
         scale = 1.0,
     }
+
+    /* Gasifier (D-040): built from shapes (tools/blender/pz_icon_props.py,
+       the tooling of D-029), 1.0 along its width. 0.93 makes it 1.4 m
+       wide, its drum 0.86 m tall, a 200 L drum's height. */
+    model Gasifier
+    {
+        mesh = TLG/Gasifier,
+        texture = TLG/Gasifier,
+        scale = 0.93,
+    }
 }

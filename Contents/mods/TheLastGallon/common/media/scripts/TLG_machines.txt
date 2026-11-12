@@ -390,6 +390,46 @@ module TLG
         }
     }
 
+    /* The wood gasifier (D-040): placed within two tiles of a generator
+       converted to gas, it feeds it wood gas (Integration/Gasifiers.lua).
+       Its floor model and icon are built from shapes (TLG_models.txt). It
+       must be learned, from TLG.WoodGasHandbook or at MetalWelding 7, and
+       asks level 5 as the reactor does: its hearth and gas line must be
+       gas-tight. */
+    item Gasifier
+    {
+        DisplayCategory = Tool,
+        ItemType = base:normal,
+        Weight = 16.0,
+        Icon = TLG_Gasifier,
+        WorldStaticModel = TLG.Gasifier,
+    }
+
+    craftRecipe TLG_MakeGasifier
+    {
+        time = 400,
+        timedAction = Making,
+        category = Welding,
+        Tags = InHandCraft;Welding,
+        SkillRequired = MetalWelding:5,
+        NeedToBeLearn = true,
+        AutoLearnAny = MetalWelding:7,
+        xpAward = MetalWelding:25,
+        inputs
+        {
+            item 1 [Base.MetalDrum],
+            item 2 [Base.SheetMetal],
+            item 3 [Base.MetalPipe],
+            item 2 [Base.MetalBar],
+            item 2 [Base.BlowTorch] flags[DontRecordInput],
+            item 1 tags[base:weldingmask] mode:keep,
+        }
+        outputs
+        {
+            item 1 TLG.Gasifier,
+        }
+    }
+
     craftRecipe TLG_MakeBiodieselWashTank
     {
         time = 400,

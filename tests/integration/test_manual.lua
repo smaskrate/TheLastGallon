@@ -67,3 +67,17 @@ T.case("integration: the biodiesel handbook joins the manual's loot lists once, 
     T.eq(#items, 6)
     T.eq(#Manual.HANDBOOK_RECIPES, 5)
 end)
+
+T.case("integration: the wood gas handbook joins the same lists once, after the others", function()
+    local Manual = TLG.Integration.Manual
+    local lists = { CrateGenerator = { items = { "ElectronicsMag4", 6 } } }
+    Manual.addToLoot(lists)
+    Manual.addToLoot(lists, Manual.HANDBOOK)
+    local added = Manual.addToLoot(lists, Manual.WOODGAS_HANDBOOK)
+    T.eq(#added, 1); T.eq(added[1], "CrateGenerator")
+    local items = lists.CrateGenerator.items
+    T.eq(#items, 8)
+    T.eq(items[7], "TLG.WoodGasHandbook"); T.eq(items[8], Manual.LOOT.CrateGenerator)
+    T.eq(#Manual.addToLoot(lists, Manual.WOODGAS_HANDBOOK), 0)
+    T.eq(Manual.WOODGAS_RECIPES[1], "TLG_MakeGasifier")
+end)

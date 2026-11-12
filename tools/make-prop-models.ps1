@@ -1,7 +1,7 @@
 <#
 .SYNOPSIS
   Builds the floor models of the sampling kit, the yeast starter, the fuel
-  stabilizer and the manual (FBX and texture) into the mod.
+  stabilizer, the manual and the gasifier (FBX and texture) into the mod.
 .DESCRIPTION
   tools/blender/pz_prop_models.py builds each from the shapes its icon is
   rendered from (tools/blender/pz_icon_props.py), as it lies on the floor,
@@ -36,7 +36,7 @@ try {
 } finally {
     $env:PYTHONHASHSEED = $seed
 }
-foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems") {
+foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems", "Gasifier") {
     foreach ($file in (Join-Path $models "$name.fbx"), (Join-Path $textures "$name.png")) {
         if (-not (Test-Path $file) -or (Get-Item $file).LastWriteTime -lt $start) { throw "not written: $file" }
     }

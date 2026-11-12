@@ -2,13 +2,14 @@
 the shapes their icons are rendered from (pz_icon_props.py), and write
 each as the supplied models ship: an FBX and its texture.
 
-  blender -b --factory-startup --python tools/blender/pz_prop_models.py -- <models_dir> <textures_dir>
+  blender -b --factory-startup --python tools/blender/pz_prop_models.py -- <models_dir> <textures_dir> [Name ...]
 
 writes <models_dir>/<Name>.fbx and <textures_dir>/<Name>.png for each
-prop in pz_icon_props.PROPS, as it lies on the floor (`floor`): the
-sampling kit's hose coiled flat in front of its jars, the manual on its
-back; the others stand. They have half the icons' sides (DETAIL 0.5),
-which keeps each under about 1,000 triangles.
+prop in pz_icon_props.PROPS, or only the props named, as it lies on the
+floor (`floor`): the sampling kit's hose coiled flat in front of its jars,
+the manual on its back; the others stand. They have half the icons' sides
+(DETAIL 0.5), which keeps the four small items under about 1,000
+triangles; the gasifier, a machine of fifteen parts, has 1,212.
 
 The FBX is the supplied models' kind (docs/engine-capabilities.md, "The
 supplied fermenter, an FBX"): one mesh with one material, Y up through
@@ -127,7 +128,8 @@ def export(name, build, models_dir, textures_dir):
 
 
 if __name__ == "__main__":
-    models_dir, textures_dir = sys.argv[sys.argv.index("--") + 1:][:2]
+    args = sys.argv[sys.argv.index("--") + 1:]
+    models_dir, textures_dir = args[:2]
     pz_icon_props.DETAIL = DETAIL
-    for prop, builder in pz_icon_props.PROPS.items():
+    for prop, builder in pz_icon_props.chosen(args[2:]):
         export(prop, builder, models_dir, textures_dir)

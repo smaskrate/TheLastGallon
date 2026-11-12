@@ -54,6 +54,10 @@ end
 Manual.HANDBOOK = "TLG.BiodieselHandbook"
 Manual.HANDBOOK_RECIPES = { "TLG_MakeWoodRetort", "TLG_MakeAshBarrel", "TLG_MakeLyeLeacher",
     "TLG_MakeBiodieselReactor", "TLG_MakeBiodieselWashTank" }
+-- The wood gas handbook (D-040): the gasifier's recipe, in the same lists
+-- at the same weights.
+Manual.WOODGAS_HANDBOOK = "TLG.WoodGasHandbook"
+Manual.WOODGAS_RECIPES = { "TLG_MakeGasifier" }
 
 -- Adds `itemType` (the manual when nil) to `lists`
 -- (ProceduralDistributions.list) before the game parses them. A list this

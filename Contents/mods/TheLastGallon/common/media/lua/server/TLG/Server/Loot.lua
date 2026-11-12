@@ -1,6 +1,5 @@
--- The mod's items in the loot lists: the field manual, the biodiesel
--- handbook and the diesel
--- generator. The world fires OnPreDistributionMerge, then parses the lists
+-- The mod's items in the loot lists: the field manual, the biodiesel and
+-- wood gas handbooks and the diesel generator. The world fires OnPreDistributionMerge, then parses the lists
 -- (BC IsoWorld.init: ItemPickerJava.Parse), so both are added on that
 -- event.
 require "TLG/Core"
@@ -20,6 +19,12 @@ Events.OnPreDistributionMerge.Add(function()
         TLG.Log.info("biodiesel handbook added to %d loot lists: %s", #hres, table.concat(hres, ", "))
     else
         TLG.Log.error("biodiesel handbook loot: %s", tostring(hres))
+    end
+    local wok, wres = pcall(TLG.Integration.Manual.addToLoot, lists, TLG.Integration.Manual.WOODGAS_HANDBOOK)
+    if wok then
+        TLG.Log.info("wood gas handbook added to %d loot lists: %s", #wres, table.concat(wres, ", "))
+    else
+        TLG.Log.error("wood gas handbook loot: %s", tostring(wres))
     end
     -- The diesel generator (D-036): beside vanilla's, in the crate lists
     -- and in the vehicles' (VehicleDistributions).

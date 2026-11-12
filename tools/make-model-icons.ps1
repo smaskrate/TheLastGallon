@@ -12,8 +12,8 @@
   chosen by eye at 32 pixels: the pot still and the drying column from a
   little right of the front, the reflux still from its left side (its
   column upright and its arm clear of it), the filter from above its lid.
-  The sampling kit, the yeast starter, the fuel stabilizer and the manual
-  are rendered the same way from simple shapes built for them by
+  The sampling kit, the yeast starter, the fuel stabilizer, the manual and
+  the gasifier are rendered the same way from simple shapes built for them by
   tools/blender/pz_icon_props.py; tools/make-prop-models.ps1 builds their
   floor models from the same shapes, as each lies on the floor. The
   fermenter's icon is drawn by tools/make-icons.ps1 instead.
@@ -53,7 +53,7 @@ foreach ($v in $views) {
 }
 & $Blender -b --factory-startup --python (Join-Path $PSScriptRoot "blender\pz_icon_props.py") -- $OutDir 2>&1 |
     Where-Object { "$_" -match "^PZI |Error|Traceback" } | ForEach-Object { Write-Host "$_" }
-foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems") {
+foreach ($name in "FuelSampleKit", "YeastStarter", "FuelStabilizer", "ManualFuelSystems", "Gasifier") {
     if (-not (Test-Path (Join-Path $OutDir "Item_TLG_$name.png"))) { throw "no icon written for $name" }
 }
 Write-Host "icons written to $OutDir"

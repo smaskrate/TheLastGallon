@@ -74,6 +74,25 @@ module TLG
         OnCreate = ItemCodeOnCreate.onCreateRecipeMagazine,
     }
 
+    /* The wood gas handbook (D-040): reading it teaches the gasifier's
+       recipe (TLG_machines.txt), as the biodiesel handbook teaches its
+       machines'. Found where the field manual is (Integration/Manual.lua).
+       On the ground it uses the field manual's model. */
+    item WoodGasHandbook
+    {
+        DisplayCategory = RecipeResource,
+        ItemType = base:literature,
+        Weight = 0.5,
+        Icon = TLG_WoodGasHandbook,
+        BoredomChange = -20,
+        StressChange = -15,
+        LearnedRecipes = TLG_MakeGasifier,
+        StaticModel = Magazine,
+        WorldStaticModel = TLG.ManualFuelSystems,
+        Tags = base:magazine,
+        OnCreate = ItemCodeOnCreate.onCreateRecipeMagazine,
+    }
+
     /* Saved from a finished ferment (>= 5 kg sugar): replaces bought yeast,
        so the ethanol chain has a renewable starter culture. */
     item YeastStarter

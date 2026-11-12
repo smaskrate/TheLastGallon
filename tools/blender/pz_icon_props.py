@@ -2,13 +2,13 @@
 render their inventory icons through pz_icon.render_scene, so they look
 like the icons rendered from the supplied models.
 
-  blender -b --factory-startup --python tools/blender/pz_icon_props.py -- <out_dir>
+  blender -b --factory-startup --python tools/blender/pz_icon_props.py -- <out_dir> [Name ...]
 
-writes Item_TLG_<Name>.png for each prop below. The shapes are this
-script's own (no outside asset); each is drawn to read apart from the
-others at 32 pixels, three of them being jars. The same shapes are the
-items' floor models (pz_prop_models.py), built with `floor` as each lies
-on the floor and with fewer sides (DETAIL):
+writes Item_TLG_<Name>.png for each prop below, or only the props named.
+The shapes are this script's own (no outside asset); each is drawn to read
+apart from the others at 32 pixels, three of them being jars. The same
+shapes are the items' floor models (pz_prop_models.py), built with
+`floor` as each lies on the floor and with fewer sides (DETAIL):
 - FuelSampleKit: three small jars of fuel (petrol, ethanol, diesel
   colours) and a red rubber hose, the kit's recipe (3 jars, a hose).
 - YeastStarter: a jar of cream culture under a cloth dome tied with
@@ -17,6 +17,8 @@ on the floor and with fewer sides (DETAIL):
   charcoal in a jar): the one bottle among the jars.
 - ManualFuelSystems: an olive field manual with a title band and an
   orange badge.
+- Gasifier: a steel drum with its lid, a cyclone and a rusty filter box
+  joined by the gas pipe, and a red valve on the outlet (D-040).
 """
 import math
 import os
@@ -160,14 +162,58 @@ def manual_fuel_systems(floor=False):
     return 30.0, 12.0
 
 
+def pipe(x0, x1, y, z, radius, colour, **kw):
+    """A pipe along X from x0 to x1 at height z."""
+    bpy.ops.mesh.primitive_cylinder_add(vertices=_sides(24), radius=radius, depth=abs(x1 - x0),
+                                        location=((x0 + x1) / 2, y, z), rotation=(0.0, math.radians(90), 0.0))
+    return _finish(bpy.context.active_object, colour, **kw)
+
+
+def gasifier(floor=False):
+    # A stationary downdraft gasifier (D-040), in metres. A steel drum holds
+    # the hopper over the hearth, with its lid on top, an air ring round the
+    # hearth and a rusty ash door at its foot on the front (-Y). The gas
+    # leaves the hearth for a cyclone over its dust cone (+X), rises over the
+    # drum to a filter box of cloth and charcoal (-X), and leaves the filter
+    # for the generator through a red valve.
+    steel, dark, rust, light, red = "#5A5D5F", "#2B2B2B", "#7A4A2A", "#8C8C86", "#B23A2A"
+    metal = {"roughness": 0.45, "metallic": 0.75}
+    cylinder(0.0, 0.0, 0.0, 0.28, 0.86, steel, **metal)
+    cylinder(0.0, 0.0, 0.86, 0.3, 0.04, dark, **metal)
+    box(0.0, 0.0, 0.9, 0.2, 0.04, 0.04, dark, **metal)
+    torus(0.0, 0.0, 0.3, 0.285, 0.025, dark, **metal)
+    box(0.0, -0.27, 0.05, 0.22, 0.04, 0.17, rust, roughness=0.85)
+    cylinder(0.5, 0.0, 0.34, 0.1, 0.44, light, **metal)
+    cone(0.5, 0.0, 0.1, 0.03, 0.1, 0.24, light, **metal)
+    pipe(0.26, 0.42, 0.0, 0.6, 0.035, light, **metal)
+    cylinder(0.5, 0.0, 0.78, 0.035, 0.22, light, **metal)
+    pipe(-0.52, 0.5, 0.0, 1.0, 0.035, light, **metal)
+    cylinder(-0.52, 0.0, 0.52, 0.035, 0.48, light, **metal)
+    box(-0.52, 0.0, 0.0, 0.26, 0.3, 0.5, rust, roughness=0.85)
+    box(-0.52, 0.0, 0.5, 0.29, 0.33, 0.03, dark, **metal)
+    pipe(-0.8, -0.65, 0.0, 0.28, 0.03, light, **metal)
+    torus(-0.73, 0.0, 0.28, 0.07, 0.012, red, tilt=(0.0, math.radians(90), 0.0), roughness=0.6)
+    return 25.0, 25.0
+
+
 # The items with no supplied model: their icons and their floor models
 # (tools/blender/pz_prop_models.py) come from these shapes.
 PROPS = {"FuelSampleKit": fuel_sample_kit, "YeastStarter": yeast_starter, "FuelStabilizer": fuel_stabilizer,
-         "ManualFuelSystems": manual_fuel_systems}
+         "ManualFuelSystems": manual_fuel_systems, "Gasifier": gasifier}
+
+
+def chosen(names):
+    """The props named after the output folders, or all of them."""
+    unknown = [n for n in names if n not in PROPS]
+    if unknown:
+        raise ValueError("no such prop: %s" % ", ".join(unknown))
+    return [(n, PROPS[n]) for n in (names or list(PROPS))]
+
 
 if __name__ == "__main__":
-    out_dir = sys.argv[sys.argv.index("--") + 1:][0]
-    for name, build in PROPS.items():
+    args = sys.argv[sys.argv.index("--") + 1:]
+    out_dir = args[0]
+    for name, build in chosen(args[1:]):
         bpy.ops.wm.read_factory_settings(use_empty=True)
         azimuth, elevation = build()
         pz_icon.render_scene(os.path.join(out_dir, "Item_TLG_%s.png" % name), azimuth, elevation)
