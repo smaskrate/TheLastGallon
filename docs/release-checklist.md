@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 261 Italian strings as shipped in a client set to Italian (run 205); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.1.2 package is the zip of `f674d1c` (SHA-256 `e6971619…`), its mod files installed and played on 42.22.2 in launch 228 (100/0, 14/0). The Workshop item serves 0.1.1; no rehearsal of its zip is recorded. NOT RUN: an install through the Steam Workshop, an upgrade from 0.1.1 |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.2 package is the zip of `f264f10` (SHA-256 `E70E7038…FAD5F9D3`), installed clean and played on 42.22.2 in launch 344 (106/0, 14/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.1; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 or later continued with a 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -248,13 +248,25 @@ Italian (`IGUI_TLG_ConvReason_not_offered`), `TLG.VERSION` and
 text, the changelog, the support matrix and `migrations.md`. No script.
 Launch 343 showed the menu without the entry, with the change in the
 repository's mod. The full run's new `LOOP.gen_start_offers_flex_only`
-checks the menu and the refusal; it has not run yet. The change note is
+checks the menu and the refusal (launch 344, below). The change note is
 `docs/workshop-change-note-0.4.2.txt`.
 
-No 0.4.2 package is built: `dist` and the upload folder hold the 0.4.1
-package of `d7543de`. Open: build it and rehearse it. Putting it in the
-upload folder, and the first description line of that folder's
-`workshop.txt`, which names 0.4.1, wait for the owner's word.
+The 0.4.2 package is the zip of `f264f10` (167 files, 7,889,325 bytes,
+SHA-256 `E70E7038…FAD5F9D3`), built from a clean tree. Thirteen files
+differ from the 0.4.1 package: `42/mod.info`, `TLG/Core.lua`, the three
+Lua files and the two string files of the fix, the shipped changelog,
+player guide, support matrix and `migrations.md`, the Workshop menu's
+picture and `workshop.txt`. It was installed clean and played: the full
+run 106/0 and 14/0, the game reading 0.4.2 (launch 344). Its new check
+passed: the menu offered the flex conversion and not the gas one, and a
+gas begin asked anyway was refused (`not_offered`). The other modes, the
+multiplayer cases and the upgrade were not run on it. The shipped
+changelog, written before launch 344, lists the refusal as not checked.
+
+The upload folder still holds the 0.4.1 package, which the Workshop item
+serves. Putting 0.4.2 there, and the first description line of the
+folder's `workshop.txt`, which names 0.4.1, wait for the owner's word.
+Not uploaded.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is

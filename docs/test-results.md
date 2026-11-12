@@ -6605,7 +6605,7 @@ error level. The generator burned in its half hour (10.0000 to 9.9850 L),
 so the check launch 317 did not reach ran here.
 
 Not run on this zip: every other mode and case, the upgrade scenarios,
-an install through the Steam Workshop. Launches 318338 ran on the
+an install through the Steam Workshop. Launches 318–338 ran on the
 repository's mod at 0.4.0. Not uploaded.
 
 Evidence:
@@ -6812,3 +6812,37 @@ server, the Italian text in game.
 Evidence:
 [run 343](evidence/2026-11-12_rt-sp_harness_run343_docs_shots.txt);
 [the full shot](evidence/2026-11-12_run343_workshop_menu.jpg).
+
+## 2026-11-12 — RT-SP harness, launch 344 (the 0.4.2 release zip, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `f264f10` (the release commit,
+clean tree) built `TheLastGallon-0.4.2.zip`: 167 files, 7,889,325 bytes,
+SHA-256 `E70E7038…FAD5F9D3`. Thirteen files differ from the 0.4.1
+package: `42/mod.info` and `TLG/Core.lua` (the version), the fix's
+`ConversionDevices.lua`, `WorkshopMenu.lua` and `ConversionHandlers.lua`,
+the English and Italian `IG_UI.json`, the shipped changelog, player
+guide, support matrix and `migrations.md`, `docs/images/workshop-menu.jpg`
+and `workshop.txt`.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 344 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 106/0, then 14/0 |
+
+The zip matched its manifest both ways. Phase A has one check more than
+launch 339's 105, and it passed: `LOOP.gen_start_offers_flex_only`. The
+basic generator's Workshop submenu, built by the game's builder, held
+Start: Flex-fuel generator conversion and no Start: Gas generator
+conversion, and a `conversion.begin` for the gas conversion, asked
+anyway, came back `ok=false`, `not_offered`. The flex conversion then
+began from the menu as before. The game read `mod.info` 0.4.2, equal to
+`TLG.VERSION`, and loaded the poster as a 256×256 texture; the mod logged
+"The Last Gallon 0.4.2 ready" at both loads. The console's one exception
+is the harness's deep-recursion probe (`LuaProbe.lua`); no line of the
+mod at warning or error level. The generator burned in its half hour
+(10.0000 to 9.9850 L).
+
+Not run on this zip: every other mode and case, the upgrade scenarios,
+a server, an install through the Steam Workshop. Not uploaded.
+
+Evidence:
+[run 344](evidence/2026-11-12_rt-sp_harness_run344_install_rehearsal_0.4.2_42.22.2.txt).
