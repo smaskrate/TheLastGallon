@@ -222,10 +222,11 @@ function G.gasCap(gen)
 end
 
 -- The litres a refill of wood gas fills to (D-040): the generator's hourly
--- step now and a margin (GasFeed.MARGIN). getTotalPowerUsing is its load
--- times the fuel setting, which the game counts switched on or off (BC
--- setSurroundingElectricity, 0.02 at least), so a generator that is off
--- gets enough to start on.
+-- step now and a margin (GasFeed.MARGIN). getTotalPowerUsing is its load as
+-- last counted times the fuel setting: 0 for a generator never switched on,
+-- the last running load after it stopped (launch 358). The margin alone is
+-- enough to start on; switching on counts the load, and the next minute's
+-- refill fills to it before the first step, an hour later at most.
 function G.woodgasCap(gen)
     local step = 0
     local ok, v = pcall(function() return gen:getTotalPowerUsing() end)

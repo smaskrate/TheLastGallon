@@ -7161,3 +7161,92 @@ Evidence:
 [run 354](evidence/2026-11-12_rt-mp_harness_run354_gaspropane_42.22.2.txt);
 [run 355](evidence/2026-11-12_rt-mp_harness_run355_gaspropane_42.22.2.txt);
 [run 356](evidence/2026-11-12_rt-mp_harness_run356_gaspropane_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 357 (gas and sleep, D-040)
+
+Command: `tools/run-sp-harness.ps1 -Mode gas-sleep` (request `sp-rtgs`),
+the repository's mod on branch `feature/gas-generators` at `0d35110` with
+the gasifier's item, recipe and handbook added (committed in `6efa4a9`),
+42.22.2, the default generator fuel setting (0.1). About 3 minutes. D-040
+asked for sleep before 0.5.0 ships: a wood-gas generator holds one hourly
+step and a margin, so a single hour whose burn came before the minute
+pass's refill would stop it, where propane's 10 L would hide it. The
+generator of the gas measures, A, at 10648,10649 (load 0.005 L an hour:
+the generator and a gas pump in range), its battery charger off. The
+character was put to sleep as the game's bed menu does it, without the
+menu's save.
+
+Launch 357 (**4/1**):
+- **Asleep on A's own fuel** (1 L): at each of 4 boundaries the hour's
+  first minute event came the tick before the boundary was seen, and had
+  not seen the step. About 108 ticks a game hour, at most one game minute
+  and one hour crossed in a tick, 60 minute events an hour.
+- **Asleep with the minute refill** to one step plus 1e-3 L (the wood-gas
+  margin, `GasFeed.MARGIN`): 8 game hours, 8 boundaries, 8 refills, no
+  stop; A ran throughout with 0.001 L left after each step.
+
+The failure is the probe's: the first sleep ended after 4 game hours, not
+the 8 asked for (woken at 13:02 where `setForceWakeUpTime` named 17:02).
+Why is not known; the second sleep ran its 8 hours.
+
+Not run: sleep with the load switched within the hour; a server, where
+sleep passes only when every player sleeps.
+
+Evidence:
+[run 357](evidence/2026-11-13_rt-sp_harness_run357_gas_sleep_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 358 (a gas generator on wood gas, D-040)
+
+Command: `tools/run-sp-harness.ps1 -Mode gas-wood` (request `sp-rtwd`, then
+`sp-rtwdb` after a save and its continue), the repository's mod on branch
+`feature/gas-generators` at `6efa4a9`, 42.22.2, the default generator
+fuel setting (0.1). About 9 minutes. A vanilla generator, A, at
+10648,10649, converted to gas as in launches 350–352, and a Wood Gasifier
+put down two tiles from it at 10650,10649. The player carried four logs,
+five pieces of firewood and two of charcoal, and used the gasifier
+through its own menu.
+
+Launch 358 (**18/0, then 4/0**):
+- **The scripts.** The item with its floor model; the recipe asks
+  MetalWelding 5 and must be learned; the Wood Gas Handbook teaches it.
+- **Loaded and lit.** Light was greyed while the hopper was empty. Load
+  the hopper with wood took all 11 pieces, 48 kg. Lit, it warmed up, and
+  A, switched off, was watched.
+- **Its gas in A.** Once warmed (0.5 h), the minute pass filled A to the
+  margin alone, 0.001 L (0.0064 Nm3): a generator never switched on
+  reports a load of 0. That was enough to start A through the start
+  gate (compatible, grade good).
+- **Four hours at ×20**: four steps of 0.005 L, 0.0200 L burned by A's
+  fuel against 0.1600 Nm3 given by the gasifier (0.0250 L, of which
+  0.005 L filled A to the new step); the wood it burned made those
+  0.1600 Nm3 exactly; no stop.
+- **Gas status**: 0.0384 Nm3 of wood gas in A, one lit gasifier beside
+  it, no tank. The gasifier's Status: gas ready, waiting for a generator
+  to draw it, 45.1 kg of wood, 2.00 of 2.00 m³ in hand, out in 3.0 h if
+  no generator draws gas.
+- **No liquid goes in**: the game's Add fuel left A and the can as they
+  were; the mod's pour was refused (`gas_generator`).
+- **Put out**: the fire out, 2 Nm3 let out; A stopped 1.97 h later with
+  0 L, at its second step.
+- **Lit again**: A fed (0.006 L) and started.
+- **Taken up while lit** with the world menu's Grab, and put down a tile
+  away: its Status read Ready, out, with all its 42.16 kg of wood.
+- **Lit where it stood**, A fed and running. **A trip** of six game hours
+  that unloaded both: on return A was off with 0 L, and the gasifier out
+  with its wood (39.27 kg) and no wood burned while away.
+- **Saved and continued**: both records as saved (their ids, the
+  hopper), A watched again. Lit, A fed (0.003 L: switched off after the
+  reload, A's load read 0.002 L) and started; two hours of refills
+  (0.0256 Nm3, two steps of 0.002 L: the gas pump in range, counted
+  before the save, no longer was).
+
+The console holds one warning of the mod's own: the gasifier's Status
+asked the game for `IGUI_TLG_GasifierHot_buffer_full` without its
+argument (`MissingFormatArgumentException` logged, the text shown right).
+The menu now asks with the argument; not run again in game.
+
+Not run: a server; crafting the gasifier and reading the handbook in
+game; a gasifier feeding two generators; the performance mode.
+
+Evidence:
+[run 358](evidence/2026-11-13_rt-sp_harness_run358_gas_wood_42.22.2.txt).

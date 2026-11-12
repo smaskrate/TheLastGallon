@@ -1804,3 +1804,61 @@ gas probe (launch 342).
   * Remove the conversion also switches a running generator off: with its
     gas let out, the game would leave it running on no fuel until its next
     hourly step (launch 355).
+* Built 2026-11-13 on `feature/gas-generators`, the wood-gas half
+  (launches 357–358, `test-results.md`):
+  * The gasifier is `TLG.Gasifier`, a machine item of 16 kg with a floor
+    model and an icon built from shapes (D-029's tooling). Its state is a
+    `Gas.Gasifier` record in the item's mod data (`tlgGasifier`, record
+    kind `gasifier`), kept by the vault on a server; the adapter is
+    `TLG/Integration/Gasifiers`. Its menu, Gasifier (The Last Gallon):
+    Load the hopper with wood (whole logs, firewood, planks, twigs and
+    charcoal from the inventory, while they fit in its 120 kg), Light, Put
+    out, Clean out tar and ash, Status. A carried gasifier answers Status
+    only.
+  * The recipe `TLG_MakeGasifier` asks MetalWelding 5, as the reactor does
+    (the hearth and its gas line must be gas-tight), and is learned at 7
+    without the book. `TLG.WoodGasHandbook` teaches it and is found in the
+    Field Manual's eleven loot lists at the manual's weights.
+  * How the gas reaches the generator, which the design above left open:
+    the generator's minute pass, finding room below one step and the
+    margin, draws that room from the lit gasifiers within two tiles in one
+    lump, out of the gasifier's own buffer. The gasifier is brought
+    forward with no other draw: it makes that gas again at its full rate
+    and waits with its buffer full, and each hourly draw keeps it lit;
+    with nobody drawing it goes out after its hold (3 h). The wood burned
+    is the gas drawn, as with a steady draw (a domain test). After hours
+    away it is brought forward with no draw: the generator ran on its own
+    buffer, drawn before it was left, which is the draw "for the hours the
+    buffer kept it running" above.
+  * The margin is 1e-3 L, not the 1e-4 L measured: the mod takes litres
+    within 1e-4 as equal (`GasFeed.TOLERANCE`), and what a step leaves must
+    still read as gas, or the liquid refusals lapse and the start gate
+    reads those litres as petrol. One step plus 1e-3 runs on as one plus
+    1e-4 did. Sleep, which the list above asked for, is measured: 8 hours
+    asleep with the minute refill to one step plus 1e-3, no stop (launch
+    357).
+  * A generator never switched on reports a load of 0, so its first fill
+    is the margin alone (1e-3 L). That is enough to start it; switching on
+    counts the load, and the next minute's refill fills to it before the
+    first step (launch 358).
+  * One source at a time, which the design above did not say: a propane
+    tank with uses left is the source; a generator without one takes wood
+    gas. To run on wood gas with a tank in, take the tank out. Put to the
+    owner with this build.
+  * Put out puts the fire out at once and lets out its gas; the wood stays
+    in the hopper. The domain's other stop, which closes the air intake and
+    lets the fire go out after its hold, is not on the menu.
+  * No move hooks: a gasifier lit and then carried, or put down on another
+    tile, is put out at its next read, its wood kept. No ten-minute pass:
+    the record advances when it is read, and the menu brings a copy to
+    now.
+  * In game (launch 358, single player): the scripts; loaded and lit
+    through the menu; its gas in a generator switched off, started through
+    the start gate; four hours with the gas given equal to the steps and
+    the wood burned equal to the gas; Gas status; liquid refused; put out,
+    the generator stopping at its second step; lit again; taken up while
+    lit and put down a tile away, out with its wood; a trip that unloaded
+    both, the generator off and the gasifier out on return; saved and
+    continued, lit again and refilling. Not run: a server; crafting the
+    gasifier and reading the handbook in game; a gasifier feeding two
+    generators; the performance mode.

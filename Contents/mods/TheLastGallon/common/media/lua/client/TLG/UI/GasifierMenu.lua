@@ -56,10 +56,13 @@ function Menu.describe(r)
         lines[#lines + 1] = getText("IGUI_TLG_GasifierBuffer", num(r.buffer), num(r.bufferCap))
     end
     if r.holdLeft then
-        -- What keeps it lit depends on why it waits.
-        local key = "IGUI_TLG_GasifierHot_" .. tostring(r.pause)
-        if getText(key) == key then key = "IGUI_TLG_GasifierHot" end
-        lines[#lines + 1] = getText(key, num(r.holdLeft, 1))
+        -- What keeps it lit depends on why it waits. Asked with its
+        -- argument: the game's Translator warns of a text with %1 asked
+        -- without one (launch 358).
+        local key, hold = "IGUI_TLG_GasifierHot_" .. tostring(r.pause), num(r.holdLeft, 1)
+        local text = getText(key, hold)
+        if text == key then text = getText("IGUI_TLG_GasifierHot", hold) end
+        lines[#lines + 1] = text
     end
     lines[#lines + 1] = getText("IGUI_TLG_GasifierFilter", string.format("%.0f%%", (r.filter or 0) * 100))
     local held = r.held or {}

@@ -549,6 +549,21 @@ RT-SP (runs 3–6, `Base.Generator`, max fuel 10 L):
     in single player (RT-SP run 348), on the tick and on the minute event
     on the server (RT-MP run 349). 60 minute events a game hour at ×20, at
     ×100 and on the server.
+  * Asleep (RT-SP run 357, the character put to sleep as the game's bed
+    menu does it, in single player): about 108 ticks a game hour, at most
+    one game minute and one hour crossed in a tick, 60 minute events an
+    hour. The hour's first minute event came the tick before the boundary
+    was seen and before the step at all four boundaries of a sleep on the
+    generator's own fuel. Refilled on each minute event to one step plus
+    1e-3 L, a generator ran through 8 hours asleep: 8 boundaries, 8
+    refills, no stop. A frame that crossed a whole hour or more would
+    burn more than one step at once; none did.
+  * `getTotalPowerUsing()` while switched off is the load as last counted
+    (RT-SP run 358): 0 for a generator put down and never switched on;
+    after it stopped on an empty buffer, its last running load (0.005 L);
+    off after its chunk was unloaded and loaded again, 0.002 L. Switched on
+    after a save's continue, it counted 0.002 L where it had counted
+    0.005 L, the gas pump in range no longer among what it powers.
   * `setFuel` clamps to 0–10 L (`MaximumGeneratorFuel`, not
     `getMaxFuel`) and calls `sync()` on a server and on a client. A
     client's `update()` returns before the burn: only the server burns.
