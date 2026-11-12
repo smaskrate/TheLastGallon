@@ -1,0 +1,61 @@
+# TLG single-player harness, the gas measures (D-040)
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=94592935019279979039 hours=2.0096 DayLength=4
+STEP rtgm_setup begin
+OBS  RTGM.placed at 2.02306 h (clock 09:01): A fuel 1.0000000, running true, load 0.0050000 L an hour, setting 0.09999999776482582 (SandboxVars 0.1), powering [Gas Pump x1 (0.003 L/h)]; charger on false
+OBS  RTGM.placed A at 10648,10649 and the charger at 10650,10649; A max fuel 10 L; AllowExteriorGenerator true; the charger's battery Base.CarBattery1
+PASS RTGM.placed :: A true running true, charger true, setting 0.09999999776482582
+STEP rtgm_charger begin
+OBS  RTGM.charger: load 0.0050000 -> 0.0100000 within 1 ticks of switching on (charger on true), 0.0050000 within 1 ticks of switching off; expected rise 0.05 x 0.09999999776482582 = 0.0050000
+PASS RTGM.charger_switches_the_load :: rise 0.0050000 (expected 0.0050000), back to 0.0050000 from 0.0050000
+STEP rtgm_steps begin
+OBS  RTGM.steps_start at 2.02336 h (clock 09:01): A fuel 1.0000000, running true, load 0.0050000 L an hour, setting 0.09999999776482582 (SandboxVars 0.1), powering [Gas Pump x1 (0.003 L/h)]; charger on false
+OBS  RTGM.steps drop at 3.00241 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9950000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.steps drop at 4.00221 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9900000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.steps drop at 5.00201 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9850000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.steps_end at 5.00350 h (clock 12:00): A fuel 0.9850000, running true, load 0.0050000 L an hour, setting 0.09999999776482582 (SandboxVars 0.1), powering [Gas Pump x1 (0.003 L/h)]; charger on false
+PASS RTGM.step_is_the_load_read_before :: 3 drops at world age 3.00241, 4.00221, 5.00201; 0 differ from the load read the tick before by more than 2e-07; 3 within the hour's first game minute
+OBS  RTGM.order: [boundary 3.00093 h tick 785: the tick watcher saw the step false; first minute event of the hour at 3.00093 h (minute 0, clock minute 0) tick 784, saw the step false, 0 ms after the tick watcher] [boundary 4.00073 h tick 1460: the tick watcher saw the step false; first minute event of the hour at 4.00073 h (minute 0, clock minute 0) tick 1459, saw the step false, 0 ms after the tick watcher] [boundary 5.00053 h tick 2135: the tick watcher saw the step false; first minute event of the hour at 5.00053 h (minute 0, clock minute 0) tick 2134, saw the step false, 0 ms after the tick watcher]; drops seen 1,1,1 ticks after the boundary
+PASS RTGM.order_observed :: 3 boundaries, 3 first minute events; the tick watcher saw the step at 0, the minute event at 0 (the same answer at every boundary is required)
+STEP rtgm_midhour begin
+OBS  RTGM.midhour drop at 6.00188 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9950000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.midhour drop at 7.00166 h: 0.0100000 L (the load read the tick before 0.0100000), fuel now 0.9850000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.midhour: load 0.0050000 before the charger came on at 6.50102 h, 0.0100000 after; the step at the next boundary 0.0100000 at 7.00166 h; the charger off at 7.50082 h, the step after none
+FAIL RTGM.step_is_the_load_of_its_moment :: after switching on: step 0.0100000, load 0.009999999776482582 (before 0.004999999888241291); after switching off: step none
+STEP rtgm_exact begin
+OBS  RTGM.exact drop at 9.00276 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9950000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.exact drop at 10.00161 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.0000000, running false, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.exact A stopped at 10.00161 h, fuel 0.0000000
+OBS  RTGM.exact drop at 11.00196 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.exact: fuel set to 0.004999999888241291 against a step of 0.004999999888241291 late in hour 9; after the boundary fuel 0, running false. Then 0.0050999997183680534 against a step of 0.004999999888241291; after the boundary fuel 0.000100000, running true
+PASS RTGM.exactly_one_step_switches_off :: set 0.004999999888241291 for a step of 0.004999999888241291; after: fuel 0 running false
+PASS RTGM.one_step_and_a_margin_runs_on :: after the step: fuel 0.000100000 (margin 1e-04), running true
+STEP rtgm_policy_tick_x20 begin
+OBS  RTGM.policy_tick_x20 drop at 12.00240 h: 0.0100000 L (the load read the tick before 0.0100000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_tick_x20 drop at 13.00275 h: 0.0100000 L (the load read the tick before 0.0100000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_tick_x20 drop at 14.00163 h: 0.0100000 L (the load read the tick before 0.0100000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_tick_x20: 3.003 game h, 180 minute events (59.9 an hour), 3 boundaries, 4 refills, 0 stops, 0 ticks not running; attempts [hour 11: on at 11.98461 h, load rose true at 11.98609 h, boundary 12.00091 h, stopped false] [hour 12: on at 12.98349 h, load rose true at 12.98497 h, boundary 13.00127 h, stopped false] [hour 13: on at 13.98384 h, load rose true at 13.98532 h, boundary 14.00014 h, stopped false]
+PASS RTGM.policy_tick_x20_runs_through :: 3 counted attempts (of 3), 0 stops, 3 boundaries
+STEP rtgm_policy_minute_x20 begin
+OBS  RTGM.policy_minute_x20 drop at 15.00206 h: 0.0100000 L (the load read the tick before 0.0100000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_minute_x20 drop at 16.00240 h: 0.0100000 L (the load read the tick before 0.0100000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_minute_x20 drop at 17.00274 h: 0.0070000 L (the load read the tick before 0.0070000), fuel now 0.0031000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_minute_x20: 3.001 game h, 180 minute events (60.0 an hour), 3 boundaries, 3 refills, 0 stops, 0 ticks not running; attempts [hour 14: on at 14.98427 h, load rose true at 14.98576 h, boundary 15.00058 h, stopped false] [hour 15: on at 15.98461 h, load rose true at 15.98610 h, boundary 16.00092 h, stopped false] [hour 16: on at 16.98348 h, load rose true at 16.98496 h, boundary 17.00126 h, stopped false]
+PASS RTGM.policy_minute_x20_as_the_order_says :: 3 counted attempts, 0 of them stopped A, 0 stops in all; the first minute event of the hour saw the step already: false
+STEP rtgm_policy_tick_x100 begin
+OBS  RTGM.policy_tick_x100 drop at 18.01319 h: 0.0070000 L (the load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_tick_x100 drop at 19.01319 h: 0.0070000 L (the load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_tick_x100 drop at 20.01319 h: 0.0070000 L (the load read the tick before 0.0070000), fuel now 0.0001000, running true, 1 ticks after the boundary was seen; charger on true
+OBS  RTGM.policy_tick_x100: 3.052 game h, 183 minute events (60.0 an hour), 3 boundaries, 4 refills, 0 stops, 0 ticks not running; attempts [hour 17: on at 17.98356 h, load rose true at 17.99097 h, boundary 18.00578 h, stopped false] [hour 18: on at 18.98356 h, load rose true at 18.99097 h, boundary 19.00578 h, stopped false] [hour 19: on at 19.98356 h, load rose true at 19.99097 h, boundary 20.00578 h, stopped false]
+PASS RTGM.policy_tick_x100_runs_through :: 3 counted attempts (of 3), 0 stops, 3 boundaries
+STEP rtgm_tank_item begin
+OBS  RTGM.tank_item: useDelta 1.9999999494757503E-4; 1234 -> 1234.0000 (getCurrentUses 1234); 1234.5 -> 1235.0000 (getCurrentUses 1235); 1 -> 1.0000 (getCurrentUses 1)
+PASS RTGM.tank_item_keeps_whole_uses :: 1234 -> 1234.0000 (getCurrentUses 1234); 1234.5 -> 1235.0000 (getCurrentUses 1235); 1 -> 1.0000 (getCurrentUses 1)
+STEP rtgm_done begin
+OBS  RTGM.end at 20.06519 h (clock 03:03): A fuel 0.0071000, running true, load 0.0020000 L an hour, setting 0.09999999776482582 (SandboxVars 0.1), powering []; charger on false
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 20.07
+SUMMARY pass=10 fail=1
+DONE

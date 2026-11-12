@@ -784,6 +784,310 @@ function services.probe_gensprite(player, args)
         profile = tostring(g and TLG.Integration.Generators.profile(g)) })
 end
 
+------------------------------------------------------------------------------
+-- gasfeed (tools/run-mp-harness.ps1 -Only gasfeed, one client, the shortest
+-- day; D-040): the single-player gas measures (SPHarness RT.GM) where the
+-- server runs them. A vanilla generator G beside the spawn point on 1 L,
+-- with a battery charger beside it as the load switched (0.05 while on).
+-- The server's own tick and minute watchers note each step, the load read
+-- the tick before it, and whether the tick watcher and the first minute
+-- event of the hour saw it already; then two refill policies run against
+-- the charger switched on after the hour's minute-59 event and before its
+-- boundary: phase "charger" (the load on and off), "steps" (three
+-- boundaries on G's own fuel), "policy_tick", "policy_minute" (each over
+-- at least three counted switch-ons and three boundaries, at most 8),
+-- "done". setFuel on the server sends the generator to the clients (BC
+-- IsoGenerator.setFuel calls sync()); the client compares its copy
+-- (MPHarnessCases.lua).
+------------------------------------------------------------------------------
+local GF = { eps = 1e-4, tol = 2e-7, phase = "none" }
+M.GF = GF
+
+function GF.power(g)
+    local p = -1
+    pcall(function() p = g:getTotalPowerUsing() end)
+    return p
+end
+
+function GF.setting(g)
+    local s = -1
+    pcall(function() s = g:getBasePowerConsumption() / 0.02 end)
+    return s
+end
+
+function GF.ms()
+    local t = -1
+    pcall(function() t = getTimestampMs() end)
+    return t
+end
+
+function GF.charging(on)
+    if GF.charger == nil then return end
+    if on then pcall(function() GF.battery:setUsedDelta(0) end) end
+    GF.charger:setActivated(on == true)
+end
+
+function GF.clear()
+    GF.drops, GF.boundaries, GF.marks, GF.attempts = {}, {}, {}, {}
+    GF.minutes, GF.refills, GF.offTicks, GF.stops, GF.off = 0, 0, 0, 0, 0
+    GF.attempt, GF.lastAttempt, GF.attemptHour, GF.min59Hour = nil, nil, nil, nil
+    GF.boundary, GF.lastFuel, GF.minuteFuel = nil, nil, nil
+end
+
+function GF.enter(phase)
+    local g = GF.g
+    GF.clear()
+    GF.phase, GF.t0 = phase, GF.tick or 0
+    GF.refill, GF.late = nil, false
+    GF.charging(false)
+    if phase == "steps" then
+        g:setFuel(1.0)
+    elseif phase == "policy_tick" or phase == "policy_minute" then
+        if not g:isActivated() then g:setActivated(true) end
+        g:setFuel(GF.power(g) + GF.eps)
+        GF.refill, GF.late = phase == "policy_tick" and "tick" or "minute", true
+        GF.h0, GF.m0 = getGameTime():getWorldAgeHours(), GF.minutes
+    end
+    GF.lastFuel = g:getFuel()
+    report():line("OBS  MPS.gf enter %s at %.5f h: fuel %.7f, running %s, load %.7f", phase,
+        getGameTime():getWorldAgeHours(), g:getFuel(), tostring(g:isActivated()), GF.power(g))
+end
+
+-- A phase's results, logged and kept for the client's probe.
+function GF.closeSteps()
+    local bad, atEdge = 0, 0
+    for _, d in ipairs(GF.drops) do
+        if math.abs(d.drop - (d.before or -1)) > GF.tol then bad = bad + 1 end
+        if d.age - math.floor(d.age) < 1 / 60 then atEdge = atEdge + 1 end
+    end
+    local tickSaw, minuteSaw, parts = 0, 0, {}
+    for i, b in ipairs(GF.boundaries) do
+        local m = GF.marks[i]
+        if b.dropped then tickSaw = tickSaw + 1 end
+        if m and m.dropped then minuteSaw = minuteSaw + 1 end
+        parts[#parts + 1] = string.format("[boundary %.5f h tick %d: tick watcher saw the step %s; first minute event at " ..
+            "%s h tick %s saw it %s, %s ms after the tick watcher]", b.age, b.tick, tostring(b.dropped),
+            m and string.format("%.5f", m.age) or "-", m and tostring(m.tick) or "-", m and tostring(m.dropped) or "-",
+            m and tostring(m.ms - b.ms) or "-")
+    end
+    GF.res.steps_n, GF.res.steps_bad, GF.res.steps_edge = #GF.drops, bad, atEdge
+    GF.res.bounds, GF.res.marks, GF.res.tick_saw, GF.res.minute_saw = #GF.boundaries, #GF.marks, tickSaw, minuteSaw
+    report():line("OBS  MPS.gf steps: %d drops, %d off the load read before by more than %.0e, %d in the hour's first game " ..
+        "minute; order %s", #GF.drops, bad, GF.tol, atEdge, table.concat(parts, " "))
+end
+
+function GF.closePolicy()
+    local counted, stoppedCounted, parts = 0, 0, {}
+    for _, at in ipairs(GF.attempts) do
+        if at.rose and at.boundary then
+            counted = counted + 1
+            if at.stopped then stoppedCounted = stoppedCounted + 1 end
+        end
+        parts[#parts + 1] = string.format("[hour %d: on at %.5f h, load rose %s, boundary %s, stopped %s]", at.hour, at.at,
+            tostring(at.rose), at.boundary and string.format("%.5f h", at.boundary.age) or "-", tostring(at.stopped == true))
+    end
+    local gone = getGameTime():getWorldAgeHours() - (GF.h0 or 0)
+    local key = GF.phase == "policy_tick" and "tick" or "minute"
+    GF.res[key .. "_counted"], GF.res[key .. "_stopped"], GF.res[key .. "_stops"] = counted, stoppedCounted, GF.stops
+    GF.res[key .. "_bounds"], GF.res[key .. "_minutes_an_hour"] = #GF.boundaries,
+        string.format("%.1f", (GF.minutes - (GF.m0 or 0)) / math.max(gone, 1e-9))
+    report():line("OBS  MPS.gf %s: %.3f game h, %d boundaries, %d refills, %d stops, %d ticks not running, %s minute events " ..
+        "an hour; attempts %s", GF.phase, gone, #GF.boundaries, GF.refills, GF.stops, GF.offTicks,
+        GF.res[key .. "_minutes_an_hour"], table.concat(parts, " "))
+end
+
+function GF.onTick()
+    local g = GF.g
+    if g == nil or GF.phase == "none" or GF.phase == "done" then return end
+    GF.tick = (GF.tick or 0) + 1
+    local age = getGameTime():getWorldAgeHours()
+    local fl = math.floor(age)
+    local f, p, on = g:getFuel(), GF.power(g), g:isActivated()
+    if GF.lastFloor ~= nil and fl > GF.lastFloor then
+        local b = { age = age, tick = GF.tick, ms = GF.ms(), dropped = GF.lastFuel ~= nil and f < GF.lastFuel - 1e-9 }
+        GF.boundaries[#GF.boundaries + 1] = b
+        GF.boundary = b
+        if GF.attempt then
+            GF.attempt.boundary = b
+            GF.lastAttempt, GF.attempt = GF.attempt, nil
+        end
+    end
+    if GF.lastFuel ~= nil and f < GF.lastFuel - 1e-9 then
+        local b = GF.boundary
+        GF.drops[#GF.drops + 1] = { age = age, drop = GF.lastFuel - f, before = GF.lastPower, on = on,
+            ticks = b and (GF.tick - b.tick) or -1 }
+        report():line("OBS  MPS.gf %s drop at %.5f h: %.7f L (load read the tick before %.7f), fuel now %.7f, running %s, " ..
+            "%d ticks after the boundary was seen", GF.phase, age, GF.lastFuel - f, GF.lastPower or -1, f, tostring(on),
+            b and (GF.tick - b.tick) or -1)
+    end
+    if GF.lastOn and not on then
+        GF.stops = GF.stops + 1
+        report():line("OBS  MPS.gf %s G stopped at %.5f h, fuel %.7f", GF.phase, age, f)
+    end
+    if not on then GF.offTicks = GF.offTicks + 1 end
+    local la = GF.lastAttempt
+    if la and la.boundary and GF.tick - la.boundary.tick <= 5 and not on then la.stopped = true end
+    -- The phases.
+    if GF.phase == "charger" then
+        if not GF.c then
+            GF.c = { p0 = p, t = GF.tick }
+            GF.charging(true)
+        elseif not GF.c.pOn then
+            if p > GF.c.p0 + GF.chargerStep / 2 or GF.tick - GF.c.t > 300 then
+                GF.c.pOn, GF.c.onTicks, GF.c.t = p, GF.tick - GF.c.t, GF.tick
+                GF.charging(false)
+            end
+        elseif math.abs(p - GF.c.p0) <= 1e-7 or GF.tick - GF.c.t > 300 then
+            GF.res.charger_rise = string.format("%.7f", GF.c.pOn - GF.c.p0)
+            GF.res.charger_back = tostring(math.abs(p - GF.c.p0) <= 1e-7)
+            report():line("OBS  MPS.gf charger: load %.7f -> %.7f within %d ticks, back to %.7f within %d ticks; expected " ..
+                "rise %.7f", GF.c.p0, GF.c.pOn, GF.c.onTicks, p, GF.tick - GF.c.t, GF.chargerStep)
+            if math.abs(GF.c.pOn - GF.c.p0 - GF.chargerStep) < 1e-6 and math.abs(p - GF.c.p0) <= 1e-7 then
+                GF.enter("steps")
+            else
+                GF.res.abort = "the charger did not change G's load as expected"
+                GF.phase = "done"
+            end
+        end
+    elseif GF.phase == "steps" then
+        if #GF.boundaries >= 3 and #GF.drops >= #GF.boundaries then
+            GF.closeSteps()
+            GF.enter("policy_tick")
+        end
+    elseif GF.phase == "policy_tick" or GF.phase == "policy_minute" then
+        if not on then
+            GF.off = GF.off + 1
+            if GF.off > 5 then
+                g:setActivated(true)
+                g:setFuel(GF.power(g) + GF.eps)
+                GF.off = 0
+            end
+        else
+            GF.off = 0
+        end
+        local counted = 0
+        for _, at in ipairs(GF.attempts) do
+            if at.rose and at.boundary then counted = counted + 1 end
+        end
+        local settled = not (GF.lastAttempt and GF.lastAttempt.boundary and GF.tick - GF.lastAttempt.boundary.tick <= 6)
+        if ((counted >= 3 and #GF.boundaries >= 3) or #GF.boundaries >= 8) and settled then
+            GF.closePolicy()
+            if GF.phase == "policy_tick" then
+                GF.enter("policy_minute")
+            else
+                GF.refill, GF.late = nil, false
+                GF.charging(false)
+                GF.phase = "done"
+                report():line("OBS  MPS.gf done")
+            end
+        end
+    end
+    if GF.late and GF.charger then
+        if GF.attempt == nil and GF.attemptHour ~= fl and GF.min59Hour == fl and on then
+            GF.charging(true)
+            GF.attempt = { hour = fl, at = age, powerBefore = p, rose = false }
+            GF.attempts[#GF.attempts + 1] = GF.attempt
+            GF.attemptHour = fl
+        elseif GF.attempt and not GF.attempt.rose and p > GF.attempt.powerBefore + GF.chargerStep / 2 then
+            GF.attempt.rose = true
+        end
+        if GF.attemptHour ~= fl and age - fl >= 0.5 and GF.charger:isActivated() then GF.charging(false) end
+    end
+    if GF.refill == "tick" and g:isActivated() then
+        local cap = GF.power(g) + GF.eps
+        if g:getFuel() < cap - GF.eps / 2 then
+            g:setFuel(cap)
+            GF.refills = GF.refills + 1
+        end
+    end
+    GF.lastFloor, GF.lastFuel, GF.lastPower, GF.lastOn = fl, g:getFuel(), GF.power(g), g:isActivated()
+end
+
+function GF.onMinute()
+    local g = GF.g
+    if g == nil or GF.phase == "none" or GF.phase == "done" then return end
+    GF.minutes = GF.minutes + 1
+    local age = getGameTime():getWorldAgeHours()
+    local fl = math.floor(age)
+    local f = g:getFuel()
+    local minute = math.floor((age - fl) * 60 + 1e-4)
+    if GF.minuteFloor ~= nil and fl > GF.minuteFloor then
+        GF.marks[#GF.marks + 1] = { age = age, tick = GF.tick or 0, ms = GF.ms(), minute = minute,
+            dropped = GF.refill == nil and GF.minuteFuel ~= nil and f < GF.minuteFuel - 1e-9 }
+    end
+    if minute == 59 then GF.min59Hour = fl end
+    if GF.refill == "minute" and g:isActivated() then
+        local cap = GF.power(g) + GF.eps
+        if f < cap - GF.eps / 2 then
+            g:setFuel(cap)
+            GF.refills = GF.refills + 1
+        end
+    end
+    GF.minuteFloor, GF.minuteFuel = fl, g:getFuel()
+end
+
+function services.setup_gasfeed(player, args)
+    local gx, gy = S.CX + 6, S.CY + 6
+    local out = {}
+    if GF.g == nil then
+        GF.res = {}
+        GF.g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), getCell():getGridSquare(gx, gy, 0))
+        pcall(function()
+            local cs = getCell():getGridSquare(gx + 2, gy, 0)
+            GF.charger = IsoCarBatteryCharger.new(instanceItem("Base.CarBatteryCharger"), getCell(), cs)
+            cs:AddSpecialObject(GF.charger)
+            GF.battery = instanceItem("Base.CarBattery1")
+            GF.battery:setUsedDelta(0)
+            GF.charger:setBattery(GF.battery)
+        end)
+        GF.g:setConnected(true)
+        GF.g:setFuel(1.0)
+        GF.g:setActivated(true)
+        GF.g:sync()
+        GF.setting0 = GF.setting(GF.g)
+        GF.chargerStep = 0.05 * GF.setting0
+        GF.clear()
+        Events.OnTick.Add(GF.onTick)
+        Events.EveryOneMinute.Add(GF.onMinute)
+        -- The load is read once G has updated, by the "charger" phase.
+        GF.phase = "settle"
+        GF.settleUntil = 120
+    end
+    out.gx, out.gy, out.setting = gx, gy, string.format("%.4f", GF.setting0)
+    out.charger = tostring(GF.charger ~= nil)
+    out.exterior = tostring(SandboxVars.AllowExteriorGenerator)
+    out.sandbox = tostring(SandboxVars.GeneratorFuelConsumption)
+    out.daylength = tostring(SandboxVars.DayLength)
+    reply("setup_gasfeed", args, out)
+end
+
+-- The "settle" phase: 120 server ticks for G's first update to compute its
+-- load before the charger is tried.
+Events.OnTick.Add(function()
+    if GF.phase ~= "settle" then return end
+    GF.settleUntil = GF.settleUntil - 1
+    if GF.settleUntil <= 0 then
+        local g = GF.g
+        report():line("OBS  MPS.gf placed: fuel %.7f, running %s, load %.7f, setting %.4f (SandboxVars %s), powering %s; " ..
+            "charger %s", g:getFuel(), tostring(g:isActivated()), GF.power(g), GF.setting0,
+            tostring(SandboxVars.GeneratorFuelConsumption), tostring(g:getItemsPowered()), tostring(GF.charger ~= nil))
+        GF.phase = "charger"
+    end
+end)
+
+function services.probe_gasfeed(player, args)
+    local g = GF.g
+    local out = { phase = GF.phase, found = tostring(g ~= nil) }
+    if g then
+        out.fuel = string.format("%.7f", g:getFuel())
+        out.on = tostring(g:isActivated())
+        out.load = string.format("%.7f", GF.power(g))
+        out.age = string.format("%.5f", getGameTime():getWorldAgeHours())
+    end
+    for k, v in pairs(GF.res or {}) do out[k] = tostring(v) end
+    reply("probe_gasfeed", args, out)
+end
+
 -- The Diesel Generator's sprite taken away on the server, as a load without
 -- the mod leaves it (step "strip"), then the mod's repair run as the
 -- server's LoadGridsquare runs it, on the generator's square (step

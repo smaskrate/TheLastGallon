@@ -6846,3 +6846,127 @@ a server, an install through the Steam Workshop. Not uploaded.
 
 Evidence:
 [run 344](evidence/2026-11-12_rt-sp_harness_run344_install_rehearsal_0.4.2_42.22.2.txt).
+
+## 2026-11-12 — RT-SP launches 345–346 (the gas measures, D-040)
+
+Command: `tools/run-sp-harness.ps1 -Mode gas-measures` (request
+`sp-rtgm`), the repository's mod on 42.22.2 at the default generator fuel
+setting: `SandboxVars.GeneratorFuelConsumption` 0.1, and the value the
+game uses read back as `getBasePowerConsumption() / 0.02`, 0.0999999978
+(0.1 as a float). About 5 minutes, no save. Branch
+`feature/gas-generators`.
+
+The game's code first (BC `IsoGenerator`, 42.22.2). Each time the
+integer world-age hour changes, `update()` takes `totalPowerUsing ×
+GeneratorFuelConsumption` litres for each hour crossed, which is what
+`getTotalPowerUsing()` returns, and switches the generator off when its
+fuel is 0 or less. The load is 0.02 for the generator plus each powered
+object's `getGeneratorPowerConsumption()`: a fridge-freezer 0.13, a
+stove 0.09, a television 0.03, a battery charger 0.05 while on, a
+stacked washer-dryer 0.9. Switching an appliance calls
+`IsoGenerator.updateGenerator(square)`, which only flags the generators
+in range; each recomputes its load in its next `update()`, after that
+call's burn. Outside `update()` the load is written only when the
+generator is loaded, when fire burns walls (`IsoGridSquare.BurnWalls`)
+or through `setTotalPowerUsing`. `setFuel` clamps to 0–10 L and calls
+`sync()` on a server. A client's `update()` returns before the burn.
+
+A vanilla generator, A, at 10648,10649 ran on 1 L or less, with a
+battery charger and a drained car battery at 10650,10649 as the load the
+probe switched. A's own load was 0.02 plus 0.03 for a gas pump in range
+(`getItemsPowered`: Gas Pump x1, 0.003 L/h), 0.005 L an hour. By world
+age 17 h the pump had left the list, with nothing done to it; why was
+not looked into.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 345 | 10/1 |
+| 346 | 11/0 |
+
+Launch 345's failure was the probe's: its stage for a load switched
+within the hour ended in the frame of a boundary, before its tick
+watcher had recorded that boundary and its step, so the step after the
+charger went off was never seen. Launch 346 waits for it. Both launches
+gave the same values:
+- **The charger** raised A's load by 0.005 (0.05 × 0.1) within one tick
+  of switching on, and the load fell back within one tick of switching
+  off.
+- **A step is the load read before it.** Three steps of 0.005 L, at world
+  age 3.0025, 4.0023 and 5.0020 h, each equal to `getTotalPowerUsing()`
+  read the tick before (within 2e-7), each in the hour's first game
+  minute.
+- **Order at a boundary.** The hour's first minute event (minute 0) ran
+  in the boundary's frame before the tick watcher (`OnTick`): the same
+  millisecond, one tick count lower. Neither saw the step, which showed
+  at the next tick, three boundaries out of three. In single player a
+  refill on the minute event, or on the tick, runs before the hour's
+  burn.
+- **The load of the moment.** The charger switched on half way through
+  an hour made the next step 0.010 L; switched off half way through the
+  next, the step after was 0.005 L.
+- **Exactly one step left** (the fuel set to 0.0049999999 for a step of
+  0.0049999999, late in the hour): after the boundary the fuel was 0 and
+  A off. **One step plus 1e-4**: 0.0001 L left after the boundary, A
+  running.
+- **Refills** to one step plus 1e-4, `setFuel` only below that, while the
+  charger was switched on after the hour's minute-59 event, its load
+  risen before the boundary (a counted attempt): on each tick at ×20, on
+  each minute event at ×20 and on each tick at ×100, three counted
+  attempts each. A never stopped and no tick found it off; each step
+  left 0.0001 L, so the refill had topped up for the new load before the
+  burn. 60 minute events a game hour at ×20 and at ×100.
+- **A propane tank item** in the inventory, given 1234 uses, read 1234
+  (`getCurrentUses` 1234); given 1234.5, 1235; given 1, 1.
+
+Launch 346's console shows no exception and no warning of the mod.
+
+Not run: a server (launch 347); sleep and speeds above ×100; generators
+in each other's range; a load that rises by more than 0.005 in one
+switch.
+
+Evidence:
+[run 345](evidence/2026-11-12_rt-sp_harness_run345_gas_measures.txt);
+[run 346](evidence/2026-11-12_rt-sp_harness_run346_gas_measures.txt).
+
+## 2026-11-12 — RT-MP launch 347 (the gas measures on a dedicated server, D-040)
+
+Command: `tools/run-mp-harness.ps1 -Only gasfeed`: the TLGDev dedicated
+server and one client on this computer, the repository's mod on 42.22.2,
+the shortest day (DayLength 1, a game hour in 37.5 s) and the default fuel
+setting (0.1, read back on the server as
+`getBasePowerConsumption() / 0.02`). About 8 minutes. The server ran the
+stages of launches 345–346 itself (`MPServer.lua`, `GF`) on a vanilla
+generator, G, at 10666,10651, with a battery charger and a drained car
+battery at 10668,10651; G powered nothing else (load 0.002). The client
+asked for the server's state every 300 ticks and compared its own copy of
+G.
+
+Launch 347 (**7/0**, client A):
+- **The charger** raised G's load by 0.005 within one server tick, and it
+  fell back within one.
+- **Steps**: three of 0.002 L at world age 3.0032, 4.0027 and 5.0049 h,
+  each the load read the tick before, each in the hour's first game
+  minute.
+- **Order on the server, as in single player**: the hour's first minute
+  event ran in the boundary's frame before the server's `OnTick` (the
+  same millisecond, one tick count lower). Neither saw the step, which
+  showed at the next tick, three boundaries of three. The server's tick
+  watcher counted 375 ticks a game hour, about 6 a game minute.
+- **Refills** to one step plus 1e-4, against the charger switched on
+  after the hour's minute-59 event with its load risen before the
+  boundary: on each server tick and on each minute event, three counted
+  attempts each. G never stopped, and each step left 0.0001 L. 60 minute
+  events a game hour.
+- **`setFuel` on the server** kept G running, and the client's copy
+  followed it: at each of 68 probes its fuel equalled the server's
+  (within 1e-6) and it ran as the server's did; at none of the 22 probes
+  of the per-tick refill was it off.
+
+The harness reports hold no step error. The server's console was not
+kept: it holds the test accounts' passwords.
+
+Not run: two clients, a real network, a generator whose chunk unloads on
+a server, sleep.
+
+Evidence:
+[run 347](evidence/2026-11-12_rt-mp_harness_run347_gasfeed_42.22.2.txt).

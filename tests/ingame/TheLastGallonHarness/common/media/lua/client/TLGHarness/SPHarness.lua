@@ -122,6 +122,11 @@
 --              it, against one on its own tank; saved ("sp-rtgpb")
 --   sp-rtgpb -> main menu continues that save: both checked, an hour more,
 --              a trip that unloads them, then the buffer run dry
+--   sp-rtgm -> the gas measures (D-040): a generator's hourly step at the
+--              default fuel setting, against the load and a battery charger
+--              switched within the hour; exactly one step left; refills on
+--              each tick and on each minute event against late switch-ons;
+--              a propane tank item's uses (RT.GM)
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -147,7 +152,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -16973,6 +16978,561 @@ RT.gasProbeReloadSteps = { RT.GP.reload, RT.GP.runStep("rtgpb_feed", RT.GP.hours
     RT.finish }
 
 ------------------------------------------------------------------------------
+-- Gas measures (request "sp-rtgm"; D-040, "to measure before building").
+-- The game's code (BC IsoGenerator, 42.22.2): each time the integer world-age
+-- hour changes, a running generator loses getTotalPowerUsing() litres, its
+-- load as last computed times the fuel setting, and at 0 or less it
+-- switches off. Switching an appliance on only flags the generators in
+-- range (IsoGenerator.updateGenerator); each recomputes its load in its next
+-- update, after that update's burn. Whether a refill covers the next step
+-- therefore depends on when the refill runs against the generator's update.
+-- One generator, A, with a battery charger beside it as the load the probe
+-- switches (0.05 while on, BC IsoCarBatteryCharger). A runs on 1 L or less,
+-- so a step reads to about 1e-7 L. The fuel setting is the default, read
+-- from the game as getBasePowerConsumption() / 0.02.
+--   1. The charger raises A's load by 0.05 x the setting and the load falls
+--      back when it is off; otherwise the stages after it are skipped.
+--   2. Steps on A's own fuel: each against the load read the tick before,
+--      at which world age, and whether the tick watcher and the first
+--      minute event of the hour saw the step already.
+--   3. The charger on half way through an hour and off half way through the
+--      next: each step is the load of its moment.
+--   4. The fuel set to exactly one step late in the hour: A off after the
+--      boundary. Then one step + 1e-4: A runs on with 1e-4 left.
+--   5. Refills to one step + 1e-4, setFuel only below that, while the
+--      charger is switched on after the hour's minute-59 event and before
+--      the boundary (an attempt counts only if A's load rose in between):
+--      on each tick at speed 20, on each minute event at speed 20, on each
+--      tick at speed 100.
+--   6. A propane tank item in the inventory given a number of uses, read
+--      back (independent of the stages before).
+------------------------------------------------------------------------------
+RT.GM = { eps = 1e-4, tol = 2e-7 }
+
+function RT.GM.power(g)
+    local p = -1
+    pcall(function() p = g:getTotalPowerUsing() end)
+    return p
+end
+
+-- The fuel setting the game uses: BC getBasePowerConsumption is 0.02 x it.
+function RT.GM.setting(g)
+    local s = -1
+    pcall(function() s = g:getBasePowerConsumption() / 0.02 end)
+    return s
+end
+
+function RT.GM.powered(g)
+    local s = "?"
+    pcall(function() s = tostring(g:getItemsPowered()) end)
+    return s
+end
+
+function RT.GM.charging(on)
+    local GM = RT.GM
+    if GM.charger == nil then return end
+    -- A drained battery, so the charger has charging to do.
+    if on then pcall(function() GM.battery:setUsedDelta(0) end) end
+    GM.charger:setActivated(on == true)
+end
+
+function RT.GM.clear()
+    local GM = RT.GM
+    GM.drops, GM.boundaries, GM.marks, GM.attempts = {}, {}, {}, {}
+    GM.minutes, GM.refills, GM.offTicks, GM.stops = 0, 0, 0, 0
+    GM.attempt, GM.lastAttempt, GM.attemptHour, GM.min59Hour, GM.onStageTick = nil, nil, nil, nil, nil
+    GM.boundary, GM.lastFuel, GM.minuteFuel = nil, nil, nil
+end
+
+-- The tick watcher. A drop of A's fuel is a step: its size against the load
+-- read the tick before, its world age, and how many ticks after this
+-- watcher first saw the new hour. Then the stage's own actions, the late
+-- switch-ons and the per-tick refill.
+function RT.GM.onTick()
+    local GM = RT.GM
+    local a = GM.a
+    if a == nil or not GM.watching then return end
+    GM.tick = (GM.tick or 0) + 1
+    local age = hours()
+    local fl = math.floor(age)
+    local f, p, on = a:getFuel(), GM.power(a), a:isActivated()
+    if GM.lastFloor ~= nil and fl > GM.lastFloor then
+        local b = { age = age, tick = GM.tick, ms = getTimestampMs(),
+            dropped = GM.lastFuel ~= nil and f < GM.lastFuel - 1e-9 }
+        GM.boundaries[#GM.boundaries + 1] = b
+        GM.boundary = b
+        if GM.attempt then
+            GM.attempt.boundary = b
+            GM.lastAttempt, GM.attempt = GM.attempt, nil
+        end
+    end
+    if GM.lastFuel ~= nil and f < GM.lastFuel - 1e-9 then
+        local b = GM.boundary
+        local d = { age = age, drop = GM.lastFuel - f, before = GM.lastPower, after = f, on = on,
+            ticks = b and (GM.tick - b.tick) or -1 }
+        GM.drops[#GM.drops + 1] = d
+        R:line("OBS  RTGM.%s drop at %.5f h: %.7f L (the load read the tick before %.7f), fuel now %.7f, running %s, " ..
+            "%d ticks after the boundary was seen; charger on %s", GM.stage or "?", age, d.drop, d.before or -1, f,
+            tostring(on), d.ticks, tostring(GM.charger and GM.charger:isActivated()))
+    end
+    if GM.lastOn and not on then
+        GM.stops = GM.stops + 1
+        R:line("OBS  RTGM.%s A stopped at %.5f h, fuel %.7f", GM.stage or "?", age, f)
+    end
+    if not on then GM.offTicks = GM.offTicks + 1 end
+    -- A stop within 5 ticks of the boundary that closed an attempt is that
+    -- attempt's.
+    local la = GM.lastAttempt
+    if la and la.boundary and GM.tick - la.boundary.tick <= 5 and not on then la.stopped = true end
+    if GM.onStageTick then GM.onStageTick(age, fl, f, p, on) end
+    if GM.late and GM.charger then
+        if GM.attempt == nil and GM.attemptHour ~= fl and GM.min59Hour == fl and on then
+            -- After this hour's minute-59 event and before its boundary.
+            GM.charging(true)
+            GM.attempt = { hour = fl, at = age, powerBefore = p, rose = false }
+            GM.attempts[#GM.attempts + 1] = GM.attempt
+            GM.attemptHour = fl
+        elseif GM.attempt and not GM.attempt.rose and p > GM.attempt.powerBefore + GM.chargerStep / 2 then
+            GM.attempt.rose, GM.attempt.roseAt = true, age
+        end
+        if GM.attemptHour ~= fl and age - fl >= 0.5 and GM.charger:isActivated() then GM.charging(false) end
+    end
+    if GM.refill == "tick" and a:isActivated() then
+        local cap = GM.power(a) + GM.eps
+        if a:getFuel() < cap - GM.eps / 2 then
+            a:setFuel(cap)
+            GM.refills = GM.refills + 1
+        end
+    end
+    GM.lastFloor, GM.lastFuel, GM.lastPower, GM.lastOn = fl, a:getFuel(), GM.power(a), a:isActivated()
+end
+
+-- The minute watcher: the first minute event of each new hour notes whether
+-- the step had been taken already (A's fuel against the last minute event,
+-- read only while no refill runs) and the tick count and millisecond it ran
+-- at, against the tick watcher's. The per-minute refill.
+function RT.GM.onMinute()
+    local GM = RT.GM
+    local a = GM.a
+    if a == nil or not GM.watching then return end
+    GM.minutes = GM.minutes + 1
+    local age = hours()
+    local fl = math.floor(age)
+    local f = a:getFuel()
+    local minute = math.floor((age - fl) * 60 + 1e-4)
+    if GM.minuteFloor ~= nil and fl > GM.minuteFloor then
+        GM.marks[#GM.marks + 1] = { age = age, tick = GM.tick or 0, ms = getTimestampMs(), minute = minute,
+            clock = getGameTime():getMinutes(), dropped = GM.refill == nil and GM.minuteFuel ~= nil and f < GM.minuteFuel - 1e-9 }
+    end
+    if minute == 59 then GM.min59Hour = fl end
+    if GM.refill == "minute" and a:isActivated() then
+        local cap = GM.power(a) + GM.eps
+        if f < cap - GM.eps / 2 then
+            a:setFuel(cap)
+            GM.refills = GM.refills + 1
+        end
+    end
+    GM.minuteFloor, GM.minuteFuel = fl, a:getFuel()
+end
+
+function RT.GM.watch(on)
+    local GM = RT.GM
+    if on and not GM.hooked then
+        Events.OnTick.Add(GM.onTick)
+        Events.EveryOneMinute.Add(GM.onMinute)
+        GM.hooked = true
+    elseif not on and GM.hooked then
+        Events.OnTick.Remove(GM.onTick)
+        Events.EveryOneMinute.Remove(GM.onMinute)
+        GM.hooked = false
+    end
+    GM.watching = on == true
+end
+
+function RT.GM.state(label)
+    local GM = RT.GM
+    local a = GM.a
+    R:line("OBS  RTGM.%s at %.5f h (clock %02d:%02d): A fuel %.7f, running %s, load %.7f L an hour, setting %s " ..
+        "(SandboxVars %s), powering %s; charger on %s", label, hours(), getGameTime():getHour(), getGameTime():getMinutes(),
+        a and a:getFuel() or -1, tostring(a and a:isActivated()), a and GM.power(a) or -1,
+        tostring(a and GM.setting(a)), tostring(SandboxVars.GeneratorFuelConsumption), a and GM.powered(a) or "-",
+        tostring(GM.charger and GM.charger:isActivated()))
+end
+
+RT.GM.setup = { name = "rtgm_setup", timeout = 1200, fn = function(ctx, ticks)
+    local GM = RT.GM
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        RT.keepFit()
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    if not ctx.placed then
+        local spot
+        for dy = 4, 16 do
+            for dx = -12, 12 do
+                local x, y = START.x + dx, START.y + dy
+                if spot == nil and RT.MI.clear(x, y) and RT.MI.clear(x + 2, y) then spot = { x = x, y = y } end
+            end
+        end
+        if spot == nil then
+            RT.abort = "no clear squares for the generator and the charger"
+            R:check("RTGM.placed", function() return false, "no clear squares near the start" end)
+            return true
+        end
+        GM.spot = spot
+        pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(spot.x, spot.y, 0)) end)
+        local s = sq(spot.x, spot.y, 0)
+        GM.a = s and s:getGenerator() or nil
+        pcall(function()
+            local cs = sq(spot.x + 2, spot.y, 0)
+            GM.charger = IsoCarBatteryCharger.new(instanceItem("Base.CarBatteryCharger"), getCell(), cs)
+            cs:AddSpecialObject(GM.charger)
+            GM.battery = instanceItem("Base.CarBattery1")
+            GM.battery:setUsedDelta(0)
+            GM.charger:setBattery(GM.battery)
+        end)
+        if GM.a then
+            GM.a:setConnected(true)
+            GM.a:setFuel(1.0)
+            GM.a:setActivated(true)
+        end
+        GM.clear()
+        GM.watch(true)
+        ctx.placed = ticks
+        return nil
+    end
+    if ticks - ctx.placed < 120 then return nil end
+    GM.setting0 = GM.a and GM.setting(GM.a) or -1
+    GM.chargerStep = 0.05 * GM.setting0
+    GM.state("placed")
+    R:line("OBS  RTGM.placed A at %d,%d and the charger at %d,%d; A max fuel %s L; AllowExteriorGenerator %s; the " ..
+        "charger's battery %s", GM.spot.x, GM.spot.y, GM.spot.x + 2, GM.spot.y, tostring(GM.a and GM.a:getMaxFuel()),
+        tostring(SandboxVars.AllowExteriorGenerator), tostring(GM.battery and GM.battery:getFullType()))
+    R:check("RTGM.placed", function()
+        return GM.a ~= nil and GM.a:isActivated() and GM.charger ~= nil and GM.setting0 > 0, string.format(
+            "A %s running %s, charger %s, setting %s", tostring(GM.a ~= nil), tostring(GM.a and GM.a:isActivated()),
+            tostring(GM.charger ~= nil), tostring(GM.setting0))
+    end)
+    if not (GM.a and GM.charger) then RT.abort = "the generator or the charger is missing" end
+    return true
+end }
+
+-- 1. The charger's load, on and off.
+RT.GM.chargerCheck = { name = "rtgm_charger", timeout = 1200, fn = function(ctx, ticks)
+    local GM = RT.GM
+    if RT.abort then return true end
+    local a = GM.a
+    if not ctx.p0 then
+        GM.stage = "charger"
+        ctx.p0, ctx.t = GM.power(a), ticks
+        GM.charging(true)
+        return nil
+    end
+    if not ctx.on then
+        if GM.power(a) > ctx.p0 + GM.chargerStep / 2 or ticks - ctx.t > 120 then
+            ctx.on, ctx.pOn, ctx.onTicks, ctx.t = true, GM.power(a), ticks - ctx.t, ticks
+            ctx.cOn = GM.charger:isActivated()
+            GM.charging(false)
+        end
+        return nil
+    end
+    if math.abs(GM.power(a) - ctx.p0) > 1e-7 and ticks - ctx.t <= 120 then return nil end
+    local pOff, offTicks = GM.power(a), ticks - ctx.t
+    local rise = ctx.pOn - ctx.p0
+    R:line("OBS  RTGM.charger: load %.7f -> %.7f within %d ticks of switching on (charger on %s), %.7f within %d ticks " ..
+        "of switching off; expected rise 0.05 x %s = %.7f", ctx.p0, ctx.pOn, ctx.onTicks, tostring(ctx.cOn), pOff, offTicks,
+        tostring(GM.setting0), GM.chargerStep)
+    local ok = math.abs(rise - GM.chargerStep) < 1e-6 and math.abs(pOff - ctx.p0) < 1e-7
+    R:check("RTGM.charger_switches_the_load", function()
+        return ok, string.format("rise %.7f (expected %.7f), back to %.7f from %.7f", rise, GM.chargerStep, pOff, ctx.p0)
+    end)
+    if not ok then RT.abort = "the charger did not change A's load as expected" end
+    return true
+end }
+
+-- 2. Steps on A's own fuel.
+RT.GM.steps = { name = "rtgm_steps", timeout = 60000, fn = function(ctx, ticks)
+    local GM = RT.GM
+    if RT.abort then return true end
+    local a = GM.a
+    if not ctx.started then
+        GM.clear()
+        GM.stage = "steps"
+        a:setFuel(1.0)
+        GM.lastFuel = a:getFuel()
+        GM.state("steps_start")
+        RT.speed(20)
+        ctx.started = ticks
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    -- Three boundaries, and the drop after the last one.
+    if #GM.boundaries < 3 or #GM.drops < #GM.boundaries then return nil end
+    RT.speed(1)
+    GM.state("steps_end")
+    local bad, atEdge, hrs = 0, 0, {}
+    for _, d in ipairs(GM.drops) do
+        if math.abs(d.drop - (d.before or -1)) > GM.tol then bad = bad + 1 end
+        if d.age - math.floor(d.age) < 1 / 60 then atEdge = atEdge + 1 end
+        hrs[#hrs + 1] = string.format("%.5f", d.age)
+    end
+    R:check("RTGM.step_is_the_load_read_before", function()
+        return #GM.drops >= 3 and bad == 0 and atEdge == #GM.drops, string.format(
+            "%d drops at world age %s; %d differ from the load read the tick before by more than %.0e; %d within the " ..
+            "hour's first game minute", #GM.drops, table.concat(hrs, ", "), bad, GM.tol, atEdge)
+    end)
+    -- The order of the tick watcher, the minute event and the step.
+    local parts, tickSaw, minuteSaw = {}, 0, 0
+    for i, b in ipairs(GM.boundaries) do
+        local m = GM.marks[i]
+        if b.dropped then tickSaw = tickSaw + 1 end
+        if m and m.dropped then minuteSaw = minuteSaw + 1 end
+        parts[#parts + 1] = string.format("[boundary %.5f h tick %d: the tick watcher saw the step %s; first minute event " ..
+            "of the hour at %s h (minute %s, clock minute %s) tick %s, saw the step %s, %s ms after the tick watcher]", b.age,
+            b.tick, tostring(b.dropped), m and string.format("%.5f", m.age) or "-", m and tostring(m.minute) or "-",
+            m and tostring(m.clock) or "-", m and tostring(m.tick) or "-", m and tostring(m.dropped) or "-",
+            m and tostring(m.ms - b.ms) or "-")
+    end
+    R:line("OBS  RTGM.order: %s; drops seen %s ticks after the boundary", table.concat(parts, " "),
+        table.concat((function()
+            local t = {}
+            for _, d in ipairs(GM.drops) do t[#t + 1] = tostring(d.ticks) end
+            return t
+        end)(), ","))
+    GM.tickSawStep = tickSaw == #GM.boundaries
+    GM.minuteSawStep = minuteSaw == #GM.boundaries
+    R:check("RTGM.order_observed", function()
+        return #GM.boundaries >= 3 and #GM.marks >= #GM.boundaries and (tickSaw == 0 or tickSaw == #GM.boundaries)
+            and (minuteSaw == 0 or minuteSaw == #GM.boundaries), string.format(
+            "%d boundaries, %d first minute events; the tick watcher saw the step at %d, the minute event at %d (the " ..
+            "same answer at every boundary is required)", #GM.boundaries, #GM.marks, tickSaw, minuteSaw)
+    end)
+    return true
+end }
+
+-- 3. The charger on half way through an hour, off half way through the next.
+RT.GM.midHour = { name = "rtgm_midhour", timeout = 60000, fn = function(ctx, ticks)
+    local GM = RT.GM
+    if RT.abort then return true end
+    local a = GM.a
+    if not ctx.started then
+        GM.clear()
+        GM.stage = "midhour"
+        a:setFuel(1.0)
+        GM.lastFuel = a:getFuel()
+        ctx.started, ctx.h0 = ticks, math.floor(hours())
+        GM.onStageTick = function(age, fl, f, p, on)
+            if fl == ctx.h0 + 1 and not ctx.onAt and age - fl >= 0.5 then
+                ctx.onAt, ctx.pBefore = age, p
+                GM.charging(true)
+            elseif fl == ctx.h0 + 1 and ctx.onAt and not ctx.pOn and p > ctx.pBefore + GM.chargerStep / 2 then
+                ctx.pOn = p
+            elseif fl == ctx.h0 + 2 and not ctx.offAt and age - fl >= 0.5 then
+                ctx.offAt = age
+                GM.charging(false)
+            end
+        end
+        RT.speed(20)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    -- Ends once the tick watcher has recorded the step after switching off:
+    -- this step runs before the watcher in a frame, so the hour alone is not
+    -- enough (launch 345 ended in the boundary's frame and missed it).
+    local dOn, dOff
+    for _, d in ipairs(GM.drops) do
+        if math.floor(d.age) == ctx.h0 + 2 then dOn = d end
+        if math.floor(d.age) == ctx.h0 + 3 then dOff = d end
+    end
+    if not (ctx.offAt and dOff) and math.floor(hours()) < ctx.h0 + 5 then return nil end
+    RT.speed(1)
+    GM.onStageTick = nil
+    R:line("OBS  RTGM.midhour: load %.7f before the charger came on at %.5f h, %.7f after; the step at the next " ..
+        "boundary %s; the charger off at %.5f h, the step after %s", ctx.pBefore or -1, ctx.onAt or -1, ctx.pOn or -1,
+        dOn and string.format("%.7f at %.5f h", dOn.drop, dOn.age) or "none", ctx.offAt or -1,
+        dOff and string.format("%.7f at %.5f h", dOff.drop, dOff.age) or "none")
+    R:check("RTGM.step_is_the_load_of_its_moment", function()
+        return dOn ~= nil and dOff ~= nil and ctx.pOn ~= nil and math.abs(dOn.drop - ctx.pOn) < GM.tol
+            and math.abs(ctx.pOn - ctx.pBefore - GM.chargerStep) < 1e-6 and math.abs(dOff.drop - ctx.pBefore) < GM.tol,
+            string.format("after switching on: step %s, load %s (before %s); after switching off: step %s",
+                dOn and string.format("%.7f", dOn.drop) or "none", tostring(ctx.pOn), tostring(ctx.pBefore),
+                dOff and string.format("%.7f", dOff.drop) or "none")
+    end)
+    return true
+end }
+
+-- 4. Exactly one step left late in the hour, then one step + 1e-4.
+RT.GM.exact = { name = "rtgm_exact", timeout = 60000, fn = function(ctx, ticks)
+    local GM = RT.GM
+    if RT.abort then return true end
+    local a = GM.a
+    if not ctx.started then
+        GM.clear()
+        GM.stage = "exact"
+        GM.charging(false)
+        a:setFuel(1.0)
+        GM.lastFuel = a:getFuel()
+        ctx.started, ctx.h0 = ticks, math.floor(hours())
+        -- A's state is read 5 ticks after a boundary: the step may show in
+        -- the tick after the one that first sees the new hour.
+        GM.onStageTick = function(age, fl, f, p, on)
+            local late = age - fl >= 59.5 / 60
+            local since = GM.boundary and (GM.tick - GM.boundary.tick) or 0
+            if fl == ctx.h0 + 1 and late and not ctx.setA then
+                a:setFuel(p)
+                ctx.setA, ctx.stepA = a:getFuel(), p
+            elseif fl == ctx.h0 + 2 and ctx.setA and not ctx.offA and since >= 5 then
+                ctx.offA = { fuel = f, on = on }
+                a:setFuel(1.0)
+                a:setActivated(true)
+            elseif fl == ctx.h0 + 2 and ctx.offA and late and not ctx.setB then
+                a:setFuel(p + GM.eps)
+                ctx.setB, ctx.stepB = a:getFuel(), p
+            elseif fl == ctx.h0 + 3 and ctx.setB and not ctx.afterB and since >= 5 then
+                ctx.afterB = { fuel = f, on = on }
+            end
+        end
+        RT.speed(20)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if not ctx.afterB then return nil end
+    RT.speed(1)
+    GM.onStageTick = nil
+    R:line("OBS  RTGM.exact: fuel set to %s against a step of %s late in hour %d; after the boundary fuel %s, running " ..
+        "%s. Then %s against a step of %s; after the boundary fuel %.9f, running %s", tostring(ctx.setA), tostring(ctx.stepA),
+        ctx.h0 + 1, tostring(ctx.offA and ctx.offA.fuel), tostring(ctx.offA and ctx.offA.on), tostring(ctx.setB),
+        tostring(ctx.stepB), ctx.afterB.fuel, tostring(ctx.afterB.on))
+    R:check("RTGM.exactly_one_step_switches_off", function()
+        return ctx.setA ~= nil and ctx.setA == ctx.stepA and ctx.offA ~= nil and ctx.offA.fuel == 0 and ctx.offA.on == false,
+            string.format("set %s for a step of %s; after: fuel %s running %s", tostring(ctx.setA), tostring(ctx.stepA),
+                tostring(ctx.offA and ctx.offA.fuel), tostring(ctx.offA and ctx.offA.on))
+    end)
+    R:check("RTGM.one_step_and_a_margin_runs_on", function()
+        return ctx.setB ~= nil and ctx.afterB.on == true and math.abs(ctx.afterB.fuel - GM.eps) < 1e-6, string.format(
+            "after the step: fuel %.9f (margin %.0e), running %s", ctx.afterB.fuel, GM.eps, tostring(ctx.afterB.on))
+    end)
+    return true
+end }
+
+-- 5. A refill policy against late switch-ons, over `want` counted attempts
+-- and at least 3 boundaries (at most 8). At speed 100 a game minute is about
+-- 1.5 ticks, so few switch-ons can count there: it wants none.
+function RT.GM.policy(mode, speed, want)
+    return { name = "rtgm_policy_" .. mode .. "_x" .. speed, timeout = 120000, fn = function(ctx, ticks)
+        local GM = RT.GM
+        if RT.abort then return true end
+        local a = GM.a
+        local label = "policy_" .. mode .. "_x" .. speed
+        if not ctx.started then
+            GM.clear()
+            GM.stage = label
+            GM.charging(false)
+            if not a:isActivated() then a:setActivated(true) end
+            a:setFuel(GM.power(a) + GM.eps)
+            GM.lastFuel = a:getFuel()
+            GM.refill, GM.late = mode, true
+            ctx.started, ctx.h0, ctx.m0 = ticks, hours(), GM.minutes
+            RT.speed(speed)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        local counted = 0
+        for _, at in ipairs(GM.attempts) do
+            if at.rose and at.boundary then counted = counted + 1 end
+        end
+        -- A stop needs restarting, or the next attempts measure nothing.
+        if not a:isActivated() then
+            ctx.off = (ctx.off or 0) + 1
+            if ctx.off > 5 then
+                a:setActivated(true)
+                a:setFuel(GM.power(a) + GM.eps)
+                GM.lastFuel = a:getFuel()
+                ctx.off = 0
+            end
+        else
+            ctx.off = 0
+        end
+        if (counted < want or #GM.boundaries < 3) and #GM.boundaries < 8 then return nil end
+        if GM.lastAttempt and GM.lastAttempt.boundary and GM.tick - GM.lastAttempt.boundary.tick <= 6 then return nil end
+        GM.refill, GM.late = nil, false
+        GM.charging(false)
+        RT.speed(1)
+        local gone = hours() - ctx.h0
+        local stoppedCounted, parts = 0, {}
+        for _, at in ipairs(GM.attempts) do
+            if at.rose and at.boundary and at.stopped then stoppedCounted = stoppedCounted + 1 end
+            parts[#parts + 1] = string.format("[hour %d: on at %.5f h, load rose %s%s, boundary %s, stopped %s]", at.hour,
+                at.at, tostring(at.rose), at.roseAt and string.format(" at %.5f h", at.roseAt) or "",
+                at.boundary and string.format("%.5f h", at.boundary.age) or "-", tostring(at.stopped == true))
+        end
+        GM.results = GM.results or {}
+        GM.results[label] = { counted = counted, stopped = stoppedCounted, stops = GM.stops }
+        R:line("OBS  RTGM.%s: %.3f game h, %d minute events (%.1f an hour), %d boundaries, %d refills, %d stops, %d ticks " ..
+            "not running; attempts %s", label, gone, GM.minutes - ctx.m0, (GM.minutes - ctx.m0) / math.max(gone, 1e-9),
+            #GM.boundaries, GM.refills, GM.stops, GM.offTicks, table.concat(parts, " "))
+        if mode == "tick" then
+            R:check("RTGM." .. label .. "_runs_through", function()
+                return counted >= want and GM.stops == 0 and #GM.boundaries >= 3, string.format(
+                    "%d counted attempts (of %d), %d stops, %d boundaries", counted, #GM.attempts, GM.stops, #GM.boundaries)
+            end)
+        else
+            -- What the minute refill must do follows from stage 2's order: a
+            -- minute event before the step refills for the new load.
+            local expectStops = GM.minuteSawStep == true
+            R:check("RTGM." .. label .. "_as_the_order_says", function()
+                return counted >= want and GM.minuteSawStep ~= nil
+                    and ((expectStops and stoppedCounted > 0) or (not expectStops and GM.stops == 0)), string.format(
+                    "%d counted attempts, %d of them stopped A, %d stops in all; the first minute event of the hour saw " ..
+                    "the step already: %s", counted, stoppedCounted, GM.stops, tostring(GM.minuteSawStep))
+            end)
+        end
+        return true
+    end }
+end
+
+-- 6. A propane tank item given a number of uses in the inventory.
+RT.GM.tankItem = { name = "rtgm_tank_item", timeout = 600, fn = function(ctx, ticks)
+    local t = instanceItem("Base.PropaneTank")
+    local inv = player():getInventory()
+    inv:AddItem(t)
+    local function uses() return t:getCurrentUsesFloat() / t:getUseDelta() end
+    local reads = {}
+    for _, n in ipairs({ 1234, 1234.5, 1 }) do
+        t:setUsedDelta(n * t:getUseDelta())
+        reads[#reads + 1] = { n = n, uses = uses(), whole = t:getCurrentUses() }
+    end
+    local parts = {}
+    for _, r in ipairs(reads) do
+        parts[#parts + 1] = string.format("%s -> %.4f (getCurrentUses %s)", tostring(r.n), r.uses, tostring(r.whole))
+    end
+    R:line("OBS  RTGM.tank_item: useDelta %s; %s", tostring(t:getUseDelta()), table.concat(parts, "; "))
+    R:check("RTGM.tank_item_keeps_whole_uses", function()
+        return math.abs(reads[1].uses - 1234) < 1e-3 and reads[1].whole == 1234 and math.abs(reads[3].uses - 1) < 1e-3
+            and reads[3].whole == 1, table.concat(parts, "; ")
+    end)
+    inv:Remove(t)
+    return true
+end }
+
+RT.GM.done = { name = "rtgm_done", fn = function()
+    local GM = RT.GM
+    GM.watch(false)
+    GM.refill, GM.late = nil, false
+    if GM.a then GM.state("end") end
+    RT.speed(1)
+    return true
+end }
+
+RT.gasMeasureSteps = { RT.waitWorld, RT.GM.setup, RT.GM.chargerCheck, RT.GM.steps, RT.GM.midHour, RT.GM.exact,
+    RT.GM.policy("tick", 20, 3), RT.GM.policy("minute", 20, 3), RT.GM.policy("tick", 100, 0), RT.GM.tankItem, RT.GM.done,
+    RT.finish }
+
+------------------------------------------------------------------------------
 -- Diesel vehicles (request "sp-rtdv", D-036). A new world, so its record
 -- says diesel chassis exist. Three vehicles at a time are spawned beside
 -- the start (the squares phase A parks on), repaired and given 10 L with
@@ -19615,7 +20175,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -19733,6 +20293,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgp" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the gas probe, before the save")
                 TLGH.Steps.run(R, RT.gasProbeSteps, H, nil)
+            elseif REQUEST == "sp-rtgm" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the gas measures (D-040)")
+                TLGH.Steps.run(R, RT.gasMeasureSteps, H, nil)
             elseif REQUEST == "sp-rtbdm" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel chain's models")
                 TLGH.Steps.run(R, RT.biodieselModelSteps, H, nil)

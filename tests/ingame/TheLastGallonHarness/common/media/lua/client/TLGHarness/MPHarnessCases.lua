@@ -115,6 +115,114 @@ if MP.only == "gensprite" then
 end
 
 ------------------------------------------------------------------------------
+-- gasfeed (one client, the shortest day; D-040): the server runs the gas
+-- measures on a vanilla generator beside the spawn point (MPServer.lua GF).
+-- Every 300 ticks the client asks for the server's state and compares its
+-- own copy of the generator, which setFuel on the server sends to it (BC
+-- IsoGenerator.setFuel calls sync()): the fuel and whether it runs. At the
+-- end the server's results are checked here.
+------------------------------------------------------------------------------
+if MP.only == "gasfeed" then
+    local C = { probes = 0, same = 0, sameOn = 0, offSeen = 0, policyProbes = 0 }
+    local function generator()
+        local sq = C.x and getCell():getGridSquare(C.x, C.y, 0)
+        return sq and sq:getGenerator() or nil
+    end
+    MP.stepsA = { MP.waitWorld,
+        call("gf_setup", "setup_gasfeed", {}, "setup_gasfeed", function(m)
+            C.x, C.y, C.setting = tonumber(m.gx), tonumber(m.gy), tonumber(m.setting)
+            report():line("OBS  MP.gf the server put G at %s,%s: setting %s (SandboxVars %s), DayLength %s, " ..
+                "AllowExteriorGenerator %s, charger %s", tostring(m.gx), tostring(m.gy), tostring(m.setting),
+                tostring(m.sandbox), tostring(m.daylength), tostring(m.exterior), tostring(m.charger))
+        end),
+        { name = "mp_gf_follow", timeout = 90000, fn = function(ctx, ticks)
+            if ctx.tag then
+                local got = MP.inbox.probe_gasfeed or {}
+                for i = ctx.n + 1, #got do
+                    local m = got[i]
+                    if m.role == MP.role and m.tag == ctx.tag then
+                        ctx.tag = nil
+                        local g = generator()
+                        local cf, con = g and g:getFuel(), g and g:isActivated()
+                        local sf = tonumber(m.fuel)
+                        C.probes = C.probes + 1
+                        if g and sf and math.abs(cf - sf) < 1e-6 then C.same = C.same + 1 end
+                        if g and tostring(con) == m.on then C.sameOn = C.sameOn + 1 end
+                        if m.phase == "policy_tick" then
+                            C.policyProbes = C.policyProbes + 1
+                            if g and not con then C.offSeen = C.offSeen + 1 end
+                        end
+                        if C.probes % 10 == 1 or m.phase ~= ctx.lastPhase then
+                            report():line("OBS  MP.gf probe %d (%s, %s h): server fuel %s running %s load %s; this " ..
+                                "client's copy fuel %s running %s", C.probes, tostring(m.phase), tostring(m.age),
+                                tostring(m.fuel), tostring(m.on), tostring(m.load), g and string.format("%.7f", cf) or "-",
+                                tostring(con))
+                        end
+                        ctx.lastPhase = m.phase
+                        if m.phase == "done" then
+                            C.final = m
+                            return true
+                        end
+                    end
+                end
+                return nil
+            end
+            if ticks % 300 == 0 then
+                ctx.n = #(MP.inbox.probe_gasfeed or {})
+                ctx.tag = "gf_probe_" .. ticks
+                send("probe_gasfeed", { tag = ctx.tag })
+            end
+            return nil
+        end },
+        once("mp_gf_results", function()
+            local m = C.final or {}
+            local function n(k) return tonumber(m[k]) or -1 end
+            report():line("OBS  MP.gf the server's results: %s; this client: %d probes, the fuel the same at %d, running " ..
+                "the same at %d, not running at %d of %d probes in the per-tick policy", brief(m), C.probes, C.same,
+                C.sameOn, C.offSeen, C.policyProbes)
+            local abort = m.abort
+            check("gf_server_charger_switches_the_load", function()
+                return abort == nil and C.setting ~= nil and math.abs(n("charger_rise") - 0.05 * C.setting) < 1e-6
+                    and m.charger_back == "true", string.format("rise %s for a setting of %s, back %s%s",
+                    tostring(m.charger_rise), tostring(C.setting), tostring(m.charger_back),
+                    abort and ("; " .. abort) or "")
+            end)
+            check("gf_server_step_is_the_load_read_before", function()
+                return n("steps_n") >= 3 and n("steps_bad") == 0 and n("steps_edge") == n("steps_n"), string.format(
+                    "%s drops, %s off the load read before, %s in the hour's first game minute", tostring(m.steps_n),
+                    tostring(m.steps_bad), tostring(m.steps_edge))
+            end)
+            local b, ts, ms = n("bounds"), n("tick_saw"), n("minute_saw")
+            check("gf_server_order_observed", function()
+                return b >= 3 and n("marks") >= b and (ts == 0 or ts == b) and (ms == 0 or ms == b), string.format(
+                    "%d boundaries, %s first minute events; the tick watcher saw the step at %d, the minute event at %d",
+                    b, tostring(m.marks), ts, ms)
+            end)
+            check("gf_server_policy_tick_runs_through", function()
+                return n("tick_counted") >= 3 and n("tick_stops") == 0, string.format(
+                    "%s counted switch-ons, %s stops, %s boundaries, %s minute events an hour", tostring(m.tick_counted),
+                    tostring(m.tick_stops), tostring(m.tick_bounds), tostring(m.tick_minutes_an_hour))
+            end)
+            check("gf_server_policy_minute_as_the_order_says", function()
+                local expectStops = ms == b and b > 0
+                return n("minute_counted") >= 3 and ((expectStops and n("minute_stopped") > 0)
+                    or (not expectStops and n("minute_stops") == 0)), string.format(
+                    "%s counted switch-ons, %s of them stopped G, %s stops in all; the first minute event saw the step " ..
+                    "at %d of %d boundaries", tostring(m.minute_counted), tostring(m.minute_stopped),
+                    tostring(m.minute_stops), ms, b)
+            end)
+            check("gf_client_copy_follows_the_server", function()
+                return C.probes >= 20 and C.same >= 0.9 * C.probes and C.sameOn >= 0.95 * C.probes and C.offSeen == 0
+                    and C.policyProbes > 0, string.format("%d probes: the fuel the same at %d, running the same at %d; " ..
+                    "not running at %d of %d probes in the per-tick policy", C.probes, C.same, C.sameOn, C.offSeen,
+                    C.policyProbes)
+            end)
+        end),
+        once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+    return
+end
+
+------------------------------------------------------------------------------
 -- handbook (2026-11-11, one client, D-038): the biodiesel recipes on a
 -- server, in a client without -debug. The Ash Barrel (a metal drum, two
 -- steel rods, a hammer; Welding 2) is tried in the game's crafting window

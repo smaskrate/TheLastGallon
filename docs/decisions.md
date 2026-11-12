@@ -1737,3 +1737,34 @@ gas probe (launch 342).
   to **Cancel the project** or **Remove the conversion** (the domain's
   test; not run in game). Building the feed includes offering the
   conversion again through that function.
+* Measured 2026-11-12, what the list above asked (launches 345–347,
+  `test-results.md`; BC `IsoGenerator` 42.22.2; engine-capabilities
+  G04/G05):
+  * The step is `getTotalPowerUsing()`: the generator's load (0.02, plus
+    each powered object's draw) times the fuel setting, taken each time
+    the integer world-age hour changes. At the default setting (0.1) a
+    generator powering nothing burns 0.002 L an hour and one powering a
+    fridge-freezer 0.015 L, which a full propane tank (13.0 L) keeps
+    going about 870 hours.
+  * Fuel set to exactly one step is 0 after the boundary, and the
+    generator off. One step plus 1e-4 L runs on with 1e-4 left.
+  * An appliance switched within the hour changes the load at the
+    generator's next update, after that update's burn: the next step is
+    the load of its moment, larger or smaller.
+  * The hour's first minute event runs at the start of the frame in which
+    the hour turns, before the burn, in single player and on a dedicated
+    server. A refill on the game-minute pass to one step plus 1e-4 L kept
+    a generator running through every hour with a battery charger switched
+    on in its last minute (three such hours in single player, three on a
+    server). The refill therefore stays on the minute pass, and the
+    margin is 1e-4 L: the wood-gas cap is one step plus 1e-4 L, read from
+    `getTotalPowerUsing()` at each refill.
+  * `setFuel` on a server keeps a running generator running and sends it
+    to the clients: a client's copy matched the server's fuel and state at
+    each of 68 reads.
+  * A propane tank item given a number of uses keeps it in whole uses
+    (1234.5 read 1235), so **Remove the propane tank** can give back a tank
+    with the uses left.
+  * Not measured: sleep and speeds above ×100; an object in range of two
+    generators. `setFuel` clamps at 10 L, so a step above 10 L less the
+    margin cannot be held (a load of 100 at the default setting).
