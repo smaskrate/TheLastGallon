@@ -415,6 +415,293 @@ if MP.only == "gaspropane" then
 end
 
 ------------------------------------------------------------------------------
+-- gaswood (one client, the shortest day; D-040): a gas generator on wood gas
+-- where the server keeps the feed and the gasifier. The server puts down a
+-- generator converted to gas, a Wood Gasifier two tiles from it and 30 kg
+-- of wood in the player's inventory (MPServer.lua setup_gaswood); the
+-- client takes every other step through the gasifier's menu and the game's
+-- actions, and compares its own copies with what the server holds. On the
+-- shortest day a game hour is about 2,400 ticks.
+------------------------------------------------------------------------------
+if MP.only == "gaswood" then
+    local GW = {}
+    local G, GZ = TLG.Integration.Generators, TLG.Integration.Gasifiers
+    local function gen()
+        local s = GW.x and getCell():getGridSquare(GW.x, GW.y, 0)
+        return s and s:getGenerator() or nil
+    end
+    -- The gasifier as this client sees it: on the floor within two tiles of
+    -- the generator, else carried.
+    local function gasifier()
+        local s = GW.x and getCell():getGridSquare(GW.x, GW.y, 0)
+        local list = s and GZ.near(s, GZ.RADIUS) or {}
+        if #list > 0 then return list[1] end
+        return GW.id and player():getInventory():getItemWithIDRecursiv(GW.id) or nil
+    end
+    local function wood()
+        return countType("Base.Log") + countType("Base.Firewood") + countType("Base.Charcoal")
+    end
+    local function ref() return TLG.Authority.Resolver.refForObject(gen(), "generator") end
+    -- A menu entry chosen as a player does, its reply caught.
+    local function menuStep(name, fill, rootKey, key, judge)
+        return { name = "mp_gw_" .. name, timeout = 1800, fn = function(ctx, ticks)
+            if ticks == 1 then
+                local c = ISContextMenu.get(0, 100, 100)
+                fill(c)
+                local root = c:getOptionFromName(getText(rootKey))
+                local sub = root and root.subOption and c:getSubMenu(root.subOption)
+                local opt = sub and sub:getOptionFromName(getText(key))
+                c:setVisible(false)
+                if opt == nil or opt.notAvailable then
+                    ctx.reply = { ok = false, reason = opt == nil and "no_menu_entry" or "entry_disabled" }
+                else
+                    local orig = TLG.Net.request
+                    TLG.Net.request = function(command, args) return orig(command, args, function(r) ctx.reply = r end) end
+                    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+                    TLG.Net.request = orig
+                    if not ok then ctx.reply = { ok = false, reason = "raised: " .. tostring(err) } end
+                end
+                return nil
+            end
+            if not ctx.reply then return nil end
+            report():line("OBS  MP.gw %s -> %s mode=%s hopper=%s loaded=%s vented=%s", name, brief(ctx.reply),
+                tostring(ctx.reply.mode), tostring(ctx.reply.hopperKg), tostring(ctx.reply.loadedKg),
+                tostring(ctx.reply.vented))
+            judge(ctx.reply, ctx)
+            return true
+        end }
+    end
+    local function gzMenu(name, key, judge)
+        return menuStep(name, function(c) TLG.UI.GasifierMenu.fill(0, c, { gasifier() }) end, "ContextMenu_TLG_Gasifier",
+            key, judge)
+    end
+    -- Which of Light and Put out this client's menu offers.
+    local function offered()
+        local c = ISContextMenu.get(0, 100, 100)
+        TLG.UI.GasifierMenu.fill(0, c, { gasifier() })
+        local root = c:getOptionFromName(getText("ContextMenu_TLG_Gasifier"))
+        local sub = root and root.subOption and c:getSubMenu(root.subOption)
+        c:setVisible(false)
+        local light = sub and sub:getOptionFromName(getText("ContextMenu_TLG_GasifierLight"))
+        local out = sub and sub:getOptionFromName(getText("ContextMenu_TLG_GasifierPutOut"))
+        return (light and not light.notAvailable) and "light" or (out and "put_out") or "none"
+    end
+    local function probe(name, judge)
+        return call("gw_" .. name, "probe_gaswood", function() return { gx = GW.x, gy = GW.y, id = GW.id } end,
+            "probe_gaswood", function(m)
+                report():line("OBS  MP.gw %s the server: G fuel %s running %s load %s record %s holds %s wood gas %s " ..
+                    "watched %s; gasifier %s stored %s now %s/%s hopper %s delivered %s fed %s", name, tostring(m.fuel),
+                    tostring(m.on), tostring(m.load), tostring(m.record), tostring(m.holds), tostring(m.woodgas),
+                    tostring(m.watched), tostring(m.where), tostring(m.stored), tostring(m.gstate), tostring(m.gpause),
+                    tostring(m.hopper), tostring(m.delivered), tostring(m.fed))
+                judge(m)
+            end)
+    end
+    -- G as this client sees it against the server's answer.
+    local function sameAsServer(m)
+        local g = gen()
+        return g ~= nil and math.abs(g:getFuel() - (tonumber(m.fuel) or -1)) < 1e-6 and tostring(g:isActivated()) == m.on
+    end
+    local function start(name)
+        return { name = "mp_gw_start_" .. name, timeout = 1800, fn = function(ctx, ticks)
+            if ticks == 1 then
+                if not gen():isActivated() then ISTimedActionQueue.add(ISActivateGenerator:new(player(), gen(), true)) end
+                return nil
+            end
+            if ticks < 60 or not TLGH.Steps.actionsIdle(player()) then return nil end
+            ctx.idle = ctx.idle or ticks
+            if ticks - ctx.idle < 120 then return nil end
+            check("gw_started_" .. name, function()
+                return gen():isActivated(), "running on this client's copy: " .. tostring(gen():isActivated())
+            end)
+            return true
+        end }
+    end
+    MP.stepsA = { MP.waitWorld,
+        call("gw_setup", "setup_gaswood", {}, "setup_gaswood", function(m)
+            GW.x, GW.y, GW.id = tonumber(m.gx), tonumber(m.gy), tonumber(m.item)
+            report():line("OBS  MP.gw the server converted G at %s,%s: %s (%s), profile %s, setting %s; the gasifier %s",
+                tostring(m.gx), tostring(m.gy), tostring(m.state), tostring(m.steps), tostring(m.profile),
+                tostring(m.setting), tostring(m.item))
+            check("gw_converted_on_the_server", function()
+                return m.state == "Commissioned" and m.profile == "generator_gas" and GW.id ~= nil, string.format(
+                    "project %s, profile %s, gasifier %s", tostring(m.state), tostring(m.profile), tostring(m.item))
+            end)
+        end),
+        wait("mp_gw_sync", 180),
+        walkTo("mp_gw_walk", function() return GW.x + 1, GW.y + 1 end),
+        once("mp_gw_seen", function()
+            local g, it = gen(), gasifier()
+            local ok, gas = pcall(G.isGas, g)
+            check("gw_client_sees_the_generator_the_gasifier_and_the_wood", function()
+                return g ~= nil and ok and gas == true and it ~= nil and it:getWorldItem() ~= nil and wood() == 9,
+                    string.format("generator %s gas %s; gasifier %s on the floor %s; wood pieces %d", tostring(g ~= nil),
+                    tostring(gas), tostring(it ~= nil), tostring(it and it:getWorldItem() ~= nil), wood())
+            end)
+        end),
+        gzMenu("light_empty", "ContextMenu_TLG_GasifierLight", function(r)
+            check("gw_light_greyed_while_empty", function()
+                return r.reason == "entry_disabled", "Light with an empty hopper: " .. tostring(r.reason)
+            end)
+        end),
+        gzMenu("load", "ContextMenu_TLG_GasifierLoad", function(r) GW.load = r end),
+        wait("mp_gw_load_settles", 180),
+        once("mp_gw_loaded", function()
+            local r = GW.load or {}
+            local rec = gasifier() and gasifier():getModData()[GZ.KEY]
+            check("gw_wood_loaded_and_seen_by_the_client", function()
+                return r.ok == true and math.abs((r.loadedKg or 0) - 30) < 1e-6 and r.items == 9 and wood() == 0
+                    and rec ~= nil, string.format("reply ok=%s loaded %s kg in %s pieces; wood pieces left %d; this " ..
+                    "client's copy of the record %s", tostring(r.ok), tostring(r.loadedKg), tostring(r.items), wood(),
+                    tostring(rec ~= nil))
+            end)
+        end),
+        gzMenu("light", "ContextMenu_TLG_GasifierLight", function(r) GW.light = r end),
+        wait("mp_gw_light_settles", 180),
+        once("mp_gw_lit", function()
+            local r = GW.light or {}
+            local menu = offered()
+            check("gw_lit_and_the_menu_follows", function()
+                return r.ok == true and r.state == "Processing" and r.mode == "warming" and menu == "put_out", string.format(
+                    "reply ok=%s state %s mode %s; this client's menu offers %s", tostring(r.ok), tostring(r.state),
+                    tostring(r.mode), menu)
+            end)
+        end),
+        -- Half an hour's warm-up, the buffer filled, and the scan's wait.
+        wait("mp_gw_warm", 2700),
+        probe("warmed", function(m)
+            check("gw_warm_gasifier_fills_G_on_the_server", function()
+                return m.holds == "true" and (tonumber(m.woodgas) or 0) > 0 and m.watched == "true" and m.on == "false"
+                    and m.gstate == "Paused" and sameAsServer(m), string.format(
+                    "server: holds %s wood gas %s watched %s running %s gasifier %s; this client's copy of G the same %s",
+                    tostring(m.holds), tostring(m.woodgas), tostring(m.watched), tostring(m.on), tostring(m.gstate),
+                    tostring(sameAsServer(m)))
+            end)
+            GW.delivered0 = tonumber(m.delivered)
+        end),
+        start("on_wood_gas"),
+        -- About two and a half game hours.
+        wait("mp_gw_hours", 6000),
+        probe("after_hours", function(m)
+            check("gw_refills_on_the_server_seen_by_the_client", function()
+                return m.on == "true" and (tonumber(m.delivered) or 0) > (GW.delivered0 or 0) + 1e-6 and m.watched == "true"
+                    and (m.gstate == "Paused" or m.gstate == "Processing") and sameAsServer(m), string.format(
+                    "server: running %s, delivered %s (was %s), gasifier %s; this client's copy of G the same %s",
+                    tostring(m.on), tostring(m.delivered), tostring(GW.delivered0), tostring(m.gstate),
+                    tostring(sameAsServer(m)))
+            end)
+        end),
+        request("gw_status", "gas.status", function() return { device = ref() } end, function(r)
+            check("gw_gas_status_from_the_server", function()
+                return r.ok == true and r.holdsGas == true and (r.woodgasNm3 or 0) > 0 and r.gasifiers == 1
+                    and r.tankUses == nil, string.format("ok=%s holds gas %s wood gas %s gasifiers %s tank %s",
+                    tostring(r.ok), tostring(r.holdsGas), tostring(r.woodgasNm3), tostring(r.gasifiers), tostring(r.tankUses))
+            end)
+        end),
+        call("gw_give_can", "give", { items = "Base.PetrolCan", petrol = 4 }, "given", function() end),
+        wait("mp_gw_can_arrives", 120),
+        request("gw_pour", "transfer", function(ctx)
+            local can = player():getInventory():getFirstTypeRecurse("Base.PetrolCan")
+            GW.can = can
+            return can and { source = TLG.Authority.Resolver.refForItem(can), destination = ref(), amount = 2 } or nil
+        end, function(r)
+            local valid = ISAddFuel:new(player(), gen(), GW.can, 100):isValid()
+            check("gw_no_liquid_goes_in", function()
+                return r.ok == false and r.reason == "gas_generator" and valid == false, string.format(
+                    "the pour: ok=%s reason=%s; the game's Add fuel valid on this client %s", tostring(r.ok),
+                    tostring(r.reason), tostring(valid))
+            end)
+        end),
+        gzMenu("put_out", "ContextMenu_TLG_GasifierPutOut", function(r) GW.out = r end),
+        wait("mp_gw_out_settles", 180),
+        once("mp_gw_put_out", function()
+            local r = GW.out or {}
+            local menu = offered()
+            check("gw_put_out_and_the_menu_follows", function()
+                return r.ok == true and r.state == "Ready" and (r.vented or 0) > 0 and menu == "light", string.format(
+                    "reply ok=%s state %s let out %s; this client's menu offers %s", tostring(r.ok), tostring(r.state),
+                    tostring(r.vented), menu)
+            end)
+        end),
+        -- G runs on what it holds: two steps at most, then off.
+        wait("mp_gw_runs_down", 5400),
+        probe("run_down", function(m)
+            check("gw_G_stops_without_gas", function()
+                return m.on == "false" and (tonumber(m.fuel) or -1) <= 1e-6 and m.gstate == "Ready" and sameAsServer(m),
+                    string.format("server: running %s fuel %s gasifier %s; this client's copy the same %s", tostring(m.on),
+                    tostring(m.fuel), tostring(m.gstate), tostring(sameAsServer(m)))
+            end)
+        end),
+        gzMenu("light_again", "ContextMenu_TLG_GasifierLight", function(r) GW.again = r end),
+        wait("mp_gw_warm_again", 2700),
+        probe("warmed_again", function(m)
+            check("gw_lit_again_fills_G", function()
+                return (GW.again or {}).ok == true and m.holds == "true" and sameAsServer(m), string.format(
+                    "Light ok=%s; server: holds %s fuel %s; this client's copy the same %s", tostring((GW.again or {}).ok),
+                    tostring(m.holds), tostring(m.fuel), tostring(sameAsServer(m)))
+            end)
+        end),
+        start("again"),
+        -- Taken up while lit with the world menu's Grab, an item transaction
+        -- the server runs with no Lua of the mod's: the gasifier goes out at
+        -- its next read.
+        { name = "mp_gw_grab", timeout = 2400, fn = function(ctx, ticks)
+            local p = player()
+            if not ctx.queued then
+                local it = gasifier()
+                local wi = it and it:getWorldItem()
+                if not wi then
+                    report():line("FAIL MP.gw_grab_queued_%s :: no gasifier on the floor", MP.role)
+                    return true
+                end
+                ISWorldObjectContextMenu.onGrabWItem(nil, wi, 0)
+                ctx.queued = ticks
+                return nil
+            end
+            if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+            ctx.idle = ctx.idle or ticks
+            if ticks - ctx.idle < 120 then return nil end
+            local it = p:getInventory():getItemWithIDRecursiv(GW.id)
+            check("gw_grabbed_while_lit", function()
+                return it ~= nil, "in this client's inventory: " .. tostring(it ~= nil)
+            end)
+            return true
+        end },
+        request("gw_status_carried", "gasifier.status", function()
+            local it = player():getInventory():getItemWithIDRecursiv(GW.id)
+            return it and { target = GZ.refFor(it) } or nil
+        end, function(r)
+            check("gw_carried_answers_out_with_its_wood", function()
+                return r.ok == true and r.placed == false and r.state == "Ready" and (r.hopperKg or 0) > 20, string.format(
+                    "ok=%s placed %s state %s hopper %s", tostring(r.ok), tostring(r.placed), tostring(r.state),
+                    tostring(r.hopperKg))
+            end)
+        end),
+        { name = "mp_gw_put_down", timeout = 2400, fn = function(ctx, ticks)
+            local p = player()
+            if ticks == 1 then
+                local it = p:getInventory():getItemWithIDRecursiv(GW.id)
+                if it then
+                    ISTimedActionQueue.add(ISDropWorldItemAction:new(p, it, getCell():getGridSquare(GW.x + 2, GW.y + 1, 0),
+                        0.5, 0.5, 0, 0, false))
+                end
+                return nil
+            end
+            if ticks < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+            ctx.idle = ctx.idle or ticks
+            return ticks - ctx.idle >= 180 or nil
+        end },
+        probe("put_down", function(m)
+            check("gw_put_down_out_on_the_server", function()
+                return m.where == "floor" and m.gstate == "Ready" and (tonumber(m.hopper) or 0) > 20, string.format(
+                    "server: gasifier %s, now %s, hopper %s", tostring(m.where), tostring(m.gstate), tostring(m.hopper))
+            end)
+        end),
+        once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+    return
+end
+
+------------------------------------------------------------------------------
 -- handbook (2026-11-11, one client, D-038): the biodiesel recipes on a
 -- server, in a client without -debug. The Ash Barrel (a metal drum, two
 -- steel rods, a hammer; Welding 2) is tried in the game's crafting window

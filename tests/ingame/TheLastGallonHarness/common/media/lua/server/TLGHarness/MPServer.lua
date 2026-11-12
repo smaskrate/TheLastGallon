@@ -1209,6 +1209,65 @@ function services.probe_gaspropane(player, args)
             g:getSquare():getZ()] == true) })
 end
 
+------------------------------------------------------------------------------
+-- gaswood (tools/run-mp-harness.ps1 -Only gaswood, one client, the shortest
+-- day; D-040): a gas generator on wood gas where the server keeps the feed
+-- and the gasifier. The server puts a vanilla generator beside the spawn
+-- point, converted to gas as for gaspropane, a Wood Gasifier on the floor
+-- two tiles from it, and wood into the player's inventory (two logs, five
+-- pieces of firewood, two of charcoal: 30 kg). The client does the rest
+-- through the gasifier's menu and the game's actions
+-- (MPHarnessCases.lua); probe_gaswood says what the server holds.
+------------------------------------------------------------------------------
+function services.setup_gaswood(player, args)
+    local gx, gy = S.CX + 6, S.CY + 6
+    local g = generatorAt(gx, gy)
+    if g == nil then
+        g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), getCell():getGridSquare(gx, gy, 0))
+    end
+    g:setConnected(true)
+    g:setFuel(0)
+    local state, steps = commissionGas(g)
+    g:sync()
+    g:transmitModData()
+    local item = getCell():getGridSquare(gx + 2, gy, 0):AddWorldInventoryItem("TLG.Gasifier", 0.5, 0.5, 0)
+    local inv = player:getInventory()
+    for _, spec in ipairs({ { "Base.Log", 2 }, { "Base.Firewood", 5 }, { "Base.Charcoal", 2 } }) do
+        for _ = 1, spec[2] do
+            local it = inv:AddItem(spec[1])
+            sendAddItemToContainer(inv, it)
+        end
+    end
+    reply("setup_gaswood", args, { gx = gx, gy = gy, state = tostring(state), steps = steps,
+        profile = tostring(TLG.Integration.Generators.profile(g)), item = tostring(item and item:getID()),
+        setting = string.format("%.4f", g:getBasePowerConsumption() / 0.02) })
+end
+
+-- The generator, its gas record, and the gasifier (on the floor within two
+-- tiles of the generator, else in the asking player's inventory by id) with
+-- its record as stored and as brought to now on a copy.
+function services.probe_gaswood(player, args)
+    local G, GZ, Gasifier = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Domain.Gas.Gasifier
+    local g = generatorAt(tonumber(args.gx), tonumber(args.gy))
+    local rec = g and G.gasRecord(g)
+    local cur = rec and TLG.Domain.GasFeed.current(rec, g:getFuel()) or {}
+    local item
+    for _, it in ipairs(g and GZ.near(g:getSquare(), GZ.RADIUS) or {}) do item = item or it end
+    if item == nil and args.id then item = player:getInventory():getItemWithIDRecursiv(tonumber(args.id)) end
+    local st = item and GZ.read(item, false)
+    local now = st and GZ.advance(item, st, TLG.World.now())
+    local s = now and Gasifier.status(now) or {}
+    local sq = g and g:getSquare()
+    reply("probe_gaswood", args, { found = tostring(g ~= nil), fuel = g and string.format("%.7f", g:getFuel()) or "-",
+        on = tostring(g and g:isActivated()), load = g and string.format("%.7f", g:getTotalPowerUsing()) or "-",
+        record = tostring(rec ~= nil), holds = tostring(g and G.holdsGas(g)), woodgas = string.format("%.6f", cur.woodgas or 0),
+        watched = tostring(sq ~= nil and G.gasSquares[sq:getX() .. "," .. sq:getY() .. "," .. sq:getZ()] == true),
+        where = item and (GZ.isPlaced(item) and "floor" or "inventory") or "none", stored = tostring(st and st.state),
+        gstate = tostring(s.state), gpause = tostring(s.reason), hopper = string.format("%.4f", s.hopperKg or -1),
+        delivered = string.format("%.6f", now and now.totals.delivered or -1),
+        fed = string.format("%.6f", now and now.totals.fed or -1) })
+end
+
 -- The Diesel Generator's sprite taken away on the server, as a load without
 -- the mod leaves it (step "strip"), then the mod's repair run as the
 -- server's LoadGridsquare runs it, on the generator's square (step

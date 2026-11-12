@@ -87,6 +87,15 @@
   the tank and gets it back, connects again and removes the conversion
   from the Workshop menu, comparing its copies with the server's (one
   client, on the shortest day).
+  gaswood: a gas generator on wood gas where the server keeps the feed and
+  the gasifier (D-040): the server puts down a generator converted to gas,
+  a Wood Gasifier two tiles from it and 30 kg of wood in the player's
+  inventory; the client loads and lights the gasifier through its menu,
+  starts the generator through the start gate, lets it run, reads Gas
+  status, is refused the pour and Add fuel, puts the gasifier out (the
+  generator stops), lights it again, takes it up while lit with the
+  world menu's Grab and puts it down, comparing its copies and its menu
+  with the server's (one client, on the shortest day).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -113,7 +122,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "wrongfuel", "menus", "gasfeed", "gaspropane")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"
@@ -216,7 +225,7 @@ end
 # shortest day (DayLength 1: 15 minutes, Sandbox_DayLength_option1), and
 # the fuel case's generator and car burn enough there to be seen (run 156
 # read none in half a minute on the default day).
-$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers", "death", "gasfeed", "gaspropane") -contains $Only) { "`n    DayLength = 1," } else { "" }
+$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers", "death", "gasfeed", "gaspropane", "gaswood") -contains $Only) { "`n    DayLength = 1," } else { "" }
 # The audit case (AuditCases.lua) runs with the grid on: without power
 # IsoObject.getPipedFuelAmount reports no fuel at all (BC 42.21; audit run 1
 # found "no pump with stock" with ElecShutModifier = 0), so the pumps' case

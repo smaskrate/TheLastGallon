@@ -12,7 +12,8 @@ local G, GasFeed, Gas, Tables = TLG.Integration.Generators, TLG.Domain.GasFeed, 
 -- The adapter's gas paths (D-040) on stand-ins for a generator, its square
 -- and the clock. The conversion is stood in for by the profile: a generator
 -- whose mod data says gasConverted has the gas profile.
-local GLOBALS = { "getGameTime", "getCell", "isServer", "isClient", "instanceof", "getClimateManager", "ModData" }
+local GLOBALS = { "getGameTime", "getCell", "isServer", "isClient", "instanceof", "getClimateManager", "ModData",
+    "sendServerCommand" }
 local GZ, Gasifier = TLG.Integration.Gasifiers, TLG.Domain.Gas.Gasifier
 
 local function fakeGame()
@@ -391,4 +392,35 @@ inGame("integration: hours away: no draw, the gasifier goes out its hold after t
     local st = GZ.advance(item, item.md.tlgGasifier, g.hours)
     T.eq(st.state, "Ready")
     T.near(st.totals.fed - fed, 0.1024 / 2.2, 1e-6, "only the wood for the gas drawn")
+end)
+
+inGame("integration: on a server a gasifier's record goes to the clients, which put it in their copy", function(g)
+    local item = gasifierAt(g, 70, 5, 4242)
+    local sent = {}
+    sendServerCommand = function(module, command, args) sent[#sent + 1] = { module = module, command = command, args = args } end
+    -- Single player sends nothing.
+    lightGasifier(g, item, 10)
+    T.eq(#sent, 0)
+    isServer = function() return true end
+    local st = TLG.Tables.deepCopy(item.md.tlgGasifier)
+    st.rev = 7
+    GZ.write(item, st)
+    T.eq(#sent, 1)
+    local m = sent[1]
+    T.eq(m.module, "TLG"); T.eq(m.command, "gasifier")
+    T.eq(m.args.id, 4242); T.eq(m.args.x, 70); T.eq(m.args.y, 5); T.eq(m.args.z, 0)
+    T.eq(m.args.rec.rev, 7)
+    -- Carried: the owner gets it with the item's fields; nothing is sent.
+    item:pickUp()
+    GZ.write(item, st)
+    T.eq(#sent, 1)
+    -- A client's copy of the item on the floor takes the record sent.
+    isServer = function() return false end
+    item:moveTo(70, 5)
+    item.md.tlgGasifier = nil
+    T.ok(GZ.received(m.args))
+    T.eq(item.md.tlgGasifier.rev, 7)
+    T.ok(not GZ.received({ id = 1, x = 70, y = 5, z = 0, rec = st }), "another item")
+    T.ok(not GZ.received({ id = 4242, x = 99, y = 99, z = 0, rec = st }), "a square not loaded")
+    T.ok(not GZ.received({ id = 4242, x = 70, y = 5, z = 0 }), "no record")
 end)

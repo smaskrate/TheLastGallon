@@ -40,6 +40,12 @@ Events.OnServerCommand.Add(function(module, command, args)
         and string.sub(args.key, 1, 14) == "IGUI_TLG_Note_" then
         TLG.Notify.show(args.key, args.fuel)
     end
+    -- A gasifier's record from the server, for this client's menu
+    -- (TLG/Integration/Gasifiers.lua).
+    if module == "TLG" and command == "gasifier" and TLG.Integration.Gasifiers then
+        local ok, err = pcall(TLG.Integration.Gasifiers.received, args)
+        if not ok then TLG.Log.error("gasifier record from the server: %s", tostring(err)) end
+    end
 end)
 
 return Net
