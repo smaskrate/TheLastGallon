@@ -135,8 +135,11 @@ local function ventGas(player, d)
     local G, gen = TLG.Integration.Generators, d.holder
     local rec = G.gasRecord(gen)
     if rec == nil then return end
+    -- Read before the tank comes out: only gas is let out. Petrol poured in
+    -- after the gas burned out stays.
+    local gas = G.holdsGas(gen)
     if rec.tank and H.gasTakeTank then H.gasTakeTank(player, gen, rec) end
-    gen:setFuel(0)
+    if gas then gen:setFuel(0) end
     gen:getModData()[G.GAS_KEY] = nil
     TLG.Authority.Vault.release("gas", function() return G.keyOf(gen) end)
     gen:transmitModData()
