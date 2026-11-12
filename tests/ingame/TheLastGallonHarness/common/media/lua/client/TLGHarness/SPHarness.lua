@@ -42,7 +42,9 @@
 --             stale petrol, no stall with the option off, a generator's wear
 --   sp-rtpf -> performance (gate 11): the mod's timers, catch-up and menus
 --             timed and frames sampled as dormant cans, parked and idling
---             cars and running fermenters are added on the same road
+--             cars and running fermenters are added on the same road; after
+--             the budgets, the biodiesel machines, diesel vans, wrong fuel
+--             and the square-load hook (RT.PF.bio and what follows it)
 --   sp-rtmi -> an original test model wired to the fermenter: placed, turned,
 --             held and photographed, saved and exited to the menu ("sp-rtmib")
 --   sp-rtmib -> main menu continues that save: back in place, photographed
@@ -115,6 +117,11 @@
 --              power of a running engine below freezing (RT.BC)
 --   sp-rtdp -> diesel at some pumps: what a pump gives read from its menu,
 --              a can and vehicles filled at a diesel and a petrol pump
+--   sp-rtgp -> the gas probe (D-039): a generator kept running on a buffer
+--              topped up each minute and paid from a propane tank beside
+--              it, against one on its own tank; saved ("sp-rtgpb")
+--   sp-rtgpb -> main menu continues that save: both checked, an hour more,
+--              a trip that unloads them, then the buffer run dry
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -140,7 +147,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -10352,16 +10359,34 @@ RT.PF = { frameSecs = 20, batches = 5, batchMs = 200, cans = 400, idle = 8, stal
 -- 480-reading records and their catch-up (the three findings: run 182, 90,
 -- 192-202 and 60 ms) are timed since D-032. Run 183 set the warmed and
 -- catch-up ones, run 185 the notes and readings (after the notes' saving).
+-- Run 341 set those of what 0.2.0 to 0.4.1 added (the stages after the
+-- budget check), and the fuel menu's (0.08 before): launches 181-185 timed
+-- a can on the ground whose 0.1.0 menu most likely did not open (0.027 ms
+-- with the game's own menu), launches 340-341 the menu 0.1.1 opens there
+-- (0.37-0.38 ms; docs/performance.md, "The fuel menu").
 RT.PF.budgets = {
     ["empty/minute"] = 0.005, ["empty/ten_minutes"] = 0.005, ["empty/hour"] = 0.03,
     ["cans_with_records/minute"] = 0.005, ["cans_with_records/ten_minutes"] = 0.005, ["cans_with_records/hour"] = 0.03,
     ["parked_20/minute"] = 0.1, ["idling_8/minute"] = 3.2,
     ["machines_32/minute"] = 3.3, ["machines_32/ten_minutes"] = 1.8, ["machines_32/hour"] = 1.7,
     ["catch_up_fresh/can_8760_h"] = 28, ["catch_up_fresh/tank_8760_h"] = 28, ["catch_up_fresh/fermenter_8760_h"] = 75,
-    ["catch_up_fresh/fuel_menu"] = 0.08, ["catch_up_fresh/machine_menu_fresh"] = 0.8,
+    ["catch_up_fresh/fuel_menu"] = 1.1, ["catch_up_fresh/machine_menu_fresh"] = 0.8,
     ["machines_32_warmed/ten_minutes"] = 31, ["machines_32_warmed/fire_scan_one_machine"] = 9,
     ["machines_32_20_days/ten_minutes"] = 20, ["machines_32_20_days/hour"] = 53,
     ["catch_up_20_days/fermenter_through_20_days"] = 13, ["catch_up_20_days/machine_menu_20_days"] = 15,
+}
+-- The stages after the budget check have theirs checked at the end.
+RT.PF.budgetsAdded = {
+    ["machines_32_again/census_hands"] = 0.011,
+    ["machines_32_biodiesel_30/ten_minutes"] = 4.2, ["machines_32_biodiesel_30/hour"] = 3.9,
+    ["idling_8_diesel_4/minute"] = 4.9, ["idling_12_fresh_fuel/minute"] = 2.2, ["idling_12_wrong_fuel/minute"] = 4.1,
+    ["catch_up_biodiesel/retort_8760_h"] = 75, ["catch_up_biodiesel/fire_pit_8760_h"] = 75,
+    ["catch_up_biodiesel/leacher_8760_h"] = 75, ["catch_up_biodiesel/reactor_8760_h"] = 75,
+    ["catch_up_biodiesel/settler_8760_h"] = 75,
+    ["catch_up_biodiesel/machine_menu_retort"] = 0.9, ["catch_up_biodiesel/machine_menu_fire_pit"] = 0.8,
+    ["catch_up_biodiesel/machine_menu_leacher"] = 0.9, ["catch_up_biodiesel/machine_menu_reactor"] = 0.9,
+    ["catch_up_biodiesel/machine_menu_settler"] = 1.0,
+    ["load_square/handler_area"] = 5.1, ["load_square/handler_generator_square"] = 0.005,
 }
 
 -- The mod's three timers, as their handlers run them (Vehicles.lua V.install,
@@ -10923,17 +10948,21 @@ function RT.PF.oldJobs()
     return jobs
 end
 
-RT.PF.checkBudgets = { name = "rtpf_budgets", fn = function()
-    local PF = RT.PF
-    for _, key in ipairs(TLG.Tables.sortedKeys(PF.budgets)) do
-        local b, limit = PF.results[key], PF.budgets[key]
-        R:check("RTPF.budget." .. key, function()
-            return b ~= nil and b.med <= limit, string.format("median %s ms per call, budget %.3f ms",
-                b and string.format("%.4f", b.med) or "not measured", limit)
-        end)
-    end
-    return true
-end }
+function RT.PF.budgetStep(name, budgetsFn)
+    return { name = name, fn = function()
+        local PF, budgets = RT.PF, budgetsFn()
+        for _, key in ipairs(TLG.Tables.sortedKeys(budgets)) do
+            local b, limit = PF.results[key], budgets[key]
+            R:check("RTPF.budget." .. key, function()
+                return b ~= nil and b.med <= limit, string.format("median %s ms per call, budget %.3f ms",
+                    b and string.format("%.4f", b.med) or "not measured", limit)
+            end)
+        end
+        return true
+    end }
+end
+RT.PF.checkBudgets = RT.PF.budgetStep("rtpf_budgets", function() return RT.PF.budgets end)
+RT.PF.checkBudgetsAdded = RT.PF.budgetStep("rtpf_budgets_added", function() return RT.PF.budgetsAdded end)
 
 RT.PF.cleanup = { name = "rtpf_cleanup", fn = function()
     local PF = RT.PF
@@ -10942,8 +10971,750 @@ RT.PF.cleanup = { name = "rtpf_cleanup", fn = function()
         pcall(function() c.v:engineDoShuttingDown() end)
     end
     if SandboxVars.TheLastGallon then SandboxVars.TheLastGallon.VehicleStalls = PF.stallsWere ~= false end
+    RT.WF.release()
+    if PF.squareHandlerOff then
+        pcall(function() Events.LoadGridsquare.Add(TLG.Integration.Generators.onLoadSquare) end)
+        PF.squareHandlerOff = false
+    end
+    closeDialogs()
+    captureDialogs(false)
     RT.speed(1)
     return true
+end }
+
+------------------------------------------------------------------------------
+-- What 0.2.0 to 0.4.1 added (launch 340). These stages come after the 22
+-- budgets are checked, so every stage before them is as in launches 181-185.
+-- - The 32 fermenters' fixture readings are taken off again and the timers
+--   timed once more ("machines_32_again"): the base the stages below add to,
+--   checked to be within 15 % of "machines_32". Also the ten-minute
+--   handler's second call, Machines.censusHands (added 2026-11-06), alone.
+-- - 6 of each of the five biodiesel machines (D-036) on the free road rows
+--   10839-10841, the only road left inside the 45-tile span, fireboxes fed
+--   from the menu. The wood retorts and the ash barrels are loaded from the
+--   menu with 11 logs each. A lye leacher, a reactor and a wash tank load
+--   from a finished machine beside them, hours of work away, so their
+--   batches are written by the domain's own load and start (Process.load,
+--   Process.start), as their handlers write them after the draw (fixture),
+--   with what one chain gives (RT.PF.bio.amounts): the ash of 99 kg of wood,
+--   18 L of oil with the methanol and lye it asks, and that oil's crude with
+--   its wash water. The sixth retort is loaded the same way, and its record
+--   is compared with a menu-loaded retort's.
+-- - Before them, the fuel menu taken apart (launch 341): how many entries
+--   its fill builds for the can, and each piece timed alone. Launch 340
+--   timed the whole menu at 0.37 ms, launches 181-185 at 0.002 ms above
+--   the game's own context menu, which may never have built it.
+-- - 4 diesel vans (Base.VanAmbulance, engine_ci_stock in a new world).
+--   Launch 340 found no room for them between the parked cars (the reasons
+--   not logged), so the middle columns' parked cars are taken away first,
+--   the minute timed again, and four van footprints (3 by 7 tiles)
+--   searched for there, each blocked try logged with its reason. The vans idle on
+--   stale diesel. Then the 12 running engines on fresh fuel of their own
+--   kind (the control: setTank also makes the fuel fresh), then on blends
+--   D-037 judges harmful but lets run (the cars a fifth diesel, the vans
+--   30 % petrol), every roll held (RT.WF.hold) so none fails. Inside a
+--   batch the tank does not drop between calls, so the minute's figure is
+--   the verdict, the power and the stall check: the wear, the exhaust wear
+--   and the failure draw that the litres burned bring come once a game
+--   minute and are not in it.
+-- - Each biodiesel machine's catch-up (1, 30 and 365 days) and machine menu.
+-- - Frames with all of it running, then again with every reply dialog
+--   closed: the menu loads' replies stay open on screen (the 32 fermenters'
+--   since machineStep, which does not close them).
+-- - The square-load hook of 0.3.2 (Generators.onLoadSquare, which the game
+--   calls for every square it loads): the handler over the loaded squares of
+--   a 60 by 60 area, and on a square holding a Diesel Generator; then the
+--   game's event for those squares without and with the mod's handler
+--   (triggerEvent; the debug scenario's own handler does nothing here, since
+--   TLGHarnessA has no onLoadGS).
+-- Their budgets (RT.PF.budgetsAdded, from launch 341) are checked at the
+-- end, after the hook (docs/performance.md).
+------------------------------------------------------------------------------
+RT.PF.bio = { loadLogs = 11, oilL = 18, sets = 6, rows = { 10839, 10840, 10841 },
+    kinds = { "retort", "fire_pit", "leacher", "reactor", "settler" },
+    types = { "TLG.WoodRetort", "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor", "TLG.BiodieselWashTank" },
+    recipes = { "methanol_wood_distill", "ash_burn", "lye_leach", "biodiesel_react", "biodiesel_wash" },
+    feedLogs = { 3, 0, 1, 1, 1 }, byKind = {}, items = {} }
+RT.PF.vans = { script = "Base.VanAmbulance", want = 4 }
+
+-- The loads one chain gives, by kind, as the handlers work them out
+-- (MachineHandlers): what 11 logs give the retort and the ash barrel; the
+-- barrel's ash with two litres of water a kilogram for the leacher; 18 L of
+-- oil with the methanol and lye it asks for the reactor; that oil's crude
+-- with its wash water for the wash tank. tests/support/perf_fixture_check.lua
+-- ran the same text offline before launch 340.
+function RT.PF.bio.amounts()
+    local P, Reg = TLG.Domain.Process, TLG.Registry
+    local wood = 9 * RT.PF.bio.loadLogs
+    local burnt = P.plan("ash_burn", { firewood = wood }, P.new({ machine = "ash_pit" }))
+    if not burnt.ok then return nil, "ash_burn " .. tostring(burnt.reason) end
+    local leach = Reg.need("recipe", "lye_leach")
+    local perKg = leach.params.waterPerKgAsh
+    local ashKg = math.min(leach.inputs.wood_ash.max, burnt.expected.outputs.wood_ash, leach.inputs.water.max / perKg)
+    local react = Reg.need("recipe", "biodiesel_react").params
+    local oil = RT.PF.bio.oilL
+    local reactIn = { plant_oil = oil, methanol = oil * react.methanolPerOil, lye = oil * react.lyePerOil }
+    local reacted = P.plan("biodiesel_react", reactIn, P.new({ machine = "biodiesel_reactor" }))
+    if not reacted.ok then return nil, "biodiesel_react " .. tostring(reacted.reason) end
+    local wash = Reg.need("recipe", "biodiesel_wash")
+    local washIn = TLG.Tables.copy(reacted.expected.outputs)
+    local carried = washIn.water or 0
+    washIn.water = carried + math.min((washIn.biodiesel or 0) * wash.params.washWaterPerL,
+        math.max(0, wash.inputs.water.max - carried))
+    return { { firewood = wood }, { firewood = wood }, { wood_ash = ashKg, water = ashKg * perKg }, reactIn, washIn }
+end
+
+-- A machine menu entry clicked, its reply dialog closed.
+function RT.PF.bio.click(label, it, key)
+    local r = machineClick(label, it, key)
+    closeDialogs()
+    return r
+end
+
+-- A batch written as a load writes it after the draw: machineState (the
+-- record read, brought to now and listed), Process.load and Process.start,
+-- then commit (the revision and the write).
+function RT.PF.bio.fixtureLoad(it, recipeId, inputs)
+    local M, P, W = TLG.Integration.Machines, TLG.Domain.Process, TLG.World
+    local now, env = W.now(), W.env()
+    local rec, why = M.read(it, true)
+    if rec == nil then return { ok = false, reason = why } end
+    rec = M.advance(it, rec, now, env)
+    M.index(it, rec)
+    local loaded = P.load(rec, recipeId, inputs, player():getPerkLevel(Perks.Cooking))
+    if not loaded.ok then return loaded end
+    local started = P.start(loaded.proc, now)
+    if not started.ok then return started end
+    started.proc.rev = (rec.rev or 0) + 1
+    M.write(it, started.proc)
+    return { ok = true, state = started.proc.state }
+end
+
+-- What a record holds that a load decides (not its id, times or readings).
+function RT.PF.bio.view(r)
+    if r == nil then return "none" end
+    return string.format("machine=%s state=%s pause=%s stage=%s stageDone=%s firebox=%s skill=%s cond=%s batches=%s " ..
+        "recipe=%s/%s inputs=%s outputs=%s", tostring(r.machine), tostring(r.state), tostring(r.pause), tostring(r.stage),
+        tostring(r.stageDone), tostring(r.firebox), tostring(r.skill), tostring(r.cond), tostring(r.batches),
+        tostring(r.recipe and r.recipe.id), tostring(r.recipe and r.recipe.fp), brief(r.inputs), brief(r.outputs))
+end
+
+-- The 32 fermenters back to fresh records: the fixture's 480 readings and
+-- notes taken off.
+RT.PF.freshAgain = { name = "rtpf_fresh_again", fn = function()
+    local PF, M = RT.PF, TLG.Integration.Machines
+    local n, empty = 0, 0
+    for _, it in ipairs(PF.machineList or {}) do
+        local rec = M.read(it, false)
+        if rec and M.running(rec) then
+            rec.temps, rec.fires = {}, {}
+            M.write(it, rec)
+            n = n + 1
+            local back = M.read(it, false)
+            if TLG.Tables.count(back.temps or {}) == 0 and TLG.Tables.count(back.fires or {}) == 0 then empty = empty + 1 end
+        end
+    end
+    R:line("OBS  RTPF.readings taken off %d running fermenters", n)
+    R:check("RTPF.readings_taken_off", function()
+        return n == #(PF.machineList or {}) and empty == n,
+            string.format("%d of %d running, %d without readings or notes", n, #(PF.machineList or {}), empty)
+    end)
+    return true
+end }
+
+-- The base timed again against the first time: each timer within 15 %.
+RT.PF.againCheck = { name = "rtpf_again_check", fn = function()
+    local PF = RT.PF
+    local parts, ok = {}, true
+    for _, w in ipairs({ "minute", "ten_minutes", "hour" }) do
+        local a, b = PF.results["machines_32/" .. w], PF.results["machines_32_again/" .. w]
+        local r = (a and b and a.med > 0) and b.med / a.med or nil
+        ok = ok and r ~= nil and math.abs(r - 1) <= 0.15
+        parts[#parts + 1] = string.format("%s %s -> %s ms (x%s)", w, a and string.format("%.4f", a.med) or "?",
+            b and string.format("%.4f", b.med) or "?", r and string.format("%.3f", r) or "?")
+    end
+    R:check("RTPF.again_as_machines_32", function() return ok, table.concat(parts, "; ") end)
+    return true
+end }
+
+-- The ten-minute handler's second call (Boot.lua), timed alone.
+RT.PF.censusStep = { name = "rtpf_census", timeout = 600, fn = function(ctx, ticks)
+    if ticks < 30 then return nil end
+    local ok, b = pcall(RT.PF.bench, function() TLG.Integration.Machines.censusHands() end)
+    if ok then
+        RT.PF.record("machines_32_again", "census_hands", b)
+    else
+        R:line("OBS  RTPF.cost machines_32_again/census_hands raised %s", tostring(b))
+    end
+    return true
+end }
+
+-- The biodiesel machines placed, their fireboxes fed and their batches
+-- loaded, one machine a few ticks apart with the player beside it.
+RT.PF.bioStep = { name = "rtpf_biodiesel", timeout = 12000, fn = function(ctx, ticks)
+    local PF, M, bio = RT.PF, TLG.Integration.Machines, RT.PF.bio
+    if not ctx.at then
+        captureDialogs(true)
+        pcall(function() player():setUnlimitedCarry(true) end)
+        local amounts, why = bio.amounts()
+        if amounts == nil then
+            R:check("RTPF.bio_amounts", function() return false, tostring(why) end)
+            return true
+        end
+        bio.loads = amounts
+        local parts = {}
+        for k = 1, 5 do parts[k] = bio.kinds[k] .. " " .. brief(amounts[k]) end
+        R:line("OBS  RTPF.bio loads: %s", table.concat(parts, "; "))
+        local slots = PF.rowSquares(bio.rows)
+        ctx.queue = {}
+        for s = 1, bio.sets do
+            for k = 1, 5 do
+                local slot = slots[(s - 1) * 5 + k]
+                if slot then
+                    local it = instanceItem(bio.types[k])
+                    slot:AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+                    bio.items[#bio.items + 1] = it
+                    bio.byKind[k] = bio.byKind[k] or {}
+                    bio.byKind[k][s] = it
+                    ctx.queue[#ctx.queue + 1] = { it = it, k = k, s = s }
+                end
+            end
+        end
+        bio.spare = {}
+        for i = bio.sets * 5 + 1, #slots do bio.spare[#bio.spare + 1] = slots[i] end
+        R:line("OBS  RTPF.bio %d machines placed on the %d free squares of rows %s", #bio.items, #slots,
+            table.concat(bio.rows, ","))
+        ctx.i, ctx.at, ctx.fed, ctx.loaded, ctx.failed, ctx.fails = 1, ticks + 60, 0, 0, 0, {}
+        return nil
+    end
+    if ticks < ctx.at then return nil end
+    local job = ctx.queue[ctx.i]
+    if job == nil then
+        PF.toStand()
+        local running, total = {}, 0
+        for k = 1, 5 do
+            running[k] = 0
+            for _, it in pairs(bio.byKind[k] or {}) do
+                local rec = M.read(it, false)
+                if rec and M.running(rec) then running[k], total = running[k] + 1, total + 1 end
+            end
+        end
+        local listed = TLG.Tables.count(TLG.World.server().machineSites or {})
+        local parts = {}
+        for k = 1, 5 do parts[k] = string.format("%s %d", bio.kinds[k], running[k]) end
+        R:line("OBS  RTPF.bio %d fireboxes fed, %d loaded, %d refused%s; running: %s; %d machines in the hourly list",
+            ctx.fed, ctx.loaded, ctx.failed, #ctx.fails > 0 and (" (" .. table.concat(ctx.fails, ", ") .. ")") or "",
+            table.concat(parts, ", "), listed)
+        local want, fer = bio.sets * 5, #(PF.machineList or {})
+        R:check("RTPF.bio_running", function()
+            return total == want and listed == fer + want,
+                string.format("%d running of %d; %d listed of %d", total, want, listed, fer + want)
+        end)
+        local a = bio.byKind[1] and bio.byKind[1][1]
+        local b = bio.byKind[1] and bio.byKind[1][bio.sets]
+        local va, vb = bio.view(a and M.read(a, false)), bio.view(b and M.read(b, false))
+        R:check("RTPF.bio_fixture_as_menu_load", function()
+            return a ~= nil and b ~= nil and va == vb, "menu: " .. va .. " | fixture: " .. vb
+        end)
+        return true
+    end
+    local s = M.square(job.it)
+    if not ctx.moved then
+        if s then player():setPosition(s:getX() + 1.5, s:getY() + 0.5, 0) end
+        ctx.moved = ticks
+        return nil
+    end
+    if ticks - ctx.moved < 10 then return nil end
+    local k, name = job.k, bio.kinds[job.k] .. job.s
+    if bio.feedLogs[k] > 0 then
+        for _, t in ipairs(RT.BD.wood) do removeAll(t) end
+        give("Base.Log", bio.feedLogs[k])
+        local r = bio.click("RTPF.feed_" .. name, job.it, "ContextMenu_TLG_AddFirewood")
+        if r.ok == true then
+            ctx.fed = ctx.fed + 1
+        else
+            ctx.fails[#ctx.fails + 1] = "feed " .. name .. ": " .. tostring(r.reason)
+        end
+    end
+    local r
+    if k <= 2 and not (k == 1 and job.s == bio.sets) then
+        for _, t in ipairs(RT.BD.wood) do removeAll(t) end
+        give("Base.Log", bio.loadLogs)
+        r = bio.click("RTPF.load_" .. name, job.it, "ContextMenu_TLG_Load_" .. bio.kinds[k])
+    else
+        r = bio.fixtureLoad(job.it, bio.recipes[k], bio.loads[k])
+    end
+    if r.ok == true then
+        ctx.loaded = ctx.loaded + 1
+    else
+        ctx.failed = ctx.failed + 1
+        ctx.fails[#ctx.fails + 1] = "load " .. name .. ": " .. tostring(r.reason)
+    end
+    for _, t in ipairs(RT.BD.wood) do removeAll(t) end
+    ctx.i, ctx.moved = ctx.i + 1, nil
+    return nil
+end }
+
+-- The engines in PF.idling that run now.
+function RT.PF.runningEngines()
+    local n = 0
+    for _, c in ipairs(RT.PF.idling or {}) do
+        if c.v:isEngineRunning() then n = n + 1 end
+    end
+    return n
+end
+
+-- Whether the workload is still in place after a stage: the machines with a
+-- batch running, by kind, and the engines running, against the counts the
+-- stages are meant to have (32 fermenters, 30 biodiesel machines and
+-- `wantEngines`), so a workload that never came cannot pass.
+function RT.PF.runningCheck(label, wantEngines)
+    return { name = "rtpf_running_" .. label, fn = function()
+        local PF, M, bio = RT.PF, TLG.Integration.Machines, RT.PF.bio
+        local fer, bioRun, byKind = 0, 0, {}
+        for _, it in ipairs(PF.machineList or {}) do
+            local rec = M.read(it, false)
+            if rec and M.running(rec) then fer = fer + 1 end
+        end
+        for k = 1, 5 do
+            byKind[k] = 0
+            for _, it in pairs(bio.byKind[k] or {}) do
+                local rec = M.read(it, false)
+                if rec and M.running(rec) then byKind[k], bioRun = byKind[k] + 1, bioRun + 1 end
+            end
+        end
+        local engines, wantBio = PF.runningEngines(), bio.sets * 5
+        local text = string.format("%d of 32 fermenters, %d of %d biodiesel machines (%s), %d of %d engines", fer, bioRun,
+            wantBio, table.concat(byKind, "/"), engines, wantEngines)
+        R:line("OBS  RTPF.running after %s: %s", label, text)
+        R:check("RTPF.still_running_" .. label, function()
+            return fer == 32 and bioRun == wantBio and engines == wantEngines, text
+        end)
+        return true
+    end }
+end
+
+-- The timers only when the stage's workload is in place (condFn), so a
+-- label never stands for a workload that did not come.
+function RT.PF.timersIf(label, condFn)
+    local inner = RT.PF.timers(label)
+    return { name = inner.name, timeout = inner.timeout, fn = function(ctx, ticks)
+        if not ctx.decided then
+            ctx.decided, ctx.go = true, condFn() == true
+            if not ctx.go then
+                R:line("SKIP %s: its workload is not in place", inner.name)
+                return true
+            end
+        end
+        return inner.fn(ctx, ticks)
+    end }
+end
+
+-- The timers under a label made when the stage starts, from what runs then.
+function RT.PF.timersFor(labelFn)
+    return { name = "rtpf_timers_labelled_at_start", timeout = 3000, fn = function(ctx, ticks)
+        if not ctx.inner then
+            ctx.inner, ctx.innerCtx = RT.PF.timers(labelFn()), {}
+            R:line("OBS  RTPF.stage %s", ctx.inner.name)
+        end
+        return ctx.inner.fn(ctx.innerCtx, ticks)
+    end }
+end
+
+-- Why a van (3 by 7 tiles around its square) would not fit: the first
+-- square that stops it and RT.D.blocked's reason, or nil when it fits.
+function RT.PF.vanBlocked(col, y)
+    for dx = -1, 1 do
+        for dy = -3, 3 do
+            local why = RT.D.blocked(sq(col + dx, y + dy, 0), nil)
+            if why then return string.format("%d,%d %s", col + dx, y + dy, why) end
+        end
+    end
+    return nil
+end
+
+-- Up to `want` van footprints on the two middle columns, rows tried from
+-- the north, 8 rows kept between two vans of a column; the first blocked
+-- tries are returned with their reasons.
+function RT.PF.findVanSlots(want)
+    local PF, out, why = RT.PF, {}, {}
+    local cols = { PF.carCols[2], PF.carCols[3] }
+    local nextY = { [cols[1]] = PF.carRows[1] + 1, [cols[2]] = PF.carRows[1] + 1 }
+    for y = PF.carRows[1] + 1, PF.carRows[#PF.carRows] - 1 do
+        for _, col in ipairs(cols) do
+            if #out < want and y >= nextY[col] then
+                local b = PF.vanBlocked(col, y)
+                if b == nil then
+                    out[#out + 1] = { col, y }
+                    nextY[col] = y + 8
+                elseif #why < 8 then
+                    why[#why + 1] = string.format("%d,%d: %s", col, y, b)
+                end
+            end
+        end
+    end
+    return out, why
+end
+
+-- The parked cars of the two middle columns taken away: room for the vans.
+RT.PF.clearMiddle = { name = "rtpf_clear_middle", timeout = 600, fn = function(ctx, ticks)
+    local PF = RT.PF
+    if not ctx.at then
+        local n = 0
+        for _, c in ipairs(PF.carList or {}) do
+            if c.col ~= PF.carCols[1] and c.col ~= PF.carCols[#PF.carCols] and not c.gone
+                and pcall(function() c.v:permanentlyRemove() end) then
+                c.gone, n = true, n + 1
+            end
+        end
+        ctx.n, ctx.at = n, ticks
+        return nil
+    end
+    if ticks - ctx.at < 60 then return nil end
+    R:line("OBS  RTPF.diesel %d parked cars of the middle columns taken away; %d vehicles in the cell, %d engines running",
+        ctx.n, getCell():getVehicles():size(), PF.runningEngines())
+    return true
+end }
+
+-- Diesel vans put on the footprints found, given 20 L of diesel aged as the
+-- petrol was, and started as idleStep starts the cars. The rolls are held
+-- from here to cleanup.
+RT.PF.vanStep = { name = "rtpf_vans", timeout = 9000, fn = function(ctx, ticks)
+    local PF, V, vans = RT.PF, TLG.Integration.Vehicles, RT.PF.vans
+    if not ctx.list then
+        RT.WF.hold()
+        local slots, why = PF.findVanSlots(vans.want)
+        ctx.list, ctx.slots = {}, {}
+        for _, slot in ipairs(slots) do
+            local v = addVehicleDebug(vans.script, IsoDirections.S, nil, sq(slot[1], slot[2], 0))
+            if v then ctx.list[#ctx.list + 1] = { v = v, col = slot[1], y = slot[2], van = true } end
+            ctx.slots[#ctx.slots + 1] = slot[1] .. "," .. slot[2]
+        end
+        R:line("OBS  RTPF.diesel van footprints at %s; %d vans put down; tries blocked: %s", table.concat(ctx.slots, " "),
+            #ctx.list, #why > 0 and table.concat(why, "; ") or "none")
+        ctx.at = ticks
+        return nil
+    end
+    if not ctx.ready then
+        if ticks - ctx.at < 300 then return nil end
+        for _, c in ipairs(ctx.list) do
+            pcall(function() c.v:repair() end)
+            RT.WF.setTank(c.v, { diesel = 20 })
+            local rec = V.read(c.v, true)
+            if rec then
+                for id in pairs(rec.deg) do rec.deg[id] = PF.stale end
+                V.writeSidecar(c.v, rec)
+            end
+        end
+        ctx.ready, ctx.i, ctx.at = true, 1, ticks
+        return nil
+    end
+    local c = ctx.list[ctx.i]
+    if c == nil then
+        PF.toStand()
+        PF.idling = PF.idling or {}
+        for _, cc in ipairs(ctx.list) do PF.idling[#PF.idling + 1] = cc end
+        vans.list = ctx.list
+        local running, profiles = 0, {}
+        for _, cc in ipairs(ctx.list) do
+            if cc.v:isEngineRunning() then running = running + 1 end
+            profiles[#profiles + 1] = tostring(V.profile(cc.v))
+        end
+        local e = ctx.list[1] and V.evaluate(ctx.list[1].v)
+        local world = TLG.World.get()
+        R:line("OBS  RTPF.diesel %d vans (%s) idling of %d wanted, profiles %s; the fuel grade=%s powerFactor=%.6f " ..
+            "wearFactor=%.6f; dieselVehicles=%s; %d vehicles in the cell, %d engines running", running, vans.script, vans.want,
+            table.concat(profiles, ","), tostring(e and e.grade), e and e.powerFactor or -1, e and e.wearFactor or -1,
+            tostring(world.dieselVehicles), getCell():getVehicles():size(), PF.runningEngines())
+        local allCi = #profiles == vans.want
+        for _, p in ipairs(profiles) do allCi = allCi and p == "engine_ci_stock" end
+        PF.vansOk = world.dieselVehicles == true and allCi and running == vans.want
+        R:check("RTPF.diesel_vans_idling", function()
+            return PF.vansOk, string.format("%d of %d running, profiles %s, dieselVehicles=%s", running, vans.want,
+                table.concat(profiles, ","), tostring(world.dieselVehicles))
+        end)
+        return true
+    end
+    local v, dt = c.v, ticks - ctx.at
+    if dt == 1 then
+        player():setPosition(c.col + 2, c.y + 0.5, 0)
+    elseif dt == 10 then
+        pcall(function() v:setHotwired(true) end)
+        c.entered = v:enter(0, player())
+        pcall(function() v:tryStartEngine(true) end)
+    elseif dt == 130 then
+        if not v:isEngineRunning() then pcall(function() v:engineDoStartingSuccess() end) end
+    elseif dt >= 160 then
+        pcall(function() v:exit(player()) end)
+        ctx.i, ctx.at = ctx.i + 1, ticks
+    end
+    return nil
+end }
+
+-- Every running engine's tank set to `carQ` (petrol cars) or `vanQ`
+-- (diesel vans), fresh, and the verdict each gets checked: compatible, and
+-- harmful or not as `wantHarmful` says; `want` engines must take it.
+function RT.PF.blendStep(name, carQ, vanQ, wantHarmful, want)
+    return { name = "rtpf_" .. name, timeout = 600, fn = function(ctx, ticks)
+        local PF, V = RT.PF, TLG.Integration.Vehicles
+        if ticks < 30 then return nil end
+        RT.WF.hold()
+        local n, fits, seen = 0, 0, {}
+        for _, c in ipairs(PF.idling or {}) do
+            if c.v:isEngineRunning() then
+                RT.WF.setTank(c.v, c.van and vanQ or carQ)
+                local e = V.evaluate(c.v)
+                n = n + 1
+                if e and e.compatible == true and (e.harmful == true) == wantHarmful then fits = fits + 1 end
+                local kind = c.van and "van" or "car"
+                if not seen[kind] then
+                    seen[kind] = string.format("%s %s %s: compatible=%s harmful=%s level=%s wrongFuel=%s power %.3f wear %.3f",
+                        kind, tostring(V.profile(c.v)), brief(c.van and vanQ or carQ), tostring(e and e.compatible),
+                        tostring(e and e.harmful), tostring(e and e.wrongLevel), tostring(e and e.wrongFuel),
+                        e and e.powerFactor or -1, e and e.wearFactor or -1)
+                end
+            end
+        end
+        local text = string.format("%d of %d running engines given it, %d judged compatible and %s; %s; %s", n, want, fits,
+            wantHarmful and "harmful" or "not harmful", tostring(seen.car), tostring(seen.van))
+        R:line("OBS  RTPF.%s %s", name, text)
+        R:check("RTPF." .. name .. "_blends", function() return n == want and fits == n, text end)
+        return true
+    end }
+end
+
+-- The control, then the wrong blends D-037 judges harmful but lets run.
+RT.PF.freshFuelStep = RT.PF.blendStep("fresh_fuel", { gasoline = 20 }, { diesel = 20 }, false, 12)
+RT.PF.wrongFuelStep = RT.PF.blendStep("wrong_fuel", { gasoline = 16, diesel = 4 }, { diesel = 14, gasoline = 6 }, true, 12)
+
+-- The 25 squares within two tiles of the player, fn called on each object,
+-- as the fuel menu's searches walk them (nearbyPump, nearbyGenerator).
+function RT.PF.aroundPlayer(fn)
+    local here, cell = player():getSquare(), getCell()
+    if here == nil then return end
+    for dx = -2, 2 do
+        for dy = -2, 2 do
+            local s = cell:getGridSquare(here:getX() + dx, here:getY() + dy, here:getZ())
+            if s then
+                local objs = s:getObjects()
+                for i = 0, objs:size() - 1 do fn(objs:get(i)) end
+            end
+        end
+    end
+end
+
+-- What the fuel menu's fill builds for the can of catch_up_fresh, with the
+-- player where that stage had them, and the gate of launches 181-185
+-- (Native.isFuelContainer) on the same can.
+RT.PF.fuelMenuInfo = { name = "rtpf_fuel_menu_info", fn = function()
+    local PF = RT.PF
+    local can = PF.canItems and PF.canItems[1]
+    if can == nil then
+        R:line("SKIP rtpf_fuel_menu_info: no can")
+        return true
+    end
+    local c = ISContextMenu.get(0, 100, 100)
+    TLG.UI.FuelMenu.fill(0, c, { can })
+    local root, subs, menus = (c.numOptions or 1) - 1, 0, 0
+    for _, m in pairs(c.instanceMap or {}) do
+        menus = menus + 1
+        subs = subs + (m.numOptions or 1) - 1
+    end
+    c:setVisible(false)
+    -- On the ground the game keeps the can's fluid on its world item:
+    -- item:getFluidContainer() is nil there (launch 341). The 0.1.0 menu of
+    -- launches 181-185 asked only that, so its isFuelCan would say false.
+    -- Containers.fluidOf asks getFluidContainerFromSelfOrWorldItem (0.1.1).
+    local N = TLG.Integration.Native
+    local own, fc = can:getFluidContainer(), TLG.Integration.Containers.fluidOf(can, "item")
+    local comp, foreign = {}, 0
+    if fc then comp, foreign = N.readComposition(fc) end
+    local oldGate = own ~= nil and N.isFuelContainer(own)
+    local objs = 0
+    PF.aroundPlayer(function() objs = objs + 1 end)
+    local here = player():getSquare()
+    R:line("OBS  RTPF.fuel_menu its fill built %d entries on the menu and %d in %d submenus; the item's own fluid container " ..
+        "%s, the world item's %s; the can holds %s (foreign %.4f L); the 0.1.0 menu's test would say %s; %d objects within " ..
+        "two tiles of the player at %s; %d vehicles in the cell", root, subs, menus, own and "found" or "none",
+        fc and "found" or "none", brief(comp), foreign, tostring(oldGate), objs, here and (here:getX() .. "," .. here:getY()) or "?",
+        getCell():getVehicles():size())
+    R:check("RTPF.fuel_menu_built", function()
+        return root >= 1 and subs >= 5, string.format("%d on the menu, %d in %d submenus", root, subs, menus)
+    end)
+    return true
+end }
+
+-- The fuel menu's pieces, each timed alone: the whole fill again, a bare
+-- submenu, the pour and drain entries (each on a bare submenu), the three
+-- inventory searches, the can's fluid container, its composition and
+-- reference, and the menu's three searches around the player.
+function RT.PF.fuelMenuJobs()
+    local PF, Menu = RT.PF, TLG.UI.FuelMenu
+    local can = PF.canItems and PF.canItems[1]
+    if can == nil then return {} end
+    local p, fc = player(), TLG.Integration.Containers.fluidOf(can, "item")
+    local inv = p:getInventory()
+    local function withSub(fn)
+        return function()
+            local c = ISContextMenu.get(0, 100, 100)
+            local sub = ISContextMenu:getNew(c)
+            if fn then fn(sub) end
+            c:setVisible(false)
+        end
+    end
+    return {
+        { what = "whole", fn = function()
+            local c = ISContextMenu.get(0, 100, 100)
+            Menu.fill(0, c, { can })
+            c:setVisible(false)
+        end },
+        { what = "submenu_alone", fn = withSub(nil) },
+        { what = "pour_entries", fn = withSub(function(sub) Menu.addPourOptions(p, sub, can) end) },
+        { what = "drain_entries", fn = withSub(function(sub) Menu.addDrainOptions(p, sub, can) end) },
+        { what = "inventory_searches", fn = function()
+            inv:getFirstTypeRecurse("TLG.FuelSampleKit")
+            inv:getFirstTypeRecurse("TLG.FuelStabilizer")
+            inv:getFirstTypeRecurse("TLG.FuelFilter")
+        end },
+        { what = "fluid_of", fn = function() TLG.Integration.Containers.fluidOf(can, "item") end },
+        { what = "read_composition", fn = function() TLG.Integration.Native.readComposition(fc) end },
+        { what = "ref_for_item", fn = function() TLG.Authority.Resolver.refForItem(can) end },
+        { what = "pump_search", fn = function() PF.aroundPlayer(function(o) TLG.Integration.Stations.isPump(o) end) end },
+        { what = "generator_search", fn = function() PF.aroundPlayer(function(o) return instanceof(o, "IsoGenerator") end) end },
+        { what = "vehicle_search", fn = function()
+            for _, v in ipairs(getCell():getVehicles():toArray()) do
+                local tank = v:getPartById("GasTank")
+                if tank then v:isInArea(tank:getArea(), p) end
+            end
+        end },
+    }
+end
+
+-- Each biodiesel machine's catch-up, and its machine menu (MachineMenu.fill)
+-- with the catch-up the menu makes (MachineMenu.controls).
+function RT.PF.bioJobs()
+    local PF, M, bio = RT.PF, TLG.Integration.Machines, RT.PF.bio
+    local env, now = TLG.World.env(), TLG.World.now()
+    local jobs = {}
+    for k = 1, 5 do
+        local it = bio.byKind[k] and bio.byKind[k][1]
+        local rec = it and M.read(it, false)
+        if rec then
+            for _, h in ipairs(PF.catchUp) do
+                jobs[#jobs + 1] = { what = bio.kinds[k] .. "_" .. h .. "_h", fn = function() M.advance(it, rec, now + h, env) end }
+            end
+            for _, j in ipairs(PF.menuJobs(it, bio.kinds[k])) do
+                if j.what ~= "context_menu_alone" and j.what ~= "fuel_menu" then jobs[#jobs + 1] = j end
+            end
+        end
+    end
+    return jobs
+end
+
+-- Every reply dialog left open on screen closed, the ones the harness never
+-- captured included (vanilla walks UIManager.getUI() the same way,
+-- ISUI/ISInventoryPane.lua:1347).
+RT.PF.closeAll = { name = "rtpf_close_dialogs", fn = function()
+    closeDialogs()
+    local n = 0
+    local ok, err = pcall(function()
+        local ui = UIManager.getUI()
+        for i = ui:size() - 1, 0, -1 do
+            local t = ui:get(i):getTable()
+            if t ~= nil and t.Type == "ISModalRichText" then
+                t:removeFromUIManager()
+                n = n + 1
+            end
+        end
+    end)
+    R:line("OBS  RTPF.dialogs %d reply dialogs open on screen closed%s", n, ok and "" or (", then raised " .. tostring(err)))
+    return true
+end }
+
+-- The loaded squares of a 60 by 60 area around the stand (floor 0), and a
+-- Diesel Generator put down on a square left free in the machine rows.
+function RT.PF.squareJobs()
+    local PF, G = RT.PF, TLG.Integration.Generators
+    local list = {}
+    for x = PF.stand.x - 30, PF.stand.x + 29 do
+        for y = PF.stand.y - 30, PF.stand.y + 29 do
+            local s = sq(x, y, 0)
+            if s then list[#list + 1] = s end
+        end
+    end
+    PF.squares = list
+    local genSq
+    for _, s in ipairs(PF.bio.spare or {}) do
+        if genSq == nil and s:getWorldObjects():size() == 0 and s:getGenerator() == nil then genSq = s end
+    end
+    if genSq then pcall(function() IsoGenerator.new(instanceItem("TLG.DieselGenerator"), getCell(), genSq) end) end
+    local gen = genSq and genSq:getGenerator()
+    local sprite = gen and gen:getSprite()
+    R:line("OBS  RTPF.squares %d loaded squares in the area; a Diesel Generator put down at %s: %s, sprite %s", #list,
+        genSq and (genSq:getX() .. "," .. genSq:getY()) or "none", tostring(gen ~= nil), tostring(sprite and sprite:getName()))
+    local jobs = { { what = "handler_area", fn = function()
+        for i = 1, #list do G.onLoadSquare(list[i]) end
+    end } }
+    if gen then jobs[#jobs + 1] = { what = "handler_generator_square", fn = function() G.onLoadSquare(genSq) end } end
+    return jobs
+end
+
+-- The game's square-load event for the same squares without the mod's
+-- handler, then with it. Remove is first tried on a probe handler of the
+-- harness's own, so a Remove that does nothing cannot pass for one that
+-- works.
+RT.PF.squareEvent = { name = "rtpf_square_event", timeout = 3000, fn = function(ctx, ticks)
+    local PF, G = RT.PF, TLG.Integration.Generators
+    if ticks < 30 then return nil end
+    local list = PF.squares or {}
+    if #list == 0 then
+        R:line("SKIP rtpf_square_event: no squares")
+        return true
+    end
+    local function fire()
+        for i = 1, #list do triggerEvent("LoadGridsquare", list[i]) end
+    end
+    ctx.k = (ctx.k or 0) + 1
+    if ctx.k == 1 then
+        local hits = 0
+        local function probe() hits = hits + 1 end
+        local okP = pcall(function()
+            Events.LoadGridsquare.Add(probe)
+            triggerEvent("LoadGridsquare", list[1])
+            Events.LoadGridsquare.Remove(probe)
+            triggerEvent("LoadGridsquare", list[1])
+        end)
+        ctx.removeWorks = okP and hits == 1
+        R:line("OBS  RTPF.squares probe handler: called %d times for one event added and one removed (ok=%s)", hits, tostring(okP))
+        if not ctx.removeWorks then
+            R:line("SKIP rtpf_square_event: Remove did not take the probe off")
+            return true
+        end
+        PF.squareHandlerOff = pcall(function() Events.LoadGridsquare.Remove(G.onLoadSquare) end)
+        local ok, b = pcall(PF.bench, fire)
+        if pcall(function() Events.LoadGridsquare.Add(G.onLoadSquare) end) then PF.squareHandlerOff = false end
+        if ok then
+            PF.record("load_square", "event_area_without_mod", b)
+        else
+            R:line("OBS  RTPF.cost load_square/event_area_without_mod raised %s", tostring(b))
+        end
+    elseif ctx.k == 2 then
+        local ok, b = pcall(PF.bench, fire)
+        if ok then
+            PF.record("load_square", "event_area_with_mod", b)
+        else
+            R:line("OBS  RTPF.cost load_square/event_area_with_mod raised %s", tostring(b))
+        end
+    else
+        local h, a, b = PF.results["load_square/handler_area"], PF.results["load_square/event_area_without_mod"],
+            PF.results["load_square/event_area_with_mod"]
+        local function us(x) return x and string.format("%.3f", x.med * 1000 / #list) or "?" end
+        R:line("OBS  RTPF.squares per square (%d): the handler alone %s us; the event without the mod's handler %s us, " ..
+            "with it %s us; the difference %s us", #list, us(h), us(a), us(b),
+            (a and b) and string.format("%.3f", (b.med - a.med) * 1000 / #list) or "?")
+        return true
+    end
+    return nil
 end }
 
 RT.perfSteps = { RT.waitWorld, RT.PF.setup,
@@ -10957,7 +11728,21 @@ RT.perfSteps = { RT.waitWorld, RT.PF.setup,
     RT.PF.frames("machines_32_idling_8"),
     RT.PF.catchStep("catch_up_fresh", RT.PF.freshJobs),
     RT.PF.oldReadings, RT.PF.timers("machines_32_20_days"), RT.PF.catchStep("catch_up_20_days", RT.PF.oldJobs),
-    RT.PF.checkBudgets, RT.PF.cleanup, RT.finish }
+    RT.PF.checkBudgets,
+    RT.PF.fuelMenuInfo, RT.PF.catchStep("fuel_menu_parts", RT.PF.fuelMenuJobs),
+    RT.PF.freshAgain, RT.PF.timers("machines_32_again"), RT.PF.againCheck, RT.PF.censusStep,
+    RT.PF.bioStep, RT.PF.timers("machines_32_biodiesel_30"), RT.PF.runningCheck("biodiesel", 8),
+    RT.PF.clearMiddle, RT.PF.timers("idling_8_middle_cleared"),
+    RT.PF.vanStep, RT.PF.timersIf("idling_8_diesel_4", function() return RT.PF.vansOk end), RT.PF.runningCheck("diesel", 12),
+    RT.PF.freshFuelStep, RT.PF.timersFor(function() return "idling_" .. RT.PF.runningEngines() .. "_fresh_fuel" end),
+    RT.PF.runningCheck("fresh_fuel", 12),
+    RT.PF.wrongFuelStep, RT.PF.timersFor(function() return "idling_" .. RT.PF.runningEngines() .. "_wrong_fuel" end),
+    RT.PF.runningCheck("wrong_fuel", 12),
+    RT.PF.catchStep("catch_up_biodiesel", RT.PF.bioJobs),
+    RT.PF.frames("all_running"), RT.PF.runningCheck("frames", 12),
+    RT.PF.closeAll, RT.PF.frames("all_running_dialogs_closed"),
+    RT.PF.catchStep("load_square", RT.PF.squareJobs), RT.PF.squareEvent,
+    RT.PF.checkBudgetsAdded, RT.PF.cleanup, RT.finish }
 
 ------------------------------------------------------------------------------
 -- Model import (requests "sp-rtmi", then "sp-rtmib"; spec section 21, G13):
@@ -15777,6 +16562,401 @@ RT.dieselGeneratorReloadSteps = { RT.DG.reload, RT.MI.zoomTo("rtdgb_zoom", 0.5),
     RT.DG.take(1, "TLG.DieselGenerator"), RT.finish }
 
 ------------------------------------------------------------------------------
+-- Gas probe (requests "sp-rtgp", then "sp-rtgpb"; D-039): what the game
+-- does with a generator kept running on gas from outside its own tank. The
+-- mod has no gas generator yet, so the probe stands in for one:
+-- - Generator A runs on a buffer. Each game minute the probe reads the
+--   litres the game burned since the last minute, sets the fuel back to the
+--   buffer and draws the propane those litres are worth, energy for energy
+--   (the TLG fuel definitions), from a propane tank lying beside A: whole
+--   uses through Gas.nm3ToUses, the remainder carried. Generator B, the
+--   control, runs on its own tank. The sandbox's generator fuel use is
+--   raised (GeneratorFuelConsumption 10; the default is 0.1) so a minute's
+--   burn is measurable; the rate itself is measured from B.
+-- - Phase A runs both for 2 game hours at speed 40, writes what it expects
+--   and saves. Phase B continues the save, checks both generators and the
+--   tank, runs 1 more hour on the buffer, then makes a trip far enough away
+--   for their chunk to unload: no Lua runs there, so A gets a buffer of an
+--   hour's burn for a 4-hour trip and B keeps its tank. Both are found again
+--   on return. Last, A runs dry while loaded, to see whether it stops.
+-- - A propane tank's uses are written once between two whole uses and read
+--   back, to see whether the game keeps a fraction of a use.
+------------------------------------------------------------------------------
+RT.GP = { buffer = 1.0, bFuel = 8.0, hoursA = 2, hoursB = 1, tripHours = 4, gens = {}, calls = 0, burned = 0, drawn = 0,
+    mismatch = 0, offMinutes = 0, lowest = 0, carry = 0, aDrops = {}, bDrops = {} }
+
+function RT.GP.tankUses()
+    local t = RT.GP.tank
+    if t == nil then return -1 end
+    return t:getCurrentUsesFloat() / t:getUseDelta()
+end
+
+function RT.GP.power(g)
+    local p = -1
+    pcall(function() p = g:getTotalPowerUsing() end)
+    return p
+end
+
+function RT.GP.log(label)
+    local GP = RT.GP
+    local a, b = GP.gens.A, GP.gens.B
+    R:line("OBS  RTGP.%s at %.3f h: A fuel %s activated=%s power %.4f; B fuel %s activated=%s power %.4f; tank %.3f uses; " ..
+        "GeneratorFuelConsumption %s", label, hours(), a and string.format("%.4f", a:getFuel()) or "-",
+        tostring(a and a:isActivated()), a and GP.power(a) or -1, b and string.format("%.4f", b:getFuel()) or "-",
+        tostring(b and b:isActivated()), b and GP.power(b) or -1, GP.tankUses(), tostring(SandboxVars.GeneratorFuelConsumption))
+end
+
+-- Propane (Nm3) worth `litres` of petrol, energy for energy.
+function RT.GP.nm3For(litres)
+    local Reg = TLG.Registry
+    return litres * Reg.need("fuel", "gasoline").energyMJ / Reg.need("fuel", "propane").energyMJ
+end
+
+-- The probe's minute: A's burn read, A set back to its buffer, the tank
+-- charged in whole uses with the rest carried.
+function RT.GP.onMinute()
+    local GP = RT.GP
+    local a = GP.gens.A
+    if a == nil or not GP.feeding then return end
+    GP.calls = GP.calls + 1
+    local f = a:getFuel()
+    if f < GP.lowest then GP.lowest = f end
+    if not a:isActivated() then GP.offMinutes = GP.offMinutes + 1 end
+    local burned = math.max(0, GP.bufferNow - f)
+    GP.burned = GP.burned + burned
+    -- Each drop of either generator's fuel since the last minute (launch
+    -- 342: the game burns a generator's fuel in one step each game hour).
+    if burned > 1e-9 then GP.aDrops[#GP.aDrops + 1] = burned end
+    local b = GP.gens.B
+    if b then
+        local fb = b:getFuel()
+        if GP.lastB and fb < GP.lastB - 1e-9 then GP.bDrops[#GP.bDrops + 1] = GP.lastB - fb end
+        GP.lastB = fb
+    end
+    a:setFuel(GP.bufferNow)
+    local uses, rem = TLG.Domain.Gas.nm3ToUses(GP.nm3For(burned) + GP.carry)
+    GP.carry = rem or 0
+    if (uses or 0) > 0 and GP.tank then
+        local before = GP.tankUses()
+        local want = math.max(0, before - uses)
+        GP.tank:setUsedDelta(want * GP.tank:getUseDelta())
+        local back = GP.tankUses()
+        GP.drawn = GP.drawn + (before - back)
+        if math.abs(back - want) > 1e-3 then GP.mismatch = GP.mismatch + 1 end
+    end
+end
+
+function RT.GP.feed(on)
+    local GP = RT.GP
+    if on and not GP.hooked then
+        Events.EveryOneMinute.Add(GP.onMinute)
+        GP.hooked = true
+    elseif not on and GP.hooked then
+        Events.EveryOneMinute.Remove(GP.onMinute)
+        GP.hooked = false
+    end
+    GP.feeding = on == true
+end
+
+-- Generators A and B and the tank found on their squares: A at x,y, the
+-- tank one east of it, B six east.
+function RT.GP.find(x, y)
+    local GP = RT.GP
+    local sa, sb, st = sq(x, y, 0), sq(x + 6, y, 0), sq(x + 1, y, 0)
+    GP.gens.A = sa and sa:getGenerator() or nil
+    GP.gens.B = sb and sb:getGenerator() or nil
+    GP.tank = nil
+    local objs = st and st:getWorldObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        local it = objs:get(i):getItem()
+        if it and it:getFullType() == "Base.PropaneTank" then GP.tank = it end
+    end
+    return GP.gens.A ~= nil and GP.gens.B ~= nil and GP.tank ~= nil
+end
+
+RT.GP.setup = { name = "rtgp_setup", timeout = 1200, fn = function(ctx, ticks)
+    local GP = RT.GP
+    if not ctx.t0 then
+        local p = player()
+        p:setGodMod(true)
+        p:setInvisible(true)
+        RT.keepFit()
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 60 then return nil end
+    local spot
+    for dy = 4, 16 do
+        for dx = -12, 12 do
+            local x, y = START.x + dx, START.y + dy
+            if spot == nil and RT.MI.clear(x, y) and RT.MI.clear(x + 1, y) and RT.MI.clear(x + 6, y) then spot = { x = x, y = y } end
+        end
+    end
+    if spot == nil then
+        RT.abort = "no clear row for the generators"
+        R:check("RTGP.placed", function() return false, "no clear row near the start" end)
+        return true
+    end
+    GP.spot = spot
+    pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(spot.x, spot.y, 0)) end)
+    pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(spot.x + 6, spot.y, 0)) end)
+    sq(spot.x + 1, spot.y, 0):AddWorldInventoryItem(instanceItem("Base.PropaneTank"), 0.5, 0.5, 0, false)
+    local found = GP.find(spot.x, spot.y)
+    local t = GP.tank
+    local full, whole, maxFuel = GP.tankUses(), t and t:getCurrentUses(), GP.gens.A and GP.gens.A:getMaxFuel()
+    -- A value between two whole uses, read back, then the tank full again.
+    local between, betweenWhole = -1, nil
+    if t then
+        t:setUsedDelta(4999.5 * t:getUseDelta())
+        between, betweenWhole = GP.tankUses(), t:getCurrentUses()
+        t:setUsedDelta(1.0)
+    end
+    R:line("OBS  RTGP.placed A at %d,%d, the tank at %d,%d, B at %d,%d; max fuel %s L; the tank: useDelta %s, %.3f uses " ..
+        "(getCurrentUses %s); set to 4999.5 uses it read %.4f (getCurrentUses %s); full again %.3f", spot.x, spot.y, spot.x + 1,
+        spot.y, spot.x + 6, spot.y, tostring(maxFuel), tostring(t and t:getUseDelta()), full, tostring(whole), between,
+        tostring(betweenWhole), GP.tankUses())
+    R:check("RTGP.placed", function()
+        return found and math.abs(GP.tankUses() - 5000) < 1e-3, string.format("A %s, B %s, tank %s with %.3f uses",
+            tostring(GP.gens.A ~= nil), tostring(GP.gens.B ~= nil), tostring(t ~= nil), GP.tankUses())
+    end)
+    if not found then RT.abort = "a generator or the tank is missing" end
+    return true
+end }
+
+RT.GP.start = { name = "rtgp_start", timeout = 300, fn = function(ctx, ticks)
+    local GP = RT.GP
+    if RT.abort then return true end
+    local a, b = GP.gens.A, GP.gens.B
+    if not ctx.on then
+        GP.bufferNow = GP.buffer
+        a:setFuel(GP.buffer)
+        b:setFuel(GP.bFuel)
+        for _, g in ipairs({ a, b }) do
+            g:setConnected(true)
+            g:setActivated(true)
+        end
+        ctx.on = ticks
+        return nil
+    end
+    if ticks - ctx.on < 30 then return nil end
+    GP.log("started")
+    R:check("RTGP.both_running", function()
+        return a:isActivated() and b:isActivated(), string.format("A %s, B %s", tostring(a:isActivated()), tostring(b:isActivated()))
+    end)
+    return true
+end }
+
+-- A on its buffer and B on its tank for `h` game hours at speed 40.
+function RT.GP.runStep(name, h, label)
+    return { name = name, timeout = 30000, fn = function(ctx, ticks)
+        local GP, Gas = RT.GP, TLG.Domain.Gas
+        local a, b = GP.gens.A, GP.gens.B
+        if RT.abort then return true end
+        if not ctx.h0 then
+            GP.calls, GP.burned, GP.drawn, GP.mismatch, GP.offMinutes, GP.lowest = 0, 0, 0, 0, 0, math.huge
+            GP.aDrops, GP.bDrops, GP.lastB = {}, {}, b:getFuel()
+            GP.bufferNow = GP.buffer
+            a:setFuel(GP.buffer)
+            ctx.h0, ctx.b0, ctx.u0, ctx.carry0 = hours(), b:getFuel(), GP.tankUses(), GP.carry
+            GP.log(label .. "_start")
+            GP.feed(true)
+            RT.speed(40)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        if hours() - ctx.h0 < h then return nil end
+        RT.speed(1)
+        GP.feed(false)
+        local gone = hours() - ctx.h0
+        local minutes = math.floor(gone * 60 + 0.5)
+        local bBurned = ctx.b0 - b:getFuel()
+        GP.rate = bBurned / gone
+        local inNm3 = GP.nm3For(GP.burned) + ctx.carry0
+        local outNm3 = GP.drawn * Gas.NM3_PER_USE + GP.carry
+        GP.log(label .. "_end")
+        R:line("OBS  RTGP.%s: %.3f game h, %d game minutes, %d minute calls; A burned %.4f L (lowest fuel before a top-up %.4f, " ..
+            "%d minutes not running); B burned %.4f L, %.5f L an hour; the tank %.3f -> %.3f uses, %.3f drawn; the propane owed " ..
+            "%.6f Nm3, drawn and carried %.6f Nm3 (%.6f carried); %d writes read back otherwise", label, gone, minutes, GP.calls,
+            GP.burned, GP.lowest, GP.offMinutes, bBurned, GP.rate, ctx.u0, GP.tankUses(), GP.drawn, inNm3, outNm3, GP.carry, GP.mismatch)
+        R:check("RTGP." .. label .. "_a_ran_on_its_buffer", function()
+            return GP.offMinutes == 0 and a:isActivated() and math.abs(GP.calls - minutes) <= 2,
+                string.format("%d minutes not running, activated at the end %s, %d calls for %d game minutes", GP.offMinutes,
+                    tostring(a:isActivated()), GP.calls, minutes)
+        end)
+        -- Launch 342 compared the litres of a stretch and failed: A and B
+        -- draw different power, and a stretch counts the hourly steps that
+        -- fall before its last minute. Each step's size per unit of power
+        -- is what both must share.
+        local function spread(list)
+            local lo, hi = math.huge, -math.huge
+            for _, x in ipairs(list) do lo, hi = math.min(lo, x), math.max(hi, x) end
+            return lo, hi
+        end
+        local aLo, aHi = spread(GP.aDrops)
+        local bLo, bHi = spread(GP.bDrops)
+        local pa, pb = GP.power(a), GP.power(b)
+        local fa = (#GP.aDrops > 0 and pa > 0) and aHi / pa or -1
+        local fb = (#GP.bDrops > 0 and pb > 0) and bHi / pb or -1
+        local steps = string.format("A %d steps of %.4f-%.4f L at power %.4f (%.4f L a unit), B %d steps of %.4f-%.4f L at " ..
+            "power %.4f (%.4f L a unit), in %.3f game h", #GP.aDrops, aLo, aHi, pa, fa, #GP.bDrops, bLo, bHi, pb, fb, gone)
+        R:line("OBS  RTGP.%s steps: %s", label, steps)
+        if #GP.aDrops > 0 then GP.aStep = aHi end
+        -- Steps read as differences of float fuel values (0.8 L from 8 L
+        -- differ by about 5e-7), hence the 1e-4 spread.
+        R:check("RTGP." .. label .. "_hourly_steps_by_power", function()
+            return #GP.aDrops >= 1 and #GP.bDrops >= 1 and #GP.aDrops <= math.ceil(gone) and #GP.bDrops <= math.ceil(gone)
+                and aHi - aLo < 1e-4 and bHi - bLo < 1e-4 and fb > 0 and math.abs(fa - fb) <= 0.01 * fb, steps
+        end)
+        R:check("RTGP." .. label .. "_tank_paid_exactly", function()
+            return GP.mismatch == 0 and GP.drawn > 0 and math.abs(inNm3 - outNm3) < 1e-6,
+                string.format("owed %.6f Nm3, drawn %.3f uses and %.6f Nm3 carried, %d writes read back otherwise", inNm3,
+                    GP.drawn, GP.carry, GP.mismatch)
+        end)
+        return true
+    end }
+end
+
+RT.GP.beforeSave = { name = "rtgp_before_save", fn = function()
+    local GP = RT.GP
+    GP.feed(false)
+    RT.speed(1)
+    local a, b = GP.gens.A, GP.gens.B
+    if RT.abort or a == nil or b == nil then return true end
+    TLGH.writeFile("TLG_harness_expect.txt", { "gp.x=" .. GP.spot.x, "gp.y=" .. GP.spot.y,
+        "gp.aFuel=" .. string.format("%.6f", a:getFuel()), "gp.bFuel=" .. string.format("%.6f", b:getFuel()),
+        "gp.uses=" .. string.format("%.6f", GP.tankUses()), "gp.rate=" .. string.format("%.6f", GP.rate or 0),
+        "gp.carry=" .. string.format("%.9f", GP.carry), "gp.h=" .. string.format("%.6f", hours()) })
+    GP.log("saving")
+    return true
+end }
+
+RT.gasProbeSteps = { RT.waitWorld, RT.GP.setup, RT.GP.start, RT.GP.runStep("rtgp_feed", RT.GP.hoursA, "phase_a"),
+    RT.GP.beforeSave, RT.saveAndExitAs("rtgp_save_and_exit", "sp-rtgpb") }
+
+-- After the save is continued (request "sp-rtgpb"): both generators and the
+-- tank found by position, as they were saved.
+RT.GP.reload = { name = "rtgpb_reload", timeout = 3000, fn = function(ctx, ticks)
+    local GP = RT.GP
+    if not (player() and ticks > 180) then return nil end
+    local e = TLGH.readKeyValues("TLG_harness_expect.txt")
+    local x, y = tonumber(e["gp.x"]), tonumber(e["gp.y"])
+    if x == nil or y == nil then
+        RT.abort = "no expectations from before the save"
+        R:check("RTGPB.expectations_read", function() return false, "TLG_harness_expect.txt has no gp.x/gp.y" end)
+        return true
+    end
+    GP.spot, GP.rate, GP.carry = { x = x, y = y }, tonumber(e["gp.rate"]) or 0, tonumber(e["gp.carry"]) or 0
+    local found = GP.find(x, y)
+    GP.log("after_the_reload")
+    if not found then
+        RT.abort = "a generator or the tank is missing after the reload"
+        R:check("RTGPB.found_after_the_reload", function()
+            return false, string.format("A %s, B %s, tank %s", tostring(GP.gens.A ~= nil), tostring(GP.gens.B ~= nil),
+                tostring(GP.tank ~= nil))
+        end)
+        return true
+    end
+    local a, b = GP.gens.A, GP.gens.B
+    local gone = math.max(0, hours() - (tonumber(e["gp.h"]) or hours()))
+    local tol = GP.rate * gone + 0.005
+    local da, db = math.abs(a:getFuel() - tonumber(e["gp.aFuel"])), math.abs(b:getFuel() - tonumber(e["gp.bFuel"]))
+    local du = math.abs(GP.tankUses() - tonumber(e["gp.uses"]))
+    R:check("RTGPB.as_saved", function()
+        return a:isActivated() and b:isActivated() and da <= tol and db <= tol and du < 1e-3,
+            string.format("A activated %s, fuel off by %.5f; B activated %s, fuel off by %.5f (allowed %.5f for %.3f game h); " ..
+                "tank off by %.5f uses", tostring(a:isActivated()), da, tostring(b:isActivated()), db, tol, gone, du)
+    end)
+    return true
+end }
+
+-- The trip: the generators' chunk unloads while the player is away, so no
+-- Lua tops A up; A gets an hour's burn for a longer trip, B keeps its tank.
+RT.GP.trip = { name = "rtgpb_trip", timeout = 30000, fn = function(ctx, ticks)
+    local GP = RT.GP
+    if RT.abort then return true end
+    if not ctx.at then
+        GP.feed(false)
+        local a, b = GP.gens.A, GP.gens.B
+        -- A's own hourly step (launch 342 used B's rate here), B's rate.
+        ctx.step, ctx.rate = GP.aStep or math.max(GP.rate or 0, 0.01), math.max(GP.rate or 0, 0.01)
+        a:setFuel(ctx.step)
+        ctx.a0, ctx.b0, ctx.h0 = a:getFuel(), b:getFuel(), hours()
+        GP.log("leaving")
+        RT.speed(1)
+        player():teleportTo(GP.spot.x, GP.spot.y - RT.away, 0)
+        ctx.at = ticks
+        return nil
+    end
+    if not ctx.awayFrom then
+        if ticks - ctx.at < 120 then return nil end
+        ctx.awayFrom = hours()
+        RT.speed(RT.waitSpeed)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if not ctx.back then
+        if sq(GP.spot.x, GP.spot.y, 0) == nil then ctx.unloaded = true end
+        if hours() - ctx.awayFrom < GP.tripHours then return nil end
+        RT.speed(1)
+        player():teleportTo(GP.spot.x - 2, GP.spot.y + 2, 0)
+        ctx.back, ctx.gone = ticks, hours() - ctx.h0
+        return nil
+    end
+    if ticks - ctx.back < 180 then return nil end
+    local found = GP.find(GP.spot.x, GP.spot.y)
+    local a, b = GP.gens.A, GP.gens.B
+    GP.log("back")
+    R:line("OBS  RTGPB.trip: their square unloaded while away %s; gone %.3f game h; A fuel %.4f (one hourly step) -> %s " ..
+        "activated=%s; B fuel %.4f -> %s activated=%s; at its rate the trip burns %.4f L of B's", tostring(ctx.unloaded == true),
+        ctx.gone, ctx.a0, a and string.format("%.4f", a:getFuel()) or "-", tostring(a and a:isActivated()), ctx.b0,
+        b and string.format("%.4f", b:getFuel()) or "-", tostring(b and b:isActivated()), ctx.rate * ctx.gone)
+    R:check("RTGPB.trip_unloaded_and_found_again", function()
+        return ctx.unloaded == true and found, string.format("unloaded %s, found %s", tostring(ctx.unloaded == true), tostring(found))
+    end)
+    if not found then RT.abort = "a generator or the tank is missing after the trip" end
+    return true
+end }
+
+-- A given a few minutes' burn and run dry while loaded: does it stop?
+RT.GP.runDry = { name = "rtgpb_run_dry", timeout = 30000, fn = function(ctx, ticks)
+    local GP = RT.GP
+    if RT.abort then return true end
+    local a = GP.gens.A
+    if not ctx.h0 then
+        ctx.buffer = (GP.aStep or math.max(GP.rate or 0, 0.01)) * 0.1
+        a:setFuel(ctx.buffer)
+        a:setConnected(true)
+        a:setActivated(true)
+        ctx.h0 = hours()
+        GP.log("run_dry_start")
+        RT.speed(40)
+        return nil
+    end
+    if ticks % 30 == 0 then RT.keepFit() end
+    if not ctx.ended then
+        if a:getFuel() > 0 and a:isActivated() and hours() - ctx.h0 < 1 then return nil end
+        RT.speed(1)
+        ctx.ended, ctx.gone = ticks, hours() - ctx.h0
+        return nil
+    end
+    if ticks - ctx.ended < 120 then return nil end
+    GP.log("run_dry_end")
+    R:check("RTGPB.a_stops_when_dry", function()
+        return a:getFuel() <= 1e-6 and not a:isActivated(), string.format("fuel %.6f, activated %s, %.3f game h after a %.4f L buffer",
+            a:getFuel(), tostring(a:isActivated()), ctx.gone, ctx.buffer)
+    end)
+    R:check("RTGPB.b_still_running", function()
+        local b = GP.gens.B
+        return b ~= nil and b:isActivated() and b:getFuel() > 0, string.format("B fuel %s, activated %s",
+            b and string.format("%.4f", b:getFuel()) or "-", tostring(b and b:isActivated()))
+    end)
+    return true
+end }
+
+RT.gasProbeReloadSteps = { RT.GP.reload, RT.GP.runStep("rtgpb_feed", RT.GP.hoursB, "phase_b"), RT.GP.trip, RT.GP.runDry,
+    RT.finish }
+
+------------------------------------------------------------------------------
 -- Diesel vehicles (request "sp-rtdv", D-036). A new world, so its record
 -- says diesel chassis exist. Three vehicles at a time are spawned beside
 -- the start (the squares phase A parks on), repaired and given 10 L with
@@ -18419,7 +19599,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -18465,6 +19645,10 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 SandboxVars.TrafficJam = false
                 SandboxVars.VehicleStoryChance = 1
                 SandboxVars.ZoneStoryChance = 1
+            elseif REQUEST == "sp-rtgp" then
+                -- A hundred times the default (0.1), so that a generator's
+                -- burn in one game minute is measurable (the gas probe).
+                SandboxVars.GeneratorFuelConsumption = 10
             end
         end,
         onStart = function()
@@ -18530,6 +19714,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtdg" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the diesel generator probe")
                 TLGH.Steps.run(R, RT.dieselGeneratorSteps, H, nil)
+            elseif REQUEST == "sp-rtgp" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the gas probe, before the save")
+                TLGH.Steps.run(R, RT.gasProbeSteps, H, nil)
             elseif REQUEST == "sp-rtbdm" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel chain's models")
                 TLGH.Steps.run(R, RT.biodieselModelSteps, H, nil)
@@ -18643,7 +19830,7 @@ if REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmf" or REQU
 end
 
 if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST == "ex-b" or REQUEST == "ex-c"
-    or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-b" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" then
+    or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-b" or REQUEST == "sp-rtmib" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtgpb" then
     Events.OnMainMenuEnter.Add(function()
         if TLGH.continued then return end
         TLGH.continued = true
@@ -18683,6 +19870,9 @@ if REQUEST == "sp-b" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtsb" or REQUEST 
         elseif REQUEST == "sp-rtdgb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, the diesel generator probe, after the save", true)
             TLGH.Steps.run(R, RT.dieselGeneratorReloadSteps, H, nil)
+        elseif REQUEST == "sp-rtgpb" then
+            R = TLGH.Report.new(RESULTS, "TLG single-player harness, the gas probe, after the save", true)
+            TLGH.Steps.run(R, RT.gasProbeReloadSteps, H, nil)
         elseif REQUEST == "sp-rtknb" then
             R = TLGH.Report.new(RESULTS, "TLG single-player harness, what I know about a fuel, after the save", true)
             TLGH.Steps.run(R, RT.knowledgeReloadSteps, H, nil)

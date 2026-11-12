@@ -15,8 +15,8 @@ runtime tests.
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
-| Performance with several clients sharing storage, and on other machines | The performance mode runs single player on the reference machine (launches 181–182, `performance.md`); the server's timers were timed with one client (launch 189). Electrical networks are not built in game in this build |
-| Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: 0.1.1 was uploaded on 2026-11-08, 0.1.2 has not been |
+| Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel | The performance mode runs single player on the reference machine (launches 181–185 and 340–341, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188). Electrical networks are not built in game in this build |
+| Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.4.1 since 2026-11-11, and Steam's download of it on this computer held exactly the package's mod files (2026-11-12) |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -6610,3 +6610,181 @@ repository's mod at 0.4.0. Not uploaded.
 
 Evidence:
 [run 339](evidence/2026-11-11_rt-sp_harness_run339_install_rehearsal_0.4.1_42.22.2.txt).
+
+## 2026-11-12 — RT-SP launches 340–341 (performance with what 0.2.0 to 0.4.1 added, gate 11)
+
+Command: `tools/run-sp-harness.ps1 -Mode performance` (request `sp-rtpf`),
+the repository's mod, whose Lua is the 0.4.1 package's, on 42.22.2
+(launches 181–185 ran on 42.21.0). About 6½ minutes a launch. The method
+and every figure are in `docs/performance.md`.
+
+The mode's stages up to its budget check are those of launches 181–185.
+After the check it now adds:
+- the 32 fermenters' fixture readings taken off and their timers timed
+  again, as the base for what follows; the ten-minute handler's
+  `Machines.censusHands` timed alone;
+- 6 of each of the five biodiesel machines, all running. The retorts and
+  ash barrels are loaded from the menu. The lye leachers, reactors and
+  wash tanks are loaded by the domain's own load and start, a fixture,
+  since their loads need a machine beside them that finished hours
+  earlier. One retort is loaded both ways for comparison;
+- 4 diesel vans (`Base.VanAmbulance`) idling on stale diesel; then all 12
+  running engines on fresh fuel of their own kind, then on blends D-037
+  judges harmful but lets run (cars a fifth diesel, vans 30 % petrol),
+  every roll held;
+- each biodiesel machine's catch-up (1, 30 and 365 days) and machine menu;
+- frames with all of it running, then with the reply dialogs closed;
+- the square-load hook of 0.3.2: the handler over 3,600 loaded squares,
+  and the game's event for them with and without it.
+
+Launch 341 also takes the fuel menu apart. Before launch 340,
+`tests/support/perf_fixture_check.lua` loaded the five fixture batches
+offline (all loaded and still running 3 game hours on), and the compile
+check passed (135/0).
+
+Launch 340 (**37/2**). Of the 22 budgets, 21 passed and
+`catch_up_fresh/fuel_menu` failed: 0.374 ms against 0.08 (launch 185:
+0.027). No van came: each of the four slots between the parked cars was
+blocked, the reasons not logged. So the stage labelled
+`idling_8_diesel_4` timed the 8 petrol cars, and the wrong blends went to
+those 8 only. The checks on engine counts compared with the engines
+present and passed anyway; launch 341's compare with fixed counts. Its
+other figures stand beside launch 341's in `performance.md`.
+
+Launch 341 (**40/1**). The middle columns' parked cars were taken away
+before the vans. Column 10590 then had room at its first try. In column
+10593 a vehicle on squares 10594,10815–10816, not identified, blocked the
+tries from 10813 to 10819, so the vans stood at 10590,10813 and 10821 and
+at 10593,10820 and 10828. The changes after launch 340 also added the
+control on fresh fuel and the fuel menu's parts.
+- Of the 22 budgets, 21 passed; the fuel menu failed again (0.381 ms).
+- The fermenters timed again: within 0.7–4.4 % of the first time.
+- Biodiesel: 30 machines running, 6 of each kind, 62 machines in the
+  hourly list. The fixture retort's record equals the menu-loaded one's in
+  everything a load decides. The 30 added 0.67 ms to the ten-minute pass
+  and 0.63 ms to the hourly pass (1.41 and 1.30 ms with the 32
+  fermenters): about 0.02 ms a machine, as for a fermenter.
+- The minute pass: 8 petrol cars on stale petrol 1.26 ms; with the 4 vans
+  on stale diesel 1.63 ms; the 12 on fresh fuel 0.73 ms; the 12 on the
+  harmful blends 1.38 ms.
+- A year's catch-up: 24.9–25.0 ms for each biodiesel machine (a fermenter
+  24.9 ms); their menus 0.27–0.33 ms (a fermenter's 0.27 ms).
+- `censusHands`: 0.0037 ms a pass.
+- The square-load hook: the handler alone 0.47 µs a square, 1.7 µs on a
+  square holding a Diesel Generator. The game's event takes 0.49 µs a
+  square without the handler and 0.84 µs with it (launch 340: 0.48 and
+  0.82).
+- Frames, the main thread's mean step: 3.09 ms with everything running and
+  32 reply dialogs on screen, 1.69 ms once they were closed (launch 340,
+  without the vans: 2.83 and 1.35 ms).
+- The fuel menu: the whole fill 0.375 ms. A bare submenu costs 0.070 ms
+  with the game's context menu (0.025 ms alone). The pour entries cost
+  0.19 ms and the drain entries 0.11 ms, each on a bare submenu. The
+  searches around the player in them: pumps 0.066 ms, generators 0.040 ms
+  (made twice), vehicles 0.018 ms; every other piece under 0.003 ms.
+- The step meant to count the fuel menu's entries raised: on the ground
+  the game keeps a can's fluid on its world item, so
+  `item:getFluidContainer()` is nil.
+
+Found:
+- **The fuel menu's budget was most likely set from a menu that never
+  opened.** This is inferred, not seen: launches 181–185 timed the menu
+  0.002 ms above the game's own; the 0.1.0 menu asked only
+  `item:getFluidContainer()`; and that is nil for a can on the ground
+  (launch 341, in the session the can was put down in; run 39, after a
+  reload), so its fill would have returned at once. 0.1.1 also asks the
+  world item (`Containers.fluidOf`; its changelog: "Fuel menus now find
+  fluids held by placed items"). That launches 340–341 time a built menu
+  also rests on its cost, which its parts add up to; its entries were not
+  counted. Its budget went from 0.08 to 1.1 ms.
+- **The reply dialogs made most of the frame cost** that
+  `performance.md` put down to "the game's own work for eight running
+  engines and 32 vessel models" (launch 182: 3.58 ms). Every menu load
+  opens a reply dialog, and neither this harness nor that of launches
+  181–185 (`b7dd527`) closes them, so 32 stood on screen from the
+  fermenter stages on. Closed, the main thread took 1.35–1.69 ms with 62
+  machines, 12 engines and 400 cans running or recorded, against
+  1.38–1.57 ms on the empty road.
+- Most older workloads cost more than in launch 185, by up to 20 %: the
+  32 fermenters' ten-minute and hourly passes 0.69–0.70 and 0.63–0.66 ms
+  (0.59 and 0.55), the 8 idling cars 1.17–1.21 ms (1.05). Launches
+  340–341 ran both a newer game and the code of 0.2.0 to 0.4.1, and do
+  not tell the two apart.
+
+The new figures got budgets of about three times launch 341's medians
+(`RT.PF.budgetsAdded`, checked at the end of the mode); the next
+performance run is the first to check them.
+
+Not run: several clients sharing storage, other machines; the minute's
+work for litres burned on wrong fuel (wear, exhaust wear, the failure
+draw), since inside a batch the tank does not drop; the square-load
+event as the game's chunk loader fires it (the comparison fires it from
+Lua); the fuel menu's entry count (the step raised; fixed in the harness
+for the next run).
+
+Evidence:
+[run 340](evidence/2026-11-12_rt-sp_harness_run340_performance.txt) and
+[run 341](evidence/2026-11-12_rt-sp_harness_run341_performance.txt).
+
+## 2026-11-12 — RT-SP launch 342 (the gas probe, D-039)
+
+Command: `tools/run-sp-harness.ps1 -Mode gas-probe` (request `sp-rtgp`,
+then `sp-rtgpb` after a save and its continue), the repository's mod on
+42.22.2, with the sandbox's `GeneratorFuelConsumption` at 10 (the
+default is 0.1). About 2 minutes.
+
+Two vanilla generators stood south of the start (what they powered was
+not looked at):
+- A, at 10648,10649, ran on a 1 L buffer. Every game minute the harness
+  set its fuel back to 1 L and paid for the litres burned from a propane
+  tank lying beside it, energy for energy (32 MJ a litre of petrol,
+  93 MJ an Nm³ of propane), in whole uses with the remainder carried;
+- B, at 10654,10649, ran on 8 L of its own, as the control.
+
+Launch 342 (**10/2**: phase A 4/1, phase B 6/1):
+- **The game burns a generator's fuel in one step each game hour.** A drew
+  0.5 power and B 0.8 (`getTotalPowerUsing`). A lost 0.5 L and B 0.8 L in
+  single steps, one a game hour, and nothing between: B read 8.0, 6.4,
+  5.6, 2.4 and 1.6 L at the stretches' ends, and A's lowest fuel before a
+  top-up was 0.5 L. B's first step, 0.984 h after it was switched on, was
+  a whole 0.8 L. That the steps fall on the clock hour is inferred from
+  when they showed: phase A's second step came after its last top-up
+  near 4.0 h, and the run-dry step 0.927 h after 9.078 h. With the
+  setting at 10 each step was the power drawn, in litres; only
+  `SandboxVars` was logged, not the value the game used, and how the
+  setting enters the burn was not traced. The stretches ran at ×40 and
+  the trip at ×100.
+- **A kept running on its buffer.** In 3 game hours of top-ups it was
+  running at each of its 180 minutes (120 calls in phase A, 60 in phase
+  B, one a game minute).
+- **The tank paid for what the harness saw.** 192 whole uses were drawn
+  in each phase for the 0.5 L A burned between top-ups, with 0.000011 and
+  0.000022 Nm³ carried, and every write read back as written. A burned
+  1.5 L in all: phase A's second step (0.5 L) came after its last top-up
+  and was set back unpaid when phase B refilled the buffer.
+- **A tank keeps whole uses only,** as far as the one value tried shows:
+  set to 4999.5 uses, it read back 5000.0001 (`getCurrentUses` 5000).
+- **Save and continue:** both generators running, their fuel and the
+  tank's uses as saved.
+- **Away:** with the player 400 tiles off for 4.02 game hours, their
+  square unloaded. Back, the game had burned the hours: B 5.6 → 2.4 L
+  (four steps of 0.8 L), still running; A, given 0.7988 L, at 0 and off.
+  A's buffer was an hour at B's rate, which at A's 0.5 L an hour lasted
+  1.6 hours.
+- **Run dry:** A on 0.0799 L, switched on while loaded, was at 0 and off
+  after the next hour's step (0.93 game h later); B still running.
+- The two failures are the probe's: it compared the litres A and B burned
+  in each stretch, but they draw different power, and a stretch counts
+  only the steps before its last top-up (phase A's second step came
+  after it, so A was saved at 0.5 L). The probe now compares each step
+  per unit of power, and the trip's and the run dry's buffers come from
+  A's own step rather than B's rate; that version has not run.
+
+The console shows no exception and no warning of the mod.
+
+Not run: a server; a generator whose appliances change within an hour;
+the generator's own tank refusing fuel; a propane bulk tank; the
+gasifier.
+
+Evidence:
+[run 342](evidence/2026-11-12_rt-sp_harness_run342_gas_probe.txt).

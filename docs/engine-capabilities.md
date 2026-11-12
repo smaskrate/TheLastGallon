@@ -37,7 +37,7 @@ alternative), **NOT RUN**.
 | G09 Per-instance vehicles | Modify one vehicle independently | **PASS (SP)** | Part modData and `setEngineFeature` change one of two identical `Base.CarNormal` only |
 | G10 Electricity | Independent consumer control | NOT RUN | Only aggregate `getTotalPowerUsing`/`setTotalPowerUsing` and `getItemsPowered` found |
 | G11 Vehicle visuals | Extra parts/model variants | NOT RUN | — |
-| G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermentation vessel whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14). Vanilla generators: `IsoGenerator.chunkLoaded(IsoChunk)` suggests catch-up on load (BC), not instrumented |
+| G12 Unloaded machines | What simulates unloaded? | **PASS (SP)** for TLG machines, once | Nothing runs while the chunk is unloaded; the process record catches up on the next access. A fermentation vessel whose chunk was unloaded for 24 game hours had done exactly 24 h more on return (RT-SP runs 13–14). Vanilla generators burn the hours away when their chunk loads again and are off if their fuel ran out (RT-SP run 342) |
 | G13 Assets | Which props/sounds exist? Can an original model be imported? | PARTIAL: catalogue from scripts; original item models **PASS (SP)** | `asset-audit.csv`. Models load from the mod's folders and are drawn: an original static test model (text `.x` mesh, PNG texture, 32×32 icon; RT-SP runs 64–67), the five supplied FBX models (runs 68–69, 120–122) and the mod's own four (runs 132–133). Held items: a non-weapon without a pose mask is drawn only during actions, as in vanilla (runs 73–74); the vessel has the mod's own carry pose (D-025). See "G13: one original model imported" below. NOT RUN: animation, sounds, the stills' and the drying column's models on another client's screen (the vessel and the five small items: RT-MP run 145); vehicle parts are G11 |
 | G14 Compatibility | What bypasses adapters? | SRC-ONLY | Java-side fluid moves and any code not calling `FluidContainer.Transfer` |
 
@@ -207,6 +207,10 @@ RT-DS results (`TLG_harness_server.txt`):
   `IsoWorldInventoryObject`** (`itemOwnContainer=false
   ownerIsWorldObject=true`); `InventoryItem.getFluidContainerFromSelfOrWorldItem()`
   (BC) returns it, while `item:getFluidContainer()` is nil there (run 39).
+  The same holds in the session a filled can is put down in, with no
+  reload (`AddWorldInventoryItem`; run 341). The 0.1.0 fuel menu tested
+  the item alone, which most likely kept it from opening for the can of
+  runs 181–185 (`performance.md`, "The fuel menu").
   The container adapter reads the fluid through
   `getFluidContainerFromSelfOrWorldItem()` and keeps the record on the
   item: run 5 found the ground can's TLG record after reload
@@ -375,9 +379,11 @@ Source evidence:
 * Generators: each running hour `IsoGenerator.update` takes 1–2 condition
   (`Rand.Next(2) + 1`) with a chance of 1 in the item's
   `ConditionLowerChanceOneIn` (default 30; Base.Generator 30, _Old 25,
-  _Yellow 36, _Blue 24), catching up the hours a chunk was away. Fuel per
-  hour is the power drawn × `GeneratorFuelConsumption`; the power
-  constants are 0.02 (`GeneratorBasePowerConsumption`), 0.13 a
+  _Yellow 36, _Blue 24), catching up the hours a chunk was away. The burn
+  reads the power drawn and `GeneratorFuelConsumption` (BC). In game, with
+  the setting at 10, each hourly step burned the power drawn in litres
+  (run 342), not power × setting; how the setting enters was not traced.
+  The power constants are 0.02 (`GeneratorBasePowerConsumption`), 0.13 a
   fridge-freezer, 0.002 a light switch. `getScriptManager():FindItem(
   gen:getGeneratorItemType()):getConditionLowerChance()` gave 30 in game.
   `IsoGenerator.setCondition` clamps 0–100 and syncs. Lua has no list of
@@ -476,6 +482,29 @@ RT-SP (runs 3–6, `Base.Generator`, max fuel 10 L):
   menus' unequip puts the carried generator down when a second one is
   taken from the world menu or a bat is equipped, and each record reaches
   its new object (run 85).
+* Running on fuel set from outside (the gas probe, RT-SP run 342, 42.22.2,
+  `GeneratorFuelConsumption` 10; D-039):
+  * The game burns a running generator's fuel in one step each game hour,
+    and not between: 0.5 L for one drawing 0.5 power, 0.8 L for one
+    drawing 0.8 (what they powered was not looked at). One switched on
+    0.984 h before its first step lost a whole step there. That the steps
+    fall on the clock hour is inferred from when they showed, not logged.
+    With the setting at 10 a step was the power drawn, in litres; only
+    `SandboxVars` was logged. The probe ran at ×40, and ×100 while away.
+  * `setFuel` on a running generator keeps it running: one set back to
+    1 L every game minute for 180 minutes was never off. A step that
+    falls between two settings is lost to whoever set it, unless it is
+    read from the fuel against the value last set.
+  * A generator whose fuel reaches 0 at its hourly step switches itself
+    off, loaded or not.
+  * Away from it, no Lua runs: the hours away are burned when its chunk
+    loads again (G12).
+  * `Base.PropaneTank` lying on the floor: `getCurrentUsesFloat()` is the
+    fraction left, and that ÷ `getUseDelta()` (0.0002) its uses;
+    `setUsedDelta(fraction)` writes it, kept to whole uses as far as the
+    one value tried shows (4999.5 uses read back 5000.0001,
+    `getCurrentUses` 5000). The uses written survive a save and its
+    continue.
 * Multiplayer (RT-MP runs 160, 162): the burn is reconciled and the start
   gate works the same on a server, and a flex-converted generator started
   on ethanol (run 162). A generator taken (once unplugged) and put back
@@ -1134,8 +1163,10 @@ server").
   full rate). Today's climate record moves until midnight (D-020), so in
   weather that changes the rate, a catch-up and a machine read through the
   day can differ slightly; not measured.
-  `IsoGenerator.chunkLoaded(IsoChunk)` (BC) indicates load-time catch-up for
-  vanilla generators; not instrumented.
+  Vanilla generators catch up when their chunk loads again
+  (`IsoGenerator.chunkLoaded(IsoChunk)`, BC): after 4.02 game hours away,
+  one had burned four hourly steps and kept running, and one whose fuel
+  ran out on the way was off (RT-SP run 342, G04/G05 below).
 * G14: anything that moves fluid in Java, or Lua code that writes fluid
   containers without `FluidContainer.Transfer`, bypasses the container
   adapter; reconciliation handles the result (D-006).

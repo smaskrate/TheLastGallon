@@ -144,8 +144,20 @@ Nothing else in it changed (its id, `visibility=public`, the tag `WIP`
 and the owner's wording stay).
 
 The owner uploaded 0.4.1 to the Workshop on 2026-11-11 (item
-3835496461), from this folder. Open: an install through the Workshop,
-and how the page shows the description and the change note.
+3835496461), from this folder. Steam's download of it on this computer
+held exactly the package's mod files (2026-11-12, gate 12). Open: the
+game loading the mod from a Workshop download, and how the page shows
+the description and the bullet form of the change note.
+
+Checked on 2026-11-12 with the repository's mod, whose Lua is the 0.4.1
+package's (launches 340–341, `test-results.md`), of what the 0.2.0 and
+0.3.0 tables list as OPEN for gate 11: the biodiesel machines, diesel
+vehicles and the wrong-fuel rules timed against a baseline, and the
+square-load hook of 0.3.2 (gate 11 below). The fuel menu's budget had
+most likely been set from a menu that never opened; it went from 0.08 to
+1.1 ms, set from launch 341.
+Open for gate 11: the same on a server, and the minute's work for litres
+burned.
 
 ## Version 0.4.0 (2026-11-11)
 
@@ -559,18 +571,26 @@ Death:
 ### Gate 11: performance measured against a baseline
 
 Single player was measured on a reference machine
-(`tools/run-sp-harness.ps1 -Mode performance`, runs 181–185);
-`docs/performance.md` gives the method, the baseline and what D-032
-changed.
+(`tools/run-sp-harness.ps1 -Mode performance`): runs 181–185 on 42.21.0
+with the ethanol machines, runs 340–341 on 42.22.2 with what 0.2.0 to
+0.4.1 added (the biodiesel machines, diesel engines, wrong fuel, the
+square-load hook). `docs/performance.md` gives the method, the baseline
+and what D-032 changed.
 
 - The mod runs nothing every frame in steady play: a machine that leaves a
   character's hands is looked at once a tick until it lands, at most 300
-  ticks (D-015 amendment).
-- Its three timers cost 0.0015–0.010 ms on an empty road, the same with
+  ticks (D-015 amendment). Since 0.3.2 it adds at least 0.34–0.35 µs to
+  each square the game loads (the Diesel Generator's sprite repair).
+- Its three timers cost 0.0016–0.011 ms on an empty road, the same with
   400 dormant cans with records, 0.034 ms a game minute with 20 parked
-  cars and 1.04 ms with 8 of them idling on stale petrol.
-- 32 running fermentation vessels, freshly loaded, cost 0.59 ms per
-  ten-minute note (run 185).
+  cars and 1.21 ms with 8 of them idling on stale petrol (run 341).
+- A running machine costs about 0.02 ms per ten-minute note and per
+  hourly reading, a biodiesel machine as a fermenter: 32 fermenters and
+  30 biodiesel machines together 1.41 and 1.30 ms (run 341).
+- A running engine costs, every game minute, 0.06 ms on fresh fuel of its
+  kind, 0.12 ms on a blend D-037 judges harmful and 0.14 ms on stale fuel
+  (run 341: 8 petrol cars and 4 diesel vans, averaged). The 4 vans on
+  stale diesel added 0.37 ms to the minute.
 - The three pauses the baseline found in the machines' records (run 182)
   cost, since D-032 (run 185): a fire's scan, 10.2 ms every ten game
   minutes for 32 vessels beside a fire; machines unused for 20 days,
@@ -578,17 +598,28 @@ changed.
   4.3 ms, also on every right-click. D-032 does the same work for less
   with the same results (equivalence tests; the fireplace mode repeated in
   run 184, 21/0).
-- A year's catch-up takes 9 ms for a can and 24 ms for a vessel.
-- Frames held 60 a second throughout; the main thread took 1.8 ms a frame
-  on the empty road, the same with the cans' records.
-- The mode checks 22 budgets of about three times the latest medians; all
-  passed in run 185.
+- A year's catch-up takes 10 ms for a can and 25 ms for any machine's
+  batch (run 341). The fuel menu costs 0.38 ms with the game's own menu,
+  a machine menu 0.27–0.33 ms.
+- Frames held 60 a second throughout. With the reply dialogs of the menu
+  loads closed, 62 running machines, 12 idling engines and 400 recorded
+  cans took the main thread about what the empty road took (1.35–1.69 ms
+  against 1.38–1.57 ms, runs 340–341). The rise runs 181–185 saw at the
+  fermenter stages was mostly those dialogs.
+- The mode checks 40 budgets of about three times the latest medians.
+  Runs 340–341 passed 21 of the 22 checked then. The fuel menu's had most
+  likely been set from a menu that never opened; it went from 0.08 to
+  1.1 ms, set from run 341 with the 18 budgets of the new workloads, which
+  the next performance run is the first to check.
 - On a dedicated server with one client (run 189), with 32 running vessels,
   four beside a campfire: the hourly readings 0.40 ms, a ten-minute note
   pass 2.5 ms, a status catch-up 0.11 ms. The vehicle pass costs 0.015 ms
   a vehicle (run 188).
-- NOT RUN: several clients sharing storage, other machines. Electrical
-  networks are not built in game in this build.
+- NOT RUN: several clients sharing storage, other machines; on a server
+  since 0.2.0, the biodiesel machines, diesel engines and wrong fuel. The
+  minute's work for litres burned (wear, exhaust wear, the failure draw)
+  is not in its figures. Electrical networks are not built in game in
+  this build.
 
 ### Gate 12: clean install and upgrade pass with the packaged artifact
 
@@ -638,7 +669,14 @@ the owner uploaded it from the upload folder that evening and said so.
 After the upload the folder's 166 files still matched the 0.4.1
 package's manifest, and its `workshop.txt` had been written again
 (23:46) with the same lines. The Workshop page itself was not looked at
-from here, and no install through the Workshop has been run. Until then
+from here. Of an install through the Workshop, the download is checked:
+on 2026-11-12 the copy Steam had downloaded to this computer for the
+owner's subscription (`steamapps/workshop/content/108600/3835496461`,
+manifest `8946080603226782332`, the item's latest) held the 0.4.1
+package's 165 mod files, each matching its SHA-256 in
+`dist/TheLastGallon-0.4.1.sha256`, and no other file. The game loading
+the mod from that folder was not run: it scans Workshop folders only in
+Steam mode, and the harness runs with `-nosteam`. Until then
 the item served 0.1.1, uploaded by the
 owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
@@ -762,8 +800,10 @@ packages' sizes, file counts and contents are in `test-results.md`.
 
 ## Open implementation items
 
-* Adapters, placeable machines and UI for biodiesel, wood gas, biogas,
-  propane cylinders and electrical networks (domains merged and tested).
+* Adapters, placeable machines and UI for wood gas, biogas, propane
+  cylinders and electrical networks (domains merged and tested).
+  Biodiesel has them since 0.2.0 (D-036), except the mod's own oil press:
+  the game's cooking oil feeds the reactor.
 * Automation wiring (rules exist in the domain; no adapter yet).
 * "Prepare removal" admin command (`migrations.md`). It must cover what the
   game drops when it loads a save without the mod: the mod's machines,
@@ -771,9 +811,11 @@ packages' sizes, file counts and contents are in `test-results.md`.
   other fluids not tried). Until it exists, the player guide and
   `migrations.md` say what is lost and what to use up first.
 * Wood-gas and electric vehicle conversions (no shipped definitions).
-* Mark the making stages (`makes`) of the biodiesel, biogas, wood retort
-  and ash pit recipes with their machines; until then **Abort batch**
-  counts every stage of them (D-023).
+* Mark the making stages (`makes`) of the two biogas recipes
+  (`biogas_digest`, `biogas_digest_heated`); until then **Abort batch**
+  would count every stage of them (D-023). Biogas has no machine in game
+  yet. The biodiesel recipes, the wood retort's and the ash barrel's
+  included, mark theirs (D-036).
 * The fermentation vessel carried (D-025). The mod puts it down before any
   Lua action that plays its own animation, since that animation replaces
   the carry pose (run 99). Walking, running, sprinting and sneaking keep it
@@ -814,7 +856,7 @@ tools\run-sp-harness.ps1 -Mode can-water                        # an opened can'
 tools\run-sp-harness.ps1 -Mode chassis                          # phase A's vehicle steps on Base.PickUpTruck
 tools\run-sp-harness.ps1 -Mode driving                          # a car on E10 driven 350 tiles on cruise control, then one stalling on the move; ~3 min
 tools\run-sp-harness.ps1 -Mode engine-effects                   # poor fuel: a car's power and wear, no stall with the option off, a generator's wear; ~4 min
-tools\run-sp-harness.ps1 -Mode performance                      # gate 11: the mod's timers, catch-up and menus timed as workloads are added, frames sampled, budgets checked (docs/performance.md); ~8 min
+tools\run-sp-harness.ps1 -Mode performance                      # gate 11: the mod's timers, catch-up and menus timed as workloads are added (fermenters, then biodiesel machines, diesel vans and wrong fuel), frames sampled, the square-load hook timed, budgets checked (docs/performance.md); ~7 min
 tools\make-test-model.ps1                                        # the original test model, into the harness mod only
 tools\run-sp-harness.ps1 -Mode model-import                     # that model on the fermenter: placed, turned, held, photographed, reloaded
 tools\run-sp-harness.ps1 -Mode fermenter-model                  # the fermenter's shipped model beside the true-size test barrel, reloaded
@@ -868,6 +910,7 @@ tools\make-preview.ps1                # the Workshop preview, the mod list's pos
 tools\package.ps1                     # the release zip (never uploads)
 tools\run-sp-harness.ps1 -Mode context-menus                    # the mod's world menu entries only where the click is on their thing (0.3.1); menus built by the game's builder at chosen screen points; no save; ~2 min
 tools\run-sp-harness.ps1 -Mode wrong-fuel                       # wrong fuel damages engines (D-037): every band's verdict, a refused start's cost, wear, a failure, the cures, the option off; no save; ~3 min
+tools\run-sp-harness.ps1 -Mode gas-probe                        # D-039's probe: a generator kept running on a buffer paid from a propane tank beside it, one on its own tank; saved and continued, a trip that unloads them, run dry; ~2 min
 tools\rehearse-install.ps1            # that zip installed in a fresh cache and played through a save; ~20 min
 tools\rehearse-install.ps1 -Scenario existing   # a save played 10 days without the mod, then with it; ~30 min
 tools\rehearse-install.ps1 -Scenario removal    # a save with the mod, continued without it, then with it again; ~4 min

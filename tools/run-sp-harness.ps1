@@ -49,6 +49,13 @@
   down twice beside a vanilla generator: one takes biodiesel through the
   mod's pour, must start and runs two game hours; the other takes petrol
   through vanilla's Add fuel and must be refused by the start gate; no save.
+  gas-probe: a probe (D-039), with the sandbox's generator fuel use at 10.
+  Two vanilla generators run: A on a 1 L buffer the harness tops up every
+  game minute and pays for from a propane tank beside it (energy for
+  energy, whole uses, the rest carried), B on its own tank as the control.
+  Two game hours, a save, the save continued: both and the tank as saved,
+  an hour more, a 4-hour trip that unloads their chunk with A on an hour's
+  buffer, and A run dry while loaded. About 2 minutes.
   diesel-vehicles: a new world (D-036). Six vanilla vehicles spawned with
   10 L and no record: the passenger van, the radio van, the ambulance and
   a pickup van must have the diesel profile and read diesel, a pickup
@@ -111,7 +118,13 @@
   with 20 days of hourly readings. Also timed: fuel and a batch brought
   forward 1, 30 and 365 days, and the fuel and machine menus; frames are
   sampled for 20 seconds at each stage. Budgets set in RT.PF.budgets are
-  checked.
+  checked. Then, on the same road: the fuel menu's parts; the fermenters
+  fresh again and timed once more; 6 of each biodiesel machine running;
+  the middle columns' parked cars taken away and 4 diesel vans idling;
+  every running engine on fresh fuel of its kind, then on a wrong blend;
+  each biodiesel machine's catch-up and menu; frames with all of it, then
+  with the reply dialogs closed; the square-load hook (the handler and the
+  game's event over 3,600 squares); and the budgets of these stages.
   model-import: the original test model of tools/make-test-model.ps1 wired
   to the fermenter (harness mod only): vanilla's water bottle and then a
   vessel equipped and photographed; four vessels turned 0-270 degrees and
@@ -298,7 +311,7 @@
   Mods the client loads (default: the mod and the harness; see setup-devenv.ps1).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "handbook-loot", "controls", "still-pickup",
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "gas-probe", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "handbook-loot", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
         "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "removal-d", "upgrade-a", "upgrade-b", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
@@ -369,7 +382,7 @@ if ($Mode -eq "italian") {
     Set-Content -Encoding ascii -Path (Join-Path $luaDir "TLG_it_expect.txt") -Value $lines
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "fuel-drives" { "sp-rtfd" } "wrong-fuel-more" { "sp-rtwg" } "biodiesel-cold" { "sp-rtbc" } "context-menus" { "sp-rtcm" } "context-menus-zoom" { "sp-rtcz" } "handbook-loot" { "sp-rthl" } "handbook" { "sp-rthb" } "controls" { "sp-rtc" }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "gas-probe" { "sp-rtgp" } "diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "fuel-drives" { "sp-rtfd" } "wrong-fuel-more" { "sp-rtwg" } "biodiesel-cold" { "sp-rtbc" } "context-menus" { "sp-rtcm" } "context-menus-zoom" { "sp-rtcz" } "handbook-loot" { "sp-rthl" } "handbook" { "sp-rthb" } "controls" { "sp-rtc" }
     "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "removal-d" { "rm-d" } "upgrade-a" { "up-a" } "upgrade-b" { "up-b" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } "transfer-liquid" { "sp-rttl" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 

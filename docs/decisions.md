@@ -1580,3 +1580,148 @@ their replacement.
   chose the texts ("Do the reword"). The recipes are unchanged. A plain
   player was checked (launches 327-338); the Lye Leacher's window on a
   server and an upgrade launch stay open.
+
+## D-039 Wood gas and propane for generators are the third pathway: version 0.5.0
+* Decision (the owner's four choices, 2026-11-12):
+  * Wood gas and propane are made playable together in 0.5.0. Both feed
+    the `gas_generator` conversion that the domain already has
+    (`Content/Conversions.lua`, consumer profile `generator_gas`):
+    propane from the game's propane tanks (`Base.PropaneTank`, D-014),
+    wood gas from the stationary gasifier (`gasifier_stationary`,
+    `Content/WoodGas.lua`) fed with firewood, dry wood chips or charcoal.
+  * Generators only. A car on wood gas (`gasifier_vehicle`) waits for a
+    later version: its model needs parts attached to a vehicle (G11, not
+    run), and no vehicle conversion to wood gas is defined.
+  * The gasifier gets a shape-built model first (the tooling of D-029);
+    the owner may supply one before the release, as for the stills.
+  * Building the gasifier asks a Welding level and a learned recipe, as
+    the biodiesel machines do since 0.4.0 (D-038). The level is left to
+    the implementation, from the game's own welded recipes.
+* Proposed with the choices: the work goes on the branch
+  `feature/gas-generators`, and `main` stays the 0.4.x line that
+  `tools/package.ps1` zips. Nothing of it is advertised, and the
+  package's "Not in this version" line stays, until a generator has run
+  in game on each gas (the rule of D-036).
+* Found in game (launch 342, `test-results.md`; engine-capabilities,
+  G04/G05): the game burns a running generator's fuel in one step each
+  game hour; a generator whose fuel is set while it runs keeps running,
+  and switches itself off when a step empties it; while its chunk is
+  unloaded no Lua runs, and on return the game has burned the hours away
+  and the generator is off if its fuel ran out; a propane tank lying on
+  the floor is read and drawn through its uses, which the game keeps
+  whole (one value tried).
+* The design that follows is D-040 (proposed). It replaces the probe's
+  way of paying, where the gas was charged after the burn: there a step
+  that fell between two top-ups went unpaid, and the litres standing in
+  the buffer were never paid at all. In D-040 the buffer is paid as it is
+  filled.
+* Reason:
+  * The domain is done and tested: the conversion and its profile,
+    `Gas.Gasifier`, the propane tank's mapping. The game-facing side is
+    missing. The two gases share the conversion and the generator's gas
+    feed, so one release covers both, and propane needs no new machine.
+  * The Workshop page lists wood gas, biogas, propane and electrical
+    networks as coming; the plan's next milestone (M7) is wood gas and
+    propane.
+  * Gate 11 was measured with what 0.2.0 to 0.4.1 added before more
+    machines come (launches 340–341).
+
+## D-040 How a generator runs on gas: the design for 0.5.0
+Proposed on 2026-11-12; the owner made its three choices the same day
+(the last point below). Nothing of it is built. It follows D-039 and the
+gas probe (launch 342).
+
+* **The buffer, paid as it is filled.**
+  * A gas generator's own fuel holds gas already taken from its source,
+    as the petrol litres of the same energy: a petrol litre is 32 MJ, an
+    Nm³ of propane 93 MJ and of wood gas 5 MJ (`Content/Fuels.lua`). A
+    full propane tank (4.48 Nm³) is worth 13.0 L.
+  * The game burns that fuel in its hourly steps (launch 342), also while
+    nobody is near, so nothing is charged after a burn. A step between
+    two refills, across a save or while away is already paid, and a
+    generator picked up carries gas that was paid for (pickup copies the
+    fuel, G04/G05).
+  * A refill tops the fuel up to the cap of its gas from what the source
+    holds, and takes that gas from the source at once. Before each game
+    hour the buffer must hold more than one hourly step while the source
+    has gas: a step that empties a generator switches it off (launch
+    342). The step at the game's default setting is not measured (launch
+    342 ran at 10), so no running times are given here.
+  * The cap: for propane, the generator's capacity (`getMaxFuel`, 10 L
+    for the game's generators). For wood gas, one hourly step and a
+    margin that leaves fuel after the step (the owner chose one hour's
+    burn; the margin is needed because a step that empties a generator
+    switches it off). The domain keeps wood gas as a stream that is
+    never stored (`Gas.STREAM_ONLY`, spec §10), but the game takes an
+    hour's burn at once, so a generator needs that much of it in hand. A
+    wood-gas generator therefore stops within about an hour once its
+    gasifier stops or nobody is near.
+* **The generator's records.** Its fuel record is a liquid `Supply` in
+  litres, which cannot hold gas, and the adapter reads any unseen rise in
+  the fuel as its main fuel or petrol (`G.read`). A gas generator gets a
+  gas record instead: Nm³ by gas, matching the buffer. The start gate,
+  the wear charge (`G.chargeWear`) and What I know read it, and it
+  travels with the generator with the other carried keys
+  (`G.CARRIED_KEYS`). A gas generator that loses its records (a drop the
+  game makes in Java alone, G14) reads its buffer as petrol, at most its
+  cap.
+* **The generator's own tank takes no liquid.** The mod refuses the
+  game's Add fuel (`ISAddFuel`), its own pour and its own drain for a
+  gas generator: the buffer is gas, and draining it into a can would
+  turn it into petrol.
+* **Removing the conversion** gives back the propane tank as Remove the
+  propane tank does (below), vents what is left in the buffer (the fuel
+  set to 0), and returns the parts as `Project.remove` gives them.
+* **Propane.**
+  * The tank goes into the generator, as into the game's propane
+    barbecue (the owner's choice): Connect a propane tank takes
+    one tank with uses left from the inventory or the floor beside the
+    generator, puts its uses in the gas record and removes the item.
+    Remove the propane tank first puts the propane the buffer has not
+    burned back into the tank, in whole uses, then gives the tank back;
+    the generator then runs only on any other gas left in its buffer. A
+    tank taken back straight after connecting is therefore as full as it
+    went in, less a use. One tank at a time.
+  * Refills take whole uses, since the game keeps whole uses; the rest
+    carries to the next refill.
+  * Not tested: giving back a tank item with a given number of uses
+    (launch 342 wrote uses only to a tank lying on the floor).
+* **Wood gas.**
+  * The gasifier (`gasifier_stationary`) is a machine item placed within
+    two tiles of a gas generator, as the biodiesel machines hand their
+    products on (D-036). It has a shape-built model (A08) and icon, and
+    its recipe asks a Welding level and is learned from a new Wood Gas
+    Handbook (the owner's choice), found where the Biodiesel Handbook is,
+    or by a higher level (D-038).
+  * Its menu: Load the hopper with logs, firewood, planks, twigs or
+    charcoal from the inventory (`Feedstocks.lua`; dry wood chips have no
+    item), Light, Put out, Service (the filter's tar and the grate's ash
+    taken out) and Status.
+  * Its state is a `Gas.Gasifier` record, not a `Process` one, so it
+    needs a record kind of its own (migrations, the vault) and an adapter
+    beside `Machines.lua`, which reads only `Process` records.
+  * The authority advances it on the ten-minute pass and on every
+    access, with the generator's draw as its demand. What it delivers
+    fills the generator's buffer up to the wood-gas cap; with the buffer
+    full, production follows the draw, and with no draw it pauses and
+    goes out after its hold (3 h).
+  * While nobody is near, no Lua runs and the generator burns its buffer.
+    On return the gasifier is brought forward with the generator's draw
+    for the hours the buffer kept it running, and none after.
+  * The gas profile's derate for wood gas (0.6) lowers an engine's power.
+    A generator has no power to lower, so it has no effect there.
+* **On a server** the authority keeps the buffer, the gas records and
+  the gasifier; clients ask through `TLG.Net`, as the machine menus do.
+  Not tested: `setFuel` on a server.
+* **Performance.** The game gives Lua no list of generators (G04/G05), so
+  the mod keeps its own list of gas generators and refills them on the
+  authority's game-minute pass, writing a record only when a refill
+  moves gas; the gasifier writes on the ten-minute pass. Both join the
+  performance mode (gate 11).
+* **To measure before building:** the hourly step at the default
+  setting; a step that takes the fuel to exactly 0; a step when an
+  appliance comes on within the hour (larger than the last one); the
+  size of the margin; `setFuel` on a server.
+* **The owner's choices** (2026-11-12): wood gas capped at one hourly
+  step; the propane tank inserted, as in the barbecue, not lying beside
+  the generator; a new Wood Gas Handbook for the gasifier.
