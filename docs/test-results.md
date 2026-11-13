@@ -7727,10 +7727,13 @@ Evidence:
 ## 2026-11-13 — RT-SP launches 387–388 (a player's own way to wood gas)
 
 Branch `feature/gas-generators` after `3d77546`, 42.22.2, with the new
-mode `gas-player` (request `sp-rtgy`, `RT.GY` in `SPHarness.lua`). Every
-step goes through what a player uses: the Workshop, Fuel and inventory
-menus, the craft entry, the game's drop action and the game's own
-right-click menu on the floor.
+mode `gas-player` (request `sp-rtgy`, `RT.GY` in `SPHarness.lua`). The
+player's steps go through the Workshop, Fuel and inventory menus, the
+craft entry's handler, the game's drop action and the game's own
+right-click menu on the floor. The harness itself places the generator,
+sets the skills, the recipe "Generator" and Welding 5, hands over every
+item, and starts the generator by queuing the game's start action
+(`ISActivateGenerator`).
 
 | Launch | Command | Result (pass/fail) |
 | --- | --- | --- |
@@ -7757,8 +7760,9 @@ The two runs went the same way, to the litre:
 * At Welding 5 the Wood Gasifier's recipe was not known. Reading the Wood
   Gas Handbook to the end with the inventory menu's **Read** taught it,
   and the book was recorded as read.
-* The craft entry on the metal drum made one Wood Gasifier into the
-  inventory from the drum, 2 metal sheets, 3 metal pipes and 2 metal bars.
+* The craft entry's handler, run on the metal drum, made one Wood Gasifier
+  into the inventory from the drum, 2 metal sheets, 3 metal pipes and 2
+  metal bars.
   The welding mask was kept; the blowtorch went from 10 uses to 8.
 * The game's drop action put it down two tiles east of the generator.
 * The game's right-click menu, built for a click where the gasifier shows
@@ -7780,8 +7784,10 @@ draws whole and textured, standing on the floor beside the generator and
 taller than it: a dark drum on a firebox with a brown door at its foot, a
 brown hopper on its left side, and a grey pipe from its top down into a
 grey cyclone on its right side. The drum's top is level with the
-character's chest and the pipe with the character's shoulders. Put down
-unturned, it shows the hopper to the left and the cyclone to the right.
+character's chest and the pipe with the character's shoulders, where
+launch 241 put the other drum machines' drums at the waist; whether that
+size is right is for the owner to judge. Put down unturned, it shows the
+hopper to the left and the cyclone to the right.
 
 The mod read 0.4.3 at each load, and neither console holds a warning or
 error of the mod, nor a load error. The step's report count in launch
@@ -7791,9 +7797,12 @@ action's own 2 and 34); launch 388 logs the action's own.
 Not run: the handbook found in a container of the map; the crafting
 window's own refusals (a server case: with `-debug`, which this harness
 runs, the game's learned-recipe call answers true for a recipe not
-learned, launch 308); the gas conversion refused below Mechanics 3 or
-Electricity 3, or without the recipe; a turned gasifier; the gasifier's
-icon seen in the game's interface.
+learned, launch 308); whether the drum's menu lists the craft entry (the
+harness ran its handler; the full run checks the listing for its own
+recipes); a click on the gasifier off its screen point, or at another
+zoom; the generator switched on from its own menu; the gas conversion
+refused below Mechanics 3 or Electricity 3, or without the recipe; a
+turned gasifier; the gasifier's icon seen in the game's interface.
 
 Evidence:
 [run 387](evidence/2026-11-13_rt-sp_harness_run387_gas_player_42.22.2.txt),

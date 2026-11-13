@@ -353,7 +353,7 @@ their changes are reconciled conservatively.
 | --- | --- | --- | --- |
 | Base.Generator | flex_generator | generator_si_stock → generator_si_flex | **Verified RT-SP** (run 8) |
 | Base.Generator_Old, _Yellow, _Blue | flex_generator | same | domain-tested; runtime NOT RUN |
-| Base.Generator | gas_generator | generator_si_stock → generator_gas | **Verified RT-SP**: begun, parts handed over and worked to `Commissioned` from the Workshop menu, the work stopping until the tank was drained from the Fuel menu (launches 387–388); **Remove the conversion** from the Workshop menu (launch 382). Hidden in 0.4.2 and 0.4.3; offered again with the gas feed (D-040). Cancel: domain-tested; runtime NOT RUN |
+| Base.Generator | gas_generator | generator_si_stock → generator_gas | **RT-SP**: begun, parts handed over and worked to `Commissioned` from the Workshop menu, the work stopping until the tank was drained from the Fuel menu, then run on wood gas (launches 387–388); **Remove the conversion** from the Workshop menu (launch 382). Cancel: domain-tested; runtime NOT RUN |
 | Base.Generator_Old, _Yellow, _Blue | gas_generator | same | domain-tested; runtime NOT RUN |
 | Base.CarNormal | flex_car_normal | engine_si_stock → engine_si_flex | **Verified RT-SP** (run 8) |
 | Base.SmallCar | flex_small_car | same | domain-tested; runtime NOT RUN |
@@ -384,6 +384,7 @@ data exists for the vehicle gasifier module only).
 | Make Wood Retort, Make Biodiesel Reactor, Make Biodiesel Wash Tank (`TLG_MakeWoodRetort`, `TLG_MakeBiodieselReactor`, `TLG_MakeBiodieselWashTank`) | in hand (`InHandCraft;Welding`) | **Verified RT-SP** in the crafting window (launch 249) |
 | Make Ash Barrel (`TLG_MakeAshBarrel`) | in hand (`InHandCraft`) | **Verified RT-SP** in the crafting window (launch 249) |
 | Make Lye Leacher (`TLG_MakeLyeLeacher`) | table or counter (`AnySurfaceCraft;Carpentry`) | **Verified RT-SP** in the crafting window (launch 249) |
+| Make Wood Gasifier (`TLG_MakeGasifier`), learned from the Wood Gas Handbook | in hand (`InHandCraft;Welding`) | **RT-SP** (launches 387–388): the inventory craft menu's handler run on the drum made one, output in the inventory, inputs gone, the welding mask kept. Whether the drum's menu lists the entry, and the crafting window: NOT RUN |
 
 Verified in the inventory craft menu (run 12): offered by the menu, crafted
 next to a counter (or in hand), output in the inventory, consumed inputs
@@ -435,7 +436,10 @@ running out; Pause, Resume and Abort; a machine picked up while working; a
 save with a batch running; settling in the cold; a batch through its hours
 on a server.
 
-The mod's own oil press is not shipped: vanilla's gives the oil. Wood gas,
-biogas, propane and electricity are implemented as domain modules with
+The mod's own oil press is not shipped: vanilla's gives the oil. A
+generator converted to gas (D-040) runs on propane, from a tank connected
+with **Gas (The Last Gallon)** > **Connect a propane tank**, or on wood
+gas, from a lit Wood Gasifier within two tiles (**Gasifier (The Last
+Gallon)**). Biogas and electricity are implemented as domain modules with
 tests only; no game-facing adapters, placeable items or UI exist for them
 yet. They are not advertised as playable.
