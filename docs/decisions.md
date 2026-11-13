@@ -1864,9 +1864,23 @@ gas probe (launch 342).
     the generator stopping at its second step; lit again; taken up while
     lit and put down a tile away, out with its wood; a trip that unloaded
     both, the generator off and the gasifier out on return; saved and
-    continued, lit again and refilling. Not run: a server; propane and the
-    full run since the refill was reworked for wood gas; crafting the
-    gasifier and reading the handbook in game; the gasifier's model looked
-    at in game; its menu from a right-click on the floor (the harness built
-    it from the item); a wood-gas generator taken up and put down; a
-    gasifier feeding two generators; the performance mode.
+    continued, lit again and refilling. Propane and the full run passed
+    again on this build (launches 359–360).
+  * On a server each write of a gasifier lying on the floor is also sent
+    to the clients (`sendServerCommand`, `Gasifiers.received`), because
+    the menu decides what to offer from the client's copy of the record:
+    an item's mod data reaches only the client whose inventory holds it,
+    and `syncItemFields` sends nothing for an item in no container. On a
+    dedicated server (launch 361) the client loaded and lit the gasifier
+    through its menu, which then offered Put out, and Light once it was
+    put out; the server fed the generator and the client's copy followed;
+    Gas status, the pour and Add fuel refused; put out, the generator
+    stopped; lit again; taken up while lit with the world menu's Grab (an
+    item transaction no Lua of the mod's sees), it answered out with its
+    wood, and put down it lay out on the server's floor.
+  * Not run: two clients; a real network; a client joining while a
+    gasifier burns; crafting the gasifier and reading the handbook in
+    game; the gasifier's model looked at in game; its menu from a
+    right-click on the floor (the harnesses built it from the item); a
+    wood-gas generator taken up and put down; a gasifier feeding two
+    generators; the performance mode.

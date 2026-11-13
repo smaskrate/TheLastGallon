@@ -7258,3 +7258,79 @@ generators; the performance mode.
 
 Evidence:
 [run 358](evidence/2026-11-13_rt-sp_harness_run358_gas_wood_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launches 359–360 (propane and the full run after the wood-gas build)
+
+The refill was reworked for wood gas (`G.gasRefill`: one source at a
+time, the cheap tests first) and every conversion's commit now watches a
+generator; launch 358 ran the tankless path only. Both launches ran the
+mod at `4fa3266`, 42.22.2, one after the other.
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 359 | `tools/run-sp-harness.ps1 -Mode gas-propane` | 10/0, then 6/0 |
+| 360 | `tools/run-sp-harness.ps1 -Mode full` | 106/0, then 14/0 |
+
+Launch 359 matched launch 352 throughout: the tank connected through the
+Gas menu (3840 uses in, 1160 left), four steps of 0.005 L burned against
+0.020000 L of propane gone, liquid refused, taken up and put down with
+the tank in, the trip, the save continued, 4980 uses back, a tank burned
+empty and given back with 0 uses, and Remove the conversion with the
+tank back. Launch 360: the game's Add fuel, the burn reconciled, pickup
+and the drop paths, the start gate, the pour and the conversions as in
+launch 353. Neither console holds an error or a warning of the mod; the
+one exception in launch 360's is the harness's deep-recursion probe.
+
+Evidence:
+[run 359](evidence/2026-11-13_rt-sp_harness_run359_gas_propane_42.22.2.txt);
+[run 360](evidence/2026-11-13_rt-sp_harness_run360_full_gas_branch_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launch 361 (a gas generator on wood gas on a dedicated server, D-040)
+
+Command: `tools/run-mp-harness.ps1 -Only gaswood`: the TLGDev dedicated
+server and one client on this computer, branch `feature/gas-generators`
+at `d3b1725`, 42.22.2, the shortest day (DayLength 1) and the default
+fuel setting. The server put down a vanilla generator,
+G, at 10666,10651 with its gas conversion made by the conversion
+service's own steps, a Wood Gasifier two tiles from it, and two logs,
+five pieces of firewood and two of charcoal (30 kg) in the player's
+inventory. The client took every other step through the gasifier's menu
+and the game's actions.
+
+Launch 361 (**18/0**, client A):
+- **The menu from the client's copy.** Light was greyed while the hopper
+  was empty. Load the hopper with wood took all 9 pieces, 30 kg, and the
+  client's copy of the gasifier then held its record. Lit, the client's
+  menu offered Put out; put out, it offered Light again. That copy
+  follows the server only because each write is now sent to the clients
+  (`d3b1725`): an item on the floor gets no `syncItemFields`.
+- **Its gas in G on the server.** Warmed, the server's minute pass filled
+  G, never switched on (load 0), to the margin alone: 0.001 L, 0.0064 Nm3
+  of wood gas. The client's copy of G matched.
+- **Started** with the game's action through the server's start gate.
+  About 2.5 game hours later G ran at 0.003 L (a load of 0.002 L: nothing
+  in range), the gasifier had given 0.0576 Nm3 (the start's top-up and
+  three steps), and the client's copy of G matched the server's.
+- **Gas status** from the server: wood gas 0.0192 Nm3, one lit gasifier,
+  no tank. **No liquid**: the pour refused (`gas_generator`), the game's
+  Add fuel not valid on the client.
+- **Put out**: 2 Nm3 let out; G then stopped on the server with 0 L, the
+  client's copy the same.
+- **Lit again**: G filled to 0.003 L, started again.
+- **Taken up while lit** with the world menu's Grab, an item transaction
+  the server runs with no Lua of the mod's: asked for its Status while
+  carried, the server answered it out (`moved`), not on the floor, with
+  its 24.25 kg of wood. Put down with the place action, it lay on the
+  server's floor, out, with its wood.
+
+The harness reports hold no step error. Neither console holds an error
+or a warning of the mod: the server's one Lua exception is the harness's
+deep-recursion probe. The server's console was not kept: it holds the
+test accounts' passwords.
+
+Not run: two clients; a real network; a client joining while a gasifier
+burns; the gasifier's menu from a right-click on the floor (the harness
+built it from the item).
+
+Evidence:
+[run 361](evidence/2026-11-13_rt-mp_harness_run361_gaswood_42.22.2.txt).
