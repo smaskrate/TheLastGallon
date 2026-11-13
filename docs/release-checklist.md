@@ -340,6 +340,14 @@ owner's file, now names 0.4.3: one byte changed; the rest of the file
 (its id, `visibility=public`, the tag `WIP`, the owner's wording) and its
 CRLF line ends stay. Not uploaded: the upload is the owner's step.
 
+Before the upload, on the owner's word ("Yes, test two players"), launch
+376 ran the same steps with two clients on a server whose mod and
+clients' mods were this zip's, file for file: after each step one player
+took, the other's copy and menu followed (A 50/0, B 48/0;
+`machinemenus2`). The change note lists it; the shipped changelog and
+support matrix, written before launch 376, still list two players as not
+checked and the server checks as one client's.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
@@ -1026,6 +1034,7 @@ tools\run-mp-harness.ps1 -Clients 1 -Only knowledge -Restart  # the same with th
 tools\run-mp-harness.ps1 -Clients 2 -Only death     # A dies carrying a running vessel; B asks the server where it fell and whether it works from the death; ~4 min
 tools\run-mp-harness.ps1 -Clients 1 -Only machinemenu   # a fermenter loaded, paused, resumed and aborted twice through its menu, each entry read against the server's state (D-023)
 tools\run-mp-harness.ps1 -Clients 1 -Only machinemenus  # the nine machines' Pause, Resume and Abort batch, a fermenter carried and put down, Seal and Open on a can on the floor and in a container, a batch paused across leaving and joining again (D-041); ~7 min
+tools\run-mp-harness.ps1 -Clients 2 -Only machinemenus2 # the same but the rejoin with two clients: after each of A's steps B reads its own copy and menu; B pauses and resumes a fermenter and A reads its own; ~15 min
 tools\make-preview.ps1                # the Workshop preview, the mod list's poster and icon (Blender), into art-src and the mod
 tools\package.ps1                     # the release zip (never uploads)
 tools\run-sp-harness.ps1 -Mode context-menus                    # the mod's world menu entries only where the click is on their thing (0.3.1); menus built by the game's builder at chosen screen points; no save; ~2 min

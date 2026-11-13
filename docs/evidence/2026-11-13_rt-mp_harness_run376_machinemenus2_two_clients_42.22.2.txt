@@ -1,0 +1,617 @@
+===== launch 376: tools/run-mp-harness.ps1 -Clients 2 -Only machinemenus2, branch main at e44a852 (the mod as in the 0.4.3 release zip of 14a36ed), the two-player case as committed with this file. The launcher's own lines were not kept; the two clients' and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_mx2_wait_b begin
+STEP mx_spawn_k1 begin
+STEP mp_mx_lands_k1 begin
+STEP mx_start_k1 begin
+OBS  MP.mx k1 TLG.FermenterVessel started on the server: Processing/nil 
+STEP mp_mx_walk_k1 begin
+STEP mp_mx_menu_k1_start begin
+OBS  MP.mx k1 (TLG.FermenterVessel) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k1_menu_after_start_A :: TLG.FermenterVessel: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k1_start begin
+STEP mp_mx_k1_pause begin
+OBS  MP.mx k1 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k1_pause begin
+OBS  MP.mx k1 (TLG.FermenterVessel) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k1_menu_after_pause_A :: TLG.FermenterVessel: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k1_pause begin
+STEP mp_mx_k1_resume begin
+OBS  MP.mx k1 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k1_resume begin
+OBS  MP.mx k1 (TLG.FermenterVessel) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k1_menu_after_resume_A :: TLG.FermenterVessel: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k1_resume begin
+STEP mp_mx_k1_abort begin
+OBS  MP.mx k1 abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mx_menu_k1_abort begin
+OBS  MP.mx k1 (TLG.FermenterVessel) after abort: the server says OutputReady/nil; this client's copy OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx_k1_menu_after_abort_A :: TLG.FermenterVessel: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mx2_tell_k1_abort begin
+STEP mx_spawn_k2 begin
+STEP mp_mx_lands_k2 begin
+STEP mx_start_k2 begin
+OBS  MP.mx k2 TLG.PotStill started on the server: Processing/nil 
+STEP mp_mx_walk_k2 begin
+STEP mp_mx_menu_k2_start begin
+OBS  MP.mx k2 (TLG.PotStill) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k2_menu_after_start_A :: TLG.PotStill: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k2_start begin
+STEP mp_mx_k2_pause begin
+OBS  MP.mx k2 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k2_pause begin
+OBS  MP.mx k2 (TLG.PotStill) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k2_menu_after_pause_A :: TLG.PotStill: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k2_pause begin
+STEP mp_mx_k2_resume begin
+OBS  MP.mx k2 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k2_resume begin
+OBS  MP.mx k2 (TLG.PotStill) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k2_menu_after_resume_A :: TLG.PotStill: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k2_resume begin
+STEP mp_mx_k2_abort begin
+OBS  MP.mx k2 abort through the menu true -> ok=true reason=nil duplicate=nil state=Ready pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k2_abort begin
+OBS  MP.mx k2 (TLG.PotStill) after abort: the server says Ready/nil; this client's copy Ready/nil; its menu offers [], want []
+PASS MP.mx_k2_menu_after_abort_A :: TLG.PotStill: server Ready/nil; this client's copy Ready/nil; menu [], want []
+STEP mp_mx2_tell_k2_abort begin
+STEP mx_spawn_k3 begin
+STEP mp_mx_lands_k3 begin
+STEP mx_start_k3 begin
+OBS  MP.mx k3 TLG.RefluxStill started on the server: Processing/nil 
+STEP mp_mx_walk_k3 begin
+STEP mp_mx_menu_k3_start begin
+OBS  MP.mx k3 (TLG.RefluxStill) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k3_menu_after_start_A :: TLG.RefluxStill: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k3_start begin
+STEP mp_mx_k3_pause begin
+OBS  MP.mx k3 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k3_pause begin
+OBS  MP.mx k3 (TLG.RefluxStill) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k3_menu_after_pause_A :: TLG.RefluxStill: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k3_pause begin
+STEP mp_mx_k3_resume begin
+OBS  MP.mx k3 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k3_resume begin
+OBS  MP.mx k3 (TLG.RefluxStill) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k3_menu_after_resume_A :: TLG.RefluxStill: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k3_resume begin
+STEP mp_mx_k3_abort begin
+OBS  MP.mx k3 abort through the menu true -> ok=true reason=nil duplicate=nil state=Ready pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k3_abort begin
+OBS  MP.mx k3 (TLG.RefluxStill) after abort: the server says Ready/nil; this client's copy Ready/nil; its menu offers [], want []
+PASS MP.mx_k3_menu_after_abort_A :: TLG.RefluxStill: server Ready/nil; this client's copy Ready/nil; menu [], want []
+STEP mp_mx2_tell_k3_abort begin
+STEP mx_spawn_k4 begin
+STEP mp_mx_lands_k4 begin
+STEP mx_start_k4 begin
+OBS  MP.mx k4 TLG.DryingColumn started on the server: Processing/nil 
+STEP mp_mx_walk_k4 begin
+STEP mp_mx_menu_k4_start begin
+OBS  MP.mx k4 (TLG.DryingColumn) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k4_menu_after_start_A :: TLG.DryingColumn: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k4_start begin
+STEP mp_mx_k4_pause begin
+OBS  MP.mx k4 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k4_pause begin
+OBS  MP.mx k4 (TLG.DryingColumn) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k4_menu_after_pause_A :: TLG.DryingColumn: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k4_pause begin
+STEP mp_mx_k4_resume begin
+OBS  MP.mx k4 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k4_resume begin
+OBS  MP.mx k4 (TLG.DryingColumn) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k4_menu_after_resume_A :: TLG.DryingColumn: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k4_resume begin
+STEP mp_mx_k4_abort begin
+OBS  MP.mx k4 abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mx_menu_k4_abort begin
+OBS  MP.mx k4 (TLG.DryingColumn) after abort: the server says OutputReady/nil; this client's copy OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx_k4_menu_after_abort_A :: TLG.DryingColumn: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mx2_tell_k4_abort begin
+STEP mx_spawn_k5 begin
+STEP mp_mx_lands_k5 begin
+STEP mx_start_k5 begin
+OBS  MP.mx k5 TLG.WoodRetort started on the server: Processing/nil 
+STEP mp_mx_walk_k5 begin
+STEP mp_mx_menu_k5_start begin
+OBS  MP.mx k5 (TLG.WoodRetort) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k5_menu_after_start_A :: TLG.WoodRetort: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k5_start begin
+STEP mp_mx_k5_pause begin
+OBS  MP.mx k5 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k5_pause begin
+OBS  MP.mx k5 (TLG.WoodRetort) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k5_menu_after_pause_A :: TLG.WoodRetort: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k5_pause begin
+STEP mp_mx_k5_resume begin
+OBS  MP.mx k5 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k5_resume begin
+OBS  MP.mx k5 (TLG.WoodRetort) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k5_menu_after_resume_A :: TLG.WoodRetort: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k5_resume begin
+STEP mp_mx_k5_abort begin
+OBS  MP.mx k5 abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mx_menu_k5_abort begin
+OBS  MP.mx k5 (TLG.WoodRetort) after abort: the server says OutputReady/nil; this client's copy OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx_k5_menu_after_abort_A :: TLG.WoodRetort: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mx2_tell_k5_abort begin
+STEP mx_spawn_k6 begin
+STEP mp_mx_lands_k6 begin
+STEP mx_start_k6 begin
+OBS  MP.mx k6 TLG.AshBarrel started on the server: Processing/nil 
+STEP mp_mx_walk_k6 begin
+STEP mp_mx_menu_k6_start begin
+OBS  MP.mx k6 (TLG.AshBarrel) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k6_menu_after_start_A :: TLG.AshBarrel: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k6_start begin
+STEP mp_mx_k6_pause begin
+OBS  MP.mx k6 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k6_pause begin
+OBS  MP.mx k6 (TLG.AshBarrel) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k6_menu_after_pause_A :: TLG.AshBarrel: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k6_pause begin
+STEP mp_mx_k6_resume begin
+OBS  MP.mx k6 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k6_resume begin
+OBS  MP.mx k6 (TLG.AshBarrel) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k6_menu_after_resume_A :: TLG.AshBarrel: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k6_resume begin
+STEP mp_mx_k6_abort begin
+OBS  MP.mx k6 abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mx_menu_k6_abort begin
+OBS  MP.mx k6 (TLG.AshBarrel) after abort: the server says OutputReady/nil; this client's copy OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx_k6_menu_after_abort_A :: TLG.AshBarrel: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mx2_tell_k6_abort begin
+STEP mx_spawn_k7 begin
+STEP mp_mx_lands_k7 begin
+STEP mx_start_k7 begin
+OBS  MP.mx k7 TLG.LyeLeacher started on the server: Processing/nil 
+STEP mp_mx_walk_k7 begin
+STEP mp_mx_menu_k7_start begin
+OBS  MP.mx k7 (TLG.LyeLeacher) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k7_menu_after_start_A :: TLG.LyeLeacher: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k7_start begin
+STEP mp_mx_k7_pause begin
+OBS  MP.mx k7 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k7_pause begin
+OBS  MP.mx k7 (TLG.LyeLeacher) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k7_menu_after_pause_A :: TLG.LyeLeacher: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k7_pause begin
+STEP mp_mx_k7_resume begin
+OBS  MP.mx k7 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k7_resume begin
+OBS  MP.mx k7 (TLG.LyeLeacher) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k7_menu_after_resume_A :: TLG.LyeLeacher: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k7_resume begin
+STEP mp_mx_k7_abort begin
+OBS  MP.mx k7 abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mx_menu_k7_abort begin
+OBS  MP.mx k7 (TLG.LyeLeacher) after abort: the server says OutputReady/nil; this client's copy OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx_k7_menu_after_abort_A :: TLG.LyeLeacher: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mx2_tell_k7_abort begin
+STEP mx_spawn_k8 begin
+STEP mp_mx_lands_k8 begin
+STEP mx_start_k8 begin
+OBS  MP.mx k8 TLG.BiodieselReactor started on the server: Processing/nil 
+STEP mp_mx_walk_k8 begin
+STEP mp_mx_menu_k8_start begin
+OBS  MP.mx k8 (TLG.BiodieselReactor) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k8_menu_after_start_A :: TLG.BiodieselReactor: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k8_start begin
+STEP mp_mx_k8_pause begin
+OBS  MP.mx k8 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k8_pause begin
+OBS  MP.mx k8 (TLG.BiodieselReactor) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k8_menu_after_pause_A :: TLG.BiodieselReactor: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k8_pause begin
+STEP mp_mx_k8_resume begin
+OBS  MP.mx k8 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k8_resume begin
+OBS  MP.mx k8 (TLG.BiodieselReactor) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k8_menu_after_resume_A :: TLG.BiodieselReactor: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k8_resume begin
+STEP mp_mx_k8_abort begin
+OBS  MP.mx k8 abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mx_menu_k8_abort begin
+OBS  MP.mx k8 (TLG.BiodieselReactor) after abort: the server says OutputReady/nil; this client's copy OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx_k8_menu_after_abort_A :: TLG.BiodieselReactor: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mx2_tell_k8_abort begin
+STEP mx_spawn_k9 begin
+STEP mp_mx_lands_k9 begin
+STEP mx_start_k9 begin
+OBS  MP.mx k9 TLG.BiodieselWashTank started on the server: Processing/nil 
+STEP mp_mx_walk_k9 begin
+STEP mp_mx_menu_k9_start begin
+OBS  MP.mx k9 (TLG.BiodieselWashTank) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k9_menu_after_start_A :: TLG.BiodieselWashTank: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k9_start begin
+STEP mp_mx_k9_pause begin
+OBS  MP.mx k9 pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_k9_pause begin
+OBS  MP.mx k9 (TLG.BiodieselWashTank) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_k9_menu_after_pause_A :: TLG.BiodieselWashTank: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_k9_pause begin
+STEP mp_mx_k9_resume begin
+OBS  MP.mx k9 resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_k9_resume begin
+OBS  MP.mx k9 (TLG.BiodieselWashTank) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_k9_menu_after_resume_A :: TLG.BiodieselWashTank: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_k9_resume begin
+STEP mp_mx_k9_abort begin
+OBS  MP.mx k9 abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mx_menu_k9_abort begin
+OBS  MP.mx k9 (TLG.BiodieselWashTank) after abort: the server says OutputReady/nil; this client's copy OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx_k9_menu_after_abort_A :: TLG.BiodieselWashTank: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mx2_tell_k9_abort begin
+STEP mx_spawn_pick begin
+STEP mp_mx_lands_pick begin
+STEP mx_start_pick begin
+OBS  MP.mx pick TLG.FermenterVessel started on the server: Processing/nil 
+STEP mp_mx_walk_pick begin
+STEP mp_mx_menu_pick_start begin
+OBS  MP.mx pick (TLG.FermenterVessel) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_pick_menu_after_start_A :: TLG.FermenterVessel: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_pick_start begin
+STEP mp_mx_grab begin
+PASS MP.mx_pick_grabbed_A :: carried true
+STEP mx_pick_status_carried begin
+PASS MP.mx_pick_carried_status_and_copy_A :: server Paused/not_placed; this client's copy (carried) Paused/not_placed
+STEP mp_mx_put_down begin
+PASS MP.mx_pick_put_down_menu_follows_A :: on the floor true; this client's copy Processing/nil; menu [pause,abort]
+STEP mp_mx2_tell_pick_put_down begin
+STEP mx_spawn_can begin
+STEP mp_mx_can_lands begin
+STEP mp_mx_walk_can begin
+STEP mp_mx_can_first begin
+PASS MP.mx_can_untouched_offers_unseal_A :: found true; menu offers unseal
+STEP mp_mx2_tell_can_first begin
+STEP mp_mx_can_unseal begin
+OBS  MP.mx can unseal through the menu true -> ok=true reason=nil duplicate=nil state=nil pause=nil stoppedEarly=nil
+STEP mp_mx_can_after_unseal begin
+OBS  MP.mx can after unseal: reply ok=true; this client's copy sealed=false; the menu offers seal, want seal
+PASS MP.mx_can_after_unseal_A :: reply ok=true reason=nil; this client's copy sealed false; menu offers seal, want seal
+STEP mp_mx2_tell_can_unseal begin
+STEP mp_mx_can_seal begin
+OBS  MP.mx can seal through the menu true -> ok=true reason=nil duplicate=nil state=nil pause=nil stoppedEarly=nil
+STEP mp_mx_can_after_seal begin
+OBS  MP.mx can after seal: reply ok=true; this client's copy sealed=true; the menu offers unseal, want unseal
+PASS MP.mx_can_after_seal_A :: reply ok=true reason=nil; this client's copy sealed true; menu offers unseal, want unseal
+STEP mp_mx2_tell_can_seal begin
+STEP mx_crate_can begin
+OBS  MP.mx crate: can 704548087 put in a bin at 10665,10636 
+STEP mp_mx_crate_lands begin
+STEP mp_mx_walk_crate begin
+STEP mp_mx_crate_first begin
+PASS MP.mx_crate_untouched_offers_unseal_A :: found true; menu offers unseal
+STEP mp_mx2_tell_crate_first begin
+STEP mp_mx_crate_unseal begin
+OBS  MP.mx crate unseal through the menu true -> ok=true reason=nil duplicate=nil state=nil pause=nil stoppedEarly=nil
+STEP mp_mx_crate_after_unseal begin
+OBS  MP.mx crate after unseal: reply ok=true; this client's copy sealed=false; the menu offers seal, want seal
+PASS MP.mx_crate_after_unseal_A :: reply ok=true reason=nil; this client's copy sealed false; menu offers seal, want seal
+STEP mp_mx2_tell_crate_unseal begin
+STEP mp_mx_crate_seal begin
+OBS  MP.mx crate seal through the menu true -> ok=true reason=nil duplicate=nil state=nil pause=nil stoppedEarly=nil
+STEP mp_mx_crate_after_seal begin
+OBS  MP.mx crate after seal: reply ok=true; this client's copy sealed=true; the menu offers unseal, want unseal
+PASS MP.mx_crate_after_seal_A :: reply ok=true reason=nil; this client's copy sealed true; menu offers unseal, want unseal
+STEP mp_mx2_tell_crate_seal begin
+STEP mx_spawn_rev begin
+STEP mp_mx_lands_rev begin
+STEP mx_start_rev begin
+OBS  MP.mx rev TLG.FermenterVessel started on the server: Processing/nil 
+STEP mp_mx_walk_rev begin
+STEP mp_mx_menu_rev_start begin
+OBS  MP.mx rev (TLG.FermenterVessel) after start: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_rev_menu_after_start_A :: TLG.FermenterVessel: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_rev_start begin
+STEP mp_mx2_rev begin
+STEP mp_mx2_seen_b_1 begin
+OBS  MP.mx2 rev after B's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_rev_seen_after_b_pause_A :: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_seen_b_2 begin
+OBS  MP.mx2 rev after B's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_rev_seen_after_b_resume_A :: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_paths begin
+OBS  MP.mx chosen through the menu by A: can.unseal=true can.seal=true crate.unseal=true crate.seal=true k1.pause=true k1.resume=true k1.abort=true k2.pause=true k2.resume=true k2.abort=true k3.pause=true k3.resume=true k3.abort=true k4.pause=true k4.resume=true k4.abort=true k5.pause=true k5.resume=true k5.abort=true k6.pause=true k6.resume=true k6.abort=true k7.pause=true k7.resume=true k7.abort=true k8.pause=true k8.resume=true k8.abort=true k9.pause=true k9.resume=true k9.abort=true
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=50 fail=0
+DONE
+===== client mp-b: %LOCALAPPDATA%\TheLastGallon\mpclient2\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_mx2_stand begin
+STEP mp_mx2_hello begin
+STEP mp_mx2_follow begin
+OBS  MP.mx2 k1 (TLG.FermenterVessel) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k1_seen_after_start_B :: TLG.FermenterVessel: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k1 (TLG.FermenterVessel) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k1_seen_after_pause_B :: TLG.FermenterVessel: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k1 (TLG.FermenterVessel) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k1_seen_after_resume_B :: TLG.FermenterVessel: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k1 (TLG.FermenterVessel) after A's abort: this client's copy OutputReady/nil after 1 ticks, want OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx2_k1_seen_after_abort_B :: TLG.FermenterVessel: this client's copy OutputReady/nil, want OutputReady/nil; menu [abort], want [abort]
+OBS  MP.mx2 k2 (TLG.PotStill) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k2_seen_after_start_B :: TLG.PotStill: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k2 (TLG.PotStill) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k2_seen_after_pause_B :: TLG.PotStill: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k2 (TLG.PotStill) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k2_seen_after_resume_B :: TLG.PotStill: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k2 (TLG.PotStill) after A's abort: this client's copy Ready/nil after 1 ticks, want Ready/nil; its menu offers [], want []
+PASS MP.mx2_k2_seen_after_abort_B :: TLG.PotStill: this client's copy Ready/nil, want Ready/nil; menu [], want []
+OBS  MP.mx2 k3 (TLG.RefluxStill) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k3_seen_after_start_B :: TLG.RefluxStill: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k3 (TLG.RefluxStill) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k3_seen_after_pause_B :: TLG.RefluxStill: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k3 (TLG.RefluxStill) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k3_seen_after_resume_B :: TLG.RefluxStill: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k3 (TLG.RefluxStill) after A's abort: this client's copy Ready/nil after 1 ticks, want Ready/nil; its menu offers [], want []
+PASS MP.mx2_k3_seen_after_abort_B :: TLG.RefluxStill: this client's copy Ready/nil, want Ready/nil; menu [], want []
+OBS  MP.mx2 k4 (TLG.DryingColumn) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k4_seen_after_start_B :: TLG.DryingColumn: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k4 (TLG.DryingColumn) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k4_seen_after_pause_B :: TLG.DryingColumn: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k4 (TLG.DryingColumn) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k4_seen_after_resume_B :: TLG.DryingColumn: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k4 (TLG.DryingColumn) after A's abort: this client's copy OutputReady/nil after 1 ticks, want OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx2_k4_seen_after_abort_B :: TLG.DryingColumn: this client's copy OutputReady/nil, want OutputReady/nil; menu [abort], want [abort]
+OBS  MP.mx2 k5 (TLG.WoodRetort) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k5_seen_after_start_B :: TLG.WoodRetort: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k5 (TLG.WoodRetort) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k5_seen_after_pause_B :: TLG.WoodRetort: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k5 (TLG.WoodRetort) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k5_seen_after_resume_B :: TLG.WoodRetort: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k5 (TLG.WoodRetort) after A's abort: this client's copy OutputReady/nil after 1 ticks, want OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx2_k5_seen_after_abort_B :: TLG.WoodRetort: this client's copy OutputReady/nil, want OutputReady/nil; menu [abort], want [abort]
+OBS  MP.mx2 k6 (TLG.AshBarrel) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k6_seen_after_start_B :: TLG.AshBarrel: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k6 (TLG.AshBarrel) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k6_seen_after_pause_B :: TLG.AshBarrel: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k6 (TLG.AshBarrel) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k6_seen_after_resume_B :: TLG.AshBarrel: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k6 (TLG.AshBarrel) after A's abort: this client's copy OutputReady/nil after 1 ticks, want OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx2_k6_seen_after_abort_B :: TLG.AshBarrel: this client's copy OutputReady/nil, want OutputReady/nil; menu [abort], want [abort]
+OBS  MP.mx2 k7 (TLG.LyeLeacher) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k7_seen_after_start_B :: TLG.LyeLeacher: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k7 (TLG.LyeLeacher) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k7_seen_after_pause_B :: TLG.LyeLeacher: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k7 (TLG.LyeLeacher) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k7_seen_after_resume_B :: TLG.LyeLeacher: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k7 (TLG.LyeLeacher) after A's abort: this client's copy OutputReady/nil after 1 ticks, want OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx2_k7_seen_after_abort_B :: TLG.LyeLeacher: this client's copy OutputReady/nil, want OutputReady/nil; menu [abort], want [abort]
+OBS  MP.mx2 k8 (TLG.BiodieselReactor) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k8_seen_after_start_B :: TLG.BiodieselReactor: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k8 (TLG.BiodieselReactor) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k8_seen_after_pause_B :: TLG.BiodieselReactor: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k8 (TLG.BiodieselReactor) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k8_seen_after_resume_B :: TLG.BiodieselReactor: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k8 (TLG.BiodieselReactor) after A's abort: this client's copy OutputReady/nil after 1 ticks, want OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx2_k8_seen_after_abort_B :: TLG.BiodieselReactor: this client's copy OutputReady/nil, want OutputReady/nil; menu [abort], want [abort]
+OBS  MP.mx2 k9 (TLG.BiodieselWashTank) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k9_seen_after_start_B :: TLG.BiodieselWashTank: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k9 (TLG.BiodieselWashTank) after A's pause: this client's copy Paused/paused_by_player after 1 ticks, want Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx2_k9_seen_after_pause_B :: TLG.BiodieselWashTank: this client's copy Paused/paused_by_player, want Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+OBS  MP.mx2 k9 (TLG.BiodieselWashTank) after A's resume: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_k9_seen_after_resume_B :: TLG.BiodieselWashTank: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 k9 (TLG.BiodieselWashTank) after A's abort: this client's copy OutputReady/nil after 1 ticks, want OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mx2_k9_seen_after_abort_B :: TLG.BiodieselWashTank: this client's copy OutputReady/nil, want OutputReady/nil; menu [abort], want [abort]
+OBS  MP.mx2 pick (TLG.FermenterVessel) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_pick_seen_after_start_B :: TLG.FermenterVessel: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 pick (TLG.FermenterVessel) after A's put_down: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_pick_seen_after_put_down_B :: TLG.FermenterVessel: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+OBS  MP.mx2 can (Base.PetrolCan) after A's first: this client's copy sealed=nil after 1 ticks, want sealed=nil; its menu offers [unseal], want [unseal]
+PASS MP.mx2_can_seen_after_first_B :: Base.PetrolCan: this client's copy sealed=nil, want sealed=nil; menu [unseal], want [unseal]
+OBS  MP.mx2 can (Base.PetrolCan) after A's unseal: this client's copy sealed=false after 1 ticks, want sealed=false; its menu offers [seal], want [seal]
+PASS MP.mx2_can_seen_after_unseal_B :: Base.PetrolCan: this client's copy sealed=false, want sealed=false; menu [seal], want [seal]
+OBS  MP.mx2 can (Base.PetrolCan) after A's seal: this client's copy sealed=true after 1 ticks, want sealed=true; its menu offers [unseal], want [unseal]
+PASS MP.mx2_can_seen_after_seal_B :: Base.PetrolCan: this client's copy sealed=true, want sealed=true; menu [unseal], want [unseal]
+OBS  MP.mx2 crate (Base.PetrolCan) after A's first: this client's copy sealed=nil after 1 ticks, want sealed=nil; its menu offers [unseal], want [unseal]
+PASS MP.mx2_crate_seen_after_first_B :: Base.PetrolCan: this client's copy sealed=nil, want sealed=nil; menu [unseal], want [unseal]
+OBS  MP.mx2 crate (Base.PetrolCan) after A's unseal: this client's copy sealed=false after 1 ticks, want sealed=false; its menu offers [seal], want [seal]
+PASS MP.mx2_crate_seen_after_unseal_B :: Base.PetrolCan: this client's copy sealed=false, want sealed=false; menu [seal], want [seal]
+OBS  MP.mx2 crate (Base.PetrolCan) after A's seal: this client's copy sealed=true after 1 ticks, want sealed=true; its menu offers [unseal], want [unseal]
+PASS MP.mx2_crate_seen_after_seal_B :: Base.PetrolCan: this client's copy sealed=true, want sealed=true; menu [unseal], want [unseal]
+OBS  MP.mx2 rev (TLG.FermenterVessel) after A's start: this client's copy Processing/nil after 1 ticks, want Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx2_rev_seen_after_start_B :: TLG.FermenterVessel: this client's copy Processing/nil, want Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_walk_rev begin
+STEP mp_mx_rev_pause begin
+OBS  MP.mx rev pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mx_menu_rev_pause begin
+OBS  MP.mx rev (TLG.FermenterVessel) after pause: the server says Paused/paused_by_player; this client's copy Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mx_rev_menu_after_pause_B :: TLG.FermenterVessel: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mx2_tell_a_pause begin
+STEP mp_mx_rev_resume begin
+OBS  MP.mx rev resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mx_menu_rev_resume begin
+OBS  MP.mx rev (TLG.FermenterVessel) after resume: the server says Processing/nil; this client's copy Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mx_rev_menu_after_resume_B :: TLG.FermenterVessel: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mx2_tell_a_resume begin
+STEP mp_mx2_paths_b begin
+OBS  MP.mx chosen through the menu by B: pause=true resume=true
+STEP mp_wait_finish begin
+STEP mp_finish begin
+SUMMARY pass=48 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.ticks 300 OnTick events in 80722 ms
+OBS  MPS.message from tlgb: hello role=B
+OBS  MPS.message from tlga: spawn item=TLG.FermenterVessel role=A tag=mx_spawn_k1 x=10648 y=10649
+OBS  MPS.reply spawned batch=nil id=1029038426 item=TLG.FermenterVessel role=A tag=mx_spawn_k1 x=10648 y=10649
+OBS  MPS.message from tlga: start_running id=1029038426 role=A tag=mx_start_k1 x=10648 y=10649
+OBS  MPS.reply started_running found=true id=1029038426 pause=nil role=A state=Processing tag=mx_start_k1
+OBS  MPS.message from tlga: mx_step id=1029038426 key=k1 kind=machine pause=nil role=A state=Processing step=start t=TLG.FermenterVessel want=pause,abort x=10648 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k1 role=B step=start
+OBS  MPS.message from tlga: mx_step id=1029038426 key=k1 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.FermenterVessel want=resume,abort x=10648 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k1 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=1029038426 key=k1 kind=machine pause=nil role=A state=Processing step=resume t=TLG.FermenterVessel want=pause,abort x=10648 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k1 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=1029038426 key=k1 kind=machine pause=nil role=A state=OutputReady step=abort t=TLG.FermenterVessel want=abort x=10648 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k1 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.PotStill role=A tag=mx_spawn_k2 x=10650 y=10649
+OBS  MPS.reply spawned batch=nil id=272777441 item=TLG.PotStill role=A tag=mx_spawn_k2 x=10650 y=10649
+OBS  MPS.message from tlga: start_running id=272777441 role=A tag=mx_start_k2 x=10650 y=10649
+OBS  MPS.reply started_running found=true id=272777441 pause=nil role=A state=Processing tag=mx_start_k2
+OBS  MPS.message from tlga: mx_step id=272777441 key=k2 kind=machine pause=nil role=A state=Processing step=start t=TLG.PotStill want=pause,abort x=10650 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k2 role=B step=start
+OBS  MPS.message from tlga: mx_step id=272777441 key=k2 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.PotStill want=resume,abort x=10650 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k2 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=272777441 key=k2 kind=machine pause=nil role=A state=Processing step=resume t=TLG.PotStill want=pause,abort x=10650 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k2 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=272777441 key=k2 kind=machine pause=nil role=A state=Ready step=abort t=TLG.PotStill want= x=10650 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k2 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.RefluxStill role=A tag=mx_spawn_k3 x=10652 y=10649
+OBS  MPS.reply spawned batch=nil id=1756861762 item=TLG.RefluxStill role=A tag=mx_spawn_k3 x=10652 y=10649
+OBS  MPS.message from tlga: start_running id=1756861762 role=A tag=mx_start_k3 x=10652 y=10649
+OBS  MPS.reply started_running found=true id=1756861762 pause=nil role=A state=Processing tag=mx_start_k3
+OBS  MPS.message from tlga: mx_step id=1756861762 key=k3 kind=machine pause=nil role=A state=Processing step=start t=TLG.RefluxStill want=pause,abort x=10652 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k3 role=B step=start
+OBS  MPS.message from tlga: mx_step id=1756861762 key=k3 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.RefluxStill want=resume,abort x=10652 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k3 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=1756861762 key=k3 kind=machine pause=nil role=A state=Processing step=resume t=TLG.RefluxStill want=pause,abort x=10652 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k3 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=1756861762 key=k3 kind=machine pause=nil role=A state=Ready step=abort t=TLG.RefluxStill want= x=10652 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k3 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.DryingColumn role=A tag=mx_spawn_k4 x=10654 y=10649
+OBS  MPS.reply spawned batch=nil id=2013868996 item=TLG.DryingColumn role=A tag=mx_spawn_k4 x=10654 y=10649
+OBS  MPS.message from tlga: start_running id=2013868996 role=A tag=mx_start_k4 x=10654 y=10649
+OBS  MPS.reply started_running found=true id=2013868996 pause=nil role=A state=Processing tag=mx_start_k4
+OBS  MPS.message from tlga: mx_step id=2013868996 key=k4 kind=machine pause=nil role=A state=Processing step=start t=TLG.DryingColumn want=pause,abort x=10654 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k4 role=B step=start
+OBS  MPS.message from tlga: mx_step id=2013868996 key=k4 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.DryingColumn want=resume,abort x=10654 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k4 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=2013868996 key=k4 kind=machine pause=nil role=A state=Processing step=resume t=TLG.DryingColumn want=pause,abort x=10654 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k4 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=2013868996 key=k4 kind=machine pause=nil role=A state=OutputReady step=abort t=TLG.DryingColumn want=abort x=10654 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k4 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.WoodRetort role=A tag=mx_spawn_k5 x=10656 y=10649
+OBS  MPS.reply spawned batch=nil id=1160406012 item=TLG.WoodRetort role=A tag=mx_spawn_k5 x=10656 y=10649
+OBS  MPS.message from tlga: start_running id=1160406012 role=A tag=mx_start_k5 x=10656 y=10649
+OBS  MPS.reply started_running found=true id=1160406012 pause=nil role=A state=Processing tag=mx_start_k5
+OBS  MPS.message from tlga: mx_step id=1160406012 key=k5 kind=machine pause=nil role=A state=Processing step=start t=TLG.WoodRetort want=pause,abort x=10656 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k5 role=B step=start
+OBS  MPS.message from tlga: mx_step id=1160406012 key=k5 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.WoodRetort want=resume,abort x=10656 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k5 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=1160406012 key=k5 kind=machine pause=nil role=A state=Processing step=resume t=TLG.WoodRetort want=pause,abort x=10656 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k5 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=1160406012 key=k5 kind=machine pause=nil role=A state=OutputReady step=abort t=TLG.WoodRetort want=abort x=10656 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k5 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.AshBarrel role=A tag=mx_spawn_k6 x=10658 y=10649
+OBS  MPS.reply spawned batch=nil id=1659566040 item=TLG.AshBarrel role=A tag=mx_spawn_k6 x=10658 y=10649
+OBS  MPS.message from tlga: start_running id=1659566040 role=A tag=mx_start_k6 x=10658 y=10649
+OBS  MPS.reply started_running found=true id=1659566040 pause=nil role=A state=Processing tag=mx_start_k6
+OBS  MPS.message from tlga: mx_step id=1659566040 key=k6 kind=machine pause=nil role=A state=Processing step=start t=TLG.AshBarrel want=pause,abort x=10658 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k6 role=B step=start
+OBS  MPS.message from tlga: mx_step id=1659566040 key=k6 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.AshBarrel want=resume,abort x=10658 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k6 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=1659566040 key=k6 kind=machine pause=nil role=A state=Processing step=resume t=TLG.AshBarrel want=pause,abort x=10658 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k6 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=1659566040 key=k6 kind=machine pause=nil role=A state=OutputReady step=abort t=TLG.AshBarrel want=abort x=10658 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k6 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.LyeLeacher role=A tag=mx_spawn_k7 x=10660 y=10649
+OBS  MPS.reply spawned batch=nil id=1739971750 item=TLG.LyeLeacher role=A tag=mx_spawn_k7 x=10660 y=10649
+OBS  MPS.message from tlga: start_running id=1739971750 role=A tag=mx_start_k7 x=10660 y=10649
+OBS  MPS.reply started_running found=true id=1739971750 pause=nil role=A state=Processing tag=mx_start_k7
+OBS  MPS.message from tlga: mx_step id=1739971750 key=k7 kind=machine pause=nil role=A state=Processing step=start t=TLG.LyeLeacher want=pause,abort x=10660 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k7 role=B step=start
+OBS  MPS.message from tlga: mx_step id=1739971750 key=k7 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.LyeLeacher want=resume,abort x=10660 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k7 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=1739971750 key=k7 kind=machine pause=nil role=A state=Processing step=resume t=TLG.LyeLeacher want=pause,abort x=10660 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k7 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=1739971750 key=k7 kind=machine pause=nil role=A state=OutputReady step=abort t=TLG.LyeLeacher want=abort x=10660 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k7 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.BiodieselReactor role=A tag=mx_spawn_k8 x=10662 y=10649
+OBS  MPS.reply spawned batch=nil id=1811251197 item=TLG.BiodieselReactor role=A tag=mx_spawn_k8 x=10662 y=10649
+OBS  MPS.message from tlga: start_running id=1811251197 role=A tag=mx_start_k8 x=10662 y=10649
+OBS  MPS.reply started_running found=true id=1811251197 pause=nil role=A state=Processing tag=mx_start_k8
+OBS  MPS.message from tlga: mx_step id=1811251197 key=k8 kind=machine pause=nil role=A state=Processing step=start t=TLG.BiodieselReactor want=pause,abort x=10662 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k8 role=B step=start
+OBS  MPS.message from tlga: mx_step id=1811251197 key=k8 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.BiodieselReactor want=resume,abort x=10662 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k8 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=1811251197 key=k8 kind=machine pause=nil role=A state=Processing step=resume t=TLG.BiodieselReactor want=pause,abort x=10662 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k8 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=1811251197 key=k8 kind=machine pause=nil role=A state=OutputReady step=abort t=TLG.BiodieselReactor want=abort x=10662 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k8 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.BiodieselWashTank role=A tag=mx_spawn_k9 x=10664 y=10649
+OBS  MPS.reply spawned batch=nil id=978135367 item=TLG.BiodieselWashTank role=A tag=mx_spawn_k9 x=10664 y=10649
+OBS  MPS.message from tlga: start_running id=978135367 role=A tag=mx_start_k9 x=10664 y=10649
+OBS  MPS.reply started_running found=true id=978135367 pause=nil role=A state=Processing tag=mx_start_k9
+OBS  MPS.message from tlga: mx_step id=978135367 key=k9 kind=machine pause=nil role=A state=Processing step=start t=TLG.BiodieselWashTank want=pause,abort x=10664 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k9 role=B step=start
+OBS  MPS.message from tlga: mx_step id=978135367 key=k9 kind=machine pause=paused_by_player role=A state=Paused step=pause t=TLG.BiodieselWashTank want=resume,abort x=10664 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k9 role=B step=pause
+OBS  MPS.message from tlga: mx_step id=978135367 key=k9 kind=machine pause=nil role=A state=Processing step=resume t=TLG.BiodieselWashTank want=pause,abort x=10664 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k9 role=B step=resume
+OBS  MPS.message from tlga: mx_step id=978135367 key=k9 kind=machine pause=nil role=A state=OutputReady step=abort t=TLG.BiodieselWashTank want=abort x=10664 y=10649
+OBS  MPS.message from tlgb: mx_seen key=k9 role=B step=abort
+OBS  MPS.message from tlga: spawn item=TLG.FermenterVessel role=A tag=mx_spawn_pick x=10648 y=10652
+OBS  MPS.reply spawned batch=nil id=952415984 item=TLG.FermenterVessel role=A tag=mx_spawn_pick x=10648 y=10652
+OBS  MPS.message from tlga: start_running id=952415984 role=A tag=mx_start_pick x=10648 y=10652
+OBS  MPS.reply started_running found=true id=952415984 pause=nil role=A state=Processing tag=mx_start_pick
+OBS  MPS.message from tlga: mx_step id=952415984 key=pick kind=machine pause=nil role=A state=Processing step=start t=TLG.FermenterVessel want=pause,abort x=10648 y=10652
+OBS  MPS.message from tlgb: mx_seen key=pick role=B step=start
+OBS  MPS.put_down of 952415984 at 10648,10653 from t=3.0197: pause not_placed -> none, state Processing
+OBS  MPS.message from tlga: mx_step id=952415984 key=pick kind=machine pause=nil role=A state=Processing step=put_down t=TLG.FermenterVessel want=pause,abort x=10648 y=10652
+OBS  MPS.message from tlgb: mx_seen key=pick role=B step=put_down
+OBS  MPS.message from tlga: spawn item=Base.PetrolCan petrol=5 role=A tag=mx_spawn_can x=10651 y=10652
+OBS  MPS.reply spawned batch=nil id=1160001417 item=Base.PetrolCan role=A tag=mx_spawn_can x=10651 y=10652
+OBS  MPS.message from tlga: mx_step id=1160001417 key=can kind=can pause= role=A sealed=nil state= step=first t=Base.PetrolCan want=unseal x=10651 y=10652
+OBS  MPS.message from tlgb: mx_seen key=can role=B step=first
+OBS  MPS.message from tlga: mx_step id=1160001417 key=can kind=can pause= role=A sealed=false state= step=unseal t=Base.PetrolCan want=seal x=10651 y=10652
+OBS  MPS.message from tlgb: mx_seen key=can role=B step=unseal
+OBS  MPS.message from tlga: mx_step id=1160001417 key=can kind=can pause= role=A sealed=true state= step=seal t=Base.PetrolCan want=unseal x=10651 y=10652
+OBS  MPS.message from tlgb: mx_seen key=can role=B step=seal
+OBS  MPS.message from tlga: crate_can role=A tag=mx_crate_can
+OBS  MPS.reply crated_can id=704548087 index=1 role=A tag=mx_crate_can type=bin x=10665 y=10636
+OBS  MPS.message from tlga: mx_step id=704548087 key=crate kind=can pause= role=A sealed=nil state= step=first t=Base.PetrolCan want=unseal x=10665 y=10636
+OBS  MPS.message from tlgb: mx_seen key=crate role=B step=first
+OBS  MPS.message from tlga: mx_step id=704548087 key=crate kind=can pause= role=A sealed=false state= step=unseal t=Base.PetrolCan want=seal x=10665 y=10636
+OBS  MPS.message from tlgb: mx_seen key=crate role=B step=unseal
+OBS  MPS.message from tlga: mx_step id=704548087 key=crate kind=can pause= role=A sealed=true state= step=seal t=Base.PetrolCan want=unseal x=10665 y=10636
+OBS  MPS.message from tlgb: mx_seen key=crate role=B step=seal
+OBS  MPS.message from tlga: spawn item=TLG.FermenterVessel role=A tag=mx_spawn_rev x=10654 y=10652
+OBS  MPS.reply spawned batch=nil id=54828424 item=TLG.FermenterVessel role=A tag=mx_spawn_rev x=10654 y=10652
+OBS  MPS.message from tlga: start_running id=54828424 role=A tag=mx_start_rev x=10654 y=10652
+OBS  MPS.reply started_running found=true id=54828424 pause=nil role=A state=Processing tag=mx_start_rev
+OBS  MPS.message from tlga: mx_step id=54828424 key=rev kind=machine pause=nil role=A state=Processing step=start t=TLG.FermenterVessel want=pause,abort x=10654 y=10652
+OBS  MPS.message from tlgb: mx_seen key=rev role=B step=start
+OBS  MPS.message from tlga: mx_rev id=54828424 role=A t=TLG.FermenterVessel x=10654 y=10652
+OBS  MPS.message from tlgb: mx_did pause=paused_by_player role=B state=Paused step=pause want=resume,abort
+OBS  MPS.message from tlga: mx_seen role=A step=pause
+OBS  MPS.message from tlgb: mx_did pause=nil role=B state=Processing step=resume want=pause,abort
+OBS  MPS.message from tlga: mx_seen role=A step=resume
+OBS  MPS.message from tlga: finish role=A

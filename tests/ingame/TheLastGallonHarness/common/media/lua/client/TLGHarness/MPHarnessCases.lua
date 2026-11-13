@@ -253,14 +253,19 @@ end
 -- the floor and on one in the container nearest the spawn point; and a
 -- batch paused through the menu, the player leaving and joining again.
 -- Each check compares the menu with the state the server replied with.
+-- machinemenus2 (two clients): the same steps by A but the rejoin, each
+-- followed by B, who stands by the row and reads its own copy and menu
+-- against the state A was given (A waits for B before the next step); then
+-- B pauses and resumes a fermenter through its menu and A reads its own.
 ------------------------------------------------------------------------------
-if MP.only == "machinemenus" then
+if MP.only == "machinemenus" or MP.only == "machinemenus2" then
     -- Built in a function of its own: with -debug the game's compiler takes
     -- at most 200 locals in all from one function, block and loop locals
     -- included, and the main chunk of this file is near that (launch 368;
     -- engine-capabilities).
     local function build()
         local MX = {}
+        local TWO = MP.only == "machinemenus2"
         local SNAP = "TLG_harness_mpsnap.txt"
         local KINDS = { "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn", "TLG.WoodRetort",
             "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor", "TLG.BiodieselWashTank" }
@@ -315,6 +320,21 @@ if MP.only == "machinemenus" then
             local rec = it and it:getModData().tlgProc
             return type(rec) == "table" and (tostring(rec.state) .. "/" .. tostring(rec.pause)) or "none"
         end
+        -- machinemenus2, A: tells B the state after a step (from the reply
+        -- kept as MX[key][step], or `over`) and waits until B has read it.
+        local function tellB(key, step, over)
+            return { name = "mp_mx2_tell_" .. key .. "_" .. step, timeout = 3600, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local r = MX[key] and MX[key][step] and MX[key][step].reply or {}
+                    local m = { kind = "machine", key = key, step = step, x = MX[key].x, y = MX[key].y, id = MX[key].id,
+                        t = MX[key].t, state = tostring(r.state), pause = tostring(r.pause), want = expected(r) }
+                    for k, v in pairs(over or {}) do m[k] = v end
+                    send("mx_step", m)
+                    return nil
+                end
+                return nextFrom("mx_seen") ~= nil or nil
+            end }
+        end
         -- A menu entry clicked as a player clicks it, else (not offered) the
         -- command asked directly; the reply kept as MX[key][step].
         local function chooseIn(name, sub, key, step, entry, command, args)
@@ -359,9 +379,14 @@ if MP.only == "machinemenus" then
                 return true
             end }
         end
+        -- A's check after a step, followed by B's in machinemenus2.
+        local function after(key, step)
+            if TWO then return menuAfter(key, step), tellB(key, step) end
+            return menuAfter(key, step)
+        end
         -- A machine of type `t` put down at x, y and its batch started.
         local function started(key, t, x, y)
-            return {
+            local list = {
                 call("mx_spawn_" .. key, "spawn", { item = t, x = x, y = y }, "spawned", function(m)
                     MX[key] = { x = x, y = y, id = tonumber(m.id), t = t }
                 end),
@@ -374,18 +399,20 @@ if MP.only == "machinemenus" then
                             tostring(m.pause), tostring(m.reason or ""))
                     end),
                 walkTo("mp_mx_walk_" .. key, x + 1, y),
-                menuAfter(key, "start"),
             }
+            for _, s in ipairs({ after(key, "start") }) do list[#list + 1] = s end
+            return list
         end
         local steps = { MP.waitWorld }
         local function add(list) for _, s in ipairs(list) do steps[#steps + 1] = s end end
+        if TWO then add({ waitFrom("mp_mx2_wait_b", "hello") }) end
         -- The nine kinds in a row, two tiles apart.
         for i, t in ipairs(KINDS) do
             local key = "k" .. i
             add(started(key, t, S.CX - 12 + 2 * (i - 1), S.CY + 4))
-            add({ choose(key, "pause", KEYS.pause, "machine.pause"), menuAfter(key, "pause"),
-                choose(key, "resume", KEYS.resume, "machine.resume"), menuAfter(key, "resume"),
-                choose(key, "abort", KEYS.abort, "machine.abort"), menuAfter(key, "abort") })
+            for _, step in ipairs({ "pause", "resume", "abort" }) do
+                add({ choose(key, step, KEYS[step], "machine." .. step), after(key, step) })
+            end
         end
         -- A running fermenter taken up and put down a tile below.
         add(started("pick", "TLG.FermenterVessel", S.CX - 12, S.CY + 7))
@@ -445,6 +472,7 @@ if MP.only == "machinemenus" then
                 return true
             end },
         })
+        if TWO then add({ tellB("pick", "put_down", { state = "Processing", pause = "nil", want = "pause,abort" }) }) end
         -- A can of petrol on the floor ("can"), then one in a container
         -- ("crate"): Open, then Seal, through the Fuel menu.
         local function fuelSub(key)
@@ -486,9 +514,93 @@ if MP.only == "machinemenus" then
                 end)
             end)
         end
+        -- machinemenus2: B is told what its copy and Fuel menu should show.
+        local function tellCan(key, step, sealed, want)
+            if not TWO then return nil end
+            return tellB(key, step, { kind = "can", sealed = sealed, want = want, state = "", pause = "" })
+        end
         local function unsealThenSeal(key)
-            return { canChoose(key, "unseal", "ContextMenu_TLG_Unseal", "unseal"), canAfter(key, "unseal", "seal"),
-                canChoose(key, "seal", "ContextMenu_TLG_Seal", "seal"), canAfter(key, "seal", "unseal") }
+            local list = { canChoose(key, "unseal", "ContextMenu_TLG_Unseal", "unseal"), canAfter(key, "unseal", "seal"),
+                tellCan(key, "unseal", "false", "seal"),
+                canChoose(key, "seal", "ContextMenu_TLG_Seal", "seal"), canAfter(key, "seal", "unseal"),
+                tellCan(key, "seal", "true", "unseal") }
+            local out = {}
+            for i = 1, 6 do
+                if list[i] then out[#out + 1] = list[i] end
+            end
+            return out
+        end
+        -- machinemenus2, B: follows each of A's steps, until A names the
+        -- fermenter B is to work ("mx_rev").
+        local follow = { name = "mp_mx2_follow", timeout = 108000, fn = function(ctx, ticks)
+            if not ctx.cur then
+                local rev = nextFrom("mx_rev")
+                if rev then
+                    MX.rev = { x = tonumber(rev.x), y = tonumber(rev.y), id = tonumber(rev.id), t = rev.t }
+                    return true
+                end
+                local m = nextFrom("mx_step")
+                if not m then return nil end
+                MX[m.key] = { x = tonumber(m.x), y = tonumber(m.y), id = tonumber(m.id), t = m.t }
+                ctx.cur, ctx.t0 = m, ticks
+                return nil
+            end
+            local m = ctx.cur
+            local it = itemOf(m.key)
+            local copy, got, want
+            if m.kind == "can" then
+                local side = it and it:getModData().tlg
+                copy, want = "sealed=" .. tostring(side and side.sealed), "sealed=" .. tostring(m.sealed)
+                got = it and sealOffer(m.key) or "none"
+            else
+                copy, want = copyState(m.key), tostring(m.state) .. "/" .. tostring(m.pause)
+                got = it and offered(m.key) or "none"
+            end
+            -- Not on this client: no copy to read.
+            if it == nil then copy = "missing" end
+            if copy ~= want and ticks - ctx.t0 < 600 then return nil end
+            report():line("OBS  MP.mx2 %s (%s) after A's %s: this client's copy %s after %d ticks, want %s; its menu " ..
+                "offers [%s], want [%s]", m.key, tostring(m.t), m.step, copy, ticks - ctx.t0, want, got, tostring(m.want))
+            check("mx2_" .. m.key .. "_seen_after_" .. m.step, function()
+                return copy == want and got == m.want, string.format("%s: this client's copy %s, want %s; menu [%s], want [%s]",
+                    tostring(m.t), copy, want, got, tostring(m.want))
+            end)
+            send("mx_seen", { key = m.key, step = m.step })
+            ctx.cur = nil
+            return nil
+        end }
+        -- machinemenus2, B: after B's own step on the fermenter, tells A the
+        -- state the server replied with and waits until A has read it.
+        local function tellA(step)
+            return { name = "mp_mx2_tell_a_" .. step, timeout = 3600, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local r = MX.rev and MX.rev[step] and MX.rev[step].reply or {}
+                    send("mx_did", { step = step, state = tostring(r.state), pause = tostring(r.pause), want = expected(r) })
+                    return nil
+                end
+                return nextFrom("mx_seen") ~= nil or nil
+            end }
+        end
+        -- machinemenus2, A: reads its own copy and menu after B's step.
+        local function seenFromB(n)
+            return { name = "mp_mx2_seen_b_" .. n, timeout = 7200, fn = function(ctx, ticks)
+                if not ctx.m then
+                    ctx.m = nextFrom("mx_did")
+                    if ctx.m then ctx.t0 = ticks end
+                    return nil
+                end
+                local m = ctx.m
+                local copy, got, want = copyState("rev"), offered("rev"), tostring(m.state) .. "/" .. tostring(m.pause)
+                if copy ~= want and ticks - ctx.t0 < 600 then return nil end
+                report():line("OBS  MP.mx2 rev after B's %s: this client's copy %s after %d ticks, want %s; its menu offers " ..
+                    "[%s], want [%s]", m.step, copy, ticks - ctx.t0, want, got, tostring(m.want))
+                check("mx2_rev_seen_after_b_" .. m.step, function()
+                    return copy == want and got == m.want, string.format("this client's copy %s, want %s; menu [%s], want [%s]",
+                        copy, want, got, tostring(m.want))
+                end)
+                send("mx_seen", { step = m.step })
+                return true
+            end }
         end
         add({
             call("mx_spawn_can", "spawn", { item = "Base.PetrolCan", x = S.CX - 9, y = S.CY + 7, petrol = 5 }, "spawned", function(m)
@@ -496,7 +608,7 @@ if MP.only == "machinemenus" then
             end),
             wait("mp_mx_can_lands", 120),
             walkTo("mp_mx_walk_can", S.CX - 8, S.CY + 7),
-            canFirst("can"),
+            canFirst("can"), tellCan("can", "first", "nil", "unseal"),
         })
         add(unsealThenSeal("can"))
         -- The container nearest the spawn point (MPServer.lua crate_can), walked
@@ -526,9 +638,40 @@ if MP.only == "machinemenus" then
                 ctx.idle = ctx.idle or ticks
                 return ticks - ctx.idle >= 60 or nil
             end },
-            canFirst("crate"),
+            canFirst("crate"), tellCan("crate", "first", "nil", "unseal"),
         })
         add(unsealThenSeal("crate"))
+        if TWO then
+            -- B pauses and resumes a running fermenter through B's menu; A
+            -- reads its own copy and menu after each.
+            add(started("rev", "TLG.FermenterVessel", S.CX - 6, S.CY + 7))
+            add({ once("mp_mx2_rev", function()
+                    send("mx_rev", { x = MX.rev.x, y = MX.rev.y, id = MX.rev.id, t = MX.rev.t })
+                end),
+                seenFromB(1), seenFromB(2),
+                once("mp_mx2_paths", function()
+                    local via = {}
+                    for _, k in ipairs(TLG.Tables.sortedKeys(MX)) do
+                        for _, step in ipairs({ "pause", "resume", "abort", "unseal", "seal" }) do
+                            if MX[k][step] then via[#via + 1] = k .. "." .. step .. "=" .. tostring(MX[k][step].viaMenu) end
+                        end
+                    end
+                    report():line("OBS  MP.mx chosen through the menu by A: %s", table.concat(via, " "))
+                end),
+                once("mp_finish_b", function() send("finish", {}) end), MP.finish })
+            MP.stepsA = steps
+            MP.stepsB = { MP.waitWorld, walkTo("mp_mx2_stand", S.CX - 4, S.CY + 9),
+                once("mp_mx2_hello", function() send("hello", {}) end), follow,
+                walkTo("mp_mx2_walk_rev", function() return MX.rev.x + 1, MX.rev.y + 1 end),
+                choose("rev", "pause", KEYS.pause, "machine.pause"), menuAfter("rev", "pause"), tellA("pause"),
+                choose("rev", "resume", KEYS.resume, "machine.resume"), menuAfter("rev", "resume"), tellA("resume"),
+                once("mp_mx2_paths_b", function()
+                    report():line("OBS  MP.mx chosen through the menu by B: pause=%s resume=%s",
+                        tostring(MX.rev.pause and MX.rev.pause.viaMenu), tostring(MX.rev.resume and MX.rev.resume.viaMenu))
+                end),
+                waitFrom("mp_wait_finish", "finish"), MP.finish }
+            return
+        end
         -- A batch paused through the menu; the player leaves and joins again.
         add(started("join", "TLG.FermenterVessel", S.CX - 6, S.CY + 7))
         add({

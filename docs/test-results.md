@@ -7123,3 +7123,41 @@ Evidence:
 [run 373](evidence/2026-11-13_rt-sp_harness_run373_install_rehearsal_0.4.3_release_42.22.2.txt);
 [run 374](evidence/2026-11-13_rt-sp_harness_run374_upgrade_0.4.2_to_0.4.3_one_check_for_older_releases_42.22.2.txt);
 [run 375](evidence/2026-11-13_rt-sp_harness_run375_upgrade_0.4.2_to_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launch 376 (two players on a server, the 0.4.3 release's mod)
+
+Command: `tools/run-mp-harness.ps1 -Clients 2 -Only machinemenus2`: the
+TLGDev dedicated server and two clients on this computer, 42.22.2,
+`main` at `e44a852`. The mod folders of the server and both clients
+were the 0.4.3 release zip's (`14a36ed`), file for file.
+
+The case (`machinemenus2`, new) runs `machinemenus`'s steps by A but
+the rejoin: the nine kinds of machine started by the server, then
+paused, resumed and aborted through A's menu; a running fermenter taken
+up with **Grab** and put down; a can on the floor and one in the bin at
+10665,10636 opened and sealed through A's Fuel menu. B stands by the row
+and acts on nothing. After each step A sends B the state the server
+replied with and waits; B reads its own copy of the record and its own
+menu against it, then answers. Last, B pauses and resumes a running
+fermenter through B's menu, and A reads its own copy and menu after
+each.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 376 | A 50/0, B 48/0 |
+
+All 45 of B's checks passed: after every step of A's, B's copy equalled
+the server's state and B's menu offered the same entries as A's, for
+the machines, the put-down fermenter and both cans (B's copy of the can
+in the bin `sealed=false` after Open and `sealed=true` after Seal). B's
+copy already matched at its first look each time: the record reaches
+the other client before A's message, which the server relays after
+it. After B's pause and resume, A's copy and menu followed too. Every
+step, A's and B's, was chosen through the menu. The logs of both clients
+and the server hold no warning or error of the mod, and no load error;
+the server's one exception is the harness's deep-recursion probe.
+
+Not run: a real network, more than two players.
+
+Evidence:
+[run 376](evidence/2026-11-13_rt-mp_harness_run376_machinemenus2_two_clients_42.22.2.txt).

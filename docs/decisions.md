@@ -703,8 +703,9 @@ their replacement.
     Abort batch while paused by hand, Abort batch once stopped early and
     nothing once emptied. RT-MP launches 365–367 did the same for each of
     the nine kinds of machine, a running fermenter carried and put down,
-    and one paused while the player left and joined again (D-041). Not
-    run: two clients, a real network, a machine in a container, the
+    and one paused while the player left and joined again (D-041); in
+    launch 376, with two clients, the other client's menu followed each
+    step. Not run: a real network, a machine in a container, the
     performance mode with these sends.
 
 ## D-024 A first look records the fuel it looks at
@@ -1811,5 +1812,7 @@ gas probe (launch 342).
   through the menus the client's copy equalled the server's state, for
   the nine kinds of machine, a fermenter carried and put down, one paused
   while the player left and joined again, and the cans on the floor and
-  in the bin (launch 367, 52/0). Not run: two clients, a real network, a
-  machine in a container, the performance mode with these sends.
+  in the bin (launch 367, 52/0). With two clients the other's copy and
+  menu followed each step, either way (launch 376: A 50/0, B 48/0). Not
+  run: a real network, a machine in a container, the performance mode
+  with these sends.
