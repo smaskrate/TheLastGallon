@@ -297,9 +297,11 @@ launches 362–367 ran the menus on a server with one client
 (`test-results.md`): a fermenter loaded and worked through its menu
 (launch 364, 7/0), then the nine machines, a carried fermenter, the cans
 on the floor and in a bin, and a batch paused across leaving and joining
-again (launch 367, 52/0). The full single-player run on the repository's
-mod (launch 368) passed every check but the station-fuel start gate, a
-start left to chance at a pump with water; the step now holds that draw.
+again (launch 367, 52/0); with both cases' steps moved into functions,
+launches 371 and 372 gave 52/0 and 7/0. The full single-player run on
+the repository's mod (launch 368) passed every check but the station-fuel
+start gate, a start left to chance at a pump with water; the step now
+holds that draw.
 
 The rehearsed zip is the zip of `d0da92c` (168 files, 7,892,433 bytes,
 SHA-256 `B04BD750…7BF6E1E8`), built from a clean tree before any release
@@ -313,9 +315,10 @@ draw, 106/0 and 14/0 (its pump held no water, so nothing was held). It is
 not the release package: the release commit dates the changelog's
 heading, so the release zip differs at least in the shipped
 `CHANGELOG.md` and needs its own build; comparing the two manifests
-shows which files differ. Not run on this zip: the other modes, the
-multiplayer cases, the upgrade scenarios. Not uploaded: the upload
-folder still holds 0.4.2.
+shows which files differ. The mod folders of launch 367's server and
+client are the zip's, file for file, so its 52/0 holds for this zip. Not
+run on it: the other modes, the other multiplayer cases, the upgrade
+scenarios. Not uploaded: the upload folder still holds 0.4.2.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is

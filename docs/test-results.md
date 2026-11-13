@@ -7029,9 +7029,12 @@ The failure was launch 368's check again: this world's first petrol pump
 held water too (0.34 %), and the gate refused all three tries at 0.5.
 The step now holds the gate's draw (launch 368). Four full runs in a row
 drew such a pump (353 and 360 on the gas branch, 368, 369), where D-017
-gives water to about one pump in ten. The draw is not tilted: over 20,000
-worlds with seeds made as `World.lua` makes them, the first pump drew
-water in 9.6 % (`WorldInit.stationContamination`, offline).
+gives water to about one pump in ten. Offline, over 20,000 worlds with
+seeds made as `World.lua` makes them, the pump the full run takes (the
+first petrol pump, x then y) drew water in 9.8 % (`WorldInit`), and the
+same computation gives launches 360, 368 and 369 the water they found
+(0.381 %, 0.393 % and 0.344 %). The draw does not explain the streak: at
+one in ten, four in a row come about once in 10,000.
 
 Evidence:
 [run 369](evidence/2026-11-13_rt-sp_harness_run369_install_rehearsal_0.4.3_one_chance_failure_42.22.2.txt).
@@ -7055,3 +7058,27 @@ path has not run in game.
 
 Evidence:
 [run 370](evidence/2026-11-13_rt-sp_harness_run370_install_rehearsal_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launches 371–372 (the two server cases with their steps in functions)
+
+Commands: `tools/run-mp-harness.ps1 -Only machinemenus`, then `-Only
+machinemenu`: the TLGDev dedicated server and one client on this
+computer, 42.22.2, branch `fix/machine-menu-server` at `c317bc7`, the mod
+as in the 0.4.3 zip. After launch 368 each case builds its steps in a
+function of its own (the `-debug` limit on a function's locals); these
+launches run them in that form.
+
+| Launch | Case | Result (pass/fail, client A) |
+| --- | --- | --- |
+| 371 | `machinemenus` | 52/0 |
+| 372 | `machinemenu` | 7/0 |
+
+Both went as launches 367 and 364: every step chosen through the menu,
+the client's copy equal to the server's state after each, the cans on
+the floor and in the bin opened and sealed again. The clients' and the
+servers' logs hold no warning or error of the mod, and no load error;
+the servers' one exception is the harness's deep-recursion probe.
+
+Evidence:
+[run 371](evidence/2026-11-13_rt-mp_harness_run371_machinemenus_rewrapped_42.22.2.txt);
+[run 372](evidence/2026-11-13_rt-mp_harness_run372_machinemenu_rewrapped_42.22.2.txt).
