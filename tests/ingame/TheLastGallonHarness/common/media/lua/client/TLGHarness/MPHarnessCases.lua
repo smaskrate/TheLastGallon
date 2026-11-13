@@ -850,7 +850,9 @@ end
 --   and started again, and both join again: the same record (id, rev,
 --   totals), no game time passed (the server pauses when empty), the
 --   generator watched again as its square loads (Generators.onLoadSquare)
---   and fed.
+--   and fed. Then B puts the gasifier out through its menu and A lights it
+--   through its own, each followed by the other: requests on the item as
+--   the restarted server reloaded it.
 -- Each time, after the hourly draws, which write the record without a new
 -- rev (Gasifiers.drawNear), each client compares its copies of the record
 -- and of the generator with the server's (probe_gaswood); a probe is asked
@@ -1337,8 +1339,14 @@ if MP.only == "gaswood2" then
                     return ticks - ctx.seen >= 600 or nil
                 end },
                 once("mp_gw2_compare", function() send("gw2_compare", {}) end),
-                waitFrom("mp_gw2_b_compared", "gw2_compared"),
-                once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+                waitFrom("mp_gw2_b_compared", "gw2_compared") }
+            -- Requests on the gasifier as the restarted server reloaded it
+            -- (found by id, checked against the vault, a new rev): B puts it
+            -- out through its menu, A lights it through its own.
+            add(rejoinedA, turnA("put_out_after_restart", "light"))
+            add(rejoinedA, { choose("relit_after_restart", LIGHT), wait("mp_gw2_relit_settles", 180),
+                ownA("relit_after_restart", "Processing", "put_out"), tell("relit_after_restart"),
+                once("mp_finish_b", function() send("finish", {}) end), MP.finish })
             rejoinedB = { joinClock, MP.waitWorld, firstRead, wait("mp_gw2_settle", 240),
                 probe("b_after_restart", function(m, same, rec)
                     local menu = offered()
@@ -1351,8 +1359,9 @@ if MP.only == "gaswood2" then
                 end, 4),
                 waitFrom("mp_gw2_wait_compare", "gw2_compare"),
                 probe("b_restart_hours", judgeSame("b_copy_follows_the_first_write_after_the_restart"), 4),
-                once("mp_gw2_compared", function() send("gw2_compared", {}) end),
-                waitFrom("mp_wait_finish", "finish"), MP.finish }
+                once("mp_gw2_compared", function() send("gw2_compared", {}) end) }
+            add(rejoinedB, turnB("put_out_after_restart", PUT_OUT, "light"))
+            add(rejoinedB, { follow("relit_after_restart", "put_out"), waitFrom("mp_wait_finish", "finish"), MP.finish })
         end
         MP.stepsA, MP.stepsB = stepsA, stepsB
         MP.stepsRejoined = MP.role == "A" and rejoinedA or rejoinedB

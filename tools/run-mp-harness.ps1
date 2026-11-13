@@ -103,8 +103,9 @@
   joins again and must have the server's record of now and Put out. With
   -Restart, B lights it again instead, both leave, the server is saved,
   stopped and started again, and both join again: the same record, no
-  game time passed, the generator fed again. Each client compares its
-  copies with the server's after the hourly draws (on the shortest day).
+  game time passed, the generator fed again; then B puts the gasifier out
+  and A lights it, each through its menu. Each client compares its copies
+  with the server's after the hourly draws (on the shortest day).
   machinemenu: the machine menu's Pause, Resume and Abort batch on a
   server: a fermenter the server puts on the floor is loaded and started
   through the menu, then paused, resumed and aborted twice; after each step

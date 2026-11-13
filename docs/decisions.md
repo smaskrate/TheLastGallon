@@ -1928,7 +1928,7 @@ gas probe (launch 342).
     generator, which started and ran three hours. Photographed with the
     fog held off, the model draws whole and textured beside the
     generator.
-  * On a dedicated server with two clients (launches 389–391): each
+  * On a dedicated server with two clients (launches 389–392): each
     client's copy of the gasifier's record and its menu followed the
     other's Load, Light and Put out, and the draws, which write the record
     with no new rev. A client that left, while the other lit the gasifier
@@ -1936,7 +1936,7 @@ gas probe (launch 342).
     the square. Across a restart of the server with the gasifier lit, the
     record kept its id, rev and totals, no game time passed, and the
     generator came back running, watched again as its square loaded, and
-    fed.
+    fed; Put out and Light through the menus then worked on it as before.
   * Not run: finding the handbook in game; the crafting window's own
     refusals; a real network; the minute pass finding a lit gasifier moved
     (both runs asked for its Status first, which put it out), a wood-gas
@@ -1986,5 +1986,5 @@ gas probe (launch 342).
   in the bin (launch 367, 52/0). With two clients the other's copy and
   menu followed each step, either way (launch 376: A 50/0, B 48/0). The
   gasifier's record on two clients, on joining and across a restart of
-  the server: launches 389–391 (D-040). Not run: a real network, a
+  the server: launches 389–392 (D-040). Not run: a real network, a
   machine in a container, the performance mode with these sends.

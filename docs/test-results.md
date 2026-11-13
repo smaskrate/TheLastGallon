@@ -7810,7 +7810,7 @@ photographs in [evidence/run387](evidence/run387);
 [run 388](evidence/2026-11-13_rt-sp_harness_run388_gas_player_clear_sky_42.22.2.txt),
 photographs in [evidence/run388](evidence/run388).
 
-## 2026-11-13 — RT-MP launches 389–391 (the gasifier on two clients, a client joining while it burns, a server restart)
+## 2026-11-13 — RT-MP launches 389–392 (the gasifier on two clients, a client joining while it burns, a server restart)
 
 Branch `feature/gas-generators` after `81b5da3`, 42.22.2, a dedicated
 server and two clients on this machine, on the shortest day. The new case
@@ -7818,13 +7818,16 @@ server and two clients on this machine, on the shortest day. The new case
 server converts to gas and a Wood Gasifier two tiles from it. The server's
 probe also answers with the stored record's id, rev, time and delivered gas,
 and its clock: a generator's draw writes the record without a new rev
-(`Gasifiers.drawNear`), so the time and the gas tell a stale copy.
+(`Gasifiers.drawNear`), so the time and the gas tell a stale copy. The
+one-client `gaswood` case, whose probe this is, was not run again after
+the probe gained these fields.
 
 | Launch | Command | A | B |
 | --- | --- | --- | --- |
 | 389 | `tools/run-mp-harness.ps1 -Clients 2 -Only gaswood2`, the first version | 10/0 | 8/0 |
 | 390 | the same, the generator off until B is back | 9/0 | 9/0 |
 | 391 | `tools/run-mp-harness.ps1 -Clients 2 -Only gaswood2 -Restart` | 18/0 | 10/0 |
+| 392 | the same, then a **Put out** and a **Light** after the restart | 20/0 | 12/0 |
 
 Two clients (each launch):
 
@@ -7859,37 +7862,45 @@ A client joining while it burns:
   draws, both copies again had the server's record (rev 4, t 7.0172 h,
   0.0448 Nm³ delivered).
 
-A server restart with the gasifier lit (launch 391):
+A server restart with the gasifier lit (launches 391 and 392, the same
+up to the restart):
 
 * B lit the gasifier again through its menu (rev 4) and the generator ran
   on it. Before the restart, at 6.92 h: record rev 4, 0.032 Nm³
   delivered, 5.728 kg fed, the generator running, both copies equal to
   the server's.
 * Both clients left; the server was saved, stopped and started again (up
-  after 30 s), and both joined again. B joined first, at 6.9641 h, 0.04 h
-  after its last probe before leaving: the restart itself took no game
-  time, as the server pauses when empty. A joined at 7.0913 h. The check
-  on the clock, 0.33 h between A's probes before and after, includes the
-  time B played alone.
+  after 30 s each time), and both joined again. The first to join came in
+  0.04 h after its last probe before leaving (launch 391: B at 6.9641 h;
+  launch 392: A at 6.9683 h): the restart itself took no game time, as
+  the server pauses when empty. The check on the clock compares A's
+  probes before and after (0.33 h and 0.19 h), which includes the time
+  the other one played alone.
 * The record came back the same: the same id, rev 4, and its totals not
   reset (0.0448 Nm³ delivered and 5.7335 kg fed at A's first probe). The
   gasifier was still lit on its square, and the generator came back
   running and watched again: its square was listed once it loaded
   (`Generators.onLoadSquare`).
-* The first draw after the restart came at 7.0170 h. B, in the game by
-  then, received it: its copy equalled the server's at 7.1124 h. B's own
-  first copy had been the last write before the restart (6.0184 h), which
-  came with the square from the saved world. A, joining after the draw,
-  found it in its first copy.
+* The first draw after the restart came at about 7.017 h. A client in the
+  game by then received it, its copy equal to the server's. The first to
+  join had, as its first copy, the last write before the restart (at
+  about 6.02 h): it came with the square from the saved world. Launch
+  391's A, joining after that draw, found it in its first copy.
 * The generator went on being fed: 0.0576 Nm³ delivered by A's probe at
-  8.93 h and 0.0704 by B's at 9.20 h, each copy equal to the server's.
+  8.93 h and 0.0704 by B's at 9.20 h in launch 391, the same in 392, each
+  copy equal to the server's.
+* Launch 392 then acted on the gasifier as the restarted server had
+  reloaded it. B put it out through its menu (rev 5) and A's copy and menu
+  followed; A lit it through its own (rev 6) and B's followed. The
+  server found the item by id and read its record through the vault's
+  check (`Vault.guard`), and each request gave a new rev.
 
-In launch 391 both clients and both server sessions read 0.4.3, the mod's
-version on this branch, at each load. No client console holds a warning
-or error of the mod; the only exceptions are the game's own animator
-folder scan (`AdvancedAnimator`). The server's log of either session
-holds no warning or error of the mod. The consoles of launches 389 and
-390 were not kept.
+In launches 391 and 392 both clients and both server sessions read 0.4.3,
+the mod's version on this branch, at each load. No client console holds a
+warning or error of the mod; the only exceptions are the game's own
+animator folder scan (`AdvancedAnimator`). The server's log of either
+session holds no warning or error of the mod. The consoles of launches
+389 and 390 were not kept.
 
 Not run: a real network; a client that never saw the gasifier before
 joining (B had, and its Lua and copies were gone after the main menu); a
@@ -7899,4 +7910,5 @@ performance mode with these sends.
 Evidence:
 [run 389](evidence/2026-11-13_rt-mp_harness_run389_gaswood2_two_clients_42.22.2.txt);
 [run 390](evidence/2026-11-13_rt-mp_harness_run390_gaswood2_join_while_it_burns_42.22.2.txt);
-[run 391](evidence/2026-11-13_rt-mp_harness_run391_gaswood2_restart_42.22.2.txt).
+[run 391](evidence/2026-11-13_rt-mp_harness_run391_gaswood2_restart_42.22.2.txt);
+[run 392](evidence/2026-11-13_rt-mp_harness_run392_gaswood2_restart_then_acted_on_42.22.2.txt).

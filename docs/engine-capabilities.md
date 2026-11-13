@@ -1612,6 +1612,11 @@ How a 42.21 server runs a timed action a client queued (`javap` of
   reach the clients: in RT-MP run 362 a fermenter's client copy held no
   record after the server had loaded, paused, resumed and aborted it. The
   mod sends such a record itself (`WorldItemRecords.lua`, D-041).
+- A client joining gets an item lying on the floor with its mod data as
+  the server holds it then, with the square. In RT-MP launch 390 a
+  gasifier's record written while a client was away, and not written
+  again, was that client's first copy on joining; in launches 391–392 the
+  records came back from the saved world after a restart of the server.
 - The world menu's **Grab** on a client queues an inventory transfer
   (`ISInventoryTransferAction`; SRC `ISWorldObjectContextMenu.lua:1436`,
   its `isClient()` branch), which the server carries out as an item
