@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.4.3 (not released)
+## 0.4.3 (2026-11-13)
 
 * Fixed: on a server, a machine's menu did not follow its batch, so
   **Pause**, **Resume** and **Abort batch** were missing. The menu
@@ -21,14 +21,14 @@
   each time it changes. A can in the player's own inventory was not
   affected.
 * Checked on 42.22.2 on a dedicated server with one player (launches
-  362–367 in `docs/test-results.md`): a fermenter loaded through its
-  menu; on each of the nine machines, a batch the server had started,
-  paused, resumed and aborted through the menu; a running fermentation
-  vessel picked up and put down; a vessel paused while the player left
-  and joined again; a can on the floor and one in a bin opened and sealed
-  again through the Fuel menu. Each menu offered each entry where it
-  applied. Not checked: two players, a real network, a machine stored in
-  a container on a server.
+  362–367 and 371–372 in `docs/test-results.md`): a fermenter loaded
+  through its menu; on each of the nine machines, a batch the server had
+  started, paused, resumed and aborted through the menu; a running
+  fermentation vessel picked up and put down; a vessel paused while the
+  player left and joined again; a can on the floor and one in a bin
+  opened and sealed again through the Fuel menu. Each menu offered each
+  entry where it applied. Not checked: two players, a real network, a
+  machine stored in a container on a server.
 
 ## 0.4.2 (2026-11-12)
 

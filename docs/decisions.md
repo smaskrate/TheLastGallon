@@ -670,7 +670,7 @@ their replacement.
   distilling kept exactly the 1.10 L it had distilled. Run 51 (32/0)
   repeated run 33's controls under the rule, a fermenter's preparing hour
   making no ethanol.
-* Amendment (2026-11-13, version 0.4.3, not released): on a server the
+* Amendment (2026-11-13, version 0.4.3): on a server the
   menu's **Pause**, **Resume** and **Abort batch** did not follow the batch
   of a machine on the floor. The menu judges on the client's copy of the
   record, and within a session that copy did not change when the server

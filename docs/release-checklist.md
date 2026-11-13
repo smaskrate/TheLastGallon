@@ -248,8 +248,8 @@ Italian (`IGUI_TLG_ConvReason_not_offered`), `TLG.VERSION` and
 text, the changelog, the support matrix and `migrations.md`. No script.
 Launch 343 showed the menu without the entry, with the change in the
 repository's mod. The full run's new `LOOP.gen_start_offers_flex_only`
-checks the menu and the refusal (launch 344, below). The change note is
-`docs/workshop-change-note-0.4.2.txt`.
+checks the menu and the refusal (launch 344, below). The change note was
+`docs/workshop-change-note-0.4.2.txt`, renamed for 0.4.3.
 
 The 0.4.2 package is the zip of `f264f10` (167 files, 7,889,325 bytes,
 SHA-256 `E70E7038…FAD5F9D3`), built from a clean tree. Thirteen files
@@ -279,7 +279,7 @@ its SHA-256 in `dist/TheLastGallon-0.4.2.sha256`, and its `mod.info`
 reads 0.4.2 (gate 12). Open: the game loading the mod from that
 download, and how the Workshop page shows the change note.
 
-## Version 0.4.3 (not released)
+## Version 0.4.3 (2026-11-13)
 
 Version 0.4.3 makes two client menus follow the server on a dedicated
 server: the machine menu's **Pause**, **Resume** and **Abort batch**
@@ -303,22 +303,23 @@ the repository's mod (launch 368) passed every check but the station-fuel
 start gate, a start left to chance at a pump with water; the step now
 holds that draw.
 
-The rehearsed zip is the zip of `d0da92c` (168 files, 7,892,433 bytes,
-SHA-256 `B04BD750…7BF6E1E8`), built from a clean tree before any release
-commit. Ten files differ from the 0.4.2 package: `42/mod.info`,
+A zip of `d0da92c` (168 files, 7,892,433 bytes, SHA-256
+`B04BD750…7BF6E1E8`) was built from a clean tree before the release
+commit and rehearsed. Ten files differ from the 0.4.2 package: `42/mod.info`,
 `TLG/Core.lua`, `Net.lua`, `MachineContextMenu.lua`, `Containers.lua`,
 `Machines.lua`, the new `WorldItemRecords.lua`, the shipped changelog and
 support matrix, and `workshop.txt`. It was installed clean and played
 twice, the game reading 0.4.3: launch 369, 105/1 and 14/0, the same
 start gate left to chance; launch 370, with the harness that holds that
-draw, 106/0 and 14/0 (its pump held no water, so nothing was held). It is
-not the release package: the release commit dates the changelog's
-heading, so the release zip differs at least in the shipped
-`CHANGELOG.md` and needs its own build; comparing the two manifests
-shows which files differ. The mod folders of launch 367's server and
-client are the zip's, file for file, so its 52/0 holds for this zip. Not
-run on it: the other modes, the other multiplayer cases, the upgrade
-scenarios. Not uploaded: the upload folder still holds 0.4.2.
+draw, 106/0 and 14/0 (its pump held no water, so nothing was held). The
+mod folders of launch 367's server and client are that zip's, file for
+file, so its 52/0 holds for it too.
+
+The release commit dates the changelog and gives the player guide its
+0.4.3 version line (the zip of `d0da92c` still read 0.4.2 there) and the
+server checks of launches 362–372 in its lists of what has been checked.
+The change note is `docs/workshop-change-note-0.4.3.txt`. No package of
+the release commit is built yet, and the upload folder still holds 0.4.2.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -795,8 +796,8 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.4.2.txt`, written on 2026-11-12: the changes
-from 0.4.1, which the item served before, to 0.4.2, in the form with bullet
+`docs/workshop-change-note-0.4.3.txt`, written on 2026-11-13: the changes
+from 0.4.2, which the item serves, to 0.4.3, in the form with bullet
 characters described below. It is not in the package. Its 0.4.1 form,
 `docs/workshop-change-note-0.4.1.txt` (the changes from 0.1.1), was
 pasted by the owner at the 0.4.1 upload

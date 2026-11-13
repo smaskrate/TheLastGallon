@@ -1,6 +1,6 @@
 # The Last Gallon: player guide
 
-Version 0.4.2, for Project Zomboid 42.22.2. Each section ends with what
+Version 0.4.3, for Project Zomboid 42.22.2. Each section ends with what
 has been checked in a running game. Anything listed as not checked is in
 the mod but has not been seen working in game yet.
 
@@ -560,7 +560,11 @@ spoiled batch is emptied the same way.
   running stills: a pot still took a stopped vessel's wash, a spoiled
   vessel was emptied and loaded again, a still paused for three hours
   burned no wood meanwhile, and a still aborted while distilling kept only
-  the spirit it had made.
+  the spirit it had made;
+* on a server, **Pause**, **Resume** and **Abort batch** through the menu
+  on the vessel, both stills and the drying column, the menu offering each
+  entry only where the batch allowed it, also for a vessel picked up and
+  put down and after the player left and joined again.
 
 **Not checked in game:** a campfire built indoors, a propane barbecue,
 machines on upper floors, and stopped days adding up across separate cold
@@ -748,15 +752,18 @@ engines tolerate.
   refused while there was none, and the retort's methanol refused to a
   can;
 * on a server, each of the five loads, the collection into a can and the
-  retort's refusal, on machines the test server had set up finished.
+  retort's refusal, on machines the test server had set up finished;
+* on a server, **Pause**, **Resume** and **Abort batch** through the menu
+  on a batch the test server had started in each of the five, the menu
+  offering each entry only where the batch allowed it.
 
 **Not checked in game:** Olive Oil, Lard and a part-used bottle; a batch
 limited by the methanol; the charcoal a retort gives back when its last
 methanol is taken; a firebox running out during a batch; **Pause**,
-**Resume** and **Abort batch** on these machines; one picked up while it
-works; a save with a batch running; settling in the cold; a batch running
-through its hours on a server; the machines' menus read in Italian (their
-Italian texts load as shipped).
+**Resume** and **Abort batch** on these machines in single player; one
+picked up while it works; a save with a batch running; settling in the
+cold; a batch running through its hours on a server; the machines' menus
+read in Italian (their Italian texts load as shipped).
 
 ## Diesel
 

@@ -1,0 +1,14 @@
+[b]Version 0.4.3[/b]
+Changes since 0.4.2, the version uploaded here before: two fixes for servers, single player unchanged. Tested on Project Zomboid 42.22.2.
+
+[b]Fixed[/b]
+• On a server, a machine's menu did not follow its batch, so "Pause", "Resume" and "Abort batch" were missing. The server now sends the batch to the players each time someone acts on the machine, asks for its "Status" or moves it. A batch that finished or paused by itself shows in the menu after a "Status".
+• On a server, the "Fuel (The Last Gallon)" menu of a can lying on the floor, or stored in a crate, a bin, a cupboard or the like, still offered "Open" after the can was opened, so it could not be sealed again from there. The server now sends the can's record to the players each time it changes.
+
+[b]Checked on a server[/b]
+• With one player: each of the nine machines paused, resumed and aborted through its menu; a working fermentation vessel picked up and put down; a vessel paused while the player left and joined again; a can on the floor and one in a bin opened and sealed again.
+
+[b]Not checked in game[/b]
+• Two players on a server, a real network, a machine kept in a crate on a server.
+
+The player guide (docs/player-guide.md in the mod's folder) has the steps and the numbers. docs/CHANGELOG.md lists the changes by version.
