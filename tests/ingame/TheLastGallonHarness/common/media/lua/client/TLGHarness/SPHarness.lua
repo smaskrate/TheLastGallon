@@ -19328,8 +19328,9 @@ RT.GY.build()
 -- 2. B is taken up with the game's action (switched off and unplugged
 --    first, as the game asks) and put down a tile from the gasifier: the
 --    same gas record, its new square watched and its old one dropped, fed
---    again once started. Taken up again and put down out of the gasifier's
---    reach, it runs on what it holds and stops.
+--    there once it falls below its cap, which follows its load on the new
+--    square. Taken up again and put down out of the gasifier's reach, it
+--    runs on what it holds and stops.
 -- 3. The lit gasifier is taken up with the world menu's Grab and put down
 --    on another tile within A's reach, and nothing reads it: the
 --    generator's minute pass, finding room after A's next step, is the

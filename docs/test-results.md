@@ -8014,9 +8014,16 @@ what three domain cases of `test_gas_generators.lua` say. Two vanilla
 generators converted to gas as in `gas-wood`, A and B, stand four tiles
 apart with a Wood Gasifier between them, two tiles from each. It is loaded
 (48 kg) and lit through its menu, and both are started through the start
-gate. The harness reads the gasifier's record without writing it: in
-single player the vault is not active and `Vault.guard` returns the record
-as stored.
+gate. In single player only two paths write a gasifier's record: a
+request from its menu (each action, and **Status**, which keeps its
+catch-up; `GasifierHandlers.lua`) and the generators' minute pass drawing
+from it (`Gasifiers.drawNear`). The vault writes only on a server
+(`Vault.active` asks `isServer()`), and `Vault.guard` otherwise returns
+the record as stored, so the harness's reads write nothing. The harness
+itself, not a player's menus, made both conversions with the conversion
+service, plugged each generator in and switched B off and unplugged it by
+setting the game's flags, and queued the game's take, drop, grab and
+start actions directly.
 
 | Launch | Command | Result (pass/fail) |
 | --- | --- | --- |
@@ -8028,8 +8035,9 @@ came with 0.006 L while its cap at the new square was 0.003 L, so it was
 not due a refill in the 1.5 h allowed; the window with B out of reach ended
 when B stopped, 0.45 h in, before A's hourly refill; and the last window
 ended in the tick A stopped, before the per-tick watch saw the stop.
-Launch 396 saw everything below but B refilled at its new square, which
-its window was too short for; the figures are launch 397's.
+Launch 396 saw everything below but B refilled at its new square and A
+refilled while B was away, which its windows were too short for; the
+figures are launch 397's.
 
 * One gasifier feeds two generators: over 3 game hours both ran without a
   stop, each of the 3 hourly steps of each (A 0.002 L, B 0.005 L) was
@@ -8051,16 +8059,20 @@ its window was too short for; the figures are launch 397's.
 * The lit gasifier moved with nothing reading it: taken up with the world
   menu's Grab and put down a tile off, within A's reach, its stored record
   was still lit, with its site the old tile and its time that of A's last
-  draw (9.0174 h). At A's next step the generator's minute pass read it
-  first, at 10.0172 h (a minute into the hour), and put it out as moved:
+  draw (9.0174 h). No request was sent to it after the move, so the next
+  write could only be the minute pass's. At A's next step the generator's
+  minute pass read it first, at 10.0172 h (a minute into the hour), and
+  put it out as moved:
   its wood kept (44.983 kg), its 2 Nm³ let out. A got nothing, held its
   margin (0.001 L), burned it at the next hour and stopped.
 
-The console holds no warning or error of the mod; it read 0.4.3.
+Neither launch's console holds a warning or error of the mod; both read
+0.4.3.
 
-Not run: these moves on a server; a gasifier between generators that
-draw more than its buffer holds in an hour (D-040 does not say how a
-buffer too small for both is shared).
+Not run: these moves on a server; a generator switched off, unplugged and
+taken up through the game's own menu entries; a gasifier between
+generators that draw more than its buffer holds in an hour (D-040 does
+not say how a buffer too small for both is shared).
 
 Evidence:
 [run 396](evidence/2026-11-13_rt-sp_harness_run396_gas_moves_42.22.2.txt);
