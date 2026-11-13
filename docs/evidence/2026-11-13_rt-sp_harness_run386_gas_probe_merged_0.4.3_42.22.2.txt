@@ -1,0 +1,52 @@
+# TLG single-player harness, the gas probe, before the save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=24055436408142920504 hours=2.0096 DayLength=4
+STEP rtgp_setup begin
+OBS  RTGP.placed A at 10648,10649, the tank at 10649,10649, B at 10654,10649; max fuel 10 L; the tank: useDelta 1.9999999494757503E-4, 5000.000 uses (getCurrentUses 5000); set to 4999.5 uses it read 5000.0001 (getCurrentUses 5000); full again 5000.000
+PASS RTGP.placed :: A true, B true, tank true with 5000.000 uses
+STEP rtgp_start begin
+OBS  RTGP.started at 2.016 h: A fuel 1.0000 activated=true power 0.5000; B fuel 8.0000 activated=true power 0.8000; tank 5000.000 uses; GeneratorFuelConsumption 10
+PASS RTGP.both_running :: A true, B true
+STEP rtgp_feed begin
+OBS  RTGP.phase_a_start at 2.016 h: A fuel 1.0000 activated=true power 0.5000; B fuel 8.0000 activated=true power 0.8000; tank 5000.000 uses; GeneratorFuelConsumption 10
+OBS  RTGP.phase_a_end at 4.017 h: A fuel 0.5000 activated=true power 0.5000; B fuel 6.4000 activated=true power 0.8000; tank 4808.000 uses; GeneratorFuelConsumption 10
+OBS  RTGP.phase_a: 2.000 game h, 120 game minutes, 120 minute calls; A burned 0.5000 L (lowest fuel before a top-up 0.5000, 0 minutes not running); B burned 1.6000 L, 0.79997 L an hour; the tank 5000.000 -> 4808.000 uses, 192.000 drawn; the propane owed 0.172043 Nm3, drawn and carried 0.172043 Nm3 (0.000011 carried); 0 writes read back otherwise
+PASS RTGP.phase_a_a_ran_on_its_buffer :: 0 minutes not running, activated at the end true, 120 calls for 120 game minutes
+OBS  RTGP.phase_a steps: A 1 steps of 0.5000-0.5000 L at power 0.5000 (1.0000 L a unit), B 1 steps of 0.8000-0.8000 L at power 0.8000 (1.0000 L a unit), in 2.000 game h
+PASS RTGP.phase_a_hourly_steps_by_power :: A 1 steps of 0.5000-0.5000 L at power 0.5000 (1.0000 L a unit), B 1 steps of 0.8000-0.8000 L at power 0.8000 (1.0000 L a unit), in 2.000 game h
+PASS RTGP.phase_a_tank_paid_exactly :: owed 0.172043 Nm3, drawn 192.000 uses and 0.000011 Nm3 carried, 0 writes read back otherwise
+STEP rtgp_before_save begin
+OBS  RTGP.saving at 4.017 h: A fuel 0.5000 activated=true power 0.5000; B fuel 6.4000 activated=true power 0.8000; tank 4808.000 uses; GeneratorFuelConsumption 10
+STEP rtgp_save_and_exit begin
+SUMMARY pass=5 fail=0
+EXIT phase 1 -> main menu
+# TLG single-player harness, the gas probe, after the save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtgpb_reload begin
+OBS  RTGP.after_the_reload at 4.044 h: A fuel 0.5000 activated=true power 0.5000; B fuel 6.4000 activated=true power 0.8000; tank 4808.000 uses; GeneratorFuelConsumption 10
+PASS RTGPB.as_saved :: A activated true, fuel off by 0.00000; B activated true, fuel off by 0.00000 (allowed 0.02714 for 0.028 game h); tank off by 0.00000 uses
+STEP rtgpb_feed begin
+OBS  RTGP.phase_b_start at 4.044 h: A fuel 1.0000 activated=true power 0.5000; B fuel 6.4000 activated=true power 0.8000; tank 4808.000 uses; GeneratorFuelConsumption 10
+OBS  RTGP.phase_b_end at 5.046 h: A fuel 1.0000 activated=true power 0.5000; B fuel 5.6000 activated=true power 0.8000; tank 4616.000 uses; GeneratorFuelConsumption 10
+OBS  RTGP.phase_b: 1.002 game h, 60 game minutes, 60 minute calls; A burned 0.5000 L (lowest fuel before a top-up 0.5000, 0 minutes not running); B burned 0.8000 L, 0.79879 L an hour; the tank 4808.000 -> 4616.000 uses, 192.000 drawn; the propane owed 0.172054 Nm3, drawn and carried 0.172054 Nm3 (0.000022 carried); 0 writes read back otherwise
+PASS RTGP.phase_b_a_ran_on_its_buffer :: 0 minutes not running, activated at the end true, 60 calls for 60 game minutes
+OBS  RTGP.phase_b steps: A 1 steps of 0.5000-0.5000 L at power 0.5000 (1.0000 L a unit), B 1 steps of 0.8000-0.8000 L at power 0.8000 (1.0000 L a unit), in 1.002 game h
+PASS RTGP.phase_b_hourly_steps_by_power :: A 1 steps of 0.5000-0.5000 L at power 0.5000 (1.0000 L a unit), B 1 steps of 0.8000-0.8000 L at power 0.8000 (1.0000 L a unit), in 1.002 game h
+PASS RTGP.phase_b_tank_paid_exactly :: owed 0.172054 Nm3, drawn 192.000 uses and 0.000022 Nm3 carried, 0 writes read back otherwise
+STEP rtgpb_trip begin
+OBS  RTGP.leaving at 5.046 h: A fuel 0.5000 activated=true power 0.5000; B fuel 5.6000 activated=true power 0.8000; tank 4616.000 uses; GeneratorFuelConsumption 10
+OBS  RTGP.back at 9.078 h: A fuel 0.0000 activated=false power 0.5000; B fuel 2.4000 activated=true power 0.8000; tank 4616.000 uses; GeneratorFuelConsumption 10
+OBS  RTGPB.trip: their square unloaded while away true; gone 4.019 game h; A fuel 0.5000 (one hourly step) -> 0.0000 activated=false; B fuel 5.6000 -> 2.4000 activated=true; at its rate the trip burns 3.2102 L of B's
+PASS RTGPB.trip_unloaded_and_found_again :: unloaded true, found true
+STEP rtgpb_run_dry begin
+OBS  RTGP.run_dry_start at 9.078 h: A fuel 0.0500 activated=true power 0.5000; B fuel 2.4000 activated=true power 0.8000; tank 4616.000 uses; GeneratorFuelConsumption 10
+OBS  RTGP.run_dry_end at 10.014 h: A fuel 0.0000 activated=false power 0.5000; B fuel 1.6000 activated=true power 0.8000; tank 4616.000 uses; GeneratorFuelConsumption 10
+PASS RTGPB.a_stops_when_dry :: fuel 0.000000, activated false, 0.927 game h after a 0.0500 L buffer
+PASS RTGPB.b_still_running :: B fuel 1.6000, activated true
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 10.01
+SUMMARY pass=7 fail=0
+DONE

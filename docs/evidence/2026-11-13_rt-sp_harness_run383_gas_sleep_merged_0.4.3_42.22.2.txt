@@ -1,0 +1,33 @@
+# TLG single-player harness, gas and sleep (D-040)
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=94280100614224994884 hours=2.0096 DayLength=4
+STEP rtgm_setup begin
+OBS  RTGM.placed at 2.02303 h (clock 09:01): A fuel 1.0000000, running true, load 0.0050000 L an hour, setting 0.09999999776482582 (SandboxVars 0.1), powering [Gas Pump x1 (0.003 L/h)]; charger on false
+OBS  RTGM.placed A at 10648,10649 and the charger at 10650,10649; A max fuel 10 L; AllowExteriorGenerator true; the charger's battery Base.CarBattery1
+PASS RTGM.placed :: A true running true, charger true, setting 0.09999999776482582
+STEP rtgs_own_fuel begin
+OBS  RTGS.own_fuel asleep at 2.02310 h (clock 09:01), to wake at 17.02; A fuel 1.0000000, load 0.0050000, refill nil
+OBS  RTGM.sleep_own_fuel drop at 3.01384 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9950000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.sleep_own_fuel drop at 4.01383 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9900000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.sleep_own_fuel drop at 5.01383 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9850000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.sleep_own_fuel drop at 6.01383 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9800000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.sleep_own_fuel drop at 7.01382 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9750000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.sleep_own_fuel drop at 8.01382 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9700000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.sleep_own_fuel drop at 9.01382 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9650000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGM.sleep_own_fuel drop at 10.01392 h: 0.0050000 L (the load read the tick before 0.0050000), fuel now 0.9600000, running true, 1 ticks after the boundary was seen; charger on false
+OBS  RTGS.own_fuel awake at 10.02578 h after 8.003 game h (865 ticks asleep): 8 boundaries, 480 minute events (60.0 an hour), at most 1 minutes and 1 hours in one tick, 8 steps, 0 refills, 0 stops, 0 ticks not running; A fuel 0.9600000, running true; boundaries [3.00458 h tick 228, first minute event 3.00458 h tick 227, saw the step false] [4.00458 h tick 336, first minute event 4.00458 h tick 335, saw the step false] [5.00457 h tick 444, first minute event 5.00457 h tick 443, saw the step false] [6.00457 h tick 552, first minute event 6.00457 h tick 551, saw the step false] [7.00456 h tick 660, first minute event 7.00456 h tick 659, saw the step false] [8.00456 h tick 768, first minute event 8.00456 h tick 767, saw the step false] [9.00456 h tick 876, first minute event 9.00456 h tick 875, saw the step false] [10.00466 h tick 984, first minute event 10.00466 h tick 983, saw the step false]
+PASS RTGS.own_fuel_slept_through :: 8.003 game h asleep, 8 boundaries
+PASS RTGS.minute_event_before_the_burn_in_sleep :: the hour's first minute event saw the step at 0 of 8 boundaries; at most 1 hours in one tick
+STEP rtgs_refill begin
+OBS  RTGS.refill asleep at 10.02585 h (clock 17:01), to wake at 1.03; A fuel 0.0060000, load 0.0050000, refill minute
+OBS  RTGS.refill awake at 18.02913 h after 8.003 game h (865 ticks asleep): 8 boundaries, 480 minute events (60.0 an hour), at most 1 minutes and 1 hours in one tick, 0 steps, 8 refills, 0 stops, 0 ticks not running; A fuel 0.0060000, running true; boundaries [11.00743 h tick 1124, first minute event 11.00743 h tick 1123, saw the step false] [12.00753 h tick 1232, first minute event 12.00753 h tick 1231, saw the step false] [13.00763 h tick 1340, first minute event 13.00763 h tick 1339, saw the step false] [14.00773 h tick 1448, first minute event 14.00773 h tick 1447, saw the step false] [15.00783 h tick 1556, first minute event 15.00783 h tick 1555, saw the step false] [16.00793 h tick 1664, first minute event 16.00793 h tick 1663, saw the step false] [17.00802 h tick 1772, first minute event 17.00802 h tick 1771, saw the step false] [18.00803 h tick 1880, first minute event 18.00803 h tick 1879, saw the step false]
+PASS RTGS.refill_slept_through :: 8.003 game h asleep, 8 boundaries
+PASS RTGS.minute_refill_runs_through_sleep :: 0 stops, 8 refills for 8 boundaries, running true
+STEP rtgm_done begin
+OBS  RTGM.end at 18.02921 h (clock 01:01): A fuel 0.0060000, running true, load 0.0050000 L an hour, setting 0.09999999776482582 (SandboxVars 0.1), powering [Gas Pump x1 (0.003 L/h)]; charger on false
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 18.03
+SUMMARY pass=5 fail=0
+DONE

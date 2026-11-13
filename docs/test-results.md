@@ -7685,3 +7685,41 @@ Evidence:
 [run 378](evidence/2026-11-13_rt-mp_harness_run378_machinemenus_merged_0.4.3_42.22.2.txt);
 [run 379](evidence/2026-11-13_rt-sp_harness_run379_gas_wood_merged_0.4.3_42.22.2.txt);
 [run 380](evidence/2026-11-13_rt-sp_harness_run380_full_merged_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-SP and RT-MP launches 381–386 (the other gas checks on the merged gas branch)
+
+Branch `feature/gas-generators` at `c7b4110` (0.4.3 merged in, the
+gasifier's record sent through `WorldItemRecords`), 42.22.2, each command
+as it was run before the merge.
+
+| Launch | Command | Result (pass/fail) | Before the merge |
+| --- | --- | --- | --- |
+| 381 | `tools/run-sp-harness.ps1 -Mode gas-measures` | 11/0 | 11/0 (launch 348) |
+| 382 | `tools/run-sp-harness.ps1 -Mode gas-propane` | 10/0, then 6/0 | 10/0, then 6/0 (359) |
+| 383 | `tools/run-sp-harness.ps1 -Mode gas-sleep` | 5/0 | 4/1 (357) |
+| 384 | `tools/run-mp-harness.ps1 -Only gasfeed` | 7/0 | 7/0 (349) |
+| 385 | `tools/run-mp-harness.ps1 -Only gaspropane` | 11/0 | 11/0 (356) |
+| 386 | `tools/run-sp-harness.ps1 -Mode gas-probe` | 5/0, then 7/0 | 10/2 (342) |
+
+Each went as before the merge but two, both now passing. Launch 383's
+first sleep, on A's own fuel, lasted the 8 game hours asked for (8
+boundaries, 8 steps burned while running), where launch 357's ended
+after 4; why 357 woke early is still not known, and it did not happen
+here. Launch 386 was the first run of the gas probe (D-039) as corrected
+after launch 342, whose two failures were the probe's own comparison: it
+now compares each step per unit of power, and the trip's and the run
+dry's buffers come from A's own step. The mod read 0.4.3 at every load,
+and no log of the single-player games, the clients or the server holds a
+warning or error of the mod, nor a load error.
+
+With launches 377–380 every gas mode and gas server case has now run on
+the merge. Not run on it: the two-player case and the modes outside the
+gas work but the full run.
+
+Evidence:
+[run 381](evidence/2026-11-13_rt-sp_harness_run381_gas_measures_merged_0.4.3_42.22.2.txt);
+[run 382](evidence/2026-11-13_rt-sp_harness_run382_gas_propane_merged_0.4.3_42.22.2.txt);
+[run 383](evidence/2026-11-13_rt-sp_harness_run383_gas_sleep_merged_0.4.3_42.22.2.txt);
+[run 384](evidence/2026-11-13_rt-mp_harness_run384_gasfeed_merged_0.4.3_42.22.2.txt);
+[run 385](evidence/2026-11-13_rt-mp_harness_run385_gaspropane_merged_0.4.3_42.22.2.txt);
+[run 386](evidence/2026-11-13_rt-sp_harness_run386_gas_probe_merged_0.4.3_42.22.2.txt).
