@@ -1,0 +1,81 @@
+# TLG single-player harness, a gas generator on wood gas, before the save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=56402470575988010526 hours=2.0096 DayLength=4
+STEP rtwd_setup begin
+OBS  RTWD.placed A at 10648,10649, the gasifier at 10650,10649: conversion Commissioned (begin=true deliver=true join=true work=true); setting 0.09999999776482582; the gasifier TLG.Gasifier on the floor true
+PASS RTWD.placed :: A true, project Commissioned, profile generator_gas; gasifier true on the floor true
+PASS RTWD.item_recipe_and_handbook :: item true model TLG.Gasifier; handbook true teaches [TLG_MakeGasifier]; recipe true asks MetalWelding:5, must be learned true
+STEP rtwd_load_and_light begin
+OBS  RTWD.light_empty menu "Light" -> ok=false reason=entry_disabled state=nil stage=nil outputs=nil consumed=nil
+OBS  RTWD.load menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTWD.light menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTWD.lit at 2.0187 h: A fuel 0.0000000 running false load 0.0000000; A's buffer 0.000000 Nm3 wood gas, 0.000000 propane; gasifier Processing/warming/nil hopper 48.000 kg buffer 0.0000 Nm3 filter 0.0000; totals fed 0.0000 kg delivered 0.000000 flared 0.0000 vented 0.0000 Nm3; on its square true
+PASS RTWD.light_greyed_while_empty :: Light with an empty hopper: entry_disabled
+PASS RTWD.wood_loaded :: reply ok=true loaded 48 kg in 11 pieces; wood and charcoal left carried 0
+PASS RTWD.lit_and_A_watched :: reply ok=true state Processing mode warming; A watched true
+STEP rtwd_warm begin
+OBS  RTWD.warmed at 3.0200 h: A fuel 0.0010000 running false load 0.0000000; A's buffer 0.006400 Nm3 wood gas, 0.000000 propane; gasifier Paused/nil/buffer_full hopper 45.121 kg buffer 2.0000 Nm3 filter 0.0070; totals fed 2.8787 kg delivered 0.006400 flared 4.5667 vented 0.0000 Nm3; on its square true
+PASS RTWD.warm_gasifier_fills_A :: warmed 0.5 h; A fuel 0.0010000 against the cap 0.0010000 (step 0.0000000 + 1e-03); A's wood gas 0.0064 Nm3; delivered 0.0064 Nm3
+STEP rtwd_start begin
+PASS RTWD.started_on_wood_gas :: running true; evaluation compatible true grade good reasons derated
+STEP rtwd_run begin
+OBS  RTWD.after_hours at 7.0263 h: A fuel 0.0060000 running true load 0.0050000; A's buffer 0.038400 Nm3 wood gas, 0.000000 propane; gasifier Paused/nil/buffer_full hopper 45.051 kg buffer 2.0000 Nm3 filter 0.0072; totals fed 2.9488 kg delivered 0.166400 flared 4.5667 vented 0.0000 Nm3; on its square true
+OBS  RTWD.run: 4.000 game h, 0 stops; the gasifier gave 0.1600000 Nm3 (0.0250000 L); A burned 0.0200000 L by its fuel; the wood fed makes 0.1600000 Nm3 against 0.1600000 given and 0.0000000 more in its buffer
+PASS RTWD.ran_on_wood_gas :: running true, 0 stops; 4 boundaries of 0.0050000 L = 0.0200000 L against 0.0200000 L burned; wood 0.1600000 Nm3 against 0.1600000
+STEP rtwd_status begin
+OBS  RTWD.gas_status menu "Gas status" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTWD.gasifier_status menu "Status" -> ok=true reason=nil state=Paused stage=nil outputs=nil consumed=nil
+OBS  RTWD.status Gas status: wood gas 0.03839999907486321 Nm3, lit gasifiers 1, tank nil; the gasifier's Status: Lit: gas ready, waiting for a generator to draw it <LINE> Hopper: 45.1 kg of wood <LINE> Gas in hand: 2.00 of 2.00 m³ <LINE> It goes out in 3.0 h if no generator draws gas <LINE> Filter: 1% full <LINE> To clean out: 0.03 kg of tar, 0.03 kg of ash
+PASS RTWD.status_shows_wood_gas :: Gas status ok=true wood gas 0.03839999907486321 gasifiers 1 tank nil; gasifier ok=true state Paused hopper 45.05121168236924
+STEP rtwd_add_fuel begin
+OBS  RTWD.pour transfer -> ok=false reason=gas_generator state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTWD.no_liquid_goes_in :: after Add fuel: A 0.0060000 (cap 0.0060000), can 4.000 (was 4.000); the pour: ok=false reason=gas_generator
+STEP rtwd_put_out begin
+OBS  RTWD.put_out menu "Put out" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTWD.put_out at 7.0272 h: A fuel 0.0060000 running true load 0.0050000; A's buffer 0.038400 Nm3 wood gas, 0.000000 propane; gasifier Ready/nil/put_out hopper 45.051 kg buffer 0.0000 Nm3 filter 0.0072; totals fed 2.9488 kg delivered 0.166400 flared 4.5667 vented 2.0000 Nm3; on its square true
+OBS  RTWD.A_stopped at 9.0016 h: A fuel 0.0000000 running false load 0.0050000; A's buffer 0.000000 Nm3 wood gas, 0.000000 propane; gasifier Ready/nil/put_out hopper 45.051 kg buffer 0.0000 Nm3 filter 0.0072; totals fed 2.9488 kg delivered 0.166400 flared 4.5667 vented 2.0000 Nm3; on its square true
+PASS RTWD.put_out_and_A_stops :: reply ok=true state Ready let out 2 Nm3; A running false fuel 0.0000000, 1.974 h after
+STEP rtwd_relight_after_put_out begin
+OBS  RTWD.light_after_put_out menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+PASS RTWD.relit_after_put_out :: Light ok=true mode warming; A fuel 0.0060000 holds gas true
+STEP rtwd_restart_after_put_out begin
+PASS RTWD.started_again_after_put_out :: running true
+STEP rtwd_take begin
+PASS RTWD.taken_up_while_lit :: lit before true; carried true
+STEP rtwd_put begin
+OBS  RTWD.status_moved menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+PASS RTWD.put_down_elsewhere_is_out :: on the floor true; Status ok=true state Ready hopper 42.1584817556752 kg (was 42.1584817556752)
+STEP rtwd_relight_moved begin
+OBS  RTWD.light_moved menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+PASS RTWD.relit_moved :: Light ok=true mode warming; A fuel 0.0060000 holds gas true
+STEP rtwd_restart_moved begin
+PASS RTWD.started_again_moved :: running true
+STEP rtwd_trip begin
+OBS  RTWD.leaving at 11.0211 h: A fuel 0.0060000 running true load 0.0050000; A's buffer 0.038400 Nm3 wood gas, 0.000000 propane; gasifier Paused/nil/buffer_full hopper 39.269 kg buffer 2.0000 Nm3 filter 0.0212; totals fed 8.7314 kg delivered 0.236800 flared 13.7000 vented 4.0000 Nm3; on its square true
+OBS  RTWD.back at 17.0446 h: A fuel 0.0000000 running false load 0.0020000; A's buffer 0.000000 Nm3 wood gas, 0.000000 propane; gasifier Ready/nil/nil hopper 39.269 kg buffer 0.0000 Nm3 filter 0.0212; totals fed 8.7314 kg delivered 0.236800 flared 13.7000 vented 6.0000 Nm3; on its square true
+PASS RTWD.trip_A_off_and_gasifier_out :: unloaded true; A running false fuel 0.0000000; gasifier Ready hopper 39.268554749148606
+STEP rtwd_before_save begin
+OBS  RTWD.saving at 17.0447 h: A fuel 0.0000000 running false load 0.0020000; A's buffer 0.000000 Nm3 wood gas, 0.000000 propane; gasifier Ready/nil/nil hopper 39.269 kg buffer 0.0000 Nm3 filter 0.0212; totals fed 8.7314 kg delivered 0.236800 flared 13.7000 vented 6.0000 Nm3; on its square true
+STEP rtwd_save_and_exit begin
+SUMMARY pass=18 fail=0
+EXIT phase 1 -> main menu
+# TLG single-player harness, a gas generator on wood gas, after the save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtwdb_reload begin
+OBS  RTWD.continued at 17.0811 h: A fuel 0.0000000 running false load 0.0020000; A's buffer 0.000000 Nm3 wood gas, 0.000000 propane; gasifier Ready/nil/nil hopper 39.269 kg buffer 0.0000 Nm3 filter 0.0212; totals fed 8.7314 kg delivered 0.236800 flared 13.7000 vented 6.0000 Nm3; on its square true
+PASS RTWDB.records_as_saved :: A true record GS295851082-5 (saved GS295851082-5); gasifier true record W295851082-4 (saved W295851082-4) hopper 39.268554749148606 (saved 39.268555); gas true; watched true
+STEP rtwd_relight_continued begin
+OBS  RTWD.light_continued menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+PASS RTWD.relit_continued :: Light ok=true mode warming; A fuel 0.0030000 holds gas true
+STEP rtwd_restart_continued begin
+PASS RTWD.started_again_continued :: running true
+STEP rtwdb_refills begin
+OBS  RTWD.after_refills at 20.1361 h: A fuel 0.0030000 running true load 0.0020000; A's buffer 0.019200 Nm3 wood gas, 0.000000 propane; gasifier Paused/nil/buffer_full hopper 36.373 kg buffer 2.0000 Nm3 filter 0.0282; totals fed 11.6270 kg delivered 0.281600 flared 18.2667 vented 6.0000 Nm3; on its square true
+PASS RTWDB.refills_go_on :: running true; delivered 0.256000 -> 0.281600 Nm3
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 20.14
+SUMMARY pass=4 fail=0
+DONE

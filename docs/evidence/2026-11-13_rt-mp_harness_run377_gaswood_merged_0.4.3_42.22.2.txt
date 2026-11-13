@@ -1,0 +1,105 @@
+===== launch 377: tools/run-mp-harness.ps1 -Only gaswood (one client), branch feature/gas-generators at abf3500: main (0.4.3) merged in, the gasifier's record sent through WorldItemRecords. The launcher's own lines were not kept; the client's and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP gw_setup begin
+OBS  MP.gw the server converted G at 10666,10651: Commissioned (begin=true deliver=true join=true work=true), profile generator_gas, setting 0.1000; the gasifier 1367455521
+PASS MP.gw_converted_on_the_server_A :: project Commissioned, profile generator_gas, gasifier 1367455521
+STEP mp_gw_sync begin
+STEP mp_gw_walk begin
+STEP mp_gw_seen begin
+PASS MP.gw_client_sees_the_generator_the_gasifier_and_the_wood_A :: generator true gas true; gasifier true on the floor true; wood pieces 9
+STEP mp_gw_light_empty begin
+OBS  MP.gw light_empty -> ok=false reason=entry_disabled duplicate=nil state=nil mode=nil hopper=nil loaded=nil vented=nil
+PASS MP.gw_light_greyed_while_empty_A :: Light with an empty hopper: entry_disabled
+STEP mp_gw_load begin
+OBS  MP.gw load -> ok=true reason=nil duplicate=nil state=Ready mode=nil hopper=30 loaded=30 vented=nil
+STEP mp_gw_load_settles begin
+STEP mp_gw_loaded begin
+PASS MP.gw_wood_loaded_and_seen_by_the_client_A :: reply ok=true loaded 30 kg in 9 pieces; wood pieces left 0; this client's copy of the record true
+STEP mp_gw_light begin
+OBS  MP.gw light -> ok=true reason=nil duplicate=nil state=Processing mode=warming hopper=30 loaded=nil vented=nil
+STEP mp_gw_light_settles begin
+STEP mp_gw_lit begin
+PASS MP.gw_lit_and_the_menu_follows_A :: reply ok=true state Processing mode warming; this client's menu offers put_out
+STEP mp_gw_warm begin
+STEP gw_warmed begin
+OBS  MP.gw warmed the server: G fuel 0.0010000 running false load 0.0000000 record true holds true wood gas 0.006400 watched true; gasifier floor stored Processing now Paused/buffer_full hopper 27.1401 delivered 0.006400 fed 2.859886
+PASS MP.gw_warm_gasifier_fills_G_on_the_server_A :: server: holds true wood gas 0.006400 watched true running false gasifier Paused; this client's copy of G the same true
+STEP mp_gw_start_on_wood_gas begin
+PASS MP.gw_started_on_wood_gas_A :: running on this client's copy: true
+STEP mp_gw_hours begin
+STEP gw_after_hours begin
+OBS  MP.gw after_hours the server: G fuel 0.0030000 running true load 0.0020000 record true holds true wood gas 0.019200 watched true; gasifier floor stored Processing now Paused/buffer_full hopper 27.1182 delivered 0.057600 fed 2.881829
+PASS MP.gw_refills_on_the_server_seen_by_the_client_A :: server: running true, delivered 0.057600 (was 0.0064), gasifier Paused; this client's copy of G the same true
+STEP gw_status begin
+PASS MP.gw_gas_status_from_the_server_A :: ok=true holds gas true wood gas 0.019199999318961745 gasifiers 1 tank nil
+STEP gw_give_can begin
+STEP mp_gw_can_arrives begin
+STEP gw_pour begin
+PASS MP.gw_no_liquid_goes_in_A :: the pour: ok=false reason=gas_generator; the game's Add fuel valid on this client false
+STEP mp_gw_put_out begin
+OBS  MP.gw put_out -> ok=true reason=nil duplicate=nil state=Ready mode=nil hopper=27.118171429646868 loaded=nil vented=2
+STEP mp_gw_out_settles begin
+STEP mp_gw_put_out begin
+PASS MP.gw_put_out_and_the_menu_follows_A :: reply ok=true state Ready let out 2; this client's menu offers light
+STEP mp_gw_runs_down begin
+STEP gw_run_down begin
+OBS  MP.gw run_down the server: G fuel 0.0000000 running false load 0.0020000 record true holds false wood gas 0.000000 watched true; gasifier floor stored Ready now Ready/put_out hopper 27.1182 delivered 0.057600 fed 2.881829
+PASS MP.gw_G_stops_without_gas_A :: server: running false fuel 0.0000000 gasifier Ready; this client's copy the same true
+STEP mp_gw_light_again begin
+OBS  MP.gw light_again -> ok=true reason=nil duplicate=nil state=Processing mode=warming hopper=27.118171429646868 loaded=nil vented=nil
+STEP mp_gw_warm_again begin
+STEP gw_warmed_again begin
+OBS  MP.gw warmed_again the server: G fuel 0.0030000 running false load 0.0020000 record true holds true wood gas 0.019200 watched true; gasifier floor stored Processing now Paused/buffer_full hopper 24.2528 delivered 0.076800 fed 5.747200
+PASS MP.gw_lit_again_fills_G_A :: Light ok=true; server: holds true fuel 0.0030000; this client's copy the same true
+STEP mp_gw_start_again begin
+PASS MP.gw_started_again_A :: running on this client's copy: true
+STEP mp_gw_grab begin
+PASS MP.gw_grabbed_while_lit_A :: in this client's inventory: true
+STEP gw_status_carried begin
+PASS MP.gw_carried_answers_out_with_its_wood_A :: ok=true placed false state Ready hopper 24.2528000014535
+STEP mp_gw_put_down begin
+STEP gw_put_down begin
+OBS  MP.gw put_down the server: G fuel 0.0030000 running true load 0.0020000 record true holds true wood gas 0.019200 watched true; gasifier floor stored Ready now Ready/moved hopper 24.2528 delivered 0.076800 fed 5.747200
+PASS MP.gw_put_down_out_on_the_server_A :: server: gasifier floor, now Ready, hopper 24.2528
+STEP mp_finish_a begin
+STEP mp_finish begin
+SUMMARY pass=18 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_gaswood role=A tag=gw_setup
+OBS  MPS.reply setup_gaswood gx=10666 gy=10651 item=1367455521 profile=generator_gas role=A setting=0.1000 state=Commissioned steps=begin=true deliver=true join=true work=true tag=gw_setup
+OBS  MPS.ticks 300 OnTick events in 83755 ms
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=1367455521 role=A tag=gw_warmed
+OBS  MPS.reply probe_gaswood delivered=0.006400 fed=2.859886 found=true fuel=0.0010000 gpause=buffer_full gstate=Paused holds=true hopper=27.1401 load=0.0000000 on=false record=true role=A stored=Processing tag=gw_warmed watched=true where=floor woodgas=0.006400
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=1367455521 role=A tag=gw_after_hours
+OBS  MPS.reply probe_gaswood delivered=0.057600 fed=2.881829 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=27.1182 load=0.0020000 on=true record=true role=A stored=Processing tag=gw_after_hours watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=4 role=A tag=gw_give_can
+OBS  MPS.reply given ids=Base.PetrolCan=1050894494 role=A tag=gw_give_can
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=1367455521 role=A tag=gw_run_down
+OBS  MPS.reply probe_gaswood delivered=0.057600 fed=2.881829 found=true fuel=0.0000000 gpause=put_out gstate=Ready holds=false hopper=27.1182 load=0.0020000 on=false record=true role=A stored=Ready tag=gw_run_down watched=true where=floor woodgas=0.000000
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=1367455521 role=A tag=gw_warmed_again
+OBS  MPS.reply probe_gaswood delivered=0.076800 fed=5.747200 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=24.2528 load=0.0020000 on=false record=true role=A stored=Processing tag=gw_warmed_again watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=1367455521 role=A tag=gw_put_down
+OBS  MPS.reply probe_gaswood delivered=0.076800 fed=5.747200 found=true fuel=0.0030000 gpause=moved gstate=Ready holds=true hopper=24.2528 load=0.0020000 on=true record=true role=A stored=Ready tag=gw_put_down watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlga: finish role=A

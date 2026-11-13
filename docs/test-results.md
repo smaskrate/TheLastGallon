@@ -7651,3 +7651,37 @@ Not run: a real network, more than two players.
 
 Evidence:
 [run 376](evidence/2026-11-13_rt-mp_harness_run376_machinemenus2_two_clients_42.22.2.txt).
+
+## 2026-11-13 — RT-MP and RT-SP launches 377–380 (the gas branch with 0.4.3 merged in)
+
+Branch `feature/gas-generators` at `abf3500`, 42.22.2: `main` (0.4.3)
+merged in (`3b42fc3`), then the gasifier's record sent to the clients
+through `WorldItemRecords` instead of its own command (D-041).
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 377 | `tools/run-mp-harness.ps1 -Only gaswood` | 18/0 |
+| 378 | `tools/run-mp-harness.ps1 -Only machinemenus` | 52/0 |
+| 379 | `tools/run-sp-harness.ps1 -Mode gas-wood` | 18/0, then 4/0 |
+| 380 | `tools/run-sp-harness.ps1 -Mode full` | 106/0, then 14/0 |
+
+Each passed as it did before the merge, on its own branch: launch 377
+as 361, the gasifier loaded and lit through the client's menu, which
+then offered Put out, with the gasifier's record now reaching the client
+through the shared `item` command; launch 378 as 371; launch 379 as 358;
+launch 380 as 360 and 370 (its first petrol pump held no water). The
+mod read 0.4.3 at every load. No log of the clients, the server or the
+single-player game holds a warning or error of the mod, nor a load
+error: the harness's case file, with both branches' cases, loads under
+`-debug`. The one exception, in launch 380's console, is the harness's
+deep-recursion probe.
+
+Not run on the merge: the other gas modes (`gas-propane`, `gas-sleep`,
+`gas-measures`) and server cases (`gaspropane`, `gasfeed`), the two-player
+case, the other modes.
+
+Evidence:
+[run 377](evidence/2026-11-13_rt-mp_harness_run377_gaswood_merged_0.4.3_42.22.2.txt);
+[run 378](evidence/2026-11-13_rt-mp_harness_run378_machinemenus_merged_0.4.3_42.22.2.txt);
+[run 379](evidence/2026-11-13_rt-sp_harness_run379_gas_wood_merged_0.4.3_42.22.2.txt);
+[run 380](evidence/2026-11-13_rt-sp_harness_run380_full_merged_0.4.3_42.22.2.txt).
