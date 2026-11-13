@@ -104,6 +104,8 @@ local function gasifierAt(g, x, y, id)
     function item:getModData() return self.md end
     function item:syncItemFields() self.synced = self.synced + 1 end
     function item:getWorldItem() return self.sq and wi or nil end
+    -- Taken up, it is in no container these tests model.
+    function item:getOutermostContainer() return nil end
     function item:moveTo(nx, ny)
         if self.sq then
             for i, w in ipairs(self.sq.wobjs) do
@@ -407,20 +409,22 @@ inGame("integration: on a server a gasifier's record goes to the clients, which 
     GZ.write(item, st)
     T.eq(#sent, 1)
     local m = sent[1]
-    T.eq(m.module, "TLG"); T.eq(m.command, "gasifier")
+    T.eq(m.module, "TLG"); T.eq(m.command, "item"); T.eq(m.args.key, "tlgGasifier")
     T.eq(m.args.id, 4242); T.eq(m.args.x, 70); T.eq(m.args.y, 5); T.eq(m.args.z, 0)
     T.eq(m.args.rec.rev, 7)
     -- Carried: the owner gets it with the item's fields; nothing is sent.
     item:pickUp()
     GZ.write(item, st)
     T.eq(#sent, 1)
-    -- A client's copy of the item on the floor takes the record sent.
+    -- A client's copy of the item on the floor takes the record sent
+    -- (TLG/Integration/WorldItemRecords.lua).
+    local WR = TLG.Integration.WorldItemRecords
     isServer = function() return false end
     item:moveTo(70, 5)
     item.md.tlgGasifier = nil
-    T.ok(GZ.received(m.args))
+    T.ok(WR.received(m.args))
     T.eq(item.md.tlgGasifier.rev, 7)
-    T.ok(not GZ.received({ id = 1, x = 70, y = 5, z = 0, rec = st }), "another item")
-    T.ok(not GZ.received({ id = 4242, x = 99, y = 99, z = 0, rec = st }), "a square not loaded")
-    T.ok(not GZ.received({ id = 4242, x = 70, y = 5, z = 0 }), "no record")
+    T.ok(not WR.received({ id = 1, x = 70, y = 5, z = 0, key = "tlgGasifier", rec = st }), "another item")
+    T.ok(not WR.received({ id = 4242, x = 99, y = 99, z = 0, key = "tlgGasifier", rec = st }), "a square not loaded")
+    T.ok(not WR.received({ id = 4242, x = 70, y = 5, z = 0, key = "tlgGasifier" }), "no record")
 end)

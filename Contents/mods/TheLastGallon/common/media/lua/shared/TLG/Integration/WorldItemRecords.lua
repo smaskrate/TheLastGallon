@@ -7,9 +7,10 @@
 -- world object sends that object's own mod data (engine-capabilities,
 -- RT-MP; launches 362, 365). The client menus decide entries from their own
 -- copy: a machine's Pause, Resume and Abort batch (`tlgProc`, D-023), a
--- can's Seal or Unseal (`tlg`). A client joining, loading the item's chunk
--- again or opening the container for the first time gets the item with its
--- record as the server holds it then.
+-- can's Seal or Open (`tlg`), a gasifier's menu (`tlgGasifier`, D-040). A
+-- client joining, loading the item's chunk again or opening the container
+-- for the first time gets the item with its record as the server holds it
+-- then.
 require "TLG/Core"
 
 TLG.Integration = TLG.Integration or {}
@@ -19,7 +20,7 @@ local WR = TLG.Integration.WorldItemRecords
 -- The mod data keys sent and taken, each with the fields left out: a
 -- machine's hourly readings and fire notes (up to 480 entries each; no
 -- menu reads them).
-WR.KEYS = { tlg = {}, tlgProc = { temps = true, fires = true } }
+WR.KEYS = { tlg = {}, tlgProc = { temps = true, fires = true }, tlgGasifier = {} }
 
 -- The square a client finds the item on: the one it lies on, or the one of
 -- the object whose container holds it, where Resolver.nearbyItem finds it

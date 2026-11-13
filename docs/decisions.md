@@ -1904,11 +1904,13 @@ gas probe (launch 342).
     both, the generator off and the gasifier out on return; saved and
     continued, lit again and refilling. Propane and the full run passed
     again on this build (launches 359–360).
-  * On a server each write of a gasifier lying on the floor is also sent
-    to the clients (`sendServerCommand`, `Gasifiers.received`), because
-    the menu decides what to offer from the client's copy of the record:
-    an item's mod data reaches only the client whose inventory holds it,
-    and `syncItemFields` sends nothing for an item in no container. On a
+  * On a server each write of a gasifier no character carries is also
+    sent to the clients, as machines' and cans' records are (D-041,
+    `WorldItemRecords.lua`; a command of its own until 0.4.3 was merged
+    in), because the menu decides what to offer from the client's copy of
+    the record: an item's mod data reaches only the client whose inventory
+    holds it, and `syncItemFields` sends nothing for an item in no
+    container. On a
     dedicated server (launch 361) the client loaded and lit the gasifier
     through its menu, which then offered Put out, and Light once it was
     put out; the server fed the generator and the client's copy followed;
@@ -1934,15 +1936,18 @@ gas probe (launch 342).
   lying on the floor, or in the container of an object on a square (a
   crate, a bin, a cupboard), where the authority's own lookup finds it
   for a request (`Resolver`). Each client looks for the item by id on
-  that square and puts the record in its copy. Two records go: a
+  that square and puts the record in its copy. Three records go: a
   machine's batch (`tlgProc`) without its hourly readings and fire notes,
-  and a can's fuel record (`tlg`). Writes no menu reads stay on the
+  a can's fuel record (`tlg`) and a gasifier's (`tlgGasifier`, D-040,
+  which had its own command until 0.4.3 was merged into the gas work).
+  Writes no menu reads stay on the
   server (the hourly readings and the fire notes, D-023 amendment). An
   item a character carries is left to the game, which sends its fields
   to its holder. Single player sends nothing.
 * Reason: the client menus decide their entries from the client's copy of
   the record: the machine menu's **Pause**, **Resume** and **Abort batch**
-  (D-023) and the Fuel menu's **Seal** or **Open**. The game sends an
+  (D-023), the Fuel menu's **Seal** or **Open** and the gasifier's menu
+  (D-040). The game sends an
   item's mod data only to the client carrying it, and a container's items
   only the first time a client opens it (engine-capabilities). So the
   copies did not follow the server: a fermenter's stayed empty while the

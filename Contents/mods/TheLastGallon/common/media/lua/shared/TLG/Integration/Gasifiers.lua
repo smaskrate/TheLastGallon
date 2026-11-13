@@ -5,9 +5,9 @@
 --   state store   item mod data "tlgGasifier": a TLG.Domain.Gas.Gasifier
 --                 record (record kind "gasifier") and `site`, the tile it was
 --                 lit on; checked against the vault on a server (holder the
---                 item, audit V-01). On a server each write of a gasifier on
---                 the floor is also sent to the clients (GZ.received), whose
---                 menus read their own copy
+--                 item, audit V-01). On a server each write of a gasifier no
+--                 character carries is also sent to the clients
+--                 (WorldItemRecords), whose menus read their own copy
 --   advance       lazy, on every authority read, with no draw: a generator's
 --                 refill draws the gas it takes in a lump (Gasifier.draw),
 --                 once an hour while the generator runs, which keeps it lit;
@@ -24,6 +24,7 @@ require "TLG/Persistence/Migrations"
 require "TLG/Integration/World"
 require "TLG/Content/WoodGas"
 require "TLG/Authority/Vault"
+require "TLG/Integration/WorldItemRecords"
 
 TLG.Integration = TLG.Integration or {}
 TLG.Integration.Gasifiers = TLG.Integration.Gasifiers or {}
@@ -100,40 +101,14 @@ function GZ.advance(item, st, now)
     return out
 end
 
--- On a server, the record written for a gasifier on the floor goes to the
--- clients, whose menus read their own copy: an item's mod data reaches only
--- the client whose inventory holds it (syncItemFields sends nothing for an
--- item in no container; engine-capabilities, RT-MP).
-local function push(item, st)
-    if not (isServer and isServer()) or sendServerCommand == nil then return end
-    local sq = GZ.square(item)
-    if sq == nil then return end
-    sendServerCommand("TLG", "gasifier", { id = item:getID(), x = sq:getX(), y = sq:getY(), z = sq:getZ(), rec = st })
-end
-
+-- On a server, the record written for a gasifier no character carries also
+-- goes to the clients, whose menus read their own copy
+-- (TLG/Integration/WorldItemRecords.lua, D-041).
 function GZ.write(item, st)
     item:getModData()[GZ.KEY] = st
     Vault.put("gasifier", Vault.itemHolder(item), st)
     send(item)
-    push(item, st)
-end
-
--- On a client: a record the server sent for a gasifier on the floor, put in
--- this client's copy of the item. Returns whether the item was found (a
--- square this client has not loaded is skipped; the item comes with its
--- record when it loads).
-function GZ.received(args)
-    if type(args) ~= "table" or type(args.rec) ~= "table" or getCell() == nil then return false end
-    local sq = getCell():getGridSquare(args.x, args.y, args.z)
-    local wobjs = sq and sq:getWorldObjects()
-    for i = 0, (wobjs and wobjs:size() or 0) - 1 do
-        local it = wobjs:get(i):getItem()
-        if it and it:getID() == args.id and GZ.machineFor(it) then
-            it:getModData()[GZ.KEY] = args.rec
-            return true
-        end
-    end
-    return false
+    TLG.Integration.WorldItemRecords.send(item, GZ.KEY, st)
 end
 
 -- Gasifier items lying within `radius` tiles of `sq` on its floor, in the
