@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 261 Italian strings as shipped in a client set to Italian (run 205); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.2 package is the zip of `f264f10` (SHA-256 `E70E7038…FAD5F9D3`), installed clean and played on 42.22.2 in launch 344 (106/0, 14/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.2 since 2026-11-12; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 or later continued with a 0.4 package |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.3 package is the zip of `14a36ed` (SHA-256 `4A7897A0…F9A472ED`), installed clean and played on 42.22.2 in launch 373 (106/0, 14/0), and a save made with the 0.4.2 zip continued with it (launch 375: 3/0, 22/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.2 since 2026-11-12; Steam's download of it held exactly that package's mod files. The upload folder holds 0.4.3, not uploaded. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -204,7 +204,7 @@ reading 0.4.1 (launch 339). The handbook mode, the multiplayer cases and
 the upgrade were not run on it; launches 318–338 ran on the repository's
 mod at 0.4.0, which differs from it in the version number.
 
-The upload folder holds this package since 2026-11-11: its `Contents`
+The upload folder held this package from 2026-11-11 to 2026-11-12: its `Contents`
 mirrored and its `preview.png` copied from the unpacked zip, 166 files
 checked by hash, both ways. Its `workshop.txt` is the owner's, edited by
 hand. On the owner's word ("Update whatever is left to update",
@@ -263,7 +263,7 @@ gas begin asked anyway was refused (`not_offered`). The other modes, the
 multiplayer cases and the upgrade were not run on it. The shipped
 changelog, written before launch 344, lists the refusal as not checked.
 
-The upload folder holds this package since 2026-11-12, on the owner's
+The upload folder held this package from 2026-11-12 to 2026-11-13, on the owner's
 word ("Yes, prepare it"): its `Contents` mirrored and its `preview.png`
 copied from the zip, unpacked and checked against its manifest, and the
 folder's 166 files checked by hash, both ways. The first description
@@ -318,8 +318,27 @@ file, so its 52/0 holds for it too.
 The release commit dates the changelog and gives the player guide its
 0.4.3 version line (the zip of `d0da92c` still read 0.4.2 there) and the
 server checks of launches 362–372 in its lists of what has been checked.
-The change note is `docs/workshop-change-note-0.4.3.txt`. No package of
-the release commit is built yet, and the upload folder still holds 0.4.2.
+The change note is `docs/workshop-change-note-0.4.3.txt`.
+
+The 0.4.3 package is the zip of `14a36ed` (168 files, 7,892,551 bytes,
+SHA-256 `4A7897A0…F9A472ED`), built from a clean tree. It differs from
+the zip of `d0da92c` in the shipped changelog, player guide and support
+matrix, and from the 0.4.2 package in eleven files: the ten above and the
+player guide. It was installed clean and played: the full run 106/0 and
+14/0, the game reading 0.4.3 (launch 373). A save made with the 0.4.2 zip
+continued with it: 3/0, then 22/0 (launch 375; in launch 374 the 0.4.2
+launch failed one check written for the releases before 0.3.0, since
+fixed). Not run on it: the other modes, the other multiplayer cases
+(launch 367 ran its mod files), the removal and existing-save scenarios.
+
+The upload folder holds this package since 2026-11-13, on the owner's
+word ("If there are not other things to test, prepare it"): its
+`Contents` mirrored and its `preview.png` copied from the zip, unpacked
+and checked against its manifest, and the folder's 168 files checked by
+hash, both ways. The first description line of its `workshop.txt`, the
+owner's file, now names 0.4.3: one byte changed; the rest of the file
+(its id, `visibility=public`, the tag `WIP`, the owner's wording) and its
+CRLF line ends stay. Not uploaded: the upload is the owner's step.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -777,11 +796,11 @@ mode, and the harness runs with `-nosteam`. Before 0.4.1 the item served
 0.1.1, uploaded by the owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.2 package's
-`Contents` and `preview.png` since 2026-11-12 (launch 344; "Version
-0.4.2" above). Before it, the 0.1.2 package's from 2026-11-10, then the
-0.3.0, 0.3.1, 0.3.2, 0.4.0 and 0.4.1 packages' on 2026-11-11; 0.2.0 was
-never put there. For 0.4.0:
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.3 package's
+`Contents` and `preview.png` since 2026-11-13 (launch 373; "Version
+0.4.3" above). Before it, the 0.1.2 package's from 2026-11-10, then the
+0.3.0, 0.3.1, 0.3.2, 0.4.0 and 0.4.1 packages' on 2026-11-11 and the 0.4.2
+package's on 2026-11-12; 0.2.0 was never put there. For 0.4.0:
 the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
 its `Contents` mirrored over the folder's, and the folder's 165 files
 checked by hash, both ways. Later that day the zip of `a0d293e` (`87ED49FD…5A47A297`), unpacked and checked against its manifest by launch 317, replaced it there: its `Contents` mirrored over the folder's and its `preview.png` copied, the folder's 166 files checked by hash, both ways. The folder's `preview.png` and `42/poster.png` are the picture of fourteen models (SHA-256 `13A1A39F…7309D5D1`). It has not been uploaded. Its `workshop.txt` is the
@@ -792,7 +811,7 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is

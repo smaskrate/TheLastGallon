@@ -7082,3 +7082,44 @@ the servers' one exception is the harness's deep-recursion probe.
 Evidence:
 [run 371](evidence/2026-11-13_rt-mp_harness_run371_machinemenus_rewrapped_42.22.2.txt);
 [run 372](evidence/2026-11-13_rt-mp_harness_run372_machinemenu_rewrapped_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launches 373–375 (the 0.4.3 release zip, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `14a36ed` (the release commit,
+clean tree) built `TheLastGallon-0.4.3.zip`: 168 files, 7,892,551 bytes,
+SHA-256 `4A7897A0…F9A472ED`. It differs from the zip of `d0da92c`
+(launches 369–370) in three shipped documents: the changelog, the player
+guide and the support matrix. Eleven files differ from the 0.4.2 package:
+the ten of launch 369's zip and the player guide.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 373 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 106/0, then 14/0 |
+| 374 | `tools\rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.4.2` | 2/1, then 22/0 |
+| 375 | the same, the check below fixed | 3/0, then 22/0 |
+
+The zips matched their manifests both ways, the 0.4.2 zip too. Launch
+373: the game read `mod.info` 0.4.3, equal to `TLG.VERSION`, and the mod
+logged "The Last Gallon 0.4.3 ready" at both loads; its first petrol
+pump held no water. Launches 374 and 375 played a new world with the
+0.4.2 zip and continued its save with this zip: the save was made with
+0.4.2, the records were as 0.4.2 left them, the running fermenter kept
+its batch, and the world stayed one with diesel vehicles. In launch 374
+the 0.4.2 launch failed
+`RTU.wrong_blends_as_the_earlier_release_judges_them`, which asked for
+the judgement of the releases before 0.3.0 (the start blocked, nothing
+said about damage); 0.4.2 already judges both blends as wrong fuel
+(D-037). The check now asks for that from 0.3.0 on (`5cb6df4`), and
+launch 375 passed it. No console holds a warning or an error of the mod;
+the one exception in launch 373's is the harness's deep-recursion probe.
+
+The mod folders of launch 367's server and client are this zip's too:
+the zip of `d0da92c` differs from it in documents only. Not run on this
+zip: the other single-player modes and the other multiplayer cases; the
+removal and existing-save scenarios; an install through the Steam
+Workshop.
+
+Evidence:
+[run 373](evidence/2026-11-13_rt-sp_harness_run373_install_rehearsal_0.4.3_release_42.22.2.txt);
+[run 374](evidence/2026-11-13_rt-sp_harness_run374_upgrade_0.4.2_to_0.4.3_one_check_for_older_releases_42.22.2.txt);
+[run 375](evidence/2026-11-13_rt-sp_harness_run375_upgrade_0.4.2_to_0.4.3_42.22.2.txt).
