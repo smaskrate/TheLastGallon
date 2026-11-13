@@ -1949,12 +1949,19 @@ gas probe (launch 342).
     4, as it says of the biodiesel machines, before 0.5.0 ships. The
     handbook was found in a container of the map, taken and read (launch
     395), and the server's loot lists gave it (launches 393–394).
+  * When things move, in single player (launch 397): one gasifier fed two
+    generators, each step of each drawn and its gas all accounted for. A
+    wood-gas generator taken up and put down within reach kept its gas
+    record and was fed there; it comes with what it holds, and its cap
+    follows its load on the new square, so it is refilled once it falls
+    below that. Put down out of reach, it ran on what it held and stopped.
+    A lit gasifier moved with nothing reading it stayed lit in its record
+    until a generator's minute pass read it, which put it out as moved,
+    its wood kept, and gave nothing.
   * Not run: a handbook found at a container's first fill (the harness
-    filled them again); a real network; the minute pass finding a lit
-    gasifier moved (both runs asked for its Status first, which put it
-    out), a wood-gas generator taken up and put down, and a gasifier
-    feeding two generators, each a domain case only
-    (`test_gas_generators.lua`); the performance mode.
+    filled them again); a real network; these moves on a server; a
+    buffer too small for two generators' hourly draws (how it is shared
+    is not decided); the performance mode.
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod

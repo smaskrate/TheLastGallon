@@ -8005,3 +8005,63 @@ Evidence:
 [run 393](evidence/2026-11-13_rt-mp_harness_run393_handbookgas_two_clients_42.22.2.txt);
 [run 394](evidence/2026-11-13_rt-mp_harness_run394_handbookgas_reader_42.22.2.txt);
 [run 395](evidence/2026-11-13_rt-sp_harness_run395_handbook_loot_woodgas_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launches 396–397 (wood gas when things move: two generators, a generator moved, a lit gasifier moved)
+
+Branch `feature/gas-generators` after `e1d3ce5`, 42.22.2. The new mode
+`gas-moves` (request `sp-rtgv`, `RT.GV` in `SPHarness.lua`) plays in game
+what three domain cases of `test_gas_generators.lua` say. Two vanilla
+generators converted to gas as in `gas-wood`, A and B, stand four tiles
+apart with a Wood Gasifier between them, two tiles from each. It is loaded
+(48 kg) and lit through its menu, and both are started through the start
+gate. The harness reads the gasifier's record without writing it: in
+single player the vault is not active and `Vault.guard` returns the record
+as stored.
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 396 | `tools/run-sp-harness.ps1 -Mode gas-moves`, the first version | 17/3 |
+| 397 | the same, three windows corrected | 20/0 |
+
+Launch 396's three failures were the mode's windows, not the mod: B, moved,
+came with 0.006 L while its cap at the new square was 0.003 L, so it was
+not due a refill in the 1.5 h allowed; the window with B out of reach ended
+when B stopped, 0.45 h in, before A's hourly refill; and the last window
+ended in the tick A stopped, before the per-tick watch saw the stop.
+Launch 396 saw everything below but B refilled at its new square, which
+its window was too short for; the figures are launch 397's.
+
+* One gasifier feeds two generators: over 3 game hours both ran without a
+  stop, each of the 3 hourly steps of each (A 0.002 L, B 0.005 L) was
+  drawn, and the gasifier's gas was all accounted for. It made
+  0.1792 Nm³, gave 0.1792 Nm³ (the litres both took), let out and held
+  nothing more, and the 0.0815 kg of wood it burned makes 0.1792 Nm³ at
+  2.2 Nm³/kg.
+* A wood-gas generator taken up and put down within reach: B, switched
+  off and unplugged as the game asks, was taken up with the game's
+  `ISTakeGenerator`, its gas record (`GS415639910-9`) and its 0.006 L in the item,
+  and put down a tile from the gasifier with the game's drop action, the
+  same record on the new square and that square watched. It came with what
+  it held, while its load there, and so its cap, was smaller: 0.002 L an
+  hour against 0.005 L before, a cap of 0.003 L. It ran two steps and was
+  refilled at 8.019 h; its old square had left the minute pass's list.
+* Put down out of reach, five tiles from the gasifier: B ran on what it
+  held, got nothing and stopped at 9.003 h; A, in reach, was refilled
+  meanwhile.
+* The lit gasifier moved with nothing reading it: taken up with the world
+  menu's Grab and put down a tile off, within A's reach, its stored record
+  was still lit, with its site the old tile and its time that of A's last
+  draw (9.0174 h). At A's next step the generator's minute pass read it
+  first, at 10.0172 h (a minute into the hour), and put it out as moved:
+  its wood kept (44.983 kg), its 2 Nm³ let out. A got nothing, held its
+  margin (0.001 L), burned it at the next hour and stopped.
+
+The console holds no warning or error of the mod; it read 0.4.3.
+
+Not run: these moves on a server; a gasifier between generators that
+draw more than its buffer holds in an hour (D-040 does not say how a
+buffer too small for both is shared).
+
+Evidence:
+[run 396](evidence/2026-11-13_rt-sp_harness_run396_gas_moves_42.22.2.txt);
+[run 397](evidence/2026-11-13_rt-sp_harness_run397_gas_moves_windows_fixed_42.22.2.txt).

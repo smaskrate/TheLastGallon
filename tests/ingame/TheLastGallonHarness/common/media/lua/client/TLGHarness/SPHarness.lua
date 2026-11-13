@@ -147,6 +147,10 @@
 --              the Fuel menu on the way; the handbook read, the gasifier
 --              crafted, put down, loaded and lit from the right-click menu
 --              and photographed; the generator started and run (RT.GY)
+--   sp-rtgv -> wood gas when things move (D-040): one gasifier feeding two
+--              generators; one of them taken up and put down within its
+--              reach and out of it; the lit gasifier moved, first read by
+--              the generator's minute pass (RT.GV)
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -172,7 +176,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtwdb" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtwdb" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtgv" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -19312,6 +19316,505 @@ end
 RT.GY.build()
 
 ------------------------------------------------------------------------------
+-- Wood gas when things move (request "sp-rtgv"; D-040): what the domain
+-- cases of test_gas_generators.lua say, played in game. Two vanilla
+-- generators converted to gas (as in gas-wood), A and B, stand four tiles
+-- apart with a Wood Gasifier between them, two tiles from each; it is
+-- loaded and lit through its menu and both are started through the start
+-- gate.
+-- 1. Both run three hours on the one gasifier: no stop, each step drawn,
+--    and all its gas accounted for (made = given + let out + held; the
+--    wood burned makes what it made).
+-- 2. B is taken up with the game's action (switched off and unplugged
+--    first, as the game asks) and put down a tile from the gasifier: the
+--    same gas record, its new square watched and its old one dropped, fed
+--    again once started. Taken up again and put down out of the gasifier's
+--    reach, it runs on what it holds and stops.
+-- 3. The lit gasifier is taken up with the world menu's Grab and put down
+--    on another tile within A's reach, and nothing reads it: the
+--    generator's minute pass, finding room after A's next step, is the
+--    first to read it (the harness reads without writing), puts it out as
+--    moved with its wood kept, and gives A nothing; A stops.
+-- No save. Built in a function of its own for the -debug compiler.
+------------------------------------------------------------------------------
+RT.GV = { hours = 3, wood = { ["Base.Log"] = 4, ["Base.Firewood"] = 6 } }
+
+function RT.GV.build()
+    local GV = RT.GV
+    local G, GZ = TLG.Integration.Generators, TLG.Integration.Gasifiers
+
+    local function genAt(p)
+        local s = p and sq(p.x, p.y, 0)
+        return s and s:getGenerator() or nil
+    end
+    local function gen(which) return genAt(GV[which]) end
+    local function keyOf(p) return p.x .. "," .. p.y .. ",0" end
+    local function gasOf(g) return g and g:getModData()[G.GAS_KEY] or nil end
+    local function at(dx, dy) return { x = GV.spot.x + dx, y = GV.spot.y + dy } end
+
+    -- The gasifier, on the floor around the site or carried.
+    local function gzItem()
+        if GV.spot == nil or GV.itemId == nil then return nil end
+        for dx = -1, 8 do
+            for dy = -1, 2 do
+                local s = sq(GV.spot.x + dx, GV.spot.y + dy, 0)
+                local objs = s and s:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getID() == GV.itemId then return it end
+                end
+            end
+        end
+        return player():getInventory():getItemWithIDRecursiv(GV.itemId)
+    end
+    -- Its record as stored (what the minute pass will read), and a copy
+    -- brought to now (what the menu reads). Neither writes.
+    local function stored()
+        local it = gzItem()
+        local rec = it and it:getModData()[GZ.KEY]
+        return type(rec) == "table" and rec or nil
+    end
+    local function gzNow()
+        local it = gzItem()
+        local st = it and GZ.read(it, false)
+        return st and GZ.advance(it, st, TLG.World.now()) or nil
+    end
+    local function menu(label, key)
+        return menuClick(label, function(c) TLG.UI.GasifierMenu.fill(0, c, { gzItem() }) end,
+            getText("ContextMenu_TLG_Gasifier"), getText(key))
+    end
+
+    function GV.state(label)
+        local parts = {}
+        for _, which in ipairs({ "a", "b" }) do
+            local g = gen(which)
+            local rec = gasOf(g)
+            parts[#parts + 1] = string.format("%s at %s fuel %.7f running %s load %.7f record %s", string.upper(which),
+                GV[which] and keyOf(GV[which]) or "-", g and g:getFuel() or -1, tostring(g and g:isActivated()),
+                g and RT.GM.power(g) or -1, tostring(rec and rec.id))
+        end
+        local st, raw = gzNow(), stored()
+        local s = st and TLG.Domain.Gas.Gasifier.status(st) or {}
+        R:line("OBS  RTGV.%s at %.4f h: %s; gasifier stored %s/%s, now %s/%s hopper %.3f kg buffer %.4f Nm3; totals " ..
+            "fed %.4f kg produced %.6f delivered %.6f vented %.6f Nm3", label, hours(), table.concat(parts, "; "),
+            tostring(raw and raw.state), tostring(raw and raw.pause), tostring(s.state), tostring(s.reason), s.hopperKg or -1,
+            s.buffer or -1, st and st.totals.fed or -1, st and st.totals.produced or -1, st and st.totals.delivered or -1,
+            st and st.totals.vented or -1)
+    end
+
+    -- Each tick, for A and B where they stand: the steps (a drop of the
+    -- fuel), the refills (a rise) and the stops.
+    function GV.watch(on)
+        if on and not GV.hooked then
+            GV.w = {}
+            for _, which in ipairs({ "a", "b" }) do
+                GV.w[which] = { steps = 0, burned = 0, rises = 0, risen = 0, stops = 0 }
+            end
+            GV.tick = function()
+                for _, which in ipairs({ "a", "b" }) do
+                    local g, w = gen(which), GV.w[which]
+                    if g then
+                        local f = g:getFuel()
+                        if w.last and f < w.last - 1e-7 then w.steps, w.burned = w.steps + 1, w.burned + (w.last - f) end
+                        if w.last and f > w.last + 1e-7 then w.rises, w.risen = w.rises + 1, w.risen + (f - w.last) end
+                        if w.on and not g:isActivated() then w.stops = w.stops + 1 end
+                        w.last, w.on = f, g:isActivated()
+                    else
+                        w.last, w.on = nil, nil
+                    end
+                end
+            end
+            Events.OnTick.Add(GV.tick)
+            GV.hooked = true
+        elseif not on and GV.hooked then
+            Events.OnTick.Remove(GV.tick)
+            GV.hooked = false
+        end
+    end
+    local function watched(which)
+        local w = GV.w and GV.w[which] or {}
+        return string.format("%d steps (%.7f L), %d refills (%.7f L), %d stops", w.steps or -1, w.burned or -1, w.rises or -1,
+            w.risen or -1, w.stops or -1)
+    end
+
+    GV.setup = { name = "rtgv_setup", timeout = 1200, fn = function(ctx, ticks)
+        if not ctx.t0 then
+            local p = player()
+            p:setGodMod(true)
+            p:setInvisible(true)
+            pcall(function() p:setUnlimitedCarry(true) end)
+            captureDialogs(true)
+            RT.keepFit()
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 60 then return nil end
+        if not ctx.placed then
+            local spot
+            for dy = 4, 20 do
+                for dx = -15, 15 do
+                    local x, y = START.x + dx, START.y + dy
+                    local free = spot == nil
+                    for cx = 0, 7 do
+                        for cy = -1, 2 do
+                            free = free and RT.MI.clear(x + cx, y + cy)
+                        end
+                    end
+                    if free then spot = { x = x, y = y } end
+                end
+            end
+            if spot == nil then
+                RT.abort = "no clear ground for the two generators and the gasifier"
+                R:check("RTGV.placed", function() return false, "no 8 by 4 clear squares near the start" end)
+                return true
+            end
+            GV.spot = spot
+            GV.a, GV.b, GV.g = at(0, 0), at(4, 0), at(2, 0)
+            for _, which in ipairs({ "a", "b" }) do
+                local p = GV[which]
+                pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(p.x, p.y, 0)) end)
+                local g = gen(which)
+                if g then
+                    g:setConnected(true)
+                    g:setFuel(0)
+                    GV[which .. "Conv"] = RT.PR.commission(g)
+                end
+            end
+            local it = instanceItem("TLG.Gasifier")
+            sq(GV.g.x, GV.g.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            GV.itemId = it:getID()
+            local inv = player():getInventory()
+            for t, n in pairs(GV.wood) do
+                for _ = 1, n do inv:AddItem(t) end
+            end
+            player():teleportTo(GV.g.x, GV.g.y + 1, 0)
+            ctx.placed = ticks
+            return nil
+        end
+        if ticks - ctx.placed < 60 then return nil end
+        local a, b, it = gen("a"), gen("b"), gzItem()
+        R:line("OBS  RTGV.placed A at %s, B at %s, the gasifier at %s: conversions %s, %s", keyOf(GV.a), keyOf(GV.b),
+            keyOf(GV.g), tostring(GV.aConv), tostring(GV.bConv))
+        R:check("RTGV.placed", function()
+            return a ~= nil and b ~= nil and G.isGas(a) and G.isGas(b) and it ~= nil and it:getWorldItem() ~= nil,
+                string.format("A %s gas %s; B %s gas %s; gasifier on the floor %s", tostring(a ~= nil), tostring(a and G.isGas(a)),
+                    tostring(b ~= nil), tostring(b and G.isGas(b)), tostring(it ~= nil and it:getWorldItem() ~= nil))
+        end)
+        if not (a and b and it and G.isGas(a) and G.isGas(b)) then RT.abort = "the site is not as set up" end
+        return true
+    end }
+
+    GV.light = { name = "rtgv_load_and_light", timeout = 600, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        local l = menu("RTGV.load", "ContextMenu_TLG_GasifierLoad")
+        local lit = menu("RTGV.light", "ContextMenu_TLG_GasifierLight")
+        closeDialogs()
+        GV.state("lit")
+        R:check("RTGV.loaded_and_lit", function()
+            return l.ok == true and (l.loadedKg or 0) > 0 and lit.ok == true and lit.state == "Processing", string.format(
+                "load ok=%s %s kg; light ok=%s state %s", tostring(l.ok), tostring(l.loadedKg), tostring(lit.ok),
+                tostring(lit.state))
+        end)
+        if lit.ok ~= true then RT.abort = "the gasifier was not lit" end
+        return true
+    end }
+
+    -- Warmed up: its gas fills both, still off, to the margin.
+    GV.warm = wdWait("rtgv_warm", 1.0, function(ctx)
+        local a, b = gen("a"), gen("b")
+        GV.state("warmed")
+        R:check("RTGV.its_gas_fills_both", function()
+            return G.holdsGas(a) and G.holdsGas(b) and math.abs(a:getFuel() - G.woodgasCap(a)) < 1e-5
+                and math.abs(b:getFuel() - G.woodgasCap(b)) < 1e-5, string.format("A %.7f (cap %.7f), B %.7f (cap %.7f)",
+                a:getFuel(), G.woodgasCap(a), b:getFuel(), G.woodgasCap(b))
+        end)
+        GV.bRec = gasOf(b) and gasOf(b).id
+    end)
+
+    -- Started through the start gate, standing beside it.
+    local function start(name, which, standDx)
+        return actionStep("rtgv_start_" .. name, function(ctx)
+            if RT.abort or gen(which) == nil then return nil end
+            local p = GV[which]
+            player():teleportTo(p.x + standDx, p.y, 0)
+            gen(which):setConnected(true)
+            return ISActivateGenerator:new(player(), gen(which), true)
+        end, function(ctx)
+            local g = gen(which)
+            R:check("RTGV.started_" .. name, function()
+                return g ~= nil and g:isActivated(), string.upper(which) .. " running " .. tostring(g and g:isActivated())
+            end)
+        end)
+    end
+
+    -- Both on the one gasifier for three hours.
+    GV.both = { name = "rtgv_both_run", timeout = 60000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        if not ctx.h0 then
+            local st = gzNow()
+            ctx.h0, ctx.fa, ctx.fb = hours(), gen("a"):getFuel(), gen("b"):getFuel()
+            ctx.t0, ctx.buf0 = TLG.Tables.deepCopy(st.totals), st.buffer
+            GV.watch(true)
+            RT.speed(20)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        if hours() - ctx.h0 < GV.hours then return nil end
+        RT.speed(1)
+        GV.watch(false)
+        local a, b, st = gen("a"), gen("b"), gzNow()
+        local wa, wb = GV.w.a, GV.w.b
+        GV.state("both_ran")
+        local nm3 = TLG.Domain.GasFeed.nm3For("woodgas", 1)
+        local d = {}
+        for _, k in ipairs({ "fed", "produced", "delivered", "vented", "flared" }) do d[k] = (st.totals[k] or 0) - (ctx.t0[k] or 0) end
+        local held = st.buffer - ctx.buf0
+        local perKg = TLG.Domain.Gas.Gasifier.ratedOutput(st) / TLG.Registry.need("machine", st.machine).feedKgPerHour
+        local bounds = math.floor(hours()) - math.floor(ctx.h0)
+        local burnedA, burnedB = (ctx.fa - a:getFuel()) + wa.risen, (ctx.fb - b:getFuel()) + wb.risen
+        R:line("OBS  RTGV.both over %.3f h, %d hour boundaries: A %s; B %s; the gasifier fed %.6f kg, made %.7f, gave " ..
+            "%.7f, let out %.7f, flared %.7f, held %.7f more Nm3", hours() - ctx.h0, bounds, watched("a"), watched("b"), d.fed,
+            d.produced, d.delivered, d.vented, d.flared, held)
+        R:check("RTGV.one_gasifier_feeds_both", function()
+            return a:isActivated() and b:isActivated() and wa.stops == 0 and wb.stops == 0 and wa.rises > 0 and wb.rises > 0,
+                string.format("A running %s, %s; B running %s, %s", tostring(a:isActivated()), watched("a"),
+                    tostring(b:isActivated()), watched("b"))
+        end)
+        R:check("RTGV.each_step_of_each_drawn", function()
+            return math.abs(burnedA - bounds * RT.GM.power(a)) < 1e-4 and math.abs(burnedB - bounds * RT.GM.power(b)) < 1e-4,
+                string.format("A burned %.7f L against %d steps of %.7f; B burned %.7f L against %d of %.7f", burnedA, bounds,
+                    RT.GM.power(a), burnedB, bounds, RT.GM.power(b))
+        end)
+        R:check("RTGV.all_its_gas_accounted_for", function()
+            return math.abs(d.delivered - (wa.risen + wb.risen) * nm3) < 1e-5
+                and math.abs(d.produced - (d.delivered + d.vented + held)) < 1e-6 and math.abs(d.fed * perKg - d.produced) < 1e-6,
+                string.format("gave %.7f Nm3 against the litres both took, %.7f; made %.7f against given + let out + held %.7f; " ..
+                    "wood %.6f kg at %.4f Nm3/kg = %.7f", d.delivered, (wa.risen + wb.risen) * nm3, d.produced,
+                    d.delivered + d.vented + held, d.fed, perKg, d.fed * perKg)
+        end)
+        return true
+    end }
+
+    -- B taken up with the game's action, switched off and unplugged first
+    -- as the game asks (SRC ISTakeGenerator.isValid).
+    local function takeB(name)
+        return actionStep("rtgv_take_b_" .. name, function(ctx)
+            if RT.abort or gen("b") == nil then return nil end
+            local g = gen("b")
+            ctx.rec, ctx.fuel, ctx.from = gasOf(g) and gasOf(g).id, g:getFuel(), GV.b
+            g:setActivated(false)
+            g:setConnected(false)
+            player():setPrimaryHandItem(nil)
+            player():setSecondaryHandItem(nil)
+            player():teleportTo(GV.b.x - 1, GV.b.y, 0)
+            return ISTakeGenerator:new(player(), g)
+        end, function(ctx)
+            local it = player():getPrimaryHandItem()
+            local side = it and it:getModData().tlg
+            local carried = side and side[G.GAS_KEY]
+            GV.bItem, GV.bFrom = it, ctx.from
+            R:check("RTGV.b_taken_up_" .. name .. "_with_its_record", function()
+                return carried ~= nil and carried.id == GV.bRec and ctx.rec == GV.bRec and genAt(ctx.from) == nil
+                    and math.abs((tonumber(it:getModData().fuel) or -1) - ctx.fuel) < 1e-4, string.format(
+                    "item %s; its gas record %s (B's %s); item fuel %s (was %.7f); a generator left at %s %s",
+                    tostring(it and it:getFullType()), tostring(carried and carried.id), tostring(GV.bRec),
+                    tostring(it and it:getModData().fuel), ctx.fuel, keyOf(ctx.from), tostring(genAt(ctx.from) ~= nil))
+            end)
+            if not carried then RT.abort = "B was not taken up with its record" end
+        end)
+    end
+
+    -- Put down with the game's drop action on `to`, standing beside it.
+    local function putB(name, dx, dy)
+        return actionStep("rtgv_put_b_" .. name, function(ctx)
+            if RT.abort or GV.bItem == nil then return nil end
+            ctx.to = at(dx, dy)
+            player():teleportTo(ctx.to.x - 1, ctx.to.y, 0)
+            return ISDropWorldItemAction:new(player(), GV.bItem, sq(ctx.to.x, ctx.to.y, 0), 0.5, 0.5, 0, 0, false)
+        end, function(ctx)
+            GV.b = ctx.to
+            local g = gen("b")
+            local rec = gasOf(g)
+            R:check("RTGV.b_put_down_" .. name .. "_with_its_record", function()
+                return g ~= nil and rec ~= nil and rec.id == GV.bRec and G.holdsGas(g) and G.gasSquares[keyOf(ctx.to)] == true,
+                    string.format("B at %s %s; its gas record %s (was %s); holds gas %s; watched %s", keyOf(ctx.to),
+                        tostring(g ~= nil), tostring(rec and rec.id), tostring(GV.bRec), tostring(g and G.holdsGas(g)),
+                        tostring(G.gasSquares[keyOf(ctx.to)]))
+            end)
+            if g == nil then RT.abort = "B was not put down" end
+        end)
+    end
+
+    -- B a tile from the gasifier: its old square dropped, fed there. It
+    -- comes with what it held, and its load, so its cap, is the new
+    -- square's (launch 396: 0.006 L held against a cap of 0.003 L there),
+    -- so the window lasts until it has room and is refilled (at most 4 h).
+    GV.bNear = { name = "rtgv_b_near", timeout = 80000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        if not ctx.h0 then
+            local b = gen("b")
+            ctx.h0, ctx.d0 = hours(), gzNow().totals.delivered
+            R:line("OBS  RTGV.b_near from %.4f h: B holds %.7f L, its cap here %.7f L (load %.7f)", ctx.h0, b:getFuel(),
+                G.woodgasCap(b), RT.GM.power(b))
+            GV.watch(true)
+            RT.speed(20)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        if not ctx.fedAt and GV.w.b.rises > 0 then ctx.fedAt = hours() end
+        if hours() - ctx.h0 < 4 and not (ctx.fedAt and hours() - ctx.fedAt > 0.1) then return nil end
+        RT.speed(1)
+        GV.watch(false)
+        local b = gen("b")
+        local given = gzNow().totals.delivered - ctx.d0
+        GV.state("b_near")
+        R:check("RTGV.b_moved_is_fed_where_it_lands", function()
+            return b ~= nil and b:isActivated() and GV.w.b.rises > 0 and GV.w.b.stops == 0 and given > 0
+                and G.gasSquares[keyOf(GV.b)] == true and G.gasSquares[keyOf(GV.bFrom)] == nil, string.format(
+                "B at %s running %s, %s, first refilled at %s h; the gasifier gave %.7f Nm3 meanwhile; watched there %s, " ..
+                "at %s %s", keyOf(GV.b), tostring(b and b:isActivated()), watched("b"), tostring(ctx.fedAt), given,
+                tostring(G.gasSquares[keyOf(GV.b)]), keyOf(GV.bFrom), tostring(G.gasSquares[keyOf(GV.bFrom)]))
+        end)
+        return true
+    end }
+
+    -- B out of the gasifier's reach: it runs on what it holds and stops.
+    -- The window lasts until B has stopped and at least 1.5 h, so that A,
+    -- still in reach, has an hourly refill in it (launch 396 ended at B's
+    -- stop, 0.45 h in, before A's refill); it is judged 60 ticks after.
+    GV.bAway = { name = "rtgv_b_away", timeout = 80000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        if not ctx.h0 then
+            ctx.h0 = hours()
+            GV.watch(true)
+            RT.speed(20)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        local b = gen("b")
+        if b and not b:isActivated() and not ctx.done then ctx.done = hours() end
+        if not ctx.settle then
+            if hours() - ctx.h0 < 3 and not (ctx.done and hours() - ctx.h0 >= 1.5) then return nil end
+            ctx.settle = ticks
+            return nil
+        end
+        if ticks - ctx.settle < 60 then return nil end
+        RT.speed(1)
+        GV.watch(false)
+        local a = gen("a")
+        GV.state("b_away")
+        R:check("RTGV.b_out_of_reach_gets_nothing_and_stops", function()
+            return b ~= nil and not b:isActivated() and GV.w.b.rises == 0 and GV.w.b.stops == 1, string.format(
+                "B at %s, %s from the gasifier: running %s, %s; stopped at %s h", keyOf(GV.b),
+                tostring(math.max(math.abs(GV.b.x - GV.g.x), math.abs(GV.b.y - GV.g.y))) .. " tiles", tostring(b and b:isActivated()),
+                watched("b"), tostring(ctx.done))
+        end)
+        R:check("RTGV.a_fed_meanwhile", function()
+            return a ~= nil and a:isActivated() and GV.w.a.stops == 0 and GV.w.a.rises > 0, string.format("A running %s, %s",
+                tostring(a and a:isActivated()), watched("a"))
+        end)
+        return true
+    end }
+
+    -- The lit gasifier taken up with Grab and put down a tile off, within
+    -- A's reach; nothing reads it.
+    GV.move = { name = "rtgv_move_gasifier", timeout = 3000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        if not ctx.phase then
+            ctx.before = TLG.Tables.deepCopy(stored())
+            ctx.hopper = TLG.Domain.Gas.Gasifier.status(gzNow()).hopperKg
+            player():teleportTo(GV.g.x, GV.g.y + 1, 0)
+            ctx.phase, ctx.t0 = "grab", ticks
+            return nil
+        end
+        if ctx.phase == "grab" then
+            if ticks - ctx.t0 < 30 then return nil end
+            ISWorldObjectContextMenu.onGrabWItem(nil, gzItem():getWorldItem(), 0)
+            ctx.phase, ctx.t0 = "grabbing", ticks
+            return nil
+        end
+        if ctx.phase == "grabbing" then
+            if ticks - ctx.t0 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+            local it = player():getInventory():getItemWithIDRecursiv(GV.itemId)
+            if not it then
+                R:check("RTGV.gasifier_moved_while_lit_unread", function() return false, "not taken up" end)
+                RT.abort = "the gasifier was not taken up"
+                return true
+            end
+            GV.to = at(1, 1)
+            ISTimedActionQueue.add(ISDropWorldItemAction:new(player(), it, sq(GV.to.x, GV.to.y, 0), 0.5, 0.5, 0, 0, false))
+            ctx.phase, ctx.t0 = "dropping", ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+        local it = gzItem()
+        local wi = it and it:getWorldItem()
+        local s = wi and wi:getSquare()
+        local rec = stored()
+        GV.moved = { h = hours(), hopper = ctx.hopper, vented = rec and rec.totals.vented or -1 }
+        GV.state("gasifier_moved")
+        R:check("RTGV.gasifier_moved_while_lit_unread", function()
+            return s ~= nil and s:getX() == GV.to.x and s:getY() == GV.to.y and rec ~= nil and GZ.lit(rec) and rec.site ~= nil
+                and rec.site.x == GV.g.x and rec.site.y == GV.g.y, string.format("on the floor at " ..
+                "%s,%s (put down on %s); its stored record %s/%s, site %s,%s, written at %s (before the move %s)",
+                tostring(s and s:getX()), tostring(s and s:getY()), keyOf(GV.to), tostring(rec and rec.state),
+                tostring(rec and rec.pause), tostring(rec and rec.site and rec.site.x), tostring(rec and rec.site and rec.site.y),
+                tostring(rec and rec.t), tostring(ctx.before and ctx.before.t))
+        end)
+        return true
+    end }
+
+    -- Until the stored record is out and A has stopped (at most 2.5 h),
+    -- judged 60 ticks after: launch 396 ended in the tick A stopped, before
+    -- the watcher saw the stop.
+    GV.afterMove = { name = "rtgv_after_move", timeout = 60000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        if not ctx.h0 then
+            ctx.h0 = hours()
+            GV.watch(true)
+            RT.speed(20)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        local rec, a = stored(), gen("a")
+        if rec and not GZ.lit(rec) and not ctx.outAt then
+            ctx.outAt, ctx.minute, ctx.aFuel = hours(), (hours() % 1) * 60, a and a:getFuel()
+        end
+        if not ctx.settle then
+            if hours() - ctx.h0 < 2.5 and not (ctx.outAt and a and not a:isActivated()) then return nil end
+            ctx.settle = ticks
+            return nil
+        end
+        if ticks - ctx.settle < 60 then return nil end
+        RT.speed(1)
+        GV.watch(false)
+        GV.state("after_the_move")
+        local st = rec and TLG.Domain.Gas.Gasifier.status(rec) or {}
+        R:line("OBS  RTGV.after the move at %.4f h: the stored record went out at %s h (minute %s of its hour), A then " ..
+            "holding %s L; A %s", GV.moved.h, tostring(ctx.outAt), tostring(ctx.minute), tostring(ctx.aFuel), watched("a"))
+        R:check("RTGV.the_minute_pass_puts_out_the_moved_gasifier", function()
+            return rec ~= nil and rec.state == "Ready" and rec.pause == "moved" and ctx.outAt ~= nil and (st.hopperKg or 0) > 0
+                and st.hopperKg <= GV.moved.hopper + 1e-9 and rec.totals.vented > GV.moved.vented, string.format(
+                "stored %s/%s; out at %s h; hopper %.4f kg (%.4f before the move); let out %.6f Nm3 (%.6f before)",
+                tostring(rec and rec.state), tostring(rec and rec.pause), tostring(ctx.outAt), st.hopperKg or -1, GV.moved.hopper,
+                rec and rec.totals.vented or -1, GV.moved.vented)
+        end)
+        R:check("RTGV.a_gets_nothing_from_it_and_stops", function()
+            return a ~= nil and not a:isActivated() and GV.w.a.rises == 0 and GV.w.a.stops == 1, string.format(
+                "A running %s, %s", tostring(a and a:isActivated()), watched("a"))
+        end)
+        return true
+    end }
+
+    RT.gasMovesSteps = { RT.waitWorld, GV.setup, GV.light, GV.warm, start("a", "a", 1), start("b", "b", -1), GV.both,
+        takeB("near"), putB("near", 3, 1), start("b_near", "b", -1), GV.bNear,
+        takeB("away"), putB("away", 7, 0), start("b_away", "b", -1), GV.bAway,
+        GV.move, GV.afterMove, RT.finish }
+end
+
+RT.GV.build()
+
+------------------------------------------------------------------------------
 -- Diesel vehicles (request "sp-rtdv", D-036). A new world, so its record
 -- says diesel chassis exist. Three vehicles at a time are spawned beside
 -- the start (the squares phase A parks on), repaired and given 10 L with
@@ -22015,7 +22518,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtgy" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtgv" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -22151,6 +22654,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtgy" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, a player's own way to wood gas")
                 TLGH.Steps.run(R, RT.gasPlayerSteps, H, nil)
+            elseif REQUEST == "sp-rtgv" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, wood gas when things move")
+                TLGH.Steps.run(R, RT.gasMovesSteps, H, nil)
             elseif REQUEST == "sp-rtbdm" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel chain's models")
                 TLGH.Steps.run(R, RT.biodieselModelSteps, H, nil)

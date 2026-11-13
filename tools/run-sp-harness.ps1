@@ -85,6 +85,13 @@
   from the game's right-click menu on it and photographed at zoom 1 and
   0.5, the fog held off; its gas filling the generator, started and run
   three hours. No save. About 3 minutes.
+  gas-moves: wood gas when things move (D-040). Two generators converted
+  to gas, A and B, with a Wood Gasifier two tiles from each, lit through
+  its menu: both run three hours on it, every step drawn and its gas
+  accounted for; B taken up and put down a tile from the gasifier (the
+  same record, fed there), then out of its reach (it stops); the lit
+  gasifier taken up and put down within A's reach with nothing reading it
+  until A's minute pass, which puts it out as moved; A stops. No save.
   gas-propane: a gas generator on propane (D-040), at the default
   generator fuel use. A vanilla generator converted to gas by the
   conversion service's own steps, a tank connected through the mod's Gas
@@ -351,7 +358,7 @@
   Mods the client loads (default: the mod and the harness; see setup-devenv.ps1).
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
-    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "gas-probe", "gas-measures", "gas-sleep", "gas-propane", "gas-wood", "gas-player", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "handbook-loot", "handbook-loot-woodgas", "controls", "still-pickup",
+    [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "gas-probe", "gas-measures", "gas-sleep", "gas-propane", "gas-wood", "gas-player", "gas-moves", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "handbook-loot", "handbook-loot-woodgas", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
         "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "removal-d", "upgrade-a", "upgrade-b", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
@@ -422,7 +429,7 @@ if ($Mode -eq "italian") {
     Set-Content -Encoding ascii -Path (Join-Path $luaDir "TLG_it_expect.txt") -Value $lines
 }
 $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "fireplace" { "sp-rtf" }
-    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "gas-probe" { "sp-rtgp" } "gas-measures" { "sp-rtgm" } "gas-sleep" { "sp-rtgs" } "gas-propane" { "sp-rtpr" } "gas-wood" { "sp-rtwd" } "gas-player" { "sp-rtgy" }"diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "fuel-drives" { "sp-rtfd" } "wrong-fuel-more" { "sp-rtwg" } "biodiesel-cold" { "sp-rtbc" } "context-menus" { "sp-rtcm" } "context-menus-zoom" { "sp-rtcz" } "handbook-loot" { "sp-rthl" } "handbook-loot-woodgas" { "sp-rthlg" }"handbook" { "sp-rthb" } "controls" { "sp-rtc" }
+    "fireplace-reload" { "sp-rtfs" } "pickup" { "sp-rtp" } "pot-still" { "sp-rtpot" } "biodiesel" { "sp-rtbd" } "biodiesel-models" { "sp-rtbdm" } "diesel-generator" { "sp-rtdg" } "gas-probe" { "sp-rtgp" } "gas-measures" { "sp-rtgm" } "gas-sleep" { "sp-rtgs" } "gas-propane" { "sp-rtpr" } "gas-wood" { "sp-rtwd" } "gas-player" { "sp-rtgy" } "gas-moves" { "sp-rtgv" } "diesel-vehicles" { "sp-rtdv" } "diesel-pumps" { "sp-rtdp" } "wrong-fuel" { "sp-rtwf" } "fuel-drives" { "sp-rtfd" } "wrong-fuel-more" { "sp-rtwg" } "biodiesel-cold" { "sp-rtbc" } "context-menus" { "sp-rtcm" } "context-menus-zoom" { "sp-rtcz" } "handbook-loot" { "sp-rthl" } "handbook-loot-woodgas" { "sp-rthlg" }"handbook" { "sp-rthb" } "controls" { "sp-rtc" }
     "still-pickup" { "sp-rts" } "still-save" { "sp-rtss" } "still-controls" { "sp-rtsc" } "late-find" { "sp-rtn" } "can-water" { "sp-rtcw" } "chassis" { "sp-rtv" } "driving" { "sp-rtd" } "engine-effects" { "sp-rte" } "performance" { "sp-rtpf" } "model-import" { "sp-rtmi" } "fermenter-model" { "sp-rtmf" } "held" { "sp-rtmh" } "heavy" { "sp-rtmhh" } "generator-unequip" { "sp-rtgu" } "pose" { "sp-rtmp" } "pose-hold" { "sp-rtmph" } "pose-freeze" { "sp-rtmpf" } "pose-carry" { "sp-rtmpc" } "pose-carry-wide" { "sp-rtmpw" } "pose-carry-mid" { "sp-rtmpm" } "pose-carry-offsets" { "sp-rtmpo" } "vessel-carry" { "sp-rtmv" } "vessel-actions" { "sp-rtmva" } "vessel-gaits" { "sp-rtmvg" } "pose-crouch" { "sp-rtmpk" } "pose-sprint" { "sp-rtmps" } "machine-models" { "sp-rtmm" } "manual" { "sp-rtman" } "manual-italian" { "sp-rtmanit" } "crafting" { "sp-rtcr" } "successor" { "sp-rtsu" } "knowledge" { "sp-rtkn" } "knowledge-save" { "sp-rtkns" } "removal-a" { "rm-a" } "removal-b" { "rm-b" } "removal-c" { "rm-c" } "removal-d" { "rm-d" } "upgrade-a" { "up-a" } "upgrade-b" { "up-b" } "fires" { "sp-rtof" } "existing-a" { "ex-a" } "existing-b" { "ex-b" } "italian" { "sp-it" } "docs-shots" { "sp-rtds" } "transfer-liquid" { "sp-rttl" } default { "sp-a" } }
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 

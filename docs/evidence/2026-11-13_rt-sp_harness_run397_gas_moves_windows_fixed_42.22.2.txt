@@ -1,0 +1,58 @@
+# TLG single-player harness, wood gas when things move
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=7257533249645852262 hours=2.0096 DayLength=4
+STEP rtgv_setup begin
+OBS  RTGV.placed A at 10645,10649,0, B at 10649,10649,0, the gasifier at 10647,10649,0: conversions Commissioned, Commissioned
+PASS RTGV.placed :: A true gas true; B true gas true; gasifier on the floor true
+STEP rtgv_load_and_light begin
+OBS  RTGV.load menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTGV.light menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTGV.lit at 2.0188 h: A at 10645,10649,0 fuel 0.0000000 running false load 0.0000000 record nil; B at 10649,10649,0 fuel 0.0000000 running false load 0.0000000 record nil; gasifier stored Processing/nil, now Processing/nil hopper 48.000 kg buffer 0.0000 Nm3; totals fed 0.0000 kg produced 0.000000 delivered 0.000000 vented 0.000000 Nm3
+PASS RTGV.loaded_and_lit :: load ok=true 48 kg; light ok=true state Processing
+STEP rtgv_warm begin
+OBS  RTGV.warmed at 3.0201 h: A at 10645,10649,0 fuel 0.0010000 running false load 0.0000000 record GS415639910-8; B at 10649,10649,0 fuel 0.0010000 running false load 0.0000000 record GS415639910-9; gasifier stored Processing/nil, now Paused/buffer_full hopper 45.085 kg buffer 2.0000 Nm3; totals fed 2.9149 kg produced 2.012800 delivered 0.012800 vented 0.000000 Nm3
+PASS RTGV.its_gas_fills_both :: A 0.0010000 (cap 0.0010000), B 0.0010000 (cap 0.0010000)
+STEP rtgv_start_a begin
+PASS RTGV.started_a :: A running true
+STEP rtgv_start_b begin
+PASS RTGV.started_b :: B running true
+STEP rtgv_both_run begin
+OBS  RTGV.both_ran at 6.0318 h: A at 10645,10649,0 fuel 0.0030000 running true load 0.0020000 record GS415639910-8; B at 10649,10649,0 fuel 0.0060000 running true load 0.0050000 record GS415639910-9; gasifier stored Processing/nil, now Paused/buffer_full hopper 45.004 kg buffer 2.0000 Nm3; totals fed 2.9964 kg produced 2.192000 delivered 0.192000 vented 0.000000 Nm3
+OBS  RTGV.both over 3.001 h, 3 hour boundaries: A 3 steps (0.0060000 L), 4 refills (0.0080000 L), 0 stops; B 3 steps (0.0150000 L), 4 refills (0.0200000 L), 0 stops; the gasifier fed 0.081455 kg, made 0.1792000, gave 0.1792000, let out 0.0000000, flared 0.0000000, held 0.0000000 more Nm3
+PASS RTGV.one_gasifier_feeds_both :: A running true, 3 steps (0.0060000 L), 4 refills (0.0080000 L), 0 stops; B running true, 3 steps (0.0150000 L), 4 refills (0.0200000 L), 0 stops
+PASS RTGV.each_step_of_each_drawn :: A burned 0.0060000 L against 3 steps of 0.0020000; B burned 0.0150000 L against 3 of 0.0050000
+PASS RTGV.all_its_gas_accounted_for :: gave 0.1792000 Nm3 against the litres both took, 0.1792000; made 0.1792000 against given + let out + held 0.1792000; wood 0.081455 kg at 2.2000 Nm3/kg = 0.1792000
+STEP rtgv_take_b_near begin
+PASS RTGV.b_taken_up_near_with_its_record :: item Base.Generator; its gas record GS415639910-9 (B's GS415639910-9); item fuel 0.006000000052154064 (was 0.0060000); a generator left at 10649,10649,0 false
+STEP rtgv_put_b_near begin
+PASS RTGV.b_put_down_near_with_its_record :: B at 10648,10650,0 true; its gas record GS415639910-9 (was GS415639910-9); holds gas true; watched true
+STEP rtgv_start_b_near begin
+PASS RTGV.started_b_near :: B running true
+STEP rtgv_b_near begin
+OBS  RTGV.b_near from 6.0458 h: B holds 0.0060000 L, its cap here 0.0030000 L (load 0.0020000)
+OBS  RTGV.b_near at 8.1194 h: A at 10645,10649,0 fuel 0.0030000 running true load 0.0020000 record GS415639910-8; B at 10648,10650,0 fuel 0.0030000 running true load 0.0020000 record GS415639910-9; gasifier stored Processing/nil, now Paused/buffer_full hopper 44.989 kg buffer 2.0000 Nm3; totals fed 3.0109 kg produced 2.224000 delivered 0.224000 vented 0.000000 Nm3
+PASS RTGV.b_moved_is_fed_where_it_lands :: B at 10648,10650,0 running true, 2 steps (0.0040000 L), 1 refills (0.0010000 L), 0 stops, first refilled at 8.018658638000488 h; the gasifier gave 0.0320000 Nm3 meanwhile; watched there true, at 10649,10649,0 nil
+STEP rtgv_take_b_away begin
+PASS RTGV.b_taken_up_away_with_its_record :: item Base.Generator; its gas record GS415639910-9 (B's GS415639910-9); item fuel 0.0029999997932463884 (was 0.0030000); a generator left at 10648,10650,0 false
+STEP rtgv_put_b_away begin
+PASS RTGV.b_put_down_away_with_its_record :: B at 10652,10649,0 true; its gas record GS415639910-9 (was GS415639910-9); holds gas true; watched true
+STEP rtgv_start_b_away begin
+PASS RTGV.started_b_away :: B running true
+STEP rtgv_b_away begin
+OBS  RTGV.b_away at 9.7229 h: A at 10645,10649,0 fuel 0.0030000 running true load 0.0020000 record GS415639910-8; B at 10652,10649,0 fuel 0.0000000 running false load 0.0050000 record GS415639910-9; gasifier stored Processing/nil, now Paused/buffer_full hopper 44.983 kg buffer 2.0000 Nm3; totals fed 3.0167 kg produced 2.236800 delivered 0.236800 vented 0.000000 Nm3
+PASS RTGV.b_out_of_reach_gets_nothing_and_stops :: B at 10652,10649,0, 5 tiles from the gasifier: running false, 1 steps (0.0030000 L), 0 refills (0.0000000 L), 1 stops; stopped at 9.002603530883789 h
+PASS RTGV.a_fed_meanwhile :: A running true, 1 steps (0.0020000 L), 1 refills (0.0020000 L), 0 stops
+STEP rtgv_move_gasifier begin
+OBS  RTGV.gasifier_moved at 9.7400 h: A at 10645,10649,0 fuel 0.0030000 running true load 0.0020000 record GS415639910-8; B at 10652,10649,0 fuel 0.0000000 running false load 0.0050000 record GS415639910-9; gasifier stored Processing/nil, now Ready/moved hopper 44.983 kg buffer 0.0000 Nm3; totals fed 3.0167 kg produced 2.236800 delivered 0.236800 vented 2.000000 Nm3
+PASS RTGV.gasifier_moved_while_lit_unread :: on the floor at 10646,10650 (put down on 10646,10650,0); its stored record Processing/nil, site 10647,10649, written at 9.017423629760742 (before the move 9.017423629760742)
+STEP rtgv_after_move begin
+OBS  RTGV.after_the_move at 11.0917 h: A at 10645,10649,0 fuel 0.0000000 running false load 0.0020000 record GS415639910-8; B at 10652,10649,0 fuel 0.0000000 running false load 0.0050000 record GS415639910-9; gasifier stored Ready/moved, now Ready/moved hopper 44.983 kg buffer 0.0000 Nm3; totals fed 3.0167 kg produced 2.236800 delivered 0.236800 vented 2.000000 Nm3
+OBS  RTGV.after the move at 9.7400 h: the stored record went out at 10.017240524291992 h (minute 1.0344314575195312 of its hour), A then holding 9.999999310821295E-4 L; A 2 steps (0.0030000 L), 0 refills (0.0000000 L), 1 stops
+PASS RTGV.the_minute_pass_puts_out_the_moved_gasifier :: stored Ready/moved; out at 10.017240524291992 h; hopper 44.9833 kg (44.9833 before the move); let out 2.000000 Nm3 (0.000000 before)
+PASS RTGV.a_gets_nothing_from_it_and_stops :: A running false, 2 steps (0.0030000 L), 0 refills (0.0000000 L), 1 stops
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 11.09
+SUMMARY pass=20 fail=0
+DONE
