@@ -113,6 +113,7 @@ local function machine(sq, rec)
     function item:getWorldItem() return item.on and wi or nil end
     function item:setWorldItem(w) if w == nil then item.on = nil end end
     function item:getID() return 7 end
+    function item:getOutermostContainer() return item.outer end
     item.on, item.wi = sq, wi
     if sq then sq.objs[#sq.objs + 1] = wi end
     return item
@@ -1386,7 +1387,7 @@ T.case("integration: on a server a machine's record goes to the clients without 
         Machines.write(item, rec)
         T.eq(#sent, 1)
         local m = sent[1]
-        T.eq(m.module, "TLG"); T.eq(m.command, "machine")
+        T.eq(m.module, "TLG"); T.eq(m.command, "item"); T.eq(m.args.key, "tlgProc")
         T.eq(m.args.id, 7); T.eq(m.args.x, 10); T.eq(m.args.y, 20); T.eq(m.args.z, 0)
         T.eq(m.args.rec.id, "P-push")
         T.eq(m.args.rec.state, rec.state)
@@ -1401,11 +1402,13 @@ T.case("integration: on a server a machine's record goes to the clients without 
         -- A client's copy of the item on the floor takes the record sent.
         isServer = function() return false end
         local copy = machine(sq, nil)
-        T.ok(Machines.received(m.args))
+        local FR = TLG.Integration.WorldItemRecords
+        T.ok(FR.received(m.args))
         T.eq(copy:getModData().tlgProc.id, "P-push")
-        T.ok(not Machines.received({ id = 8, x = 10, y = 20, z = 0, rec = m.args.rec }), "another item")
-        T.ok(not Machines.received({ id = 7, x = 1, y = 1, z = 0, rec = m.args.rec }), "a square not loaded")
-        T.ok(not Machines.received({ id = 7, x = 10, y = 20, z = 0 }), "no record")
+        T.ok(not FR.received({ id = 8, x = 10, y = 20, z = 0, key = "tlgProc", rec = m.args.rec }), "another item")
+        T.ok(not FR.received({ id = 7, x = 1, y = 1, z = 0, key = "tlgProc", rec = m.args.rec }), "a square not loaded")
+        T.ok(not FR.received({ id = 7, x = 10, y = 20, z = 0, key = "tlgProc" }), "no record")
+        T.ok(not FR.received({ id = 7, x = 10, y = 20, z = 0, key = "other", rec = m.args.rec }), "a key not sent")
     end)
     sendServerCommand = savedSend
     g.restore()
@@ -1432,7 +1435,7 @@ T.case("integration: a record sent without its readings and brought forward disa
         local server = Machines.advance(item, Machines.read(item, false), 10, env)
         local view = {}
         for k, v in pairs(server) do
-            if not Machines.PUSH_DROP[k] then view[k] = v end
+            if not TLG.Integration.WorldItemRecords.KEYS.tlgProc[k] then view[k] = v end
         end
         local copy = machine(sq, view)
         local full = Machines.advance(item, server, 12, env)

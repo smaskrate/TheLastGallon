@@ -12,13 +12,23 @@
   or moves it, and the menu goes by what was last sent. A batch that
   finished or paused by itself shows in the menu after a **Status**.
   Single player is unchanged.
+* Fixed: on a server, the **Fuel (The Last Gallon)** menu of a can lying
+  on the floor, or stored in a crate, a bin, a cupboard or the like,
+  still offered **Open** after the can was opened, so it could not be
+  sealed again from there. As with the machines, the menu decides from
+  the player's own copy of the can's record, which did not change when
+  the server changed it. The server now sends the record to the players
+  each time it changes. A can in the player's own inventory was not
+  affected.
 * Checked on 42.22.2 on a dedicated server with one player (launches
-  362–364 in `docs/test-results.md`): a fermenter loaded, paused,
-  resumed and aborted twice through its menu, which offered each entry
-  where it applied. Not checked: two players, a real network, the stills
-  and the other machines, a player joining while a batch runs, a machine
-  carried and put down on a server, the full single-player run and the
-  install rehearsal of this version.
+  362–367 in `docs/test-results.md`): a fermenter loaded through its
+  menu; on each of the nine machines, a batch the server had started,
+  paused, resumed and aborted through the menu; a running fermentation
+  vessel picked up and put down; a vessel paused while the player left
+  and joined again; a can on the floor and one in a bin opened and sealed
+  again through the Fuel menu. Each menu offered each entry where it
+  applied. Not checked: two players, a real network, a machine stored in
+  a container on a server.
 
 ## 0.4.2 (2026-11-12)
 

@@ -237,6 +237,81 @@ T.case("integration: a record write leaves the fluids alone below the commit tol
     if not ok then error(err, 0) end
 end)
 
+-- The Fuel menu offers Seal or Unseal from the client's copy of the can's
+-- record; on a server a can no character carries, on the floor or in a
+-- crate, gets it from WorldItemRecords (an item's fields reach only the
+-- client holding it).
+T.case("integration: on a server a can's record goes to the clients while it lies on the floor or in a crate; a client puts it in its copy", function()
+    local g = fakeGame(100)
+    local names, sent, saved = { "sendServerCommand", "isServer", "getCell", "instanceof" }, {}, {}
+    for _, k in ipairs(names) do saved[k] = _G[k] end
+    sendServerCommand = function(module, command, args) sent[#sent + 1] = { module = module, command = command, args = args } end
+    instanceof = function(o, class)
+        return type(o) == "table" and (o.class == class or (class == "IsoGameCharacter" and o.class == "IsoPlayer"))
+    end
+    local function list(t) return { size = function() return #t end, get = function(_, i) return t[i + 1] end } end
+    local ok, err = pcall(function()
+        -- The floor at 10,20; a crate at 11,20.
+        local floor, objects = {}, {}
+        local sq = { getX = function() return 10 end, getY = function() return 20 end, getZ = function() return 0 end,
+            getWorldObjects = function() return list(floor) end, getObjects = function() return list({}) end }
+        local crateSq = { getX = function() return 11 end, getY = function() return 20 end, getZ = function() return 0 end,
+            getWorldObjects = function() return list({}) end, getObjects = function() return list(objects) end }
+        getCell = function() return { getGridSquare = function(_, x, y, z)
+            if y == 20 and z == 0 then return (x == 10 and sq) or (x == 11 and crateSq) or nil end
+        end } end
+        local crate = { class = "IsoObject", getSquare = function() return crateSq end }
+        local inCrate = { getParent = function() return crate end }
+        local inHands = { getParent = function() return { class = "IsoPlayer" } end }
+        local onFloor, outer = true, nil
+        local x = can()
+        function x:getWorldItem() return onFloor and { getSquare = function() return sq end } or nil end
+        function x:getOutermostContainer() return outer end
+        local rec = sidecar()
+        rec.sealed = false
+        isServer = function() return false end
+        I.Containers.writeSidecar(x, "item", rec)
+        T.eq(#sent, 0, "single player sends nothing")
+        isServer = function() return true end
+        I.Containers.writeSidecar(x, "item", rec)
+        T.eq(#sent, 1)
+        local m = sent[1]
+        T.eq(m.module, "TLG"); T.eq(m.command, "item"); T.eq(m.args.key, "tlg")
+        T.eq(m.args.id, 7); T.eq(m.args.x, 10); T.eq(m.args.y, 20); T.eq(m.args.z, 0)
+        T.eq(m.args.rec.sealed, false); T.eq(m.args.rec.id, "S1")
+        onFloor, outer = false, inHands
+        I.Containers.writeSidecar(x, "item", rec)
+        T.eq(#sent, 1, "carried: its holder gets it with the item's fields")
+        outer = inCrate
+        rec.sealed = true
+        I.Containers.writeSidecar(x, "item", rec)
+        T.eq(#sent, 2, "in a crate: sent")
+        local c = sent[2]
+        T.eq(c.args.x, 11); T.eq(c.args.y, 20); T.eq(c.args.rec.sealed, true)
+        -- A client's copies, on the floor and in the crate, take the records
+        -- sent.
+        isServer = function() return false end
+        local WR = TLG.Integration.WorldItemRecords
+        local copy = can()
+        copy.md = {}
+        floor[1] = { getItem = function() return copy end }
+        T.ok(WR.received(m.args))
+        T.eq(copy.md.tlg.sealed, false, "the copy on the floor now says unsealed")
+        local stored = can()
+        stored.md = {}
+        objects[1] = { getContainerCount = function() return 1 end, getContainerByIndex = function()
+            return { getItemWithIDRecursiv = function(_, id) return id == 7 and stored or nil end }
+        end }
+        T.ok(WR.received(c.args))
+        T.eq(stored.md.tlg.sealed, true, "the copy in the crate now says sealed")
+        T.ok(not WR.received({ id = 8, x = 11, y = 20, z = 0, key = "tlg", rec = c.args.rec }), "another item")
+        T.ok(not WR.received({ id = 7, x = 12, y = 20, z = 0, key = "tlg", rec = c.args.rec }), "a square not loaded")
+    end)
+    for _, k in ipairs(names) do _G[k] = saved[k] end
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
 -- Diesel chassis (D-036): a vehicle's stock profile and the fuel an
 -- unrecorded tank is taken to hold.
 local function chassis(script, litres, engineSide)

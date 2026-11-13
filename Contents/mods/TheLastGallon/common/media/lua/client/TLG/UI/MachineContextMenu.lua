@@ -244,7 +244,7 @@ end
 -- record brought to now without writing it (records advance lazily, so the
 -- stored state can lag). Run 31 showed all three in every state. A
 -- multiplayer client judges on the record as the server last sent it
--- (Machines.received: after each of its actions, a Status and a move). It
+-- (WorldItemRecords: after each of its actions, a Status and a move). It
 -- comes without the hourly readings, and brought forward without them it
 -- can disagree with the server: in a cold room warmed by a fire, 7.8 stage
 -- hours done where the server had 9.0 (test_machine_sites).

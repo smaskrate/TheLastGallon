@@ -1522,10 +1522,20 @@ How a 42.21 server runs a timed action a client queued (`javap` of
   so `equipHeavyItem` queues no walk.
 - `InventoryItem.syncItemFields` sends the item's fields, mod data
   included (`SyncItemFieldsPacket`), to the player whose inventory holds
-  it (the outermost container's parent an `IsoPlayer`); for an item in no
-  container it sends nothing. An item sent by `sendAddItemToContainer`
-  reaches the client with its mod data (the manual's print media, run
-  145).
+  it (the outermost container's parent an `IsoPlayer`). On a server, for
+  an item lying on the floor it also sends `ItemStatsPacket` to the
+  clients near it: uses, condition, heat, wetness, fluids and food
+  values, not mod data. For an item in the container of an object (a
+  crate, a bin) it sends nothing (BC `InventoryItem.syncItemFields`,
+  `ItemStatsPacket`). An item sent by `sendAddItemToContainer` reaches the
+  client with its mod data (the manual's print media, run 145).
+- The loot window asks the server for a container's items only the first
+  time this client opens it (`requestServerItemsForContainer` when the
+  container is not explored; SRC `ISInventoryPage.lua:1110` and
+  `checkExplored`). `ItemContainer.requestSync` does nothing in 42.22.2
+  (BC). A client that has seen a container keeps its own copies of the
+  items in it, with their mod data as received: in RT-MP launch 366 a can
+  in a bin, opened through the server, kept no record on the client.
 - `transmitModData` on an item lying on the floor (its
   `IsoWorldInventoryObject`, which does not override it) sends the world
   object's own mod data, not its item's (`GameServer.sendObjectModData`;
@@ -1533,7 +1543,7 @@ How a 42.21 server runs a timed action a client queued (`javap` of
   server's writes to the item's mod data of something on the floor do not
   reach the clients: in RT-MP run 362 a fermenter's client copy held no
   record after the server had loaded, paused, resumed and aborted it. The
-  mod sends such a record itself (`sendServerCommand`, D-023 amendment).
+  mod sends such a record itself (`WorldItemRecords.lua`, D-041).
 - The world menu's **Grab** on a client queues an inventory transfer
   (`ISInventoryTransferAction`; SRC `ISWorldObjectContextMenu.lua:1436`,
   its `isClient()` branch), which the server carries out as an item

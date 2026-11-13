@@ -6898,3 +6898,70 @@ Evidence:
 [run 362](evidence/2026-11-13_rt-mp_harness_run362_machinemenu_main_42.22.2.txt);
 [run 363](evidence/2026-11-13_rt-mp_harness_run363_machinemenu_fixed_42.22.2.txt);
 [run 364](evidence/2026-11-13_rt-mp_harness_run364_machinemenu_as_sent_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launches 365–367 (the menus that read the client's copy of an item's record, on a server)
+
+Command: `tools/run-mp-harness.ps1 -Only machinemenus`: the TLGDev
+dedicated server and one client on this computer, 42.22.2, branch
+`fix/machine-menu-server`. Each step goes through the menu when the menu
+offers it, else is asked of the server directly, and each check compares
+what the menu offers with the state the server replied with. The case
+covers:
+
+* the nine kinds of machine, each put down by the server with its batch
+  started there (`start_running` in `MPServer.lua`), then paused, resumed
+  and aborted through the machine menu;
+* a running fermenter taken up with the world menu's **Grab**, its
+  **Status** asked while carried, and put down a tile away;
+* a can holding 5 L of petrol on the floor, opened and sealed again
+  through the Fuel menu's **Open** and **Seal**;
+* from launch 366, the same with a can put into the container nearest the
+  spawn point (a bin at 10665,10636), walked to with the game's
+  `luautils.walkToContainer`;
+* a fermenter paused through the menu, the player leaving to the main
+  menu and joining again, then resuming it.
+
+| Launch | The mod | Result (pass/fail, client A) |
+| --- | --- | --- |
+| 365 | launch 364's code: the machines' records sent | 48/1 |
+| 366 | the records of machines and cans on the floor sent (`FloorRecords.lua`) | 51/1 |
+| 367 | the records of items in an object's container sent too (`WorldItemRecords.lua`) | 52/0 |
+
+Launch 365: every machine check passed. After each step the client's copy
+equalled the server's state, and the menu offered what that state
+allows. The two stills, aborted while heating up, kept nothing and went
+to Ready, with nothing offered (heating makes nothing, D-023); the other
+seven kept what they had made, stopped early, and offered Abort batch.
+Carried, the fermenter's Status replied Paused, `not_placed`, and the
+client's copy, which travels with the item's fields, said the same. Put
+down, the copy said Processing and the menu offered Pause and Abort
+batch. Joining again, the client's copy of the paused fermenter said
+paused by hand, the menu offered Resume and Abort batch, and the resume
+went through the menu. The failure was the can on the floor: opened
+through the menu (the server replied ok), its copy still held no record
+and the menu kept offering **Open**, so the seal was asked directly.
+The check after the seal passed only because the copy had not changed.
+
+Launch 366: the can on the floor followed, its copy `sealed=false` after
+Open and `sealed=true` after Seal, both chosen through the menu. The can
+in the bin failed as the floor can had in launch 365: opened through the
+menu, its copy kept no record and the menu kept offering Open.
+
+Launch 367: every check passed. The can in the bin followed as the one on
+the floor did, its copy `sealed=false` after Open and `sealed=true` after
+Seal, both chosen through the menu, and the machine checks passed as in
+launches 365 and 366.
+
+The clients' logs of launches 365–367 hold no warning or error of the mod,
+and the servers' logs none besides the harness's deep-recursion probe
+(`LuaProbe.lua`). The server's console was not kept: it holds the
+test accounts' passwords.
+
+Not run: two clients, a real network, a batch that finishes or pauses by
+itself between two sends, a machine in a container, the performance mode
+with these sends.
+
+Evidence:
+[run 365](evidence/2026-11-13_rt-mp_harness_run365_machinemenus_42.22.2.txt);
+[run 366](evidence/2026-11-13_rt-mp_harness_run366_machinemenus_floor_records_42.22.2.txt);
+[run 367](evidence/2026-11-13_rt-mp_harness_run367_machinemenus_world_item_records_42.22.2.txt).

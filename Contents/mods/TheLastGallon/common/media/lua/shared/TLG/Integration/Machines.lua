@@ -75,6 +75,7 @@ require "TLG/Integration/World"
 require "TLG/Content/Production"
 require "TLG/Content/Biodiesel"
 require "TLG/Authority/Vault"
+require "TLG/Integration/WorldItemRecords"
 
 TLG.Integration.Machines = TLG.Integration.Machines or {}
 local M = TLG.Integration.Machines
@@ -572,52 +573,17 @@ function M.observeFires()
     end
 end
 
--- On a server, a record written for a machine on the floor goes to the
--- clients: an item's mod data reaches only the client whose inventory holds
--- it (syncItemFields sends nothing for an item in no container, and the
--- world object's transmitModData sends that object's own mod data;
--- engine-capabilities, RT-MP), and the menu decides Pause, Resume and Abort
--- batch from the client's copy (D-023; RT-MP launch 362). The hourly
--- readings and fire notes stay on the server: up to 480 entries each, and
--- the menu needs only the state.
-M.PUSH_DROP = { temps = true, fires = true }
-
-local function push(item, rec)
-    if not (isServer and isServer()) or sendServerCommand == nil then return end
-    local sq = M.square(item)
-    if sq == nil then return end
-    local view = {}
-    for k, v in pairs(rec) do
-        if not M.PUSH_DROP[k] then view[k] = v end
-    end
-    sendServerCommand("TLG", "machine", { id = item:getID(), x = sq:getX(), y = sq:getY(), z = sq:getZ(), rec = view })
-end
-
--- quiet: kept on the authority, not sent to clients (fire notes).
+-- quiet: kept on the authority, not sent to clients (fire notes, hourly
+-- readings). Otherwise, on a server, a machine no character carries has its
+-- record sent to the clients without those
+-- (TLG/Integration/WorldItemRecords.lua): the menu decides Pause, Resume
+-- and Abort batch from the client's copy (D-023; RT-MP launch 362).
 function M.write(item, rec, quiet)
     item:getModData()[M.SIDECAR] = rec
     Vault.put("process", Vault.itemHolder(item), rec)
     if quiet then return end
     send(item)
-    push(item, rec)
-end
-
--- On a client: a record the server sent for a machine on the floor, put in
--- this client's copy of the item. Returns whether the item was found (a
--- square this client has not loaded is skipped; the item comes with its
--- record when it loads).
-function M.received(args)
-    if type(args) ~= "table" or type(args.rec) ~= "table" or getCell() == nil then return false end
-    local sq = getCell():getGridSquare(args.x, args.y, args.z)
-    local wobjs = sq and sq:getWorldObjects()
-    for i = 0, (wobjs and wobjs:size() or 0) - 1 do
-        local it = wobjs:get(i):getItem()
-        if it and it:getID() == args.id and M.machineFor(it) then
-            it:getModData()[M.SIDECAR] = args.rec
-            return true
-        end
-    end
-    return false
+    TLG.Integration.WorldItemRecords.send(item, M.SIDECAR, rec)
 end
 
 -- Machine items within reach of a square (for still <- fermenter loading).

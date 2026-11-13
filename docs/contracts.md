@@ -74,6 +74,15 @@ return Thing
   collect/abort/repair/decommission`.
 - Authority (`TLG.Authority.Transactions`): endpoints with `key`,
   `canAccess(actor)`, `read()`, `write(record, change)`, optional `consumer`.
+- Records of items no character carries
+  (`TLG.Integration.WorldItemRecords`): on a server, a write of an item's
+  record calls `send(item, key, rec)`, which sends it to the clients when
+  the item lies on the floor or in an object's container; each client puts
+  it in its copy (`received`). The game sends an item's mod data only to
+  the client carrying it (engine-capabilities). A client menu that decides
+  its entries from an item's record reads a key listed in `KEYS`, with the
+  fields it needs kept in what is sent (`tlgProc` leaves out `temps` and
+  `fires`).
 
 ## Testing
 

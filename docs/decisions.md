@@ -683,14 +683,13 @@ their replacement.
   none of the three. A client joining, or a chunk loaded again, gets the
   item with its record as of that moment, a copy as stale as it is from
   then on (not run).
-  * The authority now also sends each record it writes for a machine on
-    the floor to the clients (`sendServerCommand` "machine"), without the
-    hourly readings and fire notes (up to 480 entries each), and each
-    client puts it in its copy (`Machines.received`). The writes of the
-    hourly readings and the fire notes are quiet: they change nothing a
-    menu judges on, and would send every running machine's record to
-    every client each game hour. So a record goes after each action on
-    the machine, each Status and each move.
+  * The authority now also sends each record it writes for a machine no
+    character carries to the clients, without the hourly readings and
+    fire notes (up to 480 entries each), and each client puts it in its
+    copy (D-041). The writes of the hourly readings and the fire notes are
+    quiet: they change nothing a menu judges on, and would send every
+    running machine's record to every client each game hour. So a record
+    goes after each action on the machine, each Status and each move.
   * A multiplayer client judges on the record as last sent, not brought
     to now: without its readings, brought forward it can disagree with
     the server's (in a cold room warmed by a fire, 7.8 stage hours done
@@ -702,10 +701,11 @@ their replacement.
     menu, the client's copy equal to the server's state after each, and
     the menu offering Pause and Abort batch while working, Resume and
     Abort batch while paused by hand, Abort batch once stopped early and
-    nothing once emptied. Not run: two clients, a real network, the stills
-    and the other machines, a client joining while a batch runs, a
-    machine carried and put down on a server, the performance mode with
-    these sends.
+    nothing once emptied. RT-MP launches 365–367 did the same for each of
+    the nine kinds of machine, a running fermenter carried and put down,
+    and one paused while the player left and joined again (D-041). Not
+    run: two clients, a real network, a machine in a container, the
+    performance mode with these sends.
 
 ## D-024 A first look records the fuel it looks at
 * Current rule (amended 2026-11-02): a first look writes the fuel's record
@@ -1774,3 +1774,42 @@ gas probe (launch 342).
   to **Cancel the project** or **Remove the conversion** (the domain's
   test; not run in game). Building the feed includes offering the
   conversion again through that function.
+
+## D-041 On a server the authority sends the records of items no character carries
+* Decision: on a server, each record the authority writes into the mod
+  data of an item that no character carries goes to every client too
+  (`TLG/Integration/WorldItemRecords.lua`, server command `item`): an item
+  lying on the floor, or in the container of an object on a square (a
+  crate, a bin, a cupboard), where the authority's own lookup finds it
+  for a request (`Resolver`). Each client looks for the item by id on
+  that square and puts the record in its copy. Two records go: a
+  machine's batch (`tlgProc`) without its hourly readings and fire notes,
+  and a can's fuel record (`tlg`). Writes no menu reads stay on the
+  server (the hourly readings and the fire notes, D-023 amendment). An
+  item a character carries is left to the game, which sends its fields
+  to its holder. Single player sends nothing.
+* Reason: the client menus decide their entries from the client's copy of
+  the record: the machine menu's **Pause**, **Resume** and **Abort batch**
+  (D-023) and the Fuel menu's **Seal** or **Open**. The game sends an
+  item's mod data only to the client carrying it, and a container's items
+  only the first time a client opens it (engine-capabilities). So on
+  0.4.2 the copies did not follow the server: a fermenter's stayed empty
+  while the server loaded, paused, resumed and aborted it (RT-MP launch
+  362), and a can's kept no record after it was opened, on the floor
+  (launch 365) and in a bin (launch 366), the menu still offering
+  **Open**.
+* Consequences: every client gets each record and keeps it only for an
+  item it has, on a square it has loaded or in a container whose items it
+  was sent. A client joining, loading the chunk again or opening the
+  container for the first time gets the item with its record as the
+  server holds it then. A record goes after each action on the item, each
+  machine **Status** and each move; a batch that finished or paused by
+  itself shows after a **Status**. A client menu that decides from an
+  item's record reads a key the module sends (`contracts.md`). Verified
+  by `tests/integration/test_machine_sites.lua` and `test_fuel_reads.lua`,
+  and by RT-MP launches 363–367 (`test-results.md`): after each step
+  through the menus the client's copy equalled the server's state, for
+  the nine kinds of machine, a fermenter carried and put down, one paused
+  while the player left and joined again, and the cans on the floor and
+  in the bin (launch 367, 52/0). Not run: two clients, a real network, a
+  machine in a container, the performance mode with these sends.
