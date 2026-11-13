@@ -1878,9 +1878,13 @@ gas probe (launch 342).
     stopped; lit again; taken up while lit with the world menu's Grab (an
     item transaction no Lua of the mod's sees), it answered out with its
     wood, and put down it lay out on the server's floor.
-  * Not run: two clients; a real network; a client joining while a
-    gasifier burns; crafting the gasifier and reading the handbook in
-    game; the gasifier's model looked at in game; its menu from a
-    right-click on the floor (the harnesses built it from the item); a
-    wood-gas generator taken up and put down; a gasifier feeding two
-    generators; the performance mode.
+  * Not run: a player's own gas conversion through the Workshop menu
+    (every run made it with the conversion service's steps); crafting the
+    gasifier and reading or finding the handbook in game; two clients; a
+    real network; a client joining while a gasifier burns; a server
+    restarted with a gasifier lit; the minute pass finding a lit gasifier
+    moved (both runs asked for its Status first, which put it out); the
+    gasifier's model looked at in game; its menu from a right-click on the
+    floor (the harnesses built it from the item); a wood-gas generator
+    taken up and put down; a gasifier feeding two generators; the
+    performance mode.

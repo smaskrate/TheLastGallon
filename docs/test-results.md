@@ -7329,7 +7329,9 @@ deep-recursion probe. The server's console was not kept: it holds the
 test accounts' passwords.
 
 Not run: two clients; a real network; a client joining while a gasifier
-burns; the gasifier's menu from a right-click on the floor (the harness
+burns; a server restarted with a gasifier lit; the minute pass finding a
+lit gasifier moved (the Status asked while it was carried put it out
+first); the gasifier's menu from a right-click on the floor (the harness
 built it from the item).
 
 Evidence:
