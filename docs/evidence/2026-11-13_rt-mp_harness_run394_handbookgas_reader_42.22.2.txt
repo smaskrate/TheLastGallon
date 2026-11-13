@@ -1,0 +1,74 @@
+===== launch 394: tools/run-mp-harness.ps1 -Clients 1 -Only handbookgas, branch feature/gas-generators after 1cd7216, the case as committed with this file (client A's steps alone). The launcher's own lines were not kept; the client's and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_hbg_start begin
+PASS MP.hbg_starts_at_welding_0_without_the_gasifier_A :: debug=false Welding 0 gasifier known false role admin
+STEP hbg_give begin
+OBS  MP.hbg A given Base.MetalDrum=2140655318;Base.SheetMetal=2117930363;Base.SheetMetal=1838667771;Base.MetalPipe=1194156041;Base.MetalPipe=1227295381;Base.MetalPipe=514902332;Base.MetalBar=2059326131;Base.MetalBar=1522004351;Base.BlowTorch=2107887074;Base.WeldingMask=869199203;Base.HandTorch=1801621495;TLG.WoodGasHandbook=726734842
+STEP mp_hbg_arrive begin
+STEP mp_hbg_light begin
+STEP hb_level_3 begin
+OBS  MP.hbg A Welding on the server 3 (0 XP), here 3 (0 XP)
+STEP mp_hbg_settle_3 begin
+STEP mp_hbg_state_at_welding_3 begin
+OBS  MP.hbg A at_welding_3: Welding 3, the gasifier actually known false, on the drum's craft entries false, the handbook read false
+STEP mp_hb_try_gasifier_refused_not_learned_at_welding_3 begin
+PASS MP.hb_gasifier_refused_not_learned_at_welding_3_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 3; hasPlayerLearnedRecipe 11111, actually known 00000, the gasifier's false; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=false level here 3 xp 0; TLG.Gasifier made 0
+STEP mp_hbg_read begin
+PASS MP.hbg_handbook_read_teaches_the_gasifier_here_A :: book carried true; after 2164 ticks the gasifier actually known true, the handbook recorded as read true, Welding 3
+STEP mp_hbg_state_after_the_read begin
+OBS  MP.hbg A after_the_read: Welding 3, the gasifier actually known true, on the drum's craft entries false, the handbook read true
+STEP hbg_probe_after_reading begin
+OBS  MP.hbg A after_reading server: known 1, actually known 1, Welding 3, handbook read true, gasifiers 0
+PASS MP.hbg_server_knows_the_gasifier_after_the_read_A :: known 1 actually 1, read true, Welding 3
+STEP mp_hb_try_gasifier_refused_two_levels_below_at_welding_3 begin
+PASS MP.hb_gasifier_refused_two_levels_below_at_welding_3_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 3; hasPlayerLearnedRecipe 11111, actually known 00000, the gasifier's true; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=false level here 3 xp 0; TLG.Gasifier made 0
+STEP hb_level_4 begin
+OBS  MP.hbg A Welding on the server 4 (0 XP), here 4 (0 XP)
+STEP mp_hbg_settle_4 begin
+STEP mp_hbg_state_at_welding_4 begin
+OBS  MP.hbg A at_welding_4: Welding 4, the gasifier actually known true, on the drum's craft entries true, the handbook read true
+STEP mp_hb_try_gasifier_made_one_level_below_at_welding_4 begin
+PASS MP.hb_gasifier_made_one_level_below_at_welding_4_A :: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 4; hasPlayerLearnedRecipe 11111, actually known 01000, the gasifier's true; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=false level here 4 xp 0; TLG.Gasifier made 1
+STEP hbg_probe_after_crafting begin
+OBS  MP.hbg A after_crafting server: known 1, actually known 1, Welding 4, handbook read true, gasifiers 1
+PASS MP.hbg_server_holds_the_gasifier_A :: gasifiers carried or within two squares on the server: 1
+STEP hbg_roll begin
+PASS MP.hbg_handbook_rolled_from_four_loot_lists_on_the_server_A :: TLG.WoodGasHandbook: 39 in 1200 fills: GasStorageMechanics=5 CrateMechanics=10 ToolStoreBooks=14 LibraryMagazines=10
+STEP mp_finish begin
+SUMMARY pass=9 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.SheetMetal;Base.SheetMetal;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalBar;Base.MetalBar;Base.BlowTorch;Base.WeldingMask;Base.HandTorch;TLG.WoodGasHandbook role=A tag=hbg_give
+OBS  MPS.reply given ids=Base.MetalDrum=2140655318;Base.SheetMetal=2117930363;Base.SheetMetal=1838667771;Base.MetalPipe=1194156041;Base.MetalPipe=1227295381;Base.MetalPipe=514902332;Base.MetalBar=2059326131;Base.MetalBar=1522004351;Base.BlowTorch=2107887074;Base.WeldingMask=869199203;Base.HandTorch=1801621495;TLG.WoodGasHandbook=726734842 role=A tag=hbg_give
+OBS  MPS.message from tlga: handbook_level level=3 rise=1 role=A tag=hb_level_3
+OBS  MPS.reply handbook_level level=3 role=A tag=hb_level_3 xp=0
+OBS  MPS.ticks 300 OnTick events in 83644 ms
+OBS  MPS.message from tlga: probe_handbook book=TLG.WoodGasHandbook product=TLG.Gasifier recipes=TLG_MakeGasifier role=A tag=hbg_probe_after_reading
+OBS  MPS.reply probe_handbook actual=1 barrels=0 known=1 level=3 made=0 read=true role=A tag=hbg_probe_after_reading
+OBS  MPS.message from tlga: handbook_level level=4 rise=1 role=A tag=hb_level_4
+OBS  MPS.reply handbook_level level=4 role=A tag=hb_level_4 xp=0
+OBS  MPS.message from tlga: probe_handbook book=TLG.WoodGasHandbook product=TLG.Gasifier recipes=TLG_MakeGasifier role=A tag=hbg_probe_after_crafting
+OBS  MPS.reply probe_handbook actual=1 barrels=0 known=1 level=4 made=1 read=true role=A tag=hbg_probe_after_crafting
+OBS  MPS.message from tlga: roll_handbook item=TLG.WoodGasHandbook role=A tag=hbg_roll
+OBS  MPS.reply roll_handbook fills=1200 item=TLG.WoodGasHandbook lists=GasStorageMechanics=5 CrateMechanics=10 ToolStoreBooks=14 LibraryMagazines=10 role=A tag=hbg_roll total=39

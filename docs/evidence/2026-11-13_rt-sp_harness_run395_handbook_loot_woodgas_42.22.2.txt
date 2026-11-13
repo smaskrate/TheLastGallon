@@ -1,0 +1,19 @@
+# TLG single-player harness, the Wood Gas Handbook taken from a container of the map
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=85934272515835171838 hours=2.0096 DayLength=4
+STEP rthlg_setup begin
+PASS RTHLG.the_gasifier_unknown_at_the_start :: recipe true; known false; the handbook read false; Welding 0
+STEP rthl_find begin
+OBS  RTHL.containers 58 within 70 tiles of 10660,10645: garagestorage/metal_shelves=1 gas2go/bin=1 gas2go/cashregister=1 gas2go/counter=11 gas2go/shelves=20 gas2go/shelvesmag=4 gasstorage/cardboardbox=1 gasstorage/metal_shelves=4 gasstorage/smallbox=1 outside/bin=5 outside/dumpster=2 outside/logs=2 outside/newspaper_dispatch=1 outside/newspaper_knews=1 outside/vendingpop=1 outside/vendingsnack=1 shed/metal_shelves=1
+PASS RTHL.a_handbook_in_a_container_of_the_map :: round 2 (round 1 is each container's first fill; later rounds empty and fill them again), 58 fills of 58 containers: in gasstorage/metal_shelves at 10673,10615
+STEP rthl_take begin
+PASS RTHL.handbook_taken_with_the_games_transfer :: standing at 10673,10616 beside the container at 10673,10615: in the inventory=true, still in the container=false
+STEP rthl_read_guard begin
+STEP rthlg_read begin
+PASS RTHLG.the_looted_handbook_teaches_the_gasifier :: the book TLG.WoodGasHandbook (id 40058021), read to the end true; the gasifier known true; recorded as read true; it asks MetalWelding:5, met false at Welding 0
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 2.20
+SUMMARY pass=4 fail=0
+DONE

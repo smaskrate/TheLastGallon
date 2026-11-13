@@ -107,6 +107,8 @@
 --              thing: a can, a machine, a generator, a car
 --   sp-rtcz -> the same menu checks at zoom 0.5, 0.75, 1.5 and 2
 --   sp-rthl -> a handbook found in a container of the map, taken and read
+--   sp-rthlg -> the same for the Wood Gas Handbook, which must teach the
+--              gasifier's recipe (RT.HLG)
 --   sp-rtwf -> wrong fuel (D-037): the verdict for every band, a refused
 --              start's cost, wear, a failure, the cures, the option off
 --   sp-rtfd -> driving on diesel, biodiesel and wrong fuel, the mod's draws
@@ -170,7 +172,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtwdb" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtwdb" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -21666,6 +21668,67 @@ RT.handbookLootSteps = { RT.waitWorld, RT.HB.setup,
     RT.finish }
 
 ------------------------------------------------------------------------------
+-- The Wood Gas Handbook taken from a container of the map (request
+-- "sp-rthlg"; D-040). It is in the same eleven loot lists as the Biodiesel
+-- Handbook, at the same weights (TLG/Integration/Manual.lua), so RT.HL's
+-- search and take serve, set to its id. The very book taken from the
+-- container is read with the inventory menu's Read at Welding 0: it must
+-- teach the Wood Gasifier's recipe, unknown before, and be recorded as
+-- read; the recipe's Welding 5 is still to be reached.
+------------------------------------------------------------------------------
+RT.HLG = { id = "TLG.WoodGasHandbook", recipe = "TLG_MakeGasifier" }
+
+RT.HLG.setup = { name = "rthlg_setup", timeout = 600, fn = function(ctx, ticks)
+    if not (player() and ticks > 120) then return nil end
+    local p = player()
+    p:setGodMod(true)
+    p:setInvisible(true)
+    p:setPerkLevelDebug(Perks.MetalWelding, 0)
+    RT.HL.id = RT.HLG.id
+    R:check("RTHLG.the_gasifier_unknown_at_the_start", function()
+        return RT.HB.recipe(RT.HLG.recipe) ~= nil and not RT.HB.known(RT.HLG.recipe) and not p:getAlreadyReadBook():contains(RT.HLG.id),
+            string.format("recipe %s; known %s; the handbook read %s; Welding %d", tostring(RT.HB.recipe(RT.HLG.recipe) ~= nil),
+                tostring(RT.HB.known(RT.HLG.recipe)), tostring(p:getAlreadyReadBook():contains(RT.HLG.id)),
+                p:getPerkLevel(Perks.MetalWelding))
+    end)
+    return true
+end }
+
+-- Read: the book taken, never one made here.
+RT.HLG.read = { name = "rthlg_read", timeout = 6000, fn = function(ctx, ticks)
+    local p, book = player(), RT.HL.book
+    if RT.abort or book == nil then return true end
+    if not ctx.t0 then
+        if p:tooDarkToRead() then
+            local torch = p:getInventory():AddItem("Base.HandTorch")
+            torch:setActivated(true)
+            p:setSecondaryHandItem(torch)
+        end
+        ISInventoryPaneContextMenu.readItem(book, 0)
+        RT.speed(3)
+        ctx.t0 = ticks
+        return nil
+    end
+    local queue = ISTimedActionQueue.getTimedActionQueue(p)
+    local busy = queue and queue.queue and #queue.queue > 0
+    if busy and ticks - ctx.t0 < 5000 then return nil end
+    if ticks - ctx.t0 < 60 then return nil end
+    RT.speed(1)
+    local known = RT.HB.known(RT.HLG.recipe)
+    local skilled, asks = RT.HB.skill(RT.HLG.recipe)
+    local recorded = p:getAlreadyReadBook():contains(RT.HLG.id)
+    R:check("RTHLG.the_looted_handbook_teaches_the_gasifier", function()
+        return not busy and known and recorded and not skilled, string.format("the book %s (id %s), read to the end %s; the " ..
+            "gasifier known %s; recorded as read %s; it asks %s, met %s at Welding %d", book:getFullType(), tostring(book:getID()),
+            tostring(not busy), tostring(known), tostring(recorded), tostring(asks), tostring(skilled),
+            p:getPerkLevel(Perks.MetalWelding))
+    end)
+    return true
+end }
+
+RT.handbookLootWoodGasSteps = { RT.waitWorld, RT.HLG.setup, RT.HL.find, RT.HL.take, RT.HL.guard, RT.HLG.read, RT.finish }
+
+------------------------------------------------------------------------------
 -- The mod's world menu entries follow the click (request "sp-rtcm"; 0.3.1).
 -- The owner found the Workshop entry on bare ground beside a car and the
 -- Fuel entry beside a can. A petrol can and a fermentation vessel lie on the
@@ -21952,7 +22015,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtgy" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtgy" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -22055,6 +22118,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rthl" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, a handbook taken from a container of the map")
                 TLGH.Steps.run(R, RT.handbookLootSteps, H, nil)
+            elseif REQUEST == "sp-rthlg" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, the Wood Gas Handbook taken from a container of the map")
+                TLGH.Steps.run(R, RT.handbookLootWoodGasSteps, H, nil)
             elseif REQUEST == "sp-rthb" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel recipes: skills and the handbook")
                 TLGH.Steps.run(R, RT.handbookSteps, H, nil)

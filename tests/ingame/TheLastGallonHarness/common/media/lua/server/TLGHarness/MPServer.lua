@@ -797,17 +797,51 @@ function services.learn_recipe(player, args)
     reply("learn_recipe", args, { recipe = args.recipe, known = tostring(player:getKnownRecipes():contains(args.recipe)) })
 end
 
+-- The sender's knowledge of the biodiesel recipes, or of `recipes`
+-- ("a;b"), as known recipes and as the game's isRecipeActuallyKnown; the
+-- Biodiesel Handbook, or `book`, read; and with `product` how many of it
+-- the sender carries or has lying within two squares (a heavy one made by
+-- an overloaded character falls to the floor).
 function services.probe_handbook(player, args)
-    local known = {}
-    for _, n in ipairs(TLG.Integration.Manual.HANDBOOK_RECIPES) do
+    local names = args.recipes and split(args.recipes) or TLG.Integration.Manual.HANDBOOK_RECIPES
+    local all = {}
+    pcall(function()
+        local list = CraftRecipeManager.queryRecipes("InHandCraft;AnySurfaceCraft")
+        for i = 0, list:size() - 1 do
+            local r = list:get(i)
+            all[string.match(r:getName(), "([^%.]+)$")] = r
+        end
+    end)
+    local known, actual = {}, {}
+    for _, n in ipairs(names) do
         known[#known + 1] = player:getKnownRecipes():contains(n) and "1" or "0"
+        actual[#actual + 1] = (all[n] ~= nil and player:isRecipeActuallyKnown(all[n]) == true) and "1" or "0"
     end
-    reply("probe_handbook", args, { known = table.concat(known), level = player:getPerkLevel(Perks.MetalWelding),
+    local fields = { known = table.concat(known), actual = table.concat(actual), level = player:getPerkLevel(Perks.MetalWelding),
         barrels = player:getInventory():getCountTypeRecurse("TLG.AshBarrel"),
-        read = tostring(player:getAlreadyReadBook():contains("TLG.BiodieselHandbook")) })
+        read = tostring(player:getAlreadyReadBook():contains(args.book or "TLG.BiodieselHandbook")) }
+    if args.product then
+        local n, here = player:getInventory():getCountTypeRecurse(args.product), player:getCurrentSquare()
+        for x = here:getX() - 2, here:getX() + 2 do
+            for y = here:getY() - 2, here:getY() + 2 do
+                local s = getCell():getGridSquare(x, y, here:getZ())
+                local objs = s and s:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getFullType() == args.product then n = n + 1 end
+                end
+            end
+        end
+        fields.made = n
+    end
+    reply("probe_handbook", args, fields)
 end
 
+-- Four of the loot lists the handbooks are in (TLG/Integration/Manual.lua
+-- has eleven), each filled 300 times as the game fills a container, counting
+-- the Biodiesel Handbook or `item`.
 function services.roll_handbook(player, args)
+    local item = args.item or "TLG.BiodieselHandbook"
     local total, fills, parts = 0, 0, {}
     for _, l in ipairs({ { "gasstorage", "other", "GasStorageMechanics" }, { "garagestorage", "crate", "CrateMechanics" },
         { "toolstore", "shelves", "ToolStoreBooks" }, { "library", "shelves", "LibraryMagazines" } }) do
@@ -819,7 +853,7 @@ function services.roll_handbook(player, args)
             for _ = 1, 300 do
                 cont:removeAllItems()
                 ItemPickerJava.doRollItem(dist, cont, 1, player, true, nil)
-                local got = cont:getItemsFromFullType("TLG.BiodieselHandbook")
+                local got = cont:getItemsFromFullType(item)
                 n = n + (got and got:size() or 0)
             end
             cont:removeAllItems()
@@ -827,7 +861,7 @@ function services.roll_handbook(player, args)
             parts[#parts + 1] = l[3] .. "=" .. n
         end
     end
-    reply("roll_handbook", args, { total = total, fills = fills, lists = table.concat(parts, " ") })
+    reply("roll_handbook", args, { item = item, total = total, fills = fills, lists = table.concat(parts, " ") })
 end
 
 -- gensprite (tools/run-mp-harness.ps1 -Only gensprite -ModAway): a Diesel

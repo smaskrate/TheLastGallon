@@ -1,0 +1,140 @@
+===== launch 393: tools/run-mp-harness.ps1 -Clients 2 -Only handbookgas, branch feature/gas-generators after 1cd7216, the case's first version: A read the handbook at Welding 4 and expected the gasifier refused there and made at 5. A's steps were changed before launch 394 (read at 3, made at 4); B's steps are as committed with this file. The launcher's own lines were not kept; the two clients' and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_hbg_start begin
+PASS MP.hbg_starts_at_welding_0_without_the_gasifier_A :: debug=false Welding 0 gasifier known false role admin
+STEP hbg_give begin
+OBS  MP.hbg A given Base.MetalDrum=852649616;Base.SheetMetal=1179822927;Base.SheetMetal=1028089133;Base.MetalPipe=22458634;Base.MetalPipe=1074681232;Base.MetalPipe=1819609917;Base.MetalBar=492497567;Base.MetalBar=644892042;Base.BlowTorch=1138308047;Base.WeldingMask=895388440;Base.HandTorch=572391501;TLG.WoodGasHandbook=1837510725
+STEP mp_hbg_arrive begin
+STEP mp_hbg_light begin
+STEP hb_level_4 begin
+OBS  MP.hbg A Welding on the server 4 (0 XP), here 4 (0 XP)
+STEP mp_hbg_settle_4 begin
+STEP mp_hbg_state_at_welding_4 begin
+OBS  MP.hbg A at_welding_4: Welding 4, the gasifier actually known false, on the drum's craft entries false, the handbook read false
+STEP mp_hb_try_gasifier_refused_not_learned_at_welding_4 begin
+PASS MP.hb_gasifier_refused_not_learned_at_welding_4_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 4; hasPlayerLearnedRecipe 11111, actually known 01000, the gasifier's false; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=false level here 4 xp 0; TLG.Gasifier made 0
+STEP mp_hbg_read begin
+PASS MP.hbg_handbook_read_teaches_the_gasifier_here_A :: book carried true; after 2166 ticks the gasifier actually known true, the handbook recorded as read true, Welding 4
+STEP mp_hbg_state_after_the_read begin
+OBS  MP.hbg A after_the_read: Welding 4, the gasifier actually known true, on the drum's craft entries true, the handbook read true
+STEP hbg_probe_after_reading begin
+OBS  MP.hbg A after_reading server: known 1, actually known 1, Welding 4, handbook read true, gasifiers 0
+PASS MP.hbg_server_knows_the_gasifier_after_the_read_A :: known 1 actually 1, read true, Welding 4
+STEP mp_hb_try_gasifier_refused_below_its_level_at_welding_4 begin
+FAIL MP.hb_gasifier_refused_below_its_level_at_welding_4_A :: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 4; hasPlayerLearnedRecipe 11111, actually known 01000, the gasifier's true; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=false level here 4 xp 0; TLG.Gasifier made 1
+STEP hb_level_5 begin
+OBS  MP.hbg A Welding on the server 5 (6.25 XP), here 5 (0 XP)
+STEP mp_hbg_settle_5 begin
+STEP mp_hbg_state_at_welding_5 begin
+OBS  MP.hbg A at_welding_5: Welding 5, the gasifier actually known true, on the drum's craft entries no drum, the handbook read true
+STEP mp_hb_try_gasifier_made_at_welding_5 begin
+FAIL MP.hb_gasifier_made_at_welding_5_A :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=false; Welding 5; hasPlayerLearnedRecipe 11111, actually known 01000, the gasifier's true; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=true level here 5 xp 6.25; TLG.Gasifier made 0
+STEP hbg_probe_after_crafting begin
+OBS  MP.hbg A after_crafting server: known 1, actually known 1, Welding 5, handbook read true, gasifiers 1
+PASS MP.hbg_server_holds_the_gasifier_A :: gasifiers carried or within two squares on the server: 1
+STEP hbg_roll begin
+PASS MP.hbg_handbook_rolled_from_four_loot_lists_on_the_server_A :: TLG.WoodGasHandbook: 28 in 1200 fills: GasStorageMechanics=5 CrateMechanics=9 ToolStoreBooks=10 LibraryMagazines=4
+STEP mp_finish begin
+SUMMARY pass=7 fail=2
+DONE
+===== client mp-b: %LOCALAPPDATA%\TheLastGallon\mpclient2\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_hbg_b_apart begin
+STEP mp_hbg_start begin
+PASS MP.hbg_starts_at_welding_0_without_the_gasifier_B :: debug=false Welding 0 gasifier known false role admin
+STEP hbg_give begin
+OBS  MP.hbg B given Base.MetalDrum=455263270;Base.SheetMetal=898020277;Base.SheetMetal=1824365902;Base.MetalPipe=1516111121;Base.MetalPipe=2137009498;Base.MetalPipe=1044203070;Base.MetalBar=1551467064;Base.MetalBar=2073064760;Base.BlowTorch=639502913;Base.WeldingMask=1873042025;Base.HandTorch=1191666937
+STEP mp_hbg_arrive begin
+STEP mp_hbg_light begin
+STEP hb_level_5 begin
+OBS  MP.hbg B Welding on the server 5 (0 XP), here 5 (0 XP)
+STEP mp_hbg_settle_5 begin
+STEP mp_hbg_state_at_welding_5 begin
+OBS  MP.hbg B at_welding_5: Welding 5, the gasifier actually known false, on the drum's craft entries false, the handbook read false
+STEP mp_hb_try_gasifier_refused_not_learned_at_welding_5 begin
+PASS MP.hb_gasifier_refused_not_learned_at_welding_5_B :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 5; hasPlayerLearnedRecipe 11111, actually known 01000, the gasifier's false; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=true level here 5 xp 0; TLG.Gasifier made 0
+STEP hb_level_6 begin
+OBS  MP.hbg B Welding on the server 6 (0 XP), here 6 (0 XP)
+STEP mp_hbg_settle_6 begin
+STEP mp_hbg_state_at_welding_6 begin
+OBS  MP.hbg B at_welding_6: Welding 6, the gasifier actually known false, on the drum's craft entries false, the handbook read false
+STEP mp_hb_try_gasifier_refused_not_learned_at_welding_6 begin
+PASS MP.hb_gasifier_refused_not_learned_at_welding_6_B :: window open=true, row listed=true, Craft enabled=false, canPerform=false, inputs satisfied=true; Welding 6; hasPlayerLearnedRecipe 11111, actually known 11001, the gasifier's false; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=true level here 6 xp 0; TLG.Gasifier made 0
+STEP hb_level_7 begin
+OBS  MP.hbg B Welding on the server 7 (0 XP), here 7 (0 XP)
+STEP mp_hbg_settle_7 begin
+STEP mp_hbg_state_at_welding_7 begin
+OBS  MP.hbg B at_welding_7: Welding 7, the gasifier actually known true, on the drum's craft entries true, the handbook read false
+STEP mp_hbg_learned_at_7 begin
+PASS MP.hbg_learned_at_welding_7_without_the_book_here_B :: the gasifier actually known true, a handbook read false
+STEP hbg_probe_at_welding_7 begin
+OBS  MP.hbg B at_welding_7 server: known 1, actually known 1, Welding 7, handbook read false, gasifiers 0
+PASS MP.hbg_learned_at_welding_7_without_the_book_on_the_server_B :: known 1 actually 1, read false, Welding 7
+STEP mp_hb_try_gasifier_made_at_welding_7_without_the_book begin
+PASS MP.hb_gasifier_made_at_welding_7_without_the_book_B :: window open=true, row listed=true, Craft enabled=true, canPerform=true, inputs satisfied=true; Welding 7; hasPlayerLearnedRecipe 11111, actually known 11011, the gasifier's true; debug=false; dark=false; asks MetalWelding:5 hasPlayerRequiredSkill=true level here 7 xp 0; TLG.Gasifier made 1
+STEP hbg_probe_after_crafting begin
+OBS  MP.hbg B after_crafting server: known 1, actually known 1, Welding 7, handbook read false, gasifiers 1
+PASS MP.hbg_server_holds_the_gasifier_B :: gasifiers carried or within two squares on the server: 1
+STEP mp_finish begin
+SUMMARY pass=8 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.MetalDrum;Base.SheetMetal;Base.SheetMetal;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalBar;Base.MetalBar;Base.BlowTorch;Base.WeldingMask;Base.HandTorch;TLG.WoodGasHandbook role=A tag=hbg_give
+OBS  MPS.reply given ids=Base.MetalDrum=852649616;Base.SheetMetal=1179822927;Base.SheetMetal=1028089133;Base.MetalPipe=22458634;Base.MetalPipe=1074681232;Base.MetalPipe=1819609917;Base.MetalBar=492497567;Base.MetalBar=644892042;Base.BlowTorch=1138308047;Base.WeldingMask=895388440;Base.HandTorch=572391501;TLG.WoodGasHandbook=1837510725 role=A tag=hbg_give
+OBS  MPS.message from tlga: handbook_level level=4 rise=1 role=A tag=hb_level_4
+OBS  MPS.reply handbook_level level=4 role=A tag=hb_level_4 xp=0
+OBS  MPS.ticks 300 OnTick events in 85541 ms
+OBS  MPS.message from tlga: probe_handbook book=TLG.WoodGasHandbook product=TLG.Gasifier recipes=TLG_MakeGasifier role=A tag=hbg_probe_after_reading
+OBS  MPS.reply probe_handbook actual=1 barrels=0 known=1 level=4 made=0 read=true role=A tag=hbg_probe_after_reading
+OBS  MPS.message from tlgb: give items=Base.MetalDrum;Base.SheetMetal;Base.SheetMetal;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;Base.MetalBar;Base.MetalBar;Base.BlowTorch;Base.WeldingMask;Base.HandTorch role=B tag=hbg_give
+OBS  MPS.reply given ids=Base.MetalDrum=455263270;Base.SheetMetal=898020277;Base.SheetMetal=1824365902;Base.MetalPipe=1516111121;Base.MetalPipe=2137009498;Base.MetalPipe=1044203070;Base.MetalBar=1551467064;Base.MetalBar=2073064760;Base.BlowTorch=639502913;Base.WeldingMask=1873042025;Base.HandTorch=1191666937 role=B tag=hbg_give
+OBS  MPS.message from tlgb: handbook_level level=5 rise=1 role=B tag=hb_level_5
+OBS  MPS.reply handbook_level level=5 role=B tag=hb_level_5 xp=0
+OBS  MPS.message from tlgb: handbook_level level=6 rise=1 role=B tag=hb_level_6
+OBS  MPS.reply handbook_level level=6 role=B tag=hb_level_6 xp=0
+OBS  MPS.message from tlgb: handbook_level level=7 rise=1 role=B tag=hb_level_7
+OBS  MPS.reply handbook_level level=7 role=B tag=hb_level_7 xp=0
+OBS  MPS.message from tlgb: probe_handbook book=TLG.WoodGasHandbook product=TLG.Gasifier recipes=TLG_MakeGasifier role=B tag=hbg_probe_at_welding_7
+OBS  MPS.reply probe_handbook actual=1 barrels=0 known=1 level=7 made=0 read=false role=B tag=hbg_probe_at_welding_7
+OBS  MPS.message from tlga: handbook_level level=5 rise=1 role=A tag=hb_level_5
+OBS  MPS.reply handbook_level level=5 role=A tag=hb_level_5 xp=6.25
+OBS  MPS.message from tlga: probe_handbook book=TLG.WoodGasHandbook product=TLG.Gasifier recipes=TLG_MakeGasifier role=A tag=hbg_probe_after_crafting
+OBS  MPS.reply probe_handbook actual=1 barrels=0 known=1 level=5 made=1 read=true role=A tag=hbg_probe_after_crafting
+OBS  MPS.message from tlga: roll_handbook item=TLG.WoodGasHandbook role=A tag=hbg_roll
+OBS  MPS.reply roll_handbook fills=1200 item=TLG.WoodGasHandbook lists=GasStorageMechanics=5 CrateMechanics=9 ToolStoreBooks=10 LibraryMagazines=4 role=A tag=hbg_roll total=28
+OBS  MPS.message from tlgb: probe_handbook book=TLG.WoodGasHandbook product=TLG.Gasifier recipes=TLG_MakeGasifier role=B tag=hbg_probe_after_crafting
+OBS  MPS.reply probe_handbook actual=1 barrels=0 known=1 level=7 made=1 read=false role=B tag=hbg_probe_after_crafting

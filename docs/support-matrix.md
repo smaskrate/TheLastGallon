@@ -384,7 +384,7 @@ data exists for the vehicle gasifier module only).
 | Make Wood Retort, Make Biodiesel Reactor, Make Biodiesel Wash Tank (`TLG_MakeWoodRetort`, `TLG_MakeBiodieselReactor`, `TLG_MakeBiodieselWashTank`) | in hand (`InHandCraft;Welding`) | **Verified RT-SP** in the crafting window (launch 249) |
 | Make Ash Barrel (`TLG_MakeAshBarrel`) | in hand (`InHandCraft`) | **Verified RT-SP** in the crafting window (launch 249) |
 | Make Lye Leacher (`TLG_MakeLyeLeacher`) | table or counter (`AnySurfaceCraft;Carpentry`) | **Verified RT-SP** in the crafting window (launch 249) |
-| Make Wood Gasifier (`TLG_MakeGasifier`), learned from the Wood Gas Handbook | in hand (`InHandCraft;Welding`) | **RT-SP** (launches 387–388): the inventory craft menu's handler run on the drum made one, output in the inventory, inputs gone, the welding mask kept. Whether the drum's menu lists the entry, and the crafting window: NOT RUN |
+| Make Wood Gasifier (`TLG_MakeGasifier`), learned from the Wood Gas Handbook or at Welding 7 | in hand (`InHandCraft;Welding`) | **RT-SP** (launches 387–388): the inventory craft menu's handler run on the drum made one, output in the inventory, inputs gone, the welding mask kept. **RT-MP** in the crafting window (launches 393–394): refused without the recipe; with the handbook read, refused two levels below and made from Welding 4, one below, as the game makes a recipe read from its magazine; learned at Welding 7 without the book and made. The drum's craft entries list it where the window offers it. The crafting window in single player: NOT RUN (the harness runs `-debug`) |
 
 Verified in the inventory craft menu (run 12): offered by the menu, crafted
 next to a counter (or in hand), output in the inventory, consumed inputs

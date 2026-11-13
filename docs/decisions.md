@@ -1856,7 +1856,9 @@ gas probe (launch 342).
   * The recipe `TLG_MakeGasifier` asks MetalWelding 5, as the reactor does
     (the hearth and its gas line must be gas-tight), and is learned at 7
     without the book. `TLG.WoodGasHandbook` teaches it and is found in the
-    Field Manual's eleven loot lists at the manual's weights.
+    Field Manual's eleven loot lists at the manual's weights. With the
+    handbook read the game makes it from Welding 4, one level below, as
+    for every recipe read from its magazine (D-038 amendment; launch 394).
   * How the gas reaches the generator, which the design above left open:
     the generator's minute pass, finding room below one step and the
     margin, draws that room from the lit gasifiers within two tiles in one
@@ -1937,12 +1939,22 @@ gas probe (launch 342).
     record kept its id, rev and totals, no game time passed, and the
     generator came back running, watched again as its square loaded, and
     fed; Put out and Light through the menus then worked on it as before.
-  * Not run: finding the handbook in game; the crafting window's own
-    refusals; a real network; the minute pass finding a lit gasifier moved
-    (both runs asked for its Status first, which put it out), a wood-gas
-    generator taken up and put down, and a gasifier feeding two
-    generators, each a domain case only (`test_gas_generators.lua`); the
-    performance mode.
+  * The crafting window on a server, in clients without `-debug`
+    (launches 393–394): refused with nothing read, at Welding 3 to 6;
+    taught by reading the handbook, refused at Welding 3 and made at 4,
+    one level below, as the game makes any recipe read from its magazine
+    (D-038 amendment), the game's own skill call answering false; taught
+    by the game at Welding 7 without the book, and made. The player guide
+    must say that with the handbook read the gasifier is made from Welding
+    4, as it says of the biodiesel machines, before 0.5.0 ships. The
+    handbook was found in a container of the map, taken and read (launch
+    395), and the server's loot lists gave it (launches 393–394).
+  * Not run: a handbook found at a container's first fill (the harness
+    filled them again); a real network; the minute pass finding a lit
+    gasifier moved (both runs asked for its Status first, which put it
+    out), a wood-gas generator taken up and put down, and a gasifier
+    feeding two generators, each a domain case only
+    (`test_gas_generators.lua`); the performance mode.
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod

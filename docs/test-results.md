@@ -7912,3 +7912,84 @@ Evidence:
 [run 390](evidence/2026-11-13_rt-mp_harness_run390_gaswood2_join_while_it_burns_42.22.2.txt);
 [run 391](evidence/2026-11-13_rt-mp_harness_run391_gaswood2_restart_42.22.2.txt);
 [run 392](evidence/2026-11-13_rt-mp_harness_run392_gaswood2_restart_then_acted_on_42.22.2.txt).
+
+## 2026-11-13 — RT-MP and RT-SP launches 393–395 (the gasifier's recipe in the crafting window on a server, the Wood Gas Handbook from loot)
+
+Branch `feature/gas-generators` after `1cd7216`, 42.22.2. The new server
+case `handbookgas` (`MPHarnessCases.lua`) tries the Wood Gasifier's recipe
+in the game's crafting window, in clients without `-debug`, each given the
+script's inputs once: a metal drum, 2 metal sheets, 3 metal pipes, 2
+metal bars, a blowtorch and a welding mask. Levels rise one at a time with
+`LevelPerk`, here and on the server. A refusal counts only with the
+recipe's row listed, its inputs satisfied and light to work by, so that
+only the knowledge or the level can have refused it (`handbook3u`, launch
+328, showed the window computes the inputs for a recipe not learned). The
+new single-player mode `handbook-loot-woodgas` is the `handbook-loot` mode
+for the Wood Gas Handbook.
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 393 | `tools/run-mp-harness.ps1 -Clients 2 -Only handbookgas`, the first version | A 7/2, B 8/0 |
+| 394 | `tools/run-mp-harness.ps1 -Clients 1 -Only handbookgas`, A's steps corrected | A 9/0 |
+| 395 | `tools/run-sp-harness.ps1 -Mode handbook-loot-woodgas` | 4/0 |
+
+The reader (A):
+
+* Launch 393 read the handbook at Welding 4 and expected the gasifier
+  refused there: the window enabled **Craft** and the server made one,
+  while the game's `hasPlayerRequiredSkill` answered false for its
+  MetalWelding 5. Its materials gone, the check at Welding 5 failed too.
+  This is the game's rule found in launches 335–338: a recipe a
+  character learned by reading its magazine can be crafted from one level
+  below its `SkillRequired` (D-038 amendment). The case expected the
+  wrong thing; launch 394 reads at Welding 3.
+* Launch 394: at Welding 3 with nothing read, refused. The handbook read
+  with the inventory menu's **Read** taught the recipe, here and on the
+  server, and was recorded as read. At Welding 3 it was refused again,
+  two levels below; at Welding 4, one level below, the window offered
+  **Craft** and the server made the gasifier.
+* The drum's own craft entries (the inventory menu's, read with
+  `CraftRecipeManager.getUniqueRecipeItems`) listed the recipe only where
+  the window offered it: not at Welding 3 before or after the read, and
+  at Welding 4 after it.
+
+The non-reader (B, launch 393):
+
+* With nothing read, refused at Welding 5 and at 6. At 7 the game taught
+  the recipe without the book (its `AutoLearnAny`), on the client and on
+  the server, and the gasifier was made. The drum's craft entries listed
+  it only at 7.
+
+Loot:
+
+* On the server (launches 393 and 394), four of the eleven loot lists the
+  handbook is in, each filled 300 times as the game fills a container,
+  gave 28 and 39 Wood Gas Handbooks in 1,200 fills (GasStorageMechanics,
+  CrateMechanics, ToolStoreBooks, LibraryMagazines; each list gave some).
+* In single player (launch 395), the 58 containers within 70 tiles of the
+  start had already been filled by the game, and none held the handbook.
+  Emptied and filled again as the game fills a container
+  (`ItemPicker.fillContainer`), one did: a metal shelf in the gas
+  station's storage room. Taken with the game's transfer action and read
+  at Welding 0, that very book taught the gasifier's recipe and was
+  recorded as read; Welding 5 was still to be reached.
+
+Each game process loaded the mod once, and no log of a client, of the
+server or of the single-player game holds a warning or error of the mod.
+The version line, 0.4.3, was read in launch 393's B, launch 394's client
+and server, and launch 395; launch 393's A and server logs were replaced
+before it was read. The older handbook cases (`handbook`, `handbook3`, `handbook3u`,
+`onebelow` to `onebelow4`) were not run again after `tryCraft` gained its
+strict refusals and the gasifier's state in its line, and the server's
+`probe_handbook` and `roll_handbook` their optional book, recipes and
+product, whose defaults are unchanged.
+
+Not run: the other seven loot lists on the server; a handbook found at a
+container's first fill; Welding 6 and 7 for the reader; a plain player
+(both accounts were admins); the single-player crafting window (the
+harness runs `-debug`).
+
+Evidence:
+[run 393](evidence/2026-11-13_rt-mp_harness_run393_handbookgas_two_clients_42.22.2.txt);
+[run 394](evidence/2026-11-13_rt-mp_harness_run394_handbookgas_reader_42.22.2.txt);
+[run 395](evidence/2026-11-13_rt-sp_harness_run395_handbook_loot_woodgas_42.22.2.txt).

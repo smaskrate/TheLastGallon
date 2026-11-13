@@ -1862,7 +1862,7 @@ end
 -- not tried: it is made on a surface, and the harness's ground has none.
 ------------------------------------------------------------------------------
 if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" or MP.only == "onebelow"
-    or MP.only == "onebelow2" or MP.only == "onebelow3" or MP.only == "onebelow4" then
+    or MP.only == "onebelow2" or MP.only == "onebelow3" or MP.only == "onebelow4" or MP.only == "handbookgas" then
     local HB = { recipe = "TLG_MakeAshBarrel" }
     local function recipes()
         local out = {}
@@ -1905,7 +1905,10 @@ if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" or
         end
         return n
     end
-    local function tryCraft(name, wantOffered, recipeName, product)
+    -- `strict`: a refusal counts only with the recipe's row listed, its
+    -- inputs satisfied and light to work by, so that the knowledge or the
+    -- level is what refused it (handbookgas).
+    local function tryCraft(name, wantOffered, recipeName, product, strict)
         recipeName, product = recipeName or HB.recipe, product or "TLG.AshBarrel"
         return { name = "mp_hb_try_" .. name, timeout = 9000, fn = function(ctx, ticks)
             local p = player()
@@ -1959,10 +1962,13 @@ if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" or
                     asks = table.concat(parts, "; ")
                 end)
                 ctx.asks = asks
+                ctx.inputs, ctx.dark = inputs, p:tooDarkToRead()
+                local gas = recipes().TLG_MakeGasifier
                 ctx.text = string.format("window open=%s, row listed=%s, Craft enabled=%s, canPerform=%s, inputs satisfied=%s;"
-                    .. " Welding %d; hasPlayerLearnedRecipe %s, actually known %s; debug=%s; dark=%s", tostring(w ~= nil),
-                    tostring(ctx.row ~= nil), tostring(c and c.buttonCraft.enable), tostring(can), inputs,
-                    p:getPerkLevel(Perks.MetalWelding), learned, actual, tostring(getDebug()), tostring(p:tooDarkToRead()))
+                    .. " Welding %d; hasPlayerLearnedRecipe %s, actually known %s, the gasifier's %s; debug=%s; dark=%s",
+                    tostring(w ~= nil), tostring(ctx.row ~= nil), tostring(c and c.buttonCraft.enable), tostring(can), inputs,
+                    p:getPerkLevel(Perks.MetalWelding), learned, actual,
+                    tostring(gas ~= nil and p:isRecipeActuallyKnown(gas) == true), tostring(getDebug()), tostring(ctx.dark))
                 if ctx.offered and wantOffered and c then c.buttonCraft:forceClick() end
                 -- Craft pressed where it must not be offered, as a click on a
                 -- disabled button: nothing may start. With nothing expected
@@ -1983,8 +1989,9 @@ if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" or
                     tostring(ctx.asks))
             else
                 check("hb_" .. name, function()
-                    return ctx.offered == wantOffered and made == (wantOffered and 1 or 0), string.format(
-                        "%s; asks %s; %s made %d", ctx.text, tostring(ctx.asks), product, made)
+                    return ctx.offered == wantOffered and made == (wantOffered and 1 or 0)
+                        and (wantOffered or not strict or (ctx.row ~= nil and ctx.inputs == "true" and ctx.dark == false)),
+                        string.format("%s; asks %s; %s made %d", ctx.text, tostring(ctx.asks), product, made)
                 end)
             end
             if w then w:close() end
@@ -2234,6 +2241,177 @@ if MP.only == "handbook" or MP.only == "handbook3" or MP.only == "handbook3u" or
                 end)
             end),
             once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+        return
+    end
+    -- handbookgas (two clients, D-040): the Wood Gasifier's recipe (Welding
+    -- 5, to be learned; learned without the book at 7) in the game's
+    -- crafting window on a server, in clients without -debug. Each is given
+    -- the script's inputs once: a metal drum, 2 metal sheets, 3 metal pipes,
+    -- 2 metal bars, a blowtorch (2 uses) and a welding mask (kept). A reads
+    -- the Wood Gas Handbook at Welding 3: refused before the read (not
+    -- learned) and after it (two levels below), made at 4, one level below,
+    -- as the game makes any recipe read from its magazine (launches 335-338,
+    -- D-038; launch 393 expected a refusal at 4 and got the gasifier, with
+    -- the game's skill call answering false). B reads nothing:
+    -- refused at 5 and 6, made at 7, where the game teaches the recipe
+    -- without the book (AutoLearnAny), judged here and on the server apart.
+    -- Each refusal counts only with the row listed, the inputs satisfied and
+    -- light to work by (tryCraft's strict). B works away from A: a product
+    -- counts when it lies within two squares, and both start on one square.
+    -- Whether the drum's own craft entries list the recipe is noted at each
+    -- level. A also has the server roll four of the eleven loot lists the
+    -- handbook is in (roll_handbook). Built in a function of its own for
+    -- the -debug compiler (machinemenus).
+    if MP.only == "handbookgas" then
+        local function build()
+            local GAS = { recipe = "TLG_MakeGasifier", product = "TLG.Gasifier", book = "TLG.WoodGasHandbook" }
+            local MATS = "Base.MetalDrum;Base.SheetMetal;Base.SheetMetal;Base.MetalPipe;Base.MetalPipe;Base.MetalPipe;"
+                .. "Base.MetalBar;Base.MetalBar;Base.BlowTorch;Base.WeldingMask;Base.HandTorch"
+            -- Gained a level at a time with LevelPerk, here and on the server,
+            -- as handbook3 does (the game's auto-learning follows LevelPerk).
+            local function level(name, n)
+                return call("hb_level_" .. name, "handbook_level", { level = n, rise = "1" }, "handbook_level", function(m)
+                    local p, guard = player(), 0
+                    while p:getPerkLevel(Perks.MetalWelding) < n and guard < 12 do
+                        p:LevelPerk(Perks.MetalWelding)
+                        guard = guard + 1
+                    end
+                    report():line("OBS  MP.hbg %s Welding on the server %s (%s XP), here %d (%s XP)", MP.role, tostring(m.level),
+                        tostring(m.xp), p:getPerkLevel(Perks.MetalWelding), tostring(p:getXp():getXP(Perks.MetalWelding)))
+                end)
+            end
+            local function gasKnown()
+                local r = recipes()[GAS.recipe]
+                return r ~= nil and player():isRecipeActuallyKnown(r) == true
+            end
+            local function bookRead() return player():getAlreadyReadBook():contains(GAS.book) end
+            -- Whether the drum's craft entries (the inventory menu's) list the gasifier.
+            local function onTheDrum()
+                local drum = player():getInventory():getFirstTypeRecurse("Base.MetalDrum")
+                if not drum then return "no drum" end
+                local found = "false"
+                local ok = pcall(function()
+                    local list = CraftRecipeManager.getUniqueRecipeItems(drum, player(),
+                        ISInventoryPaneContextMenu.getContainers(player()))
+                    for i = 0, list:size() - 1 do
+                        if string.match(list:get(i):getName(), "([^%.]+)$") == GAS.recipe then found = "true" end
+                    end
+                end)
+                return ok and found or "not read"
+            end
+            local function state(name)
+                return once("mp_hbg_state_" .. name, function()
+                    report():line("OBS  MP.hbg %s %s: Welding %d, the gasifier actually known %s, on the drum's craft " ..
+                        "entries %s, the handbook read %s", MP.role, name, player():getPerkLevel(Perks.MetalWelding),
+                        tostring(gasKnown()), onTheDrum(), tostring(bookRead()))
+                end)
+            end
+            local function server(name, judge)
+                return call("hbg_probe_" .. name, "probe_handbook", { recipes = GAS.recipe, book = GAS.book,
+                    product = GAS.product }, "probe_handbook", function(m)
+                    report():line("OBS  MP.hbg %s %s server: known %s, actually known %s, Welding %s, handbook read %s, " ..
+                        "gasifiers %s", MP.role, name, tostring(m.known), tostring(m.actual), tostring(m.level),
+                        tostring(m.read), tostring(m.made))
+                    judge(m)
+                end)
+            end
+            local function give(items)
+                return call("hbg_give", "give", { items = items }, "given", function(m)
+                    report():line("OBS  MP.hbg %s given %s", MP.role, tostring(m.ids))
+                end)
+            end
+            local function craft(name, want) return tryCraft(name, want, GAS.recipe, GAS.product, true) end
+            local start = once("mp_hbg_start", function()
+                check("hbg_starts_at_welding_0_without_the_gasifier", function()
+                    return getDebug() == false and player():getPerkLevel(Perks.MetalWelding) == 0 and not gasKnown(),
+                        string.format("debug=%s Welding %d gasifier known %s role %s", tostring(getDebug()),
+                            player():getPerkLevel(Perks.MetalWelding), tostring(gasKnown()),
+                            tostring(select(2, pcall(function() return player():getRole():getName() end))))
+                end)
+            end)
+            local light = once("mp_hbg_light", function()
+                local torch = player():getInventory():getFirstTypeRecurse("Base.HandTorch")
+                if torch and player():tooDarkToRead() then
+                    torch:setActivated(true)
+                    player():setSecondaryHandItem(torch)
+                end
+            end)
+            local read = { name = "mp_hbg_read", timeout = 9000, fn = function(ctx, ticks)
+                local p = player()
+                if not ctx.started then
+                    local book = p:getInventory():getFirstTypeRecurse(GAS.book)
+                    if not book and ticks < 600 then return nil end
+                    ctx.started, ctx.at, ctx.had = true, ticks, book ~= nil
+                    if book then ISInventoryPaneContextMenu.readItem(book, 0) end
+                    return nil
+                end
+                if ticks - ctx.at < 60 then return nil end
+                local busy = #(ISTimedActionQueue.getTimedActionQueue(p).queue or {}) > 0
+                if busy and ticks - ctx.at < 8000 then return nil end
+                check("hbg_handbook_read_teaches_the_gasifier_here", function()
+                    return ctx.had and not busy and gasKnown() and bookRead(), string.format("book carried %s; after %d " ..
+                        "ticks the gasifier actually known %s, the handbook recorded as read %s, Welding %d", tostring(ctx.had),
+                        ticks - ctx.at, tostring(gasKnown()), tostring(bookRead()), p:getPerkLevel(Perks.MetalWelding))
+                end)
+                return true
+            end }
+            MP.stepsA = { MP.waitWorld, start, give(MATS .. ";" .. GAS.book), wait("mp_hbg_arrive", 240), light,
+                level("3", 3), wait("mp_hbg_settle_3", 120), state("at_welding_3"),
+                craft("gasifier_refused_not_learned_at_welding_3", false),
+                read, state("after_the_read"),
+                server("after_reading", function(m)
+                    check("hbg_server_knows_the_gasifier_after_the_read", function()
+                        return m.known == "1" and m.actual == "1" and m.read == "true" and tonumber(m.level) == 3,
+                            string.format("known %s actually %s, read %s, Welding %s", tostring(m.known), tostring(m.actual),
+                                tostring(m.read), tostring(m.level))
+                    end)
+                end),
+                craft("gasifier_refused_two_levels_below_at_welding_3", false),
+                -- One level below with the book read: the game's rule for a
+                -- recipe read from its magazine (launches 335-338, D-038).
+                level("4", 4), wait("mp_hbg_settle_4", 120), state("at_welding_4"),
+                craft("gasifier_made_one_level_below_at_welding_4", true),
+                server("after_crafting", function(m)
+                    check("hbg_server_holds_the_gasifier", function()
+                        return tonumber(m.made) == 1, "gasifiers carried or within two squares on the server: " .. tostring(m.made)
+                    end)
+                end),
+                call("hbg_roll", "roll_handbook", { item = GAS.book }, "roll_handbook", function(m)
+                    check("hbg_handbook_rolled_from_four_loot_lists_on_the_server", function()
+                        return m.item == GAS.book and (tonumber(m.total) or 0) > 0, string.format("%s: %s in %s fills: %s",
+                            tostring(m.item), tostring(m.total), tostring(m.fills), tostring(m.lists))
+                    end)
+                end),
+                MP.finish }
+            MP.stepsB = { MP.waitWorld, walkTo("mp_hbg_b_apart", S.CX - 4, S.CY + 9), start, give(MATS),
+                wait("mp_hbg_arrive", 240), light,
+                level("5", 5), wait("mp_hbg_settle_5", 120), state("at_welding_5"),
+                craft("gasifier_refused_not_learned_at_welding_5", false),
+                level("6", 6), wait("mp_hbg_settle_6", 120), state("at_welding_6"),
+                craft("gasifier_refused_not_learned_at_welding_6", false),
+                level("7", 7), wait("mp_hbg_settle_7", 120), state("at_welding_7"),
+                once("mp_hbg_learned_at_7", function()
+                    check("hbg_learned_at_welding_7_without_the_book_here", function()
+                        return gasKnown() and not bookRead(), string.format("the gasifier actually known %s, a handbook " ..
+                            "read %s", tostring(gasKnown()), tostring(bookRead()))
+                    end)
+                end),
+                server("at_welding_7", function(m)
+                    check("hbg_learned_at_welding_7_without_the_book_on_the_server", function()
+                        return m.actual == "1" and m.read == "false" and tonumber(m.level) == 7, string.format(
+                            "known %s actually %s, read %s, Welding %s", tostring(m.known), tostring(m.actual), tostring(m.read),
+                            tostring(m.level))
+                    end)
+                end),
+                craft("gasifier_made_at_welding_7_without_the_book", true),
+                server("after_crafting", function(m)
+                    check("hbg_server_holds_the_gasifier", function()
+                        return tonumber(m.made) == 1, "gasifiers carried or within two squares on the server: " .. tostring(m.made)
+                    end)
+                end),
+                MP.finish }
+        end
+        build()
         return
     end
     if MP.only == "handbook3" or MP.only == "handbook3u" then
