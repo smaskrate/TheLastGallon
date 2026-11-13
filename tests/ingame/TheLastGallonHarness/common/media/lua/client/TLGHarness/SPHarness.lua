@@ -10651,10 +10651,19 @@ function RT.PF.frames(label)
             if c.v:isEngineRunning() then running = running + 1 end
         end
         PF.frameResults[label] = { fps = #ctx.gap / secs, upd = u, rnd = r, gap = g, minutes = minutes }
+        -- The UI elements the game updates each frame, hidden ones included,
+        -- and the time of day, which sets the lighting.
+        local ui, clock = -1, "?"
+        pcall(function() ui = UIManager.getUI():size() end)
+        pcall(function()
+            local gt = getGameTime()
+            clock = string.format("%02d:%02d", gt:getHour(), gt:getMinutes())
+        end)
         R:line("OBS  RTPF.frames %s: %d frames in %.1f s (%.1f a second), %d game minutes, %d engines running; " ..
             "main-thread step ms mean %.3f p50 %.3f p95 %.3f p99 %.3f max %.3f; render ms mean %.3f p95 %.3f; " ..
-            "between frames ms p50 %.0f p95 %.0f p99 %.0f max %.0f", label, #ctx.gap, secs, #ctx.gap / secs, minutes, running,
-            u.mean, u.p50, u.p95, u.p99, u.max, r.mean, r.p95, g.p50, g.p95, g.p99, g.max)
+            "between frames ms p50 %.0f p95 %.0f p99 %.0f max %.0f; %d UI elements; game time %s", label, #ctx.gap, secs,
+            #ctx.gap / secs, minutes, running, u.mean, u.p50, u.p95, u.p99, u.max, r.mean, r.p95, g.p50, g.p95, g.p99, g.max,
+            ui, clock)
         return true
     end }
 end
@@ -20259,21 +20268,58 @@ function RT.PFG.build()
 
     -- Every reply dialog the menus opened is closed before the frames: the
     -- Gas and Gasifier menus show one after each action, and launches
-    -- 399-400 sampled the gas frames with 24 and 8 of them on screen.
+    -- 398-400 sampled the gas frames without closing them.
+    local gasFrames = PF.frames("gas_running")
     local gasStages = { PFG.gasNone, PFG.placePropane, PFG.startPropane,
         placedCheck("propane_8", function() return PFG.propane end, false), PFG.timePropane,
         PFG.placeWood, PFG.warm, PFG.startWood,
         placedCheck("woodgas_8", function() return PFG.wood end, true), PFG.timeWood, PFG.timeBoth,
-        PF.catchStep("gas_catch_up", PFG.jobs), RT.PF.closeAll, PF.frames("gas_running"), RT.PF.checkBudgetsGas }
+        PF.catchStep("gas_catch_up", PFG.jobs), RT.PF.closeAll, gasFrames, RT.PF.checkBudgetsGas }
+
+    -- The 16 generators switched off where they stand, the gasifiers left as
+    -- they are.
+    PFG.generatorsOff = { name = "rtpf_gas_generators_off", fn = function()
+        local was, still = 0, 0
+        for _, list in ipairs({ PFG.propane or {}, PFG.wood or {} }) do
+            for _, e in ipairs(list) do
+                local g = genAt(e)
+                if g and g:isActivated() then
+                    was = was + 1
+                    pcall(function() g:setActivated(false) end)
+                    if g:isActivated() then still = still + 1 end
+                end
+            end
+        end
+        R:line("OBS  RTPF.gas generators switched off: %d were running, %d still running", was, still)
+        return true
+    end }
+
+    -- In the whole mode the frames rose 0.33-0.39 ms with the gas (launches
+    -- 398, 400 and 405), the reply dialogs closed or not; the gas stages
+    -- alone show no rise. To find where it starts, the whole mode also
+    -- samples frames once the square-load handler is timed (its Diesel
+    -- Generator put down), once the game's square-load event is, which is
+    -- just before the gas, and after the gas frames with the generators
+    -- switched off. None falls inside the gas stages' timings.
+    local whole = { PF.frames("before_gas") }
+    for _, s in ipairs(gasStages) do
+        whole[#whole + 1] = s
+        if s == gasFrames then
+            whole[#whole + 1] = PFG.generatorsOff
+            whole[#whole + 1] = PF.frames("gas_generators_off")
+        end
+    end
     -- Before the added budgets' check, so every stage before stays as in
     -- launch 341.
-    local at
+    local at, squareAt
     for i, s in ipairs(RT.perfSteps) do
         if s == RT.PF.checkBudgetsAdded then at = i end
+        if s == RT.PF.squareEvent then squareAt = i end
     end
     if at then
-        for k, s in ipairs(gasStages) do table.insert(RT.perfSteps, at + k - 1, s) end
+        for k, s in ipairs(whole) do table.insert(RT.perfSteps, at + k - 1, s) end
     end
+    if squareAt then table.insert(RT.perfSteps, squareAt, PF.frames("square_handler_timed")) end
     -- The gas stages alone on the same road (request "sp-rtpfg"), to try
     -- them in a few minutes, with frames on the bare road first to compare
     -- the gas frames with; the record is the whole mode's.

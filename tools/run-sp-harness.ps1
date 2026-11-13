@@ -168,14 +168,16 @@
   every running engine on fresh fuel of its kind, then on a wrong blend;
   each biodiesel machine's catch-up and menu; frames with all of it, then
   with the reply dialogs closed; the square-load hook (the handler and the
-  game's event over 3,600 squares). Then the gas (D-040): the gas
+  game's event over 3,600 squares), with frames after each of the two.
+  Then the gas (D-040): the gas
   generators' minute pass with none; with 8 generators on propane, a part
   of a use below their cap, within the tolerance of it, and moving one use
   at each call; with 8 on wood gas, each beside a lit gasifier, at their
   caps and drawing a step at each call; and all 16 as they stand; a lit
   gasifier brought forward 1, 30 and 365 days, the Gasifier and Gas menus,
   the square-load handler on a gas generator, and frames with all of it
-  running. Last, the budgets of the stages after the first check.
+  running, then with the 16 generators switched off. Last, the budgets of
+  the stages after the first check.
   performance-gas: the performance mode's gas stages alone, on the same
   road, to try them (about 5 minutes); the record is the whole mode's.
   model-import: the original test model of tools/make-test-model.ps1 wired

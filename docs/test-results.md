@@ -8253,3 +8253,53 @@ than 16 gas generators.
 
 Evidence:
 [run 405](evidence/2026-11-13_rt-sp_harness_run405_performance_whole_early_return_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 406 (the whole performance mode: where the gas frames' rise starts)
+
+Branch `feature/gas-generators` after `1856806`, 42.22.2, with the
+harness's new frame samples (committed with this entry). The whole mode,
+`tools/run-sp-harness.ps1 -Mode performance`, now also samples frames
+once the square-load handler is timed, once the game's square-load event
+is (just before the gas), and after the gas frames with the 16
+generators switched off; each frames line also gives the UI elements and
+the game time. It passed 82/0 in 9.0 minutes, all 53 budgets among them
+(the propane part-of-a-use one at 0.137 ms against 0.39), and timed every
+gas row within 3 % of launch 405's.
+
+| Stage | Mean main-thread time per frame |
+| --- | --- |
+| Every other workload running, the dialogs closed | 1.82 ms |
+| The square-load handler timed (a Diesel Generator put down) | 1.89 ms |
+| The game's square-load event timed, before the gas | 1.98 ms |
+| The gas added | 2.16 ms |
+| The 16 generators switched off, the rest of the gas left as it was | 1.95 ms |
+
+* With the generators switched off (16 were running, none after), the
+  frames went back to their level before the gas, so the gas's part of
+  the rise, 0.18–0.21 ms here, is most likely the generators running. It
+  rests on one on/off pair; the three samples before the gas already span
+  0.16 ms with nothing of the gas changing. The gasifiers, the gas records
+  and the minute pass were left as they were. The mod registers no
+  per-frame handler for running generators (its only one is the landing
+  watch), so this would be the game's own cost of running them (inferred;
+  not compared with petrol generators).
+* The other 0.16 ms came before any gas was placed, in steps of 0.07 and
+  0.09 ms over the two square-load stages. Consecutive samples under
+  light workloads differ by up to 0.09 ms in launches 398, 400, 405 and
+  406, so neither step alone is beyond that spread.
+* The UI held 26 elements from the dialogs' closing to the last sample,
+  and the game clock read 10:10 to 11:55 over those samples, in daylight.
+  Every stage held 60 frames a second.
+* The launch ran slower throughout than launch 405: its minute timers with
+  engines running were 3–8 % above launch 405's, its frames on the empty
+  road 1.51 ms against 1.34.
+
+No warning or error of the mod in the console; it read 0.4.3. The one Lua
+exception is the harness's own `getLockFPS` probe, as in launch 405.
+
+Not run: what adds the 0.16 ms before the gas; why running generators
+cost more in the whole mode than on the bare road, where launches 401 and
+404 showed no rise; petrol generators in the same place.
+
+Evidence:
+[run 406](evidence/2026-11-13_rt-sp_harness_run406_performance_frames_diagnosis_42.22.2.txt).

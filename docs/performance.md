@@ -10,19 +10,20 @@ other runs:
 - runs 340–341 (2026-11-12, game 42.22.2), which add what 0.2.0 to 0.4.1
   brought: the biodiesel machines, diesel engines, wrong fuel and the
   square-load hook;
-- runs 398–401, 404 and 405 (2026-11-13, game 42.22.2, the gas branch),
+- runs 398–401 and 404–406 (2026-11-13, game 42.22.2, the gas branch),
   which add the gas generators and gasifiers (D-040): run 398 with the
   gas stages' first version, runs 399, 401 and 404 the gas stages alone
-  (`-Mode performance-gas`), runs 400 and 405 the whole mode with them.
-  Runs 404 and 405 came after the gas pass's early return for a propane
-  generator with less than a use of room.
+  (`-Mode performance-gas`), runs 400, 405 and 406 the whole mode with
+  them, run 406 with more frame samples. Runs 404–406 came after the gas
+  pass's early return for a propane generator with less than a use of
+  room.
 
-Run 405, the latest run of the whole mode, passed all 53 budgets: the 40
-that runs 398 and 400 passed, the first runs to check the 18 set from
-run 341, and the gas stages' 13, set from run 400, one of them reset
-from run 404 after the early return. Runs 401 and 404, the gas stages
-alone, passed the 13 before it, run 404 against that one's budget before
-the reset (see "Budgets").
+Runs 405 and 406, the latest runs of the whole mode, passed all 53
+budgets: the 40 that runs 398 and 400 passed, the first runs to check
+the 18 set from run 341, and the gas stages' 13, set from run 400, one
+of them reset from run 404 after the early return. Runs 401 and 404, the
+gas stages alone, passed the 13 before them, run 404 against that one's
+budget before the reset (see "Budgets").
 Run 341 passed 21 of the 22 budgets set
 before it. The fuel menu's budget had most likely been set from a menu
 that never opened (see "The fuel menu"); it is now set from run 341, with
@@ -41,7 +42,8 @@ in `docs/evidence/`:
 [run 400](evidence/2026-11-13_rt-sp_harness_run400_performance_gas_states_42.22.2.txt),
 [run 401](evidence/2026-11-13_rt-sp_harness_run401_performance_gas_clean_frames_42.22.2.txt),
 [run 404](evidence/2026-11-13_rt-sp_harness_run404_performance_gas_early_return_42.22.2.txt),
-[run 405](evidence/2026-11-13_rt-sp_harness_run405_performance_whole_early_return_42.22.2.txt) and
+[run 405](evidence/2026-11-13_rt-sp_harness_run405_performance_whole_early_return_42.22.2.txt),
+[run 406](evidence/2026-11-13_rt-sp_harness_run406_performance_frames_diagnosis_42.22.2.txt) and
 run 184's fireplace test
 ([run 184](evidence/2026-11-04_rt-sp_harness_run184_fireplace.txt)).
 
@@ -167,7 +169,7 @@ every 2.5 seconds, 25 seconds and 2.5 minutes.
   12. (run 341) the same 12 on blends D-037 judges harmful but lets run:
       the petrol cars a fifth diesel, the vans 30 % petrol. Every roll is
       held so none fails;
-  13. (runs 398–401) after the square-load hook, the gas, on the road north
+  13. (runs 398–401 and 404–406) after the square-load hook, the gas, on the road north
       of the parked cars (rows 10798–10807): the gas minute pass with no
       gas generator; 8 generators converted to gas with the conversion
       service's steps, a full propane tank connected to each through the
@@ -227,7 +229,11 @@ every 2.5 seconds, 25 seconds and 2.5 minutes.
   time between frames. Every menu load opens a reply dialog, and the
   harness leaves the 32 of the fermenter loads on screen, so every frame
   stage from stage 5 on has them. From run 340 a last stage closes every
-  reply dialog and samples frames again.
+  reply dialog and samples frames again. From run 406 the whole mode also
+  samples frames after each of the square-load hook's two timings, the
+  second just before the gas, and after the gas frames with the 16
+  generators switched off; each sample also notes the UI elements and the
+  game time.
 - Offline, `tools/run-tests.ps1 -Entry tests/support/bench_machine_records.lua`
   times the pieces of one record's notes, readings and catch-up on the
   game's Lua VM (the figures below are the game's).
@@ -339,7 +345,7 @@ refill, and took 0.074–0.076 ms a generator against 0.069–0.071 in runs
 399–400; the second calculation is the likely cause (inferred; the two
 were not timed apart). The other figures were within 4 % of run 400's in
 both runs, but the pass with no gas generator in run 404, 0.0018 ms
-against 0.0017.
+against 0.0017. Run 406 timed every row within 3 % of run 405's.
 
 Most generators stood within two tiles of two gasifiers, and a generator
 draws from the one with the lower id (D-040), so the draws spread as the
@@ -463,7 +469,7 @@ With the dialogs closed, 62 running machines, 8–12 idling engines and 400
 recorded cans took about what the empty road took. Each figure is one
 20-second sample.
 
-### Frames with the gas (runs 398–401, 404 and 405)
+### Frames with the gas (runs 398–401 and 404–406)
 
 Mean main-thread time per frame; each figure is one 20-second sample, and
 every stage held 60 frames a second. The Gas and Gasifier menus show a
@@ -481,29 +487,47 @@ what reply dialogs cost (32 of them add 1.3–1.6 ms in the whole mode,
 runs 398, 400 and 405).
 
 In the whole mode, with every other workload still running, the frames
-rose with the gas in each run:
+rose 0.33–0.39 ms between the stage before the square-load hook and the
+gas in each run. Run 406 sampled them between as well, and once more
+with the generators switched off:
 
-| Stage | Run 398 | Run 400 | Run 405 |
-| --- | --- | --- | --- |
-| Every other workload running, the dialogs closed | 1.70 ms | 1.45 ms | 1.52 ms |
-| The gas added | 2.05 ms | 1.78 ms | 1.91 ms |
+| Stage | Run 398 | Run 400 | Run 405 | Run 406 |
+| --- | --- | --- | --- | --- |
+| Every other workload running, the dialogs closed | 1.70 ms | 1.45 ms | 1.52 ms | 1.82 ms |
+| The square-load handler timed (a Diesel Generator put down) | – | – | – | 1.89 ms |
+| The game's square-load event timed (about 3.3 million), before the gas | – | – | – | 1.98 ms |
+| The gas added | 2.05 ms | 1.78 ms | 1.91 ms | 2.16 ms |
+| The 16 generators switched off, the rest of the gas left as it was | – | – | – | 1.95 ms |
 
-Run 405 closed the replies before its gas sample and found none left on
-screen, yet rose as much as runs 398 and 400, which did not close them:
-the rise is there without the dialogs. It is spread over every frame: in
-each run the median frame went from 1 to 2 ms with the gas while the
-longest stayed at 7–9 ms, where a cost once a game minute would need a
-spike of some 75–90 ms to lift the mean as much. What raises it is not
-established. Between the two samples the mode also times the square-load
-hook (about 3.3 million square-load events, and a Diesel Generator put
-down) and places the gas among the other workloads; no frames were
-sampled in between. The mod's gas pass runs once a game minute (0.24 ms
-for the 16 since the early return, about 0.001 ms a frame; 0.45 ms
-before it), and the mod registers no per-frame event handler but the
-landing watch, which follows a machine for at most 300 ticks after it
-leaves a character's hands. The
-same stage also differs between runs by as much as the rise: the bare
-road read 1.66 ms in run 401 and 1.33 ms in run 404.
+The rise is there without the dialogs: run 405 closed them before its
+gas sample and found none left on screen, yet rose as much as runs 398
+and 400, which did not close them. The mod's gas code does not account
+for it either. Its pass runs once a game minute (0.24 ms for the 16
+since the early return, about 0.001 ms a frame; 0.45 ms before it), and
+the mod registers no per-frame event handler but the landing watch,
+which follows a machine for at most 300 ticks after it leaves a
+character's hands. In runs 398, 400 and 405 the median frame went from 1
+to 2 ms with the gas while the longest stayed at 7–9 ms; a cost once a
+game minute would need a spike of some 75–90 ms to lift the mean as
+much.
+
+Run 406 splits the rise in two, from one on/off pair. With the 16
+generators switched off, the gasifiers, the records and the minute pass
+as they were, the frames went back to their level before the gas (1.95
+against 1.98 ms), so the gas's part, 0.18–0.21 ms a frame there, is most
+likely the generators running. One pair is little to go on: run 406's
+three samples before the gas already span 0.16 ms with nothing of the
+gas changing. With no per-frame handler of the mod's for them, it would
+be the game's own cost of running generators (inferred; not compared
+with petrol generators). Why it is larger there than on the bare road is
+not established. The other 0.16 ms came before any gas was placed, over the
+two square-load stages, in steps of 0.07 and 0.09 ms. Consecutive
+samples under light workloads (the first four of each run) differ by up
+to 0.09 ms, so neither step alone is beyond that spread. Run 406 also
+ran slower throughout: its minute timers with engines running were
+3–8 % above run 405's. Its 26 UI elements did not change from the
+dialogs' closing to its last sample, and its clock stayed in daylight
+(10:10 to 11:55).
 
 ### The fuel menu (run 341)
 
@@ -588,14 +612,16 @@ Runs 340 and 341 passed 21 of the 22. The fuel menu failed its 0.08 ms,
 set from run 181's 0.027 ms, which most likely timed a menu that did not
 open (see "The fuel menu"). It is now 1.1 ms, set from run 341, as are
 the 18 budgets of the workloads after the budget check. Runs 398 and 400
-were the first to check those 18, and passed all 40, as did run 405.
+were the first to check those 18, and passed all 40, as did runs 405
+and 406.
 
 The gas stages' budgets (`RT.PF.budgetsGas`), set from run 400. Run 401,
 the gas stages alone, checked them first and passed all 13 (its medians
 within 5 % of run 400's). The propane part-of-a-use budget is reset
 from run 404, after the early return; run 404 passed it at 1.0 ms, the
-budget before the reset. Run 405, the whole mode, checked all 13 with
-the reset one and passed them (that one at 0.133 ms against 0.39). The
+budget before the reset. Runs 405 and 406, the whole mode, checked all
+13 with the reset one and passed them (that one at 0.133 and 0.137 ms
+against 0.39). The
 refill rows include the
 steps taken out before each call. All 16 as they stood have none: that
 state depends on how many hours the warm-up crossed. The part-of-a-use
@@ -727,9 +753,10 @@ entries for a machine with 480 of each, on top of the record itself.
 - **More than 16 gas generators,** or gasifiers that several generators
   draw from in one pass; and the game's own cost of running generators
   apart from the mod's (see "Frames with the gas").
-- **What raises the frames with the gas in the whole mode:** no frames
-  were sampled between the square-load stage and the gas, which would
-  tell the gas from what runs before it (see "Frames with the gas").
+- **The frames in the whole mode:** what added the 0.16 ms before the gas
+  in run 406, why running generators cost more there than on the bare
+  road, and whether petrol generators cost the same (see "Frames with the
+  gas").
 - **Multiple electrical networks:** no network is built in game in this
   build. The energy model is domain-only (gate 4).
 - **Several clients using shared storage:** the server's timers were
