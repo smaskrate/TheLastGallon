@@ -47,6 +47,9 @@ $roots = @(
     "--root", (Join-Path $repo "tests")
 )
 if ($Entry -like "*compile_check*") {
+    # Compiled as the game compiles with -debug, which the single-player
+    # harness uses: stricter on a function's locals (KahluaRunner.java).
+    $roots = @("--debug") + $roots
     # Also syntax-check the dev harness mod.
     $h = Join-Path $repo "tests\ingame\TheLastGallonHarness\common\media\lua"
     $roots += @("--root", (Join-Path $h "shared"), "--root", (Join-Path $h "server"), "--root", (Join-Path $h "client"))

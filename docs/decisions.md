@@ -1792,12 +1792,12 @@ gas probe (launch 342).
   the record: the machine menu's **Pause**, **Resume** and **Abort batch**
   (D-023) and the Fuel menu's **Seal** or **Open**. The game sends an
   item's mod data only to the client carrying it, and a container's items
-  only the first time a client opens it (engine-capabilities). So on
-  0.4.2 the copies did not follow the server: a fermenter's stayed empty
-  while the server loaded, paused, resumed and aborted it (RT-MP launch
-  362), and a can's kept no record after it was opened, on the floor
-  (launch 365) and in a bin (launch 366), the menu still offering
-  **Open**.
+  only the first time a client opens it (engine-capabilities). So the
+  copies did not follow the server: a fermenter's stayed empty while the
+  server loaded, paused, resumed and aborted it (RT-MP launch 362, on
+  0.4.2), and a can's kept no record after it was opened, on the floor
+  (launch 365) and in a bin (launch 366), with the cans' code still as in
+  0.4.2, the menu offering **Open** again.
 * Consequences: every client gets each record and keeps it only for an
   item it has, on a square it has loaded or in a container whose items it
   was sent. A client joining, loading the chunk again or opening the

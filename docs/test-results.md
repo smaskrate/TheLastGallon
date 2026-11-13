@@ -6965,3 +6965,43 @@ Evidence:
 [run 365](evidence/2026-11-13_rt-mp_harness_run365_machinemenus_42.22.2.txt);
 [run 366](evidence/2026-11-13_rt-mp_harness_run366_machinemenus_floor_records_42.22.2.txt);
 [run 367](evidence/2026-11-13_rt-mp_harness_run367_machinemenus_world_item_records_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 368 (the full run on 0.4.3)
+
+Command: `tools/run-sp-harness.ps1 -Mode full`: phase A, save, exit to
+the menu, continue the save, phase B, on the repository's mod at
+`b4517d0` (branch `fix/machine-menu-server`, 0.4.3), 42.22.2.
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 368 | full: phase A, save, reload, phase B | 105/1, then 14/0 |
+
+The failure was `G03.gate_station_fuel.not_refused_by_tlg`, a start left
+to chance. This world's station fuel held water (D-017), so the car's
+start factor was 0.5, and its one try was refused ("vehicle start
+refused: water"), as the gate is meant to do. Of the sixty earlier
+results of this step in `docs/evidence`, four drew water as well and each
+started at its first try. The step now tries up to three times when the
+fuel's start factor is between 0 and 1, as a driver would and as the
+steps that must start do (`vehicleGateStep` in `SPHarness.lua`), and the
+check passes when the engine runs after a refusal left to chance. Every
+other check passed, and the game read 0.4.3 at both loads.
+
+The console holds no warning or error of the mod. Besides the harness's
+deep-recursion probe it held a new error: the harness's own
+`MPHarnessCases.lua` failed to load, four times
+(`ArrayIndexOutOfBoundsException: Index 200 out of bounds for length
+200`, `LexState.new_localvar`). Started with `-debug`, as the
+single-player harness starts it, the game's compiler takes at most 200
+locals in all from one function (engine-capabilities, Lua runtime), and
+the file's main chunk passed that with the two server cases added on this
+branch (`machinemenu`, `machinemenus`). The multiplayer clients run
+without `-debug` and loaded it (launches 362–367); the single-player run
+does not use it. Each of the two cases now builds its steps in a function
+of its own. The compile check now compiles as `-debug` does
+(`KahluaRunner --debug`, passed by `run-tests.ps1`): it fails the file as
+launch 368 loaded it and passes it now, and every Lua file of the mod and
+the harness compiles that way.
+
+Evidence:
+[run 368](evidence/2026-11-13_rt-sp_harness_run368_full_one_chance_failure_0.4.3_42.22.2.txt).

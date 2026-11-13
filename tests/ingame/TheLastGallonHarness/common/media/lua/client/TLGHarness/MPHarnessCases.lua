@@ -124,115 +124,122 @@ end
 -- asked of the server directly, so the run goes on either way.
 ------------------------------------------------------------------------------
 if MP.only == "machinemenu" then
-    local MM = {}
-    local V = "TLG.FermenterVessel"
-    local KEYS = { pause = "ContextMenu_TLG_Pause", resume = "ContextMenu_TLG_Resume", abort = "ContextMenu_TLG_Abort" }
-    local function vessel()
-        local s = MM.x and getCell():getGridSquare(MM.x, MM.y, 0)
-        local objs = s and s:getWorldObjects()
-        for i = 0, (objs and objs:size() or 0) - 1 do
-            local it = objs:get(i):getItem()
-            if it and it:getID() == MM.id then return it end
+    -- Built in a function of its own: with -debug the game's compiler takes
+    -- at most 200 locals in all from one function, block and loop locals
+    -- included, and the main chunk of this file is near that (launch 368;
+    -- engine-capabilities).
+    local function build()
+        local MM = {}
+        local V = "TLG.FermenterVessel"
+        local KEYS = { pause = "ContextMenu_TLG_Pause", resume = "ContextMenu_TLG_Resume", abort = "ContextMenu_TLG_Abort" }
+        local function vessel()
+            local s = MM.x and getCell():getGridSquare(MM.x, MM.y, 0)
+            local objs = s and s:getWorldObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local it = objs:get(i):getItem()
+                if it and it:getID() == MM.id then return it end
+            end
+            return nil
         end
-        return nil
-    end
-    local function submenu()
-        local c = ISContextMenu.get(0, 100, 100)
-        TLG.UI.MachineMenu.fill(0, c, { vessel() })
-        local root = c:getOptionFromName(getText("ContextMenu_TLG_Machine"))
-        local sub = root and root.subOption and c:getSubMenu(root.subOption)
-        c:setVisible(false)
-        return sub
-    end
-    -- Which of the three the menu offers now, as "pause,abort".
-    local function offered()
-        local sub, out = submenu(), {}
-        for _, k in ipairs({ "pause", "resume", "abort" }) do
-            if sub and sub:getOptionFromName(getText(KEYS[k])) then out[#out + 1] = k end
+        local function submenu()
+            local c = ISContextMenu.get(0, 100, 100)
+            TLG.UI.MachineMenu.fill(0, c, { vessel() })
+            local root = c:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+            local sub = root and root.subOption and c:getSubMenu(root.subOption)
+            c:setVisible(false)
+            return sub
         end
-        return table.concat(out, ",")
-    end
-    -- What the menu should offer for the state the server replied with (the
-    -- single-player menu's rules, MachineMenu.controls).
-    local function expected(r)
-        if r.state == "Processing" then return "pause,abort" end
-        if r.state == "Paused" then return r.pause == "paused_by_player" and "resume,abort" or "abort" end
-        if r.state == "OutputReady" and r.stoppedEarly == true then return "abort" end
-        return ""
-    end
-    local function copyState()
-        local rec = vessel() and vessel():getModData().tlgProc
-        return type(rec) == "table" and (tostring(rec.state) .. "/" .. tostring(rec.pause)) or "none"
-    end
-    -- The entry clicked as a player clicks it when the menu offers it, else
-    -- the same command asked directly; the reply kept.
-    local function choose(name, key, command)
-        return { name = "mp_mm_" .. name, timeout = 1800, fn = function(ctx, ticks)
-            if ticks == 1 then
-                local sub = submenu()
-                local opt = sub and sub:getOptionFromName(getText(key))
-                ctx.viaMenu = opt ~= nil and not opt.notAvailable
-                local orig = TLG.Net.request
-                if ctx.viaMenu then
-                    TLG.Net.request = function(cmd, args) return orig(cmd, args, function(r) ctx.reply = r end) end
-                    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
-                    TLG.Net.request = orig
-                    if not ok then ctx.reply = { ok = false, reason = "raised: " .. tostring(err) } end
-                else
-                    orig(command, { target = TLG.Integration.Machines.refFor(vessel()) }, function(r) ctx.reply = r end)
+        -- Which of the three the menu offers now, as "pause,abort".
+        local function offered()
+            local sub, out = submenu(), {}
+            for _, k in ipairs({ "pause", "resume", "abort" }) do
+                if sub and sub:getOptionFromName(getText(KEYS[k])) then out[#out + 1] = k end
+            end
+            return table.concat(out, ",")
+        end
+        -- What the menu should offer for the state the server replied with (the
+        -- single-player menu's rules, MachineMenu.controls).
+        local function expected(r)
+            if r.state == "Processing" then return "pause,abort" end
+            if r.state == "Paused" then return r.pause == "paused_by_player" and "resume,abort" or "abort" end
+            if r.state == "OutputReady" and r.stoppedEarly == true then return "abort" end
+            return ""
+        end
+        local function copyState()
+            local rec = vessel() and vessel():getModData().tlgProc
+            return type(rec) == "table" and (tostring(rec.state) .. "/" .. tostring(rec.pause)) or "none"
+        end
+        -- The entry clicked as a player clicks it when the menu offers it, else
+        -- the same command asked directly; the reply kept.
+        local function choose(name, key, command)
+            return { name = "mp_mm_" .. name, timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local sub = submenu()
+                    local opt = sub and sub:getOptionFromName(getText(key))
+                    ctx.viaMenu = opt ~= nil and not opt.notAvailable
+                    local orig = TLG.Net.request
+                    if ctx.viaMenu then
+                        TLG.Net.request = function(cmd, args) return orig(cmd, args, function(r) ctx.reply = r end) end
+                        local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+                        TLG.Net.request = orig
+                        if not ok then ctx.reply = { ok = false, reason = "raised: " .. tostring(err) } end
+                    else
+                        orig(command, { target = TLG.Integration.Machines.refFor(vessel()) }, function(r) ctx.reply = r end)
+                    end
+                    return nil
                 end
-                return nil
-            end
-            if not ctx.reply then return nil end
-            MM[name] = { reply = ctx.reply, viaMenu = ctx.viaMenu }
-            report():line("OBS  MP.mm %s through the menu %s -> %s pause=%s stoppedEarly=%s", name, tostring(ctx.viaMenu),
-                brief(ctx.reply), tostring(ctx.reply.pause), tostring(ctx.reply.stoppedEarly))
-            return true
-        end }
+                if not ctx.reply then return nil end
+                MM[name] = { reply = ctx.reply, viaMenu = ctx.viaMenu }
+                report():line("OBS  MP.mm %s through the menu %s -> %s pause=%s stoppedEarly=%s", name, tostring(ctx.viaMenu),
+                    brief(ctx.reply), tostring(ctx.reply.pause), tostring(ctx.reply.stoppedEarly))
+                return true
+            end }
+        end
+        -- The menu once the server's write has had three seconds to arrive.
+        local function menuAfter(name)
+            return { name = "mp_mm_menu_" .. name, timeout = 600, fn = function(ctx, ticks)
+                if ticks < 180 then return nil end
+                local r = MM[name] and MM[name].reply or {}
+                local got, want, copy = offered(), expected(r), copyState()
+                report():line("OBS  MP.mm after %s: the server says %s/%s; this client's copy of the record %s; its menu " ..
+                    "offers [%s], want [%s]", name, tostring(r.state), tostring(r.pause), copy, got, want)
+                check("mm_menu_after_" .. name, function()
+                    return r.ok == true and got == want, string.format("server %s/%s; this client's copy %s; menu [%s], want [%s]",
+                        tostring(r.state), tostring(r.pause), copy, got, want)
+                end)
+                return true
+            end }
+        end
+        MP.stepsA = { MP.waitWorld,
+            call("mm_spawn", "spawn", function()
+                local x, y = S.spot(-4)
+                return { item = V, x = x, y = y }
+            end, "spawned", function(m) MM.x, MM.y, MM.id = tonumber(m.x), tonumber(m.y), tonumber(m.id) end),
+            call("mm_give", "give", { items = "Base.Sugar;Base.Sugar;Base.Yeast;Base.BucketEmpty", water = "10" }, "given",
+                function() end),
+            wait("mp_mm_arrives", 180),
+            walkTo("mp_mm_walk", function() return MM.x + 1, MM.y end),
+            once("mp_mm_empty", function()
+                local got = offered()
+                check("mm_menu_empty_offers_none", function()
+                    return vessel() ~= nil and got == "", string.format("vessel %s; menu [%s]", tostring(vessel() ~= nil), got)
+                end)
+            end),
+            choose("load", "ContextMenu_TLG_LoadFerment", "machine.loadFerment"), menuAfter("load"),
+            choose("pause", "ContextMenu_TLG_Pause", "machine.pause"), menuAfter("pause"),
+            choose("resume", "ContextMenu_TLG_Resume", "machine.resume"), menuAfter("resume"),
+            choose("abort", "ContextMenu_TLG_Abort", "machine.abort"), menuAfter("abort"),
+            choose("abort_again", "ContextMenu_TLG_Abort", "machine.abort"), menuAfter("abort_again"),
+            once("mp_mm_paths", function()
+                local via = {}
+                for _, k in ipairs({ "load", "pause", "resume", "abort", "abort_again" }) do
+                    via[#via + 1] = k .. "=" .. tostring(MM[k] and MM[k].viaMenu)
+                end
+                report():line("OBS  MP.mm chosen through the menu: %s", table.concat(via, " "))
+            end),
+            once("mp_finish_a", function() send("finish", {}) end), MP.finish }
     end
-    -- The menu once the server's write has had three seconds to arrive.
-    local function menuAfter(name)
-        return { name = "mp_mm_menu_" .. name, timeout = 600, fn = function(ctx, ticks)
-            if ticks < 180 then return nil end
-            local r = MM[name] and MM[name].reply or {}
-            local got, want, copy = offered(), expected(r), copyState()
-            report():line("OBS  MP.mm after %s: the server says %s/%s; this client's copy of the record %s; its menu " ..
-                "offers [%s], want [%s]", name, tostring(r.state), tostring(r.pause), copy, got, want)
-            check("mm_menu_after_" .. name, function()
-                return r.ok == true and got == want, string.format("server %s/%s; this client's copy %s; menu [%s], want [%s]",
-                    tostring(r.state), tostring(r.pause), copy, got, want)
-            end)
-            return true
-        end }
-    end
-    MP.stepsA = { MP.waitWorld,
-        call("mm_spawn", "spawn", function()
-            local x, y = S.spot(-4)
-            return { item = V, x = x, y = y }
-        end, "spawned", function(m) MM.x, MM.y, MM.id = tonumber(m.x), tonumber(m.y), tonumber(m.id) end),
-        call("mm_give", "give", { items = "Base.Sugar;Base.Sugar;Base.Yeast;Base.BucketEmpty", water = "10" }, "given",
-            function() end),
-        wait("mp_mm_arrives", 180),
-        walkTo("mp_mm_walk", function() return MM.x + 1, MM.y end),
-        once("mp_mm_empty", function()
-            local got = offered()
-            check("mm_menu_empty_offers_none", function()
-                return vessel() ~= nil and got == "", string.format("vessel %s; menu [%s]", tostring(vessel() ~= nil), got)
-            end)
-        end),
-        choose("load", "ContextMenu_TLG_LoadFerment", "machine.loadFerment"), menuAfter("load"),
-        choose("pause", "ContextMenu_TLG_Pause", "machine.pause"), menuAfter("pause"),
-        choose("resume", "ContextMenu_TLG_Resume", "machine.resume"), menuAfter("resume"),
-        choose("abort", "ContextMenu_TLG_Abort", "machine.abort"), menuAfter("abort"),
-        choose("abort_again", "ContextMenu_TLG_Abort", "machine.abort"), menuAfter("abort_again"),
-        once("mp_mm_paths", function()
-            local via = {}
-            for _, k in ipairs({ "load", "pause", "resume", "abort", "abort_again" }) do
-                via[#via + 1] = k .. "=" .. tostring(MM[k] and MM[k].viaMenu)
-            end
-            report():line("OBS  MP.mm chosen through the menu: %s", table.concat(via, " "))
-        end),
-        once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+    build()
     return
 end
 
@@ -248,314 +255,321 @@ end
 -- Each check compares the menu with the state the server replied with.
 ------------------------------------------------------------------------------
 if MP.only == "machinemenus" then
-    local MX = {}
-    local SNAP = "TLG_harness_mpsnap.txt"
-    local KINDS = { "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn", "TLG.WoodRetort",
-        "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor", "TLG.BiodieselWashTank" }
-    local KEYS = { pause = "ContextMenu_TLG_Pause", resume = "ContextMenu_TLG_Resume", abort = "ContextMenu_TLG_Abort" }
-    -- The item MX[key] names: on its tile or the one below, in a container
-    -- there, else carried.
-    local function itemOf(key)
-        local m = MX[key]
-        if not (m and m.id) then return nil end
-        for dy = 0, 1 do
-            local sq = getCell():getGridSquare(m.x, m.y + dy, 0)
-            local objs = sq and sq:getWorldObjects()
-            for i = 0, (objs and objs:size() or 0) - 1 do
-                local it = objs:get(i):getItem()
-                if it and it:getID() == m.id then return it end
+    -- Built in a function of its own: with -debug the game's compiler takes
+    -- at most 200 locals in all from one function, block and loop locals
+    -- included, and the main chunk of this file is near that (launch 368;
+    -- engine-capabilities).
+    local function build()
+        local MX = {}
+        local SNAP = "TLG_harness_mpsnap.txt"
+        local KINDS = { "TLG.FermenterVessel", "TLG.PotStill", "TLG.RefluxStill", "TLG.DryingColumn", "TLG.WoodRetort",
+            "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor", "TLG.BiodieselWashTank" }
+        local KEYS = { pause = "ContextMenu_TLG_Pause", resume = "ContextMenu_TLG_Resume", abort = "ContextMenu_TLG_Abort" }
+        -- The item MX[key] names: on its tile or the one below, in a container
+        -- there, else carried.
+        local function itemOf(key)
+            local m = MX[key]
+            if not (m and m.id) then return nil end
+            for dy = 0, 1 do
+                local sq = getCell():getGridSquare(m.x, m.y + dy, 0)
+                local objs = sq and sq:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getID() == m.id then return it end
+                end
+                objs = sq and sq:getObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local c = objs:get(i):getContainer()
+                    local it = c and c:getItemWithIDRecursiv(m.id)
+                    if it then return it end
+                end
             end
-            objs = sq and sq:getObjects()
-            for i = 0, (objs and objs:size() or 0) - 1 do
-                local c = objs:get(i):getContainer()
-                local it = c and c:getItemWithIDRecursiv(m.id)
-                if it then return it end
-            end
+            return player():getInventory():getItemWithIDRecursiv(m.id)
         end
-        return player():getInventory():getItemWithIDRecursiv(m.id)
-    end
-    local function submenu(fill, rootKey)
-        local c = ISContextMenu.get(0, 100, 100)
-        fill(c)
-        local root = c:getOptionFromName(getText(rootKey))
-        local sub = root and root.subOption and c:getSubMenu(root.subOption)
-        c:setVisible(false)
-        return sub
-    end
-    local function machineSub(key)
-        return submenu(function(c) TLG.UI.MachineMenu.fill(0, c, { itemOf(key) }) end, "ContextMenu_TLG_Machine")
-    end
-    local function offered(key)
-        local sub, out = machineSub(key), {}
-        for _, k in ipairs({ "pause", "resume", "abort" }) do
-            if sub and sub:getOptionFromName(getText(KEYS[k])) then out[#out + 1] = k end
+        local function submenu(fill, rootKey)
+            local c = ISContextMenu.get(0, 100, 100)
+            fill(c)
+            local root = c:getOptionFromName(getText(rootKey))
+            local sub = root and root.subOption and c:getSubMenu(root.subOption)
+            c:setVisible(false)
+            return sub
         end
-        return table.concat(out, ",")
-    end
-    local function expected(r)
-        if r.state == "Processing" then return "pause,abort" end
-        if r.state == "Paused" then return r.pause == "paused_by_player" and "resume,abort" or "abort" end
-        if r.state == "OutputReady" and r.stoppedEarly == true then return "abort" end
-        return ""
-    end
-    local function copyState(key)
-        local it = itemOf(key)
-        local rec = it and it:getModData().tlgProc
-        return type(rec) == "table" and (tostring(rec.state) .. "/" .. tostring(rec.pause)) or "none"
-    end
-    -- A menu entry clicked as a player clicks it, else (not offered) the
-    -- command asked directly; the reply kept as MX[key][step].
-    local function chooseIn(name, sub, key, step, entry, command, args)
-        return { name = name, timeout = 1800, fn = function(ctx, ticks)
-            if ticks == 1 then
-                local s = sub()
-                local opt = s and s:getOptionFromName(getText(entry))
-                ctx.viaMenu = opt ~= nil and not opt.notAvailable
-                local orig = TLG.Net.request
-                if ctx.viaMenu then
-                    TLG.Net.request = function(cmd, a) return orig(cmd, a, function(r) ctx.reply = r end) end
-                    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
-                    TLG.Net.request = orig
-                    if not ok then ctx.reply = { ok = false, reason = "raised: " .. tostring(err) } end
-                else
-                    orig(command, args(), function(r) ctx.reply = r end)
-                end
-                return nil
+        local function machineSub(key)
+            return submenu(function(c) TLG.UI.MachineMenu.fill(0, c, { itemOf(key) }) end, "ContextMenu_TLG_Machine")
+        end
+        local function offered(key)
+            local sub, out = machineSub(key), {}
+            for _, k in ipairs({ "pause", "resume", "abort" }) do
+                if sub and sub:getOptionFromName(getText(KEYS[k])) then out[#out + 1] = k end
             end
-            if not ctx.reply then return nil end
-            MX[key][step] = { reply = ctx.reply, viaMenu = ctx.viaMenu }
-            report():line("OBS  MP.mx %s %s through the menu %s -> %s pause=%s stoppedEarly=%s", key, step,
-                tostring(ctx.viaMenu), brief(ctx.reply), tostring(ctx.reply.pause), tostring(ctx.reply.stoppedEarly))
-            return true
-        end }
-    end
-    local function choose(key, step, entry, command)
-        return chooseIn("mp_mx_" .. key .. "_" .. step, function() return machineSub(key) end, key, step, entry, command,
-            function() return { target = TLG.Integration.Machines.refFor(itemOf(key)) } end)
-    end
-    local function menuAfter(key, step)
-        return { name = "mp_mx_menu_" .. key .. "_" .. step, timeout = 600, fn = function(ctx, ticks)
-            if ticks < 180 then return nil end
-            local r = MX[key][step] and MX[key][step].reply or {}
-            local got, want, copy = offered(key), expected(r), copyState(key)
-            report():line("OBS  MP.mx %s (%s) after %s: the server says %s/%s; this client's copy %s; its menu offers " ..
-                "[%s], want [%s]", key, tostring(MX[key].t), step, tostring(r.state), tostring(r.pause), copy, got, want)
-            check("mx_" .. key .. "_menu_after_" .. step, function()
-                return r.ok == true and got == want, string.format("%s: server %s/%s; this client's copy %s; menu [%s], " ..
-                    "want [%s]", tostring(MX[key].t), tostring(r.state), tostring(r.pause), copy, got, want)
-            end)
-            return true
-        end }
-    end
-    -- A machine of type `t` put down at x, y and its batch started.
-    local function started(key, t, x, y)
-        return {
-            call("mx_spawn_" .. key, "spawn", { item = t, x = x, y = y }, "spawned", function(m)
-                MX[key] = { x = x, y = y, id = tonumber(m.id), t = t }
-            end),
-            wait("mp_mx_lands_" .. key, 120),
-            call("mx_start_" .. key, "start_running", function() return { id = MX[key].id, x = x, y = y } end,
-                "started_running", function(m)
-                    MX[key].start = { reply = { ok = m.state ~= nil, state = m.state, pause = m.pause ~= "nil" and m.pause or nil,
-                        reason = m.reason } }
-                    report():line("OBS  MP.mx %s %s started on the server: %s/%s %s", key, t, tostring(m.state),
-                        tostring(m.pause), tostring(m.reason or ""))
-                end),
-            walkTo("mp_mx_walk_" .. key, x + 1, y),
-            menuAfter(key, "start"),
-        }
-    end
-    local steps = { MP.waitWorld }
-    local function add(list) for _, s in ipairs(list) do steps[#steps + 1] = s end end
-    -- The nine kinds in a row, two tiles apart.
-    for i, t in ipairs(KINDS) do
-        local key = "k" .. i
-        add(started(key, t, S.CX - 12 + 2 * (i - 1), S.CY + 4))
-        add({ choose(key, "pause", KEYS.pause, "machine.pause"), menuAfter(key, "pause"),
-            choose(key, "resume", KEYS.resume, "machine.resume"), menuAfter(key, "resume"),
-            choose(key, "abort", KEYS.abort, "machine.abort"), menuAfter(key, "abort") })
-    end
-    -- A running fermenter taken up and put down a tile below.
-    add(started("pick", "TLG.FermenterVessel", S.CX - 12, S.CY + 7))
-    add({
-        { name = "mp_mx_grab", timeout = 2400, fn = function(ctx, ticks)
-            local p = player()
-            if not ctx.queued then
-                local it = itemOf("pick")
-                local wi = it and it:getWorldItem()
-                if not wi then
-                    report():line("FAIL MP.mx_grab_queued_%s :: no fermenter on the floor", MP.role)
-                    return true
-                end
-                ISWorldObjectContextMenu.onGrabWItem(nil, wi, 0)
-                ctx.queued = ticks
-                return nil
-            end
-            if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
-            ctx.idle = ctx.idle or ticks
-            if ticks - ctx.idle < 120 then return nil end
-            local it = itemOf("pick")
-            check("mx_pick_grabbed", function()
-                return it ~= nil and it:getWorldItem() == nil, "carried " .. tostring(it ~= nil and it:getWorldItem() == nil)
-            end)
-            return true
-        end },
-        request("mx_pick_status_carried", "machine.status", function()
-            local it = itemOf("pick")
-            return it and { target = TLG.Integration.Machines.refFor(it) } or nil
-        end, function(r)
-            check("mx_pick_carried_status_and_copy", function()
-                return r.ok == true and r.state == "Paused" and r.pause == "not_placed" and copyState("pick") == "Paused/not_placed",
-                    string.format("server %s/%s; this client's copy (carried) %s", tostring(r.state), tostring(r.pause),
-                        copyState("pick"))
-            end)
-        end),
-        { name = "mp_mx_put_down", timeout = 2400, fn = function(ctx, ticks)
-            local p = player()
-            if ticks == 1 then
-                local it = itemOf("pick")
-                if it then
-                    ISTimedActionQueue.add(ISDropWorldItemAction:new(p, it, getCell():getGridSquare(MX.pick.x, MX.pick.y + 1, 0),
-                        0.5, 0.5, 0, 0, false))
-                end
-                return nil
-            end
-            if ticks < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
-            ctx.idle = ctx.idle or ticks
-            if ticks - ctx.idle < 180 then return nil end
-            local it = itemOf("pick")
-            local got = offered("pick")
-            check("mx_pick_put_down_menu_follows", function()
-                return it ~= nil and it:getWorldItem() ~= nil and copyState("pick") == "Processing/nil" and got == "pause,abort",
-                    string.format("on the floor %s; this client's copy %s; menu [%s]", tostring(it and it:getWorldItem() ~= nil),
-                        copyState("pick"), got)
-            end)
-            return true
-        end },
-    })
-    -- A can of petrol on the floor ("can"), then one in a container
-    -- ("crate"): Open, then Seal, through the Fuel menu.
-    local function fuelSub(key)
-        return submenu(function(c) TLG.UI.FuelMenu.fill(0, c, { itemOf(key) }) end, "ContextMenu_TLG_Fuel")
-    end
-    local function sealOffer(key)
-        local s = fuelSub(key)
-        if s and s:getOptionFromName(getText("ContextMenu_TLG_Seal")) then return "seal" end
-        if s and s:getOptionFromName(getText("ContextMenu_TLG_Unseal")) then return "unseal" end
-        return "none"
-    end
-    local function canAfter(key, step, want)
-        return { name = "mp_mx_" .. key .. "_after_" .. step, timeout = 600, fn = function(ctx, ticks)
-            if ticks < 180 then return nil end
-            local r = MX[key][step] and MX[key][step].reply or {}
+            return table.concat(out, ",")
+        end
+        local function expected(r)
+            if r.state == "Processing" then return "pause,abort" end
+            if r.state == "Paused" then return r.pause == "paused_by_player" and "resume,abort" or "abort" end
+            if r.state == "OutputReady" and r.stoppedEarly == true then return "abort" end
+            return ""
+        end
+        local function copyState(key)
             local it = itemOf(key)
-            local side = it and it:getModData().tlg
-            local got = sealOffer(key)
-            report():line("OBS  MP.mx %s after %s: reply ok=%s; this client's copy sealed=%s; the menu offers %s, want %s",
-                key, step, tostring(r.ok), tostring(side and side.sealed), got, want)
-            check("mx_" .. key .. "_after_" .. step, function()
-                return r.ok == true and got == want, string.format("reply ok=%s reason=%s; this client's copy sealed %s; " ..
-                    "menu offers %s, want %s", tostring(r.ok), tostring(r.reason), tostring(side and side.sealed), got, want)
-            end)
-            return true
-        end }
-    end
-    local function canChoose(key, step, entry, op)
-        return chooseIn("mp_mx_" .. key .. "_" .. step, function() return fuelSub(key) end, key, step, entry, "treat", function()
-            return { target = TLG.Authority.Resolver.refForItem(itemOf(key)), op = op }
-        end)
-    end
-    local function canFirst(key)
-        return once("mp_mx_" .. key .. "_first", function()
-            local got = sealOffer(key)
-            check("mx_" .. key .. "_untouched_offers_unseal", function()
-                return itemOf(key) ~= nil and got == "unseal", string.format("found %s; menu offers %s",
-                    tostring(itemOf(key) ~= nil), got)
-            end)
-        end)
-    end
-    local function unsealThenSeal(key)
-        return { canChoose(key, "unseal", "ContextMenu_TLG_Unseal", "unseal"), canAfter(key, "unseal", "seal"),
-            canChoose(key, "seal", "ContextMenu_TLG_Seal", "seal"), canAfter(key, "seal", "unseal") }
-    end
-    add({
-        call("mx_spawn_can", "spawn", { item = "Base.PetrolCan", x = S.CX - 9, y = S.CY + 7, petrol = 5 }, "spawned", function(m)
-            MX.can = { x = S.CX - 9, y = S.CY + 7, id = tonumber(m.id), t = "Base.PetrolCan" }
-        end),
-        wait("mp_mx_can_lands", 120),
-        walkTo("mp_mx_walk_can", S.CX - 8, S.CY + 7),
-        canFirst("can"),
-    })
-    add(unsealThenSeal("can"))
-    -- The container nearest the spawn point (MPServer.lua crate_can), walked
-    -- to as the game walks to a container.
-    add({
-        call("mx_crate_can", "crate_can", {}, "crated_can", function(m)
-            MX.crate = { x = tonumber(m.x), y = tonumber(m.y), id = tonumber(m.id), t = "Base.PetrolCan" }
-            report():line("OBS  MP.mx crate: can %s put in a %s at %s,%s %s", tostring(m.id), tostring(m.type),
-                tostring(m.x), tostring(m.y), tostring(m.error or ""))
-        end),
-        wait("mp_mx_crate_lands", 120),
-        { name = "mp_mx_walk_crate", timeout = 2400, fn = function(ctx, ticks)
-            local p = player()
-            if not ctx.queued then
-                local it = itemOf("crate")
-                if not it then
-                    if ticks < 600 then return nil end
-                    report():line("FAIL MP.mx_crate_listed_%s :: this client does not see the can in the container", MP.role)
-                    return true
+            local rec = it and it:getModData().tlgProc
+            return type(rec) == "table" and (tostring(rec.state) .. "/" .. tostring(rec.pause)) or "none"
+        end
+        -- A menu entry clicked as a player clicks it, else (not offered) the
+        -- command asked directly; the reply kept as MX[key][step].
+        local function chooseIn(name, sub, key, step, entry, command, args)
+            return { name = name, timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local s = sub()
+                    local opt = s and s:getOptionFromName(getText(entry))
+                    ctx.viaMenu = opt ~= nil and not opt.notAvailable
+                    local orig = TLG.Net.request
+                    if ctx.viaMenu then
+                        TLG.Net.request = function(cmd, a) return orig(cmd, a, function(r) ctx.reply = r end) end
+                        local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+                        TLG.Net.request = orig
+                        if not ok then ctx.reply = { ok = false, reason = "raised: " .. tostring(err) } end
+                    else
+                        orig(command, args(), function(r) ctx.reply = r end)
+                    end
+                    return nil
                 end
-                ISTimedActionQueue.clear(p)
-                luautils.walkToContainer(it:getContainer(), 0)
-                ctx.queued = ticks
-                return nil
-            end
-            if ticks - ctx.queued < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
-            ctx.idle = ctx.idle or ticks
-            return ticks - ctx.idle >= 60 or nil
-        end },
-        canFirst("crate"),
-    })
-    add(unsealThenSeal("crate"))
-    -- A batch paused through the menu; the player leaves and joins again.
-    add(started("join", "TLG.FermenterVessel", S.CX - 6, S.CY + 7))
-    add({
-        choose("join", "pause", KEYS.pause, "machine.pause"), menuAfter("join", "pause"),
-        once("mp_mx_snap", function()
-            TLGH.writeFile(SNAP, { "x=" .. MX.join.x, "y=" .. MX.join.y, "id=" .. MX.join.id })
-        end),
-        { name = "mp_mx_leave", timeout = 600, fn = function(ctx, ticks)
-            if ticks < 60 then return nil end
-            h.setPhase("rejoin")
-            report():line("OBS  MP.mx leaving to the main menu to join again, the fermenter paused")
-            setGameSpeed(1)
-            getCore():quit()
-            return true
-        end },
-    })
-    MP.stepsA = steps
-    MP.stepsRejoined = { MP.waitWorld, wait("mp_mx_rejoin_settle", 240),
-        once("mp_mx_rejoined", function()
-            local e = TLGH.readKeyValues(SNAP)
-            MX.join = { x = tonumber(e.x), y = tonumber(e.y), id = tonumber(e.id), t = "TLG.FermenterVessel" }
-            local got, copy = offered("join"), copyState("join")
-            report():line("OBS  MP.mx after joining again: this client's copy %s; its menu offers [%s]", copy, got)
-            check("mx_join_paused_batch_seen_on_joining", function()
-                return copy == "Paused/paused_by_player" and got == "resume,abort", string.format(
-                    "this client's copy %s; menu [%s], want [resume,abort]", copy, got)
-            end)
-        end),
-        choose("join", "resume", KEYS.resume, "machine.resume"), menuAfter("join", "resume"),
-        once("mp_mx_paths", function()
-            local via = {}
-            for _, k in ipairs(TLG.Tables.sortedKeys(MX)) do
-                for _, step in ipairs({ "pause", "resume", "abort", "unseal", "seal" }) do
-                    if MX[k][step] then via[#via + 1] = k .. "." .. step .. "=" .. tostring(MX[k][step].viaMenu) end
+                if not ctx.reply then return nil end
+                MX[key][step] = { reply = ctx.reply, viaMenu = ctx.viaMenu }
+                report():line("OBS  MP.mx %s %s through the menu %s -> %s pause=%s stoppedEarly=%s", key, step,
+                    tostring(ctx.viaMenu), brief(ctx.reply), tostring(ctx.reply.pause), tostring(ctx.reply.stoppedEarly))
+                return true
+            end }
+        end
+        local function choose(key, step, entry, command)
+            return chooseIn("mp_mx_" .. key .. "_" .. step, function() return machineSub(key) end, key, step, entry, command,
+                function() return { target = TLG.Integration.Machines.refFor(itemOf(key)) } end)
+        end
+        local function menuAfter(key, step)
+            return { name = "mp_mx_menu_" .. key .. "_" .. step, timeout = 600, fn = function(ctx, ticks)
+                if ticks < 180 then return nil end
+                local r = MX[key][step] and MX[key][step].reply or {}
+                local got, want, copy = offered(key), expected(r), copyState(key)
+                report():line("OBS  MP.mx %s (%s) after %s: the server says %s/%s; this client's copy %s; its menu offers " ..
+                    "[%s], want [%s]", key, tostring(MX[key].t), step, tostring(r.state), tostring(r.pause), copy, got, want)
+                check("mx_" .. key .. "_menu_after_" .. step, function()
+                    return r.ok == true and got == want, string.format("%s: server %s/%s; this client's copy %s; menu [%s], " ..
+                        "want [%s]", tostring(MX[key].t), tostring(r.state), tostring(r.pause), copy, got, want)
+                end)
+                return true
+            end }
+        end
+        -- A machine of type `t` put down at x, y and its batch started.
+        local function started(key, t, x, y)
+            return {
+                call("mx_spawn_" .. key, "spawn", { item = t, x = x, y = y }, "spawned", function(m)
+                    MX[key] = { x = x, y = y, id = tonumber(m.id), t = t }
+                end),
+                wait("mp_mx_lands_" .. key, 120),
+                call("mx_start_" .. key, "start_running", function() return { id = MX[key].id, x = x, y = y } end,
+                    "started_running", function(m)
+                        MX[key].start = { reply = { ok = m.state ~= nil, state = m.state, pause = m.pause ~= "nil" and m.pause or nil,
+                            reason = m.reason } }
+                        report():line("OBS  MP.mx %s %s started on the server: %s/%s %s", key, t, tostring(m.state),
+                            tostring(m.pause), tostring(m.reason or ""))
+                    end),
+                walkTo("mp_mx_walk_" .. key, x + 1, y),
+                menuAfter(key, "start"),
+            }
+        end
+        local steps = { MP.waitWorld }
+        local function add(list) for _, s in ipairs(list) do steps[#steps + 1] = s end end
+        -- The nine kinds in a row, two tiles apart.
+        for i, t in ipairs(KINDS) do
+            local key = "k" .. i
+            add(started(key, t, S.CX - 12 + 2 * (i - 1), S.CY + 4))
+            add({ choose(key, "pause", KEYS.pause, "machine.pause"), menuAfter(key, "pause"),
+                choose(key, "resume", KEYS.resume, "machine.resume"), menuAfter(key, "resume"),
+                choose(key, "abort", KEYS.abort, "machine.abort"), menuAfter(key, "abort") })
+        end
+        -- A running fermenter taken up and put down a tile below.
+        add(started("pick", "TLG.FermenterVessel", S.CX - 12, S.CY + 7))
+        add({
+            { name = "mp_mx_grab", timeout = 2400, fn = function(ctx, ticks)
+                local p = player()
+                if not ctx.queued then
+                    local it = itemOf("pick")
+                    local wi = it and it:getWorldItem()
+                    if not wi then
+                        report():line("FAIL MP.mx_grab_queued_%s :: no fermenter on the floor", MP.role)
+                        return true
+                    end
+                    ISWorldObjectContextMenu.onGrabWItem(nil, wi, 0)
+                    ctx.queued = ticks
+                    return nil
                 end
-            end
-            report():line("OBS  MP.mx chosen through the menu (since joining again): %s", table.concat(via, " "))
-        end),
-        once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+                if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+                ctx.idle = ctx.idle or ticks
+                if ticks - ctx.idle < 120 then return nil end
+                local it = itemOf("pick")
+                check("mx_pick_grabbed", function()
+                    return it ~= nil and it:getWorldItem() == nil, "carried " .. tostring(it ~= nil and it:getWorldItem() == nil)
+                end)
+                return true
+            end },
+            request("mx_pick_status_carried", "machine.status", function()
+                local it = itemOf("pick")
+                return it and { target = TLG.Integration.Machines.refFor(it) } or nil
+            end, function(r)
+                check("mx_pick_carried_status_and_copy", function()
+                    return r.ok == true and r.state == "Paused" and r.pause == "not_placed" and copyState("pick") == "Paused/not_placed",
+                        string.format("server %s/%s; this client's copy (carried) %s", tostring(r.state), tostring(r.pause),
+                            copyState("pick"))
+                end)
+            end),
+            { name = "mp_mx_put_down", timeout = 2400, fn = function(ctx, ticks)
+                local p = player()
+                if ticks == 1 then
+                    local it = itemOf("pick")
+                    if it then
+                        ISTimedActionQueue.add(ISDropWorldItemAction:new(p, it, getCell():getGridSquare(MX.pick.x, MX.pick.y + 1, 0),
+                            0.5, 0.5, 0, 0, false))
+                    end
+                    return nil
+                end
+                if ticks < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+                ctx.idle = ctx.idle or ticks
+                if ticks - ctx.idle < 180 then return nil end
+                local it = itemOf("pick")
+                local got = offered("pick")
+                check("mx_pick_put_down_menu_follows", function()
+                    return it ~= nil and it:getWorldItem() ~= nil and copyState("pick") == "Processing/nil" and got == "pause,abort",
+                        string.format("on the floor %s; this client's copy %s; menu [%s]", tostring(it and it:getWorldItem() ~= nil),
+                            copyState("pick"), got)
+                end)
+                return true
+            end },
+        })
+        -- A can of petrol on the floor ("can"), then one in a container
+        -- ("crate"): Open, then Seal, through the Fuel menu.
+        local function fuelSub(key)
+            return submenu(function(c) TLG.UI.FuelMenu.fill(0, c, { itemOf(key) }) end, "ContextMenu_TLG_Fuel")
+        end
+        local function sealOffer(key)
+            local s = fuelSub(key)
+            if s and s:getOptionFromName(getText("ContextMenu_TLG_Seal")) then return "seal" end
+            if s and s:getOptionFromName(getText("ContextMenu_TLG_Unseal")) then return "unseal" end
+            return "none"
+        end
+        local function canAfter(key, step, want)
+            return { name = "mp_mx_" .. key .. "_after_" .. step, timeout = 600, fn = function(ctx, ticks)
+                if ticks < 180 then return nil end
+                local r = MX[key][step] and MX[key][step].reply or {}
+                local it = itemOf(key)
+                local side = it and it:getModData().tlg
+                local got = sealOffer(key)
+                report():line("OBS  MP.mx %s after %s: reply ok=%s; this client's copy sealed=%s; the menu offers %s, want %s",
+                    key, step, tostring(r.ok), tostring(side and side.sealed), got, want)
+                check("mx_" .. key .. "_after_" .. step, function()
+                    return r.ok == true and got == want, string.format("reply ok=%s reason=%s; this client's copy sealed %s; " ..
+                        "menu offers %s, want %s", tostring(r.ok), tostring(r.reason), tostring(side and side.sealed), got, want)
+                end)
+                return true
+            end }
+        end
+        local function canChoose(key, step, entry, op)
+            return chooseIn("mp_mx_" .. key .. "_" .. step, function() return fuelSub(key) end, key, step, entry, "treat", function()
+                return { target = TLG.Authority.Resolver.refForItem(itemOf(key)), op = op }
+            end)
+        end
+        local function canFirst(key)
+            return once("mp_mx_" .. key .. "_first", function()
+                local got = sealOffer(key)
+                check("mx_" .. key .. "_untouched_offers_unseal", function()
+                    return itemOf(key) ~= nil and got == "unseal", string.format("found %s; menu offers %s",
+                        tostring(itemOf(key) ~= nil), got)
+                end)
+            end)
+        end
+        local function unsealThenSeal(key)
+            return { canChoose(key, "unseal", "ContextMenu_TLG_Unseal", "unseal"), canAfter(key, "unseal", "seal"),
+                canChoose(key, "seal", "ContextMenu_TLG_Seal", "seal"), canAfter(key, "seal", "unseal") }
+        end
+        add({
+            call("mx_spawn_can", "spawn", { item = "Base.PetrolCan", x = S.CX - 9, y = S.CY + 7, petrol = 5 }, "spawned", function(m)
+                MX.can = { x = S.CX - 9, y = S.CY + 7, id = tonumber(m.id), t = "Base.PetrolCan" }
+            end),
+            wait("mp_mx_can_lands", 120),
+            walkTo("mp_mx_walk_can", S.CX - 8, S.CY + 7),
+            canFirst("can"),
+        })
+        add(unsealThenSeal("can"))
+        -- The container nearest the spawn point (MPServer.lua crate_can), walked
+        -- to as the game walks to a container.
+        add({
+            call("mx_crate_can", "crate_can", {}, "crated_can", function(m)
+                MX.crate = { x = tonumber(m.x), y = tonumber(m.y), id = tonumber(m.id), t = "Base.PetrolCan" }
+                report():line("OBS  MP.mx crate: can %s put in a %s at %s,%s %s", tostring(m.id), tostring(m.type),
+                    tostring(m.x), tostring(m.y), tostring(m.error or ""))
+            end),
+            wait("mp_mx_crate_lands", 120),
+            { name = "mp_mx_walk_crate", timeout = 2400, fn = function(ctx, ticks)
+                local p = player()
+                if not ctx.queued then
+                    local it = itemOf("crate")
+                    if not it then
+                        if ticks < 600 then return nil end
+                        report():line("FAIL MP.mx_crate_listed_%s :: this client does not see the can in the container", MP.role)
+                        return true
+                    end
+                    ISTimedActionQueue.clear(p)
+                    luautils.walkToContainer(it:getContainer(), 0)
+                    ctx.queued = ticks
+                    return nil
+                end
+                if ticks - ctx.queued < 30 or not TLGH.Steps.actionsIdle(p) then return nil end
+                ctx.idle = ctx.idle or ticks
+                return ticks - ctx.idle >= 60 or nil
+            end },
+            canFirst("crate"),
+        })
+        add(unsealThenSeal("crate"))
+        -- A batch paused through the menu; the player leaves and joins again.
+        add(started("join", "TLG.FermenterVessel", S.CX - 6, S.CY + 7))
+        add({
+            choose("join", "pause", KEYS.pause, "machine.pause"), menuAfter("join", "pause"),
+            once("mp_mx_snap", function()
+                TLGH.writeFile(SNAP, { "x=" .. MX.join.x, "y=" .. MX.join.y, "id=" .. MX.join.id })
+            end),
+            { name = "mp_mx_leave", timeout = 600, fn = function(ctx, ticks)
+                if ticks < 60 then return nil end
+                h.setPhase("rejoin")
+                report():line("OBS  MP.mx leaving to the main menu to join again, the fermenter paused")
+                setGameSpeed(1)
+                getCore():quit()
+                return true
+            end },
+        })
+        MP.stepsA = steps
+        MP.stepsRejoined = { MP.waitWorld, wait("mp_mx_rejoin_settle", 240),
+            once("mp_mx_rejoined", function()
+                local e = TLGH.readKeyValues(SNAP)
+                MX.join = { x = tonumber(e.x), y = tonumber(e.y), id = tonumber(e.id), t = "TLG.FermenterVessel" }
+                local got, copy = offered("join"), copyState("join")
+                report():line("OBS  MP.mx after joining again: this client's copy %s; its menu offers [%s]", copy, got)
+                check("mx_join_paused_batch_seen_on_joining", function()
+                    return copy == "Paused/paused_by_player" and got == "resume,abort", string.format(
+                        "this client's copy %s; menu [%s], want [resume,abort]", copy, got)
+                end)
+            end),
+            choose("join", "resume", KEYS.resume, "machine.resume"), menuAfter("join", "resume"),
+            once("mp_mx_paths", function()
+                local via = {}
+                for _, k in ipairs(TLG.Tables.sortedKeys(MX)) do
+                    for _, step in ipairs({ "pause", "resume", "abort", "unseal", "seal" }) do
+                        if MX[k][step] then via[#via + 1] = k .. "." .. step .. "=" .. tostring(MX[k][step].viaMenu) end
+                    end
+                end
+                report():line("OBS  MP.mx chosen through the menu (since joining again): %s", table.concat(via, " "))
+            end),
+            once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+    end
+    build()
     return
 end
 

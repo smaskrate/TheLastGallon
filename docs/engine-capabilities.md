@@ -63,6 +63,7 @@ Probe: `tests/support/runtime_probe.lua` (runner) and
 | `require` | returns the module's return value (RT-DS) | Modules also register under `TLG.*` |
 | `loadstring`, `getfenv`, `os.time` | available | Not used by domain code |
 | `io`, `debug`, `load`, `dofile` | nil | — |
+| Locals in one function | at most 200 active at once; with `-debug` (`Core.debug`) at most 200 declared in all, block and loop locals included, else `ArrayIndexOutOfBoundsException` at load (BC `LexState.new_localvar`, `FuncState.actvarline` of 200) | A file's cases build their steps in functions of their own; the compile check compiles as `-debug` does (RT-SP launch 368) |
 
 Kahlua's `%` computes `a - int(a / b) * b` with the quotient cast to a
 32-bit int: `x % 1` for x near 1e15 returns x - 2147483647 (Kahlua run,
@@ -1862,6 +1863,11 @@ Each run's command, result and the defects it found are in
 * Kahlua rejects Lua files that start with a UTF-8 BOM (compile error
   "Index 65022 out of bounds"); `tests/support/compile_check.lua` flags BOMs.
   Windows PowerShell 5.1 `Set-Content -Encoding utf8` writes a BOM.
+* The single-player harness starts the game with `-debug` and the
+  multiplayer clients without it, so a file can load on a server's client
+  and fail in single player: the harness's `MPHarnessCases.lua` passed 200
+  locals in its main chunk and failed to load in launch 368 only (Lua
+  runtime, locals in one function).
 * The Windows `java` launcher glob-expands a `*` argument.
 * `Compress-Archive` in Windows PowerShell 5.1 (Archive module 1.0.1.0)
   writes zip entry names with backslashes (`Contents\mods\...`; 91 of 92 in

@@ -963,6 +963,8 @@ tools\run-mp-harness.ps1 -Clients 1 -Only timers    # the machines' readings and
 tools\run-mp-harness.ps1 -Clients 1 -Only knowledge # What I know about it from a client's Fuel menu, answered by the server; ~5 min
 tools\run-mp-harness.ps1 -Clients 1 -Only knowledge -Restart  # the same with the can sealed; the player leaves, the server restarts, the player joins and reads it again
 tools\run-mp-harness.ps1 -Clients 2 -Only death     # A dies carrying a running vessel; B asks the server where it fell and whether it works from the death; ~4 min
+tools\run-mp-harness.ps1 -Clients 1 -Only machinemenu   # a fermenter loaded, paused, resumed and aborted twice through its menu, each entry read against the server's state (D-023)
+tools\run-mp-harness.ps1 -Clients 1 -Only machinemenus  # the nine machines' Pause, Resume and Abort batch, a fermenter carried and put down, Seal and Open on a can on the floor and in a container, a batch paused across leaving and joining again (D-041); ~7 min
 tools\make-preview.ps1                # the Workshop preview, the mod list's poster and icon (Blender), into art-src and the mod
 tools\package.ps1                     # the release zip (never uploads)
 tools\run-sp-harness.ps1 -Mode context-menus                    # the mod's world menu entries only where the click is on their thing (0.3.1); menus built by the game's builder at chosen screen points; no save; ~2 min
