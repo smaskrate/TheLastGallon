@@ -155,8 +155,8 @@
   stalling. A generator on aged petrol run 6 game hours must be charged its
   wear by the next refuel, once.
   performance: release gate 11, on the same road (docs/performance.md). The
-  mod's three timers (each game minute, ten minutes and hour) are timed as
-  they run while workloads are added: 400 petrol cans with records, 10 and
+  mod's timers (each game minute, ten minutes and hour; the gas pass last)
+  are timed as they run while workloads are added: 400 petrol cans with records, 10 and
   20 parked cars, 8 of them idling on stale petrol, 8 and 32 running
   fermenters loaded from the menu, the 32 as if a fire warmed each, and
   with 20 days of hourly readings. Also timed: fuel and a batch brought

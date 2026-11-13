@@ -19828,8 +19828,9 @@ RT.GV.build()
 -- - 8 vanilla generators converted to gas (the conversion service's steps,
 --   as in gas-propane), a full propane tank connected to each through the
 --   Gas menu, each started with the game's action. A refill moves whole
---   tank uses (0.0026 L each) and an hourly step is 0.002 L, so a propane
---   generator spends most minutes a part of a use below its cap. The
+--   tank uses (0.0026 L each), so what it leaves below the cap is the rest
+--   of the room, and a propane generator spends most minutes a part of a
+--   use below its cap, at any load. The
 --   minute pass is timed in that state (launch 398 found it the costly
 --   one), within the tolerance of the cap, and with two steps out before
 --   each call, so each call moves one use from each tank;
@@ -20117,8 +20118,10 @@ function RT.PFG.build()
     end
 
     -- Propane alone. As found after the connect, each a part of a use below
-    -- its cap (a use is 0.0026 L, an hourly step 0.002 L), so each minute's
-    -- pass works out a refill that moves nothing. Then one step burned and
+    -- its cap (a use is 0.0026 L; a refill moves whole uses, so what it
+    -- leaves below the cap is the rest of the room, almost never within
+    -- the tolerance), so each minute's pass goes on past its tolerance test
+    -- to a refill that moves nothing. Then one step burned and
     -- the mod's own pass moving a use, which leaves each within the
     -- tolerance of its cap: the early return. Then two steps out before
     -- each call, so each call moves one use.
@@ -20252,11 +20255,14 @@ function RT.PFG.build()
         return jobs
     end
 
+    -- Every reply dialog the menus opened is closed before the frames: the
+    -- Gas and Gasifier menus show one after each action, and launches
+    -- 399-400 sampled the gas frames with 24 and 8 of them on screen.
     local gasStages = { PFG.gasNone, PFG.placePropane, PFG.startPropane,
         placedCheck("propane_8", function() return PFG.propane end, false), PFG.timePropane,
         PFG.placeWood, PFG.warm, PFG.startWood,
         placedCheck("woodgas_8", function() return PFG.wood end, true), PFG.timeWood, PFG.timeBoth,
-        PF.catchStep("gas_catch_up", PFG.jobs), PF.frames("gas_running"), RT.PF.checkBudgetsGas }
+        PF.catchStep("gas_catch_up", PFG.jobs), RT.PF.closeAll, PF.frames("gas_running"), RT.PF.checkBudgetsGas }
     -- Before the added budgets' check, so every stage before stays as in
     -- launch 341.
     local at
@@ -20267,8 +20273,9 @@ function RT.PFG.build()
         for k, s in ipairs(gasStages) do table.insert(RT.perfSteps, at + k - 1, s) end
     end
     -- The gas stages alone on the same road (request "sp-rtpfg"), to try
-    -- them in a few minutes; the record is the whole mode's.
-    RT.perfGasSteps = { RT.waitWorld, RT.PF.setup }
+    -- them in a few minutes, with frames on the bare road first to compare
+    -- the gas frames with; the record is the whole mode's.
+    RT.perfGasSteps = { RT.waitWorld, RT.PF.setup, PF.frames("gas_baseline") }
     for _, s in ipairs(gasStages) do RT.perfGasSteps[#RT.perfGasSteps + 1] = s end
     RT.perfGasSteps[#RT.perfGasSteps + 1] = RT.PF.cleanup
     RT.perfGasSteps[#RT.perfGasSteps + 1] = RT.finish

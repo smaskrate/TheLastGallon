@@ -1,0 +1,99 @@
+# TLG single-player harness, performance, the gas stages alone
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=87764486013939046540 hours=2.0096 DayLength=4
+STEP rtpf_setup begin
+OBS  RTPF.environment :: game=42.22.2 3d39148846 classpath=1 screen=1280x720 fullscreen=false vsync=false framerate=60 uncapped=false lockFPS=? lightingFPS=15 Zombies=6 CarSpawnRate=1 DayLength=4 VehicleStalls=false (was true) hour=9 air=15.2 C zombies=0 vehicles removed 0
+STEP rtpf_frames_gas_baseline begin
+OBS  RTPF.frames gas_baseline: 1201 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.659 p50 1.000 p95 3.000 p99 4.000 max 4.000; render ms mean 16.142 p95 18.000; between frames ms p50 17 p95 19 p99 19 max 20
+STEP rtpf_gas_none begin
+OBS  RTPF.cost gas_none/gas_minute: first call 0 ms; median 0.0018 ms per call (batches 0.0018-0.0021 ms, 546016 calls)
+STEP rtpf_gas_propane_place begin
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+STEP rtpf_gas_propane_start begin
+STEP rtpf_gas_check_propane_8 begin
+OBS  RTPF.gas propane_8: 8 placed, 8 running, 8 holding gas: 10587,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10590,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10593,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10596,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10587,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10590,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10593,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10596,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160
+PASS RTPF.gas_propane_8_running :: 8 placed, 8 running, 8 holding gas
+STEP rtpf_gas_timers_propane_8 begin
+OBS  RTPF.gas propane_8 as found (a use is 0.002604 L): room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160
+OBS  RTPF.cost propane_8/gas_minute_part_use: first call 1 ms; median 0.3333 ms per call (batches 0.3322-0.3413 ms, 2988 calls)
+PASS RTPF.gas_propane_part_use_moves_nothing :: before: room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160 | after: room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160
+OBS  RTPF.gas propane_8 a step burned and refilled: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159
+PASS RTPF.gas_propane_refilled_within_tolerance :: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159
+OBS  RTPF.cost propane_8/gas_minute_full: first call 0 ms; median 0.0862 ms per call (batches 0.0860-0.0867 ms, 11588 calls)
+PASS RTPF.gas_propane_full_moves_nothing :: before: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159 | after: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159
+OBS  RTPF.cost propane_8/two_steps_out_only: first call 0 ms; median 0.0090 ms per call (batches 0.0089-0.0092 ms, 111029 calls)
+OBS  RTPF.cost propane_8/refill_one_use: first call 1 ms; median 0.5600 ms per call (batches 0.5600-0.6400 ms, 250 calls)
+PASS RTPF.gas_propane_each_call_moves_one_use :: after the last batch of 50 calls: room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109 (were room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159)
+STEP rtpf_gas_wood_place begin
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+STEP rtpf_gas_warm begin
+STEP rtpf_gas_wood_start begin
+STEP rtpf_gas_check_woodgas_8 begin
+OBS  RTPF.gas woodgas_8: 8 placed, 8 running, 8 holding gas: 10587,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10590,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10593,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10596,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10587,10807 Commissioned fuel 0.00300 load 0.0020 lit true; 10590,10807 Commissioned fuel 0.00300 load 0.0020 lit true; 10593,10807 Commissioned fuel 0.00100 load 0.0020 lit true; 10596,10807 Commissioned fuel 0.00100 load 0.0020 lit true
+PASS RTPF.gas_woodgas_8_running :: 8 placed, 8 running, 8 holding gas
+STEP rtpf_gas_timers_woodgas_8 begin
+OBS  RTPF.gas woodgas_8 at their caps: room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+PASS RTPF.gas_woodgas_at_their_caps :: room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+OBS  RTPF.cost woodgas_8/gas_minute_full: first call 0 ms; median 0.0965 ms per call (batches 0.0961-0.0970 ms, 10367 calls)
+PASS RTPF.gas_woodgas_full_draws_nothing :: before: room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200 | after: room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+OBS  RTPF.cost woodgas_8/one_step_out_only: first call 0 ms; median 0.0089 ms per call (batches 0.0089-0.0089 ms, 112572 calls)
+OBS  RTPF.cost woodgas_8/refill_one_step: first call 2 ms; median 1.6400 ms per call (batches 1.6000-1.8600 ms, 250 calls)
+PASS RTPF.gas_woodgas_each_call_draws_a_step :: after the last batch of 50 calls the gasifiers gave 5.120000 Nm3 in all against 5.120000 for every generator's step; room 0.000000 given 0.659200; room 0.000000 given 0.659200; room 0.000000 given 1.318400; room 0.000000 given 0.000000; room 0.000000 given 0.659200; room 0.000000 given 1.318400; room 0.000000 given 0.000000; room 0.000000 given 0.659200 (were room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200)
+STEP rtpf_gas_timers_both_16 begin
+OBS  RTPF.gas both_16: propane room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; wood gas room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+OBS  RTPF.cost both_16/gas_minute_as_they_stand: first call 1 ms; median 0.4464 ms per call (batches 0.4444-0.4515 ms, 2238 calls)
+STEP rtpf_gas_catch_up begin
+OBS  RTPF.cost gas_catch_up/gasifier_24_h: first call 0 ms; median 0.1363 ms per call (batches 0.1359-0.1370 ms, 7331 calls)
+OBS  RTPF.cost gas_catch_up/gasifier_720_h: first call 0 ms; median 0.1359 ms per call (batches 0.1348-0.1374 ms, 7348 calls)
+OBS  RTPF.cost gas_catch_up/gasifier_8760_h: first call 0 ms; median 0.1361 ms per call (batches 0.1351-0.1378 ms, 7340 calls)
+OBS  RTPF.cost gas_catch_up/gasifier_menu: first call 1 ms; median 0.3559 ms per call (batches 0.3534-0.3604 ms, 2810 calls)
+OBS  RTPF.cost gas_catch_up/gas_menu_propane: first call 0 ms; median 0.1389 ms per call (batches 0.1323-0.1456 ms, 7204 calls)
+OBS  RTPF.cost gas_catch_up/gas_menu_woodgas: first call 0 ms; median 0.1536 ms per call (batches 0.1472-0.1587 ms, 6561 calls)
+OBS  RTPF.cost gas_catch_up/load_square_gas_generator: first call 0 ms; median 0.0033 ms per call (batches 0.0033-0.0033 ms, 303152 calls)
+STEP rtpf_close_dialogs begin
+OBS  RTPF.dialogs 24 reply dialogs open on screen closed
+STEP rtpf_frames_gas_running begin
+OBS  RTPF.frames gas_running: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.402 p50 1.000 p95 3.000 p99 4.000 max 6.000; render ms mean 16.162 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 20
+STEP rtpf_budgets_gas begin
+PASS RTPF.budget.gas_catch_up/gas_menu_propane :: median 0.1389 ms per call, budget 0.420 ms
+PASS RTPF.budget.gas_catch_up/gas_menu_woodgas :: median 0.1536 ms per call, budget 0.460 ms
+PASS RTPF.budget.gas_catch_up/gasifier_24_h :: median 0.1363 ms per call, budget 0.410 ms
+PASS RTPF.budget.gas_catch_up/gasifier_720_h :: median 0.1359 ms per call, budget 0.410 ms
+PASS RTPF.budget.gas_catch_up/gasifier_8760_h :: median 0.1361 ms per call, budget 0.410 ms
+PASS RTPF.budget.gas_catch_up/gasifier_menu :: median 0.3559 ms per call, budget 1.000 ms
+PASS RTPF.budget.gas_catch_up/load_square_gas_generator :: median 0.0033 ms per call, budget 0.011 ms
+PASS RTPF.budget.gas_none/gas_minute :: median 0.0018 ms per call, budget 0.005 ms
+PASS RTPF.budget.propane_8/gas_minute_full :: median 0.0862 ms per call, budget 0.270 ms
+PASS RTPF.budget.propane_8/gas_minute_part_use :: median 0.3333 ms per call, budget 1.000 ms
+PASS RTPF.budget.propane_8/refill_one_use :: median 0.5600 ms per call, budget 1.700 ms
+PASS RTPF.budget.woodgas_8/gas_minute_full :: median 0.0965 ms per call, budget 0.300 ms
+PASS RTPF.budget.woodgas_8/refill_one_step :: median 1.6400 ms per call, budget 4.800 ms
+STEP rtpf_cleanup begin
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 3.54
+SUMMARY pass=22 fail=0
+DONE

@@ -15,7 +15,7 @@ runtime tests.
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
-| Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel | The performance mode runs single player on the reference machine (launches 181–185 and 340–341, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188). Electrical networks are not built in game in this build |
+| Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines, wrong fuel and the gas | The performance mode runs single player on the reference machine (launches 181–185, 340–341 and 398–401, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188). Electrical networks are not built in game in this build |
 | Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.4.3 since 2026-11-13, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.4.2 and 0.4.1 |
 
 ## 2026-10-30 — Kahlua runtime probe
@@ -8078,7 +8078,7 @@ Evidence:
 [run 396](evidence/2026-11-13_rt-sp_harness_run396_gas_moves_42.22.2.txt);
 [run 397](evidence/2026-11-13_rt-sp_harness_run397_gas_moves_windows_fixed_42.22.2.txt).
 
-## 2026-11-13 — RT-SP launches 398–400 (performance with the gas: release gate 11)
+## 2026-11-13 — RT-SP launches 398–401 (performance with the gas: release gate 11)
 
 Branch `feature/gas-generators` after `f21f9d6`, 42.22.2, the reference
 machine (`performance.md`). The performance mode gained gas stages
@@ -8091,6 +8091,7 @@ for the gas stages alone (`-Mode performance-gas`, `sp-rtpfg`).
 | 398 | `tools/run-sp-harness.ps1 -Mode performance`, the gas stages' first version | 62/0 |
 | 399 | `tools/run-sp-harness.ps1 -Mode performance-gas` | 8/1 |
 | 400 | `tools/run-sp-harness.ps1 -Mode performance` | 69/0 |
+| 401 | `tools/run-sp-harness.ps1 -Mode performance-gas`, the reply dialogs closed before the frames | 22/0 |
 
 * Launches 398 and 400 passed all 40 budgets of the earlier stages; 18 of
   them, set from launch 341, were checked for the first time.
@@ -8112,31 +8113,39 @@ for the gas stages alone (`-Mode performance-gas`, `sp-rtpfg`).
 * Launch 400: the gas minute pass costs 0.0017 ms with no gas generator.
   Per generator a game minute: 0.011–0.012 ms when full, on propane or
   wood gas; 0.042 ms for a propane generator a part of a use below its cap,
-  which is how most of its minutes find it (the hourly step is smaller
-  than a use), because the pass works out a refill that moves nothing. A
-  refill moving a use costs 0.069 ms; a wood-gas draw from a gasifier
-  0.196 ms, once an hour. A lit gasifier brought forward costs 0.13 ms for
-  1, 30 or 365 days; the Gasifier menu 0.34 ms, the Gas menu 0.14–0.15
-  ms; the square-load handler 3.4 µs on a gas generator's square. Frames
-  with the gas: mean main-thread step 1.78 ms against 1.45 ms in the stage
-  before, of which the gas pass is about 0.002 ms a frame; the rest was
-  not measured apart from the game's own cost of running generators.
+  where the pass goes on past its tolerance test to a refill that cannot
+  move a whole use. A refill moves whole uses (0.0026 L), so what it leaves
+  below the cap is the rest of the room, within the tolerance about once
+  in 26 refills: that is most of a propane generator's minutes, at any
+  load. A refill moving a use costs 0.069 ms; a wood-gas draw from a
+  gasifier 0.196 ms, once an hour. A lit gasifier brought forward costs
+  0.13 ms for 1, 30 or 365 days; the Gasifier menu 0.34 ms, the Gas menu
+  0.14–0.15 ms; the square-load handler 3.4 µs on a gas generator's
+  square. Its frames with the gas, mean main-thread step 1.78 ms against
+  1.45 ms in the stage before, were sampled with the 8 propane connects'
+  reply dialogs still on screen (launch 399's with 24).
+* Launch 401, the gas stages alone, closed every reply dialog before its
+  frames: 1.66 ms on the bare road before the gas, 1.40 ms with the 16
+  gas generators and 8 lit gasifiers running. The gas adds no measurable
+  time to a frame.
 * The 13 gas budgets are set from launch 400, about three times its
-  medians; the next performance run is the first to check them.
+  medians. Launch 401 checked them first and passed all 13, its medians
+  within 5 % of launch 400's; the whole mode has not checked them yet.
 * An early return when a propane generator's room is below one use would
   bring its usual minute to about 0.011 ms. It is a change to the mod's
   code, put to the owner, not made.
 
 Each console holds no warning or error of the mod; the mod read 0.4.3.
-Each holds one Lua exception: in launches 398 and 400 it was traced to the
-harness's own probe of `getPerformance():getLockFPS()`, which 42.22.2
-lacks (pcall-protected; the environment line reads `lockFPS=?`, as in
-launch 341). Launch 399's console was replaced before it was traced; its
-environment line reads `lockFPS=?` too.
+Each holds one Lua exception: in launches 398, 400 and 401 it was traced
+to the harness's own probe of `getPerformance():getLockFPS()`, which
+42.22.2 lacks (pcall-protected; the environment line reads `lockFPS=?`,
+as in launch 341). Launch 399's console was replaced before it was
+traced; its environment line reads `lockFPS=?` too.
 
 Not run: the gas on a server; more than 16 gas generators.
 
 Evidence:
 [run 398](evidence/2026-11-13_rt-sp_harness_run398_performance_gas_42.22.2.txt);
 [run 399](evidence/2026-11-13_rt-sp_harness_run399_performance_gas_stages_42.22.2.txt);
-[run 400](evidence/2026-11-13_rt-sp_harness_run400_performance_gas_states_42.22.2.txt).
+[run 400](evidence/2026-11-13_rt-sp_harness_run400_performance_gas_states_42.22.2.txt);
+[run 401](evidence/2026-11-13_rt-sp_harness_run401_performance_gas_clean_frames_42.22.2.txt).

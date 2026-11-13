@@ -1958,15 +1958,17 @@ gas probe (launch 342).
     A lit gasifier moved with nothing reading it stayed lit in its record
     until a generator's minute pass read it, which put it out as moved,
     its wood kept, and gave nothing.
-  * Performance, in single player (launches 398–400, `performance.md`):
+  * Performance, in single player (launches 398–401, `performance.md`):
     the gas minute pass costs 0.011–0.012 ms a game minute for a full gas
     generator and 0.042 ms for a propane one a part of a use below its
-    cap, the state most of its minutes find it in, since an hourly step
-    (0.002 L) is smaller than a use (0.0026 L) and the pass works out a
-    refill that moves nothing. An early return when the room is below one
-    use would bring that to about 0.011 ms; put to the owner, not made.
+    cap: the pass goes on past its tolerance test to a refill that cannot
+    move a whole use. A refill moves whole uses (0.0026 L), so what it
+    leaves below the cap is the rest of the room, within the tolerance
+    about once in 26 refills: that is most of a propane generator's
+    minutes, at any load. An early return when the room is below one use
+    would bring them to about 0.011 ms; put to the owner, not made.
     A wood-gas draw costs 0.196 ms an hour, a gasifier's catch-up 0.13 ms
-    for any span.
+    for any span; the gas running adds no measurable time to a frame.
   * Not run: a handbook found at a container's first fill (the harness
     filled them again); a real network; these moves on a server; a
     buffer too small for two generators' hourly draws (how it is shared
