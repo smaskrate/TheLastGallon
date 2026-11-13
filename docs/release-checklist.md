@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 261 Italian strings as shipped in a client set to Italian (run 205); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.3 package is the zip of `14a36ed` (SHA-256 `4A7897A0…F9A472ED`), installed clean and played on 42.22.2 in launch 373 (106/0, 14/0), and a save made with the 0.4.2 zip continued with it (launch 375: 3/0, 22/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.2 since 2026-11-12; Steam's download of it held exactly that package's mod files. The upload folder holds 0.4.3, not uploaded. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.3 package is the zip of `14a36ed` (SHA-256 `4A7897A0…F9A472ED`), installed clean and played on 42.22.2 in launch 373 (106/0, 14/0), and a save made with the 0.4.2 zip continued with it (launch 375: 3/0, 22/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.3 since 2026-11-13; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -338,7 +338,7 @@ and checked against its manifest, and the folder's 168 files checked by
 hash, both ways. The first description line of its `workshop.txt`, the
 owner's file, now names 0.4.3: one byte changed; the rest of the file
 (its id, `visibility=public`, the tag `WIP`, the owner's wording) and its
-CRLF line ends stay. Not uploaded: the upload is the owner's step.
+CRLF line ends stay.
 
 Before the upload, on the owner's word ("Yes, test two players"), launch
 376 ran the same steps with two clients on a server whose mod and
@@ -347,6 +347,14 @@ took, the other's copy and menu followed (A 50/0, B 48/0;
 `machinemenus2`). The change note lists it; the shipped changelog and
 support matrix, written before launch 376, still list two players as not
 checked and the server checks as one client's.
+
+The owner uploaded 0.4.3 to the Workshop from this folder on 2026-11-13
+(Steam's record of the item: updated at 09:54). Steam's download of it
+on this computer, in place by 10:19 (manifest `154050832454505581`, the
+item's latest), held exactly the package's 166 mod files, each matching
+its SHA-256 in `dist/TheLastGallon-0.4.3.sha256`, and its `mod.info`
+reads 0.4.3 (gate 12). Open: the game loading the mod from that
+download, and how the Workshop page shows the change note.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -785,20 +793,22 @@ restored it. The zip built from `cfae118` on 2026-11-10 has that defect
 and two malformed lines in `workshop.txt`; it was not uploaded. The commit
 itself was pushed.
 
-The Steam Workshop item (id 3835496461) serves 0.4.2 since 2026-11-12:
-the owner uploaded it from the upload folder that afternoon and said so
-(Steam's public record of the item: updated at 16:32). After the upload
-the folder's 166 files still matched the 0.4.2 package's manifest, and
-its `workshop.txt` had been written again (16:32) with the same lines.
-The Workshop page itself was not looked at from here. Of an install
-through the Workshop, the download is checked: by 17:03 the copy Steam
-downloads to this computer for the owner's subscription
+The Steam Workshop item (id 3835496461) serves 0.4.3 since 2026-11-13:
+the owner uploaded it from the upload folder that morning and said so
+(Steam's record of the item: updated at 09:54). After the upload the
+folder's 168 files still matched the 0.4.3 package's manifest, and its
+`workshop.txt` had been written again (09:54) with the same lines. The
+Workshop page itself was not looked at from here. Of an install through
+the Workshop, the download is checked: by 10:19 the copy Steam downloads
+to this computer for the owner's subscription
 (`steamapps/workshop/content/108600/3835496461`, manifest
-`4702894724475894381`, the item's latest, 9,421,967 bytes) held the
-0.4.2 package's 165 mod files, each matching its SHA-256 in
-`dist/TheLastGallon-0.4.2.sha256`, and no other file. The same check
-passed for 0.4.1, uploaded on the evening of 2026-11-11 (manifest
-`8946080603226782332`, checked on 2026-11-12). The game loading the mod
+`154050832454505581`, the item's latest, 9,430,584 bytes) held the
+0.4.3 package's 166 mod files, each matching its SHA-256 in
+`dist/TheLastGallon-0.4.3.sha256`, and no other file. The same check
+passed for 0.4.2, uploaded on 2026-11-12 (manifest
+`4702894724475894381`, 165 files), and for 0.4.1, uploaded on the
+evening of 2026-11-11 (manifest `8946080603226782332`, checked on
+2026-11-12). The game loading the mod
 from that folder was not run: it scans Workshop folders only in Steam
 mode, and the harness runs with `-nosteam`. Before 0.4.1 the item served
 0.1.1, uploaded by the owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
