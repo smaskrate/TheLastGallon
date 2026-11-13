@@ -6981,11 +6981,12 @@ to chance. This world's station fuel held water (D-017), so the car's
 start factor was 0.5, and its one try was refused ("vehicle start
 refused: water"), as the gate is meant to do. Of the sixty earlier
 results of this step in `docs/evidence`, four drew water as well and each
-started at its first try. The step now tries up to three times when the
-fuel's start factor is between 0 and 1, as a driver would and as the
-steps that must start do (`vehicleGateStep` in `SPHarness.lua`), and the
-check passes when the engine runs after a refusal left to chance. Every
-other check passed, and the game read 0.4.3 at both loads.
+started at its first try. The step now holds the gate's draw at 0 when
+the fuel's start factor is between 0 and 1 (`Vehicles.startRoll`, as the
+wrong-fuel steps hold it; `vehicleGateStep` in `SPHarness.lua`), so only a
+refusal for another reason fails it. A first change, three tries, lost all
+three in launch 369. Every other check passed, and the game read 0.4.3 at
+both loads.
 
 The console holds no warning or error of the mod. Besides the harness's
 deep-recursion probe it held a new error: the harness's own
@@ -7005,3 +7006,32 @@ the harness compiles that way.
 
 Evidence:
 [run 368](evidence/2026-11-13_rt-sp_harness_run368_full_one_chance_failure_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 369 (the 0.4.3 zip installed clean, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `d0da92c` (clean tree; not a
+release commit, the changelog's heading reads "not released") built
+`TheLastGallon-0.4.3.zip`: 168 files, 7,892,433 bytes, SHA-256
+`B04BD750…7BF6E1E8`. Ten files differ from the 0.4.2 package:
+`42/mod.info`, `TLG/Core.lua`, `Net.lua`, `MachineContextMenu.lua`,
+`Containers.lua`, `Machines.lua`, the new `WorldItemRecords.lua`, the
+shipped changelog and support matrix, and `workshop.txt`.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 369 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 105/1, then 14/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.4.3,
+and the mod logged "The Last Gallon 0.4.3 ready" at both loads. The
+console holds no warning or error of the mod; its one exception is the
+harness's deep-recursion probe, and the harness's server cases loaded.
+The failure was launch 368's check again: this world's first petrol pump
+held water too (0.34 %), and the gate refused all three tries at 0.5.
+The step now holds the gate's draw (launch 368). Four full runs in a row
+drew such a pump (353 and 360 on the gas branch, 368, 369), where D-017
+gives water to about one pump in ten. The draw is not tilted: over 20,000
+worlds with seeds made as `World.lua` makes them, the first pump drew
+water in 9.6 % (`WorldInit.stationContamination`, offline).
+
+Evidence:
+[run 369](evidence/2026-11-13_rt-sp_harness_run369_install_rehearsal_0.4.3_one_chance_failure_42.22.2.txt).

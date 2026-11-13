@@ -1117,9 +1117,10 @@ end })
 -- mustRun: the engine has to end up running; like a driver, the step retries
 -- up to three times when it does not catch (vanilla start chance, TLG roll).
 -- A start factor between 0 and 1 (water from one of the stations that hold
--- some, D-017) lets the TLG gate refuse by chance, so a start that should
--- not be refused is tried up to three times too: launch 368 drew such a
--- station and lost its one try at 0.5.
+-- some, D-017) lets the TLG gate refuse by chance: launch 368 lost its one
+-- try at 0.5 and launch 369 its three. A start that should not be refused
+-- then holds the gate's draw at 0 (Vehicles.startRoll), so only a refusal
+-- for another reason fails it.
 local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
     return { name = name, timeout = 1500, fn = function(ctx, ticks)
         local v = getVehicle()
@@ -1135,7 +1136,11 @@ local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
             local e = TLG.Integration.Vehicles.evaluate(v)
             ctx.grade = e and e.grade
             local factor = e and tonumber(e.startFactor)
-            ctx.byChance = not expectRefused and factor ~= nil and factor > 0 and factor < 1
+            if not expectRefused and not mustRun and factor ~= nil and factor > 0 and factor < 1 then
+                local V = TLG.Integration.Vehicles
+                ctx.roll, V.startRoll = V.startRoll, function() return 0 end
+                R:line("OBS  %s start factor %s: the gate's draw held at 0", name, tostring(factor))
+            end
             local battery, engine = "?", "?"
             pcall(function() battery = string.format("%.2f", v:getBatteryCharge()) end)
             pcall(function() engine = tostring(v:getPartById("Engine"):getCondition()) end)
@@ -1147,13 +1152,14 @@ local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
             return nil
         end
         if ticks - ctx.t1 < 180 then return nil end
-        if (mustRun or ctx.byChance) and not v:isEngineRunning() and ctx.attempts < 3 then
+        if mustRun and not v:isEngineRunning() and ctx.attempts < 3 then
             R:line("OBS  %s attempt %d did not start (state=%s)", name, ctx.attempts, tostring(v:getEngineState()))
             ISTimedActionQueue.add(ISStartVehicleEngine:new(player()))
             ctx.t1, ctx.attempts = ticks, ctx.attempts + 1
             return nil
         end
         ctx.restoreLog()
+        if ctx.roll then TLG.Integration.Vehicles.startRoll, ctx.roll = ctx.roll, nil end
         local refusal = loggedMatching(ctx, "vehicle start refused")
         local running = v:isEngineRunning()
         R:line("OBS  %s state=%s running=%s attempts=%d refusal=%s", name, tostring(v:getEngineState()), tostring(running),
@@ -1167,10 +1173,8 @@ local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
             end)
         else
             -- An empty tank is never refused by TLG, so it proves nothing (run 7).
-            -- Refused by chance (a start factor below 1), it has to start at
-            -- a later try.
             R:check(name .. ".not_refused_by_tlg", function()
-                return (refusal == nil or (ctx.byChance and running)) and ctx.grade ~= "empty",
+                return refusal == nil and ctx.grade ~= "empty",
                     string.format("state=%s running=%s grade=%s attempts=%d", tostring(v:getEngineState()), tostring(running),
                         tostring(ctx.grade), ctx.attempts)
             end)
