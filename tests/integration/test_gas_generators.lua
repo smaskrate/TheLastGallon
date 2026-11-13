@@ -396,6 +396,79 @@ inGame("integration: hours away: no draw, the gasifier goes out its hold after t
     T.near(st.totals.fed - fed, 0.1024 / 2.2, 1e-6, "only the wood for the gas drawn")
 end)
 
+-- D-040: a generator's gas record travels with it (G.CARRIED_KEYS), and the
+-- minute pass refills each generator it watches, by square, from the lit
+-- gasifiers within two tiles. Put down, it is watched again where it lands
+-- (Generators.lua attach); here the new object is made as that placement
+-- makes it. The game's own take and place are left to a game mode.
+inGame("integration: a wood-gas generator taken up and put down is fed where it lands, if a lit gasifier is in reach", function(g)
+    local gen, sq = generatorAt(g, 50, 5, 0, true)
+    local item = gasifierAt(g, 51, 6)
+    lightGasifier(g, item, 100)
+    G.watchGas(gen)
+    g.hours = 101
+    G.gasMinute()
+    local cap = 0.015 + GasFeed.MARGIN
+    T.near(gen.fuel, cap, 1e-9)
+    -- Taken up: the tile keeps nothing, and is no longer watched.
+    local carried, fuel = TLG.Tables.deepCopy(gen.md), gen.fuel
+    sq.objs = {}
+    g.hours = 101.5
+    G.gasMinute()
+    T.eq(G.gasSquares["50,5,0"], nil, "its old tile no longer watched")
+    -- Put down a tile away, still within two tiles of the gasifier, after
+    -- an hour's step burned on its own buffer.
+    local here = generatorAt(g, 52, 5, 0, true)
+    here.md, here.fuel = carried, fuel - 0.015
+    G.watchGas(here)
+    g.hours = 102 + 1 / 60
+    G.gasMinute()
+    T.near(here.fuel, cap, 1e-9, "refilled from the gasifier where it lands")
+    T.eq(here.md.tlgGas.id, carried.tlgGas.id, "the same gas record")
+    -- Put down out of its reach: no gas, so it runs out at its next step.
+    local away = generatorAt(g, 60, 5, 0, true)
+    away.md, away.fuel = TLG.Tables.deepCopy(here.md), here.fuel - 0.015
+    g.squares["52,5,0"].objs = {}
+    G.watchGas(away)
+    g.hours = 103 + 1 / 60
+    G.gasMinute()
+    T.near(away.fuel, GasFeed.MARGIN, 1e-9, "nothing given out of reach")
+end)
+
+-- D-040: each generator's minute pass draws its room from the lit gasifiers
+-- within two tiles, out of the gasifier's own buffer, and the wood burned is
+-- the gas made. One gasifier between two generators feeds both. How a
+-- buffer too small for both is shared, D-040 does not say: not tested.
+inGame("integration: one lit gasifier between two generators feeds both, and accounts for all its gas", function(g)
+    local a = generatorAt(g, 70, 15, 0, true)
+    local b = generatorAt(g, 72, 15, 0, true)
+    local item = gasifierAt(g, 71, 16)
+    lightGasifier(g, item, 100)
+    G.watchGas(a)
+    G.watchGas(b)
+    g.hours = 101
+    G.gasMinute()
+    local cap = 0.015 + GasFeed.MARGIN
+    T.near(a.fuel, cap, 1e-9, "the first fed")
+    T.near(b.fuel, cap, 1e-9, "the second fed")
+    T.near(item.md.tlgGasifier.totals.delivered, 2 * cap * NM3_PER_L, 1e-9, "both fills delivered")
+    local t0 = TLG.Tables.deepCopy(item.md.tlgGasifier.totals)
+    -- Three hours: each hour's step on both, then the next minute's refills.
+    for h = 102, 104 do
+        a.fuel, b.fuel = a.fuel - 0.015, b.fuel - 0.015
+        g.hours = h + 1 / 60
+        G.gasMinute()
+        T.near(a.fuel, cap, 1e-9, "the first refilled")
+        T.near(b.fuel, cap, 1e-9, "the second refilled")
+    end
+    local st = item.md.tlgGasifier
+    local t = st.totals
+    T.near(t.delivered - t0.delivered, 6 * 0.015 * NM3_PER_L, 1e-9, "every step drawn")
+    -- The warm-up's gas is flared, not made (Gas.lua stepRunning).
+    T.near(t.produced, t.delivered + t.vented + st.buffer, 1e-9, "made = delivered + vented + held")
+    T.near((t.fed - t0.fed) * 2.2, t.produced - t0.produced, 1e-6, "the wood burned is the gas made")
+end)
+
 inGame("integration: on a server a gasifier's record goes to the clients, which put it in their copy", function(g)
     local item = gasifierAt(g, 70, 5, 4242)
     local sent = {}
