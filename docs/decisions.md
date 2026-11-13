@@ -1928,13 +1928,21 @@ gas probe (launch 342).
     generator, which started and ran three hours. Photographed with the
     fog held off, the model draws whole and textured beside the
     generator.
+  * On a dedicated server with two clients (launches 389–391): each
+    client's copy of the gasifier's record and its menu followed the
+    other's Load, Light and Put out, and the draws, which write the record
+    with no new rev. A client that left, while the other lit the gasifier
+    again, found that Light in its first copy on joining, brought with
+    the square. Across a restart of the server with the gasifier lit, the
+    record kept its id, rev and totals, no game time passed, and the
+    generator came back running, watched again as its square loaded, and
+    fed.
   * Not run: finding the handbook in game; the crafting window's own
-    refusals; two clients; a real network; a client joining while a
-    gasifier burns; a server restarted with a gasifier lit; the minute
-    pass finding a lit gasifier moved (both runs asked for its Status
-    first, which put it out), a wood-gas generator taken up and put down,
-    and a gasifier feeding two generators, each a domain case only
-    (`test_gas_generators.lua`); the performance mode.
+    refusals; a real network; the minute pass finding a lit gasifier moved
+    (both runs asked for its Status first, which put it out), a wood-gas
+    generator taken up and put down, and a gasifier feeding two
+    generators, each a domain case only (`test_gas_generators.lua`); the
+    performance mode.
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod
@@ -1976,6 +1984,7 @@ gas probe (launch 342).
   the nine kinds of machine, a fermenter carried and put down, one paused
   while the player left and joined again, and the cans on the floor and
   in the bin (launch 367, 52/0). With two clients the other's copy and
-  menu followed each step, either way (launch 376: A 50/0, B 48/0). Not
-  run: a real network, a machine in a container, the performance mode
-  with these sends.
+  menu followed each step, either way (launch 376: A 50/0, B 48/0). The
+  gasifier's record on two clients, on joining and across a restart of
+  the server: launches 389–391 (D-040). Not run: a real network, a
+  machine in a container, the performance mode with these sends.

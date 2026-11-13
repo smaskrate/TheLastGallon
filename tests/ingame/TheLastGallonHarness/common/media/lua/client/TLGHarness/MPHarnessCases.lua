@@ -831,6 +831,537 @@ if MP.only == "gaswood" then
 end
 
 ------------------------------------------------------------------------------
+-- gaswood2 (two clients, the shortest day; D-040, D-041): the gasifier's
+-- record on each client as the server changes it. The server's site is
+-- gaswood's (setup_gaswood, asked once, by A). A loads and lights the
+-- gasifier through its menu; B, standing on the gasifier's other side
+-- within its reach, reads its own copy and menu after each step. B puts it
+-- out through its own menu and A reads its own. Then:
+-- - without -Restart, B leaves to the main menu, A lights it again while B
+--   is away, and B joins again: its copy must be the server's record of
+--   now, with the rev of a Light it never saw, and its menu must offer Put
+--   out. The generator stays off until B is back, so nothing writes the
+--   record after A's Light: B's first copy, read the tick it is there, must
+--   be that Light, written before B joined, which only the square's data
+--   can have brought (launch 389, with the generator running, had a draw
+--   between B's joining and its reading). Then A starts the generator.
+-- - with -Restart, A starts the generator first and B lights the gasifier
+--   again through its menu; then both leave, the server is saved, stopped
+--   and started again, and both join again: the same record (id, rev,
+--   totals), no game time passed (the server pauses when empty), the
+--   generator watched again as its square loads (Generators.onLoadSquare)
+--   and fed.
+-- Each time, after the hourly draws, which write the record without a new
+-- rev (Gasifiers.drawNear), each client compares its copies of the record
+-- and of the generator with the server's (probe_gaswood); a probe is asked
+-- again, 150 ticks apart, until they agree, so a write between the
+-- server's answer and the client's reading does not count as a stale copy.
+-- What a client keeps across the main menu goes in its snap file. Built in
+-- a function of its own for the -debug compiler (machinemenus).
+------------------------------------------------------------------------------
+if MP.only == "gaswood2" then
+    local function build()
+        local GW = {}
+        local SNAP = "TLG_harness_mpsnap.txt"
+        local GZ = TLG.Integration.Gasifiers
+        local otherPlayer = h.otherPlayer
+        local saved = TLGH.readKeyValues(SNAP)
+        GW.x, GW.y, GW.id = tonumber(saved.gx), tonumber(saved.gy), tonumber(saved.id)
+        local LIGHT, PUT_OUT = "ContextMenu_TLG_GasifierLight", "ContextMenu_TLG_GasifierPutOut"
+        local function gen()
+            local s = GW.x and getCell():getGridSquare(GW.x, GW.y, 0)
+            return s and s:getGenerator() or nil
+        end
+        local function gasifier()
+            local s = GW.x and getCell():getGridSquare(GW.x, GW.y, 0)
+            return (s and GZ.near(s, GZ.RADIUS) or {})[1]
+        end
+        -- This client's copy of the gasifier's record, as stored and as the
+        -- menu brings it to now.
+        local function copy()
+            local it = gasifier()
+            local rec = it and it:getModData()[GZ.KEY]
+            return type(rec) == "table" and rec or nil
+        end
+        local function copyNow()
+            local it, rec = gasifier(), copy()
+            return it and rec and GZ.advance(it, TLG.Tables.deepCopy(rec), TLG.World.now()) or nil
+        end
+        local function copyText(rec)
+            if rec == nil then return "none" end
+            return string.format("id %s rev %s t %.6f delivered %.6f state %s", tostring(rec.id), tostring(rec.rev),
+                tonumber(rec.t) or -1, rec.totals and tonumber(rec.totals.delivered) or -1, tostring(rec.state))
+        end
+        local function keep(extra)
+            local lines = { "gx=" .. tostring(GW.x), "gy=" .. tostring(GW.y), "id=" .. tostring(GW.id) }
+            for k, v in pairs(extra or {}) do lines[#lines + 1] = k .. "=" .. tostring(v) end
+            TLGH.writeFile(SNAP, lines)
+        end
+        local function submenu()
+            local c = ISContextMenu.get(0, 100, 100)
+            TLG.UI.GasifierMenu.fill(0, c, { gasifier() })
+            local root = c:getOptionFromName(getText("ContextMenu_TLG_Gasifier"))
+            local sub = root and root.subOption and c:getSubMenu(root.subOption)
+            c:setVisible(false)
+            return sub
+        end
+        -- Which of Light and Put out this client's menu offers.
+        local function offered()
+            local sub = submenu()
+            local light = sub and sub:getOptionFromName(getText(LIGHT))
+            local out = sub and sub:getOptionFromName(getText(PUT_OUT))
+            return (light and not light.notAvailable) and "light" or (out and "put_out") or "none"
+        end
+        -- A menu entry chosen as a player chooses it; its reply kept as GW[name].
+        local function choose(name, key)
+            return { name = "mp_gw2_" .. name, timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local sub = submenu()
+                    local opt = sub and sub:getOptionFromName(getText(key))
+                    if opt == nil or opt.notAvailable then
+                        GW[name] = { ok = false, reason = opt == nil and "no_menu_entry" or "entry_disabled" }
+                        return nil
+                    end
+                    local orig = TLG.Net.request
+                    TLG.Net.request = function(command, args) return orig(command, args, function(r) GW[name] = r end) end
+                    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+                    TLG.Net.request = orig
+                    if not ok then GW[name] = { ok = false, reason = "raised: " .. tostring(err) } end
+                    return nil
+                end
+                local r = GW[name]
+                if not r then return nil end
+                report():line("OBS  MP.gw2 %s %s -> %s mode=%s rev=%s hopper=%s loaded=%s", MP.role, name, brief(r),
+                    tostring(r.mode), tostring(r.rev), tostring(r.hopperKg), tostring(r.loadedKg))
+                return true
+            end }
+        end
+        local function sameRecord(rec, m)
+            return rec ~= nil and tostring(rec.id) == m.rid and tostring(rec.rev) == m.rev
+                and string.format("%.6f", tonumber(rec.t) or -1) == m.rt
+                and string.format("%.6f", rec.totals and tonumber(rec.totals.delivered) or -1) == m.rdelivered
+        end
+        local function sameGen(m)
+            local g = gen()
+            return g ~= nil and math.abs(g:getFuel() - (tonumber(m.fuel) or -1)) < 1e-6 and tostring(g:isActivated()) == m.on
+        end
+        -- The server's probe_gaswood, asked up to `tries` times until this
+        -- client's copies agree with it; judge(m, same, copy) then.
+        local function probe(name, judge, tries)
+            return { name = "mp_gw2_probe_" .. name, timeout = 6000, fn = function(ctx, ticks)
+                if ctx.wait then
+                    if ticks < ctx.wait then return nil end
+                    ctx.wait = nil
+                end
+                if not ctx.tag then
+                    ctx.try = (ctx.try or 0) + 1
+                    ctx.tag = name .. "_" .. ctx.try
+                    ctx.n = #(MP.inbox.probe_gaswood or {})
+                    send("probe_gaswood", { gx = GW.x, gy = GW.y, id = GW.id, tag = ctx.tag })
+                    return nil
+                end
+                local got = MP.inbox.probe_gaswood or {}
+                for i = ctx.n + 1, #got do
+                    local m = got[i]
+                    if m.role == MP.role and m.tag == ctx.tag then
+                        local rec, g = copy(), gen()
+                        local same = sameRecord(rec, m) and sameGen(m)
+                        report():line("OBS  MP.gw2 %s %s try %d: server G fuel %s running %s watched %s; gasifier %s " ..
+                            "%s/%s hopper %s, record id %s rev %s t %s delivered %s fed %s; clock %s; this client's " ..
+                            "copy %s, G fuel %s running %s; the same %s", MP.role, name, ctx.try, tostring(m.fuel),
+                            tostring(m.on), tostring(m.watched), tostring(m.where), tostring(m.gstate), tostring(m.gpause),
+                            tostring(m.hopper), tostring(m.rid), tostring(m.rev), tostring(m.rt), tostring(m.rdelivered),
+                            tostring(m.fed), tostring(m.now), copyText(rec), g and string.format("%.7f", g:getFuel()) or "-",
+                            tostring(g and g:isActivated()), tostring(same))
+                        if not same and ctx.try < (tries or 1) then
+                            ctx.tag, ctx.wait = nil, ticks + 150
+                            return nil
+                        end
+                        judge(m, same, rec)
+                        return true
+                    end
+                end
+                return nil
+            end }
+        end
+        local function lit(m) return m.gstate == "Processing" or m.gstate == "Paused" end
+        local function judgeSame(name)
+            return function(m, same, rec)
+                check("gw2_" .. name, function()
+                    return same, string.format("this client's copy %s against the server's record id %s rev %s t %s " ..
+                        "delivered %s; G %s/%s", copyText(rec), tostring(m.rid), tostring(m.rev), tostring(m.rt),
+                        tostring(m.rdelivered), tostring(m.fuel), tostring(m.on))
+                end)
+            end
+        end
+        -- The generator switched on through the start gate if it is off.
+        local function start(name)
+            return { name = "mp_gw2_start_" .. name, timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    ctx.was = gen() ~= nil and gen():isActivated()
+                    if gen() and not ctx.was then ISTimedActionQueue.add(ISActivateGenerator:new(player(), gen(), true)) end
+                    return nil
+                end
+                if ticks < 60 or not TLGH.Steps.actionsIdle(player()) then return nil end
+                ctx.idle = ctx.idle or ticks
+                if ticks - ctx.idle < 120 then return nil end
+                report():line("OBS  MP.gw2 %s start %s: running before %s, now %s", MP.role, name, tostring(ctx.was),
+                    tostring(gen() and gen():isActivated()))
+                check("gw2_running_" .. name, function()
+                    return gen() ~= nil and gen():isActivated(), "running on this client's copy: "
+                        .. tostring(gen() and gen():isActivated())
+                end)
+                return true
+            end }
+        end
+        local function leave(name, phase, line, extra)
+            return { name = "mp_gw2_leave_" .. name, timeout = 600, fn = function(ctx, ticks)
+                if ticks == 1 then keep(extra and extra() or nil) end
+                if ticks < 60 then return nil end
+                h.setPhase(phase)
+                report():line("OBS  MP.gw2 %s leaving to the main menu %s", MP.role, line)
+                setGameSpeed(1)
+                getCore():quit()
+                return true
+            end }
+        end
+        -- A's own step read back: the reply, its copy and its menu.
+        local function ownA(step, wantState, want)
+            return once("mp_gw2_a_own_" .. step, function()
+                local r, rec, menu = GW[step] or {}, copy(), offered()
+                check("gw2_a_" .. step .. "_through_its_menu", function()
+                    return r.ok == true and r.state == wantState and rec ~= nil and tostring(rec.rev) == tostring(r.rev)
+                        and menu == want, string.format("reply ok=%s reason=%s state %s rev %s loaded %s; this client's " ..
+                        "copy %s; its menu offers %s, want %s", tostring(r.ok), tostring(r.reason), tostring(r.state),
+                        tostring(r.rev), tostring(r.loadedKg), copyText(rec), menu, want)
+                end)
+            end)
+        end
+        -- A tells B the state its step gave and waits until B has read it.
+        local function tell(step)
+            return { name = "mp_gw2_tell_" .. step, timeout = 3600, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local r = GW[step] or {}
+                    send("gw2_step", { step = step, rev = tostring(r.rev), state = tostring(r.state) })
+                    return nil
+                end
+                return nextFrom("gw2_seen") ~= nil or nil
+            end }
+        end
+        -- B reads its own copy and menu after A's step.
+        local function follow(step, want)
+            return { name = "mp_gw2_follow_" .. step, timeout = 18000, fn = function(ctx, ticks)
+                if not ctx.m then
+                    ctx.m = nextFrom("gw2_step")
+                    if ctx.m then ctx.at = ticks end
+                    return nil
+                end
+                if ticks - ctx.at < 180 then return nil end
+                local m, rec, menu = ctx.m, copy(), offered()
+                local cur = copyNow()
+                report():line("OBS  MP.gw2 B after A's %s (A's reply rev %s state %s): this client's copy %s, brought " ..
+                    "to now %s; its menu offers %s", tostring(m.step), tostring(m.rev), tostring(m.state), copyText(rec),
+                    tostring(cur and cur.state), menu)
+                check("gw2_b_follows_a_" .. step, function()
+                    return m.step == step and rec ~= nil and tostring(rec.rev) == m.rev and tostring(rec.state) == m.state
+                        and menu == want, string.format("A's %s: reply rev %s state %s; this client's copy %s; its menu " ..
+                        "offers %s, want %s", tostring(m.step), tostring(m.rev), tostring(m.state), copyText(rec), menu, want)
+                end)
+                send("gw2_seen", { step = step })
+                return true
+            end }
+        end
+        -- B's turn: on A's word, the entry `key` from B's own menu; B tells
+        -- A the reply and reads its own copy and menu.
+        local function turnB(step, key, want)
+            return {
+                waitFrom("mp_gw2_turn_" .. step, "gw2_turn"),
+                choose("b_" .. step, key),
+                once("mp_gw2_did_" .. step, function()
+                    local r = GW["b_" .. step] or {}
+                    send("gw2_did", { step = step, ok = tostring(r.ok), rev = tostring(r.rev), state = tostring(r.state) })
+                end),
+                wait("mp_gw2_b_settle_" .. step, 180),
+                once("mp_gw2_b_own_" .. step, function()
+                    local r, rec, menu = GW["b_" .. step] or {}, copy(), offered()
+                    check("gw2_b_" .. step .. "_through_its_menu", function()
+                        return r.ok == true and rec ~= nil and tostring(rec.rev) == tostring(r.rev) and menu == want,
+                            string.format("reply ok=%s reason=%s state %s rev %s; this client's copy %s; its menu offers " ..
+                            "%s, want %s", tostring(r.ok), tostring(r.reason), tostring(r.state), tostring(r.rev),
+                            copyText(rec), menu, want)
+                    end)
+                end),
+            }
+        end
+        -- A's side of B's turn: A reads its own copy and menu.
+        local function turnA(step, want)
+            return {
+                once("mp_gw2_your_turn_" .. step, function() send("gw2_turn", { step = step }) end),
+                waitFrom("mp_gw2_b_did_" .. step, "gw2_did", function(m) GW.did = m end),
+                wait("mp_gw2_a_settle_" .. step, 180),
+                once("mp_gw2_a_sees_b_" .. step, function()
+                    local m, rec, menu = GW.did or {}, copy(), offered()
+                    check("gw2_a_follows_b_" .. step, function()
+                        return m.step == step and m.ok == "true" and rec ~= nil and tostring(rec.rev) == m.rev
+                            and tostring(rec.state) == m.state and menu == want, string.format("B's %s: reply ok %s rev %s " ..
+                            "state %s; this client's copy %s; its menu offers %s, want %s", tostring(m.step), tostring(m.ok),
+                            tostring(m.rev), tostring(m.state), copyText(rec), menu, want)
+                    end)
+                end),
+            }
+        end
+        local function add(list, more)
+            for _, s in ipairs(more) do list[#list + 1] = s end
+            return list
+        end
+
+        local stepsA = { MP.waitWorld,
+            call("gw2_setup", "setup_gaswood", {}, "setup_gaswood", function(m)
+                GW.x, GW.y, GW.id = tonumber(m.gx), tonumber(m.gy), tonumber(m.item)
+                keep()
+                check("gw2_site_on_the_server", function()
+                    return m.state == "Commissioned" and m.profile == "generator_gas" and GW.id ~= nil, string.format(
+                        "project %s, profile %s, gasifier %s at %s,%s", tostring(m.state), tostring(m.profile),
+                        tostring(m.item), tostring(m.gx), tostring(m.gy))
+                end)
+            end),
+            wait("mp_gw2_sync", 180),
+            walkTo("mp_gw2_a_walk", function() return GW.x + 1, GW.y + 1 end),
+            waitFrom("mp_gw2_wait_b", "gw2_hello"),
+            once("mp_gw2_site", function() send("gw2_site", { gx = GW.x, gy = GW.y, id = GW.id }) end),
+            waitFrom("mp_gw2_b_ready", "gw2_ready"),
+            choose("load", "ContextMenu_TLG_GasifierLoad"), wait("mp_gw2_load_settles", 180), ownA("load", "Ready", "light"),
+            tell("load"),
+            choose("light", LIGHT), wait("mp_gw2_light_settles", 180), ownA("light", "Processing", "put_out"), tell("light"),
+            -- Half an hour's warm-up, then the gas in the generator: the
+            -- first draw, a write with no new rev.
+            wait("mp_gw2_warm", 2700),
+            probe("warmed", judgeSame("a_copy_after_the_first_draw"), 4),
+        }
+        local stepsB = { MP.waitWorld,
+            once("mp_gw2_hello", function() send("gw2_hello", {}) end),
+            waitFrom("mp_gw2_site", "gw2_site", function(m)
+                GW.x, GW.y, GW.id = tonumber(m.gx), tonumber(m.gy), tonumber(m.id)
+                keep()
+            end),
+            walkTo("mp_gw2_b_walk", function() return GW.x + 3, GW.y + 1 end),
+            once("mp_gw2_b_sees", function()
+                local g, it = gen(), gasifier()
+                check("gw2_b_sees_the_generator_and_the_gasifier", function()
+                    return g ~= nil and it ~= nil and it:getWorldItem() ~= nil, string.format(
+                        "generator %s; gasifier %s on the floor %s", tostring(g ~= nil), tostring(it ~= nil),
+                        tostring(it ~= nil and it:getWorldItem() ~= nil))
+                end)
+                send("gw2_ready", {})
+            end),
+            follow("load", "light"), follow("light", "put_out"),
+        }
+        add(stepsB, turnB("put_out", PUT_OUT, "light"))
+        local rejoinedA, rejoinedB = { MP.waitWorld, MP.finish }, { MP.waitWorld, MP.finish }
+        -- The clock as this client enters the world, before MP.waitWorld's
+        -- wait, and its copy read the first tick the gasifier and its record
+        -- are there. A copy written before the client joined cannot have
+        -- come by a send, which goes only to the clients in the game at the
+        -- write: it came with the square.
+        local joinClock = once("mp_gw2_join_clock", function() GW.joinClock = TLG.World.now() end)
+        local firstRead = { name = "mp_gw2_first_read", timeout = 3000, fn = function(ctx, ticks)
+            local rec = copy()
+            if rec == nil then return nil end
+            GW.first = { rev = rec.rev, t = tonumber(rec.t) or -1, clock = TLG.World.now(), text = copyText(rec) }
+            report():line("OBS  MP.gw2 %s joined at %.6f; its first copy at %.6f (%d ticks on): %s; written %s it joined",
+                MP.role, GW.joinClock or -1, GW.first.clock, ticks, GW.first.text,
+                GW.first.t < (GW.joinClock or -1) and "before" or "after")
+            return true
+        end }
+
+        if not MP.restart then
+            -- B puts it out and leaves; A lights it again while B is away.
+            -- The generator stays off until B is back: off and holding its
+            -- first fill (the margin, as it was never switched on), it has
+            -- no room, so nothing draws and no write follows A's Light.
+            add(stepsA, turnA("put_out", "light"))
+            add(stepsB, { leave("away", "rejoin", "to join again while the gasifier burns", function()
+                local rec = copy()
+                return { brev = rec and rec.rev }
+            end) })
+            add(stepsA, {
+                { name = "mp_gw2_b_away", timeout = 3600, fn = function(ctx, ticks)
+                    if otherPlayer() ~= nil then
+                        ctx.since = nil
+                        return nil
+                    end
+                    ctx.since = ctx.since or ticks
+                    return ticks - ctx.since >= 120 or nil
+                end },
+                choose("relit", LIGHT),
+                once("mp_gw2_relit", function()
+                    local r, rec, menu, away = GW.relit or {}, copy(), offered(), otherPlayer() == nil
+                    check("gw2_a_lights_it_while_b_is_away", function()
+                        return r.ok == true and r.state == "Processing" and away and rec ~= nil
+                            and tostring(rec.rev) == tostring(r.rev) and menu == "put_out", string.format(
+                            "reply ok=%s reason=%s state %s rev %s; B away %s; this client's copy %s; its menu offers %s",
+                            tostring(r.ok), tostring(r.reason), tostring(r.state), tostring(r.rev), tostring(away),
+                            copyText(rec), menu)
+                    end)
+                end),
+                waitFrom("mp_gw2_b_back", "gw2_back", function(m)
+                    report():line("OBS  MP.gw2 A: B is back (%s)", tostring(m.copy))
+                end),
+                start("on_wood_gas"),
+                -- About an hour and a half: draws.
+                wait("mp_gw2_hours", 3600),
+                probe("a_after_hours", function(m, same, rec)
+                    check("gw2_a_copy_after_the_hours", function()
+                        return same and m.on == "true" and m.watched == "true" and lit(m), string.format(
+                            "this client's copy %s against id %s rev %s t %s delivered %s; G running %s watched %s; " ..
+                            "gasifier %s", copyText(rec), tostring(m.rid), tostring(m.rev), tostring(m.rt),
+                            tostring(m.rdelivered), tostring(m.on), tostring(m.watched), tostring(m.gstate))
+                    end)
+                end, 4),
+                once("mp_gw2_compare", function() send("gw2_compare", {}) end),
+                waitFrom("mp_gw2_b_compared", "gw2_compared"),
+                once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+            })
+            -- B, joined again while it burns.
+            rejoinedB = { joinClock, MP.waitWorld, firstRead, wait("mp_gw2_settle", 240),
+                probe("b_back", function(m, same, rec)
+                    local menu, cur, brev, first = offered(), copyNow(), tonumber(saved.brev), GW.first or {}
+                    check("gw2_b_joins_while_it_burns", function()
+                        return same and brev ~= nil and rec ~= nil and (tonumber(rec.rev) or -1) > brev and lit(m)
+                            and cur ~= nil and GZ.lit(cur) and menu == "put_out", string.format("this client's copy %s " ..
+                            "(rev %s before it left), brought to now %s; the server's record id %s rev %s t %s, " ..
+                            "gasifier %s; the same %s; its menu offers %s", copyText(rec), tostring(saved.brev),
+                            tostring(cur and cur.state), tostring(m.rid), tostring(m.rev), tostring(m.rt),
+                            tostring(m.gstate), tostring(same), menu)
+                    end)
+                    -- Nothing wrote the record after A's Light, so B's first
+                    -- copy, A's Light, came with the square.
+                    check("gw2_b_copy_came_with_the_square", function()
+                        return first.rev ~= nil and tostring(first.rev) == m.rev and first.t < (GW.joinClock or -1)
+                            and string.format("%.6f", first.t) == m.rt, string.format("joined at %s; its first copy %s; " ..
+                            "the server's record rev %s t %s", tostring(GW.joinClock), tostring(first.text), tostring(m.rev),
+                            tostring(m.rt))
+                    end)
+                end, 4),
+                once("mp_gw2_back", function() send("gw2_back", { copy = copyText(copy()) }) end),
+                waitFrom("mp_gw2_wait_compare", "gw2_compare"),
+                probe("b_after_hours", judgeSame("b_copy_after_the_hours"), 4),
+                once("mp_gw2_compared", function() send("gw2_compared", {}) end),
+                waitFrom("mp_wait_finish", "finish"), MP.finish }
+        else
+            -- B lights it again; the draws; both leave for the restart.
+            add(stepsB, turnB("light_again", LIGHT, "put_out"))
+            add(stepsB, {
+                waitFrom("mp_gw2_wait_compare", "gw2_compare"),
+                probe("b_before_restart", judgeSame("b_copy_before_the_restart"), 4),
+                once("mp_gw2_compared", function() send("gw2_compared", {}) end),
+                waitFrom("mp_gw2_wait_restarting", "gw2_restarting"),
+                leave("restart", "restart_wait", "for the server's restart", function()
+                    local rec = copy()
+                    return { brev = rec and rec.rev }
+                end),
+            })
+            -- The generator runs from here on, across the restart.
+            add(stepsA, { start("on_wood_gas") })
+            add(stepsA, turnA("put_out", "light"))
+            add(stepsA, turnA("light_again", "put_out"))
+            add(stepsA, {
+                start("again"),
+                wait("mp_gw2_hours", 3600),
+                probe("a_before_restart", function(m, same, rec)
+                    GW.before = m
+                    check("gw2_a_copy_before_the_restart", function()
+                        return same and m.on == "true" and lit(m), string.format("this client's copy %s against id %s rev %s " ..
+                            "t %s delivered %s; G running %s; gasifier %s", copyText(rec), tostring(m.rid), tostring(m.rev),
+                            tostring(m.rt), tostring(m.rdelivered), tostring(m.on), tostring(m.gstate))
+                    end)
+                end, 4),
+                once("mp_gw2_compare", function() send("gw2_compare", {}) end),
+                waitFrom("mp_gw2_b_compared", "gw2_compared"),
+                once("mp_gw2_restarting", function() send("gw2_restarting", {}) end),
+                leave("restart", "restart_wait", "for the server's restart", function()
+                    local m = GW.before or {}
+                    return { rid = m.rid, rev = m.rev, rdelivered = m.rdelivered, fed = m.fed, hopper = m.hopper, now = m.now }
+                end),
+            })
+            -- After the restart the generator runs and draws each hour, so
+            -- where a client's first copy came from is noted, not judged.
+            rejoinedA = { joinClock, MP.waitWorld, firstRead, wait("mp_gw2_settle", 240),
+                probe("a_after_restart", function(m, same, rec)
+                    local gap = (tonumber(m.now) or -1) - (tonumber(saved.now) or 0)
+                    GW.after = m
+                    report():line("OBS  MP.gw2 A before the restart: record id %s rev %s delivered %s fed %s hopper %s, " ..
+                        "clock %s", tostring(saved.rid), tostring(saved.rev), tostring(saved.rdelivered), tostring(saved.fed),
+                        tostring(saved.hopper), tostring(saved.now))
+                    check("gw2_restart_keeps_the_record", function()
+                        return m.rid == saved.rid and m.rev == saved.rev
+                            and (tonumber(m.rdelivered) or -1) >= (tonumber(saved.rdelivered) or 0) - 1e-9
+                            and (tonumber(m.fed) or -1) >= (tonumber(saved.fed) or 0) - 1e-9, string.format(
+                            "id %s rev %s delivered %s fed %s, before %s %s %s %s", tostring(m.rid), tostring(m.rev),
+                            tostring(m.rdelivered), tostring(m.fed), tostring(saved.rid), tostring(saved.rev),
+                            tostring(saved.rdelivered), tostring(saved.fed))
+                    end)
+                    check("gw2_restart_takes_no_game_time", function()
+                        return gap >= 0 and gap < 0.5, string.format("the server's clock %s before, %s after: %.4f h",
+                            tostring(saved.now), tostring(m.now), gap)
+                    end)
+                    check("gw2_restart_lit_watched_and_running", function()
+                        return lit(m) and m.where == "floor" and m.watched == "true" and m.on == "true", string.format(
+                            "gasifier %s %s on the %s; G watched %s running %s", tostring(m.gstate), tostring(m.gpause),
+                            tostring(m.where), tostring(m.watched), tostring(m.on))
+                    end)
+                    check("gw2_a_copy_after_the_restart", function()
+                        return same, string.format("this client's copy %s against id %s rev %s t %s delivered %s",
+                            copyText(rec), tostring(m.rid), tostring(m.rev), tostring(m.rt), tostring(m.rdelivered))
+                    end)
+                end, 4),
+                start("after_restart"),
+                wait("mp_gw2_restart_hours", 3600),
+                probe("a_restart_hours", function(m, same, rec)
+                    local before = GW.after or {}
+                    check("gw2_fed_after_the_restart", function()
+                        return (tonumber(m.rdelivered) or -1) > (tonumber(before.rdelivered) or 0) + 1e-9 and m.on == "true"
+                            and m.watched == "true" and lit(m), string.format("delivered %s (after the restart %s); G " ..
+                            "running %s watched %s; gasifier %s", tostring(m.rdelivered), tostring(before.rdelivered),
+                            tostring(m.on), tostring(m.watched), tostring(m.gstate))
+                    end)
+                    check("gw2_a_copy_follows_the_first_write_after_the_restart", function()
+                        return same, string.format("this client's copy %s against id %s rev %s t %s delivered %s",
+                            copyText(rec), tostring(m.rid), tostring(m.rev), tostring(m.rt), tostring(m.rdelivered))
+                    end)
+                end, 4),
+                -- A message sent before B is back would be lost.
+                { name = "mp_gw2_b_present", timeout = 12000, fn = function(ctx, ticks)
+                    if otherPlayer() == nil then return nil end
+                    ctx.seen = ctx.seen or ticks
+                    return ticks - ctx.seen >= 600 or nil
+                end },
+                once("mp_gw2_compare", function() send("gw2_compare", {}) end),
+                waitFrom("mp_gw2_b_compared", "gw2_compared"),
+                once("mp_finish_b", function() send("finish", {}) end), MP.finish }
+            rejoinedB = { joinClock, MP.waitWorld, firstRead, wait("mp_gw2_settle", 240),
+                probe("b_after_restart", function(m, same, rec)
+                    local menu = offered()
+                    check("gw2_b_copy_after_the_restart", function()
+                        return same and rec ~= nil and tostring(rec.rev) == tostring(saved.brev) and lit(m)
+                            and menu == "put_out", string.format("this client's copy %s (rev %s before), the server's " ..
+                            "record id %s rev %s, gasifier %s; the same %s; its menu offers %s", copyText(rec),
+                            tostring(saved.brev), tostring(m.rid), tostring(m.rev), tostring(m.gstate), tostring(same), menu)
+                    end)
+                end, 4),
+                waitFrom("mp_gw2_wait_compare", "gw2_compare"),
+                probe("b_restart_hours", judgeSame("b_copy_follows_the_first_write_after_the_restart"), 4),
+                once("mp_gw2_compared", function() send("gw2_compared", {}) end),
+                waitFrom("mp_wait_finish", "finish"), MP.finish }
+        end
+        MP.stepsA, MP.stepsB = stepsA, stepsB
+        MP.stepsRejoined = MP.role == "A" and rejoinedA or rejoinedB
+    end
+    build()
+    return
+end
+
+------------------------------------------------------------------------------
 -- machinemenus (one client): the menus that read the client's copy of a
 -- record on a server. The machine menu's Pause, Resume and Abort batch for
 -- each of the nine kinds of machine, started by the server (spawn, then

@@ -1316,7 +1316,11 @@ end
 
 -- The generator, its gas record, and the gasifier (on the floor within two
 -- tiles of the generator, else in the asking player's inventory by id) with
--- its record as stored and as brought to now on a copy.
+-- its record as stored and as brought to now on a copy. The stored record's
+-- id, rev, time and delivered gas go with it for gaswood2, which compares
+-- each client's copy with them: a draw writes the record without a new rev
+-- (Gasifiers.drawNear), so the time and the gas tell a stale copy. `now` is
+-- the server's clock, to measure the time a restart took.
 function services.probe_gaswood(player, args)
     local G, GZ, Gasifier = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Domain.Gas.Gasifier
     local g = generatorAt(tonumber(args.gx), tonumber(args.gy))
@@ -1336,7 +1340,10 @@ function services.probe_gaswood(player, args)
         where = item and (GZ.isPlaced(item) and "floor" or "inventory") or "none", stored = tostring(st and st.state),
         gstate = tostring(s.state), gpause = tostring(s.reason), hopper = string.format("%.4f", s.hopperKg or -1),
         delivered = string.format("%.6f", now and now.totals.delivered or -1),
-        fed = string.format("%.6f", now and now.totals.fed or -1) })
+        fed = string.format("%.6f", now and now.totals.fed or -1),
+        rid = tostring(st and st.id), rev = tostring(st and st.rev), rt = st and string.format("%.6f", st.t) or "-",
+        rdelivered = st and string.format("%.6f", st.totals.delivered) or "-",
+        now = string.format("%.6f", TLG.World.now()) })
 end
 
 -- The Diesel Generator's sprite taken away on the server, as a load without

@@ -1,0 +1,228 @@
+===== launch 391: tools/run-mp-harness.ps1 -Clients 2 -Only gaswood2 -Restart, branch feature/gas-generators after 81b5da3, the case as committed with this file. The launcher's own lines were not kept; the two clients' and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP gw2_setup begin
+PASS MP.gw2_site_on_the_server_A :: project Commissioned, profile generator_gas, gasifier 589015069 at 10666,10651
+STEP mp_gw2_sync begin
+STEP mp_gw2_a_walk begin
+STEP mp_gw2_wait_b begin
+STEP mp_gw2_site begin
+STEP mp_gw2_b_ready begin
+STEP mp_gw2_load begin
+OBS  MP.gw2 A load -> ok=true reason=nil duplicate=nil state=Ready mode=nil rev=1 hopper=30 loaded=30
+STEP mp_gw2_load_settles begin
+STEP mp_gw2_a_own_load begin
+PASS MP.gw2_a_load_through_its_menu_A :: reply ok=true reason=nil state Ready rev 1 loaded 30; this client's copy id W1328526904-15 rev 1 t 3.454707 delivered 0.000000 state Ready; its menu offers light, want light
+STEP mp_gw2_tell_load begin
+STEP mp_gw2_light begin
+OBS  MP.gw2 A light -> ok=true reason=nil duplicate=nil state=Processing mode=warming rev=2 hopper=30 loaded=nil
+STEP mp_gw2_light_settles begin
+STEP mp_gw2_a_own_light begin
+PASS MP.gw2_a_light_through_its_menu_A :: reply ok=true reason=nil state Processing rev 2 loaded nil; this client's copy id W1328526904-15 rev 2 t 3.619958 delivered 0.000000 state Processing; its menu offers put_out, want put_out
+STEP mp_gw2_tell_light begin
+STEP mp_gw2_warm begin
+STEP mp_gw2_probe_warmed begin
+OBS  MP.gw2 A warmed try 1: server G fuel 0.0010000 running false watched true; gasifier floor Paused/buffer_full hopper 27.1401, record id W1328526904-15 rev 2 t 4.168977 delivered 0.006400 fed 2.859886; clock 4.981872; this client's copy id W1328526904-15 rev 2 t 4.168977 delivered 0.006400 state Processing, G fuel 0.0010000 running false; the same true
+PASS MP.gw2_a_copy_after_the_first_draw_A :: this client's copy id W1328526904-15 rev 2 t 4.168977 delivered 0.006400 state Processing against the server's record id W1328526904-15 rev 2 t 4.168977 delivered 0.006400; G 0.0010000/false
+STEP mp_gw2_start_on_wood_gas begin
+OBS  MP.gw2 A start on_wood_gas: running before false, now true
+PASS MP.gw2_running_on_wood_gas_A :: running on this client's copy: true
+STEP mp_gw2_your_turn_put_out begin
+STEP mp_gw2_b_did_put_out begin
+STEP mp_gw2_a_settle_put_out begin
+STEP mp_gw2_a_sees_b_put_out begin
+PASS MP.gw2_a_follows_b_put_out_A :: B's put_out: reply ok true rev 3 state Ready; this client's copy id W1328526904-15 rev 3 t 5.075156 delivered 0.019200 state Ready; its menu offers light, want light
+STEP mp_gw2_your_turn_light_again begin
+STEP mp_gw2_b_did_light_again begin
+STEP mp_gw2_a_settle_light_again begin
+STEP mp_gw2_a_sees_b_light_again begin
+PASS MP.gw2_a_follows_b_light_again_A :: B's light_again: reply ok true rev 4 state Processing; this client's copy id W1328526904-15 rev 4 t 5.160431 delivered 0.019200 state Processing; its menu offers put_out, want put_out
+STEP mp_gw2_start_again begin
+OBS  MP.gw2 A start again: running before true, now true
+PASS MP.gw2_running_again_A :: running on this client's copy: true
+STEP mp_gw2_hours begin
+STEP mp_gw2_probe_a_before_restart begin
+OBS  MP.gw2 A a_before_restart try 1: server G fuel 0.0030000 running true watched true; gasifier floor Paused/buffer_full hopper 24.2720, record id W1328526904-15 rev 4 t 6.018413 delivered 0.032000 fed 5.728000; clock 6.921877; this client's copy id W1328526904-15 rev 4 t 6.018413 delivered 0.032000 state Processing, G fuel 0.0030000 running true; the same true
+PASS MP.gw2_a_copy_before_the_restart_A :: this client's copy id W1328526904-15 rev 4 t 6.018413 delivered 0.032000 state Processing against id W1328526904-15 rev 4 t 6.018413 delivered 0.032000; G running true; gasifier Paused
+STEP mp_gw2_compare begin
+STEP mp_gw2_b_compared begin
+STEP mp_gw2_restarting begin
+STEP mp_gw2_leave_restart begin
+OBS  MP.gw2 A leaving to the main menu for the server's restart
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: true)
+OBS  MP.game_start A again
+STEP mp_gw2_join_clock begin
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10667,10652 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_gw2_first_read begin
+OBS  MP.gw2 A joined at 7.091253; its first copy at 7.145687 (1 ticks on): id W1328526904-15 rev 4 t 7.016997 delivered 0.044800 state Processing; written before it joined
+STEP mp_gw2_settle begin
+STEP mp_gw2_probe_a_after_restart begin
+OBS  MP.gw2 A a_after_restart try 1: server G fuel 0.0030000 running true watched true; gasifier floor Paused/buffer_full hopper 24.2665, record id W1328526904-15 rev 4 t 7.016997 delivered 0.044800 fed 5.733486; clock 7.249943; this client's copy id W1328526904-15 rev 4 t 7.016997 delivered 0.044800 state Processing, G fuel 0.0030000 running true; the same true
+OBS  MP.gw2 A before the restart: record id W1328526904-15 rev 4 delivered 0.032000 fed 5.728000 hopper 24.2720, clock 6.921877
+PASS MP.gw2_restart_keeps_the_record_A :: id W1328526904-15 rev 4 delivered 0.044800 fed 5.733486, before W1328526904-15 4 0.032000 5.728000
+PASS MP.gw2_restart_takes_no_game_time_A :: the server's clock 6.921877 before, 7.249943 after: 0.3281 h
+PASS MP.gw2_restart_lit_watched_and_running_A :: gasifier Paused buffer_full on the floor; G watched true running true
+PASS MP.gw2_a_copy_after_the_restart_A :: this client's copy id W1328526904-15 rev 4 t 7.016997 delivered 0.044800 state Processing against id W1328526904-15 rev 4 t 7.016997 delivered 0.044800
+STEP mp_gw2_start_after_restart begin
+OBS  MP.gw2 A start after_restart: running before true, now true
+PASS MP.gw2_running_after_restart_A :: running on this client's copy: true
+STEP mp_gw2_restart_hours begin
+STEP mp_gw2_probe_a_restart_hours begin
+OBS  MP.gw2 A a_restart_hours try 1: server G fuel 0.0030000 running true watched true; gasifier floor Paused/buffer_full hopper 24.2610, record id W1328526904-15 rev 4 t 8.017406 delivered 0.057600 fed 5.738971; clock 8.931493; this client's copy id W1328526904-15 rev 4 t 8.017406 delivered 0.057600 state Processing, G fuel 0.0030000 running true; the same true
+PASS MP.gw2_fed_after_the_restart_A :: delivered 0.057600 (after the restart 0.044800); G running true watched true; gasifier Paused
+PASS MP.gw2_a_copy_follows_the_first_write_after_the_restart_A :: this client's copy id W1328526904-15 rev 4 t 8.017406 delivered 0.057600 state Processing against id W1328526904-15 rev 4 t 8.017406 delivered 0.057600
+STEP mp_gw2_b_present begin
+STEP mp_gw2_compare begin
+STEP mp_gw2_b_compared begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=18 fail=0
+DONE
+===== client mp-b: %LOCALAPPDATA%\TheLastGallon\mpclient2\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected B (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start B
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10660,10645 isClient=true online=2 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_gw2_hello begin
+STEP mp_gw2_site begin
+STEP mp_gw2_b_walk begin
+STEP mp_gw2_b_sees begin
+PASS MP.gw2_b_sees_the_generator_and_the_gasifier_B :: generator true; gasifier true on the floor true
+STEP mp_gw2_follow_load begin
+OBS  MP.gw2 B after A's load (A's reply rev 1 state Ready): this client's copy id W1328526904-15 rev 1 t 3.454707 delivered 0.000000 state Ready, brought to now Ready; its menu offers light
+PASS MP.gw2_b_follows_a_load_B :: A's load: reply rev 1 state Ready; this client's copy id W1328526904-15 rev 1 t 3.454707 delivered 0.000000 state Ready; its menu offers light, want light
+STEP mp_gw2_follow_light begin
+OBS  MP.gw2 B after A's light (A's reply rev 2 state Processing): this client's copy id W1328526904-15 rev 2 t 3.619958 delivered 0.000000 state Processing, brought to now Processing; its menu offers put_out
+PASS MP.gw2_b_follows_a_light_B :: A's light: reply rev 2 state Processing; this client's copy id W1328526904-15 rev 2 t 3.619958 delivered 0.000000 state Processing; its menu offers put_out, want put_out
+STEP mp_gw2_turn_put_out begin
+STEP mp_gw2_b_put_out begin
+OBS  MP.gw2 B b_put_out -> ok=true reason=nil duplicate=nil state=Ready mode=nil rev=3 hopper=27.134628571936915 loaded=nil
+STEP mp_gw2_did_put_out begin
+STEP mp_gw2_b_settle_put_out begin
+STEP mp_gw2_b_own_put_out begin
+PASS MP.gw2_b_put_out_through_its_menu_B :: reply ok=true reason=nil state Ready rev 3; this client's copy id W1328526904-15 rev 3 t 5.075156 delivered 0.019200 state Ready; its menu offers light, want light
+STEP mp_gw2_turn_light_again begin
+STEP mp_gw2_b_light_again begin
+OBS  MP.gw2 B b_light_again -> ok=true reason=nil duplicate=nil state=Processing mode=warming rev=4 hopper=27.134628571936915 loaded=nil
+STEP mp_gw2_did_light_again begin
+STEP mp_gw2_b_settle_light_again begin
+STEP mp_gw2_b_own_light_again begin
+PASS MP.gw2_b_light_again_through_its_menu_B :: reply ok=true reason=nil state Processing rev 4; this client's copy id W1328526904-15 rev 4 t 5.160431 delivered 0.019200 state Processing; its menu offers put_out, want put_out
+STEP mp_gw2_wait_compare begin
+STEP mp_gw2_probe_b_before_restart begin
+OBS  MP.gw2 B b_before_restart try 1: server G fuel 0.0030000 running true watched true; gasifier floor Paused/buffer_full hopper 24.2720, record id W1328526904-15 rev 4 t 6.018413 delivered 0.032000 fed 5.728000; clock 6.924544; this client's copy id W1328526904-15 rev 4 t 6.018413 delivered 0.032000 state Processing, G fuel 0.0030000 running true; the same true
+PASS MP.gw2_b_copy_before_the_restart_B :: this client's copy id W1328526904-15 rev 4 t 6.018413 delivered 0.032000 state Processing against the server's record id W1328526904-15 rev 4 t 6.018413 delivered 0.032000; G 0.0030000/true
+STEP mp_gw2_compared begin
+STEP mp_gw2_wait_restarting begin
+STEP mp_gw2_leave_restart begin
+OBS  MP.gw2 B leaving to the main menu for the server's restart
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect B as tlgb to 127.0.0.1:16361 (rejoining)
+# TLG multiplayer harness, client B
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected B (saved player: true)
+OBS  MP.game_start B again
+STEP mp_gw2_join_clock begin
+STEP mp_wait_world begin
+OBS  MP.world B user=tlgb at 10669,10652 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_B :: isClient=true user=tlgb
+STEP mp_gw2_first_read begin
+OBS  MP.gw2 B joined at 6.964069; its first copy at 7.018336 (1 ticks on): id W1328526904-15 rev 4 t 6.018413 delivered 0.032000 state Processing; written before it joined
+STEP mp_gw2_settle begin
+STEP mp_gw2_probe_b_after_restart begin
+OBS  MP.gw2 B b_after_restart try 1: server G fuel 0.0030000 running true watched true; gasifier floor Paused/buffer_full hopper 24.2665, record id W1328526904-15 rev 4 t 7.016997 delivered 0.044800 fed 5.733486; clock 7.112419; this client's copy id W1328526904-15 rev 4 t 7.016997 delivered 0.044800 state Processing, G fuel 0.0030000 running true; the same true
+PASS MP.gw2_b_copy_after_the_restart_B :: this client's copy id W1328526904-15 rev 4 t 7.016997 delivered 0.044800 state Processing (rev 4 before), the server's record id W1328526904-15 rev 4, gasifier Paused; the same true; its menu offers put_out
+STEP mp_gw2_wait_compare begin
+STEP mp_gw2_probe_b_restart_hours begin
+OBS  MP.gw2 B b_restart_hours try 1: server G fuel 0.0030000 running true watched true; gasifier floor Paused/buffer_full hopper 24.2555, record id W1328526904-15 rev 4 t 9.016777 delivered 0.070400 fed 5.744457; clock 9.200693; this client's copy id W1328526904-15 rev 4 t 9.016777 delivered 0.070400 state Processing, G fuel 0.0030000 running true; the same true
+PASS MP.gw2_b_copy_follows_the_first_write_after_the_restart_B :: this client's copy id W1328526904-15 rev 4 t 9.016777 delivered 0.070400 state Processing against the server's record id W1328526904-15 rev 4 t 9.016777 delivered 0.070400; G 0.0030000/true
+STEP mp_gw2_compared begin
+STEP mp_wait_finish begin
+STEP mp_finish begin
+SUMMARY pass=10 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_gaswood role=A tag=gw2_setup
+OBS  MPS.reply setup_gaswood gx=10666 gy=10651 item=589015069 profile=generator_gas role=A setting=0.1000 state=Commissioned steps=begin=true deliver=true join=true work=true tag=gw2_setup
+OBS  MPS.ticks 300 OnTick events in 79907 ms
+OBS  MPS.message from tlgb: gw2_hello role=B
+OBS  MPS.message from tlga: gw2_site gx=10666 gy=10651 id=589015069 role=A
+OBS  MPS.message from tlgb: gw2_ready role=B
+OBS  MPS.message from tlga: gw2_step rev=1 role=A state=Ready step=load
+OBS  MPS.message from tlgb: gw2_seen role=B step=load
+OBS  MPS.message from tlga: gw2_step rev=2 role=A state=Processing step=light
+OBS  MPS.message from tlgb: gw2_seen role=B step=light
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=589015069 role=A tag=warmed_1
+OBS  MPS.reply probe_gaswood delivered=0.006400 fed=2.859886 found=true fuel=0.0010000 gpause=buffer_full gstate=Paused holds=true hopper=27.1401 load=0.0000000 now=4.981872 on=false rdelivered=0.006400 record=true rev=2 rid=W1328526904-15 role=A rt=4.168977 stored=Processing tag=warmed_1 watched=true where=floor woodgas=0.006400
+OBS  MPS.message from tlga: gw2_turn role=A step=put_out
+OBS  MPS.message from tlgb: gw2_did ok=true rev=3 role=B state=Ready step=put_out
+OBS  MPS.message from tlga: gw2_turn role=A step=light_again
+OBS  MPS.message from tlgb: gw2_did ok=true rev=4 role=B state=Processing step=light_again
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=589015069 role=A tag=a_before_restart_1
+OBS  MPS.reply probe_gaswood delivered=0.032000 fed=5.728000 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=24.2720 load=0.0020000 now=6.921877 on=true rdelivered=0.032000 record=true rev=4 rid=W1328526904-15 role=A rt=6.018413 stored=Processing tag=a_before_restart_1 watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlga: gw2_compare role=A
+OBS  MPS.message from tlgb: probe_gaswood gx=10666 gy=10651 id=589015069 role=B tag=b_before_restart_1
+OBS  MPS.reply probe_gaswood delivered=0.032000 fed=5.728000 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=24.2720 load=0.0020000 now=6.924544 on=true rdelivered=0.032000 record=true rev=4 rid=W1328526904-15 role=B rt=6.018413 stored=Processing tag=b_before_restart_1 watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlgb: gw2_compared role=B
+OBS  MPS.message from tlga: gw2_restarting role=A
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlgb: probe_gaswood gx=10666 gy=10651 id=589015069 role=B tag=b_after_restart_1
+OBS  MPS.reply probe_gaswood delivered=0.044800 fed=5.733486 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=24.2665 load=0.0020000 now=7.112419 on=true rdelivered=0.044800 record=true rev=4 rid=W1328526904-15 role=B rt=7.016997 stored=Processing tag=b_after_restart_1 watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=589015069 role=A tag=a_after_restart_1
+OBS  MPS.reply probe_gaswood delivered=0.044800 fed=5.733486 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=24.2665 load=0.0020000 now=7.249943 on=true rdelivered=0.044800 record=true rev=4 rid=W1328526904-15 role=A rt=7.016997 stored=Processing tag=a_after_restart_1 watched=true where=floor woodgas=0.019200
+OBS  MPS.ticks 300 OnTick events in 48560 ms
+OBS  MPS.message from tlga: probe_gaswood gx=10666 gy=10651 id=589015069 role=A tag=a_restart_hours_1
+OBS  MPS.reply probe_gaswood delivered=0.057600 fed=5.738971 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=24.2610 load=0.0020000 now=8.931493 on=true rdelivered=0.057600 record=true rev=4 rid=W1328526904-15 role=A rt=8.017406 stored=Processing tag=a_restart_hours_1 watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlga: gw2_compare role=A
+OBS  MPS.message from tlgb: probe_gaswood gx=10666 gy=10651 id=589015069 role=B tag=b_restart_hours_1
+OBS  MPS.reply probe_gaswood delivered=0.070400 fed=5.744457 found=true fuel=0.0030000 gpause=buffer_full gstate=Paused holds=true hopper=24.2555 load=0.0020000 now=9.200693 on=true rdelivered=0.070400 record=true rev=4 rid=W1328526904-15 role=B rt=9.016777 stored=Processing tag=b_restart_hours_1 watched=true where=floor woodgas=0.019200
+OBS  MPS.message from tlgb: gw2_compared role=B
+OBS  MPS.message from tlga: finish role=A
