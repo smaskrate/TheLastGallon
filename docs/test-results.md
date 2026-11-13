@@ -7723,3 +7723,80 @@ Evidence:
 [run 384](evidence/2026-11-13_rt-mp_harness_run384_gasfeed_merged_0.4.3_42.22.2.txt);
 [run 385](evidence/2026-11-13_rt-mp_harness_run385_gaspropane_merged_0.4.3_42.22.2.txt);
 [run 386](evidence/2026-11-13_rt-sp_harness_run386_gas_probe_merged_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launches 387–388 (a player's own way to wood gas)
+
+Branch `feature/gas-generators` after `3d77546`, 42.22.2, with the new
+mode `gas-player` (request `sp-rtgy`, `RT.GY` in `SPHarness.lua`). Every
+step goes through what a player uses: the Workshop, Fuel and inventory
+menus, the craft entry, the game's drop action and the game's own
+right-click menu on the floor.
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 387 | `tools/run-sp-harness.ps1 -Mode gas-player` | 15/0 |
+| 388 | the same, with the fog held off for the photographs | 15/0 |
+
+The two runs went the same way, to the litre:
+
+* A vanilla generator holding 2 L of petrol, the character at Mechanics 3
+  and Electricity 3 with the recipe "Generator": **Workshop: convert this
+  generator** offered **Start: Gas generator conversion**, which began
+  with the petrol in the tank. **Hand over parts** took 2 rubber hoses, a
+  metal pipe, a small metal sheet, 6 screws and the electric wire.
+* **Work on it** did the half hour of inspection and stopped at the next
+  stage (2 reports) with the dialog "Conversion in progress", "Stage:
+  drain and isolate the fuel system", "Drain the fuel tank first."; the
+  tank still held its 2 L.
+* On an empty petrol can, **Fuel (The Last Gallon)** > **Drain the
+  generator into this can** moved the 2 L into the can and left the tank
+  at 0.
+* **Work on it** again went on to "Converted and commissioned": 9 h of
+  work in 34 reports, profile `generator_gas`. The mod's clock moved 0.05
+  h a tick while the work action ran, as in the full run.
+* At Welding 5 the Wood Gasifier's recipe was not known. Reading the Wood
+  Gas Handbook to the end with the inventory menu's **Read** taught it,
+  and the book was recorded as read.
+* The craft entry on the metal drum made one Wood Gasifier into the
+  inventory from the drum, 2 metal sheets, 3 metal pipes and 2 metal bars.
+  The welding mask was kept; the blowtorch went from 10 uses to 8.
+* The game's drop action put it down two tiles east of the generator.
+* The game's right-click menu, built for a click where the gasifier shows
+  on screen at zoom 1, had **Gasifier (The Last Gallon)** with **Load the
+  hopper with wood**, which loaded 30 kg in 8 pieces (2 logs, 6 pieces of
+  firewood), and then **Light**, which lit it (warming).
+* An hour later its gas had filled the generator, still off, to its cap:
+  0.001 L, the margin alone, as a generator never switched on has no
+  hourly step yet. The generator started through the start gate
+  (compatible, grade good, derated) and ran 3 game hours without a stop
+  on 0.128 Nm³ from the gasifier; its fuel then stood at 0.006 L.
+
+The photographs, at zoom 1 and 0.5 with the interface hidden, were looked
+at by Claude; the owner has not looked at them yet. Launch 387's were taken
+in heavy fog, which washed the gasifier out, so launch 388 holds the fog
+off first, as the machine models' mode does (`RT.MM.clearSky`); that
+world had no fog to begin with. In launch 388's photographs the gasifier
+draws whole and textured, standing on the floor beside the generator and
+taller than it: a dark drum on a firebox with a brown door at its foot, a
+brown hopper on its left side, and a grey pipe from its top down into a
+grey cyclone on its right side. The drum's top is level with the
+character's chest and the pipe with the character's shoulders. Put down
+unturned, it shows the hopper to the left and the cyclone to the right.
+
+The mod read 0.4.3 at each load, and neither console holds a warning or
+error of the mod, nor a load error. The step's report count in launch
+387's log is the one seen before the last report (1 and 33, against the
+action's own 2 and 34); launch 388 logs the action's own.
+
+Not run: the handbook found in a container of the map; the crafting
+window's own refusals (a server case: with `-debug`, which this harness
+runs, the game's learned-recipe call answers true for a recipe not
+learned, launch 308); the gas conversion refused below Mechanics 3 or
+Electricity 3, or without the recipe; a turned gasifier; the gasifier's
+icon seen in the game's interface.
+
+Evidence:
+[run 387](evidence/2026-11-13_rt-sp_harness_run387_gas_player_42.22.2.txt),
+photographs in [evidence/run387](evidence/run387);
+[run 388](evidence/2026-11-13_rt-sp_harness_run388_gas_player_clear_sky_42.22.2.txt),
+photographs in [evidence/run388](evidence/run388).

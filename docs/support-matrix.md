@@ -353,7 +353,8 @@ their changes are reconciled conservatively.
 | --- | --- | --- | --- |
 | Base.Generator | flex_generator | generator_si_stock → generator_si_flex | **Verified RT-SP** (run 8) |
 | Base.Generator_Old, _Yellow, _Blue | flex_generator | same | domain-tested; runtime NOT RUN |
-| Base.Generator, _Old, _Yellow, _Blue | gas_generator | generator_si_stock → generator_gas | Not offered since 0.4.2: nothing gives a gas generator gas yet (D-040). Domain-tested, cancel and remove included; runtime NOT RUN |
+| Base.Generator | gas_generator | generator_si_stock → generator_gas | **Verified RT-SP**: begun, parts handed over and worked to `Commissioned` from the Workshop menu, the work stopping until the tank was drained from the Fuel menu (launches 387–388); **Remove the conversion** from the Workshop menu (launch 382). Hidden in 0.4.2 and 0.4.3; offered again with the gas feed (D-040). Cancel: domain-tested; runtime NOT RUN |
+| Base.Generator_Old, _Yellow, _Blue | gas_generator | same | domain-tested; runtime NOT RUN |
 | Base.CarNormal | flex_car_normal | engine_si_stock → engine_si_flex | **Verified RT-SP** (run 8) |
 | Base.SmallCar | flex_small_car | same | domain-tested; runtime NOT RUN |
 | Base.PickUpTruck | flex_pickup_truck | same | domain-tested; runtime NOT RUN |

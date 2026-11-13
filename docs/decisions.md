@@ -1918,16 +1918,23 @@ gas probe (launch 342).
     stopped; lit again; taken up while lit with the world menu's Grab (an
     item transaction no Lua of the mod's sees), it answered out with its
     wood, and put down it lay out on the server's floor.
-  * Not run: a player's own gas conversion through the Workshop menu
-    (every run made it with the conversion service's steps); crafting the
-    gasifier and reading or finding the handbook in game; two clients; a
-    real network; a client joining while a gasifier burns; a server
-    restarted with a gasifier lit; the minute pass finding a lit gasifier
-    moved (both runs asked for its Status first, which put it out); the
-    gasifier's model looked at in game; its menu from a right-click on the
-    floor (the harnesses built it from the item); a wood-gas generator
-    taken up and put down; a gasifier feeding two generators; the
-    performance mode.
+  * A player's own way, in single player (launches 387–388): a generator
+    holding petrol converted to gas through the Workshop menu, the work
+    stopping at "Drain the fuel tank first." until the tank was drained
+    from the can's Fuel menu; the Wood Gas Handbook read at Welding 5,
+    which taught the recipe; the gasifier crafted from the drum's craft
+    entry, put down with the game's drop action, and loaded and lit from
+    the game's right-click menu on the floor; its gas filled the
+    generator, which started and ran three hours. Photographed with the
+    fog held off, the model draws whole and textured beside the
+    generator.
+  * Not run: finding the handbook in game; the crafting window's own
+    refusals; two clients; a real network; a client joining while a
+    gasifier burns; a server restarted with a gasifier lit; the minute
+    pass finding a lit gasifier moved (both runs asked for its Status
+    first, which put it out), a wood-gas generator taken up and put down,
+    and a gasifier feeding two generators, each a domain case only
+    (`test_gas_generators.lua`); the performance mode.
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod

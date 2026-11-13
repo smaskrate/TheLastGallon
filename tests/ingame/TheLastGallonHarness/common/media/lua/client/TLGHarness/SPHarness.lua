@@ -140,6 +140,11 @@
 --              up while lit, a trip; saved ("sp-rtwdb")
 --   sp-rtwdb -> main menu continues that save: both records, lit again and
 --              the generator fed (RT.WD)
+--   sp-rtgy -> a player's own way to wood gas (D-040): a generator holding
+--              petrol converted through the Workshop menu, drained from
+--              the Fuel menu on the way; the handbook read, the gasifier
+--              crafted, put down, loaded and lit from the right-click menu
+--              and photographed; the generator started and run (RT.GY)
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
@@ -165,7 +170,7 @@ local function unattended()
 end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtwdb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtwdb" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
     or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
@@ -18783,6 +18788,528 @@ end }
 RT.gasWoodBSteps = { RT.WD.reload, wdLight("continued"), RT.WD.restart("continued"), RT.WD.after, RT.finish }
 
 ------------------------------------------------------------------------------
+-- A player's own way to wood gas (request "sp-rtgy"; D-040). A vanilla
+-- generator found holding petrol is converted through Workshop: convert
+-- this generator: Start: Gas generator conversion, Hand over parts, Work on
+-- it. The work stops where the tank must be empty ("Drain the fuel tank
+-- first."); Fuel (The Last Gallon) > Drain the generator into this can
+-- empties it, and Work on it goes on to Converted and commissioned. The Wood
+-- Gas Handbook is read with the inventory menu's Read at Welding 5, the Wood
+-- Gasifier crafted with the craft entry on the drum, put down two tiles from
+-- the generator with the game's drop action, and loaded and lit from the
+-- game's right-click menu on it (Gasifier (The Last Gallon) > Load the
+-- hopper with wood, Light). It is photographed at zoom 1 and 0.5 with the
+-- interface hidden and the fog held off. Its gas fills the generator, which
+-- is started through the start gate and runs. No save. The crafting
+-- window's own refusals are a server case: with -debug, which this harness
+-- runs, the game's learned-recipe call answers true for a recipe not
+-- learned (launch 308).
+-- The mod's clock moves while the work action runs (CLOCK_PER_TICK), as in
+-- the full run, so the records here end up ahead of the game's clock. Built
+-- in a function of its own: with -debug the game's compiler takes at most
+-- 200 locals from one function, block locals included (launch 368).
+------------------------------------------------------------------------------
+RT.GY = { hours = 3, wood = { ["Base.Log"] = 2, ["Base.Firewood"] = 6 },
+    tools = { "Base.Screwdriver", "Base.Wrench", "Base.PipeWrench", "Base.Pliers" },
+    parts = { ["Base.RubberHose"] = 2, ["Base.MetalPipe"] = 1, ["Base.SmallSheetMetal"] = 1, ["Base.Screws"] = 6,
+        ["Base.ElectricWire"] = 1 },
+    materials = { ["Base.MetalDrum"] = 1, ["Base.SheetMetal"] = 2, ["Base.MetalPipe"] = 3, ["Base.MetalBar"] = 2 } }
+
+function RT.GY.build()
+    local GY = RT.GY
+
+    -- The crafted gasifier, on the floor near the generator or carried.
+    local function gyItem()
+        if GY.spot == nil or GY.itemId == nil then return nil end
+        for dx = -3, 3 do
+            for dy = -3, 3 do
+                local s = sq(GY.spot.x + dx, GY.spot.y + dy, 0)
+                local objs = s and s:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getID() == GY.itemId then return it end
+                end
+            end
+        end
+        return player():getInventory():getItemWithIDRecursiv(GY.itemId)
+    end
+
+    -- Gasifiers on the floor within three tiles of the generator.
+    local function floorGasifiers()
+        local out = {}
+        for dx = -3, 3 do
+            for dy = -3, 3 do
+                local s = sq(GY.spot.x + dx, GY.spot.y + dy, 0)
+                local objs = s and s:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getFullType() == "TLG.Gasifier" then out[#out + 1] = it end
+                end
+            end
+        end
+        return out
+    end
+
+    -- The gasifier's record brought to now, on a copy (what the menu reads).
+    local function gyState()
+        local it = gyItem()
+        local GZ = TLG.Integration.Gasifiers
+        local st = it and GZ.read(it, false)
+        return st and GZ.advance(it, st, TLG.World.now()) or nil
+    end
+
+    function GY.state(label)
+        local g, st = prGen(), gyState()
+        local rec = prRecord(g)
+        local cur = rec and g and TLG.Domain.GasFeed.current(rec, g:getFuel()) or {}
+        local s = st and TLG.Domain.Gas.Gasifier.status(st) or {}
+        R:line("OBS  RTGY.%s at %.4f h: generator fuel %.7f running %s profile %s; its wood gas %.6f Nm3; gasifier " ..
+            "%s/%s hopper %.3f kg buffer %.4f Nm3 delivered %.6f Nm3", label, hours(), g and g:getFuel() or -1,
+            tostring(g and g:isActivated()), tostring(g and TLG.Integration.Generators.profile(g)), cur.woodgas or 0,
+            tostring(s.state), tostring(s.mode), s.hopperKg or -1, s.buffer or -1, st and st.totals.delivered or -1)
+    end
+
+    -- A light in hand when the square is too dark to read or craft (the
+    -- game's IsoPlayer.tooDarkToRead), as a player switches a torch on.
+    local function lightIfDark(label)
+        local p = player()
+        if not p:tooDarkToRead() then return end
+        local here = p:getSquare()
+        local torch = p:getInventory():AddItem("Base.HandTorch")
+        torch:setActivated(true)
+        p:setSecondaryHandItem(torch)
+        R:line("OBS  RTGY.%s too dark (light %.2f at %.2f o'clock): a torch switched on in hand, dark now=%s", label,
+            here and here:getLightLevel(0) or -1, getGameTime():getTimeOfDay(), tostring(p:tooDarkToRead()))
+    end
+
+    -- Work on it from the Workshop menu, until the work action has ended by
+    -- itself (blocked or commissioned). The mod's clock moves while it runs.
+    local function work(name, check)
+        return { name = "rtgy_" .. name, timeout = 8000, fn = function(ctx, ticks)
+            if RT.abort then return true end
+            if not ctx.t0 then
+                ctx.dialogs0 = #H.dialogs.texts
+                workshopClick("RTGY." .. name, GEN_MENU, getText("ContextMenu_TLG_ConvJoin"))
+                ctx.t0 = ticks
+                return nil
+            end
+            local a = workAction()
+            if a then
+                H.clockOffset = H.clockOffset + CLOCK_PER_TICK
+                -- Kept: its count goes on after it stops being current (launch
+                -- 387 logged the count before the last report).
+                ctx.action = a
+            end
+            if ticks - ctx.t0 < 30 then return nil end
+            if (a or not TLGH.Steps.actionsIdle(player())) and ticks - ctx.t0 < 7000 then return nil end
+            local p = projectOf(prGen(), "generator")
+            local text = H.dialogs.texts[ctx.dialogs0 + 1]
+            R:line("OBS  RTGY.%s: %s reports; project %s stage %s, %.4f h done; dialog \"%s\"", name,
+                tostring(ctx.action and ctx.action.reports), tostring(p and p.state), tostring(p and p.stage),
+                p and sumOf(p.credit) or -1, tostring(text))
+            check(p, text)
+            closeDialogs()
+            return true
+        end }
+    end
+
+    GY.setup = { name = "rtgy_setup", timeout = 1200, fn = function(ctx, ticks)
+        if not ctx.t0 then
+            local p = player()
+            p:setGodMod(true)
+            p:setInvisible(true)
+            pcall(function() p:setUnlimitedCarry(true) end)
+            captureDialogs(true)
+            installClockOffset()
+            instrumentWorkAction()
+            RT.keepFit()
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 60 then return nil end
+        if not ctx.placed then
+            local spot
+            for dy = 4, 16 do
+                for dx = -12, 12 do
+                    local x, y = START.x + dx, START.y + dy
+                    if spot == nil and RT.MI.clear(x, y) and RT.MI.clear(x + 1, y) and RT.MI.clear(x + 2, y)
+                        and RT.MI.clear(x + 1, y + 1) and RT.MI.clear(x + 2, y + 1) and RT.MI.clear(x + 1, y + 2) then
+                        spot = { x = x, y = y }
+                    end
+                end
+            end
+            if spot == nil then
+                RT.abort = "no clear squares for the generator and the gasifier"
+                R:check("RTGY.placed", function() return false, "no clear squares near the start" end)
+                return true
+            end
+            GY.spot, RT.PR.spot = spot, spot
+            pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(spot.x, spot.y, 0)) end)
+            local g = prGen()
+            if g then
+                g:setConnected(true)
+                -- Holding petrol, as a generator found on the map does.
+                g:setFuel(2)
+            end
+            local p = player()
+            p:setPerkLevelDebug(Perks.Mechanics, 3)
+            p:setPerkLevelDebug(Perks.Electricity, 3)
+            p:getKnownRecipes():add("Generator")
+            for _, t in ipairs(GY.tools) do give(t, 1) end
+            for t, n in pairs(GY.parts) do give(t, n) end
+            GY.can = giveCan("Base.PetrolCan", {})
+            p:teleportTo(spot.x + 1, spot.y + 1, 0)
+            ctx.placed = ticks
+            return nil
+        end
+        if ticks - ctx.placed < 60 then return nil end
+        local g = prGen()
+        local G = TLG.Integration.Generators
+        R:line("OBS  RTGY.placed a generator at %d,%d holding %.4f L, profile %s; Mechanics %d, Electricity %d; game hour %.2f",
+            GY.spot.x, GY.spot.y, g and g:getFuel() or -1, tostring(g and G.profile(g)), player():getPerkLevel(Perks.Mechanics),
+            player():getPerkLevel(Perks.Electricity), getGameTime():getTimeOfDay())
+        R:check("RTGY.placed", function()
+            return g ~= nil and math.abs(g:getFuel() - 2) < 1e-4 and not G.isGas(g), string.format(
+                "generator %s holding %s L, gas %s", tostring(g ~= nil), tostring(g and g:getFuel()), tostring(g and G.isGas(g)))
+        end)
+        if g == nil then RT.abort = "no generator" end
+        return true
+    end }
+
+    -- The Workshop menu offers the gas conversion; it begins with petrol in
+    -- the tank, and the parts are handed over.
+    GY.begin = { name = "rtgy_begin", timeout = 600, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        local menu = ISContextMenu.get(0, 100, 100)
+        TLG.UI.WorkshopMenu.fill(0, menu, workshopDevices(), false)
+        local root = menu:getOptionFromName(getText(GEN_MENU))
+        local sub = root and root.subOption and menu:getSubMenu(root.subOption)
+        local gas = sub and sub:getOptionFromName(startText("gas_generator"))
+        menu:setVisible(false)
+        R:check("RTGY.workshop_offers_the_gas_conversion", function()
+            return gas ~= nil and not gas.notAvailable, string.format("Start gas %s", gas == nil and "missing"
+                or (gas.notAvailable and "greyed" or "offered"))
+        end)
+        local b = workshopClick("RTGY.begin", GEN_MENU, startText("gas_generator"))
+        local p = projectOf(prGen(), "generator")
+        R:check("RTGY.begun_with_petrol_in_the_tank", function()
+            return b.ok == true and p ~= nil and p.state == "InProgress" and prGen():getFuel() > 1, string.format(
+                "reply ok=%s reason=%s; project %s stage %s; tank %.4f L", tostring(b.ok), tostring(b.reason),
+                tostring(p and p.state), tostring(p and p.stage), prGen():getFuel())
+        end)
+        local d = workshopClick("RTGY.deliver", GEN_MENU, getText("ContextMenu_TLG_ConvDeliver"))
+        local left = {}
+        for t in pairs(GY.parts) do
+            if countType(t) > 0 then left[#left + 1] = t .. "=" .. countType(t) end
+        end
+        R:check("RTGY.parts_handed_over", function()
+            return d.ok == true and #left == 0, string.format("reply ok=%s reason=%s consumed %s; left [%s]", tostring(d.ok),
+                tostring(d.reason), brief(d.consumed), table.concat(left, ","))
+        end)
+        if not (b.ok and p) then RT.abort = "the gas conversion did not begin" end
+        return true
+    end }
+
+    -- The work stops where the tank must be empty, and says so.
+    GY.workToTank = work("work_until_the_tank", function(p, text)
+        R:check("RTGY.work_stops_where_the_tank_must_be_empty", function()
+            return p ~= nil and p.state == "InProgress" and p.stage == "prepare"
+                and has(text, getText("IGUI_TLG_ConvReason_tank_not_empty")) and prGen():getFuel() > 1,
+                string.format("project %s stage %s; dialog \"%s\"; tank %.4f L", tostring(p and p.state),
+                    tostring(p and p.stage), tostring(text), prGen():getFuel())
+        end)
+    end)
+
+    -- Drained into the empty can from the can's Fuel menu.
+    GY.drain = { name = "rtgy_drain", timeout = 3000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        local g = prGen()
+        if not ctx.t0 then
+            ctx.f0 = g:getFuel()
+            local can = GY.can
+            ctx.r = menuClick("RTGY.drain", function(c) TLG.UI.FuelMenu.fill(0, c, { can }) end,
+                getText("ContextMenu_TLG_Fuel"), getText("ContextMenu_TLG_DrainGenerator"))
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 30 or (not TLGH.Steps.actionsIdle(player()) and ticks - ctx.t0 < 2500) then return nil end
+        local litres = GY.can:getFluidContainer():getAmount()
+        R:check("RTGY.drained_from_the_fuel_menu", function()
+            return ctx.r.ok == true and g:getFuel() <= 0.05 and math.abs(litres - ctx.f0) < 0.06, string.format(
+                "reply ok=%s reason=%s; tank %.4f -> %.4f L; can %.4f L", tostring(ctx.r.ok), tostring(ctx.r.reason), ctx.f0,
+                g:getFuel(), litres)
+        end)
+        return true
+    end }
+
+    -- On to Converted and commissioned: a gas generator.
+    GY.workToEnd = work("work_to_commissioned", function(p, text)
+        local g, G = prGen(), TLG.Integration.Generators
+        R:check("RTGY.gas_generator_commissioned_from_the_menu", function()
+            return p ~= nil and p.state == "Commissioned" and math.abs(sumOf(p.credit) - 9) < 1e-6
+                and G.profile(g) == "generator_gas" and G.isGas(g) and has(text, getText("IGUI_TLG_ConvState_Commissioned")),
+                string.format("project %s, %.4f h of 9; profile %s gas %s; dialog \"%s\"", tostring(p and p.state),
+                    p and sumOf(p.credit) or -1, tostring(G.profile(g)), tostring(G.isGas(g)), tostring(text))
+        end)
+        if not (p and p.state == "Commissioned") then RT.abort = "the gas conversion was not commissioned" end
+    end)
+
+    -- The Wood Gas Handbook read with the inventory menu's Read at Welding
+    -- 5: the recipe is learned only then.
+    GY.read = { name = "rtgy_read_handbook", timeout = 9000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        local p = player()
+        if not ctx.t0 then
+            ctx.r = RT.HB.recipe("TLG_MakeGasifier")
+            p:setPerkLevelDebug(Perks.MetalWelding, 5)
+            ctx.before = ctx.r ~= nil and p:isRecipeActuallyKnown(ctx.r) == true
+            ctx.book = p:getInventory():AddItem("TLG.WoodGasHandbook")
+            lightIfDark("read")
+            ISInventoryPaneContextMenu.readItem(ctx.book, 0)
+            RT.speed(3)
+            ctx.t0 = ticks
+            return nil
+        end
+        local queue = ISTimedActionQueue.getTimedActionQueue(p)
+        local busy = queue and queue.queue and #queue.queue > 0
+        if busy and ticks - ctx.t0 < 8000 then return nil end
+        if ticks - ctx.t0 < 60 then return nil end
+        RT.speed(1)
+        local after = ctx.r ~= nil and p:isRecipeActuallyKnown(ctx.r) == true
+        local recorded = p:getAlreadyReadBook():contains("TLG.WoodGasHandbook")
+        R:check("RTGY.handbook_read_teaches_the_gasifier", function()
+            return not busy and ctx.r ~= nil and not ctx.before and after and recorded, string.format(
+                "recipe %s; known before %s, after %s; read to the end %s, recorded %s; Welding %d", tostring(ctx.r ~= nil),
+                tostring(ctx.before), tostring(after), tostring(not busy), tostring(recorded), p:getPerkLevel(Perks.MetalWelding))
+        end)
+        return true
+    end }
+
+    -- Crafted with the inventory menu's craft entry on the drum. Without
+    -- room in the inventory the game puts what is made at the character's
+    -- feet (Actions.addOrDropItem, run 11), which is looked for too.
+    GY.craft = { name = "rtgy_craft", timeout = 9000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        local p = player()
+        if not ctx.t0 then
+            for t, n in pairs(GY.materials) do give(t, n) end
+            give("Base.WeldingMask", 1)
+            ctx.torch = p:getInventory():AddItem("Base.BlowTorch")
+            pcall(function() ctx.uses0 = ctx.torch:getCurrentUses() end)
+            ctx.before, ctx.floor0 = countType("TLG.Gasifier"), #floorGasifiers()
+            lightIfDark("craft")
+            local recipe = RT.HB.recipe("TLG_MakeGasifier")
+            local via = p:getInventory():getFirstTypeRecurse("Base.MetalDrum")
+            if recipe and via then ISInventoryPaneContextMenu.OnNewCraft(via, recipe, 0, false) end
+            ctx.queued = not TLGH.Steps.actionsIdle(p)
+            if not ctx.queued and recipe and via then
+                local containers = ISInventoryPaneContextMenu.getContainers(p)
+                local logic = HandcraftLogic.new(p, nil, nil)
+                logic:setContainers(containers)
+                logic:setRecipeFromContextClick(recipe, via)
+                local inputs, valid = "?", "?"
+                pcall(function() inputs = tostring(logic:getRecipeData():areAllInputItemsSatisfied()) end)
+                pcall(function() valid = tostring(CraftRecipeManager.isValidRecipeForCharacter(recipe, p, nil, containers)) end)
+                R:line("OBS  RTGY.craft not queued: canPerform=%s valid=%s inputs=%s dark=%s",
+                    tostring(logic:canPerformCurrentRecipe()), valid, inputs, tostring(p:tooDarkToRead()))
+            end
+            RT.speed(3)
+            ctx.t0 = ticks
+            return nil
+        end
+        if not TLGH.Steps.actionsIdle(p) and ticks - ctx.t0 < 8000 then return nil end
+        if ticks - ctx.t0 < 60 then return nil end
+        RT.speed(1)
+        local carried = countType("TLG.Gasifier") - ctx.before
+        local floor = floorGasifiers()
+        local dropped = #floor - ctx.floor0
+        local uses1
+        pcall(function() uses1 = ctx.torch:getCurrentUses() end)
+        local left = {}
+        for t in pairs(GY.materials) do left[#left + 1] = t .. "=" .. countType(t) end
+        R:check("RTGY.gasifier_crafted", function()
+            return ctx.queued and carried + dropped == 1 and countType("Base.MetalDrum") == 0
+                and countType("Base.SheetMetal") == 0 and countType("Base.MetalBar") == 0
+                and countType("Base.MetalPipe") == 0 and countType("Base.WeldingMask") == 1, string.format(
+                "queued %s; made %d carried, %d at the feet; left [%s]; mask %d; blowtorch uses %s -> %s", tostring(ctx.queued),
+                carried, dropped, table.concat(left, ","), countType("Base.WeldingMask"), tostring(ctx.uses0), tostring(uses1))
+        end)
+        local it = p:getInventory():getFirstTypeRecurse("TLG.Gasifier") or (dropped == 1 and floor[#floor]) or nil
+        GY.itemId = it and it:getID()
+        if not it then RT.abort = "no gasifier was crafted" end
+        return true
+    end }
+
+    -- Put down two tiles from the generator with the game's drop action (if
+    -- the craft left it at the feet, it is where it fell).
+    GY.place = { name = "rtgy_put_down", timeout = 3000, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        local it = gyItem()
+        if not ctx.t0 then
+            ctx.carried = it ~= nil and it:getWorldItem() == nil
+            if ctx.carried then
+                player():teleportTo(GY.spot.x + 1, GY.spot.y + 1, 0)
+                ISTimedActionQueue.add(ISDropWorldItemAction:new(player(), it, sq(GY.spot.x + 2, GY.spot.y, 0), 0.5, 0.5, 0,
+                    0, false))
+            end
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 10 or (not TLGH.Steps.actionsIdle(player()) and ticks - ctx.t0 < 2500) then return nil end
+        local wi = it and it:getWorldItem()
+        local s = wi and wi:getSquare()
+        R:check("RTGY.put_down_beside_the_generator", function()
+            return ctx.carried and s ~= nil and s:getX() == GY.spot.x + 2 and s:getY() == GY.spot.y, string.format(
+                "carried before %s; on the floor %s at %s,%s", tostring(ctx.carried), tostring(s ~= nil),
+                tostring(s and s:getX()), tostring(s and s:getY()))
+        end)
+        if s == nil then RT.abort = "the gasifier is not on the floor" end
+        return true
+    end }
+
+    -- The game's right-click menu built for a click on the gasifier where it
+    -- shows on screen, the cursor on it (as RT.CM does); its Gasifier entry,
+    -- then `key`. Without the entry, the gasifier's inventory menu is used
+    -- so the run goes on, and the check fails.
+    local function onIt(label, key)
+        local it = gyItem()
+        local wi = it and it:getWorldItem()
+        local tile = wi and wi:getSquare()
+        local reply, seen = nil, "not on the floor"
+        if tile then
+            local x, y = wi:getScreenPosX(0), wi:getScreenPosY(0)
+            local zoom = getCore():getZoom(0)
+            local realX, realY = getMouseXScaled, getMouseYScaled
+            getMouseXScaled, getMouseYScaled = function() return x * zoom end, function() return y * zoom end
+            local ok, err = pcall(ISWorldObjectContextMenu.createMenu, 0, { tile:getFloor() }, x, y)
+            getMouseXScaled, getMouseYScaled = realX, realY
+            local menu = getPlayerContextMenu(0)
+            local root = menu and menu:getOptionFromName(getText("ContextMenu_TLG_Gasifier"))
+            local sub = root and root.subOption and menu:getSubMenu(root.subOption)
+            local opt = sub and sub:getOptionFromName(getText(key))
+            seen = string.format("click at %.0f,%.0f, zoom %.2f; builder ok=%s%s; Gasifier entry %s; %s %s", x, y, zoom,
+                tostring(ok), ok and "" or (" " .. tostring(err)), tostring(root ~= nil), getText(key),
+                opt == nil and "missing" or (opt.notAvailable and "greyed" or "offered"))
+            if opt and not opt.notAvailable then reply = click(opt) or { ok = true, reason = "queued" } end
+            pcall(function() menu:hideAndChildren() end)
+        end
+        R:line("OBS  RTGY.%s from the right-click menu: %s -> %s", label, seen, reply and brief(reply) or "not clicked")
+        if reply == nil then
+            reply = menuClick("RTGY." .. label .. "_inventory_menu", function(c) TLG.UI.GasifierMenu.fill(0, c, { it }) end,
+                getText("ContextMenu_TLG_Gasifier"), getText(key))
+            reply.fromFloor = false
+        else
+            reply.fromFloor = true
+        end
+        return reply, seen
+    end
+
+    GY.floor = { name = "rtgy_load_and_light", timeout = 1200, fn = function(ctx, ticks)
+        if RT.abort then return true end
+        if not ctx.t0 then
+            for t, n in pairs(GY.wood) do give(t, n) end
+            player():teleportTo(GY.spot.x + 1, GY.spot.y + 1, 0)
+            ctx.t0 = ticks
+            return nil
+        end
+        if ticks - ctx.t0 < 60 then return nil end
+        local l, ls = onIt("load", "ContextMenu_TLG_GasifierLoad")
+        local lit, lits = onIt("light", "ContextMenu_TLG_GasifierLight")
+        closeDialogs()
+        GY.state("lit")
+        R:check("RTGY.loaded_from_the_right_click_menu", function()
+            return l.fromFloor and l.ok == true and (l.loadedKg or 0) > 0 and countType("Base.Log") == 0
+                and countType("Base.Firewood") == 0, string.format("%s; reply ok=%s loaded %s kg in %s pieces", ls,
+                tostring(l.ok), tostring(l.loadedKg), tostring(l.items))
+        end)
+        R:check("RTGY.lit_from_the_right_click_menu", function()
+            return lit.fromFloor and lit.ok == true and lit.state == "Processing", string.format("%s; reply ok=%s state %s mode %s",
+                lits, tostring(lit.ok), tostring(lit.state), tostring(lit.mode))
+        end)
+        return true
+    end }
+
+    -- The model on the floor beside the generator, the interface hidden.
+    local function shot(name)
+        return { name = "rtgy_shot_" .. name, timeout = 600, fn = function(ctx, ticks)
+            if RT.abort then return true end
+            if ticks == 1 then
+                player():teleportTo(GY.spot.x + 1, GY.spot.y + 2, 0)
+                ISUIHandler.setVisibleAllUI(false)
+            end
+            if ticks == 90 then
+                local file = "tlg_rtgy_" .. name .. ".png"
+                local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+                R:line("OBS  RTGY.screenshot %s ok=%s at zoom %.2f, game hour %.2f; the gasifier at %d,%d, the generator at %d,%d, " ..
+                    "the character at %d,%d", file, tostring(ok), getCore():getZoom(0), getGameTime():getTimeOfDay(), GY.spot.x + 2,
+                    GY.spot.y, GY.spot.x, GY.spot.y, GY.spot.x + 1, GY.spot.y + 2)
+            end
+            if ticks == 120 then ISUIHandler.setVisibleAllUI(true) end
+            return ticks >= 150 or nil
+        end }
+    end
+
+    -- Warmed up (half an hour): its gas fills the generator, still off, to
+    -- one step and the margin.
+    GY.warm = wdWait("rtgy_warm", 1.0, function(ctx)
+        local g, G = prGen(), TLG.Integration.Generators
+        GY.state("warmed")
+        local cap = G.woodgasCap(g)
+        R:check("RTGY.its_gas_fills_the_generator", function()
+            return G.holdsGas(g) and math.abs(g:getFuel() - cap) < 1e-5, string.format("fuel %.7f against the cap %.7f",
+                g:getFuel(), cap)
+        end)
+    end)
+
+    GY.start = actionStep("rtgy_start", function(ctx)
+        if RT.abort then return nil end
+        player():teleportTo(GY.spot.x + 1, GY.spot.y, 0)
+        return ISActivateGenerator:new(player(), prGen(), true)
+    end, function(ctx)
+        local g = prGen()
+        local e = TLG.Integration.Generators.evaluate(g)
+        R:check("RTGY.started_on_wood_gas", function()
+            return g:isActivated() and e.compatible == true, string.format("running %s; compatible %s grade %s reasons %s",
+                tostring(g:isActivated()), tostring(e.compatible), tostring(e.grade), table.concat(e.reasons or {}, ","))
+        end)
+    end)
+
+    -- Hours at speed 20: it keeps running on the gasifier's gas.
+    GY.run = { name = "rtgy_run", timeout = 60000, fn = function(ctx, ticks)
+        local PR = RT.PR
+        if RT.abort then return true end
+        if not ctx.h0 then
+            local st = gyState()
+            ctx.h0, ctx.d0 = hours(), st and st.totals.delivered or 0
+            PR.watch(true)
+            RT.speed(20)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        if hours() - ctx.h0 < GY.hours then return nil end
+        RT.speed(1)
+        PR.watch(false)
+        local g, st = prGen(), gyState()
+        GY.state("after_hours")
+        local given = st and st.totals.delivered - ctx.d0 or 0
+        R:check("RTGY.ran_on_wood_gas", function()
+            return g:isActivated() and PR.stops == 0 and given > 0, string.format("running %s, %d stops over %.3f game h; " ..
+                "the gasifier gave %.7f Nm3", tostring(g:isActivated()), PR.stops, hours() - ctx.h0, given)
+        end)
+        return true
+    end }
+
+    -- The fog is held off for the photographs (RT.MM.clearSky): launch
+    -- 387's fog washed the gasifier out.
+    RT.gasPlayerSteps = { RT.waitWorld, GY.setup, GY.begin, GY.workToTank, GY.drain, GY.workToEnd, GY.read, GY.craft,
+        GY.place, GY.floor, RT.MM.clearSky, RT.MI.zoomTo("rtgy_zoom_1", 1.0), shot("zoom_1"),
+        RT.MI.zoomTo("rtgy_zoom_05", 0.5), shot("zoom_05"), RT.MI.zoomTo("rtgy_zoom_back", 1.0), GY.warm, GY.start, GY.run,
+        RT.finish }
+end
+
+RT.GY.build()
+
+------------------------------------------------------------------------------
 -- Diesel vehicles (request "sp-rtdv", D-036). A new world, so its record
 -- says diesel chassis exist. Three vehicles at a time are spawned beside
 -- the start (the squares phase A parks on), repaired and given 10 L with
@@ -21425,7 +21952,7 @@ end)
 
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
-    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtwd" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
+    or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtgy" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
     or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
@@ -21555,6 +22082,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtwd" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, a gas generator on wood gas, before the save")
                 TLGH.Steps.run(R, RT.gasWoodSteps, H, nil)
+            elseif REQUEST == "sp-rtgy" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, a player's own way to wood gas")
+                TLGH.Steps.run(R, RT.gasPlayerSteps, H, nil)
             elseif REQUEST == "sp-rtbdm" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, the biodiesel chain's models")
                 TLGH.Steps.run(R, RT.biodieselModelSteps, H, nil)

@@ -1,0 +1,101 @@
+# TLG single-player harness, a player's own way to wood gas
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=96770551018937179365 hours=2.0096 DayLength=4
+STEP rtgy_setup begin
+OBS  RTGY.placed a generator at 10648,10649 holding 2.0000 L, profile generator_si_stock; Mechanics 3, Electricity 3; game hour 9.02
+PASS RTGY.placed :: generator true holding 2 L, gas false
+STEP rtgy_begin begin
+PASS RTGY.workshop_offers_the_gas_conversion :: Start gas offered
+OBS  RTGY.begin menu "Start: Gas generator conversion" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed=nil
+PASS RTGY.begun_with_petrol_in_the_tank :: reply ok=true reason=nil; project InProgress stage inspect; tank 2.0000 L
+OBS  RTGY.deliver menu "Hand over parts" -> ok=true reason=nil state=InProgress stage=inspect outputs=nil consumed={Base.ElectricWire=1,Base.MetalPipe=1,Base.RubberHose=2,Base.Screws=6,Base.SmallSheetMetal=1}
+PASS RTGY.parts_handed_over :: reply ok=true reason=nil consumed {Base.ElectricWire=1,Base.MetalPipe=1,Base.RubberHose=2,Base.Screws=6,Base.SmallSheetMetal=1}; left []
+STEP rtgy_work_until_the_tank begin
+OBS  RTGY.work_until_the_tank menu "Work on it" -> ok=true reason=queued state=nil stage=nil outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=nil expired=nil credited=nil done=0/9 reports=0
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=inspect released=false expired=false credited=0.25037193298339755 done=0.25037193298339755/9 reports=1
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=true expired=false credited=0.24962806701660245 done=0.5/9 reports=2
+OBS  WORK.perform ended=true reports=2
+OBS  RTGY.work_until_the_tank: 2 reports; project InProgress stage prepare, 0.5000 h done; dialog "Conversion in progress <LINE> Stage: drain and isolate the fuel system <LINE> Drain the fuel tank first."
+PASS RTGY.work_stops_where_the_tank_must_be_empty :: project InProgress stage prepare; dialog "Conversion in progress <LINE> Stage: drain and isolate the fuel system <LINE> Drain the fuel tank first."; tank 2.0000 L
+STEP rtgy_drain begin
+OBS  RTGY.drain menu "Drain the generator into this can" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+PASS RTGY.drained_from_the_fuel_menu :: reply ok=true reason=nil; tank 2.0000 -> 0.0000 L; can 2.0000 L
+STEP rtgy_work_to_commissioned begin
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=nil expired=nil credited=nil done=0.5/9 reports=0
+OBS  RTGY.work_to_commissioned menu "Work on it" -> ok=true reason=nil state=InProgress stage=prepare outputs=nil consumed=nil
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.25037193298339755 done=0.7503719329833975/9 reports=1
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.25037193298339755 done=1.000743865966795/9 reports=2
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=prepare released=false expired=false credited=0.25037193298339755 done=1.2511157989501926/9 reports=3
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=1.5014877319335902/9 reports=4
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25038528442382724 done=1.7518730163574174/9 reports=5
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25035858154296786 done=2.0022315979003853/9 reports=6
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=2.252603530883783/9 reports=7
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=2.5029754638671804/9 reports=8
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=2.753347396850578/9 reports=9
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=3.0037193298339755/9 reports=10
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=3.254091262817373/9 reports=11
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=3.5044631958007706/9 reports=12
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=3.754835128784168/9 reports=13
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339755 done=4.005207061767566/9 reports=14
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339666 done=4.255578994750962/9 reports=15
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037097930908203 done=4.505949974060044/9 reports=16
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339844 done=4.756321907043443/9 reports=17
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339666 done=5.0066938400268395/9 reports=18
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=install released=false expired=false credited=0.25037193298339666 done=5.257065773010236/9 reports=19
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.25037193298339844 done=5.507437705993635/9 reports=20
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.25037193298339844 done=5.757809638977033/9 reports=21
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.25037193298339844 done=6.0081815719604315/9 reports=22
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.250371932983402 done=6.2585535049438334/9 reports=23
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.250371932983402 done=6.508925437927235/9 reports=24
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.250371932983402 done=6.759297370910637/9 reports=25
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.250371932983402 done=7.009669303894039/9 reports=26
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=configure released=false expired=false credited=0.250371932983402 done=7.260041236877441/9 reports=27
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.250371932983402 done=7.510413169860843/9 reports=28
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.250371932983402 done=7.760785102844245/9 reports=29
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.2503709793090856 done=8.011156082153331/9 reports=30
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=test released=false expired=false credited=0.250371932983402 done=8.261528015136733/9 reports=31
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.250371932983402 done=8.511899948120135/9 reports=32
+OBS  WORK.reply ok=true reason=nil state=InProgress stage=commission released=false expired=false credited=0.250371932983402 done=8.762271881103537/9 reports=33
+OBS  WORK.reply ok=true reason=nil state=Commissioned stage=nil released=true expired=false credited=0.23772811889646306 done=nil/nil reports=34
+OBS  WORK.perform ended=true reports=34
+OBS  RTGY.work_to_commissioned: 34 reports; project Commissioned stage nil, 9.0000 h done; dialog "Converted and commissioned"
+PASS RTGY.gas_generator_commissioned_from_the_menu :: project Commissioned, 9.0000 h of 9; profile generator_gas gas true; dialog "Converted and commissioned"
+STEP rtgy_read_handbook begin
+PASS RTGY.handbook_read_teaches_the_gasifier :: recipe true; known before false, after true; read to the end true, recorded true; Welding 5
+STEP rtgy_craft begin
+PASS RTGY.gasifier_crafted :: queued true; made 1 carried, 0 at the feet; left [Base.MetalDrum=0,Base.SheetMetal=0,Base.MetalPipe=0,Base.MetalBar=0]; mask 1; blowtorch uses 10 -> 8
+STEP rtgy_put_down begin
+PASS RTGY.put_down_beside_the_generator :: carried before true; on the floor true at 10650,10649
+STEP rtgy_load_and_light begin
+OBS  RTGY.load from the right-click menu: click at 768,440, zoom 1.00; builder ok=true; Gasifier entry true; Load the hopper with wood offered -> {buffer=0,bufferCap=2,command=gasifier.load,cond=1,filter=0,held={},hopperKg=30,items=8,loadedKg=30,ok=true,placed=true,requestId=0-1794571094204-42,rev=1,state=Ready,warm=0}
+OBS  RTGY.light from the right-click menu: click at 768,440, zoom 1.00; builder ok=true; Gasifier entry true; Light offered -> {buffer=0,bufferCap=2,command=gasifier.light,cond=1,filter=0,held={},hopperKg=30,mode=warming,ok=true,placed=true,requestId=0-1794571094219-43,rev=2,state=Processing,warm=0}
+OBS  RTGY.lit at 2.3960 h: generator fuel 0.0000000 running false profile generator_gas; its wood gas 0.000000 Nm3; gasifier Processing/warming hopper 30.000 kg buffer 0.0000 Nm3 delivered 0.000000 Nm3
+PASS RTGY.loaded_from_the_right_click_menu :: click at 768,440, zoom 1.00; builder ok=true; Gasifier entry true; Load the hopper with wood offered; reply ok=true loaded 30 kg in 8 pieces
+PASS RTGY.lit_from_the_right_click_menu :: click at 768,440, zoom 1.00; builder ok=true; Gasifier entry true; Light offered; reply ok=true state Processing mode warming
+STEP rtmm_clear_sky begin
+OBS  RTMM.fog intensity 0.00 -> 0.00
+STEP rtgy_zoom_1 begin
+OBS  RTMI.zoom 1.00 -> 1.00 in 0 scrolls (enabled=true, min 0.25)
+STEP rtgy_shot_zoom_1 begin
+OBS  RTGY.screenshot tlg_rtgy_zoom_1.png ok=true at zoom 1.00, game hour 9.41; the gasifier at 10650,10649, the generator at 10648,10649, the character at 10649,10651
+STEP rtgy_zoom_05 begin
+OBS  RTMI.zoom 1.00 -> 0.50 in 2 scrolls (enabled=true, min 0.25)
+STEP rtgy_shot_zoom_05 begin
+OBS  RTGY.screenshot tlg_rtgy_zoom_05.png ok=true at zoom 0.50, game hour 9.43; the gasifier at 10650,10649, the generator at 10648,10649, the character at 10649,10651
+STEP rtgy_zoom_back begin
+OBS  RTMI.zoom 0.50 -> 1.00 in 2 scrolls (enabled=true, min 0.25)
+STEP rtgy_warm begin
+OBS  RTGY.warmed at 3.4483 h: generator fuel 0.0010000 running false profile generator_gas; its wood gas 0.006400 Nm3; gasifier Paused/nil hopper 27.088 kg buffer 2.0000 Nm3 delivered 0.006400 Nm3
+PASS RTGY.its_gas_fills_the_generator :: fuel 0.0010000 against the cap 0.0010000
+STEP rtgy_start begin
+PASS RTGY.started_on_wood_gas :: running true; compatible true grade good reasons derated
+STEP rtgy_run begin
+OBS  RTGY.after_hours at 6.4545 h: generator fuel 0.0060000 running true profile generator_gas; its wood gas 0.038400 Nm3; gasifier Paused/nil hopper 27.030 kg buffer 2.0000 Nm3 delivered 0.134400 Nm3
+PASS RTGY.ran_on_wood_gas :: running true, 0 stops over 3.001 game h; the gasifier gave 0.1280000 Nm3
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 6.45
+SUMMARY pass=15 fail=0
+DONE
