@@ -7952,6 +7952,11 @@ The reader (A):
   `CraftRecipeManager.getUniqueRecipeItems`) listed the recipe only where
   the window offered it: not at Welding 3 before or after the read, and
   at Welding 4 after it.
+* No shipped text names a Welding level for the gasifier or either
+  handbook (the English and Italian strings, the item scripts), so no
+  text in game needs the rewording D-038's amendment made for the
+  biodiesel machines. The player guide's gas section, not written yet,
+  must say that the read handbook makes it from Welding 4 (D-040).
 
 The non-reader (B, launch 393):
 
@@ -7966,13 +7971,18 @@ Loot:
   handbook is in, each filled 300 times as the game fills a container,
   gave 28 and 39 Wood Gas Handbooks in 1,200 fills (GasStorageMechanics,
   CrateMechanics, ToolStoreBooks, LibraryMagazines; each list gave some).
-* In single player (launch 395), the 58 containers within 70 tiles of the
-  start had already been filled by the game, and none held the handbook.
-  Emptied and filled again as the game fills a container
-  (`ItemPicker.fillContainer`), one did: a metal shelf in the gas
-  station's storage room. Taken with the game's transfer action and read
-  at Welding 0, that very book taught the gasifier's recipe and was
-  recorded as read; Welding 5 was still to be reached.
+* In single player (launch 395), the search found the handbook in its
+  second round, after 58 fills of the 58 containers within 70 tiles of
+  the start. The first round fills only a container not yet marked
+  explored, so that count means it filled none: inferred, each had been
+  filled already, presumably by the game, and none held the handbook.
+  (The check's line calls round 1 "each container's first fill", which
+  this run's count contradicts.) The second round emptied each and filled
+  it again as the game fills a container (`ItemPicker.fillContainer`),
+  and one held it: a metal shelf in the gas station's storage room.
+  Taken with the game's transfer action and read at Welding 0, that very
+  book taught the gasifier's recipe and was recorded as read; Welding 5
+  was still to be reached.
 
 Each game process loaded the mod once, and no log of a client, of the
 server or of the single-player game holds a warning or error of the mod.
@@ -7985,7 +7995,9 @@ strict refusals and the gasifier's state in its line, and the server's
 product, whose defaults are unchanged.
 
 Not run: the other seven loot lists on the server; a handbook found at a
-container's first fill; Welding 6 and 7 for the reader; a plain player
+container's first fill; Welding 5 to 7 for the reader (launch 393's
+materials were gone after Welding 4, and launch 394 stopped at its
+gasifier made at 4); a plain player
 (both accounts were admins); the single-player crafting window (the
 harness runs `-debug`).
 
