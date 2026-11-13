@@ -6847,7 +6847,7 @@ a server, an install through the Steam Workshop. Not uploaded.
 Evidence:
 [run 344](evidence/2026-11-12_rt-sp_harness_run344_install_rehearsal_0.4.2_42.22.2.txt).
 
-## 2026-11-13 — RT-MP launches 362–363 (the machine menu's Pause, Resume and Abort batch on a server)
+## 2026-11-13 — RT-MP launches 362–364 (the machine menu's Pause, Resume and Abort batch on a server)
 
 Command: `tools/run-mp-harness.ps1 -Only machinemenu`: the TLGDev
 dedicated server and one client on this computer, 42.22.2, branch
@@ -6863,28 +6863,38 @@ of the record (`MachineMenu.controls`, D-023).
 | Launch | The mod | Result (pass/fail, client A) |
 | --- | --- | --- |
 | 362 | `main` as released (0.4.2) | 3/4 |
-| 363 | with the records sent to the clients | 7/0 |
+| 363 | the records sent to the clients, brought forward there | 7/0 |
+| 364 | the records sent, judged as sent; the hourly reading quiet | 7/0 |
 
 Launch 362: the load went through the menu; the server replied
 Processing, then Paused (by hand), Processing, OutputReady (stopped
 early) and Ready. The client's copy of the record held nothing
 throughout, and the menu offered none of the three entries, so pause,
 resume and both aborts had to be asked directly. The three passes are
-the empty fermenter, the join and the emptied one, where nothing is
-offered. On a server the three entries have never shown for a machine on
-the floor.
+the join, the empty fermenter and the emptied one, where nothing is
+offered. Within the session the client's copy did not follow the
+server's writes; a client joining, or a chunk loaded again, would get the
+record as of then (not run).
 
-Launch 363: the client's copy equalled the server's state after each
-step, and the menu offered Pause and Abort batch while it worked, Resume
-and Abort batch while paused by hand, Abort batch once stopped early and
-nothing once emptied. Every step was chosen through the menu. Neither
-console holds an error or a warning of the mod. The server's console was
+Launches 363 and 364: the client's copy equalled the server's state after
+each step, and the menu offered Pause and Abort batch while it worked,
+Resume and Abort batch while paused by hand, Abort batch once stopped
+early and nothing once emptied. Every step was chosen through the menu.
+After launch 363 the client stopped bringing the record forward (sent
+without its readings, it can disagree with the server's) and the hourly
+reading's write became quiet; launch 364 ran that code. Neither launch's
+consoles hold an error or a warning of the mod. The server's console was
 not kept: it holds the test accounts' passwords.
 
 Not run: two clients, a real network, the stills and the other machines,
-a client joining while a batch runs. Single player is unchanged (the
-record is sent only on a server); no single-player launch was made.
+a client joining while a batch runs, a machine carried and put down on a
+server, a batch that finishes or pauses by itself between two sends, the
+performance mode with these sends. Single player is unchanged (the
+record is sent only on a server, and the menu still brings it to now
+there); no single-player launch was made, and the full run and the
+install rehearsal of 0.4.3 are still to do.
 
 Evidence:
 [run 362](evidence/2026-11-13_rt-mp_harness_run362_machinemenu_main_42.22.2.txt);
-[run 363](evidence/2026-11-13_rt-mp_harness_run363_machinemenu_fixed_42.22.2.txt).
+[run 363](evidence/2026-11-13_rt-mp_harness_run363_machinemenu_fixed_42.22.2.txt);
+[run 364](evidence/2026-11-13_rt-mp_harness_run364_machinemenu_as_sent_42.22.2.txt).

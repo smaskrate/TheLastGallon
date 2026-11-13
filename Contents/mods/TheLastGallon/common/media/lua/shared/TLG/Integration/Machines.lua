@@ -519,7 +519,10 @@ function M.sampleSites()
                     rec.temps = rec.temps or {}
                     rec.temps[slot] = t
                     M.trimTemps(rec, env)
-                    M.write(item, rec)
+                    -- Quiet: a reading changes nothing a client's menu
+                    -- judges on, and each running machine's record would
+                    -- otherwise go to every client every game hour.
+                    M.write(item, rec, true)
                 end
             end
         end

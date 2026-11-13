@@ -1411,3 +1411,46 @@ T.case("integration: on a server a machine's record goes to the clients without 
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+-- Why a multiplayer client's menu judges on the record as sent
+-- (MachineMenu.controls) rather than bringing it forward.
+T.case("integration: a record sent without its readings and brought forward disagrees with the server's; the hourly reading sends nothing", function()
+    local g = fakeGame(2)
+    local sent, savedSend = {}, sendServerCommand
+    sendServerCommand = function(module, command, args) sent[#sent + 1] = { module = module, command = command, args = args } end
+    local ok, err = pcall(function()
+        -- A cold day; a room warmed to 22 C by a fire, which the hourly
+        -- readings filed.
+        g.outC = -3
+        World.get().climateLog = { [0] = { t = -3, rh = 0.7 } }
+        local env = World.env()
+        local sq = square(g, 30, 30, 0, true, 22)
+        local rec = running("P-cold", 2)
+        rec.temps = {}
+        for h = 2, 9 do rec.temps[h] = 22 end
+        local item = machine(sq, rec)
+        local server = Machines.advance(item, Machines.read(item, false), 10, env)
+        local view = {}
+        for k, v in pairs(server) do
+            if not Machines.PUSH_DROP[k] then view[k] = v end
+        end
+        local copy = machine(sq, view)
+        local full = Machines.advance(item, server, 12, env)
+        local stripped = Machines.advance(copy, TLG.Tables.deepCopy(view), 12, env)
+        local function said(r) return string.format("%s/%s stage %s done %.4f", tostring(r.state), tostring(r.pause),
+            tostring(r.stage), r.stageDone or -1) end
+        T.ok(said(full) ~= said(stripped), "the server " .. said(full) .. "; the copy without readings " .. said(stripped))
+        -- On a server the hourly reading files the air quietly: nothing goes
+        -- to the clients.
+        isServer = function() return true end
+        Machines.write(item, full, true)
+        Machines.index(item, full)
+        g.now = 12.02
+        Machines.sampleSites()
+        T.eq(item:getModData().tlgProc.temps[11], 22, "the reading filed")
+        T.eq(#sent, 0, "and not sent")
+    end)
+    sendServerCommand = savedSend
+    g.restore()
+    if not ok then error(err, 0) end
+end)

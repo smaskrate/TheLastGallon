@@ -2,17 +2,23 @@
 
 ## 0.4.3 (not released)
 
-* Fixed: on a server, a machine on the floor never offered **Pause**,
-  **Resume** or **Abort batch** in its menu, in any version so far. The
-  menu decides them from the player's own copy of the machine's batch,
-  and on a server that copy never changed after the machine was put
-  down. The server now sends the batch to the players each time it
-  changes it. Single player is unchanged.
+* Fixed: on a server, a machine's menu did not follow its batch, so
+  **Pause**, **Resume** and **Abort batch** were missing. The menu
+  decides them from the player's own copy of the batch, and on a server
+  that copy did not change when the server changed the batch: after a
+  fermenter on the floor was loaded, paused, resumed and aborted, the
+  player's copy was still empty. The server now sends the batch to the
+  players each time someone acts on the machine, asks for its **Status**
+  or moves it, and the menu goes by what was last sent. A batch that
+  finished or paused by itself shows in the menu after a **Status**.
+  Single player is unchanged.
 * Checked on 42.22.2 on a dedicated server with one player (launches
-  362–363 in `docs/test-results.md`): a fermenter loaded, paused,
-  resumed and aborted twice through its menu, the menu offering each
-  entry where it applies. Not checked: two players, a real network, the
-  other machines.
+  362–364 in `docs/test-results.md`): a fermenter loaded, paused,
+  resumed and aborted twice through its menu, which offered each entry
+  where it applied. Not checked: two players, a real network, the stills
+  and the other machines, a player joining while a batch runs, a machine
+  carried and put down on a server, the full single-player run and the
+  install rehearsal of this version.
 
 ## 0.4.2 (2026-11-12)
 

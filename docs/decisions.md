@@ -670,27 +670,42 @@ their replacement.
   distilling kept exactly the 1.10 L it had distilled. Run 51 (32/0)
   repeated run 33's controls under the rule, a fermenter's preparing hour
   making no ethanol.
-* Amendment (2026-11-13, version 0.4.3, not released): on a server the menu
-  never offered **Pause**, **Resume** or **Abort batch** for a machine on
-  the floor, in every version released so far. The menu judges on the
-  client's copy of the record, and that copy did not change after the
-  machine was put down: an item's mod data reaches only the client whose
+* Amendment (2026-11-13, version 0.4.3, not released): on a server the
+  menu's **Pause**, **Resume** and **Abort batch** did not follow the batch
+  of a machine on the floor. The menu judges on the client's copy of the
+  record, and within a session that copy did not change when the server
+  wrote the record: an item's mod data reaches only the client whose
   inventory holds it (`syncItemFields` sends nothing for an item in no
   container), and `transmitModData` on the world object sends that
   object's own mod data (engine-capabilities, RT-MP). RT-MP run 362, on
   0.4.2: a fermenter loaded, paused, resumed and aborted twice through the
   server, its client copy held no record throughout and the menu offered
-  none of the three. The authority now also sends each record it writes
-  for a machine on the floor to the clients (`sendServerCommand`
-  "machine"), except the quiet writes of the fire notes, and without the
-  hourly readings and fire notes (up to 480 entries each; the menu needs
-  the state). Each client puts it in its copy (`Machines.received`).
-  Single player is unchanged. Verified RT-MP run 363 (7/0): each step
-  chosen through the menu, the client's copy equal to the server's state
-  after each, and the menu offering Pause and Abort batch while working,
-  Resume and Abort batch while paused by hand, Abort batch once stopped
-  early and nothing once emptied. Not run: two clients, a real network,
-  the stills and the other machines, a client joining while a batch runs.
+  none of the three. A client joining, or a chunk loaded again, gets the
+  item with its record as of that moment, a copy as stale as it is from
+  then on (not run).
+  * The authority now also sends each record it writes for a machine on
+    the floor to the clients (`sendServerCommand` "machine"), without the
+    hourly readings and fire notes (up to 480 entries each), and each
+    client puts it in its copy (`Machines.received`). The writes of the
+    hourly readings and the fire notes are quiet: they change nothing a
+    menu judges on, and would send every running machine's record to
+    every client each game hour. So a record goes after each action on
+    the machine, each Status and each move.
+  * A multiplayer client judges on the record as last sent, not brought
+    to now: without its readings, brought forward it can disagree with
+    the server's (in a cold room warmed by a fire, 7.8 stage hours done
+    where the server had 9.0; `test_machine_sites.lua`). A batch that
+    finished or paused by itself since shows after a Status. Single
+    player is unchanged: the menu still brings the record to now.
+  * Verified RT-MP runs 363 (7/0, the record sent and brought forward on
+    the client) and 364 (7/0, judged as sent): each step chosen through the
+    menu, the client's copy equal to the server's state after each, and
+    the menu offering Pause and Abort batch while working, Resume and
+    Abort batch while paused by hand, Abort batch once stopped early and
+    nothing once emptied. Not run: two clients, a real network, the stills
+    and the other machines, a client joining while a batch runs, a
+    machine carried and put down on a server, the performance mode with
+    these sends.
 
 ## D-024 A first look records the fuel it looks at
 * Current rule (amended 2026-11-02): a first look writes the fuel's record

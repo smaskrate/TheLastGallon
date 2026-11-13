@@ -242,12 +242,19 @@ end
 
 -- Which of Pause, Resume and Abort batch apply to the machine now, from its
 -- record brought to now without writing it (records advance lazily, so the
--- stored state can lag). Run 31 showed all three in every state.
+-- stored state can lag). Run 31 showed all three in every state. A
+-- multiplayer client judges on the record as the server last sent it
+-- (Machines.received: after each of its actions, a Status and a move). It
+-- comes without the hourly readings, and brought forward without them it
+-- can disagree with the server: in a cold room warmed by a fire, 7.8 stage
+-- hours done where the server had 9.0 (test_machine_sites).
 function Menu.controls(item)
     local rec = item:getModData()[Machines.SIDECAR]
     if type(rec) ~= "table" then return {} end
-    local ok, now = pcall(function() return Machines.advance(item, Machines.read(item, false), TLG.World.now(), TLG.World.env()) end)
-    if ok and type(now) == "table" then rec = now end
+    if not (isClient and isClient()) then
+        local ok, now = pcall(function() return Machines.advance(item, Machines.read(item, false), TLG.World.now(), TLG.World.env()) end)
+        if ok and type(now) == "table" then rec = now end
+    end
     local s = rec.state
     return {
         pause = s == "Processing",

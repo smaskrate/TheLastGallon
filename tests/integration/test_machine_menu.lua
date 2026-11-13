@@ -184,3 +184,37 @@ T.case("integration: Pause, Resume and Abort batch are offered only where they a
     T.eq(offered({ state = "Ready" }), "false,false,false")
     T.eq(offered(nil), "false,false,false", "no record yet")
 end)
+
+T.case("integration: a multiplayer client judges Pause, Resume and Abort batch on the record as the server sent it", function()
+    local Machines = TLG.Integration.Machines
+    local World = TLG.World
+    local savedAdvance, savedClient, savedRead = Machines.advance, isClient, Machines.read
+    local savedNow, savedEnv = World.now, World.env
+    Machines.read = function(item) return TLG.Tables.deepCopy(item:getModData().tlgProc) end
+    World.now, World.env = function() return 5 end, function() return {} end
+    local calls = 0
+    -- Brought forward, this batch would read finished; as sent, it works.
+    Machines.advance = function(item, rec)
+        calls = calls + 1
+        local out = TLG.Tables.deepCopy(rec)
+        out.state = "OutputReady"
+        return out
+    end
+    local ok, err = pcall(function()
+        local md = { tlgProc = { v = 1, id = "P-mp", machine = "fermenter_barrel", state = "Processing", t = 0 } }
+        local it = {}
+        function it:getModData() return md end
+        function it:getFullType() return "TLG.FermenterVessel" end
+        isClient = function() return true end
+        local c = Menu.controls(it)
+        T.eq(calls, 0, "not brought forward on a client")
+        T.ok(c.pause == true and c.abort == true, "as sent: working")
+        isClient = function() return false end
+        c = Menu.controls(it)
+        T.eq(calls, 1, "brought forward in single player")
+        T.ok(c.pause == false and c.abort == false, "brought forward: finished")
+    end)
+    Machines.advance, isClient, Machines.read = savedAdvance, savedClient, savedRead
+    World.now, World.env = savedNow, savedEnv
+    if not ok then error(err, 0) end
+end)
