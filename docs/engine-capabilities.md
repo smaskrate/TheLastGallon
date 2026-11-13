@@ -1526,6 +1526,14 @@ How a 42.21 server runs a timed action a client queued (`javap` of
   container it sends nothing. An item sent by `sendAddItemToContainer`
   reaches the client with its mod data (the manual's print media, run
   145).
+- `transmitModData` on an item lying on the floor (its
+  `IsoWorldInventoryObject`, which does not override it) sends the world
+  object's own mod data, not its item's (`GameServer.sendObjectModData`;
+  `ObjectModDataPacket.write` writes `IsoObject.getModData()`). So the
+  server's writes to the item's mod data of something on the floor do not
+  reach the clients: in RT-MP run 362 a fermenter's client copy held no
+  record after the server had loaded, paused, resumed and aborted it. The
+  mod sends such a record itself (`sendServerCommand`, D-023 amendment).
 - The world menu's **Grab** on a client queues an inventory transfer
   (`ISInventoryTransferAction`; SRC `ISWorldObjectContextMenu.lua:1436`,
   its `isClient()` branch), which the server carries out as an item

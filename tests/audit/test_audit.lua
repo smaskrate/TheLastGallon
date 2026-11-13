@@ -9,6 +9,13 @@ require "audit/mocks"
 require "TLG/Authority/Handlers"
 require "TLG/Authority/MachineHandlers"
 require "TLG/Authority/ConversionHandlers"
+-- These tests move petrol from pumps into petrol cars. Since 0.2.0 about one
+-- pump in four is drawn as diesel from the world's seed (D-036), and the
+-- pump->car case drew one: diesel into a petrol car is refused as
+-- incompatible. As in the multiplayer harness (MPServer.lua), no pump here
+-- gives diesel.
+require "TLG/Domain/WorldInit"
+TLG.Domain.WorldInit.STATION_DIESEL_SHARE = 0
 
 local M = AUD
 local H = TLG.Authority.Handlers

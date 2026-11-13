@@ -38,6 +38,12 @@ Events.OnServerCommand.Add(function(module, command, args)
         and string.sub(args.key, 1, 14) == "IGUI_TLG_Note_" then
         TLG.Notify.show(args.key, args.fuel)
     end
+    -- A machine's record from the server, for this client's menu
+    -- (TLG/Integration/Machines.lua).
+    if module == "TLG" and command == "machine" and TLG.Integration.Machines then
+        local ok, err = pcall(TLG.Integration.Machines.received, args)
+        if not ok then TLG.Log.error("machine record from the server: %s", tostring(err)) end
+    end
 end)
 
 return Net

@@ -1370,3 +1370,44 @@ T.case("integration: every ten game minutes the hands of the characters in the g
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+T.case("integration: on a server a machine's record goes to the clients without its readings; a client puts it in its copy", function()
+    local g = fakeGame(100)
+    local sent, savedSend = {}, sendServerCommand
+    sendServerCommand = function(module, command, args) sent[#sent + 1] = { module = module, command = command, args = args } end
+    local ok, err = pcall(function()
+        local sq = square(g, 10, 20, 0, true, 20)
+        local rec = Process.new({ id = "P-push", machine = "fermenter_barrel", t = 100 })
+        rec.temps, rec.fires = { [99] = 20 }, { [99] = false }
+        local item = machine(sq, rec)
+        Machines.write(item, rec)
+        T.eq(#sent, 0, "single player sends nothing")
+        isServer = function() return true end
+        Machines.write(item, rec)
+        T.eq(#sent, 1)
+        local m = sent[1]
+        T.eq(m.module, "TLG"); T.eq(m.command, "machine")
+        T.eq(m.args.id, 7); T.eq(m.args.x, 10); T.eq(m.args.y, 20); T.eq(m.args.z, 0)
+        T.eq(m.args.rec.id, "P-push")
+        T.eq(m.args.rec.state, rec.state)
+        T.eq(m.args.rec.temps, nil, "no readings sent")
+        T.eq(m.args.rec.fires, nil, "no fire notes sent")
+        T.ok(rec.temps ~= nil and rec.fires ~= nil, "the record kept on the server keeps both")
+        Machines.write(item, rec, true)
+        T.eq(#sent, 1, "a quiet write is not sent")
+        lift(item)
+        Machines.write(item, rec)
+        T.eq(#sent, 1, "carried: its holder gets it with the item's fields")
+        -- A client's copy of the item on the floor takes the record sent.
+        isServer = function() return false end
+        local copy = machine(sq, nil)
+        T.ok(Machines.received(m.args))
+        T.eq(copy:getModData().tlgProc.id, "P-push")
+        T.ok(not Machines.received({ id = 8, x = 10, y = 20, z = 0, rec = m.args.rec }), "another item")
+        T.ok(not Machines.received({ id = 7, x = 1, y = 1, z = 0, rec = m.args.rec }), "a square not loaded")
+        T.ok(not Machines.received({ id = 7, x = 10, y = 20, z = 0 }), "no record")
+    end)
+    sendServerCommand = savedSend
+    g.restore()
+    if not ok then error(err, 0) end
+end)

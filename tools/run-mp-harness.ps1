@@ -74,6 +74,11 @@
   menus: the mod's world menu entries where the click is on
   their thing, for a can, a machine, a generator and a car the server put
   down, at zoom 1, 0.5 and 1.5 (one client).
+  machinemenu: the machine menu's Pause, Resume and Abort batch on a
+  server: a fermenter the server puts on the floor is loaded and started
+  through the menu, then paused, resumed and aborted twice; after each step
+  the entries the client's menu offers are read against the state the
+  server replied with (one client).
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -100,7 +105,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "wrongfuel", "menus")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "wrongfuel", "menus", "machinemenu")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"

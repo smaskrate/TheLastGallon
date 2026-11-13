@@ -115,6 +115,128 @@ if MP.only == "gensprite" then
 end
 
 ------------------------------------------------------------------------------
+-- machinemenu (one client): the machine menu's Pause, Resume and Abort
+-- batch on a server. The menu decides them from this client's copy of the
+-- machine's record (MachineMenu.controls). A fermenter the server puts on
+-- the floor is loaded and started through the menu; after each step the
+-- entries the menu offers are read against the state the server's reply
+-- gives. Each next step is chosen through the menu when it offers it, else
+-- asked of the server directly, so the run goes on either way.
+------------------------------------------------------------------------------
+if MP.only == "machinemenu" then
+    local MM = {}
+    local V = "TLG.FermenterVessel"
+    local KEYS = { pause = "ContextMenu_TLG_Pause", resume = "ContextMenu_TLG_Resume", abort = "ContextMenu_TLG_Abort" }
+    local function vessel()
+        local s = MM.x and getCell():getGridSquare(MM.x, MM.y, 0)
+        local objs = s and s:getWorldObjects()
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            local it = objs:get(i):getItem()
+            if it and it:getID() == MM.id then return it end
+        end
+        return nil
+    end
+    local function submenu()
+        local c = ISContextMenu.get(0, 100, 100)
+        TLG.UI.MachineMenu.fill(0, c, { vessel() })
+        local root = c:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+        local sub = root and root.subOption and c:getSubMenu(root.subOption)
+        c:setVisible(false)
+        return sub
+    end
+    -- Which of the three the menu offers now, as "pause,abort".
+    local function offered()
+        local sub, out = submenu(), {}
+        for _, k in ipairs({ "pause", "resume", "abort" }) do
+            if sub and sub:getOptionFromName(getText(KEYS[k])) then out[#out + 1] = k end
+        end
+        return table.concat(out, ",")
+    end
+    -- What the menu should offer for the state the server replied with (the
+    -- single-player menu's rules, MachineMenu.controls).
+    local function expected(r)
+        if r.state == "Processing" then return "pause,abort" end
+        if r.state == "Paused" then return r.pause == "paused_by_player" and "resume,abort" or "abort" end
+        if r.state == "OutputReady" and r.stoppedEarly == true then return "abort" end
+        return ""
+    end
+    local function copyState()
+        local rec = vessel() and vessel():getModData().tlgProc
+        return type(rec) == "table" and (tostring(rec.state) .. "/" .. tostring(rec.pause)) or "none"
+    end
+    -- The entry clicked as a player clicks it when the menu offers it, else
+    -- the same command asked directly; the reply kept.
+    local function choose(name, key, command)
+        return { name = "mp_mm_" .. name, timeout = 1800, fn = function(ctx, ticks)
+            if ticks == 1 then
+                local sub = submenu()
+                local opt = sub and sub:getOptionFromName(getText(key))
+                ctx.viaMenu = opt ~= nil and not opt.notAvailable
+                local orig = TLG.Net.request
+                if ctx.viaMenu then
+                    TLG.Net.request = function(cmd, args) return orig(cmd, args, function(r) ctx.reply = r end) end
+                    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+                    TLG.Net.request = orig
+                    if not ok then ctx.reply = { ok = false, reason = "raised: " .. tostring(err) } end
+                else
+                    orig(command, { target = TLG.Integration.Machines.refFor(vessel()) }, function(r) ctx.reply = r end)
+                end
+                return nil
+            end
+            if not ctx.reply then return nil end
+            MM[name] = { reply = ctx.reply, viaMenu = ctx.viaMenu }
+            report():line("OBS  MP.mm %s through the menu %s -> %s pause=%s stoppedEarly=%s", name, tostring(ctx.viaMenu),
+                brief(ctx.reply), tostring(ctx.reply.pause), tostring(ctx.reply.stoppedEarly))
+            return true
+        end }
+    end
+    -- The menu once the server's write has had three seconds to arrive.
+    local function menuAfter(name)
+        return { name = "mp_mm_menu_" .. name, timeout = 600, fn = function(ctx, ticks)
+            if ticks < 180 then return nil end
+            local r = MM[name] and MM[name].reply or {}
+            local got, want, copy = offered(), expected(r), copyState()
+            report():line("OBS  MP.mm after %s: the server says %s/%s; this client's copy of the record %s; its menu " ..
+                "offers [%s], want [%s]", name, tostring(r.state), tostring(r.pause), copy, got, want)
+            check("mm_menu_after_" .. name, function()
+                return r.ok == true and got == want, string.format("server %s/%s; this client's copy %s; menu [%s], want [%s]",
+                    tostring(r.state), tostring(r.pause), copy, got, want)
+            end)
+            return true
+        end }
+    end
+    MP.stepsA = { MP.waitWorld,
+        call("mm_spawn", "spawn", function()
+            local x, y = S.spot(-4)
+            return { item = V, x = x, y = y }
+        end, "spawned", function(m) MM.x, MM.y, MM.id = tonumber(m.x), tonumber(m.y), tonumber(m.id) end),
+        call("mm_give", "give", { items = "Base.Sugar;Base.Sugar;Base.Yeast;Base.BucketEmpty", water = "10" }, "given",
+            function() end),
+        wait("mp_mm_arrives", 180),
+        walkTo("mp_mm_walk", function() return MM.x + 1, MM.y end),
+        once("mp_mm_empty", function()
+            local got = offered()
+            check("mm_menu_empty_offers_none", function()
+                return vessel() ~= nil and got == "", string.format("vessel %s; menu [%s]", tostring(vessel() ~= nil), got)
+            end)
+        end),
+        choose("load", "ContextMenu_TLG_LoadFerment", "machine.loadFerment"), menuAfter("load"),
+        choose("pause", "ContextMenu_TLG_Pause", "machine.pause"), menuAfter("pause"),
+        choose("resume", "ContextMenu_TLG_Resume", "machine.resume"), menuAfter("resume"),
+        choose("abort", "ContextMenu_TLG_Abort", "machine.abort"), menuAfter("abort"),
+        choose("abort_again", "ContextMenu_TLG_Abort", "machine.abort"), menuAfter("abort_again"),
+        once("mp_mm_paths", function()
+            local via = {}
+            for _, k in ipairs({ "load", "pause", "resume", "abort", "abort_again" }) do
+                via[#via + 1] = k .. "=" .. tostring(MM[k] and MM[k].viaMenu)
+            end
+            report():line("OBS  MP.mm chosen through the menu: %s", table.concat(via, " "))
+        end),
+        once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+    return
+end
+
+------------------------------------------------------------------------------
 -- handbook (2026-11-11, one client, D-038): the biodiesel recipes on a
 -- server, in a client without -debug. The Ash Barrel (a metal drum, two
 -- steel rods, a hammer; Welding 2) is tried in the game's crafting window

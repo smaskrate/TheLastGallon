@@ -630,7 +630,8 @@ their replacement.
 * Current rule (amended 2026-11-01): as decided below, with what a batch
   made counted as the share done of the stages its recipe marks as making
   its result (`makes`); a recipe snapshot that marks none still counts
-  every stage (amendment).
+  every stage (amendment). On a server the menu judges on the record the
+  server sends each client (amendment of 2026-11-13).
 * Decision: aborting a running or paused batch keeps what it made so far in
   the machine as output to collect, marked stopped early: a fermenter's
   wash, weaker and with its unfermented sugar, for a still; a still's
@@ -669,6 +670,27 @@ their replacement.
   distilling kept exactly the 1.10 L it had distilled. Run 51 (32/0)
   repeated run 33's controls under the rule, a fermenter's preparing hour
   making no ethanol.
+* Amendment (2026-11-13, version 0.4.3, not released): on a server the menu
+  never offered **Pause**, **Resume** or **Abort batch** for a machine on
+  the floor, in every version released so far. The menu judges on the
+  client's copy of the record, and that copy did not change after the
+  machine was put down: an item's mod data reaches only the client whose
+  inventory holds it (`syncItemFields` sends nothing for an item in no
+  container), and `transmitModData` on the world object sends that
+  object's own mod data (engine-capabilities, RT-MP). RT-MP run 362, on
+  0.4.2: a fermenter loaded, paused, resumed and aborted twice through the
+  server, its client copy held no record throughout and the menu offered
+  none of the three. The authority now also sends each record it writes
+  for a machine on the floor to the clients (`sendServerCommand`
+  "machine"), except the quiet writes of the fire notes, and without the
+  hourly readings and fire notes (up to 480 entries each; the menu needs
+  the state). Each client puts it in its copy (`Machines.received`).
+  Single player is unchanged. Verified RT-MP run 363 (7/0): each step
+  chosen through the menu, the client's copy equal to the server's state
+  after each, and the menu offering Pause and Abort batch while working,
+  Resume and Abort batch while paused by hand, Abort batch once stopped
+  early and nothing once emptied. Not run: two clients, a real network,
+  the stills and the other machines, a client joining while a batch runs.
 
 ## D-024 A first look records the fuel it looks at
 * Current rule (amended 2026-11-02): a first look writes the fuel's record

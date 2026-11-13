@@ -6846,3 +6846,45 @@ a server, an install through the Steam Workshop. Not uploaded.
 
 Evidence:
 [run 344](evidence/2026-11-12_rt-sp_harness_run344_install_rehearsal_0.4.2_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launches 362–363 (the machine menu's Pause, Resume and Abort batch on a server)
+
+Command: `tools/run-mp-harness.ps1 -Only machinemenu`: the TLGDev
+dedicated server and one client on this computer, 42.22.2, branch
+`fix/machine-menu-server` off `main`. The server put a Fermentation
+Vessel on the floor and gave the player 2 kg of sugar, a yeast and 10 L
+of water. The client loaded it through the machine menu, then paused,
+resumed and aborted it twice, each step through the menu when the menu
+offered it, else asked of the server directly. After each step it read
+which of Pause, Resume and Abort batch the menu offered against the state
+the server replied with. The menu decides them from the client's own copy
+of the record (`MachineMenu.controls`, D-023).
+
+| Launch | The mod | Result (pass/fail, client A) |
+| --- | --- | --- |
+| 362 | `main` as released (0.4.2) | 3/4 |
+| 363 | with the records sent to the clients | 7/0 |
+
+Launch 362: the load went through the menu; the server replied
+Processing, then Paused (by hand), Processing, OutputReady (stopped
+early) and Ready. The client's copy of the record held nothing
+throughout, and the menu offered none of the three entries, so pause,
+resume and both aborts had to be asked directly. The three passes are
+the empty fermenter, the join and the emptied one, where nothing is
+offered. On a server the three entries have never shown for a machine on
+the floor.
+
+Launch 363: the client's copy equalled the server's state after each
+step, and the menu offered Pause and Abort batch while it worked, Resume
+and Abort batch while paused by hand, Abort batch once stopped early and
+nothing once emptied. Every step was chosen through the menu. Neither
+console holds an error or a warning of the mod. The server's console was
+not kept: it holds the test accounts' passwords.
+
+Not run: two clients, a real network, the stills and the other machines,
+a client joining while a batch runs. Single player is unchanged (the
+record is sent only on a server); no single-player launch was made.
+
+Evidence:
+[run 362](evidence/2026-11-13_rt-mp_harness_run362_machinemenu_main_42.22.2.txt);
+[run 363](evidence/2026-11-13_rt-mp_harness_run363_machinemenu_fixed_42.22.2.txt).
