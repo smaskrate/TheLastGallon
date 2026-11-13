@@ -7035,3 +7035,23 @@ water in 9.6 % (`WorldInit.stationContamination`, offline).
 
 Evidence:
 [run 369](evidence/2026-11-13_rt-sp_harness_run369_install_rehearsal_0.4.3_one_chance_failure_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 370 (the 0.4.3 zip installed clean again, gate 12)
+
+The same zip as launch 369 (`d0da92c`, SHA-256 `B04BD750…7BF6E1E8`),
+with the harness at `4f6a791`, whose station-fuel gate step holds the
+start draw when the fuel leaves it to chance.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 370 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 106/0, then 14/0 |
+
+The zip matched its manifest, the game read 0.4.3 and the mod logged
+"The Last Gallon 0.4.3 ready" at both loads. The console holds no warning
+or error of the mod; its one exception is the harness's deep-recursion
+probe. This world's first petrol pump held no water (start factor 1), so
+the car started at its one try and the held draw was not needed: that
+path has not run in game.
+
+Evidence:
+[run 370](evidence/2026-11-13_rt-sp_harness_run370_install_rehearsal_0.4.3_42.22.2.txt).

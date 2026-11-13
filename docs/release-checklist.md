@@ -279,6 +279,44 @@ its SHA-256 in `dist/TheLastGallon-0.4.2.sha256`, and its `mod.info`
 reads 0.4.2 (gate 12). Open: the game loading the mod from that
 download, and how the Workshop page shows the change note.
 
+## Version 0.4.3 (not released)
+
+Version 0.4.3 makes two client menus follow the server on a dedicated
+server: the machine menu's **Pause**, **Resume** and **Abort batch**
+(D-023, amended) and the Fuel menu's **Seal** or **Open** for a can on
+the floor or in a container (D-041). In 0.4.2 both decide from the
+player's own copy of the record, which on a server did not change when
+the server changed the record. The server now sends the records of items
+no character carries to the clients. Single player is unchanged.
+
+What ships changes in six Lua files (`Net.lua`, `MachineContextMenu.lua`,
+`Containers.lua`, `Machines.lua`, the new `WorldItemRecords.lua`, and
+`Core.lua` for the version), `mod.info`, the shipped changelog and
+support matrix, and `workshop.txt`. No string and no script. RT-MP
+launches 362–367 ran the menus on a server with one client
+(`test-results.md`): a fermenter loaded and worked through its menu
+(launch 364, 7/0), then the nine machines, a carried fermenter, the cans
+on the floor and in a bin, and a batch paused across leaving and joining
+again (launch 367, 52/0). The full single-player run on the repository's
+mod (launch 368) passed every check but the station-fuel start gate, a
+start left to chance at a pump with water; the step now holds that draw.
+
+The rehearsed zip is the zip of `d0da92c` (168 files, 7,892,433 bytes,
+SHA-256 `B04BD750…7BF6E1E8`), built from a clean tree before any release
+commit. Ten files differ from the 0.4.2 package: `42/mod.info`,
+`TLG/Core.lua`, `Net.lua`, `MachineContextMenu.lua`, `Containers.lua`,
+`Machines.lua`, the new `WorldItemRecords.lua`, the shipped changelog and
+support matrix, and `workshop.txt`. It was installed clean and played
+twice, the game reading 0.4.3: launch 369, 105/1 and 14/0, the same
+start gate left to chance; launch 370, with the harness that holds that
+draw, 106/0 and 14/0 (its pump held no water, so nothing was held). It is
+not the release package: the release commit dates the changelog's
+heading, so the release zip differs at least in the shipped
+`CHANGELOG.md` and needs its own build; comparing the two manifests
+shows which files differ. Not run on this zip: the other modes, the
+multiplayer cases, the upgrade scenarios. Not uploaded: the upload
+folder still holds 0.4.2.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
