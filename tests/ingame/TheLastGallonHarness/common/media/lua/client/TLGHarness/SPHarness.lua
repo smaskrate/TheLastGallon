@@ -8864,10 +8864,26 @@ RT.U.stock = { name = "rtu_stock", timeout = 3000, fn = function(ctx, ticks)
         end
         local ec = U.cars[2] and I.Vehicles.evaluate(U.cars[2])
         local eg = U.oldDgen and (I.Generators.evaluate(U.oldDgen))
+        -- From 0.3.0 on, the earlier release judges both as wrong fuel
+        -- (D-037), as this version does (launch 374, from 0.4.2).
+        local major, minor = string.match(tostring(TLG.VERSION), "^(%d+)%.(%d+)")
+        local before030 = major ~= nil and tonumber(major) == 0 and tonumber(minor) < 3
+        local function wrongFuel(e)
+            for _, r in ipairs(e and e.reasons or {}) do
+                if string.find(r, "wrong_fuel", 1, true) then return true end
+            end
+            return false
+        end
         R:check("RTU.wrong_blends_as_the_earlier_release_judges_them", function()
-            return ec ~= nil and ec.compatible == false and ec.harmful == nil and (eg == nil or (eg.compatible == false and eg.harmful == nil)),
-                string.format("car on 40 %% diesel: %s; Diesel Generator on petrol: %s", evaluationText(ec),
-                    eg and evaluationText(eg) or "no such item in this release")
+            local ok
+            if before030 then
+                ok = ec ~= nil and ec.compatible == false and ec.harmful == nil
+                    and (eg == nil or (eg.compatible == false and eg.harmful == nil))
+            else
+                ok = ec ~= nil and ec.compatible == false and wrongFuel(ec) and (eg == nil or wrongFuel(eg))
+            end
+            return ok, string.format("release %s; car on 40 %% diesel: %s; Diesel Generator on petrol: %s",
+                tostring(TLG.VERSION), evaluationText(ec), eg and evaluationText(eg) or "no such item in this release")
         end)
         local amb = U.cars[1]
         local ambRec = amb and I.Vehicles.read(amb, false)
