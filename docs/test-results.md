@@ -8360,3 +8360,67 @@ the bare road; a run without the mod.
 
 Evidence:
 [run 407](evidence/2026-11-13_rt-sp_harness_run407_performance_petrol_comparison_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launches 408–409 (the wood-gas moves on a server)
+
+Branch `feature/gas-generators` after `0d1a303`, 42.22.2, on a dedicated
+server with one client, on the shortest day: the moves single player ran
+in launch 397 (D-040), as a new case, `tools/run-mp-harness.ps1 -Only
+gasmoves` (committed with this entry). The server puts down two
+generators converted to gas, A and B, four tiles apart, a Wood Gasifier
+between them two tiles from each, and 30 kg of wood in the player's
+inventory. It counts its own minute pass: each call of
+`Generators.gasRefill` by the gas record it reads, so B's counts follow
+it as it moves, with the gasifier's stored record read raw before and
+after each call. The client works everything through the gasifier's menu
+and the game's own actions: start, stop, plug in, unplug and take a
+generator, the drop action, and the world menu's **Grab**.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 408 | 23/1 |
+| 409 | 24/0 |
+
+* Both generators ran 3.2 hours on the one gasifier, across four hourly
+  steps: 4 steps and 4 refills each, no stop, each 0.008 L burned against
+  4 steps of 0.002 L.
+  The gasifier gave 0.1024 Nm3 against the litres both took, made what it
+  gave, let out and held, and its wood (0.0439 kg at 2.33 Nm3/kg) made
+  that.
+* B, switched off, unplugged and taken up, carried its gas record and its
+  0.003 L on the item, on the server and on the client's copy. Put down a
+  tile from the gasifier and plugged in, it had the same record and held
+  gas; its new square was watched and its old one dropped. It burned a
+  step and was refilled there within the hour, the gasifier giving
+  0.0256 Nm3 meanwhile (A's and B's 0.002 L). Its load was 0.002 L there
+  too, so it arrived at its cap: a cap that follows a different load on
+  the new square, which launch 396 met, did not come up. Taken up again and put down
+  five tiles from the gasifier, it ran its 0.003 L dry in two steps and
+  stopped, refilled nothing; A was refilled twice meanwhile.
+* The lit gasifier was taken up with **Grab** at minute 13 of an hour,
+  after A's refill, and put down a tile from A (minute 21); nothing on
+  the client asked about it. Its stored record stayed lit, with its old
+  site, until the minute pass read it for A's refill a minute into the
+  next hour (12.02 h of world age) and put it out as moved (Ready/moved,
+  its wood kept at 27.06 kg, its 2.0 Nm3 let out): the one time it went
+  out, during that call. A got nothing and
+  stopped. The client's copy then read Ready/moved and its menu offered
+  **Light** (D-041).
+* Launch 408 failed one check, the harness's own: B's window started its
+  counts at its first ask, which came after B's refill on the new square
+  (steps and refills 5 there against 4 at the put-down, the gasifier's
+  0.0256 Nm3 given in that minute), so the window counted none. Launch
+  409 starts them at the put-down, with B still off, and passed it.
+
+The vault, active on the server, logged nothing but its start: put down,
+a generator's gas record goes to the vault with its new square
+(`Generators` attach), and nothing was put back or dropped. No console of
+the client or the server holds a warning or error of the mod; each read
+0.4.3, and the client's holds no exception but the game's animator scan.
+
+Not run: two clients watching the moves; a real network; a generator put
+down on a square where its load differs.
+
+Evidence:
+[run 408](evidence/2026-11-13_rt-mp_harness_run408_gasmoves_42.22.2.txt);
+[run 409](evidence/2026-11-13_rt-mp_harness_run409_gasmoves_near_window_42.22.2.txt).

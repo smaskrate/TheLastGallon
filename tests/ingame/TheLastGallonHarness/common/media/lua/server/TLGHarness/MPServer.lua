@@ -2638,3 +2638,225 @@ function services.drop_vault(player, args)
     if store then store.vault = nil end
     reply("drop_vault", args, { had = tostring(had), nextId = tostring(store and store.nextId) })
 end
+
+------------------------------------------------------------------------------
+-- gasmoves (tools/run-mp-harness.ps1 -Only gasmoves, one client, the shortest
+-- day; D-040): single player's wood gas when things move (SPHarness RT.GV,
+-- launch 397) played on a dedicated server. The server finds clear ground
+-- near the spawn point (10 by 4 squares), puts down two vanilla generators
+-- converted to gas, A and B, four tiles apart, a Wood Gasifier between them
+-- two tiles from each, and wood (30 kg) into the player's inventory; the
+-- client does the rest with the gasifier's menu and the game's actions
+-- (MPHarnessCases.lua). The server watches its own minute pass: each call of
+-- Generators.gasRefill is counted by the gas record it reads, so B's counts
+-- follow it as it moves, and the gasifier's record is read raw before and
+-- after each call, which tells the call that put the moved gasifier out.
+-- Only raw reads here: Gasifiers.read and Generators.gasRecord go through
+-- the vault, which may write. Built in a function of its own for the -debug
+-- compiler.
+------------------------------------------------------------------------------
+local function buildGasMoves()
+    local GM = M.GM or {}
+    M.GM = GM
+
+    -- Clear ground from x - 1 to x + 8 and y - 1 to y + 2, nearest (x0, y0).
+    local function spot(x0, y0)
+        for r = 0, 20 do
+            for dx = -r, r do
+                for dy = -r, r do
+                    if math.max(math.abs(dx), math.abs(dy)) == r then
+                        local x, y, ok = x0 + dx, y0 + dy, true
+                        for cx = -1, 8 do
+                            for cy = -1, 2 do
+                                if ok and not free(getCell():getGridSquare(x + cx, y + cy, 0)) then ok = false end
+                            end
+                        end
+                        if ok then return x, y end
+                    end
+                end
+            end
+        end
+        return nil
+    end
+
+    -- The gasifier on the floor around the site, and its square.
+    local function onFloor()
+        if not (GM.x and GM.item) then return nil end
+        for x = GM.x - 1, GM.x + 8 do
+            for y = GM.y - 1, GM.y + 2 do
+                local s = getCell():getGridSquare(x, y, 0)
+                local objs = s and s:getWorldObjects()
+                for i = 0, (objs and objs:size() or 0) - 1 do
+                    local it = objs:get(i):getItem()
+                    if it and it:getID() == GM.item then return it, s end
+                end
+            end
+        end
+        return nil
+    end
+    local function raw(it)
+        local r = it and it:getModData()[TLG.Integration.Gasifiers.KEY]
+        return type(r) == "table" and r or nil
+    end
+    local function lit(r) return r ~= nil and TLG.Integration.Gasifiers.lit(r) end
+    local function rawText(r)
+        if r == nil then return "none" end
+        return string.format("%s/%s site %s,%s rev %s t %.6f", tostring(r.state), tostring(r.pause),
+            tostring(r.site and r.site.x), tostring(r.site and r.site.y), tostring(r.rev), tonumber(r.t) or -1)
+    end
+    local function hours() return getGameTime():getWorldAgeHours() end
+
+    -- Each call of the minute pass's gasRefill (looked up at call time by
+    -- Generators.gasMinute), counted by the gas record it reads: the steps
+    -- between calls (a drop), the refills (a rise in it), the stops (running
+    -- at one call, not at the next). Each time the gasifier's record goes
+    -- from lit to out during a call, the call is kept.
+    local function watch()
+        local G = TLG.Integration.Generators
+        if GM.watching or not (G and G.gasRefill) then return end
+        GM.watching, GM.by, GM.outs = true, {}, {}
+        local orig = G.gasRefill
+        G.gasRefill = function(gen)
+            local rec = gen and gen:getModData()[G.GAS_KEY]
+            local id = type(rec) == "table" and rec.id or nil
+            local it = onFloor()
+            local before = raw(it)
+            local wasLit = lit(before)
+            local f0, on0 = gen:getFuel(), gen:isActivated()
+            local ok, r = pcall(orig, gen)
+            local f1 = gen:getFuel()
+            local after = raw(it)
+            local sq = gen:getSquare()
+            local at = sq and (sq:getX() .. "," .. sq:getY()) or "?"
+            if id then
+                local w = GM.by[id] or { calls = 0, steps = 0, burned = 0, rises = 0, risen = 0, stops = 0 }
+                GM.by[id] = w
+                w.calls, w.at = w.calls + 1, at
+                if w.last and f0 < w.last - 1e-7 then w.steps, w.burned = w.steps + 1, w.burned + (w.last - f0) end
+                if f1 > f0 + 1e-7 then w.rises, w.risen, w.lastRise = w.rises + 1, w.risen + (f1 - f0), hours() end
+                if w.on and not on0 then w.stops = w.stops + 1 end
+                w.last, w.on = f1, gen:isActivated()
+            end
+            if wasLit and after ~= nil and not lit(after) then
+                local o = { by = tostring(id), at = at, h = hours(), before = rawText(before), after = rawText(after) }
+                GM.outs[#GM.outs + 1] = o
+                report():line("OBS  MPS.gasmoves the gasifier went out during the minute pass's read for %s at %s, " ..
+                    "%.4f h: %s -> %s", o.by, o.at, o.h, o.before, o.after)
+            end
+            if not ok then error(r, 0) end
+            return r
+        end
+    end
+
+    function services.setup_gasmoves(player, args)
+        local G = TLG.Integration.Generators
+        local x, y = spot(S.CX + 6, S.CY + 6)
+        if x == nil then
+            reply("setup_gasmoves", args, { clear = "false" })
+            return
+        end
+        GM.x, GM.y = x, y
+        local out = { clear = "true", gx = x, gy = y }
+        for k, dx in pairs({ a = 0, b = 4 }) do
+            local g = generatorAt(x + dx, y)
+            if g == nil then
+                g = IsoGenerator.new(instanceItem("Base.Generator"), getCell(), getCell():getGridSquare(x + dx, y, 0))
+            end
+            g:setConnected(true)
+            g:setFuel(0)
+            local state = commissionGas(g)
+            g:sync()
+            g:transmitModData()
+            out[k .. "state"], out[k .. "profile"] = tostring(state), tostring(G.profile(g))
+        end
+        local item = getCell():getGridSquare(x + 2, y, 0):AddWorldInventoryItem("TLG.Gasifier", 0.5, 0.5, 0)
+        GM.item = item and item:getID()
+        out.item = tostring(GM.item)
+        local inv = player:getInventory()
+        for _, spec in ipairs({ { "Base.Log", 2 }, { "Base.Firewood", 5 }, { "Base.Charcoal", 2 } }) do
+            for _ = 1, spec[2] do
+                local it = inv:AddItem(spec[1])
+                sendAddItemToContainer(inv, it)
+            end
+        end
+        -- What the game's Plug in asks of the player (as gaspropane gives it).
+        player:setPerkLevelDebug(Perks.Electricity, 4)
+        player:getKnownRecipes():add("Generator")
+        watch()
+        reply("setup_gasmoves", args, out)
+    end
+
+    -- A and B where the client says they stand (ax/ay, bx/by), their raw gas
+    -- records and the watch's counts for their records (aid, bid: the counts
+    -- follow a record, not a square); the old square's watch (ox/oy); the
+    -- generator item the player carries, with its carried gas record; the
+    -- gasifier where it lies, its record raw and brought to now on a copy;
+    -- the gas a litre and a kg of wood stand for; and every time the
+    -- gasifier went out in a call. `reset` starts the counts again after
+    -- this answer.
+    function services.probe_gasmoves(player, args)
+        local G, GZ, GasFeed = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Domain.GasFeed
+        local Gasifier = TLG.Domain.Gas.Gasifier
+        local out = { hours = string.format("%.6f", hours()), minute = tostring(getGameTime():getMinutes()) }
+        for _, k in ipairs({ "a", "b" }) do
+            local x, y = tonumber(args[k .. "x"]), tonumber(args[k .. "y"])
+            local g = x and generatorAt(x, y)
+            local rec = g and g:getModData()[G.GAS_KEY]
+            rec = type(rec) == "table" and rec or nil
+            local w = (GM.by or {})[args[k .. "id"] or (rec and rec.id) or ""] or {}
+            out[k .. "found"] = tostring(g ~= nil)
+            out[k .. "fuel"] = g and string.format("%.7f", g:getFuel()) or "-"
+            out[k .. "on"] = tostring(g and g:isActivated())
+            out[k .. "plugged"] = tostring(g and g:isConnected())
+            out[k .. "load"] = g and string.format("%.7f", g:getTotalPowerUsing()) or "-"
+            out[k .. "cap"] = g and string.format("%.7f", G.woodgasCap(g)) or "-"
+            out[k .. "rec"] = tostring(rec and rec.id)
+            out[k .. "holds"] = tostring(g ~= nil and GasFeed.holdsGas(rec, g:getFuel()))
+            out[k .. "watched"] = tostring(x ~= nil and G.gasSquares[x .. "," .. y .. ",0"] == true)
+            out[k .. "calls"], out[k .. "steps"] = tostring(w.calls or 0), tostring(w.steps or 0)
+            out[k .. "burned"], out[k .. "rises"] = string.format("%.7f", w.burned or 0), tostring(w.rises or 0)
+            out[k .. "risen"], out[k .. "stops"] = string.format("%.7f", w.risen or 0), tostring(w.stops or 0)
+            out[k .. "at"], out[k .. "lastRise"] = tostring(w.at), w.lastRise and string.format("%.4f", w.lastRise) or "-"
+        end
+        local ox, oy = tonumber(args.ox), tonumber(args.oy)
+        out.oldWatched = tostring(ox ~= nil and G.gasSquares[ox .. "," .. oy .. ",0"] == true)
+        out.oldGen = tostring(ox ~= nil and generatorAt(ox, oy) ~= nil)
+        local carried = player:getInventory():getFirstTypeRecurse("Base.Generator")
+        local side = carried and carried:getModData().tlg
+        local cg = type(side) == "table" and side[G.GAS_KEY] or nil
+        out.carried = tostring(carried ~= nil)
+        out.carriedRec = tostring(type(cg) == "table" and cg.id)
+        out.carriedFuel = tostring(carried and carried:getModData().fuel)
+        local it, s = onFloor()
+        if it == nil and GM.item then it = player:getInventory():getItemWithIDRecursiv(GM.item) end
+        out.where = s and (s:getX() .. "," .. s:getY()) or (it and "inventory") or "none"
+        local r = raw(it)
+        out.stored = rawText(r)
+        out.gstate, out.gpause, out.lit = tostring(r and r.state), tostring(r and r.pause), tostring(lit(r))
+        out.site = r and r.site and (r.site.x .. "," .. r.site.y) or "-"
+        out.hopperStored = r and string.format("%.4f", Gasifier.status(r).hopperKg or -1) or "-"
+        out.ventedStored = r and string.format("%.7f", r.totals.vented or 0) or "-"
+        local now = r and GZ.advance(it, TLG.Tables.deepCopy(r), TLG.World.now()) or nil
+        if now then
+            local st = Gasifier.status(now)
+            out.nowState, out.nowPause = tostring(st.state), tostring(st.reason)
+            out.hopper, out.buffer = string.format("%.4f", st.hopperKg or -1), string.format("%.7f", now.buffer or 0)
+            for _, k in ipairs({ "fed", "produced", "delivered", "vented", "flared" }) do
+                out[k] = string.format("%.7f", now.totals[k] or 0)
+            end
+            out.perKg = string.format("%.7f",
+                Gasifier.ratedOutput(now) / TLG.Registry.need("machine", now.machine).feedKgPerHour)
+        end
+        out.nm3PerL = string.format("%.7f", GasFeed.nm3For("woodgas", 1))
+        local outs = {}
+        for i, o in ipairs(GM.outs or {}) do
+            outs[#outs + 1] = string.format("%d:%s@%s %.4f h %s -> %s", i, o.by, o.at, o.h, o.before, o.after)
+        end
+        out.outs, out.outCount = table.concat(outs, " | "), tostring(#(GM.outs or {}))
+        local last = (GM.outs or {})[#(GM.outs or {})]
+        out.outBy, out.outAfter = tostring(last and last.by), tostring(last and last.after)
+        if args.reset == "true" then GM.by = {} end
+        reply("probe_gasmoves", args, out)
+    end
+end
+buildGasMoves()

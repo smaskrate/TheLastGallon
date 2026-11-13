@@ -1958,6 +1958,18 @@ gas probe (launch 342).
     A lit gasifier moved with nothing reading it stayed lit in its record
     until a generator's minute pass read it, which put it out as moved,
     its wood kept, and gave nothing.
+  * On a dedicated server (launches 408–409), launch 397's moves through
+    the game's own actions, B's load the same on each square: one
+    gasifier fed two generators, each step of each drawn and its gas all
+    accounted for. B, taken up, carried its gas
+    record on the item; put down a tile from the gasifier it kept it, was
+    watched there, its old square dropped, and was refilled; out of reach
+    it ran dry and stopped. The lit gasifier, taken up with Grab and put
+    down a tile from A with nothing asking about it, stayed lit in its
+    record until the server's minute pass read it for A's refill and put
+    it out as moved, its wood kept; A got nothing and stopped, and the
+    client's copy and menu followed (D-041). The vault logged nothing for
+    the record, which goes to it with the generator's new square.
   * Performance, in single player (launches 398–401 and 404–407,
     `performance.md`): the gas minute pass costs 0.011–0.012 ms a game
     minute for a full gas generator. A propane one a part of a use below
@@ -1992,9 +2004,9 @@ gas probe (launch 342).
     (launch 402) and on a server (launch 403) passed as before, and the
     whole performance mode passed all 53 budgets (launches 405–407).
   * Not run: a handbook found at a container's first fill (the harness
-    filled them again); a real network; these moves on a server; a
-    buffer too small for two generators' hourly draws (how it is shared
-    is not decided); the gas's performance on a server.
+    filled them again); a real network; a buffer too small for two
+    generators' hourly draws (how it is shared is not decided); the gas's
+    performance on a server.
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod

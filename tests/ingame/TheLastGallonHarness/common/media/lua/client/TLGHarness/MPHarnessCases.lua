@@ -1371,6 +1371,518 @@ if MP.only == "gaswood2" then
 end
 
 ------------------------------------------------------------------------------
+-- gasmoves (one client, the shortest day; D-040): single player's wood gas
+-- when things move (SPHarness RT.GV, launch 397) on a dedicated server. The
+-- server puts down A and B, two generators converted to gas four tiles
+-- apart, a Wood Gasifier between them two tiles from each, and 30 kg of
+-- wood in the player's inventory (MPServer.lua setup_gasmoves). The client
+-- loads and lights the gasifier through its menu and works the generators
+-- with the game's own actions, as a player does; probe_gasmoves says what
+-- the server holds and what its own minute pass did (each gasRefill call
+-- counted by the gas record it reads).
+-- 1. Both run three hours on the one gasifier: no stop, each step of each
+--    drawn, and all its gas accounted for.
+-- 2. B switched off, unplugged and taken up, put down a tile from the
+--    gasifier and plugged in again: the same gas record, its new square
+--    watched and its old one dropped, fed there once it falls below its
+--    cap. Taken up again and put down out of the gasifier's reach, it runs
+--    on what it holds and stops; A is fed meanwhile.
+-- 3. The lit gasifier taken up with the world menu's Grab just after A's
+--    hourly refill and put down a tile from A, and nothing asks about it:
+--    the server's minute pass, reading it for A's next refill, puts it out
+--    as moved with its wood kept, gives A nothing, and A stops. Only then
+--    is this client's copy and menu looked at (D-041).
+-- On the shortest day a game hour is about 2,400 ticks. Built in a function
+-- of its own for the -debug compiler.
+------------------------------------------------------------------------------
+if MP.only == "gasmoves" then
+    local function build()
+        local GM = {}
+        local G, GZ = TLG.Integration.Generators, TLG.Integration.Gasifiers
+        local HOUR = 2400
+        local function genAt(p)
+            local s = p and getCell():getGridSquare(p.x, p.y, 0)
+            return s and s:getGenerator() or nil
+        end
+        local function gen(which) return genAt(GM[which]) end
+        local function at(dx, dy) return { x = GM.x + dx, y = GM.y + dy } end
+        local function sqKey(p) return p and (p.x .. "," .. p.y) or "-" end
+        local function num(v) return tonumber(v) or -1 end
+        -- The gasifier as this client sees it: by id on the floor around the
+        -- site, else carried. Finding it reads nothing.
+        local function gasifier()
+            if not (GM.x and GM.item) then return nil end
+            for x = GM.x - 1, GM.x + 8 do
+                for y = GM.y - 1, GM.y + 2 do
+                    local s = getCell():getGridSquare(x, y, 0)
+                    local objs = s and s:getWorldObjects()
+                    for i = 0, (objs and objs:size() or 0) - 1 do
+                        local it = objs:get(i):getItem()
+                        if it and it:getID() == GM.item then return it end
+                    end
+                end
+            end
+            return player():getInventory():getItemWithIDRecursiv(GM.item)
+        end
+        local function wood()
+            return countType("Base.Log") + countType("Base.Firewood") + countType("Base.Charcoal")
+        end
+        local function submenu()
+            local c = ISContextMenu.get(0, 100, 100)
+            TLG.UI.GasifierMenu.fill(0, c, { gasifier() })
+            local root = c:getOptionFromName(getText("ContextMenu_TLG_Gasifier"))
+            local sub = root and root.subOption and c:getSubMenu(root.subOption)
+            c:setVisible(false)
+            return sub
+        end
+        -- Which of Light and Put out this client's menu offers.
+        local function offered()
+            local sub = submenu()
+            local light = sub and sub:getOptionFromName(getText("ContextMenu_TLG_GasifierLight"))
+            local out = sub and sub:getOptionFromName(getText("ContextMenu_TLG_GasifierPutOut"))
+            return (light and not light.notAvailable) and "light" or (out and "put_out") or "none"
+        end
+        -- A gasifier menu entry chosen as a player chooses it; its reply kept
+        -- as GM[name].
+        local function choose(name, entry)
+            return { name = "mp_gm_" .. name, timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local sub = submenu()
+                    local opt = sub and sub:getOptionFromName(getText(entry))
+                    if opt == nil or opt.notAvailable then
+                        GM[name] = { ok = false, reason = opt == nil and "no_menu_entry" or "entry_disabled" }
+                        return nil
+                    end
+                    local orig = TLG.Net.request
+                    TLG.Net.request = function(command, args) return orig(command, args, function(r) GM[name] = r end) end
+                    local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+                    TLG.Net.request = orig
+                    if not ok then GM[name] = { ok = false, reason = "raised: " .. tostring(err) } end
+                    return nil
+                end
+                local r = GM[name]
+                if not r then return nil end
+                report():line("OBS  MP.gm %s -> %s mode=%s hopper=%s loaded=%s", name, brief(r), tostring(r.mode),
+                    tostring(r.hopperKg), tostring(r.loadedKg))
+                return true
+            end }
+        end
+        -- A game action started as its menu entry starts it (walking next to
+        -- the target first), then waited for: 120 ticks idle.
+        local function act(name, start)
+            return { name = "mp_gm_" .. name, timeout = 2400, fn = function(ctx, ticks)
+                local p = player()
+                if ticks == 1 then
+                    start(p)
+                    return nil
+                end
+                if ticks < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+                ctx.idle = ctx.idle or ticks
+                return ticks - ctx.idle >= 120 or nil
+            end }
+        end
+        local function switch(which, name, on)
+            return act((on and "start_" or "stop_") .. name, function()
+                ISWorldObjectContextMenu.onActivateGenerator(nil, on, gen(which), 0)
+            end)
+        end
+        local function plug(which, name, on)
+            return act((on and "plug_" or "unplug_") .. name, function()
+                ISWorldObjectContextMenu.onPlugGenerator(nil, gen(which), 0, on)
+            end)
+        end
+        local function takeB(name)
+            return act("take_b_" .. name, function()
+                GM.from = GM.b
+                ISWorldObjectContextMenu.onTakeGenerator(nil, gen("b"), 0)
+            end)
+        end
+        -- Put down with the game's drop action, standing next to the square.
+        local function putB(name, dx, dy)
+            return act("put_b_" .. name, function(p)
+                GM.to = at(dx, dy)
+                local it = p:getInventory():getFirstTypeRecurse("Base.Generator")
+                if it then
+                    ISTimedActionQueue.add(ISDropWorldItemAction:new(p, it, getCell():getGridSquare(GM.to.x, GM.to.y, 0),
+                        0.5, 0.5, 0, 0, false))
+                end
+            end)
+        end
+
+        -- Every field of a probe_gasmoves answer, in one line.
+        local function dump(name, m)
+            local keys = {}
+            for k in pairs(m) do
+                if k ~= "role" and k ~= "tag" then keys[#keys + 1] = k end
+            end
+            table.sort(keys)
+            local parts = {}
+            for _, k in ipairs(keys) do parts[#parts + 1] = k .. "=" .. tostring(m[k]) end
+            report():line("OBS  MP.gm %s: %s", name, table.concat(parts, " "))
+        end
+        local function probeArgs(extra)
+            local a = { ax = GM.a.x, ay = GM.a.y, bx = GM.b.x, by = GM.b.y, aid = GM.aRec, bid = GM.bRec }
+            for k, v in pairs(extra or {}) do a[k] = v end
+            return a
+        end
+        local function oldSquare() return GM.from and { ox = GM.from.x, oy = GM.from.y } or {} end
+        local function probe(name, extra, judge)
+            return call("gm_" .. name, "probe_gasmoves", function() return probeArgs(extra and extra() or nil) end,
+                "probe_gasmoves", function(m)
+                    dump(name, m)
+                    if judge then judge(m) end
+                end)
+        end
+        -- probe_gasmoves asked every 480 ticks until done(m, ctx) or `cap`
+        -- ticks, then once more 60 ticks later; judge(m, ctx) on that last
+        -- answer, with ctx.first the first. The first ask starts the watch's
+        -- counts again (reset), unless `kept`: an earlier ask started them.
+        local function poll(name, cap, done, judge, extra, kept)
+            return { name = "mp_gm_" .. name, timeout = cap + 3000, fn = function(ctx, ticks)
+                if ctx.pending then
+                    local got = MP.inbox.probe_gasmoves or {}
+                    for i = ctx.n + 1, #got do
+                        local m = got[i]
+                        if m.role == MP.role and m.tag == ctx.pending then
+                            ctx.pending = nil
+                            ctx.first = ctx.first or m
+                            if ctx.final then
+                                dump(name, m)
+                                judge(m, ctx)
+                                return true
+                            end
+                            if not ctx.doneAt and (done(m, ctx) or ticks - ctx.t0 >= cap) then ctx.doneAt = ticks end
+                            break
+                        end
+                    end
+                    return nil
+                end
+                ctx.t0, ctx.k = ctx.t0 or ticks, ctx.k or 0
+                if ctx.doneAt then
+                    if ticks - ctx.doneAt < 60 then return nil end
+                    ctx.final = true
+                elseif ctx.k > 0 and ticks - ctx.asked < 480 then
+                    return nil
+                end
+                ctx.k = ctx.k + 1
+                ctx.pending, ctx.asked = name .. "_" .. ctx.k, ticks
+                ctx.n = #(MP.inbox.probe_gasmoves or {})
+                local a = probeArgs(extra and extra() or nil)
+                if ctx.k == 1 and not kept then a.reset = "true" end
+                a.tag = ctx.pending
+                send("probe_gasmoves", a)
+                return nil
+            end }
+        end
+        -- Every step after the setup does nothing once the case is stopped.
+        local function guard(steps)
+            for _, s in ipairs(steps) do
+                local fn = s.fn
+                s.fn = function(ctx, ticks)
+                    if GM.abort then return true end
+                    return fn(ctx, ticks)
+                end
+            end
+            return steps
+        end
+
+        local function counts(m, k)
+            return string.format("running %s, %s refills (%s L), %s stops, %s steps (%s L) in %s calls at %s",
+                tostring(m[k .. "on"]), tostring(m[k .. "rises"]), tostring(m[k .. "risen"]), tostring(m[k .. "stops"]),
+                tostring(m[k .. "steps"]), tostring(m[k .. "burned"]), tostring(m[k .. "calls"]), tostring(m[k .. "at"]))
+        end
+        local function carriedWithRecord(name, m)
+            local it = player():getInventory():getFirstTypeRecurse("Base.Generator")
+            local side = it and it:getModData().tlg
+            local mine = type(side) == "table" and side[G.GAS_KEY] or nil
+            check("gm_b_taken_up_" .. name .. "_with_its_record", function()
+                return m.carried == "true" and m.carriedRec == GM.bRec and m.oldGen == "false"
+                    and math.abs(num(m.carriedFuel) - (GM.bFuel or -2)) < 1e-4, string.format(
+                    "server: carried %s, its gas record %s (B's %s), item fuel %s (B held %s); a generator left at %s %s",
+                    tostring(m.carried), tostring(m.carriedRec), tostring(GM.bRec), tostring(m.carriedFuel),
+                    tostring(GM.bFuel), sqKey(GM.from), tostring(m.oldGen))
+            end)
+            check("gm_b_record_on_this_clients_item_" .. name, function()
+                return type(mine) == "table" and mine.id == GM.bRec, "this client's item: gas record " ..
+                    tostring(type(mine) == "table" and mine.id)
+            end)
+            if m.carriedRec ~= GM.bRec then GM.abort = true end
+        end
+        local function putWithRecord(name, m)
+            check("gm_b_put_down_" .. name .. "_with_its_record", function()
+                return m.bfound == "true" and m.brec == GM.bRec and m.bholds == "true" and m.bwatched == "true"
+                    and m.bplugged == "true", string.format("server: B at %s %s, its gas record %s (was %s), holds gas %s, " ..
+                    "watched %s, plugged in %s", sqKey(GM.b), tostring(m.bfound), tostring(m.brec), tostring(GM.bRec),
+                    tostring(m.bholds), tostring(m.bwatched), tostring(m.bplugged))
+            end)
+            if m.bfound ~= "true" then GM.abort = true end
+        end
+
+        local setup = call("gm_setup", "setup_gasmoves", {}, "setup_gasmoves", function(m)
+            GM.x, GM.y, GM.item = tonumber(m.gx), tonumber(m.gy), tonumber(m.item)
+            if GM.x then GM.a, GM.b, GM.g = at(0, 0), at(4, 0), at(2, 0) end
+            dump("setup", m)
+            check("gm_site_set_up_on_the_server", function()
+                return m.clear == "true" and m.astate == "Commissioned" and m.bstate == "Commissioned"
+                    and m.aprofile == "generator_gas" and m.bprofile == "generator_gas" and GM.item ~= nil, string.format(
+                    "clear ground %s at %s,%s; A %s %s; B %s %s; gasifier %s", tostring(m.clear), tostring(m.gx),
+                    tostring(m.gy), tostring(m.astate), tostring(m.aprofile), tostring(m.bstate), tostring(m.bprofile),
+                    tostring(m.item))
+            end)
+            if not (m.clear == "true" and GM.x and GM.item) then GM.abort = true end
+        end)
+
+        local steps = guard({
+            wait("mp_gm_sync", 180),
+            walkTo("mp_gm_walk", function() return GM.g.x, GM.g.y + 1 end),
+            once("mp_gm_seen", function()
+                local a, b, it = gen("a"), gen("b"), gasifier()
+                local okA, gasA = pcall(G.isGas, a)
+                local okB, gasB = pcall(G.isGas, b)
+                check("gm_client_sees_both_generators_the_gasifier_and_the_wood", function()
+                    return a ~= nil and b ~= nil and okA and gasA == true and okB and gasB == true and it ~= nil
+                        and it:getWorldItem() ~= nil and wood() == 9, string.format("A %s gas %s; B %s gas %s; gasifier on " ..
+                        "the floor %s; wood pieces %d", tostring(a ~= nil), tostring(gasA), tostring(b ~= nil), tostring(gasB),
+                        tostring(it ~= nil and it:getWorldItem() ~= nil), wood())
+                end)
+            end),
+            choose("load", "ContextMenu_TLG_GasifierLoad"),
+            wait("mp_gm_load_settles", 180),
+            choose("light", "ContextMenu_TLG_GasifierLight"),
+            wait("mp_gm_light_settles", 180),
+            once("mp_gm_lit", function()
+                local l, lit = GM.load or {}, GM.light or {}
+                check("gm_loaded_and_lit", function()
+                    return l.ok == true and (l.loadedKg or 0) > 0 and lit.ok == true and lit.state == "Processing",
+                        string.format("load ok=%s %s kg; light ok=%s state %s", tostring(l.ok), tostring(l.loadedKg),
+                        tostring(lit.ok), tostring(lit.state))
+                end)
+                if lit.ok ~= true then GM.abort = true end
+            end),
+            -- Half an hour's warm-up, then its gas into both, still off: each
+            -- at its cap, the margin (no load counted yet).
+            wait("mp_gm_warm", 2700),
+            probe("warmed", nil, function(m)
+                GM.aRec = m.arec ~= "nil" and m.arec or nil
+                GM.bRec = m.brec ~= "nil" and m.brec or nil
+                check("gm_its_gas_fills_both", function()
+                    return m.aholds == "true" and m.bholds == "true" and math.abs(num(m.afuel) - num(m.acap)) < 1e-5
+                        and math.abs(num(m.bfuel) - num(m.bcap)) < 1e-5 and m.awatched == "true" and m.bwatched == "true"
+                        and m.aon == "false" and m.bon == "false" and GM.aRec ~= nil and GM.bRec ~= nil, string.format(
+                        "A holds %s, %s L (cap %s), watched %s, running %s, record %s; B holds %s, %s L (cap %s), watched %s, " ..
+                        "running %s, record %s", tostring(m.aholds), tostring(m.afuel), tostring(m.acap), tostring(m.awatched),
+                        tostring(m.aon), tostring(m.arec), tostring(m.bholds), tostring(m.bfuel), tostring(m.bcap),
+                        tostring(m.bwatched), tostring(m.bon), tostring(m.brec))
+                end)
+                if not (GM.aRec and GM.bRec) then GM.abort = true end
+            end),
+            switch("a", "a", true),
+            switch("b", "b", true),
+            once("mp_gm_started", function()
+                local a, b = gen("a"), gen("b")
+                check("gm_both_started", function()
+                    return a ~= nil and a:isActivated() and b ~= nil and b:isActivated(), string.format(
+                        "on this client's copies: A running %s, B running %s", tostring(a and a:isActivated()),
+                        tostring(b and b:isActivated()))
+                end)
+            end),
+            -- 1. Both on the one gasifier for three hours.
+            poll("both_run", 3 * HOUR + 600, function(m, ctx) return num(m.hours) - num(ctx.first.hours) >= 3 end,
+                function(m, ctx)
+                    local f = ctx.first
+                    local function d(k) return num(m[k]) - num(f[k]) end
+                    local bounds = math.floor(num(m.hours)) - math.floor(num(f.hours))
+                    local burnedA = (num(f.afuel) - num(m.afuel)) + num(m.arisen)
+                    local burnedB = (num(f.bfuel) - num(m.bfuel)) + num(m.brisen)
+                    local nm3, perKg, held = num(m.nm3PerL), num(m.perKg), d("buffer")
+                    report():line("OBS  MP.gm both over %.3f h, %d hour boundaries: A %s; B %s; the gasifier fed %.6f kg, " ..
+                        "made %.7f, gave %.7f, let out %.7f, flared %.7f, held %.7f more Nm3", num(m.hours) - num(f.hours),
+                        bounds, counts(m, "a"), counts(m, "b"), d("fed"), d("produced"), d("delivered"), d("vented"),
+                        d("flared"), held)
+                    check("gm_one_gasifier_feeds_both", function()
+                        return m.aon == "true" and m.bon == "true" and m.astops == "0" and m.bstops == "0"
+                            and num(m.arises) > 0 and num(m.brises) > 0, string.format("A %s; B %s", counts(m, "a"),
+                            counts(m, "b"))
+                    end)
+                    check("gm_each_step_of_each_drawn", function()
+                        return math.abs(burnedA - bounds * num(m.aload)) < 1e-4 and math.abs(burnedB - bounds * num(m.bload)) < 1e-4,
+                            string.format("A burned %.7f L against %d steps of %s; B burned %.7f L against %d of %s", burnedA,
+                            bounds, tostring(m.aload), burnedB, bounds, tostring(m.bload))
+                    end)
+                    check("gm_all_its_gas_accounted_for", function()
+                        return math.abs(d("delivered") - (num(m.arisen) + num(m.brisen)) * nm3) < 1e-5
+                            and math.abs(d("produced") - (d("delivered") + d("vented") + held)) < 1e-6
+                            and math.abs(d("fed") * perKg - d("produced")) < 1e-6, string.format("gave %.7f Nm3 against " ..
+                            "the litres both took, %.7f; made %.7f against given + let out + held %.7f; wood %.6f kg at " ..
+                            "%.4f Nm3/kg = %.7f", d("delivered"), (num(m.arisen) + num(m.brisen)) * nm3, d("produced"),
+                            d("delivered") + d("vented") + held, d("fed"), perKg, d("fed") * perKg)
+                    end)
+                end),
+            -- 2. B taken up, put down a tile from the gasifier.
+            switch("b", "b_near", false),
+            plug("b", "b_near", false),
+            probe("b_before_take_near", nil, function(m) GM.bFuel = num(m.bfuel) end),
+            takeB("near"),
+            probe("b_taken_near", oldSquare, function(m) carriedWithRecord("near", m) end),
+            walkTo("mp_gm_walk_near", function() return GM.x + 3, GM.y + 2 end),
+            putB("near", 3, 1),
+            once("mp_gm_b_moved_near", function() GM.b = GM.to end),
+            plug("b", "b_near_again", true),
+            -- The counts start here, with B still off: in launch 408 B's first
+            -- refill on the new square came at the first hour after its start,
+            -- before the window's first ask, which then started them again.
+            probe("b_put_near", function()
+                local a = oldSquare()
+                a.reset = "true"
+                return a
+            end, function(m)
+                GM.deliveredAtPut = num(m.delivered)
+                putWithRecord("near", m)
+            end),
+            switch("b", "b_near", true),
+            -- Until B has room on the new square and is refilled, then a tenth
+            -- of an hour more (at most 4 h): it comes with what it held, and
+            -- its cap follows its load there (launch 396).
+            poll("b_near", 4 * HOUR, function(m, ctx)
+                if not ctx.fedAt and num(m.brises) > 0 then ctx.fedAt = num(m.hours) end
+                return ctx.fedAt ~= nil and num(m.hours) - ctx.fedAt > 0.1
+            end, function(m, ctx)
+                local given = num(m.delivered) - (GM.deliveredAtPut or num(ctx.first.delivered))
+                check("gm_b_moved_is_fed_where_it_lands", function()
+                    return m.bon == "true" and num(m.brises) > 0 and m.bstops == "0" and given > 0 and m.bwatched == "true"
+                        and m.oldWatched == "false", string.format("B at %s %s since it was put down, refilled by %s h; " ..
+                        "the gasifier gave %.7f Nm3 meanwhile; watched there %s, at %s %s", sqKey(GM.b), counts(m, "b"),
+                        tostring(ctx.fedAt), given, tostring(m.bwatched), sqKey(GM.from), tostring(m.oldWatched))
+                end)
+            end, oldSquare, true),
+            -- B taken up again and put down out of the gasifier's reach.
+            switch("b", "b_away", false),
+            plug("b", "b_away", false),
+            probe("b_before_take_away", nil, function(m) GM.bFuel = num(m.bfuel) end),
+            takeB("away"),
+            probe("b_taken_away", oldSquare, function(m) carriedWithRecord("away", m) end),
+            walkTo("mp_gm_walk_away", function() return GM.x + 7, GM.y + 1 end),
+            putB("away", 7, 0),
+            once("mp_gm_b_moved_away", function() GM.b = GM.to end),
+            plug("b", "b_away_again", true),
+            probe("b_put_away", oldSquare, function(m) putWithRecord("away", m) end),
+            switch("b", "b_away", true),
+            -- Until B has stopped and at least 1.5 h, so that A, still in
+            -- reach, has an hourly refill in it (at most 3 h).
+            poll("b_away", 3 * HOUR, function(m, ctx)
+                return m.bon == "false" and num(m.hours) - num(ctx.first.hours) >= 1.5
+            end, function(m, ctx)
+                check("gm_b_out_of_reach_gets_nothing_and_stops", function()
+                    return m.bon == "false" and m.brises == "0" and m.bstops == "1", string.format("B at %s, 5 tiles from " ..
+                        "the gasifier: %s", sqKey(GM.b), counts(m, "b"))
+                end)
+                check("gm_a_fed_meanwhile", function()
+                    return m.aon == "true" and m.astops == "0" and num(m.arises) > 0, "A " .. counts(m, "a")
+                end)
+            end),
+            -- 3. The lit gasifier taken up just after A's hourly refill: A
+            -- burns in the hour's first minute and is refilled at the next
+            -- pass, so from minute 3 the pass reads no gasifier for A until
+            -- the next hour. Nothing on this client asks about it meanwhile.
+            walkTo("mp_gm_walk_gasifier", function() return GM.g.x, GM.g.y + 1 end),
+            { name = "mp_gm_wait_minute", timeout = 2 * HOUR + 600, fn = function(ctx, ticks)
+                local minute = getGameTime():getMinutes()
+                return (minute >= 3 and minute <= 15) or nil
+            end },
+            probe("before_grab", nil, function(m)
+                GM.hopperBefore, GM.outsBefore = num(m.hopper), num(m.outCount)
+                check("gm_lit_before_the_grab", function()
+                    return m.lit == "true" and m.aon == "true" and m.where == sqKey(GM.g), string.format(
+                        "server: gasifier at %s, %s, minute %s; A running %s", tostring(m.where), tostring(m.stored),
+                        tostring(m.minute), tostring(m.aon))
+                end)
+            end),
+            { name = "mp_gm_grab", timeout = 2400, fn = function(ctx, ticks)
+                local p = player()
+                if not ctx.queued then
+                    local it = gasifier()
+                    local wi = it and it:getWorldItem()
+                    if not wi then
+                        report():line("FAIL MP.gm_grab_queued_%s :: no gasifier on the floor", MP.role)
+                        GM.abort = true
+                        return true
+                    end
+                    ISWorldObjectContextMenu.onGrabWItem(nil, wi, 0)
+                    ctx.queued = ticks
+                    return nil
+                end
+                if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+                ctx.idle = ctx.idle or ticks
+                if ticks - ctx.idle < 60 then return nil end
+                local it = p:getInventory():getItemWithIDRecursiv(GM.item)
+                check("gm_gasifier_grabbed_while_lit", function()
+                    return it ~= nil, "in this client's inventory: " .. tostring(it ~= nil)
+                end)
+                if it == nil then GM.abort = true end
+                return true
+            end },
+            act("drop_gasifier", function(p)
+                GM.gTo = at(1, 1)
+                local it = p:getInventory():getItemWithIDRecursiv(GM.item)
+                if it then
+                    ISTimedActionQueue.add(ISDropWorldItemAction:new(p, it, getCell():getGridSquare(GM.gTo.x, GM.gTo.y, 0),
+                        0.5, 0.5, 0, 0, false))
+                end
+            end),
+            probe("gasifier_moved", nil, function(m)
+                GM.ventedBefore = num(m.ventedStored)
+                check("gm_gasifier_moved_while_lit_unread", function()
+                    return m.where == sqKey(GM.gTo) and m.lit == "true" and m.site == sqKey(GM.g)
+                        and num(m.outCount) == GM.outsBefore, string.format("server: on the floor at %s (put down on %s); " ..
+                        "its stored record %s; outs %s (were %s); minute %s", tostring(m.where), sqKey(GM.gTo),
+                        tostring(m.stored), tostring(m.outCount), tostring(GM.outsBefore), tostring(m.minute))
+                end)
+            end),
+            -- Until the stored record is out and A has stopped (at most 3 h).
+            poll("after_move", 3 * HOUR, function(m, ctx)
+                if m.lit == "false" and not ctx.outAt then ctx.outAt = num(m.hours) end
+                return ctx.outAt ~= nil and m.aon == "false"
+            end, function(m, ctx)
+                report():line("OBS  MP.gm after the move: the stored record went out by %s h; outs %s", tostring(ctx.outAt),
+                    tostring(m.outs))
+                check("gm_the_minute_pass_puts_out_the_moved_gasifier", function()
+                    return m.gstate == "Ready" and m.gpause == "moved" and num(m.outCount) == GM.outsBefore + 1
+                        and m.outBy == GM.aRec and num(m.hopperStored) > 0 and num(m.hopperStored) <= GM.hopperBefore + 1e-9
+                        and num(m.ventedStored) > GM.ventedBefore, string.format("stored %s/%s; put out in the read for %s " ..
+                        "(A's record %s), %s; hopper %s kg (%s before the move); let out %s Nm3 (%s before)",
+                        tostring(m.gstate), tostring(m.gpause), tostring(m.outBy), tostring(GM.aRec), tostring(m.outAfter),
+                        tostring(m.hopperStored), tostring(GM.hopperBefore), tostring(m.ventedStored), tostring(GM.ventedBefore))
+                end)
+                check("gm_a_gets_nothing_from_it_and_stops", function()
+                    return m.aon == "false" and m.arises == "0" and m.astops == "1", "A " .. counts(m, "a")
+                end)
+            end),
+            -- The put-out was written on the server and sent: this client's
+            -- copy and its menu, read only now (D-041).
+            { name = "mp_gm_copy_follows", timeout = 1500, fn = function(ctx, ticks)
+                local it = gasifier()
+                local rec = it and it:getModData()[GZ.KEY]
+                local out = type(rec) == "table" and rec.state == "Ready" and rec.pause == "moved"
+                if not out and ticks < 1200 then return nil end
+                local menu = offered()
+                check("gm_client_copy_and_menu_follow_the_put_out", function()
+                    return out and menu == "light", string.format("this client's copy %s/%s; its menu offers %s",
+                        tostring(type(rec) == "table" and rec.state), tostring(type(rec) == "table" and rec.pause), menu)
+                end)
+                return true
+            end },
+        })
+        local stepsA = { MP.waitWorld, setup }
+        for _, s in ipairs(steps) do stepsA[#stepsA + 1] = s end
+        stepsA[#stepsA + 1] = once("mp_finish_a", function() send("finish", {}) end)
+        stepsA[#stepsA + 1] = MP.finish
+        MP.stepsA = stepsA
+    end
+    build()
+    return
+end
+
+------------------------------------------------------------------------------
 -- machinemenus (one client): the menus that read the client's copy of a
 -- record on a server. The machine menu's Pause, Resume and Abort batch for
 -- each of the nine kinds of machine, started by the server (spawn, then
