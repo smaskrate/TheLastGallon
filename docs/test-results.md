@@ -8077,3 +8077,66 @@ not say how a buffer too small for both is shared).
 Evidence:
 [run 396](evidence/2026-11-13_rt-sp_harness_run396_gas_moves_42.22.2.txt);
 [run 397](evidence/2026-11-13_rt-sp_harness_run397_gas_moves_windows_fixed_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launches 398–400 (performance with the gas: release gate 11)
+
+Branch `feature/gas-generators` after `f21f9d6`, 42.22.2, the reference
+machine (`performance.md`). The performance mode gained gas stages
+(`RT.PFG` in `SPHarness.lua`), after every stage of launch 341 and before
+its added budgets' check, so those stages run as before; and a request
+for the gas stages alone (`-Mode performance-gas`, `sp-rtpfg`).
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 398 | `tools/run-sp-harness.ps1 -Mode performance`, the gas stages' first version | 62/0 |
+| 399 | `tools/run-sp-harness.ps1 -Mode performance-gas` | 8/1 |
+| 400 | `tools/run-sp-harness.ps1 -Mode performance` | 69/0 |
+
+* Launches 398 and 400 passed all 40 budgets of the earlier stages; 18 of
+  them, set from launch 341, were checked for the first time.
+* Launch 398's gas timings did not time what they said. A propane refill
+  moves whole tank uses, 0.0026 L each (3,840 uses gave 9.99936 L), and
+  the "refill" took out one hourly step, 0.002 L, so nothing moved. The
+  mod's code confirmed it (`GasFeed.refill` returns "moved 0" when the room
+  is less than a use, and `Generators.gasRefill` reads the record before
+  its tolerance test). The stages were rebuilt around explicit states,
+  reached as the game reaches them (the fuel lowered as a burn lowers it,
+  the mod's own pass bringing it up), each timing checking the tanks'
+  uses, the gas given and the records' times before and after.
+* Launch 399, the gas stages alone, proved the states; its one failure
+  was the check of the wood-gas draws, which expected each generator to
+  draw from the gasifier beside it. Most stood within two tiles of two
+  gasifiers and draw from the one with the lower id (D-040), so two
+  served two generators each and two none; the gas given in all was every
+  generator's step. The check now judges the total.
+* Launch 400: the gas minute pass costs 0.0017 ms with no gas generator.
+  Per generator a game minute: 0.011–0.012 ms when full, on propane or
+  wood gas; 0.042 ms for a propane generator a part of a use below its cap,
+  which is how most of its minutes find it (the hourly step is smaller
+  than a use), because the pass works out a refill that moves nothing. A
+  refill moving a use costs 0.069 ms; a wood-gas draw from a gasifier
+  0.196 ms, once an hour. A lit gasifier brought forward costs 0.13 ms for
+  1, 30 or 365 days; the Gasifier menu 0.34 ms, the Gas menu 0.14–0.15
+  ms; the square-load handler 3.4 µs on a gas generator's square. Frames
+  with the gas: mean main-thread step 1.78 ms against 1.45 ms in the stage
+  before, of which the gas pass is about 0.002 ms a frame; the rest was
+  not measured apart from the game's own cost of running generators.
+* The 13 gas budgets are set from launch 400, about three times its
+  medians; the next performance run is the first to check them.
+* An early return when a propane generator's room is below one use would
+  bring its usual minute to about 0.011 ms. It is a change to the mod's
+  code, put to the owner, not made.
+
+Each console holds no warning or error of the mod; the mod read 0.4.3.
+Each holds one Lua exception: in launches 398 and 400 it was traced to the
+harness's own probe of `getPerformance():getLockFPS()`, which 42.22.2
+lacks (pcall-protected; the environment line reads `lockFPS=?`, as in
+launch 341). Launch 399's console was replaced before it was traced; its
+environment line reads `lockFPS=?` too.
+
+Not run: the gas on a server; more than 16 gas generators.
+
+Evidence:
+[run 398](evidence/2026-11-13_rt-sp_harness_run398_performance_gas_42.22.2.txt);
+[run 399](evidence/2026-11-13_rt-sp_harness_run399_performance_gas_stages_42.22.2.txt);
+[run 400](evidence/2026-11-13_rt-sp_harness_run400_performance_gas_states_42.22.2.txt).

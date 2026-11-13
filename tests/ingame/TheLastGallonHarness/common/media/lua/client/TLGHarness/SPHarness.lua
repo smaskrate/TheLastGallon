@@ -44,7 +44,9 @@
 --             timed and frames sampled as dormant cans, parked and idling
 --             cars and running fermenters are added on the same road; after
 --             the budgets, the biodiesel machines, diesel vans, wrong fuel
---             and the square-load hook (RT.PF.bio and what follows it)
+--             and the square-load hook (RT.PF.bio and what follows it), then
+--             the gas generators and gasifiers (RT.PFG)
+--   sp-rtpfg -> the performance mode's gas stages alone, on the same road
 --   sp-rtmi -> an original test model wired to the fermenter: placed, turned,
 --             held and photographed, saved and exited to the menu ("sp-rtmib")
 --   sp-rtmib -> main menu continues that save: back in place, photographed
@@ -177,7 +179,7 @@ end
 if REQUEST == "sp-a" or REQUEST == "sp-b" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf"
     or REQUEST == "sp-rtfs" or REQUEST == "sp-rtfb" or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc"
     or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rts" or REQUEST == "sp-rtss" or REQUEST == "sp-rtsb" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgpb" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtprb" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtwdb" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtgv" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn"
-    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
+    or REQUEST == "sp-rtof" or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtpfg" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmib"
     or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmfb" or REQUEST == "sp-rtmh" or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu"
     or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtknb" or REQUEST == "sp-rtdgb" or REQUEST == "sp-rtds" or REQUEST == "ex-b" or REQUEST == "ex-c" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "rm-c" or REQUEST == "rm-d" or REQUEST == "up-a" or REQUEST == "up-b" then
     unattended()
@@ -19816,6 +19818,465 @@ end
 RT.GV.build()
 
 ------------------------------------------------------------------------------
+-- The performance mode's gas stages (D-040; docs/performance.md, "What the
+-- gas work adds"). The gas generators' minute pass (Generators.gasMinute,
+-- on EveryOneMinute beside the engines' minute) is timed as its handler
+-- calls it. The stages go after every stage of launch 341 and before its
+-- added budgets' check, so those stay as they were, on the road north of
+-- the parked cars (rows 10798-10807), about 30 tiles from the stand:
+-- - the minute pass with no gas generator;
+-- - 8 vanilla generators converted to gas (the conversion service's steps,
+--   as in gas-propane), a full propane tank connected to each through the
+--   Gas menu, each started with the game's action. A refill moves whole
+--   tank uses (0.0026 L each) and an hourly step is 0.002 L, so a propane
+--   generator spends most minutes a part of a use below its cap. The
+--   minute pass is timed in that state (launch 398 found it the costly
+--   one), within the tolerance of the cap, and with two steps out before
+--   each call, so each call moves one use from each tank;
+-- - 8 more converted, each with a Wood Gasifier on the tile beside it,
+--   loaded with two logs and lit through its menu, warmed up (1.2 game
+--   hours at speed 20) and started: the minute pass with the wood-gas ones
+--   alone (the propane squares out of it meanwhile) at their caps, then
+--   with a step out of each before each call, so each call draws a step
+--   from each gasifier (Gasifiers.drawNear); then all 16 as they stand;
+-- Each state is reached as the game reaches it: the fuel lowered as a burn
+-- lowers it and the mod's own pass bringing it up, never raised by the
+-- harness (a rise the mod did not give is not gas, GasFeed.current). Each
+-- timing checks what it did: the tanks' uses, the gas given and the
+-- records' times, before and after;
+-- - a lit gasifier brought forward 1, 30 and 365 days (Gasifiers.advance,
+--   what a read after that long away does), the Gasifier menu, the Gas menu
+--   on each kind of generator, and the square-load handler on a gas
+--   generator's square;
+-- - 20 seconds of frames with all of it running.
+-- A refill takes a little from a tank or a gasifier, so the refill timings
+-- run fixed batches of 50 calls, every record and fuel put back together
+-- before each batch, outside the timing (RT.PF.benchN, whose "first call"
+-- is the first batch's mean); the steps taken out alone, which use nothing
+-- up, are timed with RT.PF.bench, to subtract. Their budgets
+-- (RT.PF.budgetsGas) are set from the first run that times them. Built in
+-- a function of its own for the -debug compiler.
+------------------------------------------------------------------------------
+-- About three times launch 400's medians (docs/performance.md); launch 400
+-- set them, the next run is the first to check them. "both_16" has none:
+-- its state depends on how many hours the warm-up crossed.
+RT.PF.budgetsGas = {
+    ["gas_none/gas_minute"] = 0.005,
+    ["propane_8/gas_minute_part_use"] = 1.0, ["propane_8/gas_minute_full"] = 0.27, ["propane_8/refill_one_use"] = 1.7,
+    ["woodgas_8/gas_minute_full"] = 0.30, ["woodgas_8/refill_one_step"] = 4.8,
+    ["gas_catch_up/gasifier_24_h"] = 0.41, ["gas_catch_up/gasifier_720_h"] = 0.41, ["gas_catch_up/gasifier_8760_h"] = 0.41,
+    ["gas_catch_up/gasifier_menu"] = 1.0, ["gas_catch_up/gas_menu_propane"] = 0.42, ["gas_catch_up/gas_menu_woodgas"] = 0.46,
+    ["gas_catch_up/load_square_gas_generator"] = 0.011,
+}
+RT.PF.checkBudgetsGas = RT.PF.budgetStep("rtpf_budgets_gas", function() return RT.PF.budgetsGas end)
+
+-- `n` calls a batch, `reset` before each batch (not timed); the median
+-- batch's ms per call.
+function RT.PF.benchN(fn, n, reset)
+    local PF, per, first = RT.PF, {}, nil
+    for b = 1, PF.batches do
+        if reset then reset() end
+        local s = getTimestampMs()
+        for _ = 1, n do fn() end
+        local e = getTimestampMs() - s
+        per[#per + 1] = e / n
+        if b == 1 then first = e / n end
+    end
+    table.sort(per)
+    return { first = first, med = per[math.floor((#per + 1) / 2)], lo = per[1], hi = per[#per], calls = n * PF.batches }
+end
+
+RT.PFG = { propaneRows = { 10798, 10801 }, woodRows = { 10804, 10807 }, cols = { 10587, 10590, 10593, 10596 },
+    logs = 2, n = 50 }
+
+function RT.PFG.build()
+    local PF, PFG = RT.PF, RT.PFG
+    local G, GZ = TLG.Integration.Generators, TLG.Integration.Gasifiers
+
+    local function genAt(e) local s = sq(e.x, e.y, 0); return s and s:getGenerator() or nil end
+    local function clearAt(x, y)
+        local s = sq(x, y, 0)
+        local objs = s and s:getWorldObjects()
+        return PF.free(s) and (objs == nil or objs:size() == 0) and s:getGenerator() == nil
+    end
+    local function gasifierOf(e)
+        local s = e.gid and sq(e.x + 1, e.y, 0)
+        local objs = s and s:getWorldObjects()
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            local it = objs:get(i):getItem()
+            if it and it:getID() == e.gid then return it end
+        end
+        return nil
+    end
+
+    -- Slots on the rows: each column's own square, the square south of it
+    -- free for the character, and with `east` the gasifier's beside it.
+    local function slots(rows, east)
+        local out = {}
+        for _, y in ipairs(rows) do
+            for _, x in ipairs(PFG.cols) do
+                if clearAt(x, y) and clearAt(x, y + 1) and (not east or clearAt(x + 1, y)) then
+                    out[#out + 1] = { x = x, y = y }
+                else
+                    R:line("OBS  RTPF.gas slot %d,%d not clear", x, y)
+                end
+            end
+        end
+        return out
+    end
+
+    -- Each entry in turn: the character moved beside it, then `act`, which
+    -- returns true when it queued an action to wait for.
+    local function eachOf(name, listFn, act)
+        return { name = "rtpf_" .. name, timeout = 12000, fn = function(ctx, ticks)
+            if not ctx.list then
+                ctx.list, ctx.i = listFn() or {}, 0
+                return nil
+            end
+            if ctx.phase == "wait" then
+                if ticks - ctx.at < 10 or not TLGH.Steps.actionsIdle(player()) then return nil end
+                ctx.phase = nil
+            elseif ctx.phase == "go" then
+                if ticks - ctx.at < 10 then return nil end
+                ctx.phase, ctx.at = act(ctx.list[ctx.i]) and "wait" or nil, ticks
+                return nil
+            end
+            ctx.i = ctx.i + 1
+            local e = ctx.list[ctx.i]
+            if e == nil then
+                PF.toStand()
+                return true
+            end
+            player():teleportTo(e.x, e.y + 1, 0)
+            ctx.phase, ctx.at = "go", ticks
+            return nil
+        end }
+    end
+
+    local function convert(e)
+        pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(e.x, e.y, 0)) end)
+        local g = genAt(e)
+        if g then
+            g:setConnected(true)
+            g:setFuel(0)
+            e.conv = RT.PR.commission(g)
+        end
+    end
+
+    local function start(e)
+        local g = genAt(e)
+        if g == nil or g:isActivated() then return false end
+        ISTimedActionQueue.add(ISActivateGenerator:new(player(), g, true))
+        return true
+    end
+
+    PFG.gasNone = { name = "rtpf_gas_none", fn = function()
+        PF.record("gas_none", "gas_minute", PF.bench(G.gasMinute))
+        return true
+    end }
+
+    PFG.placePropane = eachOf("gas_propane_place", function()
+        PFG.propane = slots(PFG.propaneRows, false)
+        for _, e in ipairs(PFG.propane) do convert(e) end
+        return PFG.propane
+    end, function(e)
+        local g = genAt(e)
+        if g == nil then return false end
+        player():getInventory():AddItem("Base.PropaneTank"):setUsedDelta(1.0)
+        e.connect = menuClick("RTPF.gas_connect", function(c) TLG.UI.GasMenu.fill(0, c, { g }, false) end,
+            getText("ContextMenu_TLG_Gas"), getText("ContextMenu_TLG_GasConnectTank"))
+        return false
+    end)
+    PFG.startPropane = eachOf("gas_propane_start", function() return PFG.propane end, start)
+
+    -- The menu's Load takes all the wood carried, so each gasifier's logs
+    -- are handed over just before it is loaded.
+    PFG.placeWood = eachOf("gas_wood_place", function()
+        PFG.wood = slots(PFG.woodRows, true)
+        for _, e in ipairs(PFG.wood) do
+            convert(e)
+            local it = instanceItem("TLG.Gasifier")
+            sq(e.x + 1, e.y, 0):AddWorldInventoryItem(it, 0.5, 0.5, 0, false)
+            e.gid = it:getID()
+        end
+        return PFG.wood
+    end, function(e)
+        local it = gasifierOf(e)
+        if it == nil then return false end
+        local inv = player():getInventory()
+        for _ = 1, PFG.logs do inv:AddItem("Base.Log") end
+        local function pick(key)
+            return menuClick("RTPF.gasifier", function(c) TLG.UI.GasifierMenu.fill(0, c, { it }) end,
+                getText("ContextMenu_TLG_Gasifier"), getText(key))
+        end
+        e.load = pick("ContextMenu_TLG_GasifierLoad")
+        e.light = pick("ContextMenu_TLG_GasifierLight")
+        closeDialogs()
+        return false
+    end)
+
+    -- Warmed up, the gas in each wood-gas generator, still off.
+    PFG.warm = { name = "rtpf_gas_warm", timeout = 40000, fn = function(ctx, ticks)
+        if not ctx.h then
+            ctx.h = hours()
+            RT.speed(20)
+            return nil
+        end
+        if ticks % 30 == 0 then RT.keepFit() end
+        if hours() - ctx.h < 1.2 then return nil end
+        RT.speed(1)
+        return true
+    end }
+    PFG.startWood = eachOf("gas_wood_start", function() return PFG.wood end, start)
+
+    -- What was placed, and whether all of it runs on gas.
+    local function placedCheck(label, listFn, wood)
+        return { name = "rtpf_gas_check_" .. label, fn = function()
+            local list = listFn() or {}
+            local running, holding, parts = 0, 0, {}
+            for _, e in ipairs(list) do
+                local g = genAt(e)
+                local rec = g and g:getModData()[G.GAS_KEY]
+                if g and g:isActivated() then running = running + 1 end
+                if g and G.holdsGas(g) then holding = holding + 1 end
+                parts[#parts + 1] = string.format("%d,%d %s fuel %.5f load %.4f %s", e.x, e.y, tostring(e.conv),
+                    g and g:getFuel() or -1, g and RT.GM.power(g) or -1, wood and ("lit " .. tostring(e.light and e.light.ok))
+                        or ("tank " .. tostring(rec and rec.tank and rec.tank.uses)))
+            end
+            R:line("OBS  RTPF.gas %s: %d placed, %d running, %d holding gas: %s", label, #list, running, holding,
+                table.concat(parts, "; "))
+            R:check("RTPF.gas_" .. label .. "_running", function()
+                return #list == 8 and running == 8 and holding == 8, string.format("%d placed, %d running, %d holding gas",
+                    #list, running, holding)
+            end)
+            return true
+        end }
+    end
+
+    -- Every record and fuel of `list` as it is now, and a reset that puts
+    -- them back (with the wood-gas scans' waits cleared).
+    local function snapshot(list)
+        local saved = {}
+        for _, e in ipairs(list) do
+            local g, it = genAt(e), gasifierOf(e)
+            saved[#saved + 1] = { g = g, fuel = g and g:getFuel(), rec = g and TLG.Tables.deepCopy(g:getModData()[G.GAS_KEY]),
+                it = it, st = it and TLG.Tables.deepCopy(it:getModData()[GZ.KEY]) }
+        end
+        return function()
+            for _, s in ipairs(saved) do
+                if s.g then
+                    s.g:getModData()[G.GAS_KEY] = TLG.Tables.deepCopy(s.rec)
+                    s.g:setFuel(s.fuel)
+                end
+                if s.it then s.it:getModData()[GZ.KEY] = TLG.Tables.deepCopy(s.st) end
+            end
+            for k in pairs(G.woodgasWait) do G.woodgasWait[k] = nil end
+        end
+    end
+    -- What each generator of `list` holds against its cap, its tank's uses
+    -- and its record's time, and its gasifier's gas given (stored record).
+    local function stateOf(list)
+        local out = {}
+        for _, e in ipairs(list) do
+            local g, it = genAt(e), gasifierOf(e)
+            local rec = g and g:getModData()[G.GAS_KEY]
+            local st = it and it:getModData()[GZ.KEY]
+            local cap = g and ((rec and rec.tank) and G.gasCap(g) or G.woodgasCap(g))
+            out[#out + 1] = { g = g, fuel = g and g:getFuel(), cap = cap, room = g and cap - g:getFuel(),
+                uses = rec and rec.tank and rec.tank.uses, t = rec and rec.t, given = st and st.totals.delivered }
+        end
+        return out
+    end
+    local function stateText(s)
+        local parts = {}
+        for _, x in ipairs(s) do
+            parts[#parts + 1] = string.format("room %.6f%s%s", x.room or -1, x.uses and (" uses " .. x.uses) or "",
+                x.given and string.format(" given %.6f", x.given) or "")
+        end
+        return table.concat(parts, "; ")
+    end
+    -- The same moves (uses, gas given) and records' times before and after.
+    local function unchanged(a, b)
+        for i, x in ipairs(a) do
+            local y = b[i]
+            if x.uses ~= y.uses or x.t ~= y.t or x.given ~= y.given then return false end
+        end
+        return true
+    end
+    -- Fuel lowered as a burn lowers it, `by(x)` litres below what `s`
+    -- held: never raised, since a rise the mod did not give is not gas
+    -- (GasFeed.current).
+    local function lower(s, by)
+        return function()
+            for _, x in ipairs(s) do x.g:setFuel(x.fuel - by(x)) end
+        end
+    end
+    local function steps(n) return function(x) return n * RT.GM.power(x.g) end end
+    local function withSquares(list, on)
+        for _, e in ipairs(list or {}) do G.gasSquares[e.x .. "," .. e.y .. ",0"] = on or nil end
+    end
+
+    -- Propane alone. As found after the connect, each a part of a use below
+    -- its cap (a use is 0.0026 L, an hourly step 0.002 L), so each minute's
+    -- pass works out a refill that moves nothing. Then one step burned and
+    -- the mod's own pass moving a use, which leaves each within the
+    -- tolerance of its cap: the early return. Then two steps out before
+    -- each call, so each call moves one use.
+    PFG.timePropane = { name = "rtpf_gas_timers_propane_8", timeout = 6000, fn = function(ctx, ticks)
+        if ticks < 30 then return nil end
+        local list, F = PFG.propane or {}, TLG.Domain.GasFeed
+        PFG.useL = F.propaneLitres(TLG.Domain.Gas.usesToNm3(1))
+        local s0 = stateOf(list)
+        R:line("OBS  RTPF.gas propane_8 as found (a use is %.6f L): %s", PFG.useL, stateText(s0))
+        PF.record("propane_8", "gas_minute_part_use", PF.bench(G.gasMinute))
+        local s1 = stateOf(list)
+        R:check("RTPF.gas_propane_part_use_moves_nothing", function()
+            local ok = unchanged(s0, s1)
+            for _, x in ipairs(s0) do ok = ok and x.room > F.TOLERANCE and x.room < PFG.useL end
+            return ok, "before: " .. stateText(s0) .. " | after: " .. stateText(s1)
+        end)
+        lower(s1, steps(1))()
+        G.gasMinute()
+        local s2 = stateOf(list)
+        R:line("OBS  RTPF.gas propane_8 a step burned and refilled: %s", stateText(s2))
+        R:check("RTPF.gas_propane_refilled_within_tolerance", function()
+            local ok = #s2 == 8
+            for i, x in ipairs(s2) do ok = ok and x.room <= F.TOLERANCE and x.uses == s1[i].uses - 1 end
+            return ok, stateText(s2)
+        end)
+        PF.record("propane_8", "gas_minute_full", PF.bench(G.gasMinute))
+        local s3 = stateOf(list)
+        R:check("RTPF.gas_propane_full_moves_nothing", function()
+            return unchanged(s2, s3), "before: " .. stateText(s2) .. " | after: " .. stateText(s3)
+        end)
+        local reset, take = snapshot(list), lower(s3, steps(2))
+        PF.record("propane_8", "two_steps_out_only", PF.bench(take))
+        reset()
+        PF.record("propane_8", "refill_one_use", PF.benchN(function() take(); G.gasMinute() end, PFG.n, reset))
+        local s4 = stateOf(list)
+        R:check("RTPF.gas_propane_each_call_moves_one_use", function()
+            local ok = #s4 == 8
+            for i, x in ipairs(s4) do ok = ok and x.uses == s3[i].uses - PFG.n end
+            return ok, string.format("after the last batch of %d calls: %s (were %s)", PFG.n, stateText(s4), stateText(s3))
+        end)
+        reset()
+        return true
+    end }
+
+    -- Wood gas alone (the propane generators' squares out of the minute
+    -- pass meanwhile). Each brought to its cap by the mod's own pass (some
+    -- were just started), then one step out before each call, so each call
+    -- draws a step's gas from each gasifier.
+    PFG.timeWood = { name = "rtpf_gas_timers_woodgas_8", timeout = 6000, fn = function(ctx, ticks)
+        if ticks < 30 then return nil end
+        local list, F = PFG.wood or {}, TLG.Domain.GasFeed
+        withSquares(PFG.propane, false)
+        for _ = 1, 3 do
+            for k in pairs(G.woodgasWait) do G.woodgasWait[k] = nil end
+            G.gasMinute()
+        end
+        local s0 = stateOf(list)
+        R:line("OBS  RTPF.gas woodgas_8 at their caps: %s", stateText(s0))
+        R:check("RTPF.gas_woodgas_at_their_caps", function()
+            local ok = #s0 == 8
+            for _, x in ipairs(s0) do ok = ok and x.room <= F.TOLERANCE and x.given ~= nil end
+            return ok, stateText(s0)
+        end)
+        PF.record("woodgas_8", "gas_minute_full", PF.bench(G.gasMinute))
+        local s1 = stateOf(list)
+        R:check("RTPF.gas_woodgas_full_draws_nothing", function()
+            return unchanged(s0, s1), "before: " .. stateText(s0) .. " | after: " .. stateText(s1)
+        end)
+        local reset, take = snapshot(list), lower(s1, steps(1))
+        PF.record("woodgas_8", "one_step_out_only", PF.bench(take))
+        reset()
+        PF.record("woodgas_8", "refill_one_step", PF.benchN(function() take(); G.gasMinute() end, PFG.n, reset))
+        local s2 = stateOf(list)
+        -- Each call draws, for each generator, the step and the room it had
+        -- (the game keeps the fuel as a float: 1e-4 Nm3 over the batch).
+        -- A generator within two tiles of two gasifiers draws from the one
+        -- with the lower id (Gasifiers.drawNear; launch 399 found two serving
+        -- two each here, two none), so the gas given is judged in all.
+        R:check("RTPF.gas_woodgas_each_call_draws_a_step", function()
+            local ok, given, want = #s2 == 8, 0, 0
+            for i, x in ipairs(s2) do
+                given = given + (x.given - s1[i].given)
+                want = want + PFG.n * F.nm3For("woodgas", RT.GM.power(x.g) + math.max(0, s1[i].room))
+                ok = ok and x.room <= F.TOLERANCE
+            end
+            return ok and math.abs(given - want) < 1e-4, string.format("after the last batch of %d calls the gasifiers gave " ..
+                "%.6f Nm3 in all against %.6f for every generator's step; %s (were %s)", PFG.n, given, want, stateText(s2),
+                stateText(s1))
+        end)
+        reset()
+        withSquares(PFG.propane, true)
+        return true
+    end }
+
+    -- Both kinds together, as they stand after their timings.
+    PFG.timeBoth = { name = "rtpf_gas_timers_both_16", timeout = 3000, fn = function(ctx, ticks)
+        if ticks < 30 then return nil end
+        R:line("OBS  RTPF.gas both_16: propane %s; wood gas %s", stateText(stateOf(PFG.propane or {})),
+            stateText(stateOf(PFG.wood or {})))
+        PF.record("both_16", "gas_minute_as_they_stand", PF.bench(G.gasMinute))
+        return true
+    end }
+
+    -- A lit gasifier's catch-up, the menus, the square-load handler.
+    function PFG.jobs()
+        local e, p = PFG.wood and PFG.wood[1], PFG.propane and PFG.propane[1]
+        local it = e and gasifierOf(e)
+        local st = it and GZ.read(it, false)
+        local now, jobs = TLG.World.now(), {}
+        local function menu(fill)
+            return function()
+                local c = ISContextMenu.get(0, 100, 100)
+                fill(c)
+                c:setVisible(false)
+            end
+        end
+        if st then
+            for _, h in ipairs(PF.catchUp) do
+                jobs[#jobs + 1] = { what = "gasifier_" .. h .. "_h", fn = function() GZ.advance(it, st, now + h) end }
+            end
+            jobs[#jobs + 1] = { what = "gasifier_menu", fn = menu(function(c) TLG.UI.GasifierMenu.fill(0, c, { it }) end) }
+        end
+        local pg, wg = p and genAt(p), e and genAt(e)
+        if pg then
+            jobs[#jobs + 1] = { what = "gas_menu_propane", fn = menu(function(c) TLG.UI.GasMenu.fill(0, c, { pg }, false) end) }
+        end
+        if wg then
+            jobs[#jobs + 1] = { what = "gas_menu_woodgas", fn = menu(function(c) TLG.UI.GasMenu.fill(0, c, { wg }, false) end) }
+            jobs[#jobs + 1] = { what = "load_square_gas_generator", fn = function() G.onLoadSquare(wg:getSquare()) end }
+        end
+        return jobs
+    end
+
+    local gasStages = { PFG.gasNone, PFG.placePropane, PFG.startPropane,
+        placedCheck("propane_8", function() return PFG.propane end, false), PFG.timePropane,
+        PFG.placeWood, PFG.warm, PFG.startWood,
+        placedCheck("woodgas_8", function() return PFG.wood end, true), PFG.timeWood, PFG.timeBoth,
+        PF.catchStep("gas_catch_up", PFG.jobs), PF.frames("gas_running"), RT.PF.checkBudgetsGas }
+    -- Before the added budgets' check, so every stage before stays as in
+    -- launch 341.
+    local at
+    for i, s in ipairs(RT.perfSteps) do
+        if s == RT.PF.checkBudgetsAdded then at = i end
+    end
+    if at then
+        for k, s in ipairs(gasStages) do table.insert(RT.perfSteps, at + k - 1, s) end
+    end
+    -- The gas stages alone on the same road (request "sp-rtpfg"), to try
+    -- them in a few minutes; the record is the whole mode's.
+    RT.perfGasSteps = { RT.waitWorld, RT.PF.setup }
+    for _, s in ipairs(gasStages) do RT.perfGasSteps[#RT.perfGasSteps + 1] = s end
+    RT.perfGasSteps[#RT.perfGasSteps + 1] = RT.PF.cleanup
+    RT.perfGasSteps[#RT.perfGasSteps + 1] = RT.finish
+end
+
+RT.PFG.build()
+
+------------------------------------------------------------------------------
 -- Diesel vehicles (request "sp-rtdv", D-036). A new world, so its record
 -- says diesel chassis exist. Three vehicles at a time are spawned beside
 -- the start (the squares phase A parks on), repaired and given 10 L with
@@ -22520,7 +22981,7 @@ end)
 if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == "sp-rtf" or REQUEST == "sp-rtfs"
     or REQUEST == "sp-rtp" or REQUEST == "sp-rtpot" or REQUEST == "sp-rtc" or REQUEST == "sp-rts" or REQUEST == "sp-rtss"
     or REQUEST == "sp-rtbd" or REQUEST == "sp-rtbdm" or REQUEST == "sp-rtdg" or REQUEST == "sp-rtdv" or REQUEST == "sp-rtdp" or REQUEST == "sp-rtwf" or REQUEST == "sp-rtfd" or REQUEST == "sp-rtwg" or REQUEST == "sp-rtbc" or REQUEST == "sp-rtcz" or REQUEST == "sp-rthl" or REQUEST == "sp-rthlg" or REQUEST == "sp-rtcm" or REQUEST == "sp-rthb" or REQUEST == "sp-rtsc" or REQUEST == "sp-rtn" or REQUEST == "sp-rtof" or REQUEST == "sp-rtgp" or REQUEST == "sp-rtgm" or REQUEST == "sp-rtgs" or REQUEST == "sp-rtpr" or REQUEST == "sp-rtwd" or REQUEST == "sp-rtgy" or REQUEST == "sp-rtgv" or REQUEST == "sp-it" or REQUEST == "rm-a" or REQUEST == "up-a"
-    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
+    or REQUEST == "sp-rtcw" or REQUEST == "sp-rtv" or REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtpfg" or REQUEST == "sp-rtmi" or REQUEST == "sp-rtmf" or REQUEST == "sp-rtmh"
     or REQUEST == "sp-rtmhh" or REQUEST == "sp-rtgu" or REQUEST == "sp-rtmp" or REQUEST == "sp-rtmph" or REQUEST == "sp-rtmpf" or REQUEST == "sp-rtmpc" or REQUEST == "sp-rtmpw" or REQUEST == "sp-rtmpm" or REQUEST == "sp-rtmpo" or REQUEST == "sp-rtmv" or REQUEST == "sp-rtmva" or REQUEST == "sp-rtmvg" or REQUEST == "sp-rtmpk" or REQUEST == "sp-rtmps" or REQUEST == "sp-rtmm" or REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" or REQUEST == "sp-rtcr" or REQUEST == "sp-rtsu" or REQUEST == "sp-rtkn" or REQUEST == "sp-rttl" or REQUEST == "sp-rtkns" or REQUEST == "sp-rtds" then
     getDebugOptions():setBoolean("DebugScenario.ForceLaunch", true)
     debugScenarios = debugScenarios or {}
@@ -22556,7 +23017,7 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
                 -- Grid on for 30 days, as vanilla's Multiplayer debug scenario
                 -- sets it (SRC DebugUIs/Scenarios/Multiplayer.lua:23).
                 SandboxVars.ElecShutModifier = 30
-            elseif REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtfd" then
+            elseif REQUEST == "sp-rtd" or REQUEST == "sp-rte" or REQUEST == "sp-rtpf" or REQUEST == "sp-rtpfg" or REQUEST == "sp-rtfd" then
                 -- Nothing on the road to hit: no parked cars, traffic jams or
                 -- vehicle and zone stories (option 1 is "None"/"Never",
                 -- Translate/EN/Sandbox.json). The performance run parks its
@@ -22695,6 +23156,9 @@ if REQUEST == "sp-a" or REQUEST == "sp-rt" or REQUEST == "sp-rtw" or REQUEST == 
             elseif REQUEST == "sp-rtpf" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, performance")
                 TLGH.Steps.run(R, RT.perfSteps, H, nil)
+            elseif REQUEST == "sp-rtpfg" then
+                R = TLGH.Report.new(RESULTS, "TLG single-player harness, performance, the gas stages alone")
+                TLGH.Steps.run(R, RT.perfGasSteps, H, nil)
             elseif REQUEST == "sp-rtmi" then
                 R = TLGH.Report.new(RESULTS, "TLG single-player harness, model import, before the save")
                 TLGH.Steps.run(R, RT.modelSteps, H, nil)
