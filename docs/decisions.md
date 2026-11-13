@@ -1958,17 +1958,29 @@ gas probe (launch 342).
     A lit gasifier moved with nothing reading it stayed lit in its record
     until a generator's minute pass read it, which put it out as moved,
     its wood kept, and gave nothing.
-  * Performance, in single player (launches 398–401, `performance.md`):
-    the gas minute pass costs 0.011–0.012 ms a game minute for a full gas
-    generator and 0.042 ms for a propane one a part of a use below its
-    cap: the pass goes on past its tolerance test to a refill that cannot
-    move a whole use. A refill moves whole uses (0.0026 L), so what it
-    leaves below the cap is the rest of the room, within the tolerance
-    about once in 26 refills: that is most of a propane generator's
-    minutes, at any load. An early return when the room is below one use
-    would bring them to about 0.011 ms; put to the owner, not made.
-    A wood-gas draw costs 0.196 ms an hour, a gasifier's catch-up 0.13 ms
-    for any span; the gas running adds no measurable time to a frame.
+  * Performance, in single player (launches 398–401 and 404,
+    `performance.md`): the gas minute pass costs 0.011–0.012 ms a game
+    minute for a full gas generator. A propane one a part of a use below
+    its cap cost 0.042 ms: the pass went on past its tolerance test to a
+    refill that cannot move a whole use. A refill moves whole uses
+    (0.0026 L), so what it leaves below the cap is the rest of the room,
+    within the tolerance about once in 26 refills: that is most of a
+    propane generator's minutes, at any load. A wood-gas draw costs
+    0.196 ms an hour, a gasifier's catch-up 0.13 ms for any span; the gas
+    running adds no measurable time to a frame.
+  * Amended 2026-11-13, at the owner's word: the pass returns early for a
+    propane generator whose room takes less than one use
+    (`Generators.gasRefill`), by the refill's own rule (`GasFeed.usesFor`),
+    before the gas checks that read the conversion record. Such a room
+    moved nothing before either, so what the pass gives is unchanged.
+    Until a use fits, the pass no longer reads the conversion record, nor
+    on a server checks it against the vault; a full generator's minute
+    never did. The early return goes by the gas record, which the pass
+    still checks, and the fuel. That minute costs 0.016 ms now, and the
+    bench's 16 gas generators 0.236 ms against 0.446 (launch 404); a
+    refill that moves a use, which makes the whole-use calculation twice,
+    about 0.005 ms more. Propane in game (launch 402) and on a server
+    (launch 403) passed as before.
   * Not run: a handbook found at a container's first fill (the harness
     filled them again); a real network; these moves on a server; a
     buffer too small for two generators' hourly draws (how it is shared

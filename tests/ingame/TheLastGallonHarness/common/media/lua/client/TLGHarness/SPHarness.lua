@@ -19858,12 +19858,14 @@ RT.GV.build()
 -- (RT.PF.budgetsGas) are set from the first run that times them. Built in
 -- a function of its own for the -debug compiler.
 ------------------------------------------------------------------------------
--- About three times launch 400's medians (docs/performance.md); launch 400
--- set them, the next run is the first to check them. "both_16" has none:
--- its state depends on how many hours the warm-up crossed.
+-- About three times launch 400's medians (docs/performance.md); launch 401
+-- checked them first. The propane part-of-a-use budget is launch 404's,
+-- after the pass's early return for a room below one use (0.337 ms before,
+-- 0.129 ms after). "both_16" has none: its state depends on how many hours
+-- the warm-up crossed.
 RT.PF.budgetsGas = {
     ["gas_none/gas_minute"] = 0.005,
-    ["propane_8/gas_minute_part_use"] = 1.0, ["propane_8/gas_minute_full"] = 0.27, ["propane_8/refill_one_use"] = 1.7,
+    ["propane_8/gas_minute_part_use"] = 0.39, ["propane_8/gas_minute_full"] = 0.27, ["propane_8/refill_one_use"] = 1.7,
     ["woodgas_8/gas_minute_full"] = 0.30, ["woodgas_8/refill_one_step"] = 4.8,
     ["gas_catch_up/gasifier_24_h"] = 0.41, ["gas_catch_up/gasifier_720_h"] = 0.41, ["gas_catch_up/gasifier_8760_h"] = 0.41,
     ["gas_catch_up/gasifier_menu"] = 1.0, ["gas_catch_up/gas_menu_propane"] = 0.42, ["gas_catch_up/gas_menu_woodgas"] = 0.46,

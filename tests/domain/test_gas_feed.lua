@@ -46,6 +46,18 @@ T.case("gas feed: no refill without room, a tank or a use's worth of room", func
     T.eq(F.refill(last.rec, 0, 10, 0).moved, 0, "an empty tank gives nothing")
 end)
 
+T.case("gas feed: the whole uses a room takes are what a refill moves", function()
+    local use = Gas.NM3_PER_USE * L_PER_NM3
+    T.eq(F.usesFor(0), 0)
+    T.eq(F.usesFor(-1), 0, "a malformed room takes none")
+    T.eq(F.usesFor(0 / 0), 0, "nor does NaN")
+    for _, k in ipairs({ 0.5, 0.999, 1, 1.5, 2.5, 7 }) do
+        local want = math.floor(k + 1e-9)
+        T.eq(F.usesFor(use * k), want, k .. " uses of room")
+        T.eq(F.refill(connected(5000), 10 - use * k, 10, 0).moved, want, "a refill moves as many for " .. k)
+    end
+end)
+
 T.case("gas feed: the game burns the mix in proportion", function()
     local rec = { v = 1, id = "GS-3", buf = { propane = 2, woodgas = 1 }, fuel = 6, t = 0 }
     local cur = F.current(rec, 3)

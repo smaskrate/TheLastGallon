@@ -84,6 +84,13 @@ function F.connect(rec, uses, now)
     return { ok = true, rec = out }
 end
 
+-- The whole tank uses a room of `litres` takes, energy for energy: what a
+-- refill moves at most (0 when less than one use fits, or for a malformed
+-- room).
+function F.usesFor(litres)
+    return (Gas.nm3ToUses(litres * litreMJ() / propaneMJ())) or 0
+end
+
 -- Tops the buffer up to `cap` litres with whole uses from the tank. Returns
 -- the record, the litres to set and the uses moved (0: nothing to write).
 function F.refill(rec, fuelNow, cap, now)
@@ -91,7 +98,7 @@ function F.refill(rec, fuelNow, cap, now)
     if tank == nil or tank.uses < 1 or room <= F.TOLERANCE then
         return { ok = true, moved = 0, rec = rec, fuel = fuelNow }
     end
-    local uses = math.min(Gas.nm3ToUses(room * litreMJ() / propaneMJ()) or 0, tank.uses)
+    local uses = math.min(F.usesFor(room), tank.uses)
     if uses < 1 then return { ok = true, moved = 0, rec = rec, fuel = fuelNow } end
     local add = Gas.usesToNm3(uses)
     local out = Tables.deepCopy(rec)

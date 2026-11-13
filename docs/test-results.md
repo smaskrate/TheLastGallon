@@ -8149,3 +8149,63 @@ Evidence:
 [run 399](evidence/2026-11-13_rt-sp_harness_run399_performance_gas_stages_42.22.2.txt);
 [run 400](evidence/2026-11-13_rt-sp_harness_run400_performance_gas_states_42.22.2.txt);
 [run 401](evidence/2026-11-13_rt-sp_harness_run401_performance_gas_clean_frames_42.22.2.txt).
+
+## 2026-11-13 — RT-SP and RT-MP launches 402–404 (the propane early return)
+
+Branch `feature/gas-generators` after `e859ac4`, 42.22.2, with the gas
+minute pass's early return for a propane generator whose room takes less
+than one use (`Generators.gasRefill`), asked for by the owner after
+launches 398–401. It goes by the refill's own rule, now a function of its
+own (`GasFeed.usesFor`, which `GasFeed.refill` uses too), and returns
+before the gas checks that read the conversion record. Such a room moved
+nothing before either, so what the pass gives is unchanged. Until a use
+fits, the pass no longer reads the conversion record, nor on a server
+checks it against the vault; a full generator's minute never did. The
+early return goes by the gas record, which the pass still checks, and
+the fuel.
+
+Offline, 323 tests pass, two of them new: the whole uses a room takes are
+what a refill moves (`test_gas_feed.lua`), and with less than a use of
+room the minute pass returns before the gas checks, which run again once
+a use fits (`test_gas_generators.lua`). With the early return disabled,
+the second fails ("the conversion is not read: expected 0, got 1").
+
+| Launch | Command | Result (pass/fail) | Before the change |
+| --- | --- | --- | --- |
+| 402 | `tools/run-sp-harness.ps1 -Mode gas-propane` | 10/0, then 6/0 | 10/0, then 6/0 (launch 382) |
+| 403 | `tools/run-mp-harness.ps1 -Only gaspropane` | 11/0 | 11/0 (launch 385) |
+| 404 | `tools/run-sp-harness.ps1 -Mode performance-gas` | 22/0 | 22/0 (launch 401) |
+
+* Launches 402 and 403, propane in single player and on a dedicated
+  server, passed every check they passed before the change.
+* Launch 404: the 8 propane generators a part of a use below their cap
+  cost the pass 0.129 ms, against 0.337 ms in launch 400 and 0.333 ms in
+  launch 401: 0.016 ms each, not the 0.011 ms estimated before the change.
+  The 0.005 ms above a full generator's 0.011 ms is the whole-use
+  calculation, the one step this minute takes past the tolerance test,
+  where a full generator's minute ends. The state checks passed: nothing
+  moved in that state, and one use per call where a use fits. All 16 gas
+  generators as they stood, in the same states as in launch 400, cost
+  0.236 ms against 0.446. A refill that moves a use makes the calculation
+  twice now, in the early return's test and in the refill: it took
+  0.074 ms a generator against 0.069 in launch 400, about the same
+  0.005 ms more (inferred; not timed apart). The other figures moved by
+  less than 4 % from launch 400's, but the pass with no gas generator,
+  0.0018 against 0.0017 ms. Frames: 1.33 ms on the bare road, 1.24 ms
+  with the gas running.
+* The part-of-a-use budget is reset from launch 404 to 0.39 ms; the other
+  12 stay as launch 400 set them. Launch 404 passed it at 1.0 ms, the
+  budget before the reset; no launch has run with 0.39 ms yet.
+
+No console of a client, of the server or of the single-player games holds
+a warning or error of the mod; each read 0.4.3. Launch 404's one Lua
+exception was traced to the harness's own `getLockFPS` probe, as in
+launches 398, 400 and 401.
+
+Not run: a launch with the 0.39 ms budget; the whole performance mode
+since the change; the pass's cost on a server.
+
+Evidence:
+[run 402](evidence/2026-11-13_rt-sp_harness_run402_gas_propane_early_return_42.22.2.txt);
+[run 403](evidence/2026-11-13_rt-mp_harness_run403_gaspropane_early_return_42.22.2.txt);
+[run 404](evidence/2026-11-13_rt-sp_harness_run404_performance_gas_early_return_42.22.2.txt).

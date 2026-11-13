@@ -304,6 +304,12 @@ function G.gasRefill(gen)
     local tank = rec ~= nil and rec.tank ~= nil and rec.tank.uses >= 1
     local cap = tank and G.gasCap(gen) or G.woodgasCap(gen)
     if cap - fuel <= GasFeed.TOLERANCE then return 0 end
+    -- With a tank in, a room of less than one use moves nothing (whole uses
+    -- only), and that is how most minutes find a propane generator: a refill
+    -- leaves the rest of the room below the cap. The gas checks below read
+    -- the conversion record, so the pass returns first (launches 398-401:
+    -- 0.042 ms a minute for such a generator, 0.011 ms for a full one).
+    if tank and GasFeed.usesFor(cap - fuel) < 1 then return 0 end
     if fuel > GasFeed.TOLERANCE and not GasFeed.holdsGas(rec, fuel) then return 0 end
     if not G.isGas(gen) then return 0 end
     if not tank then return G.woodgasRefill(gen, rec, fuel, cap) end

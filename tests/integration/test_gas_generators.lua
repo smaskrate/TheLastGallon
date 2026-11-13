@@ -168,6 +168,36 @@ inGame("integration: the minute pass fills a gas generator from its tank and wri
     T.ok(gen.fuel <= 10 and 10 - gen.fuel < Gas.NM3_PER_USE * 93 / 32, "less than one use below the cap")
 end)
 
+-- Launches 398-401: a propane generator a part of a use below its cap cost
+-- the pass four times a full one, all of it gas checks that end in a refill
+-- moving nothing. The pass now returns first; once a use fits, it refills.
+inGame("integration: with less than a use of room, a propane generator's minute pass returns before the gas checks", function(g)
+    local gen = generatorAt(g, 5, 9, 0, true)
+    connect(gen, 5000)
+    G.gasMinute()
+    local use, rec = Gas.NM3_PER_USE * 93 / 32, gen.md.tlgGas
+    T.ok(10 - gen.fuel > GasFeed.TOLERANCE and 10 - gen.fuel < use, "the first fill leaves a part of a use of room")
+    local isGas, calls = G.isGas, 0
+    G.isGas = function(x)
+        calls = calls + 1
+        return isGas(x)
+    end
+    local ok, err = pcall(function()
+        T.eq(G.gasRefill(gen), 0)
+        T.eq(calls, 0, "the conversion is not read")
+        T.ok(rawequal(gen.md.tlgGas, rec), "nothing is written")
+        -- A burn of one and a half uses: a whole use now fits.
+        gen.fuel = gen.fuel - use * 1.5
+        local want = GasFeed.usesFor(10 - gen.fuel)
+        T.ok(want >= 1, "a use fits")
+        T.eq(G.gasRefill(gen), want)
+        T.eq(calls, 1, "the gas checks run once a use fits")
+        T.eq(gen.md.tlgGas.tank.uses, rec.tank.uses - want)
+    end)
+    G.isGas = isGas
+    if not ok then error(err, 0) end
+end)
+
 inGame("integration: a converted generator that holds petrol is not refilled with gas", function(g)
     local gen = generatorAt(g, 6, 5, 3, true)
     local r = GasFeed.connect(GasFeed.new({ id = "GS-P", t = 100 }), 100, 100)
