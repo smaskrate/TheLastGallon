@@ -10,18 +10,19 @@ other runs:
 - runs 340–341 (2026-11-12, game 42.22.2), which add what 0.2.0 to 0.4.1
   brought: the biodiesel machines, diesel engines, wrong fuel and the
   square-load hook;
-- runs 398–401 and 404 (2026-11-13, game 42.22.2, the gas branch), which
-  add the gas generators and gasifiers (D-040): run 398 with the gas
-  stages' first version, runs 399, 401 and 404 the gas stages alone
-  (`-Mode performance-gas`), run 400 the whole mode with them. Run 404
-  came after the gas pass's early return for a propane generator with
-  less than a use of room.
+- runs 398–401, 404 and 405 (2026-11-13, game 42.22.2, the gas branch),
+  which add the gas generators and gasifiers (D-040): run 398 with the
+  gas stages' first version, runs 399, 401 and 404 the gas stages alone
+  (`-Mode performance-gas`), runs 400 and 405 the whole mode with them.
+  Runs 404 and 405 came after the gas pass's early return for a propane
+  generator with less than a use of room.
 
-Run 400, the latest run of the whole mode, passed all 40 budgets set
-before it, as run 398 did, the first run to check the 18 set from run
-341. The gas stages' 13 budgets are set from run 400, one of them reset
-from run 404 after the early return; runs 401 and 404 passed all 13, run
-404 against that one's budget before the reset (see "Budgets").
+Run 405, the latest run of the whole mode, passed all 53 budgets: the 40
+that runs 398 and 400 passed, the first runs to check the 18 set from
+run 341, and the gas stages' 13, set from run 400, one of them reset
+from run 404 after the early return. Runs 401 and 404, the gas stages
+alone, passed the 13 before it, run 404 against that one's budget before
+the reset (see "Budgets").
 Run 341 passed 21 of the 22 budgets set
 before it. The fuel menu's budget had most likely been set from a menu
 that never opened (see "The fuel menu"); it is now set from run 341, with
@@ -39,7 +40,8 @@ in `docs/evidence/`:
 [run 399](evidence/2026-11-13_rt-sp_harness_run399_performance_gas_stages_42.22.2.txt),
 [run 400](evidence/2026-11-13_rt-sp_harness_run400_performance_gas_states_42.22.2.txt),
 [run 401](evidence/2026-11-13_rt-sp_harness_run401_performance_gas_clean_frames_42.22.2.txt),
-[run 404](evidence/2026-11-13_rt-sp_harness_run404_performance_gas_early_return_42.22.2.txt) and
+[run 404](evidence/2026-11-13_rt-sp_harness_run404_performance_gas_early_return_42.22.2.txt),
+[run 405](evidence/2026-11-13_rt-sp_harness_run405_performance_whole_early_return_42.22.2.txt) and
 run 184's fireplace test
 ([run 184](evidence/2026-11-04_rt-sp_harness_run184_fireplace.txt)).
 
@@ -290,22 +292,22 @@ cars away first. One column then had room at once; in the other a
 vehicle on two squares at the slots' edge, not identified, moved its vans
 7 rows south.
 
-### What the gas work adds (runs 399, 400 and 404)
+### What the gas work adds (runs 399, 400, 404 and 405)
 
-The gas minute pass (`Generators.gasMinute`), milliseconds per call; run
-404 came after the early return described below. Each state was checked
-to be what its row says (stage 13); the refill rows leave out the steps
-taken out before each call (0.009 ms).
+The gas minute pass (`Generators.gasMinute`), milliseconds per call; runs
+404 and 405 came after the early return described below. Each state was
+checked to be what its row says (stage 13); the refill rows leave out the
+steps taken out before each call (0.009 ms).
 
-| The gas generators in the pass | Run 399 | Run 400 | Run 404 | A generator (run 400) |
-| --- | --- | --- | --- | --- |
-| None | 0.0017 | 0.0017 | 0.0018 | – |
-| 8 on propane, a part of a use below the cap (most minutes) | 0.331 | 0.337 | 0.129 | 0.042 |
-| 8 on propane, within the tolerance of the cap | 0.087 | 0.088 | 0.085 | 0.011 |
-| 8 on propane, each moving one use | 0.571 | 0.551 | 0.591 | 0.069 |
-| 8 on wood gas at their caps | 0.097 | 0.098 | 0.096 | 0.012 |
-| 8 on wood gas, each drawing a step from a gasifier | 1.571 | 1.571 | 1.611 | 0.196 |
-| All 16 as they stood (propane a part of a use below, wood gas at the caps) | 0.444 | 0.446 | 0.236 | – |
+| The gas generators in the pass | Run 399 | Run 400 | Run 404 | Run 405 | A generator (run 400) |
+| --- | --- | --- | --- | --- | --- |
+| None | 0.0017 | 0.0017 | 0.0018 | 0.0017 | – |
+| 8 on propane, a part of a use below the cap (most minutes) | 0.331 | 0.337 | 0.129 | 0.133 | 0.042 |
+| 8 on propane, within the tolerance of the cap | 0.087 | 0.088 | 0.085 | 0.088 | 0.011 |
+| 8 on propane, each moving one use | 0.571 | 0.551 | 0.591 | 0.611 | 0.069 |
+| 8 on wood gas at their caps | 0.097 | 0.098 | 0.096 | 0.098 | 0.012 |
+| 8 on wood gas, each drawing a step from a gasifier | 1.571 | 1.571 | 1.611 | 1.591 | 0.196 |
+| All 16 as they stood (propane a part of a use below, wood gas at the caps) | 0.444 | 0.446 | 0.236 | 0.239 | – |
 
 A generator costs the pass its record's read even when full: 0.011–0.012
 ms. Before the early return described below, a propane generator a part
@@ -325,17 +327,19 @@ where eight engines idling on stale petrol take 1.2 ms.
 Since then the pass returns early for a propane generator whose room takes
 less than one use (`Generators.gasRefill`, with `GasFeed.usesFor`, the
 rule the refill itself goes by), before the gas checks that read the
-conversion record; the owner asked for it on 2026-11-13. Run 404 timed
-the usual state at 0.129 ms for 8, 0.016 ms a generator, against 0.042
-ms in run 400, and all 16, in the same states as in run 400, at 0.236 ms
-against 0.446. The 0.005 ms above a full generator's 0.011 ms is that
-whole-use calculation, the one step this minute takes past the tolerance
-test, where a full generator's minute ends. A refill that moves a use
-now makes the calculation twice, in the early return's test and in the
-refill, and took 0.074 ms a generator against 0.069: about the same
-0.005 ms more (inferred from the matching figures; the two were not
-timed apart). The other figures moved by less than 4 % from run 400's,
-but the pass with no gas generator, 0.0018 ms against 0.0017.
+conversion record; the owner asked for it on 2026-11-13. Runs 404 and
+405 timed the usual state at 0.129 and 0.133 ms for 8, 0.016–0.017 ms a
+generator, against 0.042 ms in run 400, and all 16, in the same states
+as in run 400, at 0.236 and 0.239 ms against 0.446. The rest, 0.005–0.006
+ms above a full generator's 0.011 ms, is that whole-use calculation, the
+one step this minute takes past the tolerance test, where a full
+generator's minute ends. A refill that moves a use now
+makes the calculation twice, in the early return's test and in the
+refill, and took 0.074–0.076 ms a generator against 0.069–0.071 in runs
+399–400; the second calculation is the likely cause (inferred; the two
+were not timed apart). The other figures were within 4 % of run 400's in
+both runs, but the pass with no gas generator in run 404, 0.0018 ms
+against 0.0017.
 
 Most generators stood within two tiles of two gasifiers, and a generator
 draws from the one with the lower id (D-040), so the draws spread as the
@@ -343,12 +347,12 @@ items' ids fell: in run 399 two gasifiers served two generators each and
 two served none, in run 400 three and three. The gas given in all was
 every generator's step, 50 calls over.
 
-| Also | Run 399 | Run 400 | Run 404 |
-| --- | --- | --- | --- |
-| A lit gasifier brought forward 1 / 30 / 365 days | 0.134 / 0.134 / 0.132 | 0.134 / 0.133 / 0.134 | 0.134 / 0.133 / 0.132 |
-| The Gasifier menu, with the game's context menu | 0.350 | 0.340 | 0.346 |
-| The Gas menu on a propane / a wood-gas generator, with it | 0.137 / 0.152 | 0.137 / 0.151 | 0.138 / 0.152 |
-| The square-load handler on a gas generator's square | 0.0033 | 0.0034 | 0.0033 |
+| Also | Run 399 | Run 400 | Run 404 | Run 405 |
+| --- | --- | --- | --- | --- |
+| A lit gasifier brought forward 1 / 30 / 365 days | 0.134 / 0.134 / 0.132 | 0.134 / 0.133 / 0.134 | 0.134 / 0.133 / 0.132 | 0.134 / 0.134 / 0.135 |
+| The Gasifier menu, with the game's context menu | 0.350 | 0.340 | 0.346 | 0.347 |
+| The Gas menu on a propane / a wood-gas generator, with it | 0.137 / 0.152 | 0.137 / 0.151 | 0.138 / 0.152 | 0.139 / 0.152 |
+| The square-load handler on a gas generator's square | 0.0033 | 0.0034 | 0.0033 | 0.0034 |
 
 A gasifier brought forward costs the same for a day as for a year,
 presumably because with nothing drawing it, it goes out after its
@@ -383,8 +387,8 @@ stood in states it did not record. Those figures are not used.
 | The hands census, every ten game minutes (run 341) | 0.0037 ms with one character |
 | A square the game loads (runs 340–341) | at least 0.34–0.35 µs added to the event (see "The square-load hook") |
 | A gas generator in the minute pass, full (run 400) | 0.011 ms on propane, 0.012 ms on wood gas, a game minute |
-| A propane generator a part of a use below its cap, its usual minute | 0.016 ms a game minute since the early return (run 404; 0.042 ms in run 400) |
-| A propane refill moving a use | 0.074 ms since the early return (run 404; 0.069 ms in run 400) |
+| A propane generator a part of a use below its cap, its usual minute | 0.016–0.017 ms a game minute since the early return (runs 404–405; 0.042 ms in run 400) |
+| A propane refill moving a use | 0.074–0.076 ms since the early return (runs 404–405; 0.069 ms in run 400) |
 | A wood-gas generator's draw from a gasifier (run 400) | 0.196 ms, once a game hour |
 | A lit gasifier brought forward, 1 to 365 days (run 400) | 0.13 ms |
 | The Gasifier menu / the Gas menu, with the game's context menu (run 400) | 0.34 ms / 0.14–0.15 ms |
@@ -459,25 +463,47 @@ With the dialogs closed, 62 running machines, 8–12 idling engines and 400
 recorded cans took about what the empty road took. Each figure is one
 20-second sample.
 
-### Frames with the gas (runs 398–401 and 404)
+### Frames with the gas (runs 398–401, 404 and 405)
 
-The Gas and Gasifier menus show a reply dialog after each action, and the
-gas stages of runs 398–400 left some on screen during their frames: the 8
-propane connects' replies in runs 398 and 400 (mean main-thread time 2.05
-and 1.78 ms, against 1.70 and 1.45 ms in the stage before), 24 in run
-399 (2.61 ms). That fits the reply dialogs' cost the fermenter stages
-show. Runs 401 and 404, the gas stages alone, closed every reply dialog
-first:
+Mean main-thread time per frame; each figure is one 20-second sample, and
+every stage held 60 frames a second. The Gas and Gasifier menus show a
+reply dialog after each action. Runs 401 and 404, the gas stages alone
+on the bare road, closed every reply dialog before sampling (24 each):
 
-| Stage | Mean main-thread time per frame, run 401 / run 404 |
-| --- | --- |
-| The bare road, before the gas | 1.66 / 1.33 ms |
-| 16 gas generators and 8 lit gasifiers running, the dialogs closed | 1.40 / 1.24 ms |
+| Stage | Run 401 | Run 404 |
+| --- | --- | --- |
+| The bare road, before the gas | 1.66 ms | 1.33 ms |
+| 16 gas generators and 8 lit gasifiers running | 1.40 ms | 1.24 ms |
 
-The gas adds no measurable time to a frame; its minute pass comes to
-about 0.001 ms a frame since the early return (0.24 ms once every 225
-frames; 0.45 ms before it). Every stage held 60 frames a second. Each
-figure is one 20-second sample.
+On the bare road the gas adds no measurable time to a frame. Run 399
+sampled the same stage without closing the replies: 2.61 ms, which fits
+what reply dialogs cost (32 of them add 1.3–1.6 ms in the whole mode,
+runs 398, 400 and 405).
+
+In the whole mode, with every other workload still running, the frames
+rose with the gas in each run:
+
+| Stage | Run 398 | Run 400 | Run 405 |
+| --- | --- | --- | --- |
+| Every other workload running, the dialogs closed | 1.70 ms | 1.45 ms | 1.52 ms |
+| The gas added | 2.05 ms | 1.78 ms | 1.91 ms |
+
+Run 405 closed the replies before its gas sample and found none left on
+screen, yet rose as much as runs 398 and 400, which did not close them:
+the rise is there without the dialogs. It is spread over every frame: in
+each run the median frame went from 1 to 2 ms with the gas while the
+longest stayed at 7–9 ms, where a cost once a game minute would need a
+spike of some 75–90 ms to lift the mean as much. What raises it is not
+established. Between the two samples the mode also times the square-load
+hook (about 3.3 million square-load events, and a Diesel Generator put
+down) and places the gas among the other workloads; no frames were
+sampled in between. The mod's gas pass runs once a game minute (0.24 ms
+for the 16 since the early return, about 0.001 ms a frame; 0.45 ms
+before it), and the mod registers no per-frame event handler but the
+landing watch, which follows a machine for at most 300 ticks after it
+leaves a character's hands. The
+same stage also differs between runs by as much as the rise: the bare
+road read 1.66 ms in run 401 and 1.33 ms in run 404.
 
 ### The fuel menu (run 341)
 
@@ -562,14 +588,15 @@ Runs 340 and 341 passed 21 of the 22. The fuel menu failed its 0.08 ms,
 set from run 181's 0.027 ms, which most likely timed a menu that did not
 open (see "The fuel menu"). It is now 1.1 ms, set from run 341, as are
 the 18 budgets of the workloads after the budget check. Runs 398 and 400
-were the first to check those 18, and passed all 40.
+were the first to check those 18, and passed all 40, as did run 405.
 
 The gas stages' budgets (`RT.PF.budgetsGas`), set from run 400. Run 401,
 the gas stages alone, checked them first and passed all 13 (its medians
-within 5 % of run 400's); the whole mode has not checked them yet. The
-propane part-of-a-use budget is reset from run 404, after the early
-return: run 404 passed it at 1.0 ms, the budget before the reset, and no
-run has checked 0.39 ms yet. The refill rows include the
+within 5 % of run 400's). The propane part-of-a-use budget is reset
+from run 404, after the early return; run 404 passed it at 1.0 ms, the
+budget before the reset. Run 405, the whole mode, checked all 13 with
+the reset one and passed them (that one at 0.133 ms against 0.39). The
+refill rows include the
 steps taken out before each call. All 16 as they stood have none: that
 state depends on how many hours the warm-up crossed. The part-of-a-use
 timing takes the propane generators as the connect leaves them; an hour
@@ -700,6 +727,9 @@ entries for a machine with 480 of each, on top of the record itself.
 - **More than 16 gas generators,** or gasifiers that several generators
   draw from in one pass; and the game's own cost of running generators
   apart from the mod's (see "Frames with the gas").
+- **What raises the frames with the gas in the whole mode:** no frames
+  were sampled between the square-load stage and the gas, which would
+  tell the gas from what runs before it (see "Frames with the gas").
 - **Multiple electrical networks:** no network is built in game in this
   build. The energy model is domain-only (gate 4).
 - **Several clients using shared storage:** the server's timers were

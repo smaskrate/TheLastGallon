@@ -8209,3 +8209,47 @@ Evidence:
 [run 402](evidence/2026-11-13_rt-sp_harness_run402_gas_propane_early_return_42.22.2.txt);
 [run 403](evidence/2026-11-13_rt-mp_harness_run403_gaspropane_early_return_42.22.2.txt);
 [run 404](evidence/2026-11-13_rt-sp_harness_run404_performance_gas_early_return_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 405 (the whole performance mode after the propane early return)
+
+Branch `feature/gas-generators` at `737e25f`, 42.22.2:
+`tools/run-sp-harness.ps1 -Mode performance`, the whole mode, after the
+propane early return of launches 402–404. It passed 82/0 in 7.8 minutes,
+against 69/0 in launch 400: the 13 more are the gas stages' budgets,
+which the whole mode checked for the first time.
+
+* All 53 budgets passed: the 40 that launches 398 and 400 passed, and the
+  gas stages' 13, among them the propane part-of-a-use budget reset to
+  0.39 ms after launch 404 (0.133 ms).
+* The gas, against launch 400, the last whole-mode run before the
+  change: the usual propane minute 0.133 ms for 8 against 0.337 (0.017 ms
+  a generator against 0.042); all 16 as they stood, in the same states,
+  0.239 ms against 0.446; a refill that moves a use 0.076 ms a generator
+  against 0.069. The other gas figures were within 2 % of launch 400's.
+  Every state check passed.
+* The 101 other figures moved between −5.6 % and +6.7 % from launch
+  400's. Beyond 5 % are only timers under 0.002 ms, which moved by one in
+  their last digit, and the minute with 8 engines idling once the middle
+  columns' cars were taken away, 5.2 % faster.
+* Frames: every stage held 60 a second. With the gas added to every other
+  workload, 1.91 ms a frame against 1.52 ms in the stage before. The
+  harness closed the reply dialogs before that sample and found none left
+  on screen, yet the rise matches launches 398 and 400 (2.05 against
+  1.70, 1.78 against 1.45), which did not close them. So the rise is
+  there without the dialogs, which the launches 398–401 entry gave as
+  launch 400's cause; no evidence line counted the dialogs on screen in
+  those launches. The gas stages alone, on the bare road, showed no rise
+  (launches 401 and 404). What adds the time in the whole mode is not
+  established (`performance.md`, "Frames with the gas").
+
+No warning or error of the mod in the console; it read 0.4.3. The one Lua
+exception is the harness's own `getLockFPS` probe (`SPHarness.lua:10606`,
+inside its pcall; the environment line reads `lockFPS=?`), as in
+launches 398, 400, 401 and 404.
+
+Not run: frames sampled between the square-load stage and the gas, which
+would tell the gas from what runs before it; the gas on a server; more
+than 16 gas generators.
+
+Evidence:
+[run 405](evidence/2026-11-13_rt-sp_harness_run405_performance_whole_early_return_42.22.2.txt).

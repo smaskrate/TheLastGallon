@@ -1,0 +1,414 @@
+# TLG single-player harness, performance
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=49204180906788236899 hours=2.0096 DayLength=4
+STEP rtpf_setup begin
+OBS  RTPF.environment :: game=42.22.2 3d39148846 classpath=1 screen=1280x720 fullscreen=false vsync=false framerate=60 uncapped=false lockFPS=? lightingFPS=15 Zombies=6 CarSpawnRate=1 DayLength=4 VehicleStalls=false (was true) hour=9 air=14.8 C zombies=0 vehicles removed 0
+STEP rtpf_frames_empty begin
+OBS  RTPF.frames empty: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.344 p50 1.000 p95 3.000 p99 3.000 max 3.000; render ms mean 16.155 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 20
+STEP rtpf_timers_empty begin
+OBS  RTPF.cost empty/minute: first call 0 ms; median 0.0016 ms per call (batches 0.0016-0.0018 ms, 618305 calls)
+OBS  RTPF.cost empty/ten_minutes: first call 0 ms; median 0.0018 ms per call (batches 0.0018-0.0020 ms, 543615 calls)
+OBS  RTPF.cost empty/hour: first call 1 ms; median 0.0108 ms per call (batches 0.0106-0.0115 ms, 91113 calls)
+STEP rtpf_place_cans begin
+OBS  RTPF.cans 400 petrol cans of 10 L on the road (108 free squares in the rows)
+STEP rtpf_frames_cans_without_records begin
+OBS  RTPF.frames cans_without_records: 1200 frames in 20.0 s (60.0 a second), 6 game minutes, 0 engines running; main-thread step ms mean 1.303 p50 1.000 p95 3.000 p99 3.000 max 6.000; render ms mean 16.167 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 19
+STEP rtpf_record_cans begin
+OBS  RTPF.cans 400 records written in 360 ms (0.900 ms a can, paid once, at its first look or transfer)
+PASS RTPF.cans_recorded :: 400 of 400 cans hold a record
+STEP rtpf_frames_cans_with_records begin
+OBS  RTPF.frames cans_with_records: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.232 p50 1.000 p95 2.000 p99 3.000 max 3.000; render ms mean 16.157 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 19
+STEP rtpf_timers_cans_with_records begin
+OBS  RTPF.cost cans_with_records/minute: first call 0 ms; median 0.0015 ms per call (batches 0.0015-0.0015 ms, 661607 calls)
+OBS  RTPF.cost cans_with_records/ten_minutes: first call 0 ms; median 0.0017 ms per call (batches 0.0017-0.0017 ms, 575008 calls)
+OBS  RTPF.cost cans_with_records/hour: first call 0 ms; median 0.0105 ms per call (batches 0.0105-0.0105 ms, 95013 calls)
+STEP rtpf_park_10 begin
+OBS  RTPF.cars 10 parked with a tank record, 10 vehicles in the cell
+PASS RTPF.cars_parked_10 :: 10 with records, 10 in the cell, 10 wanted
+STEP rtpf_timers_parked_10 begin
+OBS  RTPF.cost parked_10/minute: first call 0 ms; median 0.0176 ms per call (batches 0.0174-0.0206 ms, 55342 calls)
+OBS  RTPF.cost parked_10/ten_minutes: first call 0 ms; median 0.0017 ms per call (batches 0.0017-0.0018 ms, 572364 calls)
+OBS  RTPF.cost parked_10/hour: first call 0 ms; median 0.0107 ms per call (batches 0.0107-0.0128 ms, 90298 calls)
+STEP rtpf_park_20 begin
+OBS  RTPF.cars 20 parked with a tank record, 20 vehicles in the cell
+PASS RTPF.cars_parked_20 :: 20 with records, 20 in the cell, 20 wanted
+STEP rtpf_timers_parked_20 begin
+OBS  RTPF.cost parked_20/minute: first call 0 ms; median 0.0328 ms per call (batches 0.0328-0.0331 ms, 30405 calls)
+OBS  RTPF.cost parked_20/ten_minutes: first call 0 ms; median 0.0017 ms per call (batches 0.0017-0.0018 ms, 576490 calls)
+OBS  RTPF.cost parked_20/hour: first call 0 ms; median 0.0105 ms per call (batches 0.0105-0.0106 ms, 95245 calls)
+STEP rtpf_frames_parked_20 begin
+OBS  RTPF.frames parked_20: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 0 engines running; main-thread step ms mean 1.301 p50 1.000 p95 3.000 p99 3.000 max 5.000; render ms mean 16.131 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 20
+STEP rtpf_idle begin
+OBS  RTPF.idle 8 of 8 engines running; the fuel grade=poor powerFactor=0.851429 wearFactor=1.742857
+PASS RTPF.engines_idling :: 8 running of 8 wanted
+STEP rtpf_timers_idling_8 begin
+OBS  RTPF.cost idling_8/minute: first call 2 ms; median 1.1173 ms per call (batches 1.0989-1.1236 ms, 899 calls)
+OBS  RTPF.cost idling_8/ten_minutes: first call 0 ms; median 0.0017 ms per call (batches 0.0017-0.0017 ms, 578450 calls)
+OBS  RTPF.cost idling_8/hour: first call 0 ms; median 0.0105 ms per call (batches 0.0104-0.0106 ms, 94857 calls)
+STEP rtpf_machines_8 begin
+OBS  RTPF.load1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load3 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load4 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load5 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load6 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load7 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load8 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.machines 8 placed, 8 loaded in this step (0 refused), 8 running, 8 in the hourly list
+PASS RTPF.machines_running_8 :: 8 running and 8 listed of 8
+STEP rtpf_timers_machines_8 begin
+OBS  RTPF.cost machines_8/minute: first call 1 ms; median 1.1628 ms per call (batches 1.1561-1.1696 ms, 860 calls)
+OBS  RTPF.cost machines_8/ten_minutes: first call 0 ms; median 0.1629 ms per call (batches 0.1621-0.1657 ms, 6120 calls)
+OBS  RTPF.cost machines_8/hour: first call 0 ms; median 0.1552 ms per call (batches 0.1548-0.1815 ms, 6249 calls)
+STEP rtpf_machines_32 begin
+OBS  RTPF.load9 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load10 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load11 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load12 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load13 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load14 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load15 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load16 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load17 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load18 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load19 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load20 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load21 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load22 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load23 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load24 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load25 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load26 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load27 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load28 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load29 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load30 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load31 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load32 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.machines 32 placed, 24 loaded in this step (0 refused), 32 running, 32 in the hourly list
+PASS RTPF.machines_running_32 :: 32 running and 32 listed of 32
+STEP rtpf_timers_machines_32 begin
+OBS  RTPF.cost machines_32/minute: first call 1 ms; median 1.1628 ms per call (batches 1.1561-1.1696 ms, 861 calls)
+OBS  RTPF.cost machines_32/ten_minutes: first call 1 ms; median 0.6711 ms per call (batches 0.6711-0.6920 ms, 1479 calls)
+OBS  RTPF.cost machines_32/hour: first call 1 ms; median 0.6061 ms per call (batches 0.6006-0.6098 ms, 1653 calls)
+STEP rtpf_timers_machines_32_warmed begin
+OBS  RTPF.cost machines_32_warmed/ten_minutes: first call 12 ms; median 10.2500 ms per call (batches 10.2000-10.4500 ms, 101 calls)
+OBS  RTPF.cost machines_32_warmed/fire_scan_one_machine: first call 3 ms; median 2.8056 ms per call (batches 2.7917-2.8169 ms, 359 calls)
+STEP rtpf_frames_machines_32_idling_8 begin
+OBS  RTPF.frames machines_32_idling_8: 1200 frames in 20.0 s (60.0 a second), 6 game minutes, 8 engines running; main-thread step ms mean 2.973 p50 3.000 p95 5.000 p99 6.000 max 9.000; render ms mean 16.137 p95 18.000; between frames ms p50 17 p95 19 p99 19 max 21
+STEP rtpf_catch_up_fresh begin
+OBS  RTPF.cost catch_up_fresh/can_24_h: first call 1 ms; median 0.0896 ms per call (batches 0.0894-0.0899 ms, 11157 calls)
+OBS  RTPF.cost catch_up_fresh/tank_24_h: first call 0 ms; median 0.1072 ms per call (batches 0.1067-0.1092 ms, 9303 calls)
+OBS  RTPF.cost catch_up_fresh/fermenter_24_h: first call 1 ms; median 0.1527 ms per call (batches 0.1522-0.1553 ms, 6536 calls)
+OBS  RTPF.cost catch_up_fresh/can_720_h: first call 1 ms; median 0.8163 ms per call (batches 0.8163-0.8264 ms, 1221 calls)
+OBS  RTPF.cost catch_up_fresh/tank_720_h: first call 1 ms; median 0.8333 ms per call (batches 0.8333-0.8368 ms, 1199 calls)
+OBS  RTPF.cost catch_up_fresh/fermenter_720_h: first call 2 ms; median 2.0510 ms per call (batches 2.0408-2.0722 ms, 490 calls)
+OBS  RTPF.cost catch_up_fresh/can_8760_h: first call 10 ms; median 9.2273 ms per call (batches 9.1818-9.2273 ms, 111 calls)
+OBS  RTPF.cost catch_up_fresh/tank_8760_h: first call 9 ms; median 9.1364 ms per call (batches 9.0909-9.2273 ms, 111 calls)
+OBS  RTPF.cost catch_up_fresh/fermenter_8760_h: first call 24 ms; median 23.6667 ms per call (batches 23.6667-23.7778 ms, 46 calls)
+OBS  RTPF.cost catch_up_fresh/context_menu_alone: first call 0 ms; median 0.0248 ms per call (batches 0.0248-0.0250 ms, 40239 calls)
+OBS  RTPF.cost catch_up_fresh/fuel_menu: first call 1 ms; median 0.3650 ms per call (batches 0.3623-0.3670 ms, 2742 calls)
+OBS  RTPF.cost catch_up_fresh/machine_menu_fresh: first call 0 ms; median 0.2642 ms per call (batches 0.2611-0.2729 ms, 3772 calls)
+OBS  RTPF.cost catch_up_fresh/machine_menu_catch_up_fresh: first call 0 ms; median 0.1190 ms per call (batches 0.1185-0.1198 ms, 8398 calls)
+STEP rtpf_old_readings begin
+OBS  RTPF.readings 32 running fermenters given 480 hourly readings and fire notes (fixture, dated ahead)
+PASS RTPF.readings_in_place :: 32 of 32 with 480 readings
+STEP rtpf_timers_machines_32_20_days begin
+OBS  RTPF.cost machines_32_20_days/minute: first call 1 ms; median 1.1905 ms per call (batches 1.1765-1.1905 ms, 845 calls)
+OBS  RTPF.cost machines_32_20_days/ten_minutes: first call 7 ms; median 6.8966 ms per call (batches 6.8333-6.8966 ms, 148 calls)
+OBS  RTPF.cost machines_32_20_days/hour: first call 18 ms; median 17.2500 ms per call (batches 17.0833-17.3333 ms, 61 calls)
+STEP rtpf_catch_up_20_days begin
+OBS  RTPF.cost catch_up_20_days/fermenter_through_20_days: first call 4 ms; median 4.2766 ms per call (batches 4.2766-4.2766 ms, 236 calls)
+OBS  RTPF.cost catch_up_20_days/machine_menu_20_days: first call 5 ms; median 4.8095 ms per call (batches 4.8095-4.8571 ms, 211 calls)
+OBS  RTPF.cost catch_up_20_days/machine_menu_catch_up_20_days: first call 5 ms; median 4.9756 ms per call (batches 4.9512-5.0250 ms, 204 calls)
+STEP rtpf_budgets begin
+PASS RTPF.budget.cans_with_records/hour :: median 0.0105 ms per call, budget 0.030 ms
+PASS RTPF.budget.cans_with_records/minute :: median 0.0015 ms per call, budget 0.005 ms
+PASS RTPF.budget.cans_with_records/ten_minutes :: median 0.0017 ms per call, budget 0.005 ms
+PASS RTPF.budget.catch_up_20_days/fermenter_through_20_days :: median 4.2766 ms per call, budget 13.000 ms
+PASS RTPF.budget.catch_up_20_days/machine_menu_20_days :: median 4.8095 ms per call, budget 15.000 ms
+PASS RTPF.budget.catch_up_fresh/can_8760_h :: median 9.2273 ms per call, budget 28.000 ms
+PASS RTPF.budget.catch_up_fresh/fermenter_8760_h :: median 23.6667 ms per call, budget 75.000 ms
+PASS RTPF.budget.catch_up_fresh/fuel_menu :: median 0.3650 ms per call, budget 1.100 ms
+PASS RTPF.budget.catch_up_fresh/machine_menu_fresh :: median 0.2642 ms per call, budget 0.800 ms
+PASS RTPF.budget.catch_up_fresh/tank_8760_h :: median 9.1364 ms per call, budget 28.000 ms
+PASS RTPF.budget.empty/hour :: median 0.0108 ms per call, budget 0.030 ms
+PASS RTPF.budget.empty/minute :: median 0.0016 ms per call, budget 0.005 ms
+PASS RTPF.budget.empty/ten_minutes :: median 0.0018 ms per call, budget 0.005 ms
+PASS RTPF.budget.idling_8/minute :: median 1.1173 ms per call, budget 3.200 ms
+PASS RTPF.budget.machines_32/hour :: median 0.6061 ms per call, budget 1.700 ms
+PASS RTPF.budget.machines_32/minute :: median 1.1628 ms per call, budget 3.300 ms
+PASS RTPF.budget.machines_32/ten_minutes :: median 0.6711 ms per call, budget 1.800 ms
+PASS RTPF.budget.machines_32_20_days/hour :: median 17.2500 ms per call, budget 53.000 ms
+PASS RTPF.budget.machines_32_20_days/ten_minutes :: median 6.8966 ms per call, budget 20.000 ms
+PASS RTPF.budget.machines_32_warmed/fire_scan_one_machine :: median 2.8056 ms per call, budget 9.000 ms
+PASS RTPF.budget.machines_32_warmed/ten_minutes :: median 10.2500 ms per call, budget 31.000 ms
+PASS RTPF.budget.parked_20/minute :: median 0.0328 ms per call, budget 0.100 ms
+STEP rtpf_fuel_menu_info begin
+OBS  RTPF.fuel_menu its fill built 1 entries on the menu and 7 in 1 submenus; the item's own fluid container none, the world item's found; the can holds {gasoline=10} (foreign 0.0000 L); the 0.1.0 menu's test would say false; 30 objects within two tiles of the player at 10600,10831; 20 vehicles in the cell
+PASS RTPF.fuel_menu_built :: 1 on the menu, 7 in 1 submenus
+STEP rtpf_fuel_menu_parts begin
+OBS  RTPF.cost fuel_menu_parts/whole: first call 1 ms; median 0.3670 ms per call (batches 0.3630-0.3690 ms, 2728 calls)
+OBS  RTPF.cost fuel_menu_parts/submenu_alone: first call 0 ms; median 0.0709 ms per call (batches 0.0538-0.0834 ms, 14718 calls)
+OBS  RTPF.cost fuel_menu_parts/pour_entries: first call 0 ms; median 0.1880 ms per call (batches 0.1826-0.1925 ms, 5327 calls)
+OBS  RTPF.cost fuel_menu_parts/drain_entries: first call 1 ms; median 0.1047 ms per call (batches 0.0952-0.1138 ms, 9591 calls)
+OBS  RTPF.cost fuel_menu_parts/inventory_searches: first call 0 ms; median 0.0011 ms per call (batches 0.0011-0.0011 ms, 904751 calls)
+OBS  RTPF.cost fuel_menu_parts/fluid_of: first call 0 ms; median 0.0008 ms per call (batches 0.0008-0.0008 ms, 1000001 calls)
+OBS  RTPF.cost fuel_menu_parts/read_composition: first call 0 ms; median 0.0024 ms per call (batches 0.0024-0.0025 ms, 412163 calls)
+OBS  RTPF.cost fuel_menu_parts/ref_for_item: first call 0 ms; median 0.0018 ms per call (batches 0.0018-0.0018 ms, 549615 calls)
+OBS  RTPF.cost fuel_menu_parts/pump_search: first call 0 ms; median 0.0671 ms per call (batches 0.0663-0.0672 ms, 14964 calls)
+OBS  RTPF.cost fuel_menu_parts/generator_search: first call 0 ms; median 0.0404 ms per call (batches 0.0401-0.0462 ms, 24087 calls)
+OBS  RTPF.cost fuel_menu_parts/vehicle_search: first call 0 ms; median 0.0173 ms per call (batches 0.0173-0.0200 ms, 55962 calls)
+STEP rtpf_fresh_again begin
+OBS  RTPF.readings taken off 32 running fermenters
+PASS RTPF.readings_taken_off :: 32 of 32 running, 32 without readings or notes
+STEP rtpf_timers_machines_32_again begin
+OBS  RTPF.cost machines_32_again/minute: first call 4 ms; median 1.1976 ms per call (batches 1.1834-1.2195 ms, 836 calls)
+OBS  RTPF.cost machines_32_again/ten_minutes: first call 1 ms; median 0.7143 ms per call (batches 0.7092-0.8701 ms, 1354 calls)
+OBS  RTPF.cost machines_32_again/hour: first call 0 ms; median 0.6173 ms per call (batches 0.6061-0.7353 ms, 1575 calls)
+STEP rtpf_again_check begin
+PASS RTPF.again_as_machines_32 :: minute 1.1628 -> 1.1976 ms (x1.030); ten_minutes 0.6711 -> 0.7143 ms (x1.064); hour 0.6061 -> 0.6173 ms (x1.019)
+STEP rtpf_census begin
+OBS  RTPF.cost machines_32_again/census_hands: first call 0 ms; median 0.0036 ms per call (batches 0.0036-0.0036 ms, 277229 calls)
+STEP rtpf_biodiesel begin
+OBS  RTPF.bio loads: retort {firewood=99}; fire_pit {firewood=99}; leacher {water=2.9699999999999998,wood_ash=1.4849999999999999}; reactor {lye=0.225,methanol=2.6999999999999997,plant_oil=18}; settler {biodiesel=17.73,methanol=0.7122149999999996,plant_oil=0.19799999999999957,sediment=0.182025,water=5.319}
+OBS  RTPF.bio 30 machines placed on the 36 free squares of rows 10839,10840,10841
+OBS  RTPF.feed_retort1 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.load_retort1 menu "Load firewood to distil" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load_fire_pit1 menu "Load firewood and burn it to ash" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_leacher1 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_reactor1 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_settler1 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_retort2 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.load_retort2 menu "Load firewood to distil" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load_fire_pit2 menu "Load firewood and burn it to ash" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_leacher2 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_reactor2 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_settler2 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_retort3 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.load_retort3 menu "Load firewood to distil" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load_fire_pit3 menu "Load firewood and burn it to ash" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_leacher3 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_reactor3 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_settler3 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_retort4 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.load_retort4 menu "Load firewood to distil" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load_fire_pit4 menu "Load firewood and burn it to ash" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_leacher4 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_reactor4 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_settler4 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_retort5 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.load_retort5 menu "Load firewood to distil" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.load_fire_pit5 menu "Load firewood and burn it to ash" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_leacher5 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_reactor5 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_settler5 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_retort6 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.load_fire_pit6 menu "Load firewood and burn it to ash" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_leacher6 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_reactor6 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.feed_settler6 menu "Feed the firebox" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTPF.bio 24 fireboxes fed, 30 loaded, 0 refused; running: retort 6, fire_pit 6, leacher 6, reactor 6, settler 6; 62 machines in the hourly list
+PASS RTPF.bio_running :: 30 running of 30; 62 listed of 62
+PASS RTPF.bio_fixture_as_menu_load :: menu: machine=wood_retort state=Processing pause=nil stage=1 stageDone=0 firebox=27 skill=0 cond=1 batches=0 recipe=methanol_wood_distill/recipe:methanol_wood_distill:1554277634 inputs={firewood=99} outputs={} | fixture: machine=wood_retort state=Processing pause=nil stage=1 stageDone=0 firebox=27 skill=0 cond=1 batches=0 recipe=methanol_wood_distill/recipe:methanol_wood_distill:1554277634 inputs={firewood=99} outputs={}
+STEP rtpf_timers_machines_32_biodiesel_30 begin
+OBS  RTPF.cost machines_32_biodiesel_30/minute: first call 2 ms; median 1.1824 ms per call (batches 1.1765-1.2108 ms, 845 calls)
+OBS  RTPF.cost machines_32_biodiesel_30/ten_minutes: first call 1 ms; median 1.3605 ms per call (batches 1.3605-1.3793 ms, 733 calls)
+OBS  RTPF.cost machines_32_biodiesel_30/hour: first call 2 ms; median 1.1976 ms per call (batches 1.1905-1.2036 ms, 837 calls)
+STEP rtpf_running_biodiesel begin
+OBS  RTPF.running after biodiesel: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 8 of 8 engines
+PASS RTPF.still_running_biodiesel :: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 8 of 8 engines
+STEP rtpf_clear_middle begin
+OBS  RTPF.diesel 10 parked cars of the middle columns taken away; 10 vehicles in the cell, 8 engines running
+STEP rtpf_timers_idling_8_middle_cleared begin
+OBS  RTPF.cost idling_8_middle_cleared/minute: first call 1 ms; median 1.1628 ms per call (batches 1.1618-1.1696 ms, 860 calls)
+OBS  RTPF.cost idling_8_middle_cleared/ten_minutes: first call 1 ms; median 1.4286 ms per call (batches 1.4184-1.4706 ms, 698 calls)
+OBS  RTPF.cost idling_8_middle_cleared/hour: first call 2 ms; median 1.2048 ms per call (batches 1.1976-1.2195 ms, 831 calls)
+STEP rtpf_vans begin
+OBS  RTPF.diesel van footprints at 10590,10813 10593,10813 10590,10821 10590,10829; 4 vans put down; tries blocked: 10593,10821: 10594,10819 vehicle; 10593,10822: 10594,10819 vehicle; 10593,10823: 10594,10820 vehicle; 10593,10824: 10594,10827 vehicle; 10593,10825: 10594,10827 vehicle; 10593,10826: 10594,10827 vehicle; 10593,10827: 10594,10827 vehicle; 10593,10828: 10594,10827 vehicle
+OBS  RTPF.diesel 4 vans (Base.VanAmbulance) idling of 4 wanted, profiles engine_ci_stock,engine_ci_stock,engine_ci_stock,engine_ci_stock; the fuel grade=poor powerFactor=0.851429 wearFactor=1.742857; dieselVehicles=true; 14 vehicles in the cell, 12 engines running
+PASS RTPF.diesel_vans_idling :: 4 of 4 running, profiles engine_ci_stock,engine_ci_stock,engine_ci_stock,engine_ci_stock, dieselVehicles=true
+STEP rtpf_timers_idling_8_diesel_4 begin
+OBS  RTPF.cost idling_8_diesel_4/minute: first call 2 ms; median 1.5462 ms per call (batches 1.5267-1.5703 ms, 649 calls)
+OBS  RTPF.cost idling_8_diesel_4/ten_minutes: first call 2 ms; median 1.4184 ms per call (batches 1.4085-1.4286 ms, 706 calls)
+OBS  RTPF.cost idling_8_diesel_4/hour: first call 1 ms; median 1.2048 ms per call (batches 1.1976-1.2121 ms, 831 calls)
+STEP rtpf_running_diesel begin
+OBS  RTPF.running after diesel: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+PASS RTPF.still_running_diesel :: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+STEP rtpf_fresh_fuel begin
+OBS  RTPF.fresh_fuel 12 of 12 running engines given it, 12 judged compatible and not harmful; car engine_si_stock {gasoline=20}: compatible=true harmful=nil level=nil wrongFuel=nil power 1.000 wear 1.000; van engine_ci_stock {diesel=20}: compatible=true harmful=nil level=nil wrongFuel=nil power 1.000 wear 1.000
+PASS RTPF.fresh_fuel_blends :: 12 of 12 running engines given it, 12 judged compatible and not harmful; car engine_si_stock {gasoline=20}: compatible=true harmful=nil level=nil wrongFuel=nil power 1.000 wear 1.000; van engine_ci_stock {diesel=20}: compatible=true harmful=nil level=nil wrongFuel=nil power 1.000 wear 1.000
+STEP rtpf_timers_labelled_at_start begin
+OBS  RTPF.stage rtpf_timers_idling_12_fresh_fuel
+OBS  RTPF.cost idling_12_fresh_fuel/minute: first call 1 ms; median 0.7117 ms per call (batches 0.7092-0.7168 ms, 1404 calls)
+OBS  RTPF.cost idling_12_fresh_fuel/ten_minutes: first call 2 ms; median 1.4255 ms per call (batches 1.4184-1.4286 ms, 705 calls)
+OBS  RTPF.cost idling_12_fresh_fuel/hour: first call 1 ms; median 1.2048 ms per call (batches 1.2036-1.2121 ms, 832 calls)
+STEP rtpf_running_fresh_fuel begin
+OBS  RTPF.running after fresh_fuel: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+PASS RTPF.still_running_fresh_fuel :: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+STEP rtpf_wrong_fuel begin
+OBS  RTPF.wrong_fuel 12 of 12 running engines given it, 12 judged compatible and harmful; car engine_si_stock {diesel=4,gasoline=16}: compatible=true harmful=true level=2 wrongFuel=diesel power 0.600 wear 6.000; van engine_ci_stock {diesel=14,gasoline=6}: compatible=true harmful=true level=2 wrongFuel=gasoline power 0.700 wear 8.000
+PASS RTPF.wrong_fuel_blends :: 12 of 12 running engines given it, 12 judged compatible and harmful; car engine_si_stock {diesel=4,gasoline=16}: compatible=true harmful=true level=2 wrongFuel=diesel power 0.600 wear 6.000; van engine_ci_stock {diesel=14,gasoline=6}: compatible=true harmful=true level=2 wrongFuel=gasoline power 0.700 wear 8.000
+STEP rtpf_timers_labelled_at_start begin
+OBS  RTPF.stage rtpf_timers_idling_12_wrong_fuel
+OBS  RTPF.cost idling_12_wrong_fuel/minute: first call 1 ms; median 1.2658 ms per call (batches 1.2658-1.3072 ms, 784 calls)
+OBS  RTPF.cost idling_12_wrong_fuel/ten_minutes: first call 1 ms; median 1.4255 ms per call (batches 1.4085-1.4286 ms, 705 calls)
+OBS  RTPF.cost idling_12_wrong_fuel/hour: first call 2 ms; median 1.1905 ms per call (batches 1.1834-1.1976 ms, 842 calls)
+STEP rtpf_running_wrong_fuel begin
+OBS  RTPF.running after wrong_fuel: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+PASS RTPF.still_running_wrong_fuel :: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+STEP rtpf_catch_up_biodiesel begin
+OBS  RTPF.cost catch_up_biodiesel/retort_24_h: first call 0 ms; median 0.1643 ms per call (batches 0.1634-0.1646 ms, 6094 calls)
+OBS  RTPF.cost catch_up_biodiesel/retort_720_h: first call 2 ms; median 2.0510 ms per call (batches 2.0408-2.0619 ms, 490 calls)
+OBS  RTPF.cost catch_up_biodiesel/retort_8760_h: first call 23 ms; median 23.5556 ms per call (batches 23.5556-23.7778 ms, 46 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_retort: first call 1 ms; median 0.2825 ms per call (batches 0.2805-0.2845 ms, 3540 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_catch_up_retort: first call 0 ms; median 0.1168 ms per call (batches 0.1166-0.1192 ms, 8525 calls)
+OBS  RTPF.cost catch_up_biodiesel/fire_pit_24_h: first call 0 ms; median 0.1495 ms per call (batches 0.1483-0.1502 ms, 6699 calls)
+OBS  RTPF.cost catch_up_biodiesel/fire_pit_720_h: first call 2 ms; median 2.0202 ms per call (batches 2.0100-2.0510 ms, 496 calls)
+OBS  RTPF.cost catch_up_biodiesel/fire_pit_8760_h: first call 24 ms; median 23.6667 ms per call (batches 23.5556-23.7778 ms, 46 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_fire_pit: first call 1 ms; median 0.2594 ms per call (batches 0.2564-0.2632 ms, 3853 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_catch_up_fire_pit: first call 0 ms; median 0.1120 ms per call (batches 0.1110-0.1136 ms, 8912 calls)
+OBS  RTPF.cost catch_up_biodiesel/leacher_24_h: first call 0 ms; median 0.1520 ms per call (batches 0.1512-0.1556 ms, 6563 calls)
+OBS  RTPF.cost catch_up_biodiesel/leacher_720_h: first call 2 ms; median 2.0303 ms per call (batches 2.0202-2.0510 ms, 494 calls)
+OBS  RTPF.cost catch_up_biodiesel/leacher_8760_h: first call 24 ms; median 23.7778 ms per call (batches 23.5556-24.6667 ms, 46 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_leacher: first call 1 ms; median 0.2759 ms per call (batches 0.2751-0.2805 ms, 3609 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_catch_up_leacher: first call 0 ms; median 0.1131 ms per call (batches 0.1130-0.1138 ms, 8829 calls)
+OBS  RTPF.cost catch_up_biodiesel/reactor_24_h: first call 0 ms; median 0.1899 ms per call (batches 0.1889-0.1946 ms, 5244 calls)
+OBS  RTPF.cost catch_up_biodiesel/reactor_720_h: first call 2 ms; median 2.0833 ms per call (batches 2.0722-2.2472 ms, 476 calls)
+OBS  RTPF.cost catch_up_biodiesel/reactor_8760_h: first call 24 ms; median 24.0000 ms per call (batches 23.7778-27.5000 ms, 44 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_reactor: first call 2 ms; median 0.3030 ms per call (batches 0.2963-0.3268 ms, 3234 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_catch_up_reactor: first call 0 ms; median 0.1361 ms per call (batches 0.1340-0.1504 ms, 7139 calls)
+OBS  RTPF.cost catch_up_biodiesel/settler_24_h: first call 0 ms; median 0.1661 ms per call (batches 0.1630-0.1779 ms, 5931 calls)
+OBS  RTPF.cost catch_up_biodiesel/settler_720_h: first call 2 ms; median 2.0722 ms per call (batches 2.0619-2.4217 ms, 468 calls)
+OBS  RTPF.cost catch_up_biodiesel/settler_8760_h: first call 24 ms; median 23.6667 ms per call (batches 23.4444-23.7778 ms, 46 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_settler: first call 1 ms; median 0.3279 ms per call (batches 0.3257-0.3306 ms, 3047 calls)
+OBS  RTPF.cost catch_up_biodiesel/machine_menu_catch_up_settler: first call 0 ms; median 0.1404 ms per call (batches 0.1397-0.1411 ms, 7123 calls)
+STEP rtpf_frames_all_running begin
+OBS  RTPF.frames all_running: 1201 frames in 20.0 s (60.0 a second), 6 game minutes, 12 engines running; main-thread step ms mean 3.125 p50 3.000 p95 5.000 p99 6.000 max 13.000; render ms mean 16.160 p95 18.000; between frames ms p50 17 p95 19 p99 19 max 27
+STEP rtpf_running_frames begin
+OBS  RTPF.running after frames: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+PASS RTPF.still_running_frames :: 32 of 32 fermenters, 30 of 30 biodiesel machines (6/6/6/6/6), 12 of 12 engines
+STEP rtpf_close_dialogs begin
+OBS  RTPF.dialogs 32 reply dialogs open on screen closed
+STEP rtpf_frames_all_running_dialogs_closed begin
+OBS  RTPF.frames all_running_dialogs_closed: 1201 frames in 20.0 s (60.0 a second), 5 game minutes, 12 engines running; main-thread step ms mean 1.524 p50 1.000 p95 3.000 p99 4.000 max 8.000; render ms mean 16.144 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 23
+STEP rtpf_load_square begin
+OBS  RTPF.squares 3600 loaded squares in the area; a Diesel Generator put down at 10592,10841: true, sprite tlg_generators_01_0
+OBS  RTPF.cost load_square/handler_area: first call 3 ms; median 1.6807 ms per call (batches 1.6750-1.7034 ms, 596 calls)
+OBS  RTPF.cost load_square/handler_generator_square: first call 0 ms; median 0.0019 ms per call (batches 0.0019-0.0020 ms, 514996 calls)
+STEP rtpf_square_event begin
+OBS  RTPF.squares probe handler: called 1 times for one event added and one removed (ok=true)
+OBS  RTPF.cost load_square/event_area_without_mod: first call 3 ms; median 1.7094 ms per call (batches 1.7034-1.7179 ms, 587 calls)
+OBS  RTPF.cost load_square/event_area_with_mod: first call 4 ms; median 3.0000 ms per call (batches 2.9851-3.0149 ms, 336 calls)
+OBS  RTPF.squares per square (3600): the handler alone 0.467 us; the event without the mod's handler 0.475 us, with it 0.833 us; the difference 0.358 us
+STEP rtpf_gas_none begin
+OBS  RTPF.cost gas_none/gas_minute: first call 0 ms; median 0.0017 ms per call (batches 0.0017-0.0017 ms, 580882 calls)
+STEP rtpf_gas_propane_place begin
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTPF.gas_connect menu "Connect a propane tank" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+STEP rtpf_gas_propane_start begin
+STEP rtpf_gas_check_propane_8 begin
+OBS  RTPF.gas propane_8: 8 placed, 8 running, 8 holding gas: 10587,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10590,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10593,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10596,10798 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10587,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10590,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10593,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160; 10596,10801 Commissioned fuel 9.99936 load 0.0020 tank 1160
+PASS RTPF.gas_propane_8_running :: 8 placed, 8 running, 8 holding gas
+STEP rtpf_gas_timers_propane_8 begin
+OBS  RTPF.gas propane_8 as found (a use is 0.002604 L): room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160
+OBS  RTPF.cost propane_8/gas_minute_part_use: first call 0 ms; median 0.1330 ms per call (batches 0.1322-0.1395 ms, 7455 calls)
+PASS RTPF.gas_propane_part_use_moves_nothing :: before: room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160 | after: room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160; room 0.000640 uses 1160
+OBS  RTPF.gas propane_8 a step burned and refilled: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159
+PASS RTPF.gas_propane_refilled_within_tolerance :: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159
+OBS  RTPF.cost propane_8/gas_minute_full: first call 0 ms; median 0.0876 ms per call (batches 0.0871-0.0878 ms, 11431 calls)
+PASS RTPF.gas_propane_full_moves_nothing :: before: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159 | after: room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159
+OBS  RTPF.cost propane_8/two_steps_out_only: first call 0 ms; median 0.0093 ms per call (batches 0.0093-0.0094 ms, 106917 calls)
+OBS  RTPF.cost propane_8/refill_one_use: first call 1 ms; median 0.6200 ms per call (batches 0.6200-0.6200 ms, 250 calls)
+PASS RTPF.gas_propane_each_call_moves_one_use :: after the last batch of 50 calls: room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109; room 0.001432 uses 1109 (were room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159; room 0.000036 uses 1159)
+STEP rtpf_gas_wood_place begin
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTPF.gasifier menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+STEP rtpf_gas_warm begin
+STEP rtpf_gas_wood_start begin
+STEP rtpf_gas_check_woodgas_8 begin
+OBS  RTPF.gas woodgas_8: 8 placed, 8 running, 8 holding gas: 10587,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10590,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10593,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10596,10804 Commissioned fuel 0.00300 load 0.0020 lit true; 10587,10807 Commissioned fuel 0.00100 load 0.0020 lit true; 10590,10807 Commissioned fuel 0.00100 load 0.0020 lit true; 10593,10807 Commissioned fuel 0.00100 load 0.0020 lit true; 10596,10807 Commissioned fuel 0.00100 load 0.0020 lit true
+PASS RTPF.gas_woodgas_8_running :: 8 placed, 8 running, 8 holding gas
+STEP rtpf_gas_timers_woodgas_8 begin
+OBS  RTPF.gas woodgas_8 at their caps: room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+PASS RTPF.gas_woodgas_at_their_caps :: room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+OBS  RTPF.cost woodgas_8/gas_minute_full: first call 0 ms; median 0.0980 ms per call (batches 0.0975-0.1065 ms, 10036 calls)
+PASS RTPF.gas_woodgas_full_draws_nothing :: before: room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200 | after: room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+OBS  RTPF.cost woodgas_8/one_step_out_only: first call 0 ms; median 0.0094 ms per call (batches 0.0093-0.0094 ms, 106647 calls)
+OBS  RTPF.cost woodgas_8/refill_one_step: first call 2 ms; median 1.6000 ms per call (batches 1.5800-1.6200 ms, 250 calls)
+PASS RTPF.gas_woodgas_each_call_draws_a_step :: after the last batch of 50 calls the gasifiers gave 5.120000 Nm3 in all against 5.120000 for every generator's step; room 0.000000 given 0.659200; room 0.000000 given 1.318400; room 0.000000 given 0.000000; room 0.000000 given 0.659200; room 0.000000 given 0.659200; room 0.000000 given 1.318400; room 0.000000 given 0.000000; room 0.000000 given 0.659200 (were room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200)
+STEP rtpf_gas_timers_both_16 begin
+OBS  RTPF.gas both_16: propane room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; room 0.002036 uses 1159; wood gas room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200; room 0.000000 given 0.019200; room 0.000000 given 0.038400; room 0.000000 given 0.000000; room 0.000000 given 0.019200
+OBS  RTPF.cost both_16/gas_minute_as_they_stand: first call 1 ms; median 0.2392 ms per call (batches 0.2378-0.2399 ms, 4190 calls)
+STEP rtpf_gas_catch_up begin
+OBS  RTPF.cost gas_catch_up/gasifier_24_h: first call 0 ms; median 0.1344 ms per call (batches 0.1336-0.1358 ms, 7437 calls)
+OBS  RTPF.cost gas_catch_up/gasifier_720_h: first call 0 ms; median 0.1340 ms per call (batches 0.1336-0.1359 ms, 7444 calls)
+OBS  RTPF.cost gas_catch_up/gasifier_8760_h: first call 1 ms; median 0.1348 ms per call (batches 0.1339-0.1361 ms, 7418 calls)
+OBS  RTPF.cost gas_catch_up/gasifier_menu: first call 0 ms; median 0.3466 ms per call (batches 0.3413-0.3478 ms, 2895 calls)
+OBS  RTPF.cost gas_catch_up/gas_menu_propane: first call 0 ms; median 0.1391 ms per call (batches 0.1328-0.1458 ms, 7203 calls)
+OBS  RTPF.cost gas_catch_up/gas_menu_woodgas: first call 0 ms; median 0.1521 ms per call (batches 0.1467-0.1577 ms, 6574 calls)
+OBS  RTPF.cost gas_catch_up/load_square_gas_generator: first call 0 ms; median 0.0034 ms per call (batches 0.0034-0.0035 ms, 292501 calls)
+STEP rtpf_close_dialogs begin
+OBS  RTPF.dialogs 0 reply dialogs open on screen closed
+STEP rtpf_frames_gas_running begin
+OBS  RTPF.frames gas_running: 1200 frames in 20.0 s (60.0 a second), 5 game minutes, 12 engines running; main-thread step ms mean 1.911 p50 2.000 p95 3.000 p99 4.000 max 7.000; render ms mean 16.161 p95 18.000; between frames ms p50 17 p95 18 p99 19 max 21
+STEP rtpf_budgets_gas begin
+PASS RTPF.budget.gas_catch_up/gas_menu_propane :: median 0.1391 ms per call, budget 0.420 ms
+PASS RTPF.budget.gas_catch_up/gas_menu_woodgas :: median 0.1521 ms per call, budget 0.460 ms
+PASS RTPF.budget.gas_catch_up/gasifier_24_h :: median 0.1344 ms per call, budget 0.410 ms
+PASS RTPF.budget.gas_catch_up/gasifier_720_h :: median 0.1340 ms per call, budget 0.410 ms
+PASS RTPF.budget.gas_catch_up/gasifier_8760_h :: median 0.1348 ms per call, budget 0.410 ms
+PASS RTPF.budget.gas_catch_up/gasifier_menu :: median 0.3466 ms per call, budget 1.000 ms
+PASS RTPF.budget.gas_catch_up/load_square_gas_generator :: median 0.0034 ms per call, budget 0.011 ms
+PASS RTPF.budget.gas_none/gas_minute :: median 0.0017 ms per call, budget 0.005 ms
+PASS RTPF.budget.propane_8/gas_minute_full :: median 0.0876 ms per call, budget 0.270 ms
+PASS RTPF.budget.propane_8/gas_minute_part_use :: median 0.1330 ms per call, budget 0.390 ms
+PASS RTPF.budget.propane_8/refill_one_use :: median 0.6200 ms per call, budget 1.700 ms
+PASS RTPF.budget.woodgas_8/gas_minute_full :: median 0.0980 ms per call, budget 0.300 ms
+PASS RTPF.budget.woodgas_8/refill_one_step :: median 1.6000 ms per call, budget 4.800 ms
+STEP rtpf_budgets_added begin
+PASS RTPF.budget.catch_up_biodiesel/fire_pit_8760_h :: median 23.6667 ms per call, budget 75.000 ms
+PASS RTPF.budget.catch_up_biodiesel/leacher_8760_h :: median 23.7778 ms per call, budget 75.000 ms
+PASS RTPF.budget.catch_up_biodiesel/machine_menu_fire_pit :: median 0.2594 ms per call, budget 0.800 ms
+PASS RTPF.budget.catch_up_biodiesel/machine_menu_leacher :: median 0.2759 ms per call, budget 0.900 ms
+PASS RTPF.budget.catch_up_biodiesel/machine_menu_reactor :: median 0.3030 ms per call, budget 0.900 ms
+PASS RTPF.budget.catch_up_biodiesel/machine_menu_retort :: median 0.2825 ms per call, budget 0.900 ms
+PASS RTPF.budget.catch_up_biodiesel/machine_menu_settler :: median 0.3279 ms per call, budget 1.000 ms
+PASS RTPF.budget.catch_up_biodiesel/reactor_8760_h :: median 24.0000 ms per call, budget 75.000 ms
+PASS RTPF.budget.catch_up_biodiesel/retort_8760_h :: median 23.5556 ms per call, budget 75.000 ms
+PASS RTPF.budget.catch_up_biodiesel/settler_8760_h :: median 23.6667 ms per call, budget 75.000 ms
+PASS RTPF.budget.idling_12_fresh_fuel/minute :: median 0.7117 ms per call, budget 2.200 ms
+PASS RTPF.budget.idling_12_wrong_fuel/minute :: median 1.2658 ms per call, budget 4.100 ms
+PASS RTPF.budget.idling_8_diesel_4/minute :: median 1.5462 ms per call, budget 4.900 ms
+PASS RTPF.budget.load_square/handler_area :: median 1.6807 ms per call, budget 5.100 ms
+PASS RTPF.budget.load_square/handler_generator_square :: median 0.0019 ms per call, budget 0.005 ms
+PASS RTPF.budget.machines_32_again/census_hands :: median 0.0036 ms per call, budget 0.011 ms
+PASS RTPF.budget.machines_32_biodiesel_30/hour :: median 1.1976 ms per call, budget 3.900 ms
+PASS RTPF.budget.machines_32_biodiesel_30/ten_minutes :: median 1.3605 ms per call, budget 4.200 ms
+STEP rtpf_cleanup begin
+STEP rt_finish begin
+OBS  RT.summary game hours -1.00 -> 4.58
+SUMMARY pass=82 fail=0
+DONE
