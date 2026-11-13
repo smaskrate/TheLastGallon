@@ -19,7 +19,14 @@ import java.util.stream.Stream;
  * because J2SEPlatform.setupEnvironment() loads ./stdlib.lua exactly like the
  * game does.
  *
- * Usage: KahluaRunner --root <dir> [--root <dir> ...] <entry.lua> [args...]
+ * Usage: KahluaRunner [--debug] --root <dir> [--root <dir> ...] <entry.lua> [args...]
+ *
+ * --debug sets zombie.core.Core.debug, as the game's -debug does, before
+ * anything is compiled. The compiler then records each local's line in a
+ * 200-entry array indexed by the local's number among all of its function's
+ * locals, so a function that declares more than 200 in all, block and loop
+ * locals included, fails to compile; without it only the 200 active at once
+ * count (LexState.new_localvar; RT-SP launch 368).
  *
  * Every *.lua file below each root is exposed to Lua as __TLG_SOURCES["a/b/c"]
  * (path relative to the root, forward slashes, no extension) so that the
@@ -35,9 +42,12 @@ public final class KahluaRunner {
         List<Path> roots = new ArrayList<>();
         String entry = null;
         List<String> scriptArgs = new ArrayList<>();
+        boolean debug = false;
         for (int i = 0; i < args.length; i++) {
             if (entry == null && args[i].equals("--root") && i + 1 < args.length) {
                 roots.add(Paths.get(args[++i]).toAbsolutePath().normalize());
+            } else if (entry == null && args[i].equals("--debug")) {
+                debug = true;
             } else if (entry == null) {
                 entry = args[i];
             } else {
@@ -53,6 +63,9 @@ public final class KahluaRunner {
             System.exit(65);
         }
 
+        if (debug) {
+            Class.forName("zombie.core.Core").getField("debug").setBoolean(null, true);
+        }
         Class<?> platformClass = Class.forName("se.krka.kahlua.j2se.J2SEPlatform");
         Class<?> platformIface = Class.forName("se.krka.kahlua.vm.Platform");
         Class<?> tableIface = Class.forName("se.krka.kahlua.vm.KahluaTable");

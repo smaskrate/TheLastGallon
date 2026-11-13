@@ -1134,6 +1134,11 @@ end })
 -- Starts a vehicle through the vanilla action (ISStartVehicleEngine) as its driver.
 -- mustRun: the engine has to end up running; like a driver, the step retries
 -- up to three times when it does not catch (vanilla start chance, TLG roll).
+-- A start factor between 0 and 1 (water from one of the stations that hold
+-- some, D-017) lets the TLG gate refuse by chance: launch 368 lost its one
+-- try at 0.5 and launch 369 its three. A start that should not be refused
+-- then holds the gate's draw at 0 (Vehicles.startRoll), so only a refusal
+-- for another reason fails it.
 local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
     return { name = name, timeout = 1500, fn = function(ctx, ticks)
         local v = getVehicle()
@@ -1148,6 +1153,12 @@ local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
             if ticks - ctx.t0 < 30 then return nil end
             local e = TLG.Integration.Vehicles.evaluate(v)
             ctx.grade = e and e.grade
+            local factor = e and tonumber(e.startFactor)
+            if not expectRefused and not mustRun and factor ~= nil and factor > 0 and factor < 1 then
+                local V = TLG.Integration.Vehicles
+                ctx.roll, V.startRoll = V.startRoll, function() return 0 end
+                R:line("OBS  %s start factor %s: the gate's draw held at 0", name, tostring(factor))
+            end
             local battery, engine = "?", "?"
             pcall(function() battery = string.format("%.2f", v:getBatteryCharge()) end)
             pcall(function() engine = tostring(v:getPartById("Engine"):getCondition()) end)
@@ -1166,6 +1177,7 @@ local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
             return nil
         end
         ctx.restoreLog()
+        if ctx.roll then TLG.Integration.Vehicles.startRoll, ctx.roll = ctx.roll, nil end
         local refusal = loggedMatching(ctx, "vehicle start refused")
         local running = v:isEngineRunning()
         R:line("OBS  %s state=%s running=%s attempts=%d refusal=%s", name, tostring(v:getEngineState()), tostring(running),
@@ -1181,8 +1193,8 @@ local function vehicleGateStep(name, getVehicle, expectRefused, mustRun)
             -- An empty tank is never refused by TLG, so it proves nothing (run 7).
             R:check(name .. ".not_refused_by_tlg", function()
                 return refusal == nil and ctx.grade ~= "empty",
-                    string.format("state=%s running=%s grade=%s", tostring(v:getEngineState()), tostring(running),
-                        tostring(ctx.grade))
+                    string.format("state=%s running=%s grade=%s attempts=%d", tostring(v:getEngineState()), tostring(running),
+                        tostring(ctx.grade), ctx.attempts)
             end)
         end
         pcall(function() v:shutOff() end)
@@ -8867,10 +8879,26 @@ RT.U.stock = { name = "rtu_stock", timeout = 3000, fn = function(ctx, ticks)
         end
         local ec = U.cars[2] and I.Vehicles.evaluate(U.cars[2])
         local eg = U.oldDgen and (I.Generators.evaluate(U.oldDgen))
+        -- From 0.3.0 on, the earlier release judges both as wrong fuel
+        -- (D-037), as this version does (launch 374, from 0.4.2).
+        local major, minor = string.match(tostring(TLG.VERSION), "^(%d+)%.(%d+)")
+        local before030 = major ~= nil and tonumber(major) == 0 and tonumber(minor) < 3
+        local function wrongFuel(e)
+            for _, r in ipairs(e and e.reasons or {}) do
+                if string.find(r, "wrong_fuel", 1, true) then return true end
+            end
+            return false
+        end
         R:check("RTU.wrong_blends_as_the_earlier_release_judges_them", function()
-            return ec ~= nil and ec.compatible == false and ec.harmful == nil and (eg == nil or (eg.compatible == false and eg.harmful == nil)),
-                string.format("car on 40 %% diesel: %s; Diesel Generator on petrol: %s", evaluationText(ec),
-                    eg and evaluationText(eg) or "no such item in this release")
+            local ok
+            if before030 then
+                ok = ec ~= nil and ec.compatible == false and ec.harmful == nil
+                    and (eg == nil or (eg.compatible == false and eg.harmful == nil))
+            else
+                ok = ec ~= nil and ec.compatible == false and wrongFuel(ec) and (eg == nil or wrongFuel(eg))
+            end
+            return ok, string.format("release %s; car on 40 %% diesel: %s; Diesel Generator on petrol: %s",
+                tostring(TLG.VERSION), evaluationText(ec), eg and evaluationText(eg) or "no such item in this release")
         end)
         local amb = U.cars[1]
         local ambRec = amb and I.Vehicles.read(amb, false)

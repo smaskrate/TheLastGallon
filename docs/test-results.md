@@ -16,7 +16,7 @@ runtime tests.
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel | The performance mode runs single player on the reference machine (launches 181–185 and 340–341, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188). Electrical networks are not built in game in this build |
-| Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.4.2 since 2026-11-12, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.4.1 |
+| Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.4.3 since 2026-11-13, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.4.2 and 0.4.1 |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -7336,3 +7336,318 @@ built it from the item).
 
 Evidence:
 [run 361](evidence/2026-11-13_rt-mp_harness_run361_gaswood_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launches 362–364 (the machine menu's Pause, Resume and Abort batch on a server)
+
+Command: `tools/run-mp-harness.ps1 -Only machinemenu`: the TLGDev
+dedicated server and one client on this computer, 42.22.2, branch
+`fix/machine-menu-server` off `main`. The server put a Fermentation
+Vessel on the floor and gave the player 2 kg of sugar, a yeast and 10 L
+of water. The client loaded it through the machine menu, then paused,
+resumed and aborted it twice, each step through the menu when the menu
+offered it, else asked of the server directly. After each step it read
+which of Pause, Resume and Abort batch the menu offered against the state
+the server replied with. The menu decides them from the client's own copy
+of the record (`MachineMenu.controls`, D-023).
+
+| Launch | The mod | Result (pass/fail, client A) |
+| --- | --- | --- |
+| 362 | `main` as released (0.4.2) | 3/4 |
+| 363 | the records sent to the clients, brought forward there | 7/0 |
+| 364 | the records sent, judged as sent; the hourly reading quiet | 7/0 |
+
+Launch 362: the load went through the menu; the server replied
+Processing, then Paused (by hand), Processing, OutputReady (stopped
+early) and Ready. The client's copy of the record held nothing
+throughout, and the menu offered none of the three entries, so pause,
+resume and both aborts had to be asked directly. The three passes are
+the join, the empty fermenter and the emptied one, where nothing is
+offered. Within the session the client's copy did not follow the
+server's writes; a client joining, or a chunk loaded again, would get the
+record as of then (not run).
+
+Launches 363 and 364: the client's copy equalled the server's state after
+each step, and the menu offered Pause and Abort batch while it worked,
+Resume and Abort batch while paused by hand, Abort batch once stopped
+early and nothing once emptied. Every step was chosen through the menu.
+After launch 363 the client stopped bringing the record forward (sent
+without its readings, it can disagree with the server's) and the hourly
+reading's write became quiet; launch 364 ran that code. Neither launch's
+consoles hold an error or a warning of the mod. The server's console was
+not kept: it holds the test accounts' passwords.
+
+Not run: two clients, a real network, the stills and the other machines,
+a client joining while a batch runs, a machine carried and put down on a
+server, a batch that finishes or pauses by itself between two sends, the
+performance mode with these sends. Single player is unchanged (the
+record is sent only on a server, and the menu still brings it to now
+there); no single-player launch was made, and the full run and the
+install rehearsal of 0.4.3 are still to do.
+
+Evidence:
+[run 362](evidence/2026-11-13_rt-mp_harness_run362_machinemenu_main_42.22.2.txt);
+[run 363](evidence/2026-11-13_rt-mp_harness_run363_machinemenu_fixed_42.22.2.txt);
+[run 364](evidence/2026-11-13_rt-mp_harness_run364_machinemenu_as_sent_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launches 365–367 (the menus that read the client's copy of an item's record, on a server)
+
+Command: `tools/run-mp-harness.ps1 -Only machinemenus`: the TLGDev
+dedicated server and one client on this computer, 42.22.2, branch
+`fix/machine-menu-server`. Each step goes through the menu when the menu
+offers it, else is asked of the server directly, and each check compares
+what the menu offers with the state the server replied with. The case
+covers:
+
+* the nine kinds of machine, each put down by the server with its batch
+  started there (`start_running` in `MPServer.lua`), then paused, resumed
+  and aborted through the machine menu;
+* a running fermenter taken up with the world menu's **Grab**, its
+  **Status** asked while carried, and put down a tile away;
+* a can holding 5 L of petrol on the floor, opened and sealed again
+  through the Fuel menu's **Open** and **Seal**;
+* from launch 366, the same with a can put into the container nearest the
+  spawn point (a bin at 10665,10636), walked to with the game's
+  `luautils.walkToContainer`;
+* a fermenter paused through the menu, the player leaving to the main
+  menu and joining again, then resuming it.
+
+| Launch | The mod | Result (pass/fail, client A) |
+| --- | --- | --- |
+| 365 | launch 364's code: the machines' records sent | 48/1 |
+| 366 | the records of machines and cans on the floor sent (`FloorRecords.lua`) | 51/1 |
+| 367 | the records of items in an object's container sent too (`WorldItemRecords.lua`) | 52/0 |
+
+Launch 365: every machine check passed. After each step the client's copy
+equalled the server's state, and the menu offered what that state
+allows. The two stills, aborted while heating up, kept nothing and went
+to Ready, with nothing offered (heating makes nothing, D-023); the other
+seven kept what they had made, stopped early, and offered Abort batch.
+Carried, the fermenter's Status replied Paused, `not_placed`, and the
+client's copy, which travels with the item's fields, said the same. Put
+down, the copy said Processing and the menu offered Pause and Abort
+batch. Joining again, the client's copy of the paused fermenter said
+paused by hand, the menu offered Resume and Abort batch, and the resume
+went through the menu. The failure was the can on the floor: opened
+through the menu (the server replied ok), its copy still held no record
+and the menu kept offering **Open**, so the seal was asked directly.
+The check after the seal passed only because the copy had not changed.
+
+Launch 366: the can on the floor followed, its copy `sealed=false` after
+Open and `sealed=true` after Seal, both chosen through the menu. The can
+in the bin failed as the floor can had in launch 365: opened through the
+menu, its copy kept no record and the menu kept offering Open.
+
+Launch 367: every check passed. The can in the bin followed as the one on
+the floor did, its copy `sealed=false` after Open and `sealed=true` after
+Seal, both chosen through the menu, and the machine checks passed as in
+launches 365 and 366.
+
+The clients' logs of launches 365–367 hold no warning or error of the mod,
+and the servers' logs none besides the harness's deep-recursion probe
+(`LuaProbe.lua`). The server's console was not kept: it holds the
+test accounts' passwords.
+
+Not run: two clients, a real network, a batch that finishes or pauses by
+itself between two sends, a machine in a container, the performance mode
+with these sends.
+
+Evidence:
+[run 365](evidence/2026-11-13_rt-mp_harness_run365_machinemenus_42.22.2.txt);
+[run 366](evidence/2026-11-13_rt-mp_harness_run366_machinemenus_floor_records_42.22.2.txt);
+[run 367](evidence/2026-11-13_rt-mp_harness_run367_machinemenus_world_item_records_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 368 (the full run on 0.4.3)
+
+Command: `tools/run-sp-harness.ps1 -Mode full`: phase A, save, exit to
+the menu, continue the save, phase B, on the repository's mod at
+`b4517d0` (branch `fix/machine-menu-server`, 0.4.3), 42.22.2.
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 368 | full: phase A, save, reload, phase B | 105/1, then 14/0 |
+
+The failure was `G03.gate_station_fuel.not_refused_by_tlg`, a start left
+to chance. This world's station fuel held water (D-017), so the car's
+start factor was 0.5, and its one try was refused ("vehicle start
+refused: water"), as the gate is meant to do. Of the sixty earlier
+results of this step in `docs/evidence`, four drew water as well and each
+started at its first try. The step now holds the gate's draw at 0 when
+the fuel's start factor is between 0 and 1 (`Vehicles.startRoll`, as the
+wrong-fuel steps hold it; `vehicleGateStep` in `SPHarness.lua`), so only a
+refusal for another reason fails it. A first change, three tries, lost all
+three in launch 369. Every other check passed, and the game read 0.4.3 at
+both loads.
+
+The console holds no warning or error of the mod. Besides the harness's
+deep-recursion probe it held a new error: the harness's own
+`MPHarnessCases.lua` failed to load, four times
+(`ArrayIndexOutOfBoundsException: Index 200 out of bounds for length
+200`, `LexState.new_localvar`). Started with `-debug`, as the
+single-player harness starts it, the game's compiler takes at most 200
+locals in all from one function (engine-capabilities, Lua runtime), and
+the file's main chunk passed that with the two server cases added on this
+branch (`machinemenu`, `machinemenus`). The multiplayer clients run
+without `-debug` and loaded it (launches 362–367); the single-player run
+does not use it. Each of the two cases now builds its steps in a function
+of its own. The compile check now compiles as `-debug` does
+(`KahluaRunner --debug`, passed by `run-tests.ps1`): it fails the file as
+launch 368 loaded it and passes it now, and every Lua file of the mod and
+the harness compiles that way.
+
+Evidence:
+[run 368](evidence/2026-11-13_rt-sp_harness_run368_full_one_chance_failure_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 369 (the 0.4.3 zip installed clean, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `d0da92c` (clean tree; not a
+release commit, the changelog's heading reads "not released") built
+`TheLastGallon-0.4.3.zip`: 168 files, 7,892,433 bytes, SHA-256
+`B04BD750…7BF6E1E8`. Ten files differ from the 0.4.2 package:
+`42/mod.info`, `TLG/Core.lua`, `Net.lua`, `MachineContextMenu.lua`,
+`Containers.lua`, `Machines.lua`, the new `WorldItemRecords.lua`, the
+shipped changelog and support matrix, and `workshop.txt`.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 369 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 105/1, then 14/0 |
+
+The zip matched its manifest both ways. The game read `mod.info` 0.4.3,
+and the mod logged "The Last Gallon 0.4.3 ready" at both loads. The
+console holds no warning or error of the mod; its one exception is the
+harness's deep-recursion probe, and the harness's server cases loaded.
+The failure was launch 368's check again: this world's first petrol pump
+held water too (0.34 %), and the gate refused all three tries at 0.5.
+The step now holds the gate's draw (launch 368). Four full runs in a row
+drew such a pump (353 and 360 on the gas branch, 368, 369), where D-017
+gives water to about one pump in ten. Offline, over 20,000 worlds with
+seeds made as `World.lua` makes them, the pump the full run takes (the
+first petrol pump, x then y) drew water in 9.8 % (`WorldInit`), and the
+same computation gives launches 360, 368 and 369 the water they found
+(0.381 %, 0.393 % and 0.344 %). The draw does not explain the streak: at
+one in ten, four in a row come about once in 10,000.
+
+Evidence:
+[run 369](evidence/2026-11-13_rt-sp_harness_run369_install_rehearsal_0.4.3_one_chance_failure_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launch 370 (the 0.4.3 zip installed clean again, gate 12)
+
+The same zip as launch 369 (`d0da92c`, SHA-256 `B04BD750…7BF6E1E8`),
+with the harness at `4f6a791`, whose station-fuel gate step holds the
+start draw when the fuel leaves it to chance.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 370 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 106/0, then 14/0 |
+
+The zip matched its manifest, the game read 0.4.3 and the mod logged
+"The Last Gallon 0.4.3 ready" at both loads. The console holds no warning
+or error of the mod; its one exception is the harness's deep-recursion
+probe. This world's first petrol pump held no water (start factor 1), so
+the car started at its one try and the held draw was not needed: that
+path has not run in game.
+
+Evidence:
+[run 370](evidence/2026-11-13_rt-sp_harness_run370_install_rehearsal_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launches 371–372 (the two server cases with their steps in functions)
+
+Commands: `tools/run-mp-harness.ps1 -Only machinemenus`, then `-Only
+machinemenu`: the TLGDev dedicated server and one client on this
+computer, 42.22.2, branch `fix/machine-menu-server` at `c317bc7`, the mod
+as in the 0.4.3 zip. After launch 368 each case builds its steps in a
+function of its own (the `-debug` limit on a function's locals); these
+launches run them in that form.
+
+| Launch | Case | Result (pass/fail, client A) |
+| --- | --- | --- |
+| 371 | `machinemenus` | 52/0 |
+| 372 | `machinemenu` | 7/0 |
+
+Both went as launches 367 and 364: every step chosen through the menu,
+the client's copy equal to the server's state after each, the cans on
+the floor and in the bin opened and sealed again. The clients' and the
+servers' logs hold no warning or error of the mod, and no load error;
+the servers' one exception is the harness's deep-recursion probe.
+
+Evidence:
+[run 371](evidence/2026-11-13_rt-mp_harness_run371_machinemenus_rewrapped_42.22.2.txt);
+[run 372](evidence/2026-11-13_rt-mp_harness_run372_machinemenu_rewrapped_42.22.2.txt).
+
+## 2026-11-13 — RT-SP launches 373–375 (the 0.4.3 release zip, gate 12)
+
+Build 42.22.2. `tools\package.ps1` at `14a36ed` (the release commit,
+clean tree) built `TheLastGallon-0.4.3.zip`: 168 files, 7,892,551 bytes,
+SHA-256 `4A7897A0…F9A472ED`. It differs from the zip of `d0da92c`
+(launches 369–370) in three shipped documents: the changelog, the player
+guide and the support matrix. Eleven files differ from the 0.4.2 package:
+the ten of launch 369's zip and the player guide.
+
+| Launch | Mode, on the installed package | Result (pass/fail) |
+| --- | --- | --- |
+| 373 | `tools\rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 106/0, then 14/0 |
+| 374 | `tools\rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.4.2` | 2/1, then 22/0 |
+| 375 | the same, the check below fixed | 3/0, then 22/0 |
+
+The zips matched their manifests both ways, the 0.4.2 zip too. Launch
+373: the game read `mod.info` 0.4.3, equal to `TLG.VERSION`, and the mod
+logged "The Last Gallon 0.4.3 ready" at both loads; its first petrol
+pump held no water. Launches 374 and 375 played a new world with the
+0.4.2 zip and continued its save with this zip: the save was made with
+0.4.2, the records were as 0.4.2 left them, the running fermenter kept
+its batch, and the world stayed one with diesel vehicles. In launch 374
+the 0.4.2 launch failed
+`RTU.wrong_blends_as_the_earlier_release_judges_them`, which asked for
+the judgement of the releases before 0.3.0 (the start blocked, nothing
+said about damage); 0.4.2 already judges both blends as wrong fuel
+(D-037). The check now asks for that from 0.3.0 on (`5cb6df4`), and
+launch 375 passed it. No console holds a warning or an error of the mod;
+the one exception in launch 373's is the harness's deep-recursion probe.
+
+The mod folders of launch 367's server and client are this zip's too:
+the zip of `d0da92c` differs from it in documents only. Not run on this
+zip: the other single-player modes and the other multiplayer cases; the
+removal and existing-save scenarios; an install through the Steam
+Workshop.
+
+Evidence:
+[run 373](evidence/2026-11-13_rt-sp_harness_run373_install_rehearsal_0.4.3_release_42.22.2.txt);
+[run 374](evidence/2026-11-13_rt-sp_harness_run374_upgrade_0.4.2_to_0.4.3_one_check_for_older_releases_42.22.2.txt);
+[run 375](evidence/2026-11-13_rt-sp_harness_run375_upgrade_0.4.2_to_0.4.3_42.22.2.txt).
+
+## 2026-11-13 — RT-MP launch 376 (two players on a server, the 0.4.3 release's mod)
+
+Command: `tools/run-mp-harness.ps1 -Clients 2 -Only machinemenus2`: the
+TLGDev dedicated server and two clients on this computer, 42.22.2,
+`main` at `e44a852`. The mod folders of the server and both clients
+were the 0.4.3 release zip's (`14a36ed`), file for file.
+
+The case (`machinemenus2`, new) runs `machinemenus`'s steps by A but
+the rejoin: the nine kinds of machine started by the server, then
+paused, resumed and aborted through A's menu; a running fermenter taken
+up with **Grab** and put down; a can on the floor and one in the bin at
+10665,10636 opened and sealed through A's Fuel menu. B stands by the row
+and acts on nothing. After each step A sends B the state the server
+replied with and waits; B reads its own copy of the record and its own
+menu against it, then answers. Last, B pauses and resumes a running
+fermenter through B's menu, and A reads its own copy and menu after
+each.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 376 | A 50/0, B 48/0 |
+
+All 45 of B's checks passed: after every step of A's, B's copy equalled
+the server's state and B's menu offered the same entries as A's, for
+the machines, the put-down fermenter and both cans (B's copy of the can
+in the bin `sealed=false` after Open and `sealed=true` after Seal). B's
+copy already matched at its first look each time: the record reaches
+the other client before A's message, which the server relays after
+it. After B's pause and resume, A's copy and menu followed too. Every
+step, A's and B's, was chosen through the menu. The logs of both clients
+and the server hold no warning or error of the mod, and no load error;
+the server's one exception is the harness's deep-recursion probe.
+
+Not run: a real network, more than two players.
+
+Evidence:
+[run 376](evidence/2026-11-13_rt-mp_harness_run376_machinemenus2_two_clients_42.22.2.txt).

@@ -1,0 +1,66 @@
+===== launch 372: tools/run-mp-harness.ps1 -Only machinemenu (one client), branch fix/machine-menu-server at c317bc7: the case's steps built in a function of their own (d0da92c), the mod as in the 0.4.3 zip. The launcher's own lines were not kept; the client's and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.51
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mm_spawn begin
+STEP mm_give begin
+STEP mp_mm_arrives begin
+STEP mp_mm_walk begin
+STEP mp_mm_empty begin
+PASS MP.mm_menu_empty_offers_none_A :: vessel true; menu []
+STEP mp_mm_load begin
+OBS  MP.mm load through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mm_menu_load begin
+OBS  MP.mm after load: the server says Processing/nil; this client's copy of the record Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mm_menu_after_load_A :: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mm_pause begin
+OBS  MP.mm pause through the menu true -> ok=true reason=nil duplicate=nil state=Paused pause=paused_by_player stoppedEarly=nil
+STEP mp_mm_menu_pause begin
+OBS  MP.mm after pause: the server says Paused/paused_by_player; this client's copy of the record Paused/paused_by_player; its menu offers [resume,abort], want [resume,abort]
+PASS MP.mm_menu_after_pause_A :: server Paused/paused_by_player; this client's copy Paused/paused_by_player; menu [resume,abort], want [resume,abort]
+STEP mp_mm_resume begin
+OBS  MP.mm resume through the menu true -> ok=true reason=nil duplicate=nil state=Processing pause=nil stoppedEarly=nil
+STEP mp_mm_menu_resume begin
+OBS  MP.mm after resume: the server says Processing/nil; this client's copy of the record Processing/nil; its menu offers [pause,abort], want [pause,abort]
+PASS MP.mm_menu_after_resume_A :: server Processing/nil; this client's copy Processing/nil; menu [pause,abort], want [pause,abort]
+STEP mp_mm_abort begin
+OBS  MP.mm abort through the menu true -> ok=true reason=nil duplicate=nil state=OutputReady pause=nil stoppedEarly=true
+STEP mp_mm_menu_abort begin
+OBS  MP.mm after abort: the server says OutputReady/nil; this client's copy of the record OutputReady/nil; its menu offers [abort], want [abort]
+PASS MP.mm_menu_after_abort_A :: server OutputReady/nil; this client's copy OutputReady/nil; menu [abort], want [abort]
+STEP mp_mm_abort_again begin
+OBS  MP.mm abort_again through the menu true -> ok=true reason=nil duplicate=nil state=Ready pause=nil stoppedEarly=nil
+STEP mp_mm_menu_abort_again begin
+OBS  MP.mm after abort_again: the server says Ready/nil; this client's copy of the record Ready/nil; its menu offers [], want []
+PASS MP.mm_menu_after_abort_again_A :: server Ready/nil; this client's copy Ready/nil; menu [], want []
+STEP mp_mm_paths begin
+OBS  MP.mm chosen through the menu: load=true pause=true resume=true abort=true abort_again=true
+STEP mp_finish_a begin
+STEP mp_finish begin
+SUMMARY pass=7 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: spawn item=TLG.FermenterVessel role=A tag=mm_spawn x=10656 y=10649
+OBS  MPS.reply spawned batch=nil id=462209369 item=TLG.FermenterVessel role=A tag=mm_spawn x=10656 y=10649
+OBS  MPS.message from tlga: give items=Base.Sugar;Base.Sugar;Base.Yeast;Base.BucketEmpty role=A tag=mm_give water=10
+OBS  MPS.reply given ids=Base.Sugar=1896770774;Base.Sugar=1152367870;Base.Yeast=1270013827;Base.BucketEmpty=1945768214 role=A tag=mm_give
+OBS  MPS.message from tlga: finish role=A

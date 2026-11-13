@@ -113,6 +113,7 @@ local function machine(sq, rec)
     function item:getWorldItem() return item.on and wi or nil end
     function item:setWorldItem(w) if w == nil then item.on = nil end end
     function item:getID() return 7 end
+    function item:getOutermostContainer() return item.outer end
     item.on, item.wi = sq, wi
     if sq then sq.objs[#sq.objs + 1] = wi end
     return item
@@ -1367,6 +1368,92 @@ T.case("integration: every ten game minutes the hands of the characters in the g
     end)
     for _, k in ipairs(names) do _G[k] = saved[k] end
     Machines.landing, Machines.watching, Machines.inHands = {}, false, {}
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: on a server a machine's record goes to the clients without its readings; a client puts it in its copy", function()
+    local g = fakeGame(100)
+    local sent, savedSend = {}, sendServerCommand
+    sendServerCommand = function(module, command, args) sent[#sent + 1] = { module = module, command = command, args = args } end
+    local ok, err = pcall(function()
+        local sq = square(g, 10, 20, 0, true, 20)
+        local rec = Process.new({ id = "P-push", machine = "fermenter_barrel", t = 100 })
+        rec.temps, rec.fires = { [99] = 20 }, { [99] = false }
+        local item = machine(sq, rec)
+        Machines.write(item, rec)
+        T.eq(#sent, 0, "single player sends nothing")
+        isServer = function() return true end
+        Machines.write(item, rec)
+        T.eq(#sent, 1)
+        local m = sent[1]
+        T.eq(m.module, "TLG"); T.eq(m.command, "item"); T.eq(m.args.key, "tlgProc")
+        T.eq(m.args.id, 7); T.eq(m.args.x, 10); T.eq(m.args.y, 20); T.eq(m.args.z, 0)
+        T.eq(m.args.rec.id, "P-push")
+        T.eq(m.args.rec.state, rec.state)
+        T.eq(m.args.rec.temps, nil, "no readings sent")
+        T.eq(m.args.rec.fires, nil, "no fire notes sent")
+        T.ok(rec.temps ~= nil and rec.fires ~= nil, "the record kept on the server keeps both")
+        Machines.write(item, rec, true)
+        T.eq(#sent, 1, "a quiet write is not sent")
+        lift(item)
+        Machines.write(item, rec)
+        T.eq(#sent, 1, "carried: its holder gets it with the item's fields")
+        -- A client's copy of the item on the floor takes the record sent.
+        isServer = function() return false end
+        local copy = machine(sq, nil)
+        local FR = TLG.Integration.WorldItemRecords
+        T.ok(FR.received(m.args))
+        T.eq(copy:getModData().tlgProc.id, "P-push")
+        T.ok(not FR.received({ id = 8, x = 10, y = 20, z = 0, key = "tlgProc", rec = m.args.rec }), "another item")
+        T.ok(not FR.received({ id = 7, x = 1, y = 1, z = 0, key = "tlgProc", rec = m.args.rec }), "a square not loaded")
+        T.ok(not FR.received({ id = 7, x = 10, y = 20, z = 0, key = "tlgProc" }), "no record")
+        T.ok(not FR.received({ id = 7, x = 10, y = 20, z = 0, key = "other", rec = m.args.rec }), "a key not sent")
+    end)
+    sendServerCommand = savedSend
+    g.restore()
+    if not ok then error(err, 0) end
+end)
+
+-- Why a multiplayer client's menu judges on the record as sent
+-- (MachineMenu.controls) rather than bringing it forward.
+T.case("integration: a record sent without its readings and brought forward disagrees with the server's; the hourly reading sends nothing", function()
+    local g = fakeGame(2)
+    local sent, savedSend = {}, sendServerCommand
+    sendServerCommand = function(module, command, args) sent[#sent + 1] = { module = module, command = command, args = args } end
+    local ok, err = pcall(function()
+        -- A cold day; a room warmed to 22 C by a fire, which the hourly
+        -- readings filed.
+        g.outC = -3
+        World.get().climateLog = { [0] = { t = -3, rh = 0.7 } }
+        local env = World.env()
+        local sq = square(g, 30, 30, 0, true, 22)
+        local rec = running("P-cold", 2)
+        rec.temps = {}
+        for h = 2, 9 do rec.temps[h] = 22 end
+        local item = machine(sq, rec)
+        local server = Machines.advance(item, Machines.read(item, false), 10, env)
+        local view = {}
+        for k, v in pairs(server) do
+            if not TLG.Integration.WorldItemRecords.KEYS.tlgProc[k] then view[k] = v end
+        end
+        local copy = machine(sq, view)
+        local full = Machines.advance(item, server, 12, env)
+        local stripped = Machines.advance(copy, TLG.Tables.deepCopy(view), 12, env)
+        local function said(r) return string.format("%s/%s stage %s done %.4f", tostring(r.state), tostring(r.pause),
+            tostring(r.stage), r.stageDone or -1) end
+        T.ok(said(full) ~= said(stripped), "the server " .. said(full) .. "; the copy without readings " .. said(stripped))
+        -- On a server the hourly reading files the air quietly: nothing goes
+        -- to the clients.
+        isServer = function() return true end
+        Machines.write(item, full, true)
+        Machines.index(item, full)
+        g.now = 12.02
+        Machines.sampleSites()
+        T.eq(item:getModData().tlgProc.temps[11], 22, "the reading filed")
+        T.eq(#sent, 0, "and not sent")
+    end)
+    sendServerCommand = savedSend
     g.restore()
     if not ok then error(err, 0) end
 end)

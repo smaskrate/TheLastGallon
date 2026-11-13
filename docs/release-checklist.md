@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 261 Italian strings as shipped in a client set to Italian (run 205); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.2 package is the zip of `f264f10` (SHA-256 `E70E7038…FAD5F9D3`), installed clean and played on 42.22.2 in launch 344 (106/0, 14/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.2 since 2026-11-12; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 or later continued with a 0.4 package |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.3 package is the zip of `14a36ed` (SHA-256 `4A7897A0…F9A472ED`), installed clean and played on 42.22.2 in launch 373 (106/0, 14/0), and a save made with the 0.4.2 zip continued with it (launch 375: 3/0, 22/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.3 since 2026-11-13; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -204,7 +204,7 @@ reading 0.4.1 (launch 339). The handbook mode, the multiplayer cases and
 the upgrade were not run on it; launches 318–338 ran on the repository's
 mod at 0.4.0, which differs from it in the version number.
 
-The upload folder holds this package since 2026-11-11: its `Contents`
+The upload folder held this package from 2026-11-11 to 2026-11-12: its `Contents`
 mirrored and its `preview.png` copied from the unpacked zip, 166 files
 checked by hash, both ways. Its `workshop.txt` is the owner's, edited by
 hand. On the owner's word ("Update whatever is left to update",
@@ -248,8 +248,8 @@ Italian (`IGUI_TLG_ConvReason_not_offered`), `TLG.VERSION` and
 text, the changelog, the support matrix and `migrations.md`. No script.
 Launch 343 showed the menu without the entry, with the change in the
 repository's mod. The full run's new `LOOP.gen_start_offers_flex_only`
-checks the menu and the refusal (launch 344, below). The change note is
-`docs/workshop-change-note-0.4.2.txt`.
+checks the menu and the refusal (launch 344, below). The change note was
+`docs/workshop-change-note-0.4.2.txt`, renamed for 0.4.3.
 
 The 0.4.2 package is the zip of `f264f10` (167 files, 7,889,325 bytes,
 SHA-256 `E70E7038…FAD5F9D3`), built from a clean tree. Thirteen files
@@ -263,7 +263,7 @@ gas begin asked anyway was refused (`not_offered`). The other modes, the
 multiplayer cases and the upgrade were not run on it. The shipped
 changelog, written before launch 344, lists the refusal as not checked.
 
-The upload folder holds this package since 2026-11-12, on the owner's
+The upload folder held this package from 2026-11-12 to 2026-11-13, on the owner's
 word ("Yes, prepare it"): its `Contents` mirrored and its `preview.png`
 copied from the zip, unpacked and checked against its manifest, and the
 folder's 166 files checked by hash, both ways. The first description
@@ -277,6 +277,83 @@ on this computer, in place by 17:03 (manifest `4702894724475894381`, the
 item's latest), held exactly the package's 165 mod files, each matching
 its SHA-256 in `dist/TheLastGallon-0.4.2.sha256`, and its `mod.info`
 reads 0.4.2 (gate 12). Open: the game loading the mod from that
+download, and how the Workshop page shows the change note.
+
+## Version 0.4.3 (2026-11-13)
+
+Version 0.4.3 makes two client menus follow the server on a dedicated
+server: the machine menu's **Pause**, **Resume** and **Abort batch**
+(D-023, amended) and the Fuel menu's **Seal** or **Open** for a can on
+the floor or in a container (D-041). In 0.4.2 both decide from the
+player's own copy of the record, which on a server did not change when
+the server changed the record. The server now sends the records of items
+no character carries to the clients. Single player is unchanged.
+
+What ships changes in six Lua files (`Net.lua`, `MachineContextMenu.lua`,
+`Containers.lua`, `Machines.lua`, the new `WorldItemRecords.lua`, and
+`Core.lua` for the version), `mod.info`, the shipped changelog and
+support matrix, and `workshop.txt`. No string and no script. RT-MP
+launches 362–367 ran the menus on a server with one client
+(`test-results.md`): a fermenter loaded and worked through its menu
+(launch 364, 7/0), then the nine machines, a carried fermenter, the cans
+on the floor and in a bin, and a batch paused across leaving and joining
+again (launch 367, 52/0); with both cases' steps moved into functions,
+launches 371 and 372 gave 52/0 and 7/0. The full single-player run on
+the repository's mod (launch 368) passed every check but the station-fuel
+start gate, a start left to chance at a pump with water; the step now
+holds that draw.
+
+A zip of `d0da92c` (168 files, 7,892,433 bytes, SHA-256
+`B04BD750…7BF6E1E8`) was built from a clean tree before the release
+commit and rehearsed. Ten files differ from the 0.4.2 package: `42/mod.info`,
+`TLG/Core.lua`, `Net.lua`, `MachineContextMenu.lua`, `Containers.lua`,
+`Machines.lua`, the new `WorldItemRecords.lua`, the shipped changelog and
+support matrix, and `workshop.txt`. It was installed clean and played
+twice, the game reading 0.4.3: launch 369, 105/1 and 14/0, the same
+start gate left to chance; launch 370, with the harness that holds that
+draw, 106/0 and 14/0 (its pump held no water, so nothing was held). The
+mod folders of launch 367's server and client are that zip's, file for
+file, so its 52/0 holds for it too.
+
+The release commit dates the changelog and gives the player guide its
+0.4.3 version line (the zip of `d0da92c` still read 0.4.2 there) and the
+server checks of launches 362–372 in its lists of what has been checked.
+The change note is `docs/workshop-change-note-0.4.3.txt`.
+
+The 0.4.3 package is the zip of `14a36ed` (168 files, 7,892,551 bytes,
+SHA-256 `4A7897A0…F9A472ED`), built from a clean tree. It differs from
+the zip of `d0da92c` in the shipped changelog, player guide and support
+matrix, and from the 0.4.2 package in eleven files: the ten above and the
+player guide. It was installed clean and played: the full run 106/0 and
+14/0, the game reading 0.4.3 (launch 373). A save made with the 0.4.2 zip
+continued with it: 3/0, then 22/0 (launch 375; in launch 374 the 0.4.2
+launch failed one check written for the releases before 0.3.0, since
+fixed). Not run on it: the other modes, the other multiplayer cases
+(launch 367 ran its mod files), the removal and existing-save scenarios.
+
+The upload folder holds this package since 2026-11-13, on the owner's
+word ("If there are not other things to test, prepare it"): its
+`Contents` mirrored and its `preview.png` copied from the zip, unpacked
+and checked against its manifest, and the folder's 168 files checked by
+hash, both ways. The first description line of its `workshop.txt`, the
+owner's file, now names 0.4.3: one byte changed; the rest of the file
+(its id, `visibility=public`, the tag `WIP`, the owner's wording) and its
+CRLF line ends stay.
+
+Before the upload, on the owner's word ("Yes, test two players"), launch
+376 ran the same steps with two clients on a server whose mod and
+clients' mods were this zip's, file for file: after each step one player
+took, the other's copy and menu followed (A 50/0, B 48/0;
+`machinemenus2`). The change note lists it; the shipped changelog and
+support matrix, written before launch 376, still list two players as not
+checked and the server checks as one client's.
+
+The owner uploaded 0.4.3 to the Workshop from this folder on 2026-11-13
+(Steam's record of the item: updated at 09:54). Steam's download of it
+on this computer, in place by 10:19 (manifest `154050832454505581`, the
+item's latest), held exactly the package's 166 mod files, each matching
+its SHA-256 in `dist/TheLastGallon-0.4.3.sha256`, and its `mod.info`
+reads 0.4.3 (gate 12). Open: the game loading the mod from that
 download, and how the Workshop page shows the change note.
 
 ## Gate details
@@ -716,30 +793,32 @@ restored it. The zip built from `cfae118` on 2026-11-10 has that defect
 and two malformed lines in `workshop.txt`; it was not uploaded. The commit
 itself was pushed.
 
-The Steam Workshop item (id 3835496461) serves 0.4.2 since 2026-11-12:
-the owner uploaded it from the upload folder that afternoon and said so
-(Steam's public record of the item: updated at 16:32). After the upload
-the folder's 166 files still matched the 0.4.2 package's manifest, and
-its `workshop.txt` had been written again (16:32) with the same lines.
-The Workshop page itself was not looked at from here. Of an install
-through the Workshop, the download is checked: by 17:03 the copy Steam
-downloads to this computer for the owner's subscription
+The Steam Workshop item (id 3835496461) serves 0.4.3 since 2026-11-13:
+the owner uploaded it from the upload folder that morning and said so
+(Steam's record of the item: updated at 09:54). After the upload the
+folder's 168 files still matched the 0.4.3 package's manifest, and its
+`workshop.txt` had been written again (09:54) with the same lines. The
+Workshop page itself was not looked at from here. Of an install through
+the Workshop, the download is checked: by 10:19 the copy Steam downloads
+to this computer for the owner's subscription
 (`steamapps/workshop/content/108600/3835496461`, manifest
-`4702894724475894381`, the item's latest, 9,421,967 bytes) held the
-0.4.2 package's 165 mod files, each matching its SHA-256 in
-`dist/TheLastGallon-0.4.2.sha256`, and no other file. The same check
-passed for 0.4.1, uploaded on the evening of 2026-11-11 (manifest
-`8946080603226782332`, checked on 2026-11-12). The game loading the mod
+`154050832454505581`, the item's latest, 9,430,584 bytes) held the
+0.4.3 package's 166 mod files, each matching its SHA-256 in
+`dist/TheLastGallon-0.4.3.sha256`, and no other file. The same check
+passed for 0.4.2, uploaded on 2026-11-12 (manifest
+`4702894724475894381`, 165 files), and for 0.4.1, uploaded on the
+evening of 2026-11-11 (manifest `8946080603226782332`, checked on
+2026-11-12). The game loading the mod
 from that folder was not run: it scans Workshop folders only in Steam
 mode, and the harness runs with `-nosteam`. Before 0.4.1 the item served
 0.1.1, uploaded by the owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.2 package's
-`Contents` and `preview.png` since 2026-11-12 (launch 344; "Version
-0.4.2" above). Before it, the 0.1.2 package's from 2026-11-10, then the
-0.3.0, 0.3.1, 0.3.2, 0.4.0 and 0.4.1 packages' on 2026-11-11; 0.2.0 was
-never put there. For 0.4.0:
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.3 package's
+`Contents` and `preview.png` since 2026-11-13 (launch 373; "Version
+0.4.3" above). Before it, the 0.1.2 package's from 2026-11-10, then the
+0.3.0, 0.3.1, 0.3.2, 0.4.0 and 0.4.1 packages' on 2026-11-11 and the 0.4.2
+package's on 2026-11-12; 0.2.0 was never put there. For 0.4.0:
 the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
 its `Contents` mirrored over the folder's, and the folder's 165 files
 checked by hash, both ways. Later that day the zip of `a0d293e` (`87ED49FD…5A47A297`), unpacked and checked against its manifest by launch 317, replaced it there: its `Contents` mirrored over the folder's and its `preview.png` copied, the folder's 166 files checked by hash, both ways. The folder's `preview.png` and `42/poster.png` are the picture of fourteen models (SHA-256 `13A1A39F…7309D5D1`). It has not been uploaded. Its `workshop.txt` is the
@@ -750,12 +829,12 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.4.2.txt`, written on 2026-11-12: the changes
-from 0.4.1, which the item served before, to 0.4.2, in the form with bullet
+`docs/workshop-change-note-0.4.3.txt`, written on 2026-11-13: the changes
+from 0.4.2, which the item serves, to 0.4.3, in the form with bullet
 characters described below. It is not in the package. Its 0.4.1 form,
 `docs/workshop-change-note-0.4.1.txt` (the changes from 0.1.1), was
 pasted by the owner at the 0.4.1 upload
@@ -963,6 +1042,9 @@ tools\run-mp-harness.ps1 -Clients 1 -Only timers    # the machines' readings and
 tools\run-mp-harness.ps1 -Clients 1 -Only knowledge # What I know about it from a client's Fuel menu, answered by the server; ~5 min
 tools\run-mp-harness.ps1 -Clients 1 -Only knowledge -Restart  # the same with the can sealed; the player leaves, the server restarts, the player joins and reads it again
 tools\run-mp-harness.ps1 -Clients 2 -Only death     # A dies carrying a running vessel; B asks the server where it fell and whether it works from the death; ~4 min
+tools\run-mp-harness.ps1 -Clients 1 -Only machinemenu   # a fermenter loaded, paused, resumed and aborted twice through its menu, each entry read against the server's state (D-023)
+tools\run-mp-harness.ps1 -Clients 1 -Only machinemenus  # the nine machines' Pause, Resume and Abort batch, a fermenter carried and put down, Seal and Open on a can on the floor and in a container, a batch paused across leaving and joining again (D-041); ~7 min
+tools\run-mp-harness.ps1 -Clients 2 -Only machinemenus2 # the same but the rejoin with two clients: after each of A's steps B reads its own copy and menu; B pauses and resumes a fermenter and A reads its own; ~15 min
 tools\make-preview.ps1                # the Workshop preview, the mod list's poster and icon (Blender), into art-src and the mod
 tools\package.ps1                     # the release zip (never uploads)
 tools\run-sp-harness.ps1 -Mode context-menus                    # the mod's world menu entries only where the click is on their thing (0.3.1); menus built by the game's builder at chosen screen points; no save; ~2 min

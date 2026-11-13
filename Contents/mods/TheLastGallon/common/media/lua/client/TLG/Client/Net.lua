@@ -46,6 +46,12 @@ Events.OnServerCommand.Add(function(module, command, args)
         local ok, err = pcall(TLG.Integration.Gasifiers.received, args)
         if not ok then TLG.Log.error("gasifier record from the server: %s", tostring(err)) end
     end
+    -- A record of an item on the floor or in a crate from the server, for
+    -- this client's menus (TLG/Integration/WorldItemRecords.lua).
+    if module == "TLG" and command == "item" and TLG.Integration.WorldItemRecords then
+        local ok, err = pcall(TLG.Integration.WorldItemRecords.received, args)
+        if not ok then TLG.Log.error("item record from the server: %s", tostring(err)) end
+    end
 end)
 
 return Net

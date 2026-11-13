@@ -8,7 +8,11 @@
 --                      reconciled composition q; every record write sets the
 --                      native fluids to q where they differ (C.commit)
 --   replication        item: syncItemFields (a can's record the same on the
---                      client as on the server, RT-MP runs 145-171); object:
+--                      client as on the server, RT-MP runs 145-171), which
+--                      reaches only the client carrying it, and for a can on
+--                      the floor or in an object's container the record
+--                      sent to the clients
+--                      (TLG/Integration/WorldItemRecords.lua); object:
 --                      transmitModData
 --   server copy        on a server every read is checked against the vault
 --                      (TLG/Authority/Vault.lua; audit V-01): clients can
@@ -27,6 +31,7 @@ require "TLG/Authority/Transactions"
 require "TLG/Content/Containers"
 require "TLG/Persistence/Migrations"
 require "TLG/Authority/Vault"
+require "TLG/Integration/WorldItemRecords"
 
 TLG.Integration.Containers = TLG.Integration.Containers or {}
 local C = TLG.Integration.Containers
@@ -183,6 +188,9 @@ function C.writeSidecar(owner, kind, rec)
     owner:getModData()[C.SIDECAR] = side
     Vault.put("supply", function() return C.holderOf(owner, kind) end, side)
     send(owner, kind)
+    -- A can on the floor or in a crate: the Fuel menu's Seal or Unseal reads
+    -- the client's copy (WorldItemRecords).
+    if kind == "item" then TLG.Integration.WorldItemRecords.send(owner, C.SIDECAR, side) end
 end
 
 -- Writes the record and sets the container's fluids to its composition

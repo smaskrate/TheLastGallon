@@ -418,10 +418,10 @@ function services.probe_fuel(player, args)
     reply("probe_fuel", args, out)
 end
 
--- The crate case: a vessel put into the container nearest the spawn point
--- (a crate if one is within reach of the search), as a player finds one.
-function services.crate_vessel(player, args)
-    local best, bestD, bestType
+-- The container nearest the spawn point (a crate if one is within reach of
+-- the search), as a player finds one; nil when there is none.
+local function nearestContainer()
+    local best, bestD
     for dx = -40, 40 do
         for dy = -40, 40 do
             local sq = getCell():getGridSquare(S.CX + dx, S.CY + dy, 0)
@@ -431,20 +431,43 @@ function services.crate_vessel(player, args)
                 local c = o:getContainer()
                 if c and not instanceof(o, "IsoGenerator") then
                     local d = dx * dx + dy * dy - (c:getType() == "crate" and 1e6 or 0)
-                    if bestD == nil or d < bestD then best, bestD, bestType = o, d, c:getType() end
+                    if bestD == nil or d < bestD then best, bestD = o, d end
                 end
             end
         end
     end
+    return best
+end
+
+-- An item put into the nearest container; the reply names it and where.
+local function crate(args, item, replyName)
+    local best = nearestContainer()
     if not best then
-        reply("crated", args, { error = "no container within 40 squares" })
+        reply(replyName, args, { error = "no container within 40 squares" })
         return
     end
     local c = best:getContainer()
-    local item = c:AddItem("TLG.FermenterVessel")
+    item = c:AddItem(item)
     sendAddItemToContainer(c, item)
-    reply("crated", args, { id = tostring(item and item:getID()), type = bestType, x = best:getSquare():getX(),
+    reply(replyName, args, { id = tostring(item and item:getID()), type = c:getType(), x = best:getSquare():getX(),
         y = best:getSquare():getY(), index = best:getObjectIndex() })
+end
+
+-- The crate case: a vessel put into the nearest container.
+function services.crate_vessel(player, args)
+    crate(args, "TLG.FermenterVessel", "crated")
+end
+
+-- The Fuel menu's Seal and Open on a can in a container (machinemenus):
+-- a can holding 5 L of petrol, put into the nearest container.
+function services.crate_can(player, args)
+    local item = instanceItem("Base.PetrolCan")
+    local fc = item and item:getFluidContainer()
+    if fc then
+        fc:Empty()
+        fc:addFluid(Fluid.Petrol, 5)
+    end
+    crate(args, item, "crated_can")
 end
 
 -- The car conversion case: a car with an empty tank (the conversion drains
@@ -559,6 +582,54 @@ local function doneMachine(itemType, recipe, inputs, firebox, dx, dy)
     Machines.write(item, rec)
     Machines.index(item, rec)
     return item, rec
+end
+
+-- machinemenus (one client): a batch started on a machine of each kind the
+-- server put down earlier (spawn), as loading and starting it leave it: the
+-- firebox fed, Process.load, Process.start, written as the mod's requests
+-- write it (Machines.write, which sends the record to the clients). The
+-- item is found by id; its record is written in a second request so that
+-- the client has the item before the record is sent.
+local RUNNING = {
+    ["TLG.FermenterVessel"] = { "ethanol_ferment", { sugar_eq = 6, water = 30 } },
+    ["TLG.PotStill"] = { "ethanol_distill", { ethanol = 2, water = 20 }, 20 },
+    ["TLG.RefluxStill"] = { "ethanol_distill", { ethanol = 2, water = 20 }, 20 },
+    ["TLG.DryingColumn"] = { "ethanol_dry", { ethanol = 10, water = 1, quicklime_kg = 2 } },
+    ["TLG.WoodRetort"] = { "methanol_wood_distill", { firewood = 50 }, 20 },
+    ["TLG.AshBarrel"] = { "ash_burn", { firewood = 20 } },
+    ["TLG.LyeLeacher"] = { "lye_leach", { wood_ash = 2, water = 4 }, 10 },
+    ["TLG.BiodieselReactor"] = { "biodiesel_react", { plant_oil = 17.1, methanol = 2.565, lye = 0.21375 }, 20 },
+    ["TLG.BiodieselWashTank"] = { "biodiesel_wash",
+        { biodiesel = 16.8435, methanol = 0.6766, plant_oil = 0.1881, sediment = 0.1729, water = 5.053 }, 10 },
+}
+
+function services.start_running(player, args)
+    local Machines, Process, World = TLG.Integration.Machines, TLG.Domain.Process, TLG.World
+    local sq = getCell():getGridSquare(tonumber(args.x), tonumber(args.y), 0)
+    local item
+    local objs = sq and sq:getWorldObjects()
+    for i = 0, (objs and objs:size() or 0) - 1 do
+        local it = objs:get(i):getItem()
+        if it and it:getID() == tonumber(args.id) then item = it end
+    end
+    local spec = item and RUNNING[item:getFullType()]
+    local out = { id = args.id, found = tostring(item ~= nil) }
+    if spec then
+        local now = World.now()
+        local rec = Process.new({ id = World.newId("P"), machine = Machines.machineFor(item), t = now })
+        if spec[3] then rec = Process.addFirebox(rec, spec[3]).proc end
+        local l = Process.load(rec, spec[1], spec[2])
+        if l.ok then
+            rec = Process.start(l.proc, now).proc
+            rec = Machines.advance(item, rec, now, World.env())
+            Machines.write(item, rec)
+            Machines.index(item, rec)
+            out.state, out.pause = tostring(rec.state), tostring(rec.pause)
+        else
+            out.reason = tostring(l.reason)
+        end
+    end
+    reply("started_running", args, out)
 end
 
 function services.setup_biodiesel(player, args)

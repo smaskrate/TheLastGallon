@@ -75,6 +75,7 @@ require "TLG/Integration/World"
 require "TLG/Content/Production"
 require "TLG/Content/Biodiesel"
 require "TLG/Authority/Vault"
+require "TLG/Integration/WorldItemRecords"
 
 TLG.Integration.Machines = TLG.Integration.Machines or {}
 local M = TLG.Integration.Machines
@@ -519,7 +520,10 @@ function M.sampleSites()
                     rec.temps = rec.temps or {}
                     rec.temps[slot] = t
                     M.trimTemps(rec, env)
-                    M.write(item, rec)
+                    -- Quiet: a reading changes nothing a client's menu
+                    -- judges on, and each running machine's record would
+                    -- otherwise go to every client every game hour.
+                    M.write(item, rec, true)
                 end
             end
         end
@@ -569,12 +573,17 @@ function M.observeFires()
     end
 end
 
--- quiet: kept on the authority, not sent to clients (fire notes).
+-- quiet: kept on the authority, not sent to clients (fire notes, hourly
+-- readings). Otherwise, on a server, a machine no character carries has its
+-- record sent to the clients without those
+-- (TLG/Integration/WorldItemRecords.lua): the menu decides Pause, Resume
+-- and Abort batch from the client's copy (D-023; RT-MP launch 362).
 function M.write(item, rec, quiet)
     item:getModData()[M.SIDECAR] = rec
     Vault.put("process", Vault.itemHolder(item), rec)
     if quiet then return end
     send(item)
+    TLG.Integration.WorldItemRecords.send(item, M.SIDECAR, rec)
 end
 
 -- Machine items within reach of a square (for still <- fermenter loading).

@@ -96,6 +96,19 @@
   generator stops), lights it again, takes it up while lit with the
   world menu's Grab and puts it down, comparing its copies and its menu
   with the server's (one client, on the shortest day).
+  machinemenu: the machine menu's Pause, Resume and Abort batch on a
+  server: a fermenter the server puts on the floor is loaded and started
+  through the menu, then paused, resumed and aborted twice; after each step
+  the entries the client's menu offers are read against the state the
+  server replied with (one client).
+  machinemenus: the menus that read a client's copy of a record, on a
+  server: Pause, Resume and Abort batch for each of the nine kinds of
+  machine (the server starts each batch), a running fermenter taken up and
+  put down, Seal and Open on a can on the floor and on one in a container,
+  and a paused batch after the player leaves and joins again (one client).
+  machinemenus2: the same with two clients (-Clients 2), the rejoin left out:
+  after each of A's steps B reads its own copy and menu, and A reads its own
+  after B pauses and resumes a fermenter.
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -122,7 +135,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood", "machinemenu", "machinemenus", "machinemenus2")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"
