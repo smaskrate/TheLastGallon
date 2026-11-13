@@ -1958,7 +1958,7 @@ gas probe (launch 342).
     A lit gasifier moved with nothing reading it stayed lit in its record
     until a generator's minute pass read it, which put it out as moved,
     its wood kept, and gave nothing.
-  * Performance, in single player (launches 398–401 and 404–406,
+  * Performance, in single player (launches 398–401 and 404–407,
     `performance.md`): the gas minute pass costs 0.011–0.012 ms a game
     minute for a full gas generator. A propane one a part of a use below
     its cap cost 0.042 ms: the pass went on past its tolerance test to a
@@ -1966,16 +1966,17 @@ gas probe (launch 342).
     (0.0026 L), so what it leaves below the cap is the rest of the room,
     within the tolerance about once in 26 refills: that is most of a
     propane generator's minutes, at any load. A wood-gas draw costs
-    0.196 ms an hour, a gasifier's catch-up 0.13 ms for any span. On the
-    bare road the gas running adds no measurable time to a frame
-    (launches 401 and 404). In the whole performance mode the frames rose
-    0.33–0.39 ms from the stage before the square-load hook to the gas in
-    each run, the reply dialogs closed or not (launches 398, 400, 405 and
-    406). Launch 406 split it, from one on/off pair: 0.18–0.21 ms came
-    and went with the generators running, the gasifiers and records left
-    in place, most likely the game's own cost of running generators
-    (inferred; the mod has no per-frame handler for them); the other
-    0.16 ms came before any gas was placed.
+    0.196 ms an hour, a gasifier's catch-up 0.13 ms for any span. In the
+    whole performance mode the frames rose 0.20–0.39 ms from the stage
+    before the square-load hook to the gas, the reply dialogs closed or
+    not (launches 398, 400 and 405–407). Most of it comes with generators
+    running, not with the gas feed: in launch 407, switching the 16 gas
+    generators off took 0.13 ms off a frame, and switching off 16 plain
+    petrol generators put on the same squares 0.11 ms. That it is the
+    game's own cost rests on the mod having no per-frame handler but the
+    landing watch. The rest is drift between 20-second samples: launch
+    406's 0.16 ms before the gas did not recur in launch 407. The
+    bare-road runs (launches 401 and 404) switched nothing off and on.
   * Amended 2026-11-13, at the owner's word: the pass returns early for a
     propane generator whose room takes less than one use
     (`Generators.gasRefill`), by the refill's own rule (`GasFeed.usesFor`),
@@ -1989,7 +1990,7 @@ gas probe (launch 342).
     404 and 405); a refill that moves a use, which makes the whole-use
     calculation twice, 0.074–0.076 ms against 0.069–0.071. Propane in game
     (launch 402) and on a server (launch 403) passed as before, and the
-    whole performance mode passed all 53 budgets (launches 405 and 406).
+    whole performance mode passed all 53 budgets (launches 405–407).
   * Not run: a handbook found at a container's first fill (the harness
     filled them again); a real network; these moves on a server; a
     buffer too small for two generators' hourly draws (how it is shared

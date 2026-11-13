@@ -20276,21 +20276,63 @@ function RT.PFG.build()
         placedCheck("woodgas_8", function() return PFG.wood end, true), PFG.timeWood, PFG.timeBoth,
         PF.catchStep("gas_catch_up", PFG.jobs), RT.PF.closeAll, gasFrames, RT.PF.checkBudgetsGas }
 
-    -- The 16 generators switched off where they stand, the gasifiers left as
-    -- they are.
-    PFG.generatorsOff = { name = "rtpf_gas_generators_off", fn = function()
-        local was, still = 0, 0
+    -- The generators on the 16 squares switched off or on where they stand,
+    -- as the game's action ends (ISActivateGenerator: setActivated, then
+    -- sync) without the action itself, the gasifiers left as they are.
+    local function switchAll(name, on)
+        return { name = "rtpf_" .. name, fn = function()
+            local was, now = 0, 0
+            for _, list in ipairs({ PFG.propane or {}, PFG.wood or {} }) do
+                for _, e in ipairs(list) do
+                    local g = genAt(e)
+                    if g then
+                        if g:isActivated() then was = was + 1 end
+                        pcall(function()
+                            g:setActivated(on)
+                            g:sync()
+                        end)
+                        if g:isActivated() then now = now + 1 end
+                    end
+                end
+            end
+            R:line("OBS  RTPF.gas %s: %d were running, %d running now", name, was, now)
+            return true
+        end }
+    end
+    PFG.generatorsOff = switchAll("gas_generators_off", false)
+    PFG.generatorsOn = switchAll("gas_generators_on", true)
+    PFG.petrolOff = switchAll("petrol_generators_off", false)
+
+    -- The gas generators taken away as the game's pickup does it
+    -- (ISTakeGenerator: remove) and a plain generator put on each of the 16
+    -- squares, filled with 10 L of petrol (setFuel, no fuel record),
+    -- connected and started: everything else, the gasifiers included, left
+    -- as it is.
+    PFG.petrolSwap = { name = "rtpf_petrol_swap", fn = function()
+        local removed, placed, running = 0, 0, 0
         for _, list in ipairs({ PFG.propane or {}, PFG.wood or {} }) do
             for _, e in ipairs(list) do
                 local g = genAt(e)
-                if g and g:isActivated() then
-                    was = was + 1
-                    pcall(function() g:setActivated(false) end)
-                    if g:isActivated() then still = still + 1 end
+                if g then
+                    pcall(function() g:remove() end)
+                    if genAt(e) == nil then removed = removed + 1 end
+                end
+                pcall(function() IsoGenerator.new(instanceItem("Base.Generator"), getCell(), sq(e.x, e.y, 0)) end)
+                local p = genAt(e)
+                if p and p ~= g then
+                    placed = placed + 1
+                    pcall(function()
+                        p:setConnected(true)
+                        p:setFuel(10)
+                        p:setActivated(true)
+                        p:sync()
+                    end)
+                    if p:isActivated() then running = running + 1 end
                 end
             end
         end
-        R:line("OBS  RTPF.gas generators switched off: %d were running, %d still running", was, still)
+        R:line("OBS  RTPF.petrol %d gas generators taken away, %d plain generators put down with petrol, %d running",
+            removed, placed, running)
         return true
     end }
 
@@ -20300,13 +20342,20 @@ function RT.PFG.build()
     -- samples frames once the square-load handler is timed (its Diesel
     -- Generator put down), once the game's square-load event is, which is
     -- just before the gas, and after the gas frames with the generators
-    -- switched off. None falls inside the gas stages' timings.
+    -- switched off. Then the gas generators on again, and plain petrol
+    -- generators on the same squares, running and off, to tell the cost of
+    -- running generators from the gas (launch 407: about the same). None
+    -- falls inside the gas stages' timings.
     local whole = { PF.frames("before_gas") }
     for _, s in ipairs(gasStages) do
         whole[#whole + 1] = s
         if s == gasFrames then
-            whole[#whole + 1] = PFG.generatorsOff
-            whole[#whole + 1] = PF.frames("gas_generators_off")
+            for _, x in ipairs({ PFG.generatorsOff, PF.frames("gas_generators_off"),
+                PFG.generatorsOn, PF.frames("gas_running_again"),
+                PFG.petrolSwap, PF.frames("petrol_running"),
+                PFG.petrolOff, PF.frames("petrol_off") }) do
+                whole[#whole + 1] = x
+            end
         end
     end
     -- Before the added budgets' check, so every stage before stays as in

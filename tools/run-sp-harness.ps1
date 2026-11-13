@@ -176,8 +176,9 @@
   caps and drawing a step at each call; and all 16 as they stand; a lit
   gasifier brought forward 1, 30 and 365 days, the Gasifier and Gas menus,
   the square-load handler on a gas generator, and frames with all of it
-  running, then with the 16 generators switched off. Last, the budgets of
-  the stages after the first check.
+  running, with the 16 generators switched off and on again, then with 16
+  plain petrol generators on their squares, running and switched off.
+  Last, the budgets of the stages after the first check.
   performance-gas: the performance mode's gas stages alone, on the same
   road, to try them (about 5 minutes); the record is the whole mode's.
   model-import: the original test model of tools/make-test-model.ps1 wired
