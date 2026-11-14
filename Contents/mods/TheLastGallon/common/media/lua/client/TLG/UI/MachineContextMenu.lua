@@ -339,7 +339,20 @@ local function addMachine(playerNum, context, item, title, world)
     local c = Menu.controls(item, rec)
     if c.pause then sub:addOption(getText("ContextMenu_TLG_Pause"), nil, function() req("machine.pause", { target = ref }) end) end
     if c.resume then sub:addOption(getText("ContextMenu_TLG_Resume"), nil, function() req("machine.resume", { target = ref }) end) end
-    if c.abort then sub:addOption(getText("ContextMenu_TLG_Abort"), nil, function() req("machine.abort", { target = ref }) end) end
+    if c.abort then
+        -- Abort batch on what an earlier abort kept throws it away: it
+        -- asks first, and says so beside the entry.
+        local kept = rec.state == "OutputReady" and rec.stoppedEarly == true
+        local o = sub:addOption(getText("ContextMenu_TLG_Abort"), nil, function()
+            if kept then
+                TLG.UI.Confirm.ask(getText("IGUI_TLG_Confirm_AbortAgain"), function() req("machine.abort", { target = ref }) end,
+                    playerNum)
+            else
+                req("machine.abort", { target = ref })
+            end
+        end)
+        if kept then Tip.set(o, getText("IGUI_TLG_Tip_AbortAgain"), world) end
+    end
 end
 
 function Menu.fill(playerNum, context, items)

@@ -388,3 +388,193 @@ T.case("integration: the firebox's second entry shows with a plank carried that 
     ISContextMenu, TLG.Net.request = saved.ISContextMenu, saved.request
     if not ok then error(err, 0) end
 end)
+
+T.case("integration: the workshop menu offers what applies to the project's state", function()
+    local function offered(state)
+        local e = Workshop.entriesFor(state)
+        local out = {}
+        for _, k in ipairs({ "start", "deliver", "work", "cancel", "remove" }) do
+            if e[k] then out[#out + 1] = k end
+        end
+        return table.concat(out, ",")
+    end
+    T.eq(offered("none"), "start")
+    T.eq(offered("InProgress"), "deliver,work,cancel")
+    T.eq(offered("Planned"), "start", "made and not begun: only Start takes it further")
+    T.eq(offered("Commissioned"), "remove")
+    for _, state in ipairs({ "Cancelled", "Removed", "Reverted", "Invalidated" }) do
+        T.eq(offered(state), "start", state .. ": a new project can start")
+    end
+    T.eq(offered("SomethingNewer"), "start,deliver,work,cancel,remove", "a state this build does not know: everything")
+    -- The state on the client's copy: a generator's mod data, a vehicle's Engine part's.
+    local function generator(md) return { getModData = function() return md end } end
+    local function vehicle(md)
+        return { getPartById = function(_, id) return id == "Engine" and { getModData = function() return md end } or nil end }
+    end
+    T.eq(Workshop.projectState(generator({}), "generator"), "none")
+    T.eq(Workshop.projectState(generator({ tlgConv = { state = "InProgress" } }), "generator"), "InProgress")
+    T.eq(Workshop.projectState(vehicle({ tlgConv = { state = "Commissioned" } }), "vehicle"), "Commissioned")
+    T.eq(Workshop.projectState(vehicle({}), "vehicle"), "none")
+    T.eq(Workshop.projectState({ getPartById = function() return nil end }, "vehicle"), "none", "no engine")
+    T.eq(Workshop.projectState({}, "generator"), "none", "a device that cannot be read")
+    T.eq(Workshop.projectState(generator({ tlgConv = "broken" }), "generator"), "none")
+end)
+
+T.case("integration: Start's tooltip lists what the conversion asks for and marks what is missing", function()
+    withText(bracket, function()
+        local def = TLG.Registry.need("conversion", "flex_generator")
+        -- Without the character's own numbers: the list alone.
+        local t = Workshop.requirements(def, nil)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Skills:[IGUI_perks_Electricity] 2, [IGUI_perks_Mechanics] 2]"), t)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Knows:Generator]"), t)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Tools:<Base.Pliers>, <Base.Screwdriver>, <Base.Wrench>]"), t)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Parts:1 <Base.ElectricWire>, 1 <Base.RubberHose>, 4 <Base.Screws>]"), t)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Hours:7.5]") and has(t, "[IGUI_TLG_ConvReq_Drain]"), t)
+        T.ok(not has(t, "IGUI_TLG_ConvReq_Missing") and not has(t, "IGUI_TLG_ConvReq_SkillLow"), t)
+        -- A character short of a skill, the magazine, a tool and some screws.
+        t = Workshop.requirements(def, { skills = { Mechanics = 2, Electricity = 1 }, recipes = {},
+            inventory = { ["Base.Wrench"] = 1, ["Base.Screwdriver"] = 1, ["Base.Screws"] = 3, ["Base.RubberHose"] = 1,
+                ["Base.ElectricWire"] = 2 } })
+        T.ok(has(t, "[IGUI_TLG_ConvReq_SkillLow:[IGUI_perks_Electricity] 2,1], [IGUI_perks_Mechanics] 2]"), t)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Knows:[IGUI_TLG_ConvReq_Missing:Generator]]"), t)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Tools:[IGUI_TLG_ConvReq_Missing:<Base.Pliers>], <Base.Screwdriver>, <Base.Wrench>]"), t)
+        T.ok(has(t, "[IGUI_TLG_ConvReq_Parts:1 <Base.ElectricWire>, 1 <Base.RubberHose>, "
+            .. "[IGUI_TLG_ConvReq_Missing:4 <Base.Screws>]]"), t)
+        -- With everything: nothing marked.
+        t = Workshop.requirements(def, { skills = { Mechanics = 5, Electricity = 5 }, recipes = { Generator = true },
+            inventory = { ["Base.Wrench"] = 1, ["Base.Screwdriver"] = 1, ["Base.Pliers"] = 1, ["Base.Screws"] = 4,
+                ["Base.RubberHose"] = 1, ["Base.ElectricWire"] = 1 } })
+        T.ok(not has(t, "IGUI_TLG_ConvReq_Missing") and not has(t, "IGUI_TLG_ConvReq_SkillLow"), t)
+        -- Every conversion's requirements can be listed.
+        for _, id in ipairs(TLG.Registry.ids("conversion")) do
+            T.ok(has(Workshop.requirements(TLG.Registry.need("conversion", id), nil), "IGUI_TLG_ConvReq_Hours"), id)
+        end
+    end)
+end)
+
+T.case("integration: Cancel and Remove ask first, and the menu follows the device's project", function()
+    local saved = { instanceof = instanceof, getSpecificPlayer = getSpecificPlayer, getText = getText,
+        ISContextMenu = ISContextMenu, request = TLG.Net.request, ask = TLG.UI.Confirm.ask, getCell = getCell,
+        JoypadState = JoypadState }
+    local function context()
+        local c = { options = {} }
+        function c:addOption(name, target, fn)
+            local option = { name = name, onSelect = fn }
+            self.options[#self.options + 1] = option
+            return option
+        end
+        function c:addSubMenu(option, sub) option.sub = sub end
+        return c
+    end
+    local md, sent, asked, answer = {}, {}, {}, false
+    local square = { getX = function() return 11 end, getY = function() return 10 end, getZ = function() return 0 end }
+    local gen = { class = "IsoGenerator", getSquare = function() return square end, getObjectIndex = function() return 1 end,
+        getGeneratorItemType = function() return "Base.Generator" end, getModData = function() return md end }
+    instanceof = function(o, class) return type(o) == "table" and o.class == class end
+    getText = function(key, a) if a ~= nil then return key .. ":" .. tostring(a) end return key end
+    getSpecificPlayer = function() return { getVehicle = function() return nil end, getSquare = function() return square end } end
+    getCell = function() return { getVehicles = function() return { toArray = function() return {} end } end } end
+    JoypadState = nil
+    ISContextMenu = { getNew = context }
+    TLG.Net.request = function(command, args) sent[#sent + 1] = command end
+    TLG.UI.Confirm.ask = function(text, onYes)
+        asked[#asked + 1] = text
+        if answer then onYes() end
+    end
+    local function entries()
+        local c = context()
+        Workshop.fill(0, c, { gen }, false)
+        local byName, names = {}, {}
+        for _, o in ipairs(c.options[1].sub.options) do
+            byName[o.name] = o
+            names[#names + 1] = (string.gsub(o.name, ":.*", ""))
+        end
+        return byName, table.concat(names, ",")
+    end
+    local ok, err = pcall(function()
+        local e, names = entries()
+        T.eq(names, "ContextMenu_TLG_ConvStatus,ContextMenu_TLG_ConvBegin,ContextMenu_TLG_ConvBegin", "no project")
+        md.tlgConv = { state = "InProgress" }
+        e, names = entries()
+        T.eq(names, "ContextMenu_TLG_ConvStatus,ContextMenu_TLG_ConvDeliver,ContextMenu_TLG_ConvJoin,ContextMenu_TLG_ConvCancel")
+        -- Cancel: asked, nothing sent on No, the request on Yes.
+        e.ContextMenu_TLG_ConvCancel.onSelect()
+        T.eq(asked[#asked], "IGUI_TLG_Confirm_ConvCancel"); T.eq(#sent, 0, "No: nothing sent")
+        answer = true
+        e.ContextMenu_TLG_ConvCancel.onSelect()
+        T.eq(sent[#sent], "conversion.cancel")
+        -- Hand over parts needs no question.
+        local before = #asked
+        e.ContextMenu_TLG_ConvDeliver.onSelect()
+        T.eq(sent[#sent], "conversion.deliver"); T.eq(#asked, before)
+        md.tlgConv = { state = "Commissioned" }
+        e, names = entries()
+        T.eq(names, "ContextMenu_TLG_ConvStatus,ContextMenu_TLG_ConvRemove")
+        answer = false
+        local n = #sent
+        e.ContextMenu_TLG_ConvRemove.onSelect()
+        T.eq(asked[#asked], "IGUI_TLG_Confirm_ConvRemove"); T.eq(#sent, n)
+        answer = true
+        e.ContextMenu_TLG_ConvRemove.onSelect()
+        T.eq(sent[#sent], "conversion.remove")
+        md.tlgConv = { state = "Cancelled" }
+        e, names = entries()
+        T.eq(names, "ContextMenu_TLG_ConvStatus,ContextMenu_TLG_ConvBegin,ContextMenu_TLG_ConvBegin", "a new project can start")
+    end)
+    instanceof, getSpecificPlayer, getText, getCell = saved.instanceof, saved.getSpecificPlayer, saved.getText, saved.getCell
+    ISContextMenu, TLG.Net.request, TLG.UI.Confirm.ask, JoypadState = saved.ISContextMenu, saved.request, saved.ask,
+        saved.JoypadState
+    if not ok then error(err, 0) end
+end)
+
+T.case("integration: Abort batch on what an abort kept asks before throwing it away", function()
+    local saved = { instanceof = instanceof, getSpecificPlayer = getSpecificPlayer, getText = getText,
+        ISContextMenu = ISContextMenu, request = TLG.Net.request, ask = TLG.UI.Confirm.ask, isClient = isClient }
+    local function context()
+        local c = { options = {} }
+        function c:addOption(name, target, fn)
+            local option = { name = name, onSelect = fn }
+            self.options[#self.options + 1] = option
+            return option
+        end
+        function c:addSubMenu(option, sub) option.sub = sub end
+        return c
+    end
+    local md, sent, asked = {}, {}, {}
+    local square = { getX = function() return 10 end, getY = function() return 20 end, getZ = function() return 0 end }
+    local still = { class = "InventoryItem", getFullType = function() return "TLG.PotStill" end,
+        getID = function() return 5 end, getModData = function() return md end }
+    still.getWorldItem = function() return { getSquare = function() return square end } end
+    instanceof = function(value, class) return value.class == class end
+    getText = function(key) return key end
+    getSpecificPlayer = function() return carrying({}) end
+    -- As a multiplayer client: the record as sent, not brought forward.
+    isClient = function() return true end
+    ISContextMenu = { getNew = context }
+    TLG.Net.request = function(command) sent[#sent + 1] = command end
+    TLG.UI.Confirm.ask = function(text, onYes)
+        asked[#asked + 1] = text
+        onYes()
+    end
+    local function abort()
+        local c = context()
+        Machine.fill(0, c, { still })
+        for _, o in ipairs(c.options[1].sub.options) do
+            if o.name == "ContextMenu_TLG_Abort" then return o end
+        end
+    end
+    local ok, err = pcall(function()
+        md.tlgProc = { state = "Processing", machine = "pot_still" }
+        abort().onSelect()
+        T.eq(sent[#sent], "machine.abort"); T.eq(#asked, 0, "a running batch: no question, its product is kept")
+        md.tlgProc = { state = "OutputReady", stoppedEarly = true, machine = "pot_still" }
+        abort().onSelect()
+        T.eq(asked[#asked], "IGUI_TLG_Confirm_AbortAgain"); T.eq(#sent, 2)
+        md.tlgProc = { state = "Faulted", pause = "batch_spoiled", machine = "pot_still" }
+        abort().onSelect()
+        T.eq(#asked, 1, "a spoiled batch: nothing left worth asking about"); T.eq(#sent, 3)
+    end)
+    instanceof, getSpecificPlayer, getText, isClient = saved.instanceof, saved.getSpecificPlayer, saved.getText, saved.isClient
+    ISContextMenu, TLG.Net.request, TLG.UI.Confirm.ask = saved.ISContextMenu, saved.request, saved.ask
+    if not ok then error(err, 0) end
+end)

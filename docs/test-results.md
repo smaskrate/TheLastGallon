@@ -14,6 +14,7 @@ runtime tests.
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-SP and RT-MP: loads leaving favourite items alone, the firebox's planks entry and the loads' tooltips (offline only: `test_biodiesel_commands.lua`, `test_menu_replies.lua`); on a server, whether the favourite mark a client sets reaches the server's copy of the item, which the loads read (`TLG/Integration/Picks.lua`) | Written 2026-11-14, not in the harness yet. Until the server case is run, a server may take favourite items |
+| RT-MP: the Workshop menu choosing its entries from a client's copy of the project (`WorkshopMenu.projectState`: a generator's mod data, a vehicle's Engine part's). RT-SP and RT-MP: the yes/no question before **Cancel the project**, **Remove the conversion** and a second **Abort batch**, which the harness answers without opening it (`TLGHarness/Confirm.lua`); a controller on it | Written 2026-11-14. If a client's copy lacked a project the server has, the menu would offer only **Start: …**, which the server refuses, and nothing to carry on with: to be run on a server before a release for servers |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
@@ -8774,3 +8775,87 @@ in this chain, whose text the mode does not keep.
 
 Evidence:
 [run 416](evidence/2026-11-14_rt-sp_harness_run416_biodiesel_picks_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 417 (the Workshop menu follows the project; Cancel, Remove and a second Abort ask first)
+
+Branch `feature/gas-generators` after `afb3d60`, 42.22.2, with the second
+part of the review's R4:
+
+* The Workshop menu offers what applies to the project's state, read
+  from the device (`WorkshopMenu.projectState`, `entriesFor`): without a
+  project **Project status** and the **Start: …** entries; in progress
+  **Hand over parts**, **Work on it** and **Cancel the project**; on a
+  converted engine **Remove the conversion**.
+* A **Start: …** entry's tooltip lists what the conversion asks for and
+  marks what the character lacks (`WorkshopMenu.requirements`).
+* **Cancel the project**, **Remove the conversion** and **Abort batch**
+  on what an earlier abort kept ask yes or no first
+  (`TLG/UI/Confirm.lua`). The harness answers yes without opening the
+  dialog (`TLGHarness/Confirm.lua`, new), and its screenshot mode expects
+  a generator without a project to offer Project status and the two
+  Start entries.
+
+Offline, `tools/run-tests.ps1` passed 346 of 346 cases, four of them new
+in `test_menu_replies.lua` (the entries by state and the state read from
+a generator and a vehicle; the requirements with and without what is
+missing; Cancel and Remove asked, sent only on Yes; the second Abort
+asked, the first and a spoiled batch's not). The audit suite passed 40
+of 40.
+
+`tools/run-sp-harness.ps1`, the full mode:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 417 | 106/0, then 14/0 |
+
+The same checks as launch 415.
+
+* On a generator and on a standard car, **Start: …**, **Hand over
+  parts** and **Work on it** were found and clicked in the menu as their
+  projects went from none to in progress to commissioned: the generator's
+  state read from its mod data, the car's from its Engine part's.
+* A generator without a project offered both Start entries
+  (`LOOP.gen_start_offers_flex_and_gas`).
+
+The console holds no warning or error of the mod, no failed tooltip
+(`workshop requirements`, `load preview`).
+
+Not run: the yes/no dialog itself, with a mouse or a controller;
+**Cancel the project** and **Remove the conversion** in this mode; a
+second **Abort batch** (the `controls` mode clicks it); the tooltips; the
+menu on a server, where it goes by the client's copy of the project
+(standing list above); the screenshot mode with its new expectation; the
+performance mode.
+
+Evidence:
+[run 417](evidence/2026-11-14_rt-sp_harness_run417_workshop_by_state_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 418 (the second Abort batch through its question)
+
+Branch `feature/gas-generators` after `afb3d60`, 42.22.2, with launch
+417's changes, nothing added since.
+`tools/run-sp-harness.ps1 -Mode controls -TimeoutMinutes 30`:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 418 | 32/0 |
+
+The same count as the mode's earlier runs.
+
+* `RTC.second_abort_throws_it_away_F1`: the second **Abort batch**,
+  clicked in the menu on a vessel holding what the first abort kept,
+  went through `Confirm.ask`, which the harness answers yes
+  (`TLGHarness/Confirm.lua`); the vessel was Ready and the dialog listed
+  what was thrown away. The run did not wait on a dialog.
+* The first abort of a running batch and the abort of a spoiled one
+  went through without the question, as before.
+* The abort dialogs carry units: "Ethanol: 0.14 L", "Sugar: 5.75 kg",
+  "Thrown away: Spent lime 4.49 kg".
+
+The console holds no warning or error of the mod.
+
+Not run: the yes/no dialog itself and its No answer in game (the harness
+never opens it); the entry's tooltip.
+
+Evidence:
+[run 418](evidence/2026-11-14_rt-sp_harness_run418_controls_second_abort_42.22.2.txt).

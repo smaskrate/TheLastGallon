@@ -13,10 +13,13 @@ require "TLG/Integration/ConversionDevices"
 require "TLG/Actions/ISTLGConversionWork"
 require "TLG/UI/Clicked"
 require "TLG/UI/Format"
+require "TLG/UI/Tip"
+require "TLG/UI/Confirm"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.WorkshopMenu = TLG.UI.WorkshopMenu or {}
 local Menu = TLG.UI.WorkshopMenu
+local CD = TLG.Integration.ConversionDevices
 
 local function show(text)
     local w, h = 440, 260
@@ -133,7 +136,104 @@ function Menu.work(player, deviceRef, device)
     end
 end
 
-local function addDeviceMenu(context, player, titleKey, deviceRef, device, kind, chassis)
+-- The project's state on this client's copy of the device ("none" without
+-- one): a generator's mod data, a vehicle's Engine part's
+-- (ConversionDevices.store sends both to the clients). Read as stored, with
+-- no schema check or vault: the menu only chooses its entries from it, and
+-- the authority judges every request. On a server the copy of a vehicle's
+-- part is NOT RUN.
+function Menu.projectState(device, kind)
+    local ok, md = pcall(function()
+        if kind == "vehicle" then return (CD.vehicleStore(device)) end
+        return device:getModData()
+    end)
+    local project = ok and type(md) == "table" and md[CD.KEY] or nil
+    if type(project) ~= "table" or type(project.state) ~= "string" then return "none" end
+    return project.state
+end
+
+-- Which entries apply in a project's state; every one for a state this
+-- build does not know, as the menu offered before.
+function Menu.entriesFor(state)
+    -- Planned: a project made and not begun, which only Start takes further
+    -- (conversion.begin makes a new one).
+    if state == "none" or state == "Planned" or TLG.Domain.ConversionService.TERMINAL[state] then return { start = true } end
+    if state == "InProgress" then return { work = true, deliver = true, cancel = true } end
+    if state == "Commissioned" then return { remove = true } end
+    return { start = true, work = true, deliver = true, cancel = true, remove = true }
+end
+
+local function itemName(fullType)
+    local ok, name = pcall(getItemNameFromFullType, fullType)
+    if ok and name and name ~= "" then return name end
+    return fullType
+end
+
+-- What a conversion asks for, as the lines of its Start entry's tooltip:
+-- skills, know-how, tools, parts, the hours of work and the empty tank.
+-- With `actor` (ConversionDevices.actor) what the character lacks is
+-- marked. NOT RUN in game.
+function Menu.requirements(def, actor)
+    local lines = {}
+    local function mark(text, has)
+        if actor ~= nil and not has then return getText("IGUI_TLG_ConvReq_Missing", text) end
+        return text
+    end
+    local know = def.requiredKnowledge or {}
+    local skills = {}
+    for _, perk in ipairs(TLG.Tables.sortedKeys(know.skills or {})) do
+        local need = know.skills[perk]
+        local have = actor and actor.skills and actor.skills[perk] or 0
+        local text = Menu.missingText(perk .. ":" .. tostring(need))
+        if actor ~= nil and have < need then text = getText("IGUI_TLG_ConvReq_SkillLow", text, tostring(have)) end
+        skills[#skills + 1] = text
+    end
+    if #skills > 0 then lines[#lines + 1] = getText("IGUI_TLG_ConvReq_Skills", table.concat(skills, ", ")) end
+    -- Known as the authority counts it (Project.lua, recipeSet): a name as a
+    -- key with a true value, or as a value.
+    local recipes, known = {}, {}
+    for k, v in pairs(actor and actor.recipes or {}) do
+        if type(k) == "string" and v then known[k] = true end
+        if type(v) == "string" then known[v] = true end
+    end
+    for _, name in ipairs(know.recipes or {}) do
+        recipes[#recipes + 1] = mark(name, known[name] == true)
+    end
+    if #recipes > 0 then lines[#lines + 1] = getText("IGUI_TLG_ConvReq_Knows", table.concat(recipes, ", ")) end
+    -- Tools of every stage, each once; parts of every stage, summed.
+    local tools, parts = {}, {}
+    for _, stage in ipairs(TLG.Tables.sortedKeys(def.requiredTools or {})) do
+        for _, tool in ipairs(def.requiredTools[stage]) do tools[tool] = true end
+    end
+    for _, stage in ipairs(TLG.Tables.sortedKeys(def.requiredModules or {})) do
+        for _, part in ipairs(TLG.Tables.sortedKeys(def.requiredModules[stage])) do
+            parts[part] = (parts[part] or 0) + def.requiredModules[stage][part]
+        end
+    end
+    local inv = actor and actor.inventory or {}
+    local list = {}
+    for _, tool in ipairs(TLG.Tables.sortedKeys(tools)) do
+        list[#list + 1] = mark(itemName(tool), (inv[tool] or 0) >= 1)
+    end
+    if #list > 0 then lines[#lines + 1] = getText("IGUI_TLG_ConvReq_Tools", table.concat(list, ", ")) end
+    list = {}
+    for _, part in ipairs(TLG.Tables.sortedKeys(parts)) do
+        list[#list + 1] = mark(tostring(parts[part]) .. " " .. itemName(part), (inv[part] or 0) >= parts[part])
+    end
+    if #list > 0 then lines[#lines + 1] = getText("IGUI_TLG_ConvReq_Parts", table.concat(list, ", ")) end
+    local hours = 0
+    for _, stage in ipairs(def.workStages or {}) do hours = hours + (stage.hours or 0) end
+    lines[#lines + 1] = getText("IGUI_TLG_ConvReq_Hours", string.format("%.1f", hours))
+    if def.fuelStorageChanges and def.fuelStorageChanges.drainRequired then
+        lines[#lines + 1] = getText("IGUI_TLG_ConvReq_Drain")
+    end
+    return table.concat(lines, " <LINE> ")
+end
+
+-- The Workshop entry of a device: Project status always, then what applies
+-- to the project's state (Menu.entriesFor). Cancel and Remove ask first:
+-- both lose parts.
+local function addDeviceMenu(context, player, playerNum, titleKey, deviceRef, device, kind, chassis)
     local root = context:addOption(getText(titleKey), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
@@ -142,16 +242,40 @@ local function addDeviceMenu(context, player, titleKey, deviceRef, device, kind,
             show(Menu.describe(r))
         end)
     end)
-    for _, row in ipairs(TLG.Domain.ConversionService.matrix()) do
-        if row.deviceKind == kind and row.chassis == chassis and TLG.Integration.ConversionDevices.offered(row.conversion) then
-            sub:addOption(getText("ContextMenu_TLG_ConvBegin", getText("IGUI_TLG_Conversion_" .. row.conversion)), nil,
-                function() req("conversion.begin", { device = deviceRef, conversion = row.conversion }) end)
+    local offer = Menu.entriesFor(Menu.projectState(device, kind))
+    if offer.start then
+        for _, row in ipairs(TLG.Domain.ConversionService.matrix()) do
+            if row.deviceKind == kind and row.chassis == chassis and CD.offered(row.conversion) then
+                local o = sub:addOption(getText("ContextMenu_TLG_ConvBegin", getText("IGUI_TLG_Conversion_" .. row.conversion)),
+                    nil, function() req("conversion.begin", { device = deviceRef, conversion = row.conversion }) end)
+                local ok, text = pcall(function()
+                    local known, actor = pcall(CD.actor, player, nil, row.conversion)
+                    return Menu.requirements(TLG.Registry.need("conversion", row.conversion), known and actor or nil)
+                end)
+                if ok then TLG.UI.Tip.set(o, text, true) else TLG.Log.error("workshop requirements: %s", tostring(text)) end
+            end
         end
     end
-    sub:addOption(getText("ContextMenu_TLG_ConvDeliver"), nil, function() req("conversion.deliver", { device = deviceRef }) end)
-    sub:addOption(getText("ContextMenu_TLG_ConvJoin"), nil, function() Menu.work(player, deviceRef, device) end)
-    sub:addOption(getText("ContextMenu_TLG_ConvCancel"), nil, function() req("conversion.cancel", { device = deviceRef }) end)
-    sub:addOption(getText("ContextMenu_TLG_ConvRemove"), nil, function() req("conversion.remove", { device = deviceRef }) end)
+    if offer.deliver then
+        sub:addOption(getText("ContextMenu_TLG_ConvDeliver"), nil, function() req("conversion.deliver", { device = deviceRef }) end)
+    end
+    if offer.work then
+        sub:addOption(getText("ContextMenu_TLG_ConvJoin"), nil, function() Menu.work(player, deviceRef, device) end)
+    end
+    if offer.cancel then
+        sub:addOption(getText("ContextMenu_TLG_ConvCancel"), nil, function()
+            TLG.UI.Confirm.ask(getText("IGUI_TLG_Confirm_ConvCancel"), function()
+                req("conversion.cancel", { device = deviceRef })
+            end, playerNum)
+        end)
+    end
+    if offer.remove then
+        sub:addOption(getText("ContextMenu_TLG_ConvRemove"), nil, function()
+            TLG.UI.Confirm.ask(getText("IGUI_TLG_Confirm_ConvRemove"), function()
+                req("conversion.remove", { device = deviceRef })
+            end, playerNum)
+        end)
+    end
 end
 
 function Menu.fill(playerNum, context, worldobjects, test)
@@ -161,12 +285,12 @@ function Menu.fill(playerNum, context, worldobjects, test)
     -- With a controller there is no cursor: the nearest in reach, as before.
     local gen = TLG.UI.Clicked.generator(playerNum, worldobjects, function() return nearbyGenerator(player) end)
     if gen then
-        addDeviceMenu(context, player, "ContextMenu_TLG_ConvGenerator",
+        addDeviceMenu(context, player, playerNum, "ContextMenu_TLG_ConvGenerator",
             TLG.Authority.Resolver.refForObject(gen, "generator"), gen, "generator", gen:getGeneratorItemType())
     end
     local v = TLG.UI.Clicked.vehicle(playerNum, worldobjects, function() return nearbyVehicle(player) end)
     if v then
-        addDeviceMenu(context, player, "ContextMenu_TLG_ConvVehicle", { kind = "vehicle", id = v:getId() }, v,
+        addDeviceMenu(context, player, playerNum, "ContextMenu_TLG_ConvVehicle", { kind = "vehicle", id = v:getId() }, v,
             "vehicle", v:getScriptName())
     end
 end

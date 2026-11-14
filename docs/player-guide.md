@@ -534,8 +534,9 @@ weaker wash for a still, a still's spirit, a drying column's ethanol. The
 rest (a still's undistilled wash, spent lime) is thrown away, and the
 message lists both. A still makes no spirit while it heats up, during its
 first hour, so a still aborted then keeps nothing and its wash is thrown
-away. Choose **Abort batch** again to throw the kept part away too; a
-spoiled batch is emptied the same way.
+away. Choose **Abort batch** again to throw the kept part away too: the
+game asks first, since nothing of the batch is left after that. A
+spoiled batch is emptied the same way, without the question.
 
 ### What has been checked
 
@@ -893,8 +894,17 @@ only for a click on the car, or on the generator or its tile:
    time away never counts: choose **Work on it** again to carry on. A
    helper can work alongside you.
 4. There is no progress bar: **Project status** shows which stage the work
-   has reached. When it reads **Converted and commissioned**, the engine
-   is flex.
+   has reached and the hours of work done and needed. When it reads
+   **Converted and commissioned**, the engine is flex.
+
+The menu offers what applies to the project. Without one it has
+**Project status** and the **Start: …** entries; hold the pointer on a
+**Start: …** entry to read the skills, know-how, tools and parts it asks
+for, with what you lack marked, the hours of work and whether the tank
+must be empty. With a project in progress it has **Hand over parts**,
+**Work on it** and **Cancel the project**; on a converted engine,
+**Remove the conversion**. **Cancel the project** and **Remove the
+conversion** ask before they act, since both lose parts.
 
 ![A generator's menu with Workshop: convert this generator open: Project status, Start: Flex-fuel generator conversion, Hand over parts, Work on it, Cancel the project, Remove the conversion](images/workshop-menu.jpg)
 

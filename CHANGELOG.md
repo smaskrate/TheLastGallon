@@ -20,6 +20,17 @@ and the wood gasifier (D-040) are not.
   progress shows the hours of work done and needed. Checked in single
   player on a fermentation just begun (launch 414); the other lines are
   not checked in game.
+* Changed: the Workshop menu offers what applies to the project. Without
+  one, **Project status** and the **Start: …** entries; in progress,
+  **Hand over parts**, **Work on it** and **Cancel the project**; on a
+  converted engine, **Remove the conversion**. Before, all six showed in
+  every state. A **Start: …** entry shows what the conversion asks for
+  when the pointer is on it, with what the character lacks marked. Not
+  checked on a server, where the menu goes by the player's own copy of
+  the project.
+* **Cancel the project**, **Remove the conversion** and **Abort batch**
+  on what an earlier abort kept ask before they act. Not checked in
+  game.
 * A machine's or a gasifier's load never takes an item marked as a
   favourite: crops and sugar, water, yeast, wood, charcoal, oil and
   quicklime stay in the bag, and a favourite fuel can is not chosen to

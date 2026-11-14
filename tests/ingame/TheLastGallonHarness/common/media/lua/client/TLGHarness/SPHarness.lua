@@ -15186,9 +15186,9 @@ RT.DS.workshopMenu = RT.DS.menuShot({ name = "workshop_menu", rootKey = GEN_MENU
         ISWorldObjectContextMenu.createMenu(0, objs, x, y)
     end,
     fill = function(c) TLG.UI.WorkshopMenu.fill(0, c, { RT.DS.gen }, false) end,
+    -- A generator without a project: Project status and what can be started.
     want = function() return { getText("ContextMenu_TLG_ConvStatus"), startText("flex_generator"),
-        getText("ContextMenu_TLG_ConvDeliver"), getText("ContextMenu_TLG_ConvJoin"), getText("ContextMenu_TLG_ConvCancel"),
-        getText("ContextMenu_TLG_ConvRemove") } end })
+        startText("gas_generator") } end })
 
 -- Start and Hand over parts, as the menu chooses them, so Project status
 -- has a project to show.
