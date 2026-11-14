@@ -397,6 +397,28 @@ their replacement.
   on the server (300 ticks in 78.8 s at its start), which the watch needs.
 
 ## D-016 UI feedback through rich-text dialogs
+* Current rule (amended 2026-11-14, UX review R6): a window is for what
+  is read and for what must not be missed; what an action did is a line
+  over the character (`TLG/UI/Say.lua`: the game's `HaloTextHelper`,
+  green for done, red for a refusal). The menus choose by the kind of
+  reply, never by the text's length, so that a translation does not turn
+  a line into a window:
+  * windows: **Status** of a machine, a gasifier and the gas, **What I
+    know about it**, a test's result, every workshop answer (they list
+    parts and hours), a refusal with a list (what was found, what is
+    missing), an abort, a collect or a load that threw something away,
+    and the reactor's load that also emptied the retort;
+  * lines: a treatment, a load, a feed (with what the firebox now
+    holds), a collect, Pause and Resume (the state), a gasifier's load,
+    light, put out and clean-out, a propane tank connected or removed,
+    the pump's product, and a refusal of one sentence.
+  A text with a line break, a missing character or a failing call opens
+  the window: a reply is never dropped. Reason: one window to close for
+  each feed of a firebox, and closing a window sets the game's speed back
+  to 1 (`ISModalRichText.destroy`; whether that is felt in play was not
+  verified, review R14). Consequence accepted: after an action the state,
+  stage and site temperature are read in **Status**, no longer in the
+  action's own answer; a line lasts a few seconds and can be missed.
 * Decision: inspection and machine results are shown in `ISModalRichText`
   dialogs built from translated keys; unknown condition has its own wording.
 * Reason: readable without relying on colour or tiny world labels (spec §16).

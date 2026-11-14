@@ -15,19 +15,16 @@ require "TLG/UI/Clicked"
 require "TLG/UI/Format"
 require "TLG/UI/Tip"
 require "TLG/UI/Confirm"
+require "TLG/UI/Say"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.WorkshopMenu = TLG.UI.WorkshopMenu or {}
 local Menu = TLG.UI.WorkshopMenu
 local CD = TLG.Integration.ConversionDevices
 
-local function show(text)
-    local w, h = 440, 260
-    local modal = ISModalRichText:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
-        w, h, text, false, nil, nil, 0)
-    modal:initialise()
-    modal:addToUIManager()
-end
+local Say = TLG.UI.Say
+
+local function show(text) Say.window(text, 440, 260) end
 
 -- What is missing, in the player's words: items by display name (vanilla
 -- getItemNameFromFullType), skills as "Mechanics 4", recipes as named.
@@ -97,7 +94,18 @@ function Menu.describe(reply)
     return table.concat(lines, " <LINE> ")
 end
 
-local function req(command, args) TLG.Net.request(command, args, function(r) show(Menu.describe(r)) end) end
+-- A workshop reply: every step's answer lists parts or hours and is read
+-- in a window; a refusal that names nothing missing is one sentence over
+-- the character.
+local function tell(r)
+    if not r.ok and #(r.missing or {}) == 0 then
+        Say.refusal(Menu.describe(r))
+    else
+        show(Menu.describe(r))
+    end
+end
+
+local function req(command, args) TLG.Net.request(command, args, tell) end
 
 local function nearbyGenerator(player)
     local sq = player:getSquare()
@@ -126,7 +134,7 @@ end
 
 -- Walks to the engine area (vehicle) or next to the generator, then works.
 function Menu.work(player, deviceRef, device)
-    local action = ISTLGConversionWork:new(player, deviceRef, device, function(r) show(Menu.describe(r)) end)
+    local action = ISTLGConversionWork:new(player, deviceRef, device, tell)
     if deviceRef.kind == "vehicle" then
         local engine = device:getPartById("Engine")
         if engine then ISTimedActionQueue.add(ISPathFindAction:pathToVehicleArea(player, device, engine:getArea())) end
@@ -234,6 +242,7 @@ end
 -- to the project's state (Menu.entriesFor). Cancel and Remove ask first:
 -- both lose parts.
 local function addDeviceMenu(context, player, playerNum, titleKey, deviceRef, device, kind, chassis)
+    Say.from(playerNum)
     local root = context:addOption(getText(titleKey), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)

@@ -13,6 +13,7 @@ require "TLG/UI/Format"
 require "TLG/UI/Clicked"
 require "TLG/UI/Tip"
 require "TLG/UI/LoadPreview"
+require "TLG/UI/Say"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.MachineMenu = TLG.UI.MachineMenu or {}
@@ -20,13 +21,9 @@ local Menu = TLG.UI.MachineMenu
 local Machines, Fmt, Tip = TLG.Integration.Machines, TLG.UI.Format, TLG.UI.Tip
 local Picks, Preview = TLG.Integration.Picks, TLG.UI.LoadPreview
 
-local function show(text)
-    local w, h = 420, 240
-    local modal = ISModalRichText:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
-        w, h, text, false, nil, nil, 0)
-    modal:initialise()
-    modal:addToUIManager()
-end
+local Say = TLG.UI.Say
+
+local function show(text) Say.window(text, 420, 240) end
 
 -- In the player's units (vanilla's weather radio formats the same way,
 -- SRC server/radio/ISWeatherChannel.lua:209).
@@ -179,12 +176,44 @@ function Menu.failureText(reply)
     return text
 end
 
+-- What an action did, in one sentence for over the character; nil for a
+-- reply that belongs in a window: Status, which is read; an abort and
+-- anything thrown away, which the player must not miss; and the reactor's
+-- load that also emptied the retort (two things happened). The sentence is
+-- what the action took or gave (Menu.did), for a feed with what the firebox
+-- now holds, and for an action that moved nothing (Pause, Resume) the
+-- machine's state. The rest of the dialog's lines stay in Status.
+function Menu.line(reply)
+    -- A reply that does not say what was asked is read as a status.
+    if reply.command == nil or reply.command == "machine.status" or reply.aborted then return nil end
+    if type(reply.discarded) == "table" and not TLG.Tables.isEmpty(reply.discarded) then return nil end
+    local def = reply.machine and TLG.Registry.get("machine", reply.machine)
+    local kind = def and def.kind
+    local did = Menu.did(reply, kind)
+    if did == nil then
+        local text = kindText("IGUI_TLG_MachineState_" .. tostring(reply.state), kind)
+        if reply.pause then text = text .. " " .. kindText("IGUI_TLG_Pause_" .. tostring(reply.pause), kind) end
+        return text
+    end
+    if string.find(did, "<LINE>", 1, true) then return nil end
+    if reply.command == "machine.addFuel" and reply.firebox and def and def.firebox and def.firebox.capacityKg then
+        did = did .. " " .. getText("IGUI_TLG_FireboxOf", string.format("%.1f", reply.firebox),
+            string.format("%.0f", def.firebox.capacityKg))
+    end
+    return did
+end
+
+-- A refusal goes over the character unless it lists what was found; what
+-- an action did goes there too (Menu.line), the rest opens a window.
 local function onReply(reply)
     if not reply.ok then
-        show(Menu.failureText(reply))
+        Say.refusal(Menu.failureText(reply))
         return
     end
-    show(Menu.describe(reply))
+    local line = Menu.line(reply)
+    -- A Resume that leaves the machine waiting is not good news.
+    local good = not (reply.command == "machine.resume" and reply.state == "Paused")
+    if line then Say.line(line, good) else show(Menu.describe(reply)) end
 end
 
 local function req(command, args) TLG.Net.request(command, args, onReply) end
@@ -293,6 +322,7 @@ local function addFirebox(sub, player, rec, def, ref, world)
 end
 
 local function addMachine(playerNum, context, item, title, world)
+    Say.from(playerNum)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
     local def = TLG.Registry.need("machine", Machines.machineFor(item))

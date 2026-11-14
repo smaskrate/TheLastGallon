@@ -5,8 +5,20 @@
 Only the menus' texts are listed here so far; the gas generator, propane
 and the wood gasifier (D-040) are not.
 
-* After a load, a feed of the firebox or a collect, a machine's dialog
-  lists what the action took and gave, for example "Loaded: 6.00 kg of
+* Changed: what an action did is said in a line over the character, with
+  no window to close: a treatment of a can, a load, a feed of the
+  firebox, a collect, Pause and Resume, a gasifier's load, lighting,
+  putting out and cleaning, a propane tank connected or removed, and
+  **Read what this pump gives**. A refusal of one sentence is said the
+  same way, in red. Windows stay for what is read (**Status**, **What I
+  know about it**, a test's result, the workshop's answers), for a
+  refusal with a list, for an abort and for a collect or load that threw
+  something away. After an action the line holds what it took or gave;
+  the machine's state, stage and temperature are in **Status**. The
+  texts ran through the harness in single player (launches 421 and 422);
+  whether they showed over the character was not looked at.
+* After a load, a feed of the firebox or a collect, a machine's answer
+  says what the action took and gave, for example "Loaded: 6.00 kg of
   sugar equivalent, 30.00 L of water and the yeast." A reactor's load
   also says how much charcoal the emptied retort gave.
 * **Status** of a machine with a batch running says how far the current

@@ -51,6 +51,27 @@ under [Making biodiesel](#making-biodiesel) and [Diesel](#diesel).*
 *Dropped on the floor, left to right: the Field Manual: Fuel Systems, the
 Fuel Stabilizer, the Yeast Starter Culture and the Fuel Sampling Kit.*
 
+## How the mod answers
+
+What you do from the mod's menus is answered in one of two ways.
+
+* A line over your character, as the game's own short messages: what an
+  action did ("Added 9.00 kg of wood to the firebox. Firebox: 9.0 of
+  40 kg of wood", "Stabilizer added. The fuel will age more slowly from
+  now on."), green, and a refusal of one sentence ("You need a fuel
+  sampling kit."), red. There is nothing to close.
+* A window to close with **OK**: what you read (**Status**, **What I know
+  about it**, a test's result, the workshop's answers), a refusal that
+  lists what was found or what is missing, an aborted batch, and a
+  collect or load that threw something away.
+
+A line lasts a few seconds. After a load or a feed, a machine's state and
+how long the batch takes are in its **Status**.
+
+**Not checked in game:** how the lines look over the character. Their
+texts ran through the harness (launches 421 and 422), which cannot see
+the screen.
+
 ## Inspecting fuel
 
 Right-click a fuel can and open **Fuel (The Last Gallon)**. For a can on

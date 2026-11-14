@@ -16,6 +16,7 @@ runtime tests.
 | RT-SP and RT-MP: loads leaving favourite items alone, the firebox's planks entry and the loads' tooltips (offline only: `test_biodiesel_commands.lua`, `test_menu_replies.lua`); on a server, whether the favourite mark a client sets reaches the server's copy of the item, which the loads read (`TLG/Integration/Picks.lua`) | Written 2026-11-14, not in the harness yet. Until the server case is run, a server may take favourite items |
 | RT-MP: the Workshop menu choosing its entries from a client's copy of the project (`WorkshopMenu.projectState`: a generator's mod data, a vehicle's Engine part's). RT-SP and RT-MP: the yes/no question before **Cancel the project**, **Remove the conversion** and a second **Abort batch**, which the harness answers without opening it (`TLGHarness/Confirm.lua`); a controller on it | Written 2026-11-14. If a client's copy lacked a project the server has, the menu would offer only **Start: …**, which the server refuses, and nothing to carry on with: to be run on a server before a release for servers |
 | RT-SP: the Fuel entry of a tank from a real right-click on a vehicle (launch 419 stood in for the game's pick under the cursor), a tank's samples after a save and reload, the line after a refuel at a pump or a stopped refuel (offline only: `test_tank_fuel.lua`), the Generator Info window on screen (its text: launch 419). RT-MP, all of R5: the Fuel entry of a tank and its dialogs; that the refuel line reaches only the player who poured; whether a client's world record carries `dieselVehicles` (until shown, a client's menu leaves the engine line out, D-042); Generator Info from a client's copy of the generator's mod data | Not in the harness yet (UX review R5, 2026-11-14; single player otherwise run in launch 419). The server rows are to be run before a release for servers |
+| RT-SP and RT-MP: a reply said over the character (`TLG/UI/Say.lua`): how the line looks, two lines sent one after the other, a line while the game is paused, a controller's second player (offline only: `test_say.lua`). The screenshot modes (`docs-shots`, `sp-rtds`) expect a window for every reply they photograph and were not run since | UX review R6, 2026-11-14: the harness reads a line's text where the menu says it and cannot see the screen. To be looked at in play |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
@@ -8944,3 +8945,41 @@ petrol to a petrol car); the rest as in launch 419.
 
 Evidence:
 [run 420](evidence/2026-11-14_rt-sp_harness_run420_full_after_r5_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launches 421 and 422 (replies over the character: UX review R6)
+
+Branch `feature/gas-generators` after `f877fe5`, 42.22.2, with R6 in the
+working tree (D-016 as amended): every reply of the five menus goes
+through `TLG/UI/Say.lua`, a line over the character for what an action
+did and for a refusal of one sentence, a window for the rest. The
+harness reads a line's text where the menu says it, into the list the
+windows' texts go to (`captureDialogs` in `SPHarness.lua`).
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 421 | full | 106/0, then 14/0 after the reload |
+| 422 | `controls` | 32/0 |
+
+The same counts as launches 420 and 418. No check was changed.
+
+* **Pause**: the text is "Paused Reason: paused by hand", one sentence
+  (`RTC.pause_F1`); **Resume**: "Working" (`RTC.resume_F1`).
+* Refusals of one sentence carry their text as before: "It is not
+  working on a batch right now.", "It is not paused.", "There is no
+  batch to stop.", "The batch in it has spoiled: use Abort batch to
+  empty it."
+* Aborts, **Status**, the workshop's answers and the tests' results came
+  as windows, with the lines the checks read in them
+  (`LOOP.menu_dialogs_translated`: 7 texts, none untranslated).
+
+The console holds no warning or error of the mod.
+
+Not run: whether each of these texts was shown over the character or
+fell back to the window. The harness records the text in both cases and
+the result files do not say which; nobody looked at the screen. The
+biodiesel, fireplace and gas modes since R6 (a gasifier's lines); the
+screenshot modes; a server.
+
+Evidence:
+[run 421](evidence/2026-11-14_rt-sp_harness_run421_full_say_42.22.2.txt),
+[run 422](evidence/2026-11-14_rt-sp_harness_run422_controls_say_42.22.2.txt).

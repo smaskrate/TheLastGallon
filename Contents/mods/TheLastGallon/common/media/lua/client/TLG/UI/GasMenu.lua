@@ -7,19 +7,16 @@ require "TLG/UI/Format"
 require "TLG/UI/Clicked"
 require "TLG/Integration/Generators"
 require "TLG/UI/Tip"
+require "TLG/UI/Say"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.GasMenu = TLG.UI.GasMenu or {}
 local Menu = TLG.UI.GasMenu
 local G, Fmt = TLG.Integration.Generators, TLG.UI.Format
 
-local function show(text)
-    local w, h = 420, 220
-    local modal = ISModalRichText:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
-        w, h, text, false, nil, nil, 0)
-    modal:initialise()
-    modal:addToUIManager()
-end
+local Say = TLG.UI.Say
+
+local function show(text) Say.window(text, 420, 220) end
 
 -- The text of a gas.status reply.
 function Menu.describe(r)
@@ -46,13 +43,13 @@ end
 
 local function onReply(reply)
     if not reply.ok then
-        show(Fmt.failure(reply))
+        Say.refusal(Fmt.failure(reply))
     elseif reply.command == "gas.status" then
         show(Menu.describe(reply))
     elseif reply.command == "gas.connect" then
-        show(getText("IGUI_TLG_GasConnected", tostring(reply.uses)))
+        Say.line(getText("IGUI_TLG_GasConnected", tostring(reply.uses)), true)
     elseif reply.command == "gas.remove" then
-        show(getText("IGUI_TLG_GasRemoved", tostring(reply.uses)))
+        Say.line(getText("IGUI_TLG_GasRemoved", tostring(reply.uses)), true)
     end
 end
 
@@ -90,6 +87,7 @@ function Menu.fill(playerNum, context, worldobjects, test)
     local ok, gas = pcall(G.isGas, gen)
     if not (ok and gas) then return end
     local ref = TLG.Authority.Resolver.refForObject(gen, "generator")
+    Say.from(playerNum)
     local root = context:addOption(getText("ContextMenu_TLG_Gas"), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)

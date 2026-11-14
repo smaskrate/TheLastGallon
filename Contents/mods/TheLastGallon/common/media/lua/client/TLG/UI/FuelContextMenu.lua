@@ -6,6 +6,7 @@ require "TLG/Integration/Native"
 require "TLG/Actions/ISTLGPourFuel"
 require "TLG/UI/Clicked"
 require "TLG/UI/Tip"
+require "TLG/UI/Say"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.FuelMenu = TLG.UI.FuelMenu or {}
@@ -13,13 +14,9 @@ local Menu = TLG.UI.FuelMenu
 local Fmt, Native, Tip = TLG.UI.Format, TLG.Integration.Native, TLG.UI.Tip
 local Containers, Resolver = TLG.Integration.Containers, TLG.Authority.Resolver
 
-local function show(text)
-    local w, h = 420, 260
-    local modal = ISModalRichText:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
-        w, h, text, false, nil, nil, 0)
-    modal:initialise()
-    modal:addToUIManager()
-end
+local Say = TLG.UI.Say
+
+local function show(text) Say.window(text, 420, 260) end
 
 -- A test's result: what it found; for a tank, the engine it feeds and,
 -- from a kit, what the sample means for that engine.
@@ -31,9 +28,11 @@ function Menu.sampleText(reply)
     return table.concat(parts, " <LINE> <LINE> ")
 end
 
+-- What is read opens a window (What I know about it, a test's result);
+-- what a treatment did, and a refusal, go over the character (TLG/UI/Say).
 local function onReply(reply)
     if not reply.ok then
-        show(Fmt.failure(reply))
+        Say.refusal(Fmt.failure(reply))
         return
     end
     if reply.command == "known" then
@@ -43,7 +42,7 @@ local function onReply(reply)
     elseif reply.command == "status" and reply.evaluation then
         show(Fmt.evaluation(reply.evaluation))
     elseif reply.command == "treat" then
-        show(getText("IGUI_TLG_TreatDone_" .. tostring(reply.op)))
+        Say.line(getText("IGUI_TLG_TreatDone_" .. tostring(reply.op)), true)
     end
 end
 
@@ -68,6 +67,7 @@ local function isFuelCan(item, kind)
 end
 
 local function addContainer(playerNum, context, item, kind, title, world)
+    Say.from(playerNum)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
     local fc = Containers.fluidOf(item, kind)
@@ -119,15 +119,16 @@ function Menu.fill(playerNum, context, items)
     end
 end
 
--- "This pump gives diesel.", from the pump's status (its main fuel).
+-- "This pump gives diesel.", from the pump's status (its main fuel), over
+-- the character.
 function Menu.askPump(pump)
     TLG.Net.request("status", { target = Resolver.refForObject(pump, "pump") }, function(reply)
         if not reply.ok then
-            show(Fmt.failure(reply))
+            Say.refusal(Fmt.failure(reply))
         elseif reply.primary == nil or (reply.total or 0) <= 0 then
-            show(getText("IGUI_TLG_PumpEmpty"))
+            Say.line(getText("IGUI_TLG_PumpEmpty"), false)
         else
-            show(getText("IGUI_TLG_PumpGives", Fmt.componentName(reply.primary)))
+            Say.line(getText("IGUI_TLG_PumpGives", Fmt.componentName(reply.primary)), true)
         end
     end)
 end
@@ -170,6 +171,7 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
     local tank = Menu.tankAt(playerNum, worldobjects)
     if #found == 0 and pump == nil and tank == nil then return end
     if test then return ISWorldObjectContextMenu.setTest() end
+    Say.from(playerNum)
     if pump then
         context:addOption(getText("ContextMenu_TLG_PumpProduct"), nil, function() Menu.askPump(pump) end)
     end
@@ -208,7 +210,7 @@ local function queuePour(player, item, destination, face, experimental)
             dlg:initialise()
             dlg:addToUIManager()
         else
-            show(Fmt.failure(reply))
+            Say.refusal(Fmt.failure(reply))
         end
     end))
 end
@@ -313,6 +315,7 @@ end
 -- Diesel Generator; a real right-click on a vehicle NOT RUN (offline:
 -- tests/integration/test_tank_menu.lua).
 function Menu.addTank(playerNum, context, tank)
+    Say.from(playerNum)
     local player = getSpecificPlayer(playerNum)
     local root = context:addOption(getText(tank.kind == "vehicle" and "ContextMenu_TLG_FuelVehicle"
         or "ContextMenu_TLG_FuelGenerator"), nil, nil)

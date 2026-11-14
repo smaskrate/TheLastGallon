@@ -1329,7 +1329,12 @@ end
 -- Dialogs the menus open: the text is kept (what the player reads), the
 -- windows are closed again at the end of each step.
 H.dialogs = H.dialogs or { texts = {}, open = {} }
+-- The menus' replies as the player gets them: the windows' texts and, since
+-- 0.5.0, the lines said over the character (TLG/UI/Say.lua), in one list in
+-- the order they came. A line has no window to close; H.dialogs.lines
+-- counts them.
 local function captureDialogs(on)
+    local Say = TLG.UI and TLG.UI.Say
     if on and not H.dialogs.orig then
         H.dialogs.orig = ISModalRichText.new
         ISModalRichText.new = function(self, x, y, w, h, text, ...)
@@ -1338,8 +1343,21 @@ local function captureDialogs(on)
             H.dialogs.open[#H.dialogs.open + 1] = o
             return o
         end
+        if Say and not H.dialogs.line then
+            H.dialogs.line = Say.line
+            Say.line = function(text, good)
+                local how = H.dialogs.line(text, good)
+                if how == "line" then
+                    H.dialogs.texts[#H.dialogs.texts + 1] = tostring(text)
+                    H.dialogs.lines = (H.dialogs.lines or 0) + 1
+                    H.dialogs.lastLine = { text = tostring(text), good = good == true }
+                end
+                return how
+            end
+        end
     elseif not on and H.dialogs.orig then
         ISModalRichText.new, H.dialogs.orig = H.dialogs.orig, nil
+        if Say and H.dialogs.line then Say.line, H.dialogs.line = H.dialogs.line, nil end
     end
 end
 

@@ -1,0 +1,134 @@
+require "support/fixtures"
+-- How a reply reaches the player (client UI, TLG/UI/Say.lua; UX review R6,
+-- D-016 as amended): over the character for what an action did and for a
+-- refusal of one sentence, in a window for what is read and for a refusal
+-- with a list. The menus are loaded by test_machine_menu.lua and
+-- test_gasifier_menu.lua, which keep the stand-ins their loading needs.
+require "integration/test_machine_menu"
+require "integration/test_gasifier_menu"
+require "TLG/UI/Say"
+local Say, Machine, Gasifier, Fmt = TLG.UI.Say, TLG.UI.MachineMenu, TLG.UI.GasifierMenu, TLG.UI.Format
+
+local function bracket(key, ...)
+    local args = { ... }
+    return "[" .. key .. (#args > 0 and (":" .. table.concat(args, ",")) or "") .. "]"
+end
+
+local GLOBALS = { "getText", "getSpecificPlayer", "HaloTextHelper", "ISModalRichText", "getCore" }
+
+-- The game's two ways to show a text, recorded: s.lines over a character
+-- ({ player, text, good }) and s.windows ({ text, w, h, playerNum }).
+local function stage(fn)
+    local saved = { translate = Fmt.translate, playerNum = Say.playerNum }
+    for _, k in ipairs(GLOBALS) do saved[k] = _G[k] end
+    local s = { lines = {}, windows = {}, players = { [0] = "first", [1] = "second" } }
+    getText, Fmt.translate = bracket, bracket
+    getSpecificPlayer = function(n) return s.players[n] end
+    HaloTextHelper = {
+        addGoodText = function(player, text) s.lines[#s.lines + 1] = { player = player, text = text, good = true } end,
+        addBadText = function(player, text) s.lines[#s.lines + 1] = { player = player, text = text, good = false } end,
+    }
+    getCore = function() return { getScreenWidth = function() return 1920 end, getScreenHeight = function() return 1080 end } end
+    ISModalRichText = { new = function(_, x, y, w, h, text, _, _, _, playerNum)
+        local o = { text = text, w = w, h = h, x = x, playerNum = playerNum }
+        function o:initialise() self.initialised = true end
+        function o:addToUIManager() s.windows[#s.windows + 1] = self end
+        return o
+    end }
+    Say.playerNum = 0
+    local ok, err = pcall(fn, s)
+    for _, k in ipairs(GLOBALS) do _G[k] = saved[k] end
+    Fmt.translate, Say.playerNum = saved.translate, saved.playerNum
+    if not ok then error(err, 0) end
+end
+
+T.case("integration: a sentence goes over the character, a text with lines or without a character opens a window", function()
+    stage(function(s)
+        T.eq(Say.line("Stabilizer added.", true), "line")
+        T.eq(#s.lines, 1); T.eq(#s.windows, 0)
+        T.ok(s.lines[1].good == true and s.lines[1].text == "Stabilizer added." and s.lines[1].player == "first")
+        T.eq(Say.refusal("You need a fuel filter."), "line")
+        T.ok(s.lines[2].good == false, "a refusal in the bad colour")
+        -- The player whose menu was opened last.
+        Say.from(1)
+        Say.line("Paused", true)
+        T.eq(s.lines[3].player, "second")
+        Say.from(nil)
+        T.eq(Say.playerNum, 1, "no number: the last one stays")
+        -- A list stays a window, whoever asks for a line.
+        T.eq(Say.refusal("Not enough wood. <LINE> Found: 2.00 kg"), "window")
+        T.eq(#s.lines, 3); T.eq(#s.windows, 1)
+        T.ok(s.windows[1].initialised and s.windows[1].text == "Not enough wood. <LINE> Found: 2.00 kg")
+        T.eq(s.windows[1].playerNum, 1, "the window is that player's")
+        -- No character, or a game without the text over the head: the
+        -- window, so that a reply is never dropped.
+        s.players[1] = nil
+        T.eq(Say.line("Filtered.", true), "window")
+        s.players[1] = "second"
+        HaloTextHelper = nil
+        T.eq(Say.refusal("You need a kit."), "window")
+        HaloTextHelper = { addGoodText = function() error("java") end }
+        T.eq(Say.line("Sealed.", true), "window")
+        T.eq(#s.windows, 4); T.eq(#s.lines, 3)
+        T.eq(Say.line("", true), "window", "nothing to say over a character")
+        -- A window's size is the menu's own.
+        Say.window("Status", 440, 260)
+        T.ok(s.windows[6].w == 440 and s.windows[6].h == 260)
+        T.eq(s.windows[6].x, 1920 / 2 - 220)
+    end)
+end)
+
+T.case("integration: a machine's action is said in one sentence; Status, an abort and what was thrown away are windows", function()
+    stage(function()
+        local function line(reply)
+            reply.ok = true
+            return Machine.line(reply)
+        end
+        T.eq(line({ command = "machine.loadFerment", machine = "fermenter_barrel", state = "Processing", stage = "prepare",
+            sugarKg = 6, waterL = 30 }), "[IGUI_TLG_Did_loadFerment:6.00,30.00]")
+        T.eq(line({ command = "machine.loadWash", machine = "pot_still", state = "Processing", washL = 36.5 }),
+            "[IGUI_TLG_Did_loadWash:36.50]")
+        -- The feed, repeated most often: with what the firebox now holds.
+        local cap = string.format("%.0f", TLG.Registry.need("machine", "pot_still").firebox.capacityKg)
+        T.eq(line({ command = "machine.addFuel", machine = "pot_still", state = "Ready", addedKg = 9, firebox = 9 }),
+            "[IGUI_TLG_Did_addFuel:9.00] [IGUI_TLG_FireboxOf:9.0," .. cap .. "]")
+        T.eq(line({ command = "machine.collect", machine = "pot_still", state = "Ready", outputs = {},
+            collected = { ethanol = 4 } }), "[IGUI_TLG_Did_collect:[IGUI_TLG_Fuel_ethanol] [IGUI_TLG_Amount_L:4.00]]")
+        T.eq(line({ command = "machine.load", machine = "wood_retort", state = "Processing", woodKg = 40 }),
+            "[IGUI_TLG_Did_load_wood:40.00]")
+        -- Pause and Resume move nothing: the state, and why it stands.
+        local paused = line({ command = "machine.pause", machine = "pot_still", state = "Paused", pause = "paused_by_player" })
+        T.ok(string.find(paused, "[IGUI_TLG_MachineState_Paused", 1, true) == 1
+            and string.find(paused, "IGUI_TLG_Pause_paused_by_player", 1, true) ~= nil, paused)
+        T.ok(not string.find(paused, "<LINE>", 1, true), "one sentence")
+        T.ok(string.find(line({ command = "machine.resume", machine = "pot_still", state = "Processing", stage = "distil" }),
+            "IGUI_TLG_MachineState_Processing", 1, true) ~= nil)
+        -- Windows.
+        T.ok(line({ command = "machine.status", machine = "pot_still", state = "Processing", stage = "distil" }) == nil,
+            "Status is read")
+        T.ok(line({ command = "machine.abort", machine = "pot_still", state = "Ready", aborted = true }) == nil, "an abort")
+        T.ok(line({ machine = "pot_still", state = "Processing", stage = "distil" }) == nil, "a reply that names no command")
+        T.ok(line({ command = "machine.collect", machine = "pot_still", state = "Ready", outputs = {},
+            collected = { ethanol = 4 }, discarded = { stillage = 20 } }) == nil, "the collect that threw the stillage away")
+        T.ok(line({ command = "machine.load", machine = "biodiesel_reactor", state = "Processing", oilL = 10, methanolL = 2,
+            lyeKg = 0.1, charcoal = 3 }) == nil, "the load that also emptied the retort")
+        T.ok(line({ command = "machine.load", machine = "biodiesel_reactor", state = "Processing", oilL = 10, methanolL = 2,
+            lyeKg = 0.1 }) ~= nil)
+        T.ok(line({ command = "machine.collect", machine = "pot_still", state = "Ready", collected = { ethanol = 4 },
+            discarded = {} }) ~= nil, "nothing thrown away")
+    end)
+end)
+
+T.case("integration: a gasifier's action is said in one sentence, its Status is a window", function()
+    stage(function()
+        T.ok(Gasifier.line({ command = "gasifier.status", state = "Processing", mode = "running" }) == nil)
+        T.ok(Gasifier.line({ state = "Ready" }) == nil, "a reply that names no command")
+        T.eq(Gasifier.line({ command = "gasifier.load", state = "Ready", loadedKg = 12.5, items = 5, hopperKg = 12.5 }),
+            "[IGUI_TLG_GasifierLoaded:12.5,5]")
+        T.eq(Gasifier.line({ command = "gasifier.putOut", state = "Ready", vented = 0.25 }), "[IGUI_TLG_GasifierVented:0.25]")
+        T.eq(Gasifier.line({ command = "gasifier.service", state = "Ready",
+            thrownAway = { wood_tar = 1, wood_ash = 2, water = 0.5 } }), "[IGUI_TLG_GasifierServiced:1.00,2.00,0.50]")
+        T.eq(Gasifier.line({ command = "gasifier.light", state = "Processing", mode = "warming" }),
+            "[IGUI_TLG_GasifierState_warming]")
+    end)
+end)

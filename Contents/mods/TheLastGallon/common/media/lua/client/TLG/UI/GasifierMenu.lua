@@ -11,19 +11,16 @@ require "TLG/UI/Clicked"
 require "TLG/Content/Feedstocks"
 require "TLG/UI/Tip"
 require "TLG/UI/LoadPreview"
+require "TLG/UI/Say"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.GasifierMenu = TLG.UI.GasifierMenu or {}
 local Menu = TLG.UI.GasifierMenu
 local GZ, Fmt, Gasifier, Tables = TLG.Integration.Gasifiers, TLG.UI.Format, TLG.Domain.Gas.Gasifier, TLG.Tables
 
-local function show(text)
-    local w, h = 420, 240
-    local modal = ISModalRichText:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
-        w, h, text, false, nil, nil, 0)
-    modal:initialise()
-    modal:addToUIManager()
-end
+local Say = TLG.UI.Say
+
+local function show(text) Say.window(text, 420, 240) end
 
 local function num(x, places)
     return string.format("%." .. tostring(places or 2) .. "f", x or 0)
@@ -74,14 +71,31 @@ function Menu.describe(r)
     return table.concat(lines, " <LINE> ")
 end
 
+-- What an action did, in one sentence for over the character; nil for
+-- Status, which is read in a window. A load says how much went in, putting
+-- it out what gas was let out, cleaning it what was thrown away; lighting
+-- it, its new state. The hopper, the filter and the rest stay in Status.
+function Menu.line(r)
+    -- A reply that does not say what was asked is read as a status.
+    if r.command == nil or r.command == "gasifier.status" then return nil end
+    if r.loadedKg then return getText("IGUI_TLG_GasifierLoaded", num(r.loadedKg, 1), tostring(r.items or 0)) end
+    if r.vented then return getText("IGUI_TLG_GasifierVented", num(r.vented)) end
+    if r.thrownAway then
+        local t = r.thrownAway
+        return getText("IGUI_TLG_GasifierServiced", num(t.wood_tar), num(t.wood_ash), num(t.water))
+    end
+    return getText(Menu.stateKey(r))
+end
+
 local function onReply(reply)
     if not reply.ok then
         local key = "IGUI_TLG_GasifierFail_" .. tostring(reply.reason)
         local text = getText(key)
-        show(text ~= key and text or Fmt.failure(reply))
+        Say.refusal(text ~= key and text or Fmt.failure(reply))
         return
     end
-    show(Menu.describe(reply))
+    local line = Menu.line(reply)
+    if line then Say.line(line, true) else show(Menu.describe(reply)) end
 end
 
 local function req(command, ref) TLG.Net.request(command, { target = ref }, onReply) end
@@ -107,6 +121,7 @@ function Menu.hasWood(player)
 end
 
 local function addGasifier(playerNum, context, item, title, world)
+    Say.from(playerNum)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
     local root = context:addOption(title or getText("ContextMenu_TLG_Gasifier"), nil, nil)
