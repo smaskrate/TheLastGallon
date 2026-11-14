@@ -51,6 +51,9 @@ under [Making biodiesel](#making-biodiesel) and [Diesel](#diesel).*
 *Dropped on the floor, left to right: the Field Manual: Fuel Systems, the
 Fuel Stabilizer, the Yeast Starter Culture and the Fuel Sampling Kit.*
 
+Each item's tooltip, shown when the pointer rests on it in the
+inventory, says what it is for and where its command is.
+
 ## How the mod answers
 
 What you do from the mod's menus is answered in one of two ways.

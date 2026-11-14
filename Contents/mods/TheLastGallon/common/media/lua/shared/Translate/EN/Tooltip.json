@@ -1,0 +1,20 @@
+{
+    "Tooltip_TLG_FuelSampleKit": "Used by Take a sample (kit), in the Fuel menu of a can or a tank.<br>A closer estimate, small amounts of water, and the blend.<br>Not used up.",
+    "Tooltip_TLG_FuelStabilizer": "Used by Add stabilizer, in a fuel can's Fuel menu.<br>The fuel ages more slowly. One bottle treats 20 L.",
+    "Tooltip_TLG_FuelFilter": "Used by Filter, in a fuel can's Fuel menu.<br>Takes out sediment and some free water. One use.",
+    "Tooltip_TLG_ManualFuelSystems": "How to start making ethanol, which engines take which fuel,<br>and what to do when a machine or engine stops.",
+    "Tooltip_TLG_BiodieselHandbook": "Teaches how to build the five machines that make biodiesel.",
+    "Tooltip_TLG_WoodGasHandbook": "Teaches how to build the Wood Gasifier.",
+    "Tooltip_TLG_YeastStarter": "Starts a mash fermenting in place of yeast.",
+    "Tooltip_TLG_FermenterVessel": "Ferments a mash of sugar, water and yeast into wash.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_PotStill": "Distils wash into ethanol over a wood fire.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_RefluxStill": "Distils wash into stronger ethanol than a Pot Still gives.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_DryingColumn": "Dries ethanol with quicklime.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_WoodRetort": "Distils wood into methanol and charcoal over a wood fire.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_AshBarrel": "Burns wood to ash for the Lye Leacher.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_LyeLeacher": "Leaches wood ash with water into lye.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_BiodieselReactor": "Reacts plant oil with methanol and lye into crude biodiesel.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_BiodieselWashTank": "Washes and dries crude biodiesel, ready for a fuel can.<br>Put it on the ground and right-click it.",
+    "Tooltip_TLG_DieselGenerator": "Runs on diesel or biodiesel. Gasoline damages it.",
+    "Tooltip_TLG_Gasifier": "Turns wood into gas for a generator converted to gas,<br>within two tiles of it.<br>Put it on the ground and right-click it."
+}

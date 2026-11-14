@@ -348,7 +348,9 @@
   look, and What I know about it; a loaded fermentation vessel's Machine
   submenu and Status; a generator's Workshop submenu and, with a project
   started, Project status; the crafting window searched for "Make" with the
-  vessel's recipe picked. Menus and the crafting window are built as a
+  vessel's recipe picked; the inventory tooltip of a Pot Still and of a
+  Fuel Sampling Kit, after every item of the mod is asked for its
+  tooltip's key and text. Menus and the crafting window are built as a
   player's game builds them, without the debug entries; each menu stays
   open and each dialog on screen until photographed, the debug console
   hidden meanwhile. The rectangles of what each shot shows are in the

@@ -4,7 +4,7 @@
 .DESCRIPTION
   * Every EN json file has an IT counterpart with exactly the same keys.
   * Keys referenced in Lua (string literals starting with IGUI_TLG_,
-    ContextMenu_TLG_, Tooltip_TLG_, Sandbox_TLG_), fluid DisplayName values,
+    ContextMenu_TLG_, Tooltip_TLG_, Sandbox_TLG_), fluid DisplayName values, item Tooltip values,
     item ids (ItemName "TLG.<id>") and sandbox option translations exist in EN.
   * Dynamic prefixes (IGUI_TLG_Fuel_, IGUI_TLG_TreatDone_, IGUI_TLG_Method_)
     are checked against the registry/handler values listed below.
@@ -43,6 +43,28 @@ foreach ($f in $luaFiles) {
 }
 foreach ($m in [regex]::Matches((Get-Content (Join-Path $media "scripts\TLG_fluids.txt") -Raw), 'DisplayName\s*=\s*([A-Za-z0-9_]+)')) {
     [void]$referenced.Add($m.Groups[1].Value)
+}
+# Item tooltips (R9): "Tooltip = Tooltip_TLG_<id>," in an item block. Every
+# item of the mod has one, named after the item.
+$scriptText = (Get-ChildItem (Join-Path $media "scripts") -Filter "TLG_*.txt" | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"
+$tipKeys = @()
+foreach ($m in [regex]::Matches($scriptText, '(?m)^\s*Tooltip\s*=\s*([A-Za-z0-9_]+)\s*,')) {
+    $tipKeys += $m.Groups[1].Value
+    [void]$referenced.Add($m.Groups[1].Value)
+}
+foreach ($m in [regex]::Matches($scriptText, '(?m)^\s*item\s+([A-Za-z0-9_]+)\s*\r?$')) {
+    $tip = "Tooltip_TLG_" + $m.Groups[1].Value
+    if ($tipKeys -notcontains $tip) { $problems += "item $($m.Groups[1].Value) has no `"Tooltip = $tip,`" line" }
+}
+# The game does not wrap an item tooltip (launch 426: 135 characters on one
+# line, 680 px wide): each line between <br> marks stays within 72 characters.
+foreach ($lang in "EN", "IT") {
+    $tips = Get-Content (Join-Path $tr "$lang\Tooltip.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($p in $tips.PSObject.Properties) {
+        foreach ($line in ([string]$p.Value -split "<br>")) {
+            if ($line.Length -gt 72) { $problems += "$lang/Tooltip.json $($p.Name): a line of $($line.Length) characters (72 at most): $line" }
+        }
+    }
 }
 foreach ($m in [regex]::Matches(((Get-ChildItem (Join-Path $media "scripts") -Filter "TLG_*.txt" | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"), '(?m)^\s*item\s+([A-Za-z0-9_]+)\s*\r?$')) {
     [void]$referenced.Add("TLG." + $m.Groups[1].Value)

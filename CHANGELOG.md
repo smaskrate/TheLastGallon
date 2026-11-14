@@ -5,6 +5,14 @@
 Only the menus' texts are listed here so far; the gas generator, propane
 and the wood gasifier (D-040) are not.
 
+* New: each of the mod's 18 items has a tooltip of a sentence or two,
+  in English and Italian: what the item is for and where its command
+  is ("Used by Take a sample (kit), in the Fuel menu of a can or a tank.",
+  "Distils wash into ethanol over a wood fire. Put it on the ground and
+  right-click it."). Before, an item just found said nothing of itself.
+  The game does not wrap a tooltip, so each line is 72 characters at
+  most. Checked in single player: the game has every text in both
+  languages and draws the two photographed (launches 426–431).
 * **Status** of a machine and of a gasifier shows its condition, and
   when it is worn what that costs: "Condition: 86%", "Worn: it gives 96%
   of what a new one gives". A machine loses condition with every batch

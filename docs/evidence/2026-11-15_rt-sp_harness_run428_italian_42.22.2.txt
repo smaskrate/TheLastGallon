@@ -1,0 +1,32 @@
+# TLG single-player harness, the client in Italian
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=19602453431618268846 hours=2.0096 DayLength=4
+STEP rti_setup begin
+STEP rti_text begin
+PASS RTI.language_is_italian :: Translator.getLanguage() = IT
+OBS  RTI.strings ContextMenu 55/55, Fluids 8/8, IG_UI 372/372, ItemName 18/18, Recipes 13/13, Sandbox 19/19, Tooltip 4/18; samples: Carburante (The Last Gallon) | Condizioni sconosciute: non ancora campionato. Un carburante sconosciuto non è necessariamente cattivo. | Salvataggi esistenti
+FAIL RTI.every_string_as_shipped :: 489 of 503 as shipped, 0 unresolved, 0 garbled; off: Tooltip_TLG_FuelSampleKit: game "Serve per Preleva un campione (kit), nel menu Carburante
+di una tanica o di un serbatoio.
+Una stima più precisa, piccole quantità d'acqua e la miscela.
+Non si consuma.", shipped "Serve per Preleva un campione (kit), nel menu Carburante<br>di una tanica o di un serbatoio.<br>Una stima più precisa, piccole quantità d'acqua e la miscela.<br>Non si consuma." || Tooltip_TLG_FuelStabilizer: game "Serve per Aggiungi stabilizzante, nel menu Carburante di una tanica.
+Il carburante invecchia più lentamente.
+Una bottiglia tratta fino a 20 L.", shipped "Serve per Aggiungi stabilizzante, nel menu Carburante di una tanica.<br>Il carburante invecchia più lentamente.<br>Una bottiglia tratta fino a 20 L." || Tooltip_TLG_FuelFilter: game "Serve per Filtra, nel menu Carburante di una tanica.
+Toglie i sedimenti e parte dell'acqua libera. Un solo uso.", shipped "Serve per Filtra, nel menu Carburante di una tanica.<br>Toglie i sedimenti e parte dell'acqua libera. Un solo uso." || Tooltip_TLG_ManualFuelSystems: game "Come si rovina il carburante, come provarlo e trattarlo,
+e come fare etanolo.", shipped "Come si rovina il carburante, come provarlo e trattarlo,<br>e come fare etanolo." || Tooltip_TLG_FermenterVessel: game "Fermenta un mosto di zucchero, acqua e lievito in fermentato.
+Appoggialo a terra e fai clic destro.", shipped "Fermenta un mosto di zucchero, acqua e lievito in fermentato.<br>Appoggialo a terra e fai clic destro." || Tooltip_TLG_PotStill: game "Distilla il fermentato in etanolo, su un fuoco di legna.
+Appoggialo a terra e fai clic destro.", shipped "Distilla il fermentato in etanolo, su un fuoco di legna.<br>Appoggialo a terra e fai clic destro."
+PASS RTI.placeholders_filled :: "Carburante principale: Etanolo" | "Condizioni: Buono (stima 0.1, più o meno 0.3)"
+STEP rti_menus begin
+OBS  RTI.look menu "Osserva e annusa" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTI.fuel_menu "Carburante (The Last Gallon)" > Cosa so di questo carburante / Osserva e annusa / Preleva un campione (kit) / Aggiungi stabilizzante / Filtra / Lascia decantare e scarica l'acqua / Apri; Look and smell: Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.1, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+PASS RTI.fuel_menu_italian :: 7 entries; look dialog Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.1, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+OBS  RTI.status menu "Stato" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTI.machine_menu Status: Pronto <LINE> Temperatura qui adesso: 63.4 °F, all'aperto <LINE> Condizione: 100%
+PASS RTI.machine_menu_italian :: Pronto <LINE> Temperatura qui adesso: 63.4 °F, all'aperto <LINE> Condizione: 100%
+STEP rt_finish begin
+OBS  RT.summary replies: 0 over the character, 2 in a window; last line (-): none
+OBS  RT.summary game hours -1.00 -> 2.01
+SUMMARY pass=4 fail=1
+DONE

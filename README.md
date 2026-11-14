@@ -87,6 +87,7 @@ tools\setup-devenv.ps1                                   # deploy to the isolate
 tools\run-sp-harness.ps1                                 # single player, unattended (unlocked desktop, no input, ~15 min); -Mode for the other cases
 tools\run-mp-harness.ps1 -Clients 2                      # dedicated server and two clients on this computer, unattended; -Only for the other cases
 tools\make-preview.ps1                                   # Workshop preview, mod list poster and icon (Blender)
+tools\make-workshop-shots.ps1                            # Workshop screenshots, cut from the harness's (art-src\workshop)
 tools\package.ps1                                        # build dist/ (never uploads)
 tools\rehearse-install.ps1                               # install the zip in a fresh cache and play it (~20 min)
 tools\rehearse-install.ps1 -Scenario existing            # the zip added to a save played without it (~30 min)

@@ -1,0 +1,20 @@
+{
+    "Tooltip_TLG_FuelSampleKit": "Serve per Preleva un campione (kit), nel menu Carburante<br>di una tanica o di un serbatoio.<br>Una stima più precisa, piccole quantità d'acqua e la miscela.<br>Non si consuma.",
+    "Tooltip_TLG_FuelStabilizer": "Serve per Aggiungi stabilizzante, nel menu Carburante di una tanica.<br>Il carburante invecchia più lentamente.<br>Una bottiglia tratta 20 L.",
+    "Tooltip_TLG_FuelFilter": "Serve per Filtra, nel menu Carburante di una tanica.<br>Toglie i sedimenti e parte dell'acqua libera. Un solo uso.",
+    "Tooltip_TLG_ManualFuelSystems": "Come cominciare a fare etanolo, quali motori usano quale carburante,<br>e cosa fare quando una macchina o un motore si ferma.",
+    "Tooltip_TLG_BiodieselHandbook": "Insegna a costruire le cinque macchine che fanno il biodiesel.",
+    "Tooltip_TLG_WoodGasHandbook": "Insegna a costruire il gassificatore a legna.",
+    "Tooltip_TLG_YeastStarter": "Avvia la fermentazione di un mosto al posto del lievito.",
+    "Tooltip_TLG_FermenterVessel": "Fermenta un mosto di zucchero, acqua e lievito in fermentato.<br>Appoggialo a terra e fai clic destro.",
+    "Tooltip_TLG_PotStill": "Distilla il fermentato in etanolo, su un fuoco di legna.<br>Appoggialo a terra e fai clic destro.",
+    "Tooltip_TLG_RefluxStill": "Distilla il fermentato in etanolo più forte<br>di quello di un alambicco discontinuo.<br>Appoggialo a terra e fai clic destro.",
+    "Tooltip_TLG_DryingColumn": "Disidrata l'etanolo con calce viva.<br>Appoggiala a terra e fai clic destro.",
+    "Tooltip_TLG_WoodRetort": "Distilla la legna in metanolo e carbone, su un fuoco di legna.<br>Appoggiala a terra e fai clic destro.",
+    "Tooltip_TLG_AshBarrel": "Brucia la legna in cenere per il lisciviatore.<br>Appoggialo a terra e fai clic destro.",
+    "Tooltip_TLG_LyeLeacher": "Liscivia la cenere di legna con acqua per farne liscivia.<br>Appoggialo a terra e fai clic destro.",
+    "Tooltip_TLG_BiodieselReactor": "Fa reagire olio vegetale con metanolo e liscivia<br>in biodiesel grezzo.<br>Appoggialo a terra e fai clic destro.",
+    "Tooltip_TLG_BiodieselWashTank": "Lava e asciuga il biodiesel grezzo, pronto per una tanica.<br>Appoggiala a terra e fai clic destro.",
+    "Tooltip_TLG_DieselGenerator": "Funziona a gasolio o biodiesel. La benzina lo danneggia.",
+    "Tooltip_TLG_Gasifier": "Trasforma la legna in gas per un generatore convertito a gas,<br>entro due caselle.<br>Appoggialo a terra e fai clic destro."
+}

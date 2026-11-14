@@ -14884,6 +14884,7 @@ end
 -- used for the crafting window, whose containers come from those windows'
 -- lists (ISInventoryPaneContextMenu.getContainers).
 function RT.DS.windows(visible)
+    if not visible then RT.DS.fold() end
     for _, get in ipairs({ getPlayerInventory, getPlayerLoot }) do
         pcall(function()
             local w = get(0)
@@ -14891,6 +14892,30 @@ function RT.DS.windows(visible)
         end)
     end
 end
+
+-- Folds the inventory and loot windows and clears the highlight an open one
+-- puts on its container's tile (ISInventoryPage.updateContainerHighlight):
+-- the shots of launch 427 had the open Ground window's orange tile under
+-- the character.
+function RT.DS.fold()
+    for _, get in ipairs({ getPlayerInventory, getPlayerLoot }) do
+        pcall(function()
+            local w = get(0)
+            if not w then return end
+            w.pin = false
+            w:collapseNow()
+            w:updateContainerHighlight()
+        end)
+    end
+end
+
+-- A line said over the character (the vessel's load in the setup) fades
+-- before the first shot.
+RT.DS.lineFades = { name = "rtds_line_fades", timeout = 1200, fn = function(ctx, ticks)
+    if ticks == 1 then RT.DS.fold() end
+    if ticks > 480 then return true end
+    return nil
+end }
 
 function RT.DS.consoleText()
     local s = "none"
@@ -15489,11 +15514,103 @@ RT.DS.crafting = { name = "rtds_crafting", timeout = 1200, fn = function(ctx, ti
     return true
 end }
 
+-- Item tooltips (UX review R9): each of the mod's items names its tooltip
+-- in its script ("Tooltip = Tooltip_TLG_<id>,") and the text is in
+-- Translate/<language>/Tooltip.json. RT.TT.read asks the game for both;
+-- RT.TT.shot shows the game's own inventory tooltip (ISToolTipInv) of one
+-- item beside the open inventory window and photographs it. The pointer is
+-- not moved: the tooltip is placed, not hovered.
+RT.TT = { ids = { "FuelSampleKit", "FuelStabilizer", "FuelFilter", "ManualFuelSystems", "BiodieselHandbook", "WoodGasHandbook",
+    "YeastStarter", "FermenterVessel", "PotStill", "RefluxStill", "DryingColumn", "WoodRetort", "AshBarrel", "LyeLeacher",
+    "BiodieselReactor", "BiodieselWashTank", "DieselGenerator", "Gasifier" } }
+
+RT.TT.read = { name = "rttt_read", timeout = 300, fn = function()
+    if RT.skip("rttt_read") then return true end
+    local bad, n = {}, 0
+    for _, id in ipairs(RT.TT.ids) do
+        local key = "Tooltip_TLG_" .. id
+        local ok, item = pcall(instanceItem, "TLG." .. id)
+        local tip = "(no item)"
+        if ok and item then pcall(function() tip = tostring(item:getTooltip()) end) end
+        local text = tostring(getText(key))
+        R:line("OBS  RTTT.%s getTooltip()=%s; text: %s", id, tip, text)
+        if (tip == key or tip == text) and text ~= key and not has(text, "Tooltip_TLG") then
+            n = n + 1
+        else
+            bad[#bad + 1] = id .. " (" .. tip .. ")"
+        end
+    end
+    R:check("RTTT.every_item_names_its_tooltip_and_the_game_has_its_text", function()
+        return n == #RT.TT.ids, string.format("%d of %d; off: %s", n, #RT.TT.ids, #bad > 0 and table.concat(bad, ", ") or "none")
+    end)
+    return true
+end }
+
+function RT.TT.shot(name, id)
+    local step = "rttt_shot_" .. name
+    return { name = step, timeout = 900, fn = function(ctx, ticks)
+        local D = RT.DS
+        if RT.skip(step) then return true end
+        if ticks == 1 then
+            D.console(false)
+            local inv = player():getInventory()
+            ctx.added = {}
+            for _, other in ipairs(RT.TT.ids) do
+                if not inv:contains("TLG." .. other) then ctx.added[#ctx.added + 1] = inv:AddItem("TLG." .. other) end
+            end
+            ctx.item = inv:getFirstTypeRecurse("TLG." .. id)
+            local x, y = 420, 200
+            pcall(function()
+                local page = getPlayerInventory(0)
+                page:setVisible(true)
+                page.isCollapsed = false
+                page:setPinned()
+                page:clearMaxDrawHeight()
+                x, y = page:getX() + 300, page:getY() + 70
+                ctx.page = page
+            end)
+            pcall(function() if ISContextMenu.instance then ISContextMenu.instance.visibleCheck = false end end)
+            local tip = ISToolTipInv:new(ctx.item)
+            tip:initialise()
+            tip:addToUIManager()
+            tip:setVisible(true)
+            tip:setCharacter(player())
+            tip.followMouse = false
+            tip:setX(x)
+            tip:setY(y)
+            ctx.tip = tip
+            return nil
+        end
+        if ticks == D.settle then
+            local w, h = 0, 0
+            pcall(function() w, h = ctx.tip.tooltip:getWidth(), ctx.tip.tooltip:getHeight() end)
+            R:line("OBS  RTTT.%s tooltip of %s at %s, drawn %dx%d; inventory window at %s", name, id, D.rect(ctx.tip), w, h,
+                D.rect(ctx.page))
+            local shot = D.shot(name)
+            R:check("RTTT.shot_" .. name, function()
+                return shot and ctx.item ~= nil and w > 100 and w <= 480 and h > 40,
+                    string.format("item=%s; tooltip %dx%d", tostring(ctx.item ~= nil), w, h)
+            end)
+            return nil
+        end
+        if ticks < D.settle + D.hold then return nil end
+        pcall(function() ctx.tip:removeFromUIManager() end)
+        -- What the shot added leaves again, and the window folds as it was.
+        for _, it in ipairs(ctx.added or {}) do pcall(function() player():getInventory():Remove(it) end) end
+        RT.DS.fold()
+        D.console(true)
+        return true
+    end }
+end
+
 if REQUEST == "sp-rtds" then
-    RT.docsSteps = { RT.waitWorld, RT.DS.setup, RT.DS.fuelSpot, RT.DS.fuelMenu("fuel_menu", "full"),
-        RT.DS.fuelMenu("fuel_menu_empty_can", "empty"), RT.DS.kit, RT.DS.wait, RT.DS.look, RT.DS.known, RT.DS.toVessel,
+    RT.docsSteps = { RT.waitWorld, RT.DS.setup, RT.TT.read, RT.DS.fuelSpot, RT.DS.lineFades,
+        RT.DS.fuelMenu("fuel_menu", "full"),
+        RT.DS.fuelMenu("fuel_menu_empty_can", "empty"), RT.TT.shot("tooltip_pot_still", "PotStill"),
+        RT.TT.shot("tooltip_sample_kit", "FuelSampleKit"), RT.DS.kit, RT.DS.wait, RT.DS.look, RT.DS.known, RT.DS.toVessel,
         RT.DS.machineMenu, RT.DS.status, RT.DS.generator, RT.DS.floorPour, RT.DS.workshopMenu, RT.DS.project, RT.DS.projectStatus,
-        RT.CR.setup, RT.DS.playerView(true), RT.CR.open, RT.DS.crafting, RT.CR.close, RT.DS.playerView(false), RT.finish }
+        RT.CR.setup, RT.DS.playerView(true), RT.CR.open, RT.DS.crafting, RT.CR.close, RT.DS.playerView(false),
+        RT.finish }
 end
 
 -- Held items (request "sp-rtmh"): runs 65-71 drew nothing in the
@@ -15846,6 +15963,8 @@ RT.itText = { name = "rti_text", timeout = 600, fn = function(ctx, ticks)
             -- The game stores a placeholder %N as %N$s (seen in run 43:
             -- getText without arguments returns that form).
             local want = (string.gsub(I.want[key], "%%(%d)", "%%%1$s"))
+            -- The game reads a tooltip's <br> as a line break (launch 428).
+            want = (string.gsub(want, "<br>", string.char(10)))
             local got
             if cat == "ItemName" then
                 local ok, it = pcall(instanceItem, key)

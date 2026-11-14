@@ -13,6 +13,7 @@ module TLG
     {
         DisplayCategory = VehicleMaintenance,
         ItemType = base:normal,
+        Tooltip = Tooltip_TLG_FuelSampleKit,
         Weight = 0.4,
         Icon = TLG_FuelSampleKit,
         WorldStaticModel = TLG.FuelSampleKit,
@@ -24,6 +25,7 @@ module TLG
     {
         DisplayCategory = VehicleMaintenance,
         ItemType = base:normal,
+        Tooltip = Tooltip_TLG_FuelStabilizer,
         Weight = 0.3,
         Icon = TLG_FuelStabilizer,
         WorldStaticModel = TLG.FuelStabilizer,
@@ -36,6 +38,7 @@ module TLG
     {
         DisplayCategory = VehicleMaintenance,
         ItemType = base:normal,
+        Tooltip = Tooltip_TLG_FuelFilter,
         Weight = 0.2,
         Icon = TLG_FuelFilter,
         WorldStaticModel = TLG.FuelFilter,
@@ -49,6 +52,7 @@ module TLG
     {
         DisplayCategory = SkillBook,
         ItemType = base:literature,
+        Tooltip = Tooltip_TLG_ManualFuelSystems,
         Weight = 0.5,
         Icon = TLG_ManualFuelSystems,
         WorldStaticModel = TLG.ManualFuelSystems,
@@ -63,6 +67,7 @@ module TLG
     {
         DisplayCategory = RecipeResource,
         ItemType = base:literature,
+        Tooltip = Tooltip_TLG_BiodieselHandbook,
         Weight = 0.5,
         Icon = TLG_BiodieselHandbook,
         BoredomChange = -20,
@@ -82,6 +87,7 @@ module TLG
     {
         DisplayCategory = RecipeResource,
         ItemType = base:literature,
+        Tooltip = Tooltip_TLG_WoodGasHandbook,
         Weight = 0.5,
         Icon = TLG_WoodGasHandbook,
         BoredomChange = -20,
@@ -99,6 +105,7 @@ module TLG
     {
         DisplayCategory = Food,
         ItemType = base:normal,
+        Tooltip = Tooltip_TLG_YeastStarter,
         Weight = 0.3,
         Icon = TLG_YeastStarter,
         WorldStaticModel = TLG.YeastStarter,

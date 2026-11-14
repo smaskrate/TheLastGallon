@@ -10,6 +10,7 @@ runtime tests.
 
 | Area | Reason |
 | --- | --- |
+| RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
@@ -9098,3 +9099,77 @@ Not run: a gasifier worn by its own filter cycles; the rest as in launch
 
 Evidence:
 [run 425](evidence/2026-11-14_rt-sp_harness_run425_controls_gasifier_repair_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launches 426–431 (item tooltips, the Workshop page's screenshots)
+
+Branch `feature/gas-generators` after `213c669`, 42.22.2, the working
+tree with the tooltips of UX review R9. The `docs-shots` mode has two
+additions: `RT.TT.read` asks the game for each of the mod's 18 items'
+tooltip key (`getTooltip()`) and for its text; `RT.TT.shot` shows the
+game's own inventory tooltip (`ISToolTipInv`) of an item beside the open
+inventory window and photographs it.
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 426 | `docs-shots` | 68/0 |
+| 427 | `docs-shots` | 68/0 |
+| 428 | `italian` | 4/1 |
+| 429 | `italian` | 5/0 |
+| 430 | `docs-shots` | 68/0 |
+| 431 | `italian` | 5/0 |
+
+* Launch 426: every item answers `Tooltip_TLG_<id>` and the game has its
+  text (`RTTT.every_item_names_its_tooltip_and_the_game_has_its_text`,
+  18 of 18). The game reads `<br>` as a line break and draws the tooltip
+  under the item's name, weight and "Mod: The Last Gallon". It does not
+  wrap a line: the Fuel Sampling Kit's 135 characters were one line, the
+  tooltip 680 px wide in a 1280 px window; the Pot Still's two lines
+  230 px.
+* After it the texts were cut into lines of 72 characters at most with
+  `<br>` (`tools/check-translations.ps1` now holds them to it), two of
+  them shortened (the Reflux Column Still's and the Biodiesel Reactor's
+  no longer say "over a wood fire"). Launch 427, the same checks: the
+  kit's tooltip is 343×107 px, the Pot Still's 230×91; the shot's check
+  now fails above 480 px. The tooltip shots moved from the end of the
+  mode (night, a black screen behind) to after the Fuel menu's.
+* Launch 428, the client in Italian: `RTI.every_string_as_shipped`
+  failed on the 14 tooltips with a `<br>`, which the game returns as a
+  line break: a fault of the comparison, not of the texts. With `<br>`
+  read as a line break in the expected text, launch 429: 503 of 503
+  strings as shipped, Tooltip 18/18.
+* The shots of launch 427 had an orange tile under the character and,
+  behind the Fuel menu, the green line of the vessel's load. The tile is
+  the highlight an open inventory or loot window puts on its container
+  (`ISInventoryPage.updateContainerHighlight`; the Ground window stood
+  open). `RT.DS.fold` now folds both windows and clears it, and
+  `RT.DS.lineFades` waits 480 ticks before the first shot. Two texts
+  changed as well: the Field Manual's tooltip said what the manual does
+  not hold (it now names the manual's three subjects, as the guide
+  does), and the stabilizer's says "treats 20 L", as the guide does.
+  Launch 430: the same 68 checks, neither flaw in the shots. Launch 431,
+  Italian, with the final texts: 503 of 503, Tooltip 18/18.
+* The consoles of the three `docs-shots` launches hold no exception and
+  no warning or error of the mod. Those of launches 429 and 431 hold
+  only `MissingFormatArgumentException` warnings (the Italian mode asks
+  for texts with placeholders without arguments) and none of the mod.
+
+The Workshop page's screenshots, `art-src/workshop/01`–`13`, are cut by
+`tools/make-workshop-shots.ps1` from the screenshots of launch 430 (the
+nine interface shots) and of earlier launches (the four scenes: the
+`machine-models` shot of 2026-11-03, the `diesel-generator` shot of
+2026-11-11, the `gas-wood` shot of 2026-11-13, the `biodiesel` shot of
+2026-11-14). What they show was read from them by the agent, each of
+the thirteen.
+
+Not run: a tooltip under the real pointer (the shot places it); the
+other 16 items' tooltips on screen and all of them in Italian on screen
+(their texts come back as shipped); the player guide's own images, which
+are still those of 2026-11-12.
+
+Evidence:
+[run 426](evidence/2026-11-15_rt-sp_harness_run426_docs_shots_tooltips_42.22.2.txt),
+[run 427](evidence/2026-11-15_rt-sp_harness_run427_docs_shots_tooltips_42.22.2.txt),
+[run 428](evidence/2026-11-15_rt-sp_harness_run428_italian_42.22.2.txt),
+[run 429](evidence/2026-11-15_rt-sp_harness_run429_italian_42.22.2.txt),
+[run 430](evidence/2026-11-15_rt-sp_harness_run430_docs_shots_tooltips_42.22.2.txt),
+[run 431](evidence/2026-11-15_rt-sp_harness_run431_italian_42.22.2.txt).
