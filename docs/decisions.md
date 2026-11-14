@@ -2003,10 +2003,26 @@ gas probe (launch 342).
     calculation twice, 0.074–0.076 ms against 0.069–0.071. Propane in game
     (launch 402) and on a server (launch 403) passed as before, and the
     whole performance mode passed all 53 budgets (launches 405–407).
+  * Performance on a dedicated server with one client (launch 410,
+    `performance.md`), the single-player mode's gas laid out as a
+    fixture: with generators in it, the minute pass cost within 10 % of
+    single player's in its steady states (the 16 0.235 ms), each record
+    read going through the vault. A refill cost more: a propane use
+    0.106 ms a generator against 0.076, a wood-gas draw 0.231 ms against
+    0.199. The gasifier record's send to the clients took 0.014 ms timed
+    alone; the draw rows with and without it, run once each, differ by
+    0.025–0.06 ms a draw. Timed whole as the game made them over six game
+    hours, the passes without a write read 0.685 ms on average (2 ms the
+    most), about three times the bench's 16, which the whole-millisecond
+    clock could account for; the 6 passes with writes took 4.7 ms (5 ms
+    the most) against 2.7 ms in the bench, for reasons not separated.
+    Every gasifier record written was sent and the client got all 3,145;
+    it found the item for 3,131 (the other 14 not traced). The vault put
+    nothing back.
   * Not run: a handbook found at a container's first fill (the harness
     filled them again); a real network; a buffer too small for two
-    generators' hourly draws (how it is shared is not decided); the gas's
-    performance on a server.
+    generators' hourly draws (how it is shared is not decided); the gas
+    on a server with more than one client.
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod
@@ -2050,5 +2066,11 @@ gas probe (launch 342).
   in the bin (launch 367, 52/0). With two clients the other's copy and
   menu followed each step, either way (launch 376: A 50/0, B 48/0). The
   gasifier's record on two clients, on joining and across a restart of
-  the server: launches 389–392 (D-040). Not run: a real network, a
-  machine in a container, the performance mode with these sends.
+  the server: launches 389–392 (D-040). The gasifier record's send was
+  timed on a server with one client (launch 410, `performance.md`):
+  0.014 ms a record alone (the draw rows with and without it, run once
+  each, differ by 0.025–0.06 ms a draw). Every record written was sent
+  and the client got all 3,145, finding the item for 3,131; the other 14
+  were not traced. Not run: a real network, a machine in a container; the
+  machines' and the cans' sends, and several clients, in the performance
+  mode.

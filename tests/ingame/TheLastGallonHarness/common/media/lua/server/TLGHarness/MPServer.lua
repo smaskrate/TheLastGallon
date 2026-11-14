@@ -2860,3 +2860,723 @@ local function buildGasMoves()
     end
 end
 buildGasMoves()
+
+------------------------------------------------------------------------------
+-- gastimers (tools/run-mp-harness.ps1 -Only gastimers, one client, the
+-- shortest day; D-040, D-041): the gas's cost on a dedicated server, timed
+-- as the single-player performance mode's stage 13 times it (SPHarness
+-- RT.PFG, docs/performance.md). The server finds clear ground near the spawn
+-- point and lays the gas out as single player does: 8 generators converted
+-- to gas, each with a full propane tank in, and 8 more, each with a Wood
+-- Gasifier on the tile east of it, loaded with two logs and lit; the
+-- generators three tiles apart, so a draw scans the same squares. A
+-- fixture: the conversion by the conversion service's steps (commissionGas),
+-- the tank and the gasifier by their handlers' domain steps (GasHandlers
+-- gas.connect; GasifierHandlers gasifier.load and gasifier.light), each
+-- generator started with setActivated (gaspropane, gaswood and gasmoves play
+-- the menus and the game's actions). The client asks for each timing in
+-- turn (bench_gastimers). Between requests the minute pass and the hourly
+-- burn move on, so each request sets up its state as the game reaches it
+-- (fuel lowered as a burn lowers it, the mod's own pass bringing it up),
+-- checks it, times it and checks it again. On a server setFuel and every
+-- write send to the clients: a body that sets fuel or writes runs a set
+-- number of calls a batch, never batches of a set time, and records go back
+-- through the mod's own writers (Generators.writeGas, Gasifiers.write),
+-- which keep the vault's copy (a table put straight into the mod data reads
+-- as forged, and the vault puts its own back). Each write and each record
+-- sent to the clients (WorldItemRecords.send) is counted, inside the timed
+-- refills too. Then a live window: each minute pass the game makes, timed
+-- whole, and each refill in it. Built in a function of its own for the
+-- -debug compiler.
+------------------------------------------------------------------------------
+local function buildGasTimers()
+    local GT = M.GT or {}
+    M.GT = GT
+    GT.n, GT.batches, GT.batchMs, GT.sendN = 50, 5, 200, 200
+    GT.cols, GT.propRows, GT.woodRows = { 0, 3, 6, 9 }, { 0, 3 }, { 6, 9 }
+
+    local function cell(x, y) return getCell():getGridSquare(x, y, 0) end
+
+    -- The 16 generators' squares, and the 8 east of the wood-gas ones for
+    -- their gasifiers, all clear; the corner nearest (x0, y0).
+    local function layout(x0, y0)
+        for r = 0, 24 do
+            for dx = -r, r do
+                for dy = -r, r do
+                    if math.max(math.abs(dx), math.abs(dy)) == r then
+                        local x, y, ok = x0 + dx, y0 + dy, true
+                        for _, c in ipairs(GT.cols) do
+                            for _, row in ipairs(GT.propRows) do ok = ok and free(cell(x + c, y + row)) end
+                            for _, row in ipairs(GT.woodRows) do
+                                ok = ok and free(cell(x + c, y + row)) and free(cell(x + c + 1, y + row))
+                            end
+                        end
+                        if ok then return x, y end
+                    end
+                end
+            end
+        end
+        return nil
+    end
+
+    local function genAt(e) return generatorAt(e.x, e.y) end
+    local function gasifierOf(e)
+        local s = e.gid and cell(e.x + 1, e.y)
+        local objs = s and s:getWorldObjects()
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            local it = objs:get(i):getItem()
+            if it and it:getID() == e.gid then return it end
+        end
+        return nil
+    end
+    local function keyOf(e) return e.x .. "," .. e.y .. ",0" end
+    local function power(g)
+        local p = -1
+        pcall(function() p = g:getTotalPowerUsing() end)
+        return p
+    end
+    local function useL() return TLG.Domain.GasFeed.propaneLitres(TLG.Domain.Gas.usesToNm3(1)) end
+
+    -- What each generator of `list` holds against its cap, its tank's uses,
+    -- its record's time and whether it holds gas, and its own gasifier's gas
+    -- given; raw reads (Generators.gasRecord and Gasifiers.read go through
+    -- the vault, which may write).
+    local function stateOf(list)
+        local G, GZ, F = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Domain.GasFeed
+        local out = {}
+        for _, e in ipairs(list) do
+            local g, it = genAt(e), gasifierOf(e)
+            local rec = g and g:getModData()[G.GAS_KEY]
+            rec = type(rec) == "table" and rec or nil
+            local st = it and it:getModData()[GZ.KEY]
+            st = type(st) == "table" and st or nil
+            local cap = g and ((rec and rec.tank) and G.gasCap(g) or G.woodgasCap(g))
+            out[#out + 1] = { e = e, g = g, fuel = g and g:getFuel(), cap = cap, room = g and (cap - g:getFuel()) or 99,
+                uses = rec and rec.tank and rec.tank.uses, t = rec and rec.t, on = g ~= nil and g:isActivated(),
+                holds = g ~= nil and F.holdsGas(rec, g:getFuel()), power = g and power(g) or -1,
+                given = st and st.totals and st.totals.delivered, lit = st ~= nil and GZ.lit(st),
+                hopper = st and TLG.Domain.Gas.Gasifier.status(st).hopperKg }
+        end
+        return out
+    end
+    local function stateText(s)
+        local parts = {}
+        for _, x in ipairs(s) do
+            parts[#parts + 1] = string.format("%d,%d room %.6f%s%s%s", x.e.x, x.e.y, x.room or -1,
+                x.uses and (" uses " .. x.uses) or "", x.given and string.format(" given %.6f", x.given) or "",
+                x.on and "" or " off")
+        end
+        return table.concat(parts, "; ")
+    end
+    local function count(s, fn)
+        local n = 0
+        for _, x in ipairs(s) do if fn(x) then n = n + 1 end end
+        return n
+    end
+    local function allOf(s, n, fn)
+        if #s ~= n then return false end
+        for i, x in ipairs(s) do
+            if not fn(x, i) then return false end
+        end
+        return true
+    end
+    -- The same moves (uses, gas given), records' times and fuel.
+    local function unchanged(a, b)
+        if #a ~= #b then return false end
+        for i, x in ipairs(a) do
+            local y = b[i]
+            if x.uses ~= y.uses or x.t ~= y.t or x.given ~= y.given or math.abs((x.fuel or 0) - (y.fuel or 0)) > 1e-9 then
+                return false
+            end
+        end
+        return true
+    end
+    -- Fuel lowered as a burn lowers it, by(x) litres below what `s` held:
+    -- never raised, since a rise the mod did not give is not gas
+    -- (GasFeed.current).
+    local function lower(s, by)
+        return function()
+            for _, x in ipairs(s) do x.g:setFuel(x.fuel - by(x)) end
+        end
+    end
+    local function withSquares(list, on)
+        local G = TLG.Integration.Generators
+        for _, e in ipairs(list or {}) do G.gasSquares[keyOf(e)] = on or nil end
+    end
+    -- `fn` with the squares of `other` out of the minute pass, put back after.
+    local function without(other, fn)
+        withSquares(other, false)
+        local ok, err = pcall(fn)
+        withSquares(other, true)
+        if not ok then error(err, 0) end
+    end
+
+    -- Every record and fuel of `list` as it is now, and a reset that puts
+    -- them back through the mod's own writers, with the wood-gas scans'
+    -- waits cleared.
+    local function snapshot(list)
+        local G, GZ, Tables = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Tables
+        local saved = {}
+        for _, e in ipairs(list) do
+            local g, it = genAt(e), gasifierOf(e)
+            saved[#saved + 1] = { g = g, fuel = g and g:getFuel(), rec = g and Tables.deepCopy(g:getModData()[G.GAS_KEY]),
+                it = it, st = it and Tables.deepCopy(it:getModData()[GZ.KEY]) }
+        end
+        return function()
+            for _, s in ipairs(saved) do
+                if s.g and s.rec then
+                    s.g:setFuel(s.fuel)
+                    G.writeGas(s.g, Tables.deepCopy(s.rec))
+                end
+                if s.it and s.st then GZ.write(s.it, Tables.deepCopy(s.st)) end
+            end
+            for k in pairs(G.woodgasWait) do G.woodgasWait[k] = nil end
+        end
+    end
+
+    -- The first call alone, then five batches of at least 200 ms: the median
+    -- batch's ms per call (RT.PF.bench). Only for a body that neither sets
+    -- fuel nor writes.
+    local function bench(fn)
+        local t0 = getTimestampMs()
+        fn()
+        local first = getTimestampMs() - t0
+        local per, calls = {}, 1
+        for _ = 1, GT.batches do
+            local n, s, e = 0, getTimestampMs(), 0
+            repeat
+                fn()
+                n = n + 1
+                e = getTimestampMs() - s
+            until e >= GT.batchMs or n >= 200000
+            per[#per + 1] = e / n
+            calls = calls + n
+        end
+        table.sort(per)
+        return { first = first, med = per[math.floor((#per + 1) / 2)], lo = per[1], hi = per[#per], calls = calls }
+    end
+    -- `n` calls a batch, `reset` before each (not timed): the median batch's
+    -- ms per call (RT.PF.benchN), the first batch's, and the mean over all.
+    local function benchN(fn, n, reset)
+        local per, first, total = {}, nil, 0
+        for b = 1, GT.batches do
+            if reset then reset() end
+            local s = getTimestampMs()
+            for _ = 1, n do fn() end
+            local e = getTimestampMs() - s
+            per[#per + 1] = e / n
+            total = total + e
+            if b == 1 then first = e / n end
+        end
+        table.sort(per)
+        return { first = first, med = per[math.floor((#per + 1) / 2)], lo = per[1], hi = per[#per], calls = n * GT.batches,
+            mean = total / (n * GT.batches) }
+    end
+    local function record(out, label, what, b)
+        local key = label .. "/" .. what
+        local head = b.mean and string.format("first batch %.4f ms per call", b.first)
+            or string.format("first call %.0f ms", b.first)
+        local text = string.format("%s; median %.4f ms per call (batches %.4f-%.4f ms, %d calls)%s", head, b.med, b.lo,
+            b.hi, b.calls, b.mean and string.format("; mean %.4f ms", b.mean) or "")
+        report():line("OBS  MPS.gastimers cost %s: %s", key, text)
+        out["cost_" .. key] = text
+    end
+    local function chk(out, name, ok, why)
+        out["chk_" .. name], out["why_" .. name] = tostring(ok == true), tostring(why)
+        report():line("OBS  MPS.gastimers check %s %s: %s", name, tostring(ok == true), tostring(why))
+    end
+
+    -- Counts of the writes and of the records sent to the clients (by key,
+    -- sent or not), from the setup on.
+    local function counters()
+        if GT.counting then return end
+        GT.counting = true
+        GT.gasWrites, GT.gzWrites, GT.sent, GT.unsent = 0, 0, {}, {}
+        local G, GZ, WR = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Integration.WorldItemRecords
+        local writeGas, write, send = G.writeGas, GZ.write, WR.send
+        GT.bareSend = send
+        G.writeGas = function(gen, rec)
+            GT.gasWrites = GT.gasWrites + 1
+            return writeGas(gen, rec)
+        end
+        GZ.write = function(item, st)
+            GT.gzWrites = GT.gzWrites + 1
+            return write(item, st)
+        end
+        WR.send = function(item, key, rec)
+            local sent = send(item, key, rec)
+            local t = sent and GT.sent or GT.unsent
+            t[tostring(key)] = (t[tostring(key)] or 0) + 1
+            return sent
+        end
+    end
+
+    -- From now on each minute pass the game makes is timed whole (the mod's
+    -- handler taken off the event and called inside a timer), and each
+    -- refill in it: its kind, whether it wrote, its milliseconds.
+    local function startLive()
+        local G = TLG.Integration.Generators
+        GT.live = { passes = {}, passWrites = {}, outside = 0, calls = {}, bySquare = {}, t0 = TLG.World.now(),
+            gasWrites = GT.gasWrites, gzWrites = GT.gzWrites, sent = GT.sent.tlgGasifier or 0 }
+        if GT.timing then return end
+        GT.timing = true
+        local pass, refill = G.gasMinute, G.gasRefill
+        local function timedPass()
+            local L = GT.live
+            local w0 = GT.gasWrites + GT.gzWrites
+            GT.inPass = true
+            local t0 = getTimestampMs()
+            local ok, err = pcall(pass)
+            local ms = getTimestampMs() - t0
+            GT.inPass = false
+            L.passes[#L.passes + 1] = ms
+            L.passWrites[#L.passWrites + 1] = GT.gasWrites + GT.gzWrites - w0
+            if not ok then report():line("STEPERR MPS.gastimers pass :: %s", tostring(err)) end
+        end
+        -- Without Remove the pass stays as it is, and only its refills are
+        -- timed. A handler Remove did not find goes on calling the refills
+        -- outside the timed pass (counted: `outside`).
+        if Events.EveryOneMinute.Remove then
+            Events.EveryOneMinute.Remove(pass)
+            Events.EveryOneMinute.Add(timedPass)
+            GT.passTimed = true
+        end
+        G.gasRefill = function(gen)
+            local L = GT.live
+            if not GT.inPass then L.outside = L.outside + 1 end
+            local rec = gen and gen:getModData()[G.GAS_KEY]
+            local kind = (type(rec) == "table" and rec.tank) and "propane" or "woodgas"
+            local w0 = GT.gasWrites
+            local t0 = getTimestampMs()
+            local ok, r = pcall(refill, gen)
+            local ms = getTimestampMs() - t0
+            local c = L.calls[kind] or { n = 0, ms = 0, wrote = 0, msWrote = 0, max = 0 }
+            L.calls[kind] = c
+            c.n, c.ms, c.max = c.n + 1, c.ms + ms, math.max(c.max, ms)
+            if GT.gasWrites > w0 then
+                c.wrote, c.msWrote = c.wrote + 1, c.msWrote + ms
+                local sq = gen:getSquare()
+                local k = sq and (sq:getX() .. "," .. sq:getY()) or "?"
+                L.bySquare[k] = (L.bySquare[k] or 0) + 1
+            end
+            if not ok then error(r, 0) end
+            return r
+        end
+    end
+
+    -- Whole milliseconds of each pass: their mean is the time a pass takes,
+    -- since a pass starts at any point of a millisecond.
+    local function statsText(list)
+        local n = #list
+        if n == 0 then return "none" end
+        local s, sum, ones = {}, 0, 0
+        for i, v in ipairs(list) do
+            s[i] = v
+            sum = sum + v
+            if v >= 1 then ones = ones + 1 end
+        end
+        table.sort(s)
+        return string.format("%d: mean %.3f ms, median %.0f ms, max %.0f ms, %d at 1 ms or more", n, sum / n,
+            s[math.floor((n + 1) / 2)], s[n], ones)
+    end
+
+    function services.setup_gastimers(player, args)
+        local G, GZ, F = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Domain.GasFeed
+        local Gasifier, W, Tables, V = TLG.Domain.Gas.Gasifier, TLG.World, TLG.Tables, TLG.Authority.Vault
+        counters()
+        GT.vault0 = { restored = V.stats.restored, cleared = V.stats.cleared, dropped = V.stats.dropped }
+        local out = { vaultActive = tostring(V.active()) }
+        local before = 0
+        for _ in pairs(G.gasSquares) do before = before + 1 end
+        out.squaresBefore = before
+        record(out, "gas_none", "gas_minute", bench(G.gasMinute))
+        local x, y = layout(S.CX + 6, S.CY + 6)
+        if x == nil then
+            out.clear = "false"
+            reply("setup_gastimers", args, out)
+            return
+        end
+        out.clear, out.x, out.y = "true", x, y
+        GT.propane, GT.wood = {}, {}
+        for _, r in ipairs(GT.propRows) do
+            for _, c in ipairs(GT.cols) do GT.propane[#GT.propane + 1] = { x = x + c, y = y + r } end
+        end
+        for _, r in ipairs(GT.woodRows) do
+            for _, c in ipairs(GT.cols) do GT.wood[#GT.wood + 1] = { x = x + c, y = y + r } end
+        end
+        local now = W.now()
+        local conv, gas, tanks, lit = 0, 0, 0, 0
+        local function place(e)
+            local g = genAt(e) or IsoGenerator.new(instanceItem("Base.Generator"), getCell(), cell(e.x, e.y))
+            g:setConnected(true)
+            g:setFuel(0)
+            local state = commissionGas(g)
+            e.conv = tostring(state)
+            if e.conv == "Commissioned" then conv = conv + 1 end
+            if G.isGas(g) then gas = gas + 1 end
+            g:sync()
+            g:transmitModData()
+            return g
+        end
+        for _, e in ipairs(GT.propane) do
+            local g = place(e)
+            -- gas.connect's steps (GasHandlers), a full tank.
+            pcall(G.chargeWear, g)
+            local rec = G.gasRecord(g) or F.new({ id = W.newId("GS"), t = now })
+            local base = Tables.deepCopy(rec)
+            base.buf, base.fuel = F.current(rec, g:getFuel()), g:getFuel()
+            local c = F.connect(base, TLG.Domain.Gas.TANK_USES, now)
+            if c.ok then
+                G.writeGas(g, c.rec)
+                e.moved = G.gasRefill(g)
+                if (e.moved or 0) > 0 then tanks = tanks + 1 end
+            end
+            g:setActivated(true)
+            g:sync()
+        end
+        local kg = 2 * TLG.Feedstocks.contribution("Base.Log").wood
+        for _, e in ipairs(GT.wood) do
+            place(e)
+            local item = cell(e.x + 1, e.y):AddWorldInventoryItem("TLG.Gasifier", 0.5, 0.5, 0)
+            e.gid = item and item:getID()
+            local st = item and GZ.read(item, true)
+            -- gasifier.load's and gasifier.light's steps (GasifierHandlers).
+            local function commit(r, site)
+                if not (r and r.ok) then return false end
+                if site then r.st.site = GZ.siteOf(GZ.square(item)) end
+                r.st.rev = (st.rev or 0) + 1
+                GZ.write(item, r.st)
+                GZ.watchGenerators(item)
+                st = r.st
+                return true
+            end
+            if st then
+                st = GZ.advance(item, st, now)
+                commit(Gasifier.load(st, { firewood = kg }, now))
+                if commit(Gasifier.start(st, now), true) and GZ.lit(st) then lit = lit + 1 end
+            end
+        end
+        local sp = stateOf(GT.propane)
+        local n = 0
+        for _ in pairs(G.gasSquares) do n = n + 1 end
+        out.converted, out.gas, out.tanks, out.lit, out.squares, out.kg = conv, gas, tanks, lit, n, kg
+        out.propaneOn = count(sp, function(s) return s.on end)
+        out.propaneGas = count(sp, function(s) return s.holds end)
+        out.moved, out.uses = tostring(GT.propane[1].moved), tostring(sp[1] and sp[1].uses)
+        report():line("OBS  MPS.gastimers site %d,%d: %d converted (%d on gas), %d tanks in, %d gasifiers lit with %.1f kg; " ..
+            "%d squares in the pass (%d before); propane %s", x, y, conv, gas, tanks, lit, kg, n, before, stateText(sp))
+        reply("setup_gastimers", args, out)
+    end
+
+    -- After the warm-up: the wood-gas generators started, as the game's
+    -- Turn on leaves them.
+    function services.start_gastimers(player, args)
+        for _, e in ipairs(GT.wood or {}) do
+            local g = genAt(e)
+            if g then
+                g:setActivated(true)
+                g:sync()
+            end
+        end
+        local sw = stateOf(GT.wood or {})
+        local out = { woodOn = count(sw, function(s) return s.on end), woodGas = count(sw, function(s) return s.holds end),
+            woodLit = count(sw, function(s) return s.lit end), text = stateText(sw) }
+        report():line("OBS  MPS.gastimers wood gas started: %s", out.text)
+        reply("start_gastimers", args, out)
+    end
+
+    function services.live_gastimers(player, args)
+        startLive()
+        reply("live_gastimers", args, { t0 = string.format("%.4f", GT.live.t0), passTimed = tostring(GT.passTimed == true) })
+    end
+
+    -- The 16 as they stand (raw), the live window so far, the records sent
+    -- since the setup, and the vault's checks since then.
+    function services.probe_gastimers(player, args)
+        local V = TLG.Authority.Vault
+        local out = { hours = string.format("%.4f", getGameTime():getWorldAgeHours()),
+            minute = tostring(getGameTime():getMinutes()) }
+        local sp, sw = stateOf(GT.propane or {}), stateOf(GT.wood or {})
+        local function on(s) return s.on end
+        local function holds(s) return s.holds end
+        out.propaneOn, out.woodOn, out.propaneGas, out.woodGas = count(sp, on), count(sw, on), count(sp, holds),
+            count(sw, holds)
+        out.woodLit = count(sw, function(s) return s.lit end)
+        local function fin(v) return v == math.huge and -1 or v end
+        local lo, hi, hop = math.huge, -1, math.huge
+        for _, s in ipairs(sp) do
+            lo, hi = math.min(lo, s.uses or -1), math.max(hi, s.uses or -1)
+        end
+        for _, s in ipairs(sw) do hop = math.min(hop, s.hopper or -1) end
+        out.usesLo, out.usesHi, out.hopperLo = fin(lo), hi, string.format("%.4f", fin(hop))
+        out.propaneText, out.woodText = stateText(sp), stateText(sw)
+        local L = GT.live
+        if L then
+            local quiet, busy = {}, {}
+            for i, ms in ipairs(L.passes) do
+                if (L.passWrites[i] or 0) > 0 then busy[#busy + 1] = ms else quiet[#quiet + 1] = ms end
+            end
+            out.passes, out.outside, out.liveHours = #L.passes, L.outside, string.format("%.4f", TLG.World.now() - L.t0)
+            out.passTimed = tostring(GT.passTimed == true)
+            out.passText, out.quietText, out.busyText = statsText(L.passes), statsText(quiet), statsText(busy)
+            for kind, c in pairs(L.calls) do
+                local q = c.n - c.wrote
+                out[kind .. "Calls"], out[kind .. "Wrote"], out[kind .. "Max"] = c.n, c.wrote, c.max
+                out[kind .. "Ms"] = string.format("%.4f", c.n > 0 and c.ms / c.n or 0)
+                out[kind .. "MsQuiet"] = string.format("%.4f", q > 0 and (c.ms - c.msWrote) / q or 0)
+                out[kind .. "MsWrote"] = string.format("%.4f", c.wrote > 0 and c.msWrote / c.wrote or 0)
+            end
+            local minP, minW = math.huge, math.huge
+            for _, e in ipairs(GT.propane or {}) do minP = math.min(minP, L.bySquare[e.x .. "," .. e.y] or 0) end
+            for _, e in ipairs(GT.wood or {}) do minW = math.min(minW, L.bySquare[e.x .. "," .. e.y] or 0) end
+            out.minPropaneRefills, out.minWoodDraws = fin(minP), fin(minW)
+            out.liveGasWrites, out.liveGzWrites = GT.gasWrites - L.gasWrites, GT.gzWrites - L.gzWrites
+            out.liveSent = (GT.sent.tlgGasifier or 0) - L.sent
+        end
+        out.sentGz, out.unsentGz = GT.sent and GT.sent.tlgGasifier or 0, GT.unsent and GT.unsent.tlgGasifier or 0
+        out.gasWrites, out.gzWrites = GT.gasWrites or 0, GT.gzWrites or 0
+        out.vaultActive = tostring(V.active())
+        local v0 = GT.vault0 or {}
+        out.vaultRestored = V.stats.restored - (v0.restored or 0)
+        out.vaultCleared = V.stats.cleared - (v0.cleared or 0)
+        out.vaultDropped = V.stats.dropped - (v0.dropped or 0)
+        reply("probe_gastimers", args, out)
+    end
+
+    local rows = {}
+
+    -- Propane alone (the wood-gas squares out of the pass meanwhile). As
+    -- found after a pass, each a part of a use below its cap; one found
+    -- within the tolerance of it is lowered by half a use first.
+    function rows.propane_part(out)
+        local G, F = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local list, u = GT.propane, useL()
+        without(GT.wood, function()
+            G.gasMinute()
+            local lowered = 0
+            for _, x in ipairs(stateOf(list)) do
+                if x.room <= F.TOLERANCE then
+                    x.g:setFuel(x.fuel - u / 2)
+                    lowered = lowered + 1
+                end
+            end
+            local s0 = stateOf(list)
+            report():line("OBS  MPS.gastimers propane_8 as found (a use is %.6f L; %d lowered by half a use): %s", u,
+                lowered, stateText(s0))
+            chk(out, "propane_part_use_found", allOf(s0, 8, function(x) return x.on and x.room > F.TOLERANCE and x.room < u end),
+                stateText(s0))
+            record(out, "propane_8", "gas_minute_part_use", bench(G.gasMinute))
+            local s1 = stateOf(list)
+            chk(out, "propane_part_use_moves_nothing", unchanged(s0, s1), "after: " .. stateText(s1))
+        end)
+    end
+
+    -- Each propane generator brought within the tolerance of its cap: its
+    -- fuel lowered to a use below the cap (2e-5 L more, for the float the
+    -- game keeps fuel in) and the mod's own pass moving that use.
+    local function toFull(list)
+        local G, F = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local u = useL()
+        G.gasMinute()
+        for _, x in ipairs(stateOf(list)) do
+            if x.room > F.TOLERANCE then x.g:setFuel(x.fuel - (u - x.room) - 2e-5) end
+        end
+        G.gasMinute()
+    end
+
+    function rows.propane_full(out)
+        local G, F = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local list = GT.propane
+        without(GT.wood, function()
+            G.gasMinute()
+            local s0 = stateOf(list)
+            toFull(list)
+            local s1 = stateOf(list)
+            chk(out, "propane_within_tolerance", allOf(s1, 8, function(x, i)
+                local moved = s0[i].room > F.TOLERANCE and 1 or 0
+                return x.on and x.room <= F.TOLERANCE and x.uses == s0[i].uses - moved
+            end), "before: " .. stateText(s0) .. " | after: " .. stateText(s1))
+            record(out, "propane_8", "gas_minute_full", bench(G.gasMinute))
+            local s2 = stateOf(list)
+            chk(out, "propane_full_moves_nothing", unchanged(s1, s2), "after: " .. stateText(s2))
+        end)
+    end
+
+    -- From the cap, 1.5 uses out before each call, so each call moves one
+    -- use from each tank; the lowering alone timed too, to subtract.
+    function rows.propane_refill(out)
+        local G, F = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local list, u = GT.propane, useL()
+        without(GT.wood, function()
+            toFull(list)
+            local s3 = stateOf(list)
+            chk(out, "propane_refill_starts_full", allOf(s3, 8, function(x)
+                return x.room <= F.TOLERANCE and (x.uses or 0) > 2 * GT.n
+            end), stateText(s3))
+            local reset, take = snapshot(list), lower(s3, function() return 1.5 * u end)
+            record(out, "propane_8", "lowered_only", benchN(take, GT.n))
+            reset()
+            record(out, "propane_8", "refill_one_use", benchN(function() take(); G.gasMinute() end, GT.n, reset))
+            local s4 = stateOf(list)
+            chk(out, "propane_each_call_moves_one_use", allOf(s4, 8, function(x, i) return x.uses == s3[i].uses - GT.n end),
+                string.format("after the last batch of %d calls: %s (were %s)", GT.n, stateText(s4), stateText(s3)))
+            reset()
+            local s5 = stateOf(list)
+            chk(out, "propane_put_back", unchanged(s3, s5), stateText(s5))
+        end)
+    end
+
+    -- Each wood-gas generator brought to its cap by the mod's own pass.
+    local function toCaps()
+        local G = TLG.Integration.Generators
+        for _ = 1, 3 do
+            for k in pairs(G.woodgasWait) do G.woodgasWait[k] = nil end
+            G.gasMinute()
+        end
+    end
+    local function atCap(x) return x.on and x.power > 0 and x.room <= TLG.Domain.GasFeed.TOLERANCE and x.given ~= nil end
+
+    -- Wood gas alone (the propane squares out of the pass meanwhile).
+    function rows.woodgas_full(out)
+        local G = TLG.Integration.Generators
+        local list = GT.wood
+        without(GT.propane, function()
+            toCaps()
+            local s0 = stateOf(list)
+            chk(out, "woodgas_at_their_caps", allOf(s0, 8, atCap), stateText(s0))
+            record(out, "woodgas_8", "gas_minute_full", bench(G.gasMinute))
+            local s1 = stateOf(list)
+            chk(out, "woodgas_full_draws_nothing", unchanged(s0, s1), "after: " .. stateText(s1))
+        end)
+    end
+
+    -- From the caps, a step out before each call, so each call draws a
+    -- step's gas from the gasifiers (a generator within two tiles of two
+    -- draws from the one with the lower id, so the gas is judged in all);
+    -- `around` wraps the timed calls alone. The gasifier records written
+    -- and sent in the timed calls are kept in `out`.
+    local function woodRefill(out, label, what, around, alone)
+        local G, F = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local list = GT.wood
+        without(GT.propane, function()
+            toCaps()
+            local s1 = stateOf(list)
+            chk(out, label .. "_starts_at_the_caps", allOf(s1, 8, atCap), stateText(s1))
+            local reset, take = snapshot(list), lower(s1, function(x) return x.power end)
+            if alone then
+                record(out, "woodgas_8", "one_step_out_only", benchN(take, GT.n))
+                reset()
+            end
+            local w0, sent0 = GT.gzWrites, GT.sent.tlgGasifier or 0
+            local function timed() return benchN(function() take(); G.gasMinute() end, GT.n, reset) end
+            local b
+            if around then b = around(timed) else b = timed() end
+            out[label .. "Writes"], out[label .. "Sent"] = GT.gzWrites - w0, (GT.sent.tlgGasifier or 0) - sent0
+            record(out, "woodgas_8", what, b)
+            local s2 = stateOf(list)
+            local ok, given, want = #s2 == 8, 0, 0
+            for i, x in ipairs(s2) do
+                given = given + ((x.given or 0) - (s1[i].given or 0))
+                want = want + GT.n * F.nm3For("woodgas", s1[i].power + math.max(0, s1[i].room))
+                ok = ok and x.room <= F.TOLERANCE
+            end
+            chk(out, label .. "_each_call_draws_a_step", ok and math.abs(given - want) < 1e-4, string.format(
+                "after the last batch of %d calls the gasifiers gave %.6f Nm3 in all against %.6f for every generator's step; %s",
+                GT.n, given, want, stateText(s2)))
+            reset()
+            local s3 = stateOf(list)
+            chk(out, label .. "_put_back", unchanged(s1, s3), stateText(s3))
+        end)
+    end
+
+    function rows.woodgas_refill(out)
+        woodRefill(out, "woodgas", "refill_one_step", nil, true)
+        chk(out, "woodgas_every_gasifier_write_sent", out.woodgasWrites > 0 and out.woodgasSent == out.woodgasWrites,
+            string.format("%d gasifier records written, %d sent to the clients", out.woodgasWrites, out.woodgasSent))
+    end
+
+    -- The same with the gasifier record's send to the clients
+    -- (WorldItemRecords.send, D-041) taken out of the timed calls.
+    function rows.woodgas_refill_no_item_send(out)
+        local WR = TLG.Integration.WorldItemRecords
+        local function around(fn)
+            local send = WR.send
+            WR.send = function() return false end
+            local ok, r = pcall(fn)
+            WR.send = send
+            if not ok then error(r, 0) end
+            return r
+        end
+        woodRefill(out, "woodgas_quiet", "refill_one_step_no_item_send", around, false)
+        chk(out, "woodgas_quiet_sent_nothing", out.woodgas_quietWrites > 0 and out.woodgas_quietSent == 0,
+            string.format("%d gasifier records written, %d sent to the clients", out.woodgas_quietWrites,
+                out.woodgas_quietSent))
+    end
+
+    -- Both kinds together, as single player's run 400 found them: propane a
+    -- part of a use below, wood gas at the caps.
+    function rows.both(out)
+        local G, F = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local u = useL()
+        toCaps()
+        for _, x in ipairs(stateOf(GT.propane)) do
+            if x.room <= F.TOLERANCE then x.g:setFuel(x.fuel - u / 2) end
+        end
+        local sp, sw = stateOf(GT.propane), stateOf(GT.wood)
+        chk(out, "both_16_as_in_single_player", allOf(sp, 8, function(x) return x.on and x.room > F.TOLERANCE and x.room < u end)
+            and allOf(sw, 8, atCap), "propane " .. stateText(sp) .. " | wood gas " .. stateText(sw))
+        record(out, "both_16", "gas_minute_as_they_stand", bench(G.gasMinute))
+        local sp2, sw2 = stateOf(GT.propane), stateOf(GT.wood)
+        chk(out, "both_16_unchanged", unchanged(sp, sp2) and unchanged(sw, sw2),
+            "propane " .. stateText(sp2) .. " | wood gas " .. stateText(sw2))
+    end
+
+    -- The sends alone, a set number a batch, on the first wood-gas
+    -- generator and its gasifier: the generator's mod data
+    -- (transmitModData, Generators.writeGas), its fields (sync, setFuel), the
+    -- gasifier item's own sends (Gasifiers.write: syncItemFields and its world
+    -- object's transmitModData, as the mod makes them) and the record to
+    -- every client (WorldItemRecords.send, without the harness's counter,
+    -- counted here).
+    function rows.sends(out)
+        local GZ = TLG.Integration.Gasifiers
+        local e = GT.wood[1]
+        local g, it = genAt(e), gasifierOf(e)
+        local wi = it and it:getWorldItem()
+        local st = it and it:getModData()[GZ.KEY]
+        if not (g and it and wi and type(st) == "table") then error("no generator or gasifier at " .. keyOf(e), 0) end
+        local n = GT.sendN
+        record(out, "sends", "generator_mod_data", benchN(function() g:transmitModData() end, n))
+        record(out, "sends", "generator_sync", benchN(function() g:sync() end, n))
+        record(out, "sends", "gasifier_item_and_object", benchN(function()
+            if it.syncItemFields then it:syncItemFields() end
+            if wi.transmitModData then pcall(function() wi:transmitModData() end) end
+        end, n))
+        local bare = GT.bareSend
+        local one = bare(it, GZ.KEY, st)
+        record(out, "sends", "gasifier_record", benchN(function() bare(it, GZ.KEY, st) end, n))
+        if one then GT.sent.tlgGasifier = (GT.sent.tlgGasifier or 0) + 1 + n * GT.batches end
+        chk(out, "sends_gasifier_record_goes", one == true, "WorldItemRecords.send returned " .. tostring(one))
+    end
+
+    function services.bench_gastimers(player, args)
+        local V = TLG.Authority.Vault
+        local out = { row = tostring(args.row) }
+        local v0 = { V.stats.restored, V.stats.cleared, V.stats.dropped }
+        local fn = rows[args.row]
+        if fn == nil or GT.propane == nil or GT.wood == nil then
+            out.error = "no such row, or no site"
+        else
+            local ok, err = pcall(fn, out)
+            if not ok then
+                out.error = tostring(err)
+                report():line("STEPERR MPS.bench_gastimers %s :: %s", tostring(args.row), out.error)
+            end
+        end
+        chk(out, "vault_kept_" .. tostring(args.row), V.stats.restored == v0[1] and V.stats.cleared == v0[2]
+            and V.stats.dropped == v0[3], string.format("restored %d, cleared %d, dropped %d during the row",
+                V.stats.restored - v0[1], V.stats.cleared - v0[2], V.stats.dropped - v0[3]))
+        reply("bench_gastimers", args, out)
+    end
+end
+buildGasTimers()

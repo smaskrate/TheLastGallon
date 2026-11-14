@@ -1883,6 +1883,215 @@ if MP.only == "gasmoves" then
 end
 
 ------------------------------------------------------------------------------
+-- gastimers (one client, the shortest day; D-040, D-041): the gas's cost on
+-- a dedicated server (MPServer.lua, buildGasTimers). The server lays out 8
+-- propane and 8 wood-gas generators as single player's performance mode
+-- does, the gasifiers lit, and after the warm-up starts the wood-gas ones.
+-- A then asks for each timing in turn, each a state the server sets up,
+-- checks, times and checks again; then six game hours with every minute
+-- pass timed on the server. A counts the records the server sends it (the
+-- TLG item command, WorldItemRecords.received) against the server's count
+-- of the gasifier records it sent.
+------------------------------------------------------------------------------
+if MP.only == "gastimers" then
+    local function build()
+        local GT = { hours = 6, warm = 1.2, settle = 0.2, got = 0, gz = 0, found = 0, ms = 0 }
+        MP.GT = GT
+        local function num(m, k) return tonumber(m[k]) or -1 end
+        local function hrs() return getGameTime():getWorldAgeHours() end
+        local function costs(m)
+            local keys = {}
+            for k in pairs(m) do
+                if string.sub(k, 1, 5) == "cost_" then keys[#keys + 1] = k end
+            end
+            table.sort(keys)
+            for _, k in ipairs(keys) do
+                report():line("OBS  MP.gt cost on the server %s: %s", string.sub(k, 6), tostring(m[k]))
+            end
+        end
+        -- Every check the server made (chk_<name>, why_<name>) as this
+        -- client's; returns how many.
+        local function judged(m)
+            local names = {}
+            for k in pairs(m) do
+                local n = string.match(k, "^chk_(.+)$")
+                if n then names[#names + 1] = n end
+            end
+            table.sort(names)
+            for _, n in ipairs(names) do
+                check("gt_" .. n, function() return m["chk_" .. n] == "true", tostring(m["why_" .. n]) end)
+            end
+            return #names
+        end
+        local function waitHours(name, h)
+            return { name = "mp_gt_" .. name, timeout = math.floor(h * 3600) + 1200, fn = function(ctx, ticks)
+                ctx.h0 = ctx.h0 or hrs()
+                if hrs() - ctx.h0 < h then return nil end
+                report():line("OBS  MP.gt %s: %.3f game hours passed", name, hrs() - ctx.h0)
+                return true
+            end }
+        end
+
+        -- The records the server sends this client, counted as they come.
+        local counting = once("mp_gt_count_records", function()
+            local WR = TLG.Integration.WorldItemRecords
+            local orig = WR.received
+            WR.received = function(args)
+                local t0 = getTimestampMs()
+                local r = orig(args)
+                GT.ms = GT.ms + (getTimestampMs() - t0)
+                GT.got = GT.got + 1
+                if r then GT.found = GT.found + 1 end
+                if type(args) == "table" and args.key == "tlgGasifier" then GT.gz = GT.gz + 1 end
+                return r
+            end
+        end)
+
+        local setup = call("gt_setup", "setup_gastimers", {}, "setup_gastimers", function(m)
+            report():line("OBS  MP.gt site %s,%s clear=%s: %s converted (%s on gas), %s tanks in (%s uses moved, %s left), " ..
+                "%s gasifiers lit with %s kg; %s squares in the pass (%s before); propane running %s, holding gas %s; " ..
+                "vault %s", tostring(m.x), tostring(m.y), tostring(m.clear), tostring(m.converted), tostring(m.gas),
+                tostring(m.tanks), tostring(m.moved), tostring(m.uses), tostring(m.lit), tostring(m.kg), tostring(m.squares),
+                tostring(m.squaresBefore), tostring(m.propaneOn), tostring(m.propaneGas), tostring(m.vaultActive))
+            costs(m)
+            check("gt_site_clear_and_no_gas_generator_before", function()
+                return m.clear == "true" and num(m, "squaresBefore") == 0 and m.vaultActive == "true", string.format(
+                    "clear %s, %s squares in the pass before, vault %s", tostring(m.clear), tostring(m.squaresBefore),
+                    tostring(m.vaultActive))
+            end)
+            check("gt_sixteen_converted_to_gas", function()
+                return num(m, "converted") == 16 and num(m, "gas") == 16 and num(m, "squares") == 16, string.format(
+                    "%s converted, %s on gas, %s squares in the pass", tostring(m.converted), tostring(m.gas),
+                    tostring(m.squares))
+            end)
+            check("gt_propane_tanks_in_and_running", function()
+                return num(m, "tanks") == 8 and num(m, "propaneOn") == 8 and num(m, "propaneGas") == 8, string.format(
+                    "%s tanks in, %s running, %s holding gas", tostring(m.tanks), tostring(m.propaneOn),
+                    tostring(m.propaneGas))
+            end)
+            check("gt_gasifiers_lit", function() return num(m, "lit") == 8, tostring(m.lit) .. " lit" end)
+        end, 3600)
+
+        local start = call("gt_start", "start_gastimers", {}, "start_gastimers", function(m)
+            report():line("OBS  MP.gt wood gas started: running %s, holding gas %s, gasifiers lit %s: %s", tostring(m.woodOn),
+                tostring(m.woodGas), tostring(m.woodLit), tostring(m.text))
+            check("gt_woodgas_started", function()
+                return num(m, "woodOn") == 8 and num(m, "woodGas") == 8 and num(m, "woodLit") == 8, string.format(
+                    "%s running, %s holding gas, %s gasifiers lit", tostring(m.woodOn), tostring(m.woodGas),
+                    tostring(m.woodLit))
+            end)
+        end)
+
+        local function probe(name, judge)
+            return call("gt_probe_" .. name, "probe_gastimers", {}, "probe_gastimers", function(m)
+                report():line("OBS  MP.gt %s at %s h (minute %s): propane running %s holding gas %s, tank uses %s-%s; " ..
+                    "wood gas running %s holding gas %s, gasifiers lit %s, least wood in a hopper %s kg; gasifier records " ..
+                    "sent %s (not sent %s); writes: gas %s, gasifier %s; vault restored %s cleared %s dropped %s",
+                    name, tostring(m.hours), tostring(m.minute), tostring(m.propaneOn), tostring(m.propaneGas),
+                    tostring(m.usesLo), tostring(m.usesHi), tostring(m.woodOn), tostring(m.woodGas), tostring(m.woodLit),
+                    tostring(m.hopperLo), tostring(m.sentGz), tostring(m.unsentGz), tostring(m.gasWrites),
+                    tostring(m.gzWrites), tostring(m.vaultRestored), tostring(m.vaultCleared), tostring(m.vaultDropped))
+                if m.passes then
+                    report():line("OBS  MP.gt %s live window %s h, pass timed %s: passes %s; without a write %s; with " ..
+                        "one %s; refills outside the timed pass %s", name, tostring(m.liveHours), tostring(m.passTimed),
+                        tostring(m.passText), tostring(m.quietText), tostring(m.busyText), tostring(m.outside))
+                    for _, kind in ipairs({ "propane", "woodgas" }) do
+                        report():line("OBS  MP.gt %s live %s refills: %s calls, %s ms each (%s without a write, %s with " ..
+                            "one), %s wrote, %s ms the most", name, kind, tostring(m[kind .. "Calls"]),
+                            tostring(m[kind .. "Ms"]), tostring(m[kind .. "MsQuiet"]), tostring(m[kind .. "MsWrote"]),
+                            tostring(m[kind .. "Wrote"]), tostring(m[kind .. "Max"]))
+                    end
+                    report():line("OBS  MP.gt %s live writes: gas %s, gasifier %s, gasifier records sent %s; fewest " ..
+                        "refills on a propane square %s, draws on a wood-gas square %s", name, tostring(m.liveGasWrites),
+                        tostring(m.liveGzWrites), tostring(m.liveSent), tostring(m.minPropaneRefills),
+                        tostring(m.minWoodDraws))
+                end
+                if judge then judge(m) end
+            end)
+        end
+
+        local running = probe("running", function(m)
+            check("gt_all_sixteen_running_on_gas", function()
+                return num(m, "propaneOn") == 8 and num(m, "woodOn") == 8 and num(m, "propaneGas") == 8
+                    and num(m, "woodGas") == 8, string.format("propane %s running %s holding gas; wood gas %s running %s " ..
+                    "holding gas", tostring(m.propaneOn), tostring(m.propaneGas), tostring(m.woodOn), tostring(m.woodGas))
+            end)
+        end)
+
+        local benches = {}
+        for _, row in ipairs({ "propane_part", "propane_full", "propane_refill", "woodgas_full", "woodgas_refill",
+            "woodgas_refill_no_item_send", "both", "sends" }) do
+            benches[#benches + 1] = call("gt_bench_" .. row, "bench_gastimers", { row = row }, "bench_gastimers",
+                function(m)
+                    costs(m)
+                    local n = judged(m)
+                    check("gt_bench_" .. row .. "_ran", function()
+                        return m.error == nil and n > 1, string.format("%d checks; error %s", n, tostring(m.error))
+                    end)
+                end, 3600)
+        end
+
+        local live = call("gt_live", "live_gastimers", {}, "live_gastimers", function(m)
+            report():line("OBS  MP.gt live window from %s h, the pass timed whole %s", tostring(m.t0), tostring(m.passTimed))
+        end)
+        -- The gasifier records sent before the first answer reached this
+        -- client before it (in order); those sent by the second came no later.
+        local first = probe("live_end", function(m) GT.s1 = num(m, "sentGz") end)
+        local mine = once("mp_gt_client_counts", function()
+            GT.c = GT.gz
+            report():line("OBS  MP.gt this client got %d records from the server (%d gasifier records), found the item " ..
+                "for %d, %d ms in all", GT.got, GT.gz, GT.found, GT.ms)
+        end)
+        local last = probe("end", function(m)
+            GT.s2 = num(m, "sentGz")
+            local hours = GT.hours
+            check("gt_live_every_minute_timed", function()
+                return m.passTimed == "true" and num(m, "passes") >= 60 * hours - 3 and num(m, "outside") == 0,
+                    string.format("pass timed %s, %s passes in %s h, %s refills outside them", tostring(m.passTimed),
+                        tostring(m.passes), tostring(m.liveHours), tostring(m.outside))
+            end)
+            check("gt_live_all_sixteen_ran", function()
+                return num(m, "propaneOn") == 8 and num(m, "woodOn") == 8 and num(m, "propaneGas") == 8
+                    and num(m, "woodGas") == 8 and num(m, "woodLit") == 8, string.format(
+                    "propane %s running %s holding gas; wood gas %s running %s holding gas, %s gasifiers lit",
+                    tostring(m.propaneOn), tostring(m.propaneGas), tostring(m.woodOn), tostring(m.woodGas),
+                    tostring(m.woodLit))
+            end)
+            check("gt_live_refills_and_draws", function()
+                return num(m, "minPropaneRefills") >= 1 and num(m, "minWoodDraws") >= hours - 1, string.format(
+                    "fewest refills on a propane square %s, fewest draws on a wood-gas square %s in %s h",
+                    tostring(m.minPropaneRefills), tostring(m.minWoodDraws), tostring(m.liveHours))
+            end)
+            check("gt_live_every_gasifier_record_sent", function()
+                return num(m, "liveGzWrites") > 0 and num(m, "liveSent") == num(m, "liveGzWrites"), string.format(
+                    "%s gasifier records written, %s sent to the clients", tostring(m.liveGzWrites), tostring(m.liveSent))
+            end)
+            check("gt_client_got_every_gasifier_record", function()
+                return GT.s1 > 0 and GT.s1 <= GT.c and GT.c <= GT.s2, string.format(
+                    "the server had sent %d, then %d; this client got %d", GT.s1, GT.s2, GT.c or -1)
+            end)
+            check("gt_vault_kept_every_record", function()
+                return num(m, "vaultRestored") == 0 and num(m, "vaultCleared") == 0 and num(m, "vaultDropped") == 0,
+                    string.format("since the setup: restored %s, cleared %s, dropped %s", tostring(m.vaultRestored),
+                        tostring(m.vaultCleared), tostring(m.vaultDropped))
+            end)
+        end)
+
+        local stepsA = { MP.waitWorld, counting, setup, waitHours("warm", GT.warm), start, waitHours("settle", GT.settle),
+            running }
+        for _, s in ipairs(benches) do stepsA[#stepsA + 1] = s end
+        for _, s in ipairs({ live, waitHours("live", GT.hours), first, wait("mp_gt_records_arrive", 120), mine, last,
+            once("mp_finish_a", function() send("finish", {}) end), MP.finish }) do
+            stepsA[#stepsA + 1] = s
+        end
+        MP.stepsA = stepsA
+        MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+    end
+    build()
+    return
+end
+
+------------------------------------------------------------------------------
 -- machinemenus (one client): the menus that read the client's copy of a
 -- record on a server. The machine menu's Pause, Resume and Abort batch for
 -- each of the nine kinds of machine, started by the server (spawn, then

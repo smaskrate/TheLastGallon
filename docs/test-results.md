@@ -15,7 +15,7 @@ runtime tests.
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
-| Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines, wrong fuel and the gas | The performance mode runs single player on the reference machine (launches 181–185, 340–341 and 398–401, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188). Electrical networks are not built in game in this build |
+| Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launch 410). Electrical networks are not built in game in this build |
 | Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.4.3 since 2026-11-13, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.4.2 and 0.4.1 |
 
 ## 2026-10-30 — Kahlua runtime probe
@@ -8424,3 +8424,62 @@ down on a square where its load differs.
 Evidence:
 [run 408](evidence/2026-11-13_rt-mp_harness_run408_gasmoves_42.22.2.txt);
 [run 409](evidence/2026-11-13_rt-mp_harness_run409_gasmoves_near_window_42.22.2.txt).
+
+## 2026-11-14 — RT-MP launch 410 (the gas's cost on a server)
+
+Branch `feature/gas-generators` after `8aca974`, 42.22.2, on a dedicated
+server with one client, on the shortest day: the gas timed on the server
+as single player's performance mode times it (D-040, D-041), as a new
+case, `tools/run-mp-harness.ps1 -Only gastimers` (committed with this
+entry). The server lays out single player's 16 gas generators near the
+spawn point as a fixture (8 on propane with a full tank in, 8 on wood gas
+with a lit Wood Gasifier east of each, three tiles apart; no menus), and
+the client asks for each timing in turn. Each sets up its state as the
+game reaches it, checks it, times it and checks it again; the refills and
+the sends run fixed batches, since on a server each sends to the clients.
+Then the server times every minute pass for six game hours and counts the
+gasifier records it sends against those the client gets.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 410 | 49/0 |
+
+* The setup: 16 generators converted to gas, the 8 tanks in (the
+  connect's refill moved 3,840 uses from each, 1,160 left), the 8
+  gasifiers lit with 18 kg of wood, the 16 squares in the minute pass and
+  none there before. After 1.2 game hours of warm-up all 16 ran on gas.
+* Every timed state was what its row says before and after the timing;
+  each refill row moved one use or drew a step a call (the gasifiers gave
+  5.12 Nm3 a batch against 5.12 for every generator's step), and each
+  row's records went back as they were. The figures are in
+  `performance.md` ("The gas on a dedicated server"): the minute pass in
+  its steady states within 10 % of single player's run 405 (the 16
+  0.235 ms against 0.239); a propane refill 0.106 ms a generator against
+  0.076; a wood-gas draw 0.231 ms against 0.199, and 0.194 ms with the
+  gasifier record's send to the clients taken out; the sends alone
+  0.002–0.014 ms.
+* The propane generators stood within the tolerance of their caps at the
+  first row, after one hourly step (the arithmetic of single player's row
+  within the tolerance), so that row lowered each by half a use first.
+* Live, 6.2 game hours: all 371 minute passes timed whole, no refill
+  outside them. The 365 passes without a write read 0.685 ms on average
+  (2 ms the most), the 6 with writes 4.7 ms (5 ms); 6 is as many as the
+  hourly steps, but the passes' minutes were not logged. Each
+  propane generator refilled 5 times and each wood-gas one drew 6 times;
+  all 16 still ran at the end. The 48 gasifier records written were all
+  sent.
+* The client got every gasifier record the server sent over the run,
+  3,145. It found the item on its square for 3,131; the other 14 were not
+  looked into.
+
+The vault, active on the server, put back, cleared and dropped nothing,
+and logged nothing but its start. No console of the client or the server
+holds a warning or error of the mod; each read 0.4.3, the server's holds
+no Lua error, and the client's no exception outside the game's animator
+scan.
+
+Not run: more than one client; a real network; the machines' and the
+cans' records sent, timed on a server.
+
+Evidence:
+[run 410](evidence/2026-11-14_rt-mp_harness_run410_gastimers_42.22.2.txt).

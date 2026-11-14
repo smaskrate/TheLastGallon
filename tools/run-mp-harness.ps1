@@ -124,6 +124,14 @@
   with the world menu's Grab just after A's refill and puts it down a tile
   from A, asking nothing about it until the server's minute pass has put
   it out as moved (one client, on the shortest day, about 9 minutes).
+  gastimers: the gas's cost on a server (D-040, D-041), timed as single
+  player's performance mode times it: the server lays out 8 propane and 8
+  wood-gas generators with lit gasifiers (a fixture, no menus), times the
+  minute pass in each state the mode times, the refills with and without
+  the gasifier record's send to the clients, and the sends alone; then
+  times every minute pass over six game hours and counts the gasifier
+  records sent against those the client gets (one client, on the shortest
+  day).
   machinemenu: the machine menu's Pause, Resume and Abort batch on a
   server: a fermenter the server puts on the floor is loaded and started
   through the menu, then paused, resumed and aborted twice; after each step
@@ -163,7 +171,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "handbookgas", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "machinemenu", "machinemenus", "machinemenus2")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "handbookgas", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers", "machinemenu", "machinemenus", "machinemenus2")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"
@@ -266,7 +274,7 @@ end
 # shortest day (DayLength 1: 15 minutes, Sandbox_DayLength_option1), and
 # the fuel case's generator and car burn enough there to be seen (run 156
 # read none in half a minute on the default day).
-$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers", "death", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves") -contains $Only) { "`n    DayLength = 1," } else { "" }
+$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers", "death", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers") -contains $Only) { "`n    DayLength = 1," } else { "" }
 # The audit case (AuditCases.lua) runs with the grid on: without power
 # IsoObject.getPipedFuelAmount reports no fuel at all (BC 42.21; audit run 1
 # found "no pump with stock" with ElecShutModifier = 0), so the pumps' case
