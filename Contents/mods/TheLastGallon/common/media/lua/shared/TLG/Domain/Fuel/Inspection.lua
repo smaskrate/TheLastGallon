@@ -56,6 +56,35 @@ function Inspection.sample(s, method, skillBonus, rng)
     return obs
 end
 
+-- The fuel as one observation describes it, as a record an engine's profile
+-- can be judged against (Consumers.evaluate): the composition found, every
+-- part at the condition estimated, the free water and the sediment seen.
+-- nil for a test that finds no composition (a look). It holds what the test
+-- found and nothing of the fuel itself: shares rounded to 0.05, so a part
+-- under 2.5 % is not in it, and no microbial growth.
+function Inspection.asSupply(obs)
+    if type(obs) ~= "table" or type(obs.composition) ~= "table" then return nil end
+    local q, deg, fuel = {}, {}, 0
+    for _, id in ipairs(Tables.sortedKeys(obs.composition)) do
+        local share = obs.composition[id]
+        if share > 0 then
+            q[id], deg[id] = share, obs.observedDeg or 0
+            fuel = fuel + share
+        end
+    end
+    if fuel <= Num.DUST then return nil end
+    local s = Supply.new({ storage = "unknown", cap = 2, q = q, deg = deg, t = obs.sampledAt })
+    -- The observed water and sediment are shares of the whole, and the water
+    -- seen is free water: what the fuel does not hold in solution, which is
+    -- therefore in the whole as well.
+    local water, sediment = obs.observedWater or 0, obs.observedSediment or 0
+    local held = water > 0 and Supply.waterCapacity(s) or 0
+    local whole = (fuel + held) / math.max(0.05, 1 - water - sediment)
+    if sediment > 0 then s.q.sediment = sediment * whole end
+    if water > 0 then s.q.water = held + water * whole end
+    return s
+end
+
 -- Grade from a degradation value with hysteresis around thresholds:
 -- moving to a worse grade needs deg >= threshold; moving back to a better
 -- grade needs deg < threshold - hysteresis.

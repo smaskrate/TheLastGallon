@@ -80,6 +80,21 @@ local function consume(player, item)
     if isServer() and sendRemoveItemFromContainer then sendRemoveItemFromContainer(container, item) end
 end
 
+-- What a test's result means for the engine the fuel is in (a vehicle's or
+-- a generator's tank): the profile's judgement of the fuel as the
+-- observation describes it (Inspection.asSupply), never of the record, so
+-- that it tells no more than the test found. nil for a container without
+-- an engine and for a test without a composition. Worked out at each reply
+-- and not kept with the observation: a conversion changes the engine.
+local function verdict(ep, obs, ctx)
+    if ep.consumer == nil then return nil end
+    local seen = Inspection.asSupply(obs)
+    if seen == nil then return nil end
+    local ok, e = pcall(TLG.Domain.Consumers.evaluate, ep.consumer, seen, { ambientC = ctx.ambientC })
+    if not ok then return nil end
+    return { grade = e.grade, compatible = e.compatible, harmful = e.harmful, reasons = e.reasons }
+end
+
 -- Sampling never moves fuel; the observation is stored per player, under
 -- the id the fuel carries. Fuel the mod had not recorded is recorded as
 -- found (D-024): before, the observation was filed under an id the fuel
@@ -103,7 +118,9 @@ function H.sample(player, args)
     -- The latest result of each test (a look keeps what a kit found).
     know[tostring(state.rec.id)] = Inspection.remember(know[tostring(state.rec.id)], obs)
     player:getModData().tlgKnowledge = know
-    return remember(state, player, args, { ok = true, requestId = args.requestId, observation = obs })
+    -- For a tank, the engine it feeds and what the sample means for it.
+    return remember(state, player, args, { ok = true, requestId = args.requestId, observation = obs,
+        engine = state.ep.consumer, verdict = verdict(state.ep, obs, state.ctx) })
 end
 
 local TREATMENTS = {
@@ -184,7 +201,11 @@ function H.known(player, args)
     local rec = Aging.advance(stored, ctx.now, ctx.env)
     local know = player:getModData().tlgKnowledge or {}
     local entry = rec.id ~= nil and know[tostring(rec.id)] or nil
-    return { ok = true, requestId = args.requestId, tests = Inspection.known(rec, entry), sealed = rec.sealed == true }
+    local tests = Inspection.known(rec, entry)
+    for _, t in ipairs(tests) do t.verdict = verdict(ep, t.observation, ctx) end
+    -- `tank` for a vehicle's or a generator's: it has no cap to leave open.
+    return { ok = true, requestId = args.requestId, tests = tests, sealed = rec.sealed == true,
+        engine = ep.consumer, tank = ep.consumer ~= nil }
 end
 
 H.commands = { transfer = H.transfer, sample = H.sample, treat = H.treat, status = H.status, known = H.known }

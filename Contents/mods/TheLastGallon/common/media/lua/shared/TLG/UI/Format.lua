@@ -99,14 +99,30 @@ function Fmt.ago(hours)
     return d == 1 and tr("IGUI_TLG_Ago_Day") or tr("IGUI_TLG_Ago_Days", tostring(d))
 end
 
+-- The engine a tank feeds, by its profile: "Engine: stock diesel engine".
+function Fmt.engine(profile)
+    if profile == nil then return nil end
+    return tr("IGUI_TLG_EngineIs", tr("IGUI_TLG_Profile_" .. tostring(profile)))
+end
+
+-- What one test's result means for that engine (the authority's `verdict`):
+-- headed as the sample's, since a test misses what is below its precision.
+function Fmt.verdict(v)
+    if v == nil then return nil end
+    return tr("IGUI_TLG_VerdictTitle") .. " <LINE> " .. Fmt.evaluation(v)
+end
+
 -- What I know about it: each test done on this fuel, most precise first,
 -- with when it was done, what it found and whether the fuel changed since;
--- a note when the container is open. `reply` is the authority's answer to
--- the known command: { tests = { { method, observation, ageHours, changed } },
--- sealed }.
+-- a note when the container is open. For a vehicle's or a generator's tank,
+-- the engine it feeds first, and under each test what it means for that
+-- engine. `reply` is the authority's answer to the known command:
+-- { tests = { { method, observation, ageHours, changed, verdict } }, sealed,
+-- engine, tank }.
 function Fmt.known(reply)
     local parts = { tr("IGUI_TLG_KnownTitle") }
     local tests = reply and reply.tests or {}
+    if reply and reply.engine then parts[#parts + 1] = Fmt.engine(reply.engine) end
     if #tests == 0 then
         parts[#parts + 1] = tr("IGUI_TLG_ConditionUnknown")
         return table.concat(parts, " <LINE> <LINE> ")
@@ -115,9 +131,10 @@ function Fmt.known(reply)
         local lines = { tr("IGUI_TLG_KnownTest", tr("IGUI_TLG_TestName_" .. t.method), Fmt.ago(t.ageHours)) }
         lines[#lines + 1] = Fmt.observation(t.observation, true)
         if t.changed then lines[#lines + 1] = tr("IGUI_TLG_KnownChanged") end
+        if t.verdict then lines[#lines + 1] = Fmt.verdict(t.verdict) end
         parts[#parts + 1] = table.concat(lines, " <LINE> ")
     end
-    if not reply.sealed then parts[#parts + 1] = tr("IGUI_TLG_KnownOpen") end
+    if not reply.sealed and not reply.tank then parts[#parts + 1] = tr("IGUI_TLG_KnownOpen") end
     return table.concat(parts, " <LINE> <LINE> ")
 end
 

@@ -1,0 +1,274 @@
+require "support/fixtures"
+-- The Fuel entry of a vehicle's or a generator's tank, what its dialogs
+-- say, and the line in the game's Generator Info window (client UI, UX
+-- review R5). The Fuel menu loads the pour action, which derives from a
+-- class of the game: the stand-in of tests/integration/test_mp_actions.lua,
+-- whose case runs the class whichever file loaded it first, and which is
+-- therefore left in place as the game leaves its own. The menus register
+-- game events and the window is a game class: stand-ins for the load.
+__TLG_SOURCES["TimedActions/ISBaseTimedAction"] = __TLG_SOURCES["TimedActions/ISBaseTimedAction"] or [[
+    ISBaseTimedAction = {}
+    ISBaseTimedAction.__index = ISBaseTimedAction
+    function ISBaseTimedAction:derive(type)
+        local o = setmetatable({}, self)
+        self.__index = self
+        o.Type = type
+        return o
+    end
+    function ISBaseTimedAction.new(self, character)
+        local o = setmetatable({}, self)
+        self.__index = self
+        o.character = character
+        return o
+    end
+]]
+local savedEvents, realRequire, savedWindow = Events, require, ISGeneratorInfoWindow
+Events = setmetatable({}, { __index = function(t, k)
+    local e = { Add = function() end }
+    rawset(t, k, e)
+    return e
+end })
+require = function(name)
+    if name == "ISUI/ISGeneratorInfoWindow" then
+        -- The game's text: the long one of the window, the short one of the tooltip.
+        ISGeneratorInfoWindow = { getRichText = function(_, displayStats) return displayStats and "game text" or "short" end }
+        return true
+    end
+    return realRequire(name)
+end
+require "TLG/UI/FuelContextMenu"
+require "TLG/UI/GeneratorInfo"
+require = realRequire
+local Window = ISGeneratorInfoWindow
+ISGeneratorInfoWindow, Events = savedWindow, savedEvents
+local Menu, Info, Fmt, G = TLG.UI.FuelMenu, TLG.UI.GeneratorInfo, TLG.UI.Format, TLG.Integration.Generators
+
+local function bracket(key, ...)
+    local args = { ... }
+    return "[" .. key .. (#args > 0 and (":" .. table.concat(args, ",")) or "") .. "]"
+end
+
+local function has(text, part) return string.find(text, part, 1, true) ~= nil end
+
+local GLOBALS = { "instanceof", "getCore", "getCell", "JoypadState", "IsoObjectPicker", "getMouseXScaled", "getMouseYScaled",
+    "getSpecificPlayer", "getText", "ISContextMenu", "ISWorldObjectContextMenu", "isServer", "isClient", "getTimestampMs" }
+
+-- A character on a tile, a car that may be under the cursor, generators on
+-- tiles; getText as the game's Translator with every key known.
+local function world(fn)
+    local saved = { translate = Fmt.translate, holdsGas = G.holdsGas, profile = G.profile, isGas = G.isGas,
+        vehicleProfile = TLG.Integration.Vehicles.profile }
+    for _, k in ipairs(GLOBALS) do saved[k] = _G[k] end
+    local w = { squares = {}, picked = nil, kit = false, ms = 0 }
+    local function list(t)
+        return { size = function() return #t end, get = function(_, i) return t[i + 1] end }
+    end
+    function w.square(x, y)
+        local key = x .. "," .. y
+        if w.squares[key] == nil then
+            local s = { objects = {} }
+            function s:getX() return x end
+            function s:getY() return y end
+            function s:getZ() return 0 end
+            function s:getWorldObjects() return list({}) end
+            function s:getObjects() return list(self.objects) end
+            function s:DistToProper(o) return math.sqrt((o:getX() - x) ^ 2 + (o:getY() - y) ^ 2) end
+            s.floor = { class = "IsoObject", getSquare = function() return s end, getFluidContainer = function() return nil end,
+                getPipedFuelAmount = function() return 0 end, hasModData = function() return false end }
+            w.squares[key] = s
+        end
+        return w.squares[key]
+    end
+    function w.generator(x, y)
+        local s = w.square(x, y)
+        local g = { class = "IsoGenerator", getSquare = function() return s end, getObjectIndex = function() return 1 end,
+            getFluidContainer = function() return nil end, fuel = 5 }
+        function g:getFuel() return self.fuel end
+        s.objects[#s.objects + 1] = g
+        return g
+    end
+    function w.car(atCap)
+        local car = { class = "BaseVehicle", atCap = atCap }
+        local tank = { getArea = function() return "cap" end }
+        function car:getPartById(id) return id == "GasTank" and tank or nil end
+        function car:isInArea() return self.atCap end
+        function car:getId() return 31 end
+        return car
+    end
+    w.at = w.square(10, 10)
+    w.player = { getVehicle = function() return w.seated end, getSquare = function() return w.at end,
+        getInventory = function()
+            return { getFirstTypeRecurse = function(_, t) return w.kit and t == "TLG.FuelSampleKit" and {} or nil end }
+        end }
+    instanceof = function(o, class) return type(o) == "table" and o.class == class end
+    getCore = function() return { getZoom = function() return 1 end } end
+    getCell = function()
+        return { getGridSquare = function(_, x, y) return w.squares[x .. "," .. y] end,
+            getVehicles = function() return { toArray = function() return {} end } end }
+    end
+    JoypadState = nil
+    IsoObjectPicker = { Instance = { PickVehicle = function() return w.picked end } }
+    getMouseXScaled, getMouseYScaled = function() return 0 end, function() return 0 end
+    getSpecificPlayer = function() return w.player end
+    getText, Fmt.translate = bracket, bracket
+    isServer, isClient = function() return false end, function() return false end
+    getTimestampMs = function() return w.ms end
+    local function context()
+        local c = { options = {} }
+        function c:addOption(name, _, fn) local o = { name = name, fn = fn }; self.options[#self.options + 1] = o; return o end
+        function c:addSubMenu(option, sub) option.sub = sub end
+        return c
+    end
+    w.context = context
+    ISContextMenu = { getNew = context }
+    ISWorldObjectContextMenu = { addToolTip = function() return {} end, setTest = function() return "test" end }
+    G.holdsGas = function(g) return g.gas == true end
+    G.isGas = function(g) return g.isGas == true end
+    G.profile = function(g) return g.profile or "generator_si_stock" end
+    TLG.Integration.Vehicles.profile = function(v) return v.profile or "engine_si_stock" end
+    local ok, err = pcall(fn, w)
+    for _, k in ipairs(GLOBALS) do _G[k] = saved[k] end
+    G.isGas = saved.isGas
+    Fmt.translate, G.holdsGas, G.profile, TLG.Integration.Vehicles.profile = saved.translate, saved.holdsGas, saved.profile,
+        saved.vehicleProfile
+    if not ok then error(err, 0) end
+end
+
+local function names(sub)
+    local out = {}
+    for _, o in ipairs(sub.options) do out[#out + 1] = o.name end
+    return table.concat(out, " | ")
+end
+
+T.case("integration: the tank under the click is offered from where the authority lets it be sampled", function()
+    world(function(w)
+        local floor = w.at.floor
+        T.ok(Menu.tankAt(0, { floor }) == nil, "nothing clicked")
+        -- A car under the cursor: from its fuel cap only.
+        local car = w.car(false)
+        w.picked = car
+        T.ok(Menu.tankAt(0, { floor }) == nil, "not at the fuel cap")
+        car.atCap = true
+        local t = Menu.tankAt(0, { floor })
+        T.ok(t ~= nil and t.kind == "vehicle" and t.owner == car)
+        T.eq(t.ref.kind, "vehicle"); T.eq(t.ref.id, 31)
+        w.seated = car
+        T.ok(Menu.tankAt(0, { floor }) == nil, "seated: none")
+        w.seated, w.picked = nil, nil
+        -- A generator: within 2.5 tiles as the authority measures them, so
+        -- two tiles off on both axes (2.83) is out, though the old scan found it.
+        local near, far = w.generator(12, 10), w.generator(12, 12)
+        t = Menu.tankAt(0, { near })
+        T.ok(t ~= nil and t.kind == "generator" and t.owner == near)
+        T.eq(t.ref.kind, "generator"); T.eq(t.ref.x, 12); T.eq(t.ref.index, 1)
+        T.ok(Menu.tankAt(0, { far }) == nil, "out of the authority's reach")
+        near.gas = true
+        T.ok(Menu.tankAt(0, { near }) == nil, "its fuel is gas: Gas is its entry")
+        -- A gas generator run empty holds no gas and has no liquid either.
+        near.gas, near.isGas, near.fuel = false, true, 0
+        T.ok(Menu.tankAt(0, { near }) == nil, "an empty gas generator")
+        near.fuel = 3
+        T.ok(Menu.tankAt(0, { near }) ~= nil, "one that still holds petrol from before its conversion")
+    end)
+end)
+
+T.case("integration: a tank's Fuel entry names the engine and offers the three tests", function()
+    world(function(w)
+        local car = w.car(true)
+        car.profile = "engine_ci_stock"
+        w.picked = car
+        local c = w.context()
+        Menu.fillWorld(0, c, { w.at.floor }, false)
+        T.eq(#c.options, 1)
+        T.eq(c.options[1].name, "[ContextMenu_TLG_FuelVehicle]", "its own name, not a can's Fuel entry")
+        T.eq(names(c.options[1].sub), "[IGUI_TLG_EngineIs:[IGUI_TLG_Profile_engine_ci_stock]] | [ContextMenu_TLG_ShowKnown] | "
+            .. "[ContextMenu_TLG_Look] | [ContextMenu_TLG_SampleKit]")
+        local sub = c.options[1].sub.options
+        T.ok(sub[1].fn == nil, "the engine line does nothing")
+        T.ok(sub[4].notAvailable == true, "no kit carried: greyed")
+        w.kit = true
+        c = w.context()
+        Menu.fillWorld(0, c, { w.at.floor }, false)
+        T.ok(c.options[1].sub.options[4].notAvailable == nil)
+        -- The menu's test call: there is something to show.
+        T.eq(Menu.fillWorld(0, w.context(), { w.at.floor }, true), "test")
+        -- A client of a server does not work the engine out: the replies name it.
+        isClient = function() return true end
+        c = w.context()
+        Menu.fillWorld(0, c, { w.at.floor }, false)
+        T.eq(names(c.options[1].sub), "[ContextMenu_TLG_ShowKnown] | [ContextMenu_TLG_Look] | [ContextMenu_TLG_SampleKit]")
+        isClient = function() return false end
+        -- A generator, and one that holds gas.
+        w.picked = nil
+        local gen = w.generator(11, 10)
+        gen.profile = "generator_ci_bio"
+        c = w.context()
+        Menu.fillWorld(0, c, { gen }, false)
+        T.eq(c.options[1].name, "[ContextMenu_TLG_FuelGenerator]")
+        T.ok(has(names(c.options[1].sub), "[IGUI_TLG_EngineIs:[IGUI_TLG_Profile_generator_ci_bio]]"))
+        gen.gas = true
+        c = w.context()
+        Menu.fillWorld(0, c, { gen }, false)
+        T.eq(#c.options, 0, "no Fuel entry on a gas generator")
+    end)
+end)
+
+T.case("integration: a tank's dialogs name the engine and say what a kit's sample means for it", function()
+    world(function()
+        local obs = { observedDeg = 0.4, degError = 0.5, primary = "diesel", method = "kit", composition = { diesel = 1 } }
+        local t = Menu.sampleText({ ok = true, observation = obs, engine = "engine_si_stock",
+            verdict = { grade = "unsuitable", compatible = false, harmful = true, reasons = { "wrong_fuel_4_diesel" } } })
+        T.ok(has(t, "[IGUI_TLG_EngineIs:[IGUI_TLG_Profile_engine_si_stock]]"), t)
+        T.ok(has(t, "[IGUI_TLG_VerdictTitle] <LINE> [IGUI_TLG_Grade_Unsuitable] <LINE> [IGUI_TLG_NotCompatible]"), t)
+        T.ok(has(t, "[IGUI_TLG_Reason_Wrong_4:[IGUI_TLG_Fuel_diesel]]"), t)
+        -- A can's sample: as before.
+        t = Menu.sampleText({ ok = true, observation = obs })
+        T.ok(not has(t, "EngineIs") and not has(t, "VerdictTitle"), t)
+        -- What I know about it: the engine first, also with nothing known;
+        -- a tank is not "open".
+        t = Fmt.known({ tests = {}, sealed = false, engine = "generator_ci_bio", tank = true })
+        T.eq(t, "[IGUI_TLG_KnownTitle] <LINE> <LINE> [IGUI_TLG_EngineIs:[IGUI_TLG_Profile_generator_ci_bio]] <LINE> <LINE> "
+            .. "[IGUI_TLG_ConditionUnknown]")
+        t = Fmt.known({ sealed = false, engine = "engine_ci_stock", tank = true, tests = {
+            { method = "kit", observation = obs, ageHours = 2, changed = false,
+                verdict = { grade = "good", compatible = true, reasons = {} } },
+            { method = "visual", observation = { observedDeg = 0.5, degError = 1, primary = "diesel" }, ageHours = 0 } } })
+        T.ok(has(t, "[IGUI_TLG_VerdictTitle] <LINE> [IGUI_TLG_Grade_Good] <LINE> [IGUI_TLG_Compatible]"), t)
+        T.ok(not has(t, "[IGUI_TLG_KnownOpen]"), "no open-container note for a tank")
+        local _, count = string.gsub(t, "VerdictTitle", "")
+        T.eq(count, 1, "the look has no judgement")
+        T.ok(has(Fmt.known({ tests = {}, sealed = false }), "[IGUI_TLG_ConditionUnknown]"))
+        T.ok(has(Fmt.known({ sealed = false, tests = { { method = "visual", observation = obs, ageHours = 0 } } }),
+            "[IGUI_TLG_KnownOpen]"), "an open can still says so")
+    end)
+end)
+
+T.case("integration: Generator Info says which fuel the generator takes", function()
+    world(function(w)
+        T.ok(Info.original ~= nil and Window.getRichText ~= Info.original, "the game's text is wrapped")
+        local gen = { profile = "generator_ci_bio" }
+        T.eq(Window.getRichText(gen, true),
+            "[IGUI_TLG_GenFuel:[IGUI_TLG_GenFuel_generator_ci_bio]] <LINE> game text")
+        T.eq(Window.getRichText(gen, false), "short", "the tooltip's short text is left alone")
+        -- Asked at every frame: the profile is read again after REFRESH_MS.
+        local reads = 0
+        G.profile = function(g) reads = reads + 1; return g.profile end
+        Info.last = nil
+        for _ = 1, 50 do Window.getRichText(gen, true) end
+        T.eq(reads, 1)
+        gen.profile = "generator_gas"
+        w.ms = Info.REFRESH_MS
+        T.ok(has(Window.getRichText(gen, true), "[IGUI_TLG_GenFuel_generator_gas]"), "a conversion shows after the refresh")
+        T.eq(reads, 2)
+        -- Another generator is not answered from the first one's line.
+        local other = { profile = "generator_si_stock" }
+        T.ok(has(Window.getRichText(other, true), "[IGUI_TLG_GenFuel_generator_si_stock]"))
+        -- A profile without a text, and a failing read: the game's text alone.
+        getText = function(key, ...) if key == "IGUI_TLG_GenFuel_odd" then return key end return bracket(key, ...) end
+        Info.last = nil
+        T.eq(Window.getRichText({ profile = "odd" }, true), "game text")
+        G.profile = function() error("no mod data") end
+        Info.last = nil
+        T.eq(Window.getRichText({}, true), "game text")
+    end)
+end)

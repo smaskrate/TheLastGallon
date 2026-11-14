@@ -2119,3 +2119,49 @@ gas probe (launch 342).
   down (launches 365–367); why the order differs there was not traced. Not
   run: a real network, a machine in a container; the machines' and the
   cans' sends, and several clients, in the performance mode.
+
+## D-042 The engine's type is shown; a tank is read as a can is
+
+Decided 2026-11-14, with the UX review's R5 (`docs/ux-review-2026-11-14.md`
+§4.5), which the owner approved as written.
+
+**Before.** Nothing in the game or the mod named an engine's type: the
+guide listed the diesel models and said "go by the model". The fuel in a
+vehicle's or a generator's tank could not be inspected; `status` answered
+with the engine's exact verdict on it, and no menu asked.
+
+**Now.**
+
+* The engine's profile is shown: in the tank's Fuel entry, in the sample
+  and What I know about it dialogs, and for a generator in the game's
+  Generator Info window. The review's reason: a mechanic sees it with the
+  bonnet open, so hiding it was friction of the interface, not a choice of
+  the game. No skill is asked.
+* A tank is read through `sample` and `known`, as a can: what the player
+  learns is an observation at the test's precision, kept per character
+  under the record's id.
+* A kit's observation of a tank is judged for the engine
+  (`Handlers.verdict`): `Consumers.evaluate` on the fuel as the
+  observation describes it (`Inspection.asSupply`), never on the record.
+  The menus still do not ask `status` for a tank, whose verdict is the
+  record's.
+* After the game's own refuels (`ISAddFuel`, `ISAddGasolineToVehicle`,
+  `ISRefuelFromGasPump`) the player who poured is told when the tank's
+  composition is wrong for the engine (`Consumers.wrongFuelOf`,
+  `IGUI_TLG_Note_WrongInTank`). This reads the record: it is the mod
+  saying what the start would say, one step earlier.
+
+**Consequences accepted.**
+
+* The kit's verdict can say "this engine can use it" on a tank the refuel
+  warning or the start then calls wrong: a kit rounds shares to 5 %, and
+  the wrong-fuel bands begin at 1 to 2 %. The verdict is headed "going by
+  this sample" for that reason.
+* The refuel warning tells the exact fact without a test. The start
+  already told it; the pour is now known to be wrong before the damage.
+* On a server's client the menu does not name the engine: the client's
+  world record is not known to carry `dieselVehicles`
+  (`Vehicles.baseProfile`), and a wrong line there would cause the
+  misfuelling this is meant to prevent. The authority's replies name it.
+  Generator Info reads the client's copy of the generator's mod data
+  (NOT RUN on a server).

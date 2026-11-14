@@ -242,6 +242,13 @@ local function installRefuelFromPump()
             V.writeSidecar(self.part:getVehicle(), merged)
         end)
         if not ok then TLG.Log.error("pump->vehicle settle: %s", tostring(err)) end
+        -- The pump gave what it holds (three in four give petrol): told at
+        -- once when that is wrong for this engine (Vehicles.warnWrongFuel).
+        local told, why = pcall(function()
+            if self.part:getContainerContentAmount() - self.tlgTankStart <= 1e-6 then return end
+            V.warnWrongFuel(self.part:getVehicle(), self.character)
+        end)
+        if not told then TLG.Log.error("pump->vehicle warning: %s", tostring(why)) end
     end
     wrap(ISRefuelFromGasPump, "complete", function(orig, self) local r = orig(self); settle(self); return r end)
     wrap(ISRefuelFromGasPump, "stop", function(orig, self) if not isClient() then settle(self) end; return orig(self) end)

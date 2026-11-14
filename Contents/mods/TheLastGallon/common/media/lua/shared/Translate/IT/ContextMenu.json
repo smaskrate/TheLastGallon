@@ -1,5 +1,7 @@
 {
     "ContextMenu_TLG_Fuel": "Carburante (The Last Gallon)",
+    "ContextMenu_TLG_FuelVehicle": "Carburante di questo veicolo (The Last Gallon)",
+    "ContextMenu_TLG_FuelGenerator": "Carburante di questo generatore (The Last Gallon)",
     "ContextMenu_TLG_ShowKnown": "Cosa so di questo carburante",
     "ContextMenu_TLG_Look": "Osserva e annusa",
     "ContextMenu_TLG_SampleKit": "Preleva un campione (kit)",

@@ -209,6 +209,26 @@ local function settleIntoTank(action, srcRec, movedLitres, correctCan)
     V.writeSidecar(vehicle, merged)
 end
 
+-- After a refuel with the game's own actions, which take any fuel: when the
+-- tank now holds a blend whose composition is wrong for this engine, the
+-- player who poured is told, with the fuel that makes it so
+-- (Consumers.wrongFuelOf). The same thing the start says, one step earlier;
+-- the refuel is not stopped. Aged or wet fuel is not announced here.
+-- RT-SP launch 419 from a can; at a pump and on a server NOT RUN (offline:
+-- tests/integration/test_tank_fuel.lua).
+-- Returns the fuel named, nil when none.
+function V.warnWrongFuel(vehicle, player)
+    local rec = V.read(vehicle, false)
+    if rec == nil then return nil end
+    local profile = V.profile(vehicle)
+    local e = Consumers.evaluate(profile, rec, {})
+    if e.grade == "empty" then return nil end
+    local fuel = Consumers.wrongFuelOf(profile, rec, e)
+    if fuel == nil then return nil end
+    TLG.Notify.send(player, "IGUI_TLG_Note_WrongInTank", fuel)
+    return fuel
+end
+
 -- Not for a constructor: those keep vanilla's parameters (below), as a
 -- multiplayer client sends a timed action's fields named as its new's
 -- parameters (BC NetTimedAction.set; Stations.lua says more, RT-MP run 156).
@@ -242,6 +262,10 @@ local function installAddGasoline()
         local moved = self.part:getContainerContentAmount() - self.tlgTankStart
         local ok, err = pcall(settleIntoTank, self, self.tlgCanBefore, moved)
         if not ok then TLG.Log.error("vehicle refuel settle: %s", tostring(err)) end
+        if moved > 1e-6 then
+            local told, why = pcall(V.warnWrongFuel, self.vehicle, self.character)
+            if not told then TLG.Log.error("vehicle refuel warning: %s", tostring(why)) end
+        end
     end
     wrap(A, "complete", function(orig, self) local r = orig(self); settle(self); return r end)
     wrap(A, "stop", function(orig, self) if not isClient() then settle(self) end; return orig(self) end)

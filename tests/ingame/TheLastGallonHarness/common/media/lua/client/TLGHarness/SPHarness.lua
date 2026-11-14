@@ -21102,6 +21102,227 @@ RT.WF.off = { name = "rtwf_option_off", timeout = 60, fn = function()
     return true
 end }
 
+------------------------------------------------------------------------------
+-- The fuel in a tank (UX review R5, D-042): the Fuel entry of a vehicle's
+-- and a generator's tank, what its dialogs say, the Generator Info line,
+-- and the line after the game's own refuels. On the wrong-fuel mode's
+-- ambulance (diesel), petrol car and Diesel Generator.
+------------------------------------------------------------------------------
+function RT.WF.lastDialog()
+    return H.dialogs.texts[#H.dialogs.texts]
+end
+
+-- Fills a context menu as a right-click on `clicked` would, with `picked`
+-- the vehicle under the cursor (the harness has no cursor on it: the game's
+-- pick is stood in for, the rest of Menu.fillWorld runs as it is).
+function RT.WF.tankFill(clicked, picked)
+    return function(context)
+        local Clicked = TLG.UI.Clicked
+        local real = Clicked.vehicle
+        Clicked.vehicle = function() return picked end
+        local ok, err = pcall(TLG.UI.FuelMenu.fillWorld, 0, context, clicked(), false)
+        Clicked.vehicle = real
+        if not ok then R:line("OBS  RTWF.tank menu raised %s", tostring(err)) end
+    end
+end
+
+-- Whether the menu has the root entry, and its submenu's entries in order.
+function RT.WF.tankEntries(fill, rootText)
+    local context = ISContextMenu.get(0, 100, 100)
+    fill(context)
+    local root = context:getOptionFromName(rootText)
+    local sub = root and root.subOption and context:getSubMenu(root.subOption)
+    local names = {}
+    for _, o in ipairs(sub and sub.options or {}) do
+        names[#names + 1] = tostring(o.name) .. (o.notAvailable and " (greyed)" or "")
+    end
+    context:setVisible(false)
+    return root ~= nil, table.concat(names, " | ")
+end
+
+function RT.WF.kit()
+    local inv = player():getInventory()
+    if not inv:getFirstTypeRecurse("TLG.FuelSampleKit") then inv:AddItem("TLG.FuelSampleKit") end
+end
+
+RT.WF.tankVehicle = { name = "rtwf_tank_vehicle", timeout = 900, fn = function(ctx, ticks)
+    if RT.abort then return true end
+    local WF, V = RT.WF, TLG.Integration.Vehicles
+    local v = WF.cars[2]
+    local part = v:getPartById("GasTank")
+    local rootText = getText("ContextMenu_TLG_FuelVehicle")
+    local fill = WF.tankFill(function() return { player():getSquare():getFloor() } end, v)
+    if not ctx.t0 then
+        pcall(function() if v:isEngineRunning() then v:shutOff() end end)
+        WF.setTank(v, { diesel = 10 })
+        WF.kit()
+        player():setPrimaryHandItem(nil)
+        player():setSecondaryHandItem(nil)
+        player():teleportTo(START.x, START.y, 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 == 20 then
+        -- Away from the fuel cap: no entry.
+        ctx.farIn = v:isInArea(part:getArea(), player())
+        ctx.farShown = WF.tankEntries(fill, rootText)
+        local c = v:getAreaCenter(part:getArea())
+        ctx.target = { x = c:getX(), y = c:getY() }
+        player():teleportTo(math.floor(ctx.target.x), math.floor(ctx.target.y), 0)
+        return nil
+    end
+    if ticks - ctx.t0 == 25 then player():setPosition(ctx.target.x, ctx.target.y, 0) end
+    if ticks - ctx.t0 < 45 then return nil end
+    local engineLine = getText("IGUI_TLG_EngineIs", getText("IGUI_TLG_Profile_engine_ci_stock"))
+    local want = table.concat({ engineLine, getText("ContextMenu_TLG_ShowKnown"), getText("ContextMenu_TLG_Look"),
+        getText("ContextMenu_TLG_SampleKit") }, " | ")
+    local shown, names = WF.tankEntries(fill, rootText)
+    R:check("RTWF.tank_entry_at_the_fuel_cap_only", function()
+        return ctx.farIn == false and ctx.farShown == false and shown and names == want, string.format(
+            "away (in the cap's area=%s): entry=%s; at the cap (in area=%s): entry=%s [%s]", tostring(ctx.farIn),
+            tostring(ctx.farShown), tostring(v:isInArea(part:getArea(), player())), tostring(shown), names)
+    end)
+    local verdictTitle = getText("IGUI_TLG_VerdictTitle")
+    local look = menuClick("RTWF.tank_look", fill, rootText, getText("ContextMenu_TLG_Look"))
+    local text = WF.lastDialog()
+    R:check("RTWF.tank_look_names_the_engine_and_judges_nothing", function()
+        return look.ok == true and look.engine == "engine_ci_stock" and look.verdict == nil and has(text, engineLine)
+            and not has(text, verdictTitle) and not has(text, "IGUI_TLG"), tostring(text)
+    end)
+    local kit = menuClick("RTWF.tank_kit", fill, rootText, getText("ContextMenu_TLG_SampleKit"))
+    text = WF.lastDialog()
+    R:check("RTWF.tank_kit_says_what_it_means_for_the_engine", function()
+        return kit.ok == true and kit.verdict ~= nil and kit.verdict.compatible == true and kit.verdict.harmful ~= true
+            and has(text, engineLine) and has(text, verdictTitle) and has(text, getText("IGUI_TLG_Compatible"))
+            and not has(text, "IGUI_TLG"), tostring(text)
+    end)
+    local known = menuClick("RTWF.tank_known", fill, rootText, getText("ContextMenu_TLG_ShowKnown"))
+    text = WF.lastDialog()
+    local side = part:getModData().tlg
+    local know = player():getModData().tlgKnowledge or {}
+    R:check("RTWF.tank_samples_are_known_under_the_tanks_record", function()
+        return known.ok == true and known.tank == true and known.engine == "engine_ci_stock" and #(known.tests or {}) == 2
+            and known.tests[1].method == "kit" and known.tests[1].verdict ~= nil and known.tests[2].verdict == nil
+            and side ~= nil and know[tostring(side.id)] ~= nil and has(text, engineLine) and has(text, verdictTitle)
+            and not has(text, getText("IGUI_TLG_KnownOpen")) and not has(text, "IGUI_TLG"),
+            string.format("record %s; tests %d; %s", tostring(side and side.id), #(known.tests or {}), tostring(text))
+    end)
+    -- Petrol in the ambulance: the kit's sample says so.
+    WF.setTank(v, { gasoline = 10 })
+    local wrong = menuClick("RTWF.tank_kit_petrol", fill, rootText, getText("ContextMenu_TLG_SampleKit"))
+    text = WF.lastDialog()
+    R:check("RTWF.tank_kit_finds_petrol_in_a_diesel", function()
+        return wrong.ok == true and wrong.verdict ~= nil and wrong.verdict.harmful == true
+            and has(table.concat(wrong.verdict.reasons or {}, ","), "wrong_fuel_3_gasoline")
+            and has(text, getText("IGUI_TLG_Harmful")) and not has(text, "IGUI_TLG"),
+            string.format("reasons %s; %s", wrong.verdict and table.concat(wrong.verdict.reasons or {}, ",") or "none", tostring(text))
+    end)
+    closeDialogs()
+    return true
+end }
+
+RT.WF.tankGenerator = { name = "rtwf_tank_generator", timeout = 900, fn = function(ctx, ticks)
+    if RT.abort then return true end
+    local WF, G = RT.WF, TLG.Integration.Generators
+    local g, red = WF.gens[2], WF.gens[1]
+    local rootText = getText("ContextMenu_TLG_FuelGenerator")
+    local fill = WF.tankFill(function() return { g } end, nil)
+    local gs = g:getSquare()
+    if not ctx.t0 then
+        pcall(function() g:setActivated(false) end)
+        WF.setGen(g, { diesel = 5 })
+        WF.kit()
+        -- Four tiles off: out of the authority's 2.5.
+        player():teleportTo(gs:getX() + 4, gs:getY(), 0)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 == 20 then
+        ctx.farShown = WF.tankEntries(fill, rootText)
+        ctx.farDist = player():getSquare():DistToProper(gs)
+        player():teleportTo(gs:getX() + 1, gs:getY(), 0)
+        return nil
+    end
+    if ticks - ctx.t0 < 40 then return nil end
+    local engineLine = getText("IGUI_TLG_EngineIs", getText("IGUI_TLG_Profile_generator_ci_bio"))
+    local shown, names = WF.tankEntries(fill, rootText)
+    R:check("RTWF.generator_tank_entry_within_reach_only", function()
+        return ctx.farShown == false and shown and has(names, engineLine) and has(names, getText("ContextMenu_TLG_SampleKit")),
+            string.format("at %.2f tiles: entry=%s; beside it: entry=%s [%s]", ctx.farDist or -1, tostring(ctx.farShown),
+                tostring(shown), names)
+    end)
+    local kit = menuClick("RTWF.generator_tank_kit", fill, rootText, getText("ContextMenu_TLG_SampleKit"))
+    local text = WF.lastDialog()
+    R:check("RTWF.generator_tank_kit_judged_for_the_generator", function()
+        return kit.ok == true and kit.engine == "generator_ci_bio" and kit.verdict ~= nil and kit.verdict.compatible == true
+            and kit.verdict.harmful ~= true and has(text, engineLine) and has(text, getText("IGUI_TLG_VerdictTitle"))
+            and not has(text, "IGUI_TLG"), tostring(text)
+    end)
+    closeDialogs()
+    -- The game's Generator Info text, with the mod's line first.
+    local function runsOn(profile) return getText("IGUI_TLG_GenFuel", getText("IGUI_TLG_GenFuel_" .. profile)) end
+    local green, redText, short = ISGeneratorInfoWindow.getRichText(g, true), ISGeneratorInfoWindow.getRichText(red, true),
+        ISGeneratorInfoWindow.getRichText(g, false)
+    R:check("RTWF.generator_info_says_what_it_runs_on", function()
+        return string.sub(green, 1, #runsOn("generator_ci_bio")) == runsOn("generator_ci_bio")
+            and string.sub(redText, 1, #runsOn("generator_si_stock")) == runsOn("generator_si_stock")
+            and has(green, getText("IGUI_Generator_FuelAmount", math.ceil(g:getFuelPercentage())))
+            and not has(short, runsOn("generator_ci_bio")) and not has(green, "IGUI_TLG"),
+            string.format("diesel: %s || petrol: %s || short: %s", tostring(green), tostring(redText), tostring(short))
+    end)
+    return true
+end }
+
+-- The game's Add Fuel with a can of petrol into the Diesel Generator.
+RT.WF.refuelGenerator = actionStep("rtwf_add_fuel_warns", function(ctx)
+    if RT.abort then return nil end
+    local g = RT.WF.gens[2]
+    RT.WF.setGen(g, { diesel = 3 })
+    local can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 4.0 } })
+    player():setPrimaryHandItem(can)
+    player():teleportTo(g:getSquare():getX() + 1, g:getSquare():getY(), 0)
+    ctx.f0 = g:getFuel()
+    TLG.Notify.last = nil
+    return ISAddFuel:new(player(), g, can)
+end, function(ctx)
+    local g, note = RT.WF.gens[2], TLG.Notify.last
+    local side = g:getModData().tlg
+    R:check("RTWF.add_fuel_of_petrol_into_a_diesel_generator_warns", function()
+        return g:getFuel() > ctx.f0 + 1 and note ~= nil and note.key == "IGUI_TLG_Note_WrongInTank" and note.fuel == "gasoline"
+            and not has(note.text, "IGUI_TLG") and side ~= nil and (side.q.gasoline or 0) > 1,
+            string.format("fuel %.3f -> %.3f; record %s; note: %s", ctx.f0, g:getFuel(), sidecar(g:getModData()),
+                note and tostring(note.text) or "none")
+    end)
+end)
+
+-- The game's refuel from a can: petrol into the ambulance warns, petrol
+-- into the petrol car does not.
+function RT.WF.refuelVehicle(name, index, q, expectFuel)
+    return actionStep("rtwf_" .. name, function(ctx)
+        if RT.abort then return nil end
+        local v = RT.WF.cars[index]
+        local part = v:getPartById("GasTank")
+        pcall(function() if v:isEngineRunning() then v:shutOff() end end)
+        RT.WF.setTank(v, q)
+        local can = giveCan("Base.PetrolCan", { { Fluid.Petrol, 5.0 } })
+        player():setPrimaryHandItem(can)
+        local c = v:getAreaCenter(part:getArea())
+        player():teleportTo(c:getX(), c:getY(), 0)
+        ctx.v, ctx.part, ctx.l0 = v, part, part:getContainerContentAmount()
+        TLG.Notify.last = nil
+        return ISAddGasolineToVehicle:new(player(), part, can, nil)
+    end, function(ctx)
+        local note, l1 = TLG.Notify.last, ctx.part:getContainerContentAmount()
+        R:check("RTWF." .. name, function()
+            local told = note ~= nil and note.key == "IGUI_TLG_Note_WrongInTank" and note.fuel == expectFuel
+                and not has(note.text, "IGUI_TLG")
+            if expectFuel == nil then told = note == nil end
+            return l1 > ctx.l0 + 1 and told, string.format("tank %.3f -> %.3f L; record %s; note: %s", ctx.l0, l1,
+                sidecar(ctx.part:getModData()), note and tostring(note.text) or "none")
+        end)
+    end)
+end
+
 RT.wrongFuelSteps = { RT.waitWorld, RT.BD.photoSetup, RT.WF.spawn, RT.WF.verdicts,
     -- The petrol car: no start on 40 % diesel; wear on 20 %.
     RT.WF.prepare("rtwf_car_40pc_diesel", 1, { gasoline = 6, diesel = 4 }),
@@ -21178,7 +21399,12 @@ RT.wrongFuelSteps = { RT.waitWorld, RT.BD.photoSetup, RT.WF.spawn, RT.WF.verdict
     RT.WF.genBefore,
     generatorGateStep("RTWF.petrol_generator_on_40pc_diesel", function() return RT.WF.gens[1] end, true), RT.WF.genRefused,
     generatorGateStep("RTWF.diesel_generator_on_pure_petrol", function() return RT.WF.gens[2] end, false),
-    RT.WF.generators, RT.WF.off, RT.finish }
+    RT.WF.generators,
+    -- The fuel in a tank (R5).
+    RT.WF.tankVehicle, RT.WF.tankGenerator, RT.WF.refuelGenerator,
+    RT.WF.refuelVehicle("can_of_petrol_into_the_ambulance_warns", 2, { diesel = 10 }, "gasoline"),
+    RT.WF.refuelVehicle("can_of_petrol_into_the_petrol_car_says_nothing", 1, { gasoline = 5 }, nil),
+    RT.WF.off, RT.finish }
 
 ------------------------------------------------------------------------------
 -- Driving on diesel, biodiesel and wrong fuel (request "sp-rtfd"; D-036,

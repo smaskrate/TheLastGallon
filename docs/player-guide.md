@@ -93,6 +93,34 @@ knowing nothing.
 **Checked in game:** What I know about it, in single player and on a
 server.
 
+### The fuel in a tank
+
+A vehicle's tank and a generator's have the same three entries. Stand at
+the vehicle's fuel cap, where you would refuel it, and right-click the
+vehicle: **Fuel in this vehicle (The Last Gallon)**. For a generator,
+right-click it from within two tiles: **Fuel in this generator (The Last
+Gallon)**. A generator running on gas has no such entry; **Gas (The Last
+Gallon)** is its own.
+
+* The first line names the engine: "Engine: stock diesel engine",
+  "Engine: flex-fuel engine (gasoline/ethanol)". It does nothing when
+  clicked. On a server the line is not in the menu; the two dialogs below
+  begin with it instead.
+* **Look and smell** and **Take a sample (kit)** test the fuel in the
+  tank as they test a can's, with the same precision, and
+  **What I know about it** lists them the same way.
+* A kit sample of a tank ends with what it means for that engine: whether
+  the engine can use the fuel, whether it damages it, and why. This goes
+  by what the kit found. A kit gives the blend in steps of 5 %, so a
+  small share of the wrong fuel, which already wears a diesel engine from
+  2 % of petrol, does not show in it. A look finds no blend and gets no
+  such line.
+
+**Checked in game** (single player, launch 419): the entry at the fuel cap
+and not away from it, the three tests on an ambulance and on a Diesel
+Generator, the kit's line for the engine. **Not checked in game:** a real
+right-click on a vehicle, a save and reload, a server.
+
 ## Treating fuel
 
 These are in the same **Fuel (The Last Gallon)** menu:
@@ -268,8 +296,11 @@ kind. Damage already done stays until repaired.
 pour that would harm the engine and say why. The game's own actions do not
 check. **Add Fuel** offers petrol cans to every generator, the Diesel
 Generator included, and about three pumps in four give petrol
-([Diesel pumps](#diesel-pumps)): a diesel engine filled that way is
-damaged without a warning.
+([Diesel pumps](#diesel-pumps)). A tank filled that way with the wrong
+fuel is not refused: when the refuel ends, a line over the character
+says so, "Wrong fuel in the tank (Gasoline): do not start the engine".
+Empty the tank before starting; an engine that never ran on it took no
+damage. The line is checked in single player after **Add Fuel** and a refuel from a can (launch 419), not at a pump.
 
 The sandbox option **Wrong fuel damages engines** turned off brings back
 the behaviour of version 0.2.0: any such fuel above a trace stops the
@@ -802,7 +833,8 @@ These have a diesel engine and are found with diesel in the tank:
 
 Every other vehicle is petrol, the two-seat Franklin Valuline trade vans,
 the Chevalier D6 and the Chevalier Step Van included. The game shows no
-sign of the engine type: go by the model.
+sign of the engine type. The mod names it in the vehicle's Fuel entry,
+opened from the fuel cap ([The fuel in a tank](#the-fuel-in-a-tank)).
 
 A diesel vehicle runs on diesel and on biodiesel. Up to 20 % biodiesel in
 its diesel costs nothing; with more it starts less reliably, has less
@@ -827,6 +859,11 @@ It burns diesel or biodiesel in any blend, pure biodiesel included. Fill
 it with **Pour into the generator**. The game's own **Add Fuel** takes
 petrol cans only, and petrol damages the Diesel Generator
 ([Wrong fuel](#wrong-fuel)).
+
+The game's **Generator Info** window has a line with the fuel a generator
+takes: "Runs on: diesel or biodiesel" for this one, "Runs on: gasoline" for the
+red one, and the converted ones' fuels after a conversion. Its text is
+checked in single player (launch 419); the window was not looked at.
 
 ### Diesel pumps
 

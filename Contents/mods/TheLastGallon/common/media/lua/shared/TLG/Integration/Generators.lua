@@ -532,6 +532,20 @@ function G.chargeWear(gen)
     return whole
 end
 
+-- As Vehicles.warnWrongFuel, for a generator's tank after Add Fuel.
+-- RT-SP launch 419; on a server NOT RUN.
+function G.warnWrongFuel(gen, player)
+    local rec = G.read(gen, false)
+    if rec == nil then return nil end
+    local profile = G.profile(gen)
+    local e = Consumers.evaluate(profile, rec, {})
+    if e.grade == "empty" then return nil end
+    local fuel = Consumers.wrongFuelOf(profile, rec, e)
+    if fuel == nil then return nil end
+    TLG.Notify.send(player, "IGUI_TLG_Note_WrongInTank", fuel)
+    return fuel
+end
+
 -- Not for a constructor: those keep vanilla's parameters (below), as a
 -- multiplayer client sends a timed action's fields named as its new's
 -- parameters (BC NetTimedAction.set; Stations.lua says more, RT-MP run 156).
@@ -597,6 +611,11 @@ local function installAddFuel()
                 G.writeSidecar(self.generator, merged)
             end)
             if not ok then TLG.Log.error("generator refuel settle: %s", tostring(err)) end
+            local told, why = pcall(function()
+                if self.generator:getFuel() - self.tlgFuelStart <= 1e-6 then return end
+                G.warnWrongFuel(self.generator, self.character)
+            end)
+            if not told then TLG.Log.error("generator refuel warning: %s", tostring(why)) end
         end
         return r
     end)

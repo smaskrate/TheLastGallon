@@ -257,4 +257,30 @@ function Consumers.evaluate(profileId, s, state)
     return r
 end
 
+-- The fuel that makes a blend the wrong one for this engine, nil when its
+-- composition is fine: the fuel a wrong-fuel band was decided by (`e`, the
+-- evaluation of `s`), else the largest part the profile does not accept or
+-- accepts only below the share it has. With the damage option off no band
+-- is judged and `e.wrongFuel` is never set: the second rule then names the
+-- fuel. Aged fuel, water and sediment are not wrong fuel.
+function Consumers.wrongFuelOf(profileId, s, e)
+    if e ~= nil and e.wrongFuel ~= nil then return e.wrongFuel end
+    local p = Registry.need("consumer", profileId)
+    local fuel = Supply.fuelTotal(s)
+    if fuel <= Num.DUST then return nil end
+    local found, foundShare, foreign, over = nil, 0, 0, false
+    for _, id in ipairs(Tables.sortedKeys(s.q)) do
+        if Registry.need("fuel", id).role ~= "contaminant" then
+            local share, rule = s.q[id] / fuel, p.accepts[id]
+            local past = rule ~= nil and share > rule.max + 1e-9
+            if rule == nil then foreign = foreign + share end
+            if past then over = true end
+            if (rule == nil or past) and share > foundShare then found, foundShare = id, share end
+        end
+    end
+    -- A trace the profile tolerates is not named.
+    if not over and foreign <= p.foreignMax + 1e-9 then return nil end
+    return found
+end
+
 return Consumers

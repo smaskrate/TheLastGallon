@@ -15,6 +15,7 @@ runtime tests.
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-SP and RT-MP: loads leaving favourite items alone, the firebox's planks entry and the loads' tooltips (offline only: `test_biodiesel_commands.lua`, `test_menu_replies.lua`); on a server, whether the favourite mark a client sets reaches the server's copy of the item, which the loads read (`TLG/Integration/Picks.lua`) | Written 2026-11-14, not in the harness yet. Until the server case is run, a server may take favourite items |
 | RT-MP: the Workshop menu choosing its entries from a client's copy of the project (`WorkshopMenu.projectState`: a generator's mod data, a vehicle's Engine part's). RT-SP and RT-MP: the yes/no question before **Cancel the project**, **Remove the conversion** and a second **Abort batch**, which the harness answers without opening it (`TLGHarness/Confirm.lua`); a controller on it | Written 2026-11-14. If a client's copy lacked a project the server has, the menu would offer only **Start: …**, which the server refuses, and nothing to carry on with: to be run on a server before a release for servers |
+| RT-SP: the Fuel entry of a tank from a real right-click on a vehicle (launch 419 stood in for the game's pick under the cursor), a tank's samples after a save and reload, the line after a refuel at a pump or a stopped refuel (offline only: `test_tank_fuel.lua`), the Generator Info window on screen (its text: launch 419). RT-MP, all of R5: the Fuel entry of a tank and its dialogs; that the refuel line reaches only the player who poured; whether a client's world record carries `dieselVehicles` (until shown, a client's menu leaves the engine line out, D-042); Generator Info from a client's copy of the generator's mod data | Not in the harness yet (UX review R5, 2026-11-14; single player otherwise run in launch 419). The server rows are to be run before a release for servers |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
@@ -8859,3 +8860,58 @@ never opens it); the entry's tooltip.
 
 Evidence:
 [run 418](evidence/2026-11-14_rt-sp_harness_run418_controls_second_abort_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 419 (the fuel in a tank: UX review R5)
+
+Branch `feature/gas-generators` after `42063a4`, 42.22.2, with R5 in the
+working tree (D-042): the Fuel entry of a vehicle's and a generator's
+tank, the line after the game's own refuels, the Generator Info line.
+Eleven checks were added to the wrong-fuel mode, after its own
+(`RT.WF.tankVehicle`, `tankGenerator`, `refuelGenerator`,
+`refuelVehicle` in `SPHarness.lua`).
+`tools/run-sp-harness.ps1 -Mode wrong-fuel -TimeoutMinutes 40`:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 419 | 57/0 |
+
+The mode's 46 earlier checks passed as before, with the game's refuels
+now sending a note of their own.
+
+* `RTWF.tank_entry_at_the_fuel_cap_only`: on the ambulance, away from the
+  fuel cap the menu has no **Fuel in this vehicle** entry; at the cap it
+  has "Engine: stock diesel engine | What I know about it | Look and
+  smell | Take a sample (kit)". The vehicle under the cursor was stood in
+  for (`Clicked.vehicle`); the rest of `FuelMenu.fillWorld` ran as it is.
+* A look at the tank names the engine and has no verdict. A kit sample
+  ends with "For this engine, going by this sample: Good / This engine
+  can use it". **What I know about it** lists both under the tank's
+  record id (`V…-28`), the engine first, without the open-container
+  note.
+* With 10 L of petrol in the ambulance, the kit sample says "Poor / It
+  runs on this, but the fuel damages the engine / Mostly Gasoline…"
+  (`wrong_fuel_3_gasoline`).
+* The Diesel Generator: no entry from 4 tiles, the entry from the tile
+  beside it, "Engine: diesel generator, biodiesel-ready", a kit sample
+  judged for it.
+* The game's Generator Info text begins "Runs on: diesel or biodiesel"
+  for the Diesel Generator and "Runs on: gasoline" for the red one, then
+  the game's "Fuel: 50%"; the tooltip's short text is unchanged. Read
+  through `ISGeneratorInfoWindow.getRichText`, the window not opened.
+* The game's **Add Fuel**, 4 L of petrol into the Diesel Generator
+  holding 3 L of diesel: the record has both, and the note is "Wrong fuel
+  in the tank (Gasoline): do not start the engine".
+* The game's refuel from a can, 5 L of petrol: into the ambulance
+  holding 10 L of diesel, the same note; into the petrol car, no note.
+
+The console holds no warning or error of the mod.
+
+Not run: the entry from a real right-click on a vehicle (the game's pick
+under the cursor); the Generator Info window on screen; the note after a
+refuel at a pump and after a stopped refuel (offline only:
+`test_tank_fuel.lua`); a tank's samples after a save and reload; the
+sandbox option off; a gas generator; everything on a server (standing
+list).
+
+Evidence:
+[run 419](evidence/2026-11-14_rt-sp_harness_run419_wrong_fuel_tank_fuel_42.22.2.txt).

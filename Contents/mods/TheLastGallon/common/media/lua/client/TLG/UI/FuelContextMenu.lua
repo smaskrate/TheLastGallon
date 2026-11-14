@@ -21,6 +21,16 @@ local function show(text)
     modal:addToUIManager()
 end
 
+-- A test's result: what it found; for a tank, the engine it feeds and,
+-- from a kit, what the sample means for that engine.
+function Menu.sampleText(reply)
+    local parts = { getText("IGUI_TLG_InspectionTitle") }
+    if reply.engine then parts[#parts + 1] = Fmt.engine(reply.engine) end
+    parts[#parts + 1] = Fmt.observation(reply.observation)
+    if reply.verdict then parts[#parts + 1] = Fmt.verdict(reply.verdict) end
+    return table.concat(parts, " <LINE> <LINE> ")
+end
+
 local function onReply(reply)
     if not reply.ok then
         show(Fmt.failure(reply))
@@ -29,7 +39,7 @@ local function onReply(reply)
     if reply.command == "known" then
         show(Fmt.known(reply))
     elseif reply.observation then
-        show(getText("IGUI_TLG_InspectionTitle") .. " <LINE> <LINE> " .. Fmt.observation(reply.observation))
+        show(Menu.sampleText(reply))
     elseif reply.command == "status" and reply.evaluation then
         show(Fmt.evaluation(reply.evaluation))
     elseif reply.command == "treat" then
@@ -125,7 +135,8 @@ end
 -- The Fuel entry for what the click is on: a fixed object that holds fuel,
 -- or a can on the ground under the click (TLG/UI/Clicked.lua; until 0.3.0
 -- any can on the clicked tile, so that a click on the ground beside one
--- still offered it).
+-- still offered it); and, under its own name, the tank of the vehicle or
+-- the generator clicked (Menu.tankAt).
 function Menu.fillWorld(playerNum, context, worldobjects, test)
     if getSpecificPlayer(playerNum) == nil then return end
     local found, seen, squares = {}, {}, {}
@@ -156,7 +167,8 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
             end
         end
     end
-    if #found == 0 and pump == nil then return end
+    local tank = Menu.tankAt(playerNum, worldobjects)
+    if #found == 0 and pump == nil and tank == nil then return end
     if test then return ISWorldObjectContextMenu.setTest() end
     if pump then
         context:addOption(getText("ContextMenu_TLG_PumpProduct"), nil, function() Menu.askPump(pump) end)
@@ -170,6 +182,7 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
         end
         addContainer(playerNum, context, entry.owner, entry.kind, title, true)
     end
+    if tank then Menu.addTank(playerNum, context, tank) end
 end
 
 -- Pouring into engines goes through the authoritative transfer so that any
@@ -249,6 +262,72 @@ end
 local function holdsGas(g)
     local ok, gas = pcall(TLG.Integration.Generators.holdsGas, g)
     return ok and gas
+end
+
+-- A generator that has no liquid to inspect: its fuel is gas, or it is a
+-- gas generator with an empty tank. One converted to gas that still holds
+-- petrol from before the conversion keeps its Fuel entry.
+local function gasOnly(g)
+    if holdsGas(g) then return true end
+    local ok, gas = pcall(TLG.Integration.Generators.isGas, g)
+    return ok and gas == true and g:getFuel() <= 1e-6
+end
+
+-- The tank the click is on, when the character is where the authority lets
+-- it be sampled from (Authority/Resolver): a vehicle's from its fuel cap, a
+-- generator's within 2.5 tiles, and not one whose fuel is gas (D-040: Gas
+-- is its entry). Seated in a vehicle, none.
+function Menu.tankAt(playerNum, worldobjects)
+    local player = getSpecificPlayer(playerNum)
+    if player == nil or player:getVehicle() ~= nil then return nil end
+    local v = TLG.UI.Clicked.vehicle(playerNum, worldobjects, function() return nearbyVehicleTank(player) end)
+    local tank = v and v:getPartById("GasTank") or nil
+    if tank and v:isInArea(tank:getArea(), player) then
+        return { kind = "vehicle", owner = v, ref = { kind = "vehicle", id = v:getId() } }
+    end
+    local g = TLG.UI.Clicked.generator(playerNum, worldobjects, function() return nearbyGenerator(player) end)
+    local here, there = player:getSquare(), g and g:getSquare() or nil
+    if here and there and here:DistToProper(there) <= 2.5 and not gasOnly(g) then
+        return { kind = "generator", owner = g, ref = Resolver.refForObject(g, "generator") }
+    end
+    return nil
+end
+
+-- The engine's profile where this process is the authority. A client's copy
+-- of the world record is not known to tell a diesel chassis from a petrol
+-- one (Vehicles.baseProfile), so there the line is left out and the
+-- authority's replies name the engine (Format.known, onReply).
+function Menu.engineOf(tank)
+    if not TLG.World.isAuthority() then return nil end
+    local ok, profile = pcall(function()
+        if tank.kind == "vehicle" then return TLG.Integration.Vehicles.profile(tank.owner) end
+        return TLG.Integration.Generators.profile(tank.owner)
+    end)
+    return ok and profile or nil
+end
+
+-- The Fuel entry of a vehicle's or a generator's tank: the engine's type,
+-- then what a can's entry has to learn about the fuel. The tank is read
+-- through the same tests as a can and tells no more; a kit sample comes
+-- back with what it means for this engine. RT-SP launch 419 on an ambulance and a
+-- Diesel Generator; a real right-click on a vehicle NOT RUN (offline:
+-- tests/integration/test_tank_menu.lua).
+function Menu.addTank(playerNum, context, tank)
+    local player = getSpecificPlayer(playerNum)
+    local root = context:addOption(getText(tank.kind == "vehicle" and "ContextMenu_TLG_FuelVehicle"
+        or "ContextMenu_TLG_FuelGenerator"), nil, nil)
+    local sub = ISContextMenu:getNew(context)
+    context:addSubMenu(root, sub)
+    local engine = Fmt.engine(Menu.engineOf(tank))
+    if engine then sub:addOption(engine, nil, nil) end
+    local ref = tank.ref
+    sub:addOption(getText("ContextMenu_TLG_ShowKnown"), nil, function() request("known", { target = ref }) end)
+    sub:addOption(getText("ContextMenu_TLG_Look"), nil, function() request("sample", { target = ref, method = "visual" }) end)
+    local kit = sub:addOption(getText("ContextMenu_TLG_SampleKit"), nil,
+        function() request("sample", { target = ref, method = "kit" }) end)
+    if not player:getInventory():getFirstTypeRecurse("TLG.FuelSampleKit") then
+        Tip.grey(kit, getText("IGUI_TLG_Fail_NeedsKit"), true)
+    end
 end
 
 function Menu.addDrainOptions(player, sub, item)

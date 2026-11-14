@@ -31,6 +31,19 @@ and the wood gasifier (D-040) are not.
 * **Cancel the project**, **Remove the conversion** and **Abort batch**
   on what an earlier abort kept ask before they act. Not checked in
   game.
+* A vehicle's tank and a generator's get a Fuel entry: **Fuel in this
+  vehicle** from the fuel cap, **Fuel in this generator** from within two
+  tiles. It names the engine ("Engine: stock diesel engine") and offers
+  **What I know about it**, **Look and smell** and **Take a sample
+  (kit)** on the fuel in the tank. A kit sample of a tank also says what
+  it means for that engine, going by what the kit found. On a server the
+  engine is named in the dialogs, not in the menu. Checked in single player (launch 419), with the vehicle under the pointer stood in for.
+* After the game's own **Add Fuel**, refuelling from a can or at a pump,
+  a line over the character says when the tank now holds the wrong fuel
+  for its engine: "Wrong fuel in the tank (Gasoline): do not start the
+  engine". The refuel itself is not stopped. Checked in single player from a can (launch 419); at a pump not checked in game.
+* The game's **Generator Info** window says which fuel the generator
+  takes: "Runs on: diesel or biodiesel". Its text checked in single player (launch 419), the window not looked at.
 * A machine's or a gasifier's load never takes an item marked as a
   favourite: crops and sugar, water, yeast, wood, charcoal, oil and
   quicklime stay in the bag, and a favourite fuel can is not chosen to
