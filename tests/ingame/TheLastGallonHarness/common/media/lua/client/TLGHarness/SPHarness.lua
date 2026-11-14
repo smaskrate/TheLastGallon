@@ -1341,6 +1341,7 @@ local function captureDialogs(on)
             local o = H.dialogs.orig(self, x, y, w, h, text, ...)
             H.dialogs.texts[#H.dialogs.texts + 1] = tostring(text)
             H.dialogs.open[#H.dialogs.open + 1] = o
+            H.dialogs.windows = (H.dialogs.windows or 0) + 1
             return o
         end
         if Say and not H.dialogs.line then
@@ -1359,6 +1360,17 @@ local function captureDialogs(on)
         ISModalRichText.new, H.dialogs.orig = H.dialogs.orig, nil
         if Say and H.dialogs.line then Say.line, H.dialogs.line = H.dialogs.line, nil end
     end
+end
+
+-- How many replies were said over the character and how many opened a
+-- window since the capture began (a line that fell back to the window
+-- counts as a window), with the last line said. Says that the game took
+-- the line (HaloTextHelper did not raise), not how it looked.
+function H.saidSummary(tag)
+    local last = H.dialogs.lastLine
+    R:line("OBS  %s replies: %d over the character, %d in a window; last line (%s): %s", tag, H.dialogs.lines or 0,
+        H.dialogs.windows or 0, last and (last.good and "green" or "red") or "-", last and last.text or "none")
+    return H.dialogs.lines or 0, H.dialogs.windows or 0
 end
 
 local function closeDialogs()
@@ -2909,6 +2921,7 @@ RT.finish = RT.add({ name = "rt_finish", timeout = 600, fn = function(ctx, ticks
         RT.speed(1)
         closeDialogs()
         captureDialogs(false)
+        H.saidSummary("RT.summary")
         R:line("OBS  RT.summary game hours %.2f -> %.2f", RT.h0 or -1, hours())
         TLGH.writeFile("TLG_harness_request.txt", { "done" })
         R:finish(true)
@@ -18757,6 +18770,12 @@ RT.WD.beforeSave = { name = "rtwd_before_save", fn = function()
     TLGH.writeFile("TLG_harness_expect.txt", { "wd.x=" .. RT.WD.spot.x, "wd.y=" .. RT.WD.spot.y,
         "wd.item=" .. tostring(RT.WD.itemId), "wd.gid=" .. tostring(st and st.id), "wd.rid=" .. tostring(rec and rec.id),
         "wd.hopper=" .. string.format("%.6f", TLG.Domain.Gas.Gasifier.status(wdState()).hopperKg) })
+    -- R6: the gasifier's load, lights and put-out were said over the
+    -- character, its Status and the gas's were windows.
+    local lines, windows = H.saidSummary("RTWD.said")
+    R:check("RTWD.actions_said_over_the_character_status_in_a_window", function()
+        return lines >= 4 and windows >= 2, string.format("%d lines, %d windows", lines, windows)
+    end)
     RT.WD.state("saving")
     return true
 end }

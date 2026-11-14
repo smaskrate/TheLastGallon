@@ -13,8 +13,8 @@
 -- zombie.characters.HaloTextHelper.addGoodText / addBadText(player, text),
 -- as SRC client/ISUI/ISWorldObjectContextMenu.lua uses for "not safe to
 -- sleep"). How two lines sent together show, and a line sent while the
--- game is paused, are NOT RUN. RT-SP launches 421 and 422 ran the texts
--- through here; whether they showed over the character or in the window was
+-- game is paused, are NOT RUN. RT-SP launch 423: five lines of a gasifier taken
+-- by the game, none fell back to the window. How a line looks was
 -- not looked at.
 TLG.UI = TLG.UI or {}
 TLG.UI.Say = TLG.UI.Say or {}

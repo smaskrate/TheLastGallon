@@ -8983,3 +8983,36 @@ screenshot modes; a server.
 Evidence:
 [run 421](evidence/2026-11-14_rt-sp_harness_run421_full_say_42.22.2.txt),
 [run 422](evidence/2026-11-14_rt-sp_harness_run422_controls_say_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 423 (the gasifier's replies counted: lines and windows)
+
+Branch `feature/gas-generators` at `a5ef848`, 42.22.2. The harness now
+counts the replies said over the character and those that opened a
+window (`H.saidSummary` in `SPHarness.lua`; a line that falls back to
+the window counts as a window), and the wood-gas mode has one check
+more. `tools/run-sp-harness.ps1 -Mode gas-wood -TimeoutMinutes 60`:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 423 | 19/0, then 4/0 after the reload |
+
+Launch 379 had 18/0, then 4/0: the same checks and the new one.
+
+* `RTWD.actions_said_over_the_character_status_in_a_window`: 5 replies
+  went over the character (the hopper's load, three lightings, the
+  put-out) and 3 opened a window (the gas's status, the gasifier's
+  twice). The game took every line: `HaloTextHelper.addGoodText` did not
+  raise, so none fell back to the window. The last line said was "Lit:
+  warming up, no gas yet", green.
+* After the reload, one more lighting went over the character
+  (`RT.summary`: 1 line, 0 windows).
+
+The console holds no warning or error of the mod.
+
+Not run: how a line looks over the character (nobody looked at the
+screen); a red line in this mode (the one refusal it tries, lighting an
+empty gasifier, is a greyed entry and is never asked); the count in the
+other modes, which print it at their end from now on.
+
+Evidence:
+[run 423](evidence/2026-11-14_rt-sp_harness_run423_gas_wood_said_42.22.2.txt).

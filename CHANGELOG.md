@@ -15,8 +15,9 @@ and the wood gasifier (D-040) are not.
   refusal with a list, for an abort and for a collect or load that threw
   something away. After an action the line holds what it took or gave;
   the machine's state, stage and temperature are in **Status**. The
-  texts ran through the harness in single player (launches 421 and 422);
-  whether they showed over the character was not looked at.
+  texts ran through the harness in single player (launches 421 to 423; in
+  423 the game took five lines of a gasifier, none fell back to a window);
+  how a line looks over the character was not looked at.
 * After a load, a feed of the firebox or a collect, a machine's answer
   says what the action took and gave, for example "Loaded: 6.00 kg of
   sugar equivalent, 30.00 L of water and the yeast." A reactor's load
