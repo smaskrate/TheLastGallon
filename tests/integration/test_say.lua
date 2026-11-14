@@ -132,3 +132,76 @@ T.case("integration: a gasifier's action is said in one sentence, its Status is 
             "[IGUI_TLG_GasifierState_warming]")
     end)
 end)
+
+T.case("integration: Status says how worn a machine is and what that costs in yield", function()
+    stage(function()
+        local Process = TLG.Domain.Process
+        T.near(Process.yieldAt(1), 1, 1e-12); T.near(Process.yieldAt(0), 0.7, 1e-12); T.near(Process.yieldAt(0.5), 0.85, 1e-12)
+        T.near(Process.yieldAt(nil), 1, 1e-12); T.near(Process.yieldAt(7), 1, 1e-12)
+        T.ok(Fmt.condition(nil) == nil, "a reply without a condition")
+        T.eq(Fmt.condition(1), "[IGUI_TLG_MachineCond:100%]", "a new machine: no cost named")
+        T.eq(Fmt.condition(0.86), "[IGUI_TLG_MachineCond:86%] <LINE> [IGUI_TLG_MachineCondYield:96%]")
+        T.eq(Fmt.condition(0), "[IGUI_TLG_MachineCond:0%] <LINE> [IGUI_TLG_MachineCondWornOut]")
+        local function has(text, part) return string.find(text, part, 1, true) ~= nil end
+        local status = Machine.describe({ ok = true, command = "machine.status", machine = "pot_still", state = "Ready",
+            cond = 0.5 })
+        T.ok(has(status, "[IGUI_TLG_MachineCond:50%] <LINE> [IGUI_TLG_MachineCondYield:85%]"), status)
+        -- An action's window (an abort) does not repeat it.
+        T.ok(not has(Machine.describe({ ok = true, command = "machine.abort", machine = "pot_still", state = "Ready",
+            aborted = true, cond = 0.5 }), "MachineCond"))
+        T.ok(has(Gasifier.describe({ command = "gasifier.status", state = "Ready", hopperKg = 0, filter = 0.2, cond = 0.9 }),
+            "[IGUI_TLG_MachineCond:90%] <LINE> [IGUI_TLG_MachineCondYield:97%]"))
+    end)
+end)
+
+T.case("integration: the Repair entry shows on a worn machine, with what it takes or what is missing", function()
+    stage(function()
+        local Repair, Picks = TLG.UI.Repair, TLG.Integration.Picks
+        local saved = { name = getItemNameFromFullType, world = ISWorldObjectContextMenu, pick = Picks.repair }
+        getItemNameFromFullType = function(t) return "<" .. t .. ">" end
+        ISWorldObjectContextMenu = { addToolTip = function() return {} end }
+        local ok, err = pcall(function()
+            local function menu()
+                local c = { options = {} }
+                function c:addOption(name, _, fn) local o = { name = name, fn = fn }; self.options[#self.options + 1] = o; return o end
+                return c
+            end
+            local needs = "[IGUI_TLG_Tip_Repair:25%,1 <Base.MetalPipe>,<Base.Screwdriver>]"
+            T.eq(Repair.needs("pot_still"), needs)
+            T.eq(Repair.needs("fermenter_barrel"), "[IGUI_TLG_Tip_Repair:25%,2 <Base.Nails>, 1 <Base.Plank>,<Base.Hammer>]")
+            -- Not worn enough, or no condition known: no entry.
+            local c = menu()
+            T.ok(Repair.add(c, {}, "pot_still", 1, nil, true, nil) == nil and Repair.add(c, {}, "pot_still", nil, nil, true, nil) == nil)
+            T.ok(Repair.add(c, {}, "pot_still", 0.8, nil, true, nil) == nil, "a whole quarter does not fit yet")
+            T.eq(#c.options, 0)
+            -- Worn, with what it takes.
+            Picks.repair = function() return { ok = true, items = {}, missing = {} } end
+            local clicked = false
+            local o = Repair.add(c, {}, "pot_still", 0.6, nil, true, function() clicked = true end)
+            T.eq(o.name, "[ContextMenu_TLG_Repair]")
+            T.ok(o.notAvailable == nil and o.toolTip.description == needs)
+            o.fn()
+            T.ok(clicked)
+            -- Something missing: greyed, naming it once, then what it takes.
+            Picks.repair = function() return { ok = false, items = {}, missing = { "Base.Nails", "Base.Nails", "Base.Hammer" } } end
+            o = Repair.add(c, {}, "pot_still", 0.6, nil, true, nil)
+            T.ok(o.notAvailable == true)
+            T.eq(o.toolTip.description, "[IGUI_TLG_Tip_RepairMissing:<Base.Nails>, <Base.Hammer>] <LINE> " .. needs)
+            -- Busy: greyed with that reason, the inventory not looked at.
+            Picks.repair = function() error("not asked") end
+            o = Repair.add(c, {}, "pot_still", 0.6, "busy now", true, nil)
+            T.ok(o.notAvailable == true and o.toolTip.description == "busy now")
+            -- The replies: a line when done, a window with the list when refused.
+            T.eq(Machine.line({ ok = true, command = "machine.repair", machine = "pot_still", state = "Ready", cond = 0.65 }),
+                "[IGUI_TLG_Did_repair:65%]")
+            T.eq(Gasifier.line({ command = "gasifier.repair", state = "Ready", repaired = true, cond = 0.25 }),
+                "[IGUI_TLG_Did_repair:25%]")
+            T.eq(Machine.failureText({ ok = false, reason = "needs_repair_parts", missing = { "Base.MetalPipe", "Base.MetalPipe" } }),
+                "[IGUI_TLG_MachineFail_needs_repair_parts] <LINE> - <Base.MetalPipe>", "the list, each part once (the stand-in translator knows every key)")
+            T.eq(Fmt.failure({ reason = "not_worn" }), "[IGUI_TLG_Fail_NotWorn]")
+            T.eq(Fmt.failure({ reason = "needs_repair_parts" }), "[IGUI_TLG_Fail_RepairParts]")
+        end)
+        getItemNameFromFullType, ISWorldObjectContextMenu, Picks.repair = saved.name, saved.world, saved.pick
+        if not ok then error(err, 0) end
+    end)
+end)

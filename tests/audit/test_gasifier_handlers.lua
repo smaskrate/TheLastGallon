@@ -116,6 +116,37 @@ T.case("gasifier: clean out only when it does not burn; what it held is thrown a
     T.eq(item:getModData().tlgGasifier.filter, 0)
 end)
 
+T.case("gasifier: Repair gives a cold, worn one a quarter of its condition for a pipe; a worn-out one lights again", function()
+    local item, player, ref = gasifierAt(525, 500, { ["Base.Log"] = 4, ["Base.MetalPipe"] = 2 })
+    T.ok(ask(player, "gasifier.load", ref).ok)
+    T.eq(ask(player, "gasifier.repair", ref).reason, "not_worn", "a new one")
+    T.eq(count(player, "Base.MetalPipe"), 2)
+    -- Worn, with pipes and no screwdriver.
+    item:getModData().tlgGasifier.cond = 0.3
+    local r = ask(player, "gasifier.repair", ref)
+    T.eq(r.reason, "needs_repair_parts"); T.eq(table.concat(r.missing, ","), "Base.Screwdriver")
+    T.eq(count(player, "Base.MetalPipe"), 2)
+    player:getInventory():AddItem(M.item("Base.Screwdriver"))
+    r = ask(player, "gasifier.repair", ref)
+    T.ok(r.ok, tostring(r.reason))
+    T.eq(r.command, "gasifier.repair"); T.eq(r.repaired, true)
+    T.near(r.cond, 0.55, 1e-12); T.near(item:getModData().tlgGasifier.cond, 0.55, 1e-12)
+    T.eq(count(player, "Base.MetalPipe"), 1); T.eq(count(player, "Base.Screwdriver"), 1)
+    -- Not while it burns.
+    T.ok(ask(player, "gasifier.light", ref).ok)
+    T.eq(ask(player, "gasifier.repair", ref).reason, "busy")
+    T.ok(ask(player, "gasifier.putOut", ref).ok)
+    -- Worn out: it does not light until repaired.
+    local st = item:getModData().tlgGasifier
+    st.cond, st.state, st.pause = 0, "Faulted", "needs_repair"
+    T.eq(ask(player, "gasifier.light", ref).reason, "needs_repair")
+    r = ask(player, "gasifier.repair", ref)
+    T.ok(r.ok, tostring(r.reason))
+    T.eq(r.state, "Ready"); T.near(r.cond, 0.25, 1e-12)
+    T.eq(count(player, "Base.MetalPipe"), 0)
+    T.ok(ask(player, "gasifier.light", ref).ok, "lit again")
+end)
+
 T.case("gasifier: carried it answers Status only; out of reach nothing", function()
     local item, player, ref = gasifierAt(530, 500, { ["Base.Log"] = 4 })
     T.ok(ask(player, "gasifier.load", ref).ok)

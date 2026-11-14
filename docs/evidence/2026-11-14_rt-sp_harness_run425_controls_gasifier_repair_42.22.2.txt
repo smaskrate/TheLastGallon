@@ -1,0 +1,101 @@
+# TLG single-player harness, real game clock, machine controls
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=2336060607493739696 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rtc_sites begin
+OBS  RTC.spots character 10618,10628; F1 10617,10628 F2 10617,10629 F3 10618,10629 column 10619,10628 still 10619,10629; grid power=true
+PASS RTC.grid_is_on :: isHydroPowerOn=true
+STEP rtc_run begin
+OBS  RTC.load_mash_F1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_F1 :: sugar=6 water=30
+OBS  RTC.load_mash_F2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_F2 :: sugar=6 water=30
+OBS  RTC.load_mash_F3 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_F3 :: sugar=6 water=30
+OBS  RTC.load_dry_column menu "Dry ethanol with quicklime" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loaded_column :: ethanol 3.999993188757002 water 1.000006811242998 lime 4; ethanol left in carried cans 0.0000 L
+OBS  RTC.menu F1 working: Status, Load mash and start fermenting, Pause, Abort batch
+PASS RTC.menu_working_F1 :: pause,resume,abort offered true,false,true (want true,false,true)
+OBS  RTC.menu still idle: Status, Load wash from a nearby fermenter, Feed the firebox, Collect ethanol into a fuel can
+PASS RTC.menu_idle_still :: pause,resume,abort offered false,false,false (want false,false,false)
+OBS  RTC.pause_F1 menu "Pause" -> ok=true reason=nil state=Paused stage=nil outputs={} consumed=nil
+PASS RTC.pause_F1 :: state=Paused pause=paused_by_player dialog=Paused Reason: paused by hand
+OBS  RTC.menu F1 paused_by_hand: Status, Load mash and start fermenting, Resume, Abort batch
+PASS RTC.menu_paused_by_hand_F1 :: pause,resume,abort offered false,true,true (want false,true,true)
+OBS  RTC.pause_again_F1 machine.pause -> ok=false reason=not_processing state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTC.pause_again_refused_F1 :: reason not_processing (want not_processing); record unchanged; the menu shows "It is not working on a batch right now."
+OBS  RTC.abort_F2 menu "Abort batch" -> ok=true reason=nil state=OutputReady stage=nil outputs={ethanol=0.13755910694599152,sugar_eq=5.74989253282547,water=30} consumed=nil
+OBS  RTC.abort_F2 kept={ethanol=0.13755910694599152,sugar_eq=5.74989253282547,water=30} discarded={}; dialog=Batch stopped. <LINE> Stopped early: the wash so far is ready for a still <LINE> Ethanol: 0.14 L <LINE> Sugar: 5.75 kg <LINE> Water: 30.00 L <LINE> Abort batch again to throw it away.
+PASS RTC.abort_keeps_the_wash_F2 :: kept {ethanol=0.13755910694599152,sugar_eq=5.74989253282547,water=30}, discarded {}; vessel OutputReady holding {ethanol=0.13755910694599152,sugar_eq=5.74989253282547,water=30}; expected {ethanol=0.1375591069459915,sugar_eq=5.74989253282547,water=30}
+PASS RTC.design_abort_lists_what_it_kept_F2 :: dialog: Batch stopped. <LINE> Stopped early: the wash so far is ready for a still <LINE> Ethanol: 0.14 L <LINE> Sugar: 5.75 kg <LINE> Water: 30.00 L <LINE> Abort batch again to throw it away.
+OBS  RTC.menu F2 stopped_early: Status, Load mash and start fermenting, Abort batch
+PASS RTC.menu_stopped_early_F2 :: pause,resume,abort offered false,false,true (want false,false,true)
+OBS  RTC.load_wash_still menu "Load wash from a nearby fermenter" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.still_takes_the_stopped_wash :: wash 30.137559106945993 L; still inputs {ethanol=0.13755910694599152,sugar_eq=5.74989253282547,water=30}; vessel Ready
+OBS  RTC.abort_again_F2 machine.abort -> ok=false reason=nothing_to_abort state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTC.abort_again_refused_F2 :: reason nothing_to_abort (want nothing_to_abort); record unchanged; the menu shows "There is no batch to stop."
+OBS  RTC.load_mash_F2 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loads_again_after_abort_F2 :: reason nil
+OBS  RTC.pause_F3 menu "Pause" -> ok=true reason=nil state=Paused stage=nil outputs={} consumed=nil
+PASS RTC.pause_F3 :: state Paused
+OBS  RTC.abort_column menu "Abort batch" -> ok=true reason=nil state=OutputReady stage=nil outputs={ethanol=3.999993188757002,water=0.5097525244016442} consumed=nil
+OBS  RTC.abort_column kept={ethanol=3.999993188757002,water=0.5097525244016442} discarded={spent_lime=4.4902542868413535}; dialog=Batch stopped. <LINE> Stopped early: what it made is ready to collect <LINE> Ethanol: 4.00 L <LINE> Water: 0.51 L <LINE> Thrown away: Spent lime 4.49 kg <LINE> Abort batch again to throw it away.
+PASS RTC.abort_keeps_the_ethanol_in_the_column :: kept {ethanol=3.999993188757002,water=0.5097525244016442}, discarded {spent_lime=4.4902542868413535}; column OutputReady; expected ethanol 3.999993 water 0.509753 (0.5003 done)
+PASS RTC.design_abort_lists_what_is_lost_column :: dialog: Batch stopped. <LINE> Stopped early: what it made is ready to collect <LINE> Ethanol: 4.00 L <LINE> Water: 0.51 L <LINE> Thrown away: Spent lime 4.49 kg <LINE> Abort batch again to throw it away.
+OBS  RTC.collect_column menu "Collect ethanol into a fuel can" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTC.design_abort_keeps_the_ethanol :: can id=S51694191-5 rev=2 total=4.5097 q[ethanol=4.0000,water=0.5098] deg[ethanol=0.0018] mic=0 stab=0; column Ready
+PASS RTC.paused_hours_do_no_work_F1 :: done 5.001719 h (5.001719 at the pause); paused for 6.001799 h of 6.001799
+OBS  RTC.resume_F1 menu "Resume" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.resume_F1 :: state=Processing dialog=Working
+OBS  RTC.resume_again_F1 machine.resume -> ok=false reason=not_paused state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTC.resume_again_refused_F1 :: reason not_paused (want not_paused); record unchanged; the menu shows "It is not paused."
+PASS RTC.resume_continues_F1 :: done 9.001964 h (want 9.001964); paused 6.001799 h; state Processing
+OBS  RTC.abort_F1 menu "Abort batch" -> ok=true reason=nil state=OutputReady stage=nil outputs={ethanol=0.2750674992799759,sugar_eq=5.4998772740364075,water=30} consumed=nil
+OBS  RTC.abort_again_F1 menu "Abort batch" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTC.second_abort_throws_it_away_F1 :: kept {ethanol=0.2750674992799759,sugar_eq=5.4998772740364075,water=30}, then thrown away {ethanol=0.2750674992799759,sugar_eq=5.4998772740364075,water=30}; vessel Ready; dialog Batch stopped. <LINE> Ready <LINE> Thrown away: Ethanol 0.28 L, Sugar 5.50 kg, Water 30.00 L
+OBS  RTC.load_mash_F1 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loads_again_after_throwing_away_F1 :: reason nil
+PASS RTC.hand_pause_counts_towards_spoiling :: state=Faulted pause=batch_spoiled paused for 72.000000 h
+OBS  RTC.menu F3 spoiled: Status, Load mash and start fermenting, Abort batch
+PASS RTC.menu_spoiled_F3 :: pause,resume,abort offered false,false,true (want false,false,true)
+OBS  RTC.load_mash_F3 menu "Load mash and start fermenting" -> ok=false reason=batch_spoiled state=nil stage=nil outputs=nil consumed=nil
+PASS RTC.spoiled_load_refused_F3 :: reason batch_spoiled; dialog The batch in it has spoiled: use Abort batch to empty it.
+OBS  RTC.abort_F3 menu "Abort batch" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTC.design_spoiled_batch_can_be_cleared :: state Ready; thrown away {sugar_eq=6,water=30}; dialog The spoiled batch was thrown away. <LINE> Ready <LINE> Thrown away: Sugar 6.00 kg, Water 30.00 L
+OBS  RTC.load_mash_F3 menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTC.loads_again_after_spoiling_F3 :: reason nil
+STEP rtrp_wear_and_repair begin
+OBS  RTRP.status_new_still menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTRP.new_machine_full_condition_no_repair :: cond 1; entry false; Ready <LINE> Temperature here now: 71.6 °F, in a room <LINE> Condition: 100%
+OBS  RTRP.status_worn_still menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTRP.repair_without_parts machine.repair -> ok=false reason=needs_repair_parts state=nil pause=nil stage=nil blocked=nil missing={1=Base.Screwdriver,2=Base.MetalPipe} outputs=nil
+PASS RTRP.worn_machine_says_so_and_repair_names_what_is_missing :: status: Ready <LINE> Temperature here now: 71.6 °F, in a room <LINE> Condition: 40% <LINE> Worn: it gives 82% of what a new one gives || entry greyed=true tip: You lack: Screwdriver, Iron Pipe. <LINE> Gives back 25% of the condition. Takes 1 Iron Pipe; needs a Screwdriver. || refusal needs_repair_parts missing {1=Base.Screwdriver,2=Base.MetalPipe}
+OBS  RTRP.repair_still_1 menu "Repair" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTRP.repair_gives_a_quarter_for_a_pipe :: entry greyed=false tip: Gives back 25% of the condition. Takes 1 Iron Pipe; needs a Screwdriver. || cond 0.65; pipes 1 screwdrivers 1; said: Repaired: condition now 65%. (over the character: true)
+OBS  RTRP.repair_still_2 menu "Repair" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTRP.repair_at_90 machine.repair -> ok=false reason=not_worn state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTRP.no_repair_above_three_quarters :: cond 0.9; entry offered=false; asked anyway: not_worn; pipes 1
+OBS  RTRP.status_dead_still menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTRP.repair_dead_still menu "Repair" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTRP.worn_out_machine_is_repaired :: Ready <LINE> Temperature here now: 71.6 °F, in a room <LINE> Condition: 0% <LINE> Worn out: repair it to use it again || repair ok=true reason=nil cond 0.25
+OBS  RTRP.status_vessel menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTRP.repair_vessel menu "Repair" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTRP.fermenter_takes_a_plank_and_two_nails :: one nail: greyed=true tip: You lack: Nails. <LINE> Gives back 25% of the condition. Takes 2 Nails, 1 Plank; needs a Claw Hammer. || two: greyed=false tip: Gives back 25% of the condition. Takes 2 Nails, 1 Plank; needs a Claw Hammer. || ok=true reason=nil cond 0.75; planks 0 nails 0 hammers 1
+OBS  RTRP.gasifier_load menu "Load the hopper with wood" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTRP.gasifier_status_worn menu "Status" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTRP.gasifier_repair menu "Repair" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+PASS RTRP.gasifier_shows_its_wear_and_is_repaired :: new: [Status | Load the hopper with wood (greyed) | Light] || status: Cold <LINE> Hopper: 27.0 kg of wood <LINE> Filter: 0% full <LINE> Condition: 50% <LINE> Worn: it gives 85% of what a new one gives || worn: [Status | Load the hopper with wood (greyed) | Light | Repair] || repair ok=true reason=nil cond 0.75 pipes 1; said: Repaired: condition now 75%.
+OBS  RTRP.gasifier_light_worn_out gasifier.light -> ok=false reason=needs_repair state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+OBS  RTRP.gasifier_repair_worn_out menu "Repair" -> ok=true reason=nil state=Ready stage=nil outputs=nil consumed=nil
+OBS  RTRP.gasifier_light_repaired menu "Light" -> ok=true reason=nil state=Processing stage=nil outputs=nil consumed=nil
+PASS RTRP.worn_out_gasifier_lights_again_after_a_repair :: worn out: [Status | Load the hopper with wood (greyed) | Light (greyed) | Repair]; light needs_repair; repair ok=true state Ready cond 0.25; pipes 0; lit ok=true state Processing reason nil
+OBS  RTRP.gasifier_put_out gasifier.putOut -> ok=true reason=nil state=Ready pause=put_out stage=nil blocked=nil missing=nil outputs=nil
+STEP rt_finish begin
+OBS  RT.summary replies: 21 over the character, 10 in a window; last line (green): Lit: warming up, no gas yet
+OBS  RT.summary game hours 2.01 -> 81.75
+SUMMARY pass=40 fail=0
+DONE

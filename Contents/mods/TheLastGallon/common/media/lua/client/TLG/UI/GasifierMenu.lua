@@ -12,6 +12,7 @@ require "TLG/Content/Feedstocks"
 require "TLG/UI/Tip"
 require "TLG/UI/LoadPreview"
 require "TLG/UI/Say"
+require "TLG/UI/Repair"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.GasifierMenu = TLG.UI.GasifierMenu or {}
@@ -64,6 +65,8 @@ function Menu.describe(r)
         lines[#lines + 1] = text
     end
     lines[#lines + 1] = getText("IGUI_TLG_GasifierFilter", string.format("%.0f%%", (r.filter or 0) * 100))
+    -- How worn it is (each full filter wears it) and what that costs in gas.
+    lines[#lines + 1] = Fmt.condition(r.cond)
     local held = r.held or {}
     if (held.wood_tar or 0) > 0 or (held.wood_ash or 0) > 0 then
         lines[#lines + 1] = getText("IGUI_TLG_GasifierHeld", num(held.wood_tar), num(held.wood_ash))
@@ -79,6 +82,7 @@ function Menu.line(r)
     -- A reply that does not say what was asked is read as a status.
     if r.command == nil or r.command == "gasifier.status" then return nil end
     if r.loadedKg then return getText("IGUI_TLG_GasifierLoaded", num(r.loadedKg, 1), tostring(r.items or 0)) end
+    if r.repaired then return getText("IGUI_TLG_Did_repair", string.format("%.0f%%", (tonumber(r.cond) or 0) * 100)) end
     if r.vented then return getText("IGUI_TLG_GasifierVented", num(r.vented)) end
     if r.thrownAway then
         local t = r.thrownAway
@@ -91,7 +95,7 @@ local function onReply(reply)
     if not reply.ok then
         local key = "IGUI_TLG_GasifierFail_" .. tostring(reply.reason)
         local text = getText(key)
-        Say.refusal(text ~= key and text or Fmt.failure(reply))
+        Say.refusal((text ~= key and text or Fmt.failure(reply)) .. TLG.UI.Repair.missingLines(reply))
         return
     end
     local line = Menu.line(reply)
@@ -159,6 +163,9 @@ local function addGasifier(playerNum, context, item, title, world)
     if st.state ~= "Processing" and (st.filter > 0 or not Tables.isEmpty(st.held)) then
         sub:addOption(getText("ContextMenu_TLG_GasifierService"), nil, function() req("gasifier.service", ref) end)
     end
+    -- Repair, for a worn or worn-out gasifier: only while it is cold.
+    TLG.UI.Repair.add(sub, player, st.machine, tonumber(st.cond), (st.state ~= "Ready" and st.state ~= "Faulted")
+        and getText("IGUI_TLG_GasifierFail_busy") or nil, world, function() req("gasifier.repair", ref) end)
 end
 
 local function firstItem(entry)

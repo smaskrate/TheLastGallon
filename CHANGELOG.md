@@ -5,6 +5,20 @@
 Only the menus' texts are listed here so far; the gas generator, propane
 and the wood gasifier (D-040) are not.
 
+* **Status** of a machine and of a gasifier shows its condition, and
+  when it is worn what that costs: "Condition: 86%", "Worn: it gives 96%
+  of what a new one gives". A machine loses condition with every batch
+  and a gasifier with every full filter; before, nothing showed it and
+  the yield fell unexplained. Checked in single player on a pot still and a gasifier (launches 424 and 425).
+* New: **Repair**, in the menu of a machine or gasifier at 75 % or less.
+  Each repair
+  gives back a quarter of the condition and takes a piece of what the
+  machine is made of: the fermenter a plank and two nails, with a
+  hammer; every other machine and the gasifier a metal pipe, with a
+  screwdriver. The tool is kept; favourite parts are left alone. Only an
+  idle, empty machine or a cold gasifier can be repaired. The entry says
+  what it takes, or what is missing. Before, a machine at 0 % took no
+  more batches and nothing could bring it back. Checked in single player on a pot still, a fermenter and a gasifier (launches 424 and 425).
 * Changed: what an action did is said in a line over the character, with
   no window to close: a treatment of a can, a load, a feed of the
   firebox, a collect, Pause and Resume, a gasifier's load, lighting,

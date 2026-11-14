@@ -37,6 +37,8 @@ Fmt.FAILURE_KEYS = {
     no_engine = "IGUI_TLG_Fail_NoEngine", empty = "IGUI_TLG_Fail_Empty",
     source_not_fuel = "IGUI_TLG_Fail_NotFuel", destination_not_fuel = "IGUI_TLG_Fail_NotFuel",
     commit_failed = "IGUI_TLG_Fail_CommitFailed", future_schema = "IGUI_TLG_Fail_FutureSchema",
+    -- Repair (R8).
+    not_worn = "IGUI_TLG_Fail_NotWorn", needs_repair_parts = "IGUI_TLG_Fail_RepairParts",
 }
 
 local function pct(x) return string.format("%.1f%%", (x or 0) * 100) end
@@ -188,6 +190,21 @@ function Fmt.evaluation(e)
         end
     end
     return table.concat(lines, " <LINE> ")
+end
+
+-- A machine's condition for its Status: "Condition: 86%", and when it is
+-- worn what that costs, "It gives 96% of what a new one gives" (the yield
+-- rule is Process.yieldAt). nil without a condition in the reply.
+function Fmt.condition(cond)
+    if type(cond) ~= "number" then return nil end
+    local c = math.max(0, math.min(1, cond))
+    local text = tr("IGUI_TLG_MachineCond", string.format("%.0f%%", c * 100))
+    if c <= 0 then return text .. " <LINE> " .. tr("IGUI_TLG_MachineCondWornOut") end
+    if c < 0.995 then
+        local yield = TLG.Domain.Process.yieldAt(c)
+        text = text .. " <LINE> " .. tr("IGUI_TLG_MachineCondYield", string.format("%.0f%%", yield * 100))
+    end
+    return text
 end
 
 function Fmt.failure(reply)

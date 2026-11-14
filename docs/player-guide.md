@@ -576,6 +576,33 @@ burns only while it stands. In multiplayer, a working machine picked up
 with the world menu's **Grab** can lose up to ten minutes of work before
 the pickup.
 
+### Wear and Repair
+
+Every batch wears a machine a little, and every full filter wears a
+gasifier. **Status** shows it: "Condition: 86%", and under it what the
+wear costs, "Worn: it gives 96% of what a new one gives". A worn machine
+gives less from the same load, down to 70 % of a new one's yield; at 0 %
+it takes no more batches, and a gasifier no longer lights.
+
+**Repair** is in the menu of a machine or gasifier at 75 % or less. Each
+repair gives back a quarter of the condition and takes:
+
+| Machine | Takes | Tool, kept |
+| --- | --- | --- |
+| Fermenter | 1 plank, 2 nails | a hammer |
+| Every other machine, and the gasifier | 1 metal pipe (the game's Iron Pipe) | a screwdriver |
+
+The machine must be on the ground, idle and empty (a gasifier cold).
+Items marked as favourites are not used as parts. With the pointer on
+the entry it says what it takes; greyed, it says what you lack. A pot
+still wears 2 % a batch, so one pipe pays for about twelve batches; a
+fermenter wears 1 %.
+
+**Checked in game** (single player, launches 424 and 425): the condition
+lines and **Repair** on a pot still, a fermenter and a gasifier, with the
+condition written into their records. **Not checked in game:** wear from
+real batches, a server.
+
 ### Pause, Resume and Abort batch
 
 **Pause** holds a batch where it is and **Resume** carries on, but a paused

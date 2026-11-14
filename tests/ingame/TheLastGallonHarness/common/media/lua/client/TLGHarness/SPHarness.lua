@@ -5883,7 +5883,189 @@ RT.controlRun = { name = "rtc_run", timeout = 120000, fn = function(ctx, ticks)
     return RT.C.phases[ctx.phase or "load"](ctx, ticks) == true
 end }
 
-RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.finish }
+------------------------------------------------------------------------------
+-- Wear and Repair (UX review R8, D-043), at the end of the controls mode:
+-- a pot still and a fermenter put down new beside the character, their
+-- condition set in the record, read in Status and repaired from the menu
+-- with the game's own items.
+------------------------------------------------------------------------------
+RT.RP = {}
+
+-- The Repair entry of `item`'s menu: nil when not offered, else whether it
+-- is greyed and its tooltip's text.
+function RT.RP.entry(item)
+    local context = ISContextMenu.get(0, 100, 100)
+    TLG.UI.MachineMenu.fill(0, context, { item })
+    local root = context:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+    local sub = root and root.subOption and context:getSubMenu(root.subOption)
+    local o = sub and sub:getOptionFromName(getText("ContextMenu_TLG_Repair"))
+    context:setVisible(false)
+    if o == nil then return nil end
+    return { greyed = o.notAvailable == true, tip = o.toolTip and tostring(o.toolTip.description) or "none" }
+end
+
+function RT.RP.count(fullType)
+    return player():getInventory():getCountTypeRecurse(fullType)
+end
+
+function RT.RP.click(label, item, key)
+    local before = #H.dialogs.texts
+    local r = machineClick("RTRP." .. label, item, key)
+    local text = H.dialogs.texts[before + 1]
+    closeDialogs()
+    return r, text
+end
+
+RT.RP.step = { name = "rtrp_wear_and_repair", timeout = 900, fn = function(ctx, ticks)
+    if RT.abort or RT.skip("rtrp_wear_and_repair") then return true end
+    local RP, Machines = RT.RP, TLG.Integration.Machines
+    if not ctx.t0 then
+        local here = player():getSquare()
+        RP.still, RP.vessel = instanceItem("TLG.PotStill"), instanceItem("TLG.FermenterVessel")
+        here:AddWorldInventoryItem(RP.still, 0.2, 0.2, 0, false)
+        here:AddWorldInventoryItem(RP.vessel, 0.8, 0.8, 0, false)
+        for _, t in ipairs({ "Base.Screwdriver", "Base.MetalPipe", "Base.Hammer", "Base.Plank", "Base.Nails" }) do removeAll(t) end
+        ctx.t0 = ticks
+        return nil
+    end
+    if ticks - ctx.t0 < 30 then return nil end
+    local function pct(x) return string.format("%.0f%%", x * 100) end
+    local function cond(item) return (item:getModData().tlgProc or {}).cond end
+    local function wear(item, c)
+        local rec = item:getModData().tlgProc
+        rec.cond, rec.rev = c, (rec.rev or 0) + 1
+    end
+    -- A new machine: Status gives it its record; 100 %, no cost named, no entry.
+    local s, text = RP.click("status_new_still", RP.still, "ContextMenu_TLG_MachineStatus")
+    R:check("RTRP.new_machine_full_condition_no_repair", function()
+        return s.ok == true and s.cond == 1 and has(text, getText("IGUI_TLG_MachineCond", "100%"))
+            and not has(text, getText("IGUI_TLG_MachineCondYield", "")) and RP.entry(RP.still) == nil and not has(text, "IGUI_TLG"),
+            string.format("cond %s; entry %s; %s", tostring(s.cond), tostring(RP.entry(RP.still) ~= nil), tostring(text))
+    end)
+    -- Worn to 40 %: Status says so and what it costs; Repair is greyed
+    -- without the parts and says what is missing; the authority refuses.
+    wear(RP.still, 0.4)
+    s, text = RP.click("status_worn_still", RP.still, "ContextMenu_TLG_MachineStatus")
+    local e = RP.entry(RP.still)
+    local r = ask("RTRP.repair_without_parts", "machine.repair", { target = Machines.refFor(RP.still) })
+    R:check("RTRP.worn_machine_says_so_and_repair_names_what_is_missing", function()
+        return has(text, getText("IGUI_TLG_MachineCond", "40%")) and has(text, getText("IGUI_TLG_MachineCondYield", "82%"))
+            and e ~= nil and e.greyed and has(e.tip, getItemNameFromFullType("Base.MetalPipe"))
+            and has(e.tip, getItemNameFromFullType("Base.Screwdriver")) and not has(e.tip, "IGUI_TLG")
+            and r.ok == false and r.reason == "needs_repair_parts" and #(r.missing or {}) == 2 and cond(RP.still) == 0.4,
+            string.format("status: %s || entry greyed=%s tip: %s || refusal %s missing %s", tostring(text),
+                tostring(e and e.greyed), tostring(e and e.tip), tostring(r.reason), brief(r.missing))
+    end)
+    -- With a screwdriver and two pipes: two repairs, one pipe each.
+    give("Base.Screwdriver", 1)
+    give("Base.MetalPipe", 2)
+    e = RP.entry(RP.still)
+    local a, atext = RP.click("repair_still_1", RP.still, "ContextMenu_TLG_Repair")
+    local line = H.dialogs.lastLine
+    R:check("RTRP.repair_gives_a_quarter_for_a_pipe", function()
+        return e ~= nil and not e.greyed and a.ok == true and math.abs((a.cond or 0) - 0.65) < 1e-9
+            and math.abs(cond(RP.still) - 0.65) < 1e-9 and RP.count("Base.MetalPipe") == 1 and RP.count("Base.Screwdriver") == 1
+            and atext == getText("IGUI_TLG_Did_repair", "65%") and line ~= nil and line.text == atext and line.good,
+            string.format("entry greyed=%s tip: %s || cond %s; pipes %d screwdrivers %d; said: %s (over the character: %s)",
+                tostring(e and e.greyed), tostring(e and e.tip), tostring(cond(RP.still)), RP.count("Base.MetalPipe"),
+                RP.count("Base.Screwdriver"), tostring(atext), tostring(line ~= nil and line.text == atext))
+    end)
+    local b = RP.click("repair_still_2", RP.still, "ContextMenu_TLG_Repair")
+    local gone = RP.entry(RP.still) == nil
+    give("Base.MetalPipe", 1)
+    local c = ask("RTRP.repair_at_90", "machine.repair", { target = Machines.refFor(RP.still) })
+    R:check("RTRP.no_repair_above_three_quarters", function()
+        return b.ok == true and math.abs(cond(RP.still) - 0.9) < 1e-9 and gone and c.ok == false and c.reason == "not_worn"
+            and RP.count("Base.MetalPipe") == 1, string.format("cond %s; entry offered=%s; asked anyway: %s; pipes %d",
+                tostring(cond(RP.still)), tostring(not gone), tostring(c.reason), RP.count("Base.MetalPipe"))
+    end)
+    -- Worn out: Status says to repair it; one repair and it is at 25 %.
+    wear(RP.still, 0)
+    s, text = RP.click("status_dead_still", RP.still, "ContextMenu_TLG_MachineStatus")
+    local d = RP.click("repair_dead_still", RP.still, "ContextMenu_TLG_Repair")
+    R:check("RTRP.worn_out_machine_is_repaired", function()
+        return has(text, getText("IGUI_TLG_MachineCond", "0%")) and has(text, getText("IGUI_TLG_MachineCondWornOut"))
+            and d.ok == true and d.state == "Ready" and math.abs(cond(RP.still) - 0.25) < 1e-9 and RP.count("Base.MetalPipe") == 0,
+            string.format("%s || repair ok=%s reason=%s cond %s", tostring(text), tostring(d.ok), tostring(d.reason),
+                tostring(cond(RP.still)))
+    end)
+    -- The fermenter is wood: a plank and two nails, with a hammer.
+    RP.click("status_vessel", RP.vessel, "ContextMenu_TLG_MachineStatus")
+    wear(RP.vessel, 0.5)
+    give("Base.Hammer", 1)
+    give("Base.Plank", 1)
+    give("Base.Nails", 1)
+    local short = RP.entry(RP.vessel)
+    give("Base.Nails", 1)
+    local full = RP.entry(RP.vessel)
+    local v = RP.click("repair_vessel", RP.vessel, "ContextMenu_TLG_Repair")
+    R:check("RTRP.fermenter_takes_a_plank_and_two_nails", function()
+        return short ~= nil and short.greyed and has(short.tip, getItemNameFromFullType("Base.Nails")) and full ~= nil
+            and not full.greyed and v.ok == true and math.abs(cond(RP.vessel) - 0.75) < 1e-9 and RP.count("Base.Plank") == 0
+            and RP.count("Base.Nails") == 0 and RP.count("Base.Hammer") == 1,
+            string.format("one nail: greyed=%s tip: %s || two: greyed=%s tip: %s || ok=%s reason=%s cond %s; planks %d nails %d hammers %d",
+                tostring(short and short.greyed), tostring(short and short.tip), tostring(full and full.greyed),
+                tostring(full and full.tip), tostring(v.ok), tostring(v.reason), tostring(cond(RP.vessel)), RP.count("Base.Plank"),
+                RP.count("Base.Nails"), RP.count("Base.Hammer"))
+    end)
+    -- The gasifier: its first load gives it its record; worn, then worn out.
+    local GZ = TLG.Integration.Gasifiers
+    local gz = instanceItem("TLG.Gasifier")
+    player():getSquare():AddWorldInventoryItem(gz, 0.5, 0.2, 0, false)
+    local function gzFill(context) TLG.UI.GasifierMenu.fill(0, context, { gz }) end
+    local function gzClick(label, key)
+        local before = #H.dialogs.texts
+        local reply = menuClick("RTRP." .. label, gzFill, getText("ContextMenu_TLG_Gasifier"), getText(key))
+        local said = H.dialogs.texts[before + 1]
+        closeDialogs()
+        return reply, said
+    end
+    local function gzEntries() return select(2, RT.WF.tankEntries(gzFill, getText("ContextMenu_TLG_Gasifier"))) end
+    give("Base.Log", 1)
+    local loaded = gzClick("gasifier_load", "ContextMenu_TLG_GasifierLoad")
+    local grec = gz:getModData()[GZ.KEY]
+    if not (loaded.ok and type(grec) == "table") then
+        R:check("RTRP.gasifier_has_a_record", function() return false, "load: " .. tostring(loaded.reason) end)
+        return true
+    end
+    give("Base.MetalPipe", 2)
+    local fresh = gzEntries()
+    grec.cond = 0.5
+    local gs, gtext = gzClick("gasifier_status_worn", "ContextMenu_TLG_GasifierStatus")
+    local worn = gzEntries()
+    local g1, gsaid = gzClick("gasifier_repair", "ContextMenu_TLG_Repair")
+    R:check("RTRP.gasifier_shows_its_wear_and_is_repaired", function()
+        return not has(fresh, getText("ContextMenu_TLG_Repair")) and gs.ok == true
+            and has(gtext, getText("IGUI_TLG_MachineCond", "50%")) and has(gtext, getText("IGUI_TLG_MachineCondYield", "85%"))
+            and not has(gtext, "IGUI_TLG") and has(worn, getText("ContextMenu_TLG_Repair"))
+            and not has(worn, getText("ContextMenu_TLG_Repair") .. " (greyed)") and g1.ok == true
+            and math.abs((gz:getModData()[GZ.KEY].cond or 0) - 0.75) < 1e-9 and RP.count("Base.MetalPipe") == 1
+            and gsaid == getText("IGUI_TLG_Did_repair", "75%"),
+            string.format("new: [%s] || status: %s || worn: [%s] || repair ok=%s reason=%s cond %s pipes %d; said: %s", fresh,
+                tostring(gtext), worn, tostring(g1.ok), tostring(g1.reason), tostring(gz:getModData()[GZ.KEY].cond),
+                RP.count("Base.MetalPipe"), tostring(gsaid))
+    end)
+    -- Worn out: it does not light; a repair, and it lights.
+    grec = gz:getModData()[GZ.KEY]
+    grec.cond, grec.state, grec.pause = 0, "Faulted", "needs_repair"
+    local dead = gzEntries()
+    local dl = ask("RTRP.gasifier_light_worn_out", "gasifier.light", { target = GZ.refFor(gz) })
+    local g2 = gzClick("gasifier_repair_worn_out", "ContextMenu_TLG_Repair")
+    local lit = gzClick("gasifier_light_repaired", "ContextMenu_TLG_GasifierLight")
+    R:check("RTRP.worn_out_gasifier_lights_again_after_a_repair", function()
+        return has(dead, getText("ContextMenu_TLG_GasifierLight") .. " (greyed)") and dl.ok == false and dl.reason == "needs_repair"
+            and g2.ok == true and g2.state == "Ready" and math.abs((g2.cond or -1) - 0.25) < 1e-9
+            and RP.count("Base.MetalPipe") == 0 and lit.ok == true and lit.state == "Processing",
+            string.format("worn out: [%s]; light %s; repair ok=%s state %s cond %s; pipes %d; lit ok=%s state %s reason %s", dead,
+                tostring(dl.reason), tostring(g2.ok), tostring(g2.state), tostring(g2.cond), RP.count("Base.MetalPipe"),
+                tostring(lit.ok), tostring(lit.state), tostring(lit.reason))
+    end)
+    ask("RTRP.gasifier_put_out", "gasifier.putOut", { target = GZ.refFor(gz) })
+    for _, t in ipairs({ "Base.Screwdriver", "Base.MetalPipe", "Base.Hammer" }) do removeAll(t) end
+    return true
+end }
+
+RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.RP.step, RT.finish }
 
 ------------------------------------------------------------------------------
 -- Stills and drying column picked up (request "sp-rts"): D-015 on the

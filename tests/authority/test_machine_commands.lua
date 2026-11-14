@@ -256,3 +256,110 @@ T.case("authority: Status of a running batch gives an estimate the batch then ke
         T.eq(s.progress, nil)
     end)
 end)
+
+-- A player carrying items of the given types ({ type, favourite }); the
+-- inventory removes what the handler takes.
+local function carrier(list)
+    local p, inv, items = player(), {}, {}
+    for i, spec in ipairs(list) do
+        local item = { type = spec[1], fav = spec.favourite == true, id = 100 + i }
+        function item:getFullType() return self.type end
+        function item:isFavorite() return self.fav end
+        function item:getID() return self.id end
+        function item:getContainer() return inv end
+        items[#items + 1] = item
+    end
+    function inv:Remove(item)
+        for i = #items, 1, -1 do
+            if items[i] == item then table.remove(items, i) end
+        end
+    end
+    function inv:getAllEvalRecurse(pred)
+        local out = {}
+        for _, item in ipairs(items) do
+            if pred(item) then out[#out + 1] = item end
+        end
+        return { size = function() return #out end, get = function(_, i) return out[i + 1] end }
+    end
+    function inv:getFirstTypeRecurse(t)
+        for _, item in ipairs(items) do
+            if item.type == t then return item end
+        end
+        return nil
+    end
+    function inv:getItemWithIDRecursiv() return nil end
+    function p:getInventory() return inv end
+    p.count = function(t)
+        local n = 0
+        for _, item in ipairs(items) do
+            if item.type == t then n = n + 1 end
+        end
+        return n
+    end
+    return p
+end
+
+T.case("authority: Repair gives a worn, idle machine a quarter of its condition for a pipe, with a screwdriver", function()
+    inGame(function(g)
+        local Picks = TLG.Integration.Picks
+        local sq = square(g, 10, 10)
+        local worn = Process.new({ id = "M-repair", machine = "pot_still", t = 2, cond = 0.4 })
+        local still = potStill(sq, worn)
+        -- Nothing carried: refused, with what is missing; nothing changes.
+        local r = H.dispatch(player(), "machine.repair", req(still))
+        T.eq(r.ok, false); T.eq(r.reason, "needs_repair_parts")
+        T.eq(table.concat(r.missing, ","), "Base.Screwdriver,Base.MetalPipe")
+        T.near(still:getModData().tlgProc.cond, 0.4, 1e-12)
+        -- The tool without the part, and a favourite pipe, which is left alone.
+        local p = carrier({ { "Base.Screwdriver" }, { "Base.MetalPipe", favourite = true } })
+        r = H.dispatch(p, "machine.repair", req(still))
+        T.eq(r.reason, "needs_repair_parts"); T.eq(table.concat(r.missing, ","), "Base.MetalPipe")
+        T.eq(p.count("Base.MetalPipe"), 1)
+        -- Tool and part: a quarter back, one pipe gone, the screwdriver kept.
+        p = carrier({ { "Base.Screwdriver_Old", favourite = true }, { "Base.MetalPipe" }, { "Base.MetalPipe" } })
+        r = H.dispatch(p, "machine.repair", req(still))
+        T.eq(r.ok, true); T.eq(r.command, "machine.repair"); T.eq(r.state, "Ready")
+        T.near(r.cond, 0.65, 1e-12); T.eq(r.used["Base.MetalPipe"], 1)
+        T.near(still:getModData().tlgProc.cond, 0.65, 1e-12)
+        T.eq(p.count("Base.MetalPipe"), 1); T.eq(p.count("Base.Screwdriver_Old"), 1)
+        -- Again at 65 %; at 90 % a whole quarter no longer fits: refused,
+        -- nothing taken.
+        r = H.dispatch(p, "machine.repair", req(still))
+        T.near(r.cond, 0.9, 1e-12); T.eq(p.count("Base.MetalPipe"), 0)
+        p = carrier({ { "Base.Screwdriver" }, { "Base.MetalPipe" } })
+        r = H.dispatch(p, "machine.repair", req(still))
+        T.eq(r.ok, false); T.eq(r.reason, "not_worn"); T.eq(p.count("Base.MetalPipe"), 1)
+        T.near(still:getModData().tlgProc.cond, 0.9, 1e-12)
+        T.near(Picks.REPAIR_STEP, 0.25, 1e-12)
+        T.ok(Picks.repairable(0.75) and Picks.repairable(0) and not Picks.repairable(0.76) and not Picks.repairable(1)
+            and not Picks.repairable(nil))
+    end)
+end)
+
+T.case("authority: Repair is refused while the machine holds a batch, and a worn-out one loads again after it", function()
+    inGame(function(g)
+        local sq = square(g, 10, 10)
+        local busy = distilling("M-busy")
+        busy.cond = 0.5
+        local still = potStill(sq, busy)
+        local p = carrier({ { "Base.Screwdriver" }, { "Base.MetalPipe" } })
+        local r = H.dispatch(p, "machine.repair", req(still))
+        T.eq(r.ok, false); T.eq(r.reason, "machine_busy"); T.eq(p.count("Base.MetalPipe"), 1)
+        -- Worn out: the load's plan refuses it, a repair makes it take loads again.
+        local dead = Process.new({ id = "M-dead", machine = "pot_still", t = 2, cond = 0 })
+        T.eq(Process.plan("ethanol_distill", { ethanol = 3.3, water = 30 }, dead).reason, "needs_repair")
+        local other = potStill(square(g, 12, 10), dead)
+        function other:getID() return 8 end
+        r = H.dispatch(p, "machine.repair", req(other))
+        T.eq(r.ok, true); T.near(r.cond, 0.25, 1e-12)
+        T.eq(Process.plan("ethanol_distill", { ethanol = 3.3, water = 30 }, other:getModData().tlgProc).ok, true)
+        -- The fermenter is wood: a plank and two nails, with a hammer.
+        local Picks = TLG.Integration.Picks
+        T.eq(Picks.repairSpec("fermenter_barrel"), Picks.REPAIRS.wood)
+        T.eq(Picks.repairSpec("gasifier_stationary"), Picks.REPAIRS.metal)
+        local pick = Picks.repair(carrier({ { "Base.ClubHammer" }, { "Base.Plank" }, { "Base.Nails" } }), "fermenter_barrel")
+        T.eq(pick.ok, false); T.eq(table.concat(pick.missing, ","), "Base.Nails")
+        pick = Picks.repair(carrier({ { "Base.Hammer" }, { "Base.Plank" }, { "Base.Nails" }, { "Base.Nails" } }), "fermenter_barrel")
+        T.eq(pick.ok, true); T.eq(#pick.items, 3)
+    end)
+end)

@@ -2187,3 +2187,42 @@ with the engine's exact verdict on it, and no menu asked.
   misfuelling this is meant to prevent. The authority's replies name it.
   Generator Info reads the client's copy of the generator's mod data
   (NOT RUN on a server).
+
+## D-043 Machines show their wear and can be repaired
+
+Decided 2026-11-14, with the UX review's R8; the cost is the owner's
+choice of that day among three (a simple material; material and welding
+for the welded machines; no repair at all).
+
+**Before.** A machine lost condition with every batch (`wearPerBatch`,
+0.2 to 2 %) and a gasifier with every full filter; its yield fell to 70 %
+at condition 0 (`1 - 0.3 (1 - cond)`), where a load is refused with
+`needs_repair`. Nothing showed the condition and no command called
+`Process.repair` or `Gasifier.repair`: a dead end, some fifty batches
+away for a pot still.
+
+**Now.**
+
+* **Status** shows the condition and, when worn, the share of a new
+  machine's yield (`Format.condition`, `Process.yieldAt`, the one place
+  the yield rule is written).
+* `machine.repair` and `gasifier.repair` give back
+  `Picks.REPAIR_STEP` (0.25) of the condition for the parts
+  `Picks.repair` chooses: the wooden fermenter one plank and two nails
+  with a hammer, every other machine and the gasifier one metal pipe with
+  a screwdriver, and only at 75 % or less (`Picks.repairable`), so that a
+  repair always gives back the whole step. The tool is kept; favourite
+  parts are never taken; no
+  skill is asked.
+* Only a machine in `Ready` is repaired (idle and empty: a spoiled batch
+  is emptied with Abort first, which a repair must not skip), and a
+  gasifier in `Ready` or `Faulted`. Nothing is taken when the request is
+  refused.
+
+**Reason for the cost.** A new pot still costs a pot, two pipes and a
+hose: a repair dearer than that would never be chosen. Four repairs cost
+about what a new machine does and keep its place. The numbers are game
+values, not measured in play.
+
+**Not done.** The biogas machines and the domain's `Treatment.repair`
+have no menu; `Maintenance` is still a state nothing enters.

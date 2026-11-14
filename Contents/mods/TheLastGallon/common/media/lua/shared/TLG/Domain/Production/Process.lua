@@ -224,10 +224,17 @@ local function stageRate(proc, st, seg, m)
     return tempRate(st, seg.tempC)
 end
 
+-- What a machine at condition `cond` (0..1) gives of what a new one gives:
+-- a worn machine loses up to 30 % of its yield. The one place the rule is
+-- written; Status shows it (TLG/UI/Format.condition).
+function Process.yieldAt(cond)
+    return 1 - 0.3 * (1 - Num.clamp(cond or 1, 0, 1))
+end
+
 local function completeBatch(out, m)
     local params = out.recipe.params
     local conv = Process.converters[params.converter]
-    local eff = 1 - 0.3 * (1 - out.cond)
+    local eff = Process.yieldAt(out.cond)
     local produced = conv(out.inputs, params.params or {}, m, eff, out.skill)
     out.outputs = produced.outputs
     out.outProps = produced.props or {}

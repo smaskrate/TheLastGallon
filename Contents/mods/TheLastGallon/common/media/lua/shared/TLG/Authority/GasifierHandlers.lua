@@ -134,6 +134,26 @@ H.commands["gasifier.service"] = action(function(player, args, o)
     return commit(player, args, o, r.st, { thrownAway = r.returned })
 end)
 
+-- Repair (R8), as a machine's (MachineHandlers.machineRepair): a cold
+-- gasifier, worn or worn out, for the parts Picks.repair chooses.
+H.commands["gasifier.repair"] = action(function(player, args, o)
+    if o.st.state ~= "Ready" and o.st.state ~= "Faulted" then return fail("busy") end
+    if not TLG.Integration.Picks.repairable(o.st.cond) then return fail("not_worn") end
+    local Picks = TLG.Integration.Picks
+    local pick = Picks.repair(player, o.st.machine)
+    if not pick.ok then return fail("needs_repair_parts", { missing = pick.missing }) end
+    local r = Gasifier.repair(o.st, Picks.REPAIR_STEP)
+    if not r.ok then return fail(r.reason) end
+    local used = {}
+    for _, item in ipairs(pick.items) do
+        used[item:getFullType()] = (used[item:getFullType()] or 0) + 1
+        local c = item:getContainer()
+        c:Remove(item)
+        if isServer() and sendRemoveItemFromContainer then sendRemoveItemFromContainer(c, item) end
+    end
+    return commit(player, args, o, r.st, { repaired = true, used = used })
+end)
+
 -- Read-only (no ledger); the catch-up is kept, as machine.status keeps it.
 H.commands["gasifier.status"] = function(player, args)
     local bad = TLG.Authority.Transactions.validateRequest(args, { "target" })

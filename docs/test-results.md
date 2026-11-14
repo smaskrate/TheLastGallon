@@ -17,6 +17,7 @@ runtime tests.
 | RT-MP: the Workshop menu choosing its entries from a client's copy of the project (`WorkshopMenu.projectState`: a generator's mod data, a vehicle's Engine part's). RT-SP and RT-MP: the yes/no question before **Cancel the project**, **Remove the conversion** and a second **Abort batch**, which the harness answers without opening it (`TLGHarness/Confirm.lua`); a controller on it | Written 2026-11-14. If a client's copy lacked a project the server has, the menu would offer only **Start: …**, which the server refuses, and nothing to carry on with: to be run on a server before a release for servers |
 | RT-SP: the Fuel entry of a tank from a real right-click on a vehicle (launch 419 stood in for the game's pick under the cursor), a tank's samples after a save and reload, the line after a refuel at a pump or a stopped refuel (offline only: `test_tank_fuel.lua`), the Generator Info window on screen (its text: launch 419). RT-MP, all of R5: the Fuel entry of a tank and its dialogs; that the refuel line reaches only the player who poured; whether a client's world record carries `dieselVehicles` (until shown, a client's menu leaves the engine line out, D-042); Generator Info from a client's copy of the generator's mod data | Not in the harness yet (UX review R5, 2026-11-14; single player otherwise run in launch 419). The server rows are to be run before a release for servers |
 | RT-SP and RT-MP: a reply said over the character (`TLG/UI/Say.lua`): how the line looks, two lines sent one after the other, a line while the game is paused, a controller's second player (offline only: `test_say.lua`). The screenshot modes (`docs-shots`, `sp-rtds`) expect a window for every reply they photograph and were not run since | UX review R6, 2026-11-14: the harness reads a line's text where the menu says it and cannot see the screen. To be looked at in play |
+| RT-SP: a machine's wear from real batches up to a refused load and the load after a repair, a busy machine's greyed **Repair**, a favourite part left alone, a gasifier worn by its own filter cycles (offline only: `test_machine_commands.lua`, `test_gasifier_handlers.lua`, `test_say.lua`; a pot still, a fermenter and a gasifier with the condition written into the record: launches 424 and 425). RT-MP: all of R8 | Not in the harness yet (UX review R8, D-043, 2026-11-14) |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
@@ -9016,3 +9017,84 @@ other modes, which print it at their end from now on.
 
 Evidence:
 [run 423](evidence/2026-11-14_rt-sp_harness_run423_gas_wood_said_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 424 (wear in Status, and Repair: UX review R8)
+
+Branch `feature/gas-generators` after `544209d`, 42.22.2, with R8 in the
+working tree (D-043). Six checks were added at the end of the controls
+mode (`RT.RP.step` in `SPHarness.lua`): a pot still and a fermenter put
+down new, their condition set in the record, read in **Status** and
+repaired from the menu with the game's own items.
+`tools/run-sp-harness.ps1 -Mode controls -TimeoutMinutes 30`:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 424 | 38/0 |
+
+The mode's 32 earlier checks passed as in launch 422.
+
+* A new pot still: **Status** ends with "Condition: 100%", no cost
+  named, and its menu has no **Repair**.
+* At 40 %: "Condition: 40%" and "Worn: it gives 82% of what a new one
+  gives". Without parts **Repair** is greyed with "You lack:
+  Screwdriver, Iron Pipe. Gives back 25% of the condition. Takes 1 Iron
+  Pipe; needs a Screwdriver."; asked all the same, the authority refuses
+  with `needs_repair_parts` and both types, the record unchanged.
+* With a screwdriver and two pipes: the entry is offered, the repair
+  brings the still to 65 %, one pipe is gone, the screwdriver stays, and
+  "Repaired: condition now 65%." went over the character, green. A
+  second brings it to 90 %; there the entry is gone and a request is
+  refused with `not_worn`, no pipe taken.
+* At 0 %: "Condition: 0%" and "Worn out: repair it to use it again"; one
+  repair makes it 25 %, `Ready`.
+* The fermenter at 50 %: greyed with one nail ("You lack: Nails."),
+  offered with two; the repair takes the plank and both nails, keeps the
+  hammer, 75 %. The game names the hammer "Claw Hammer".
+* The mode's end count: 17 replies over the character, 9 in a window.
+
+The item types of `Picks.REPAIRS` used here exist in 42.22.2
+(`Base.Screwdriver`, `Base.MetalPipe`, `Base.Hammer`, `Base.Plank`,
+`Base.Nails`): the game made them and counted them.
+
+The console holds no warning or error of the mod.
+
+Not run: wear from real batches (the condition was written into the
+record); a load refused at 0 % and accepted after the repair (offline
+only); a busy machine's greyed entry; a favourite part; the other tools
+of the lists; a gasifier's condition and repair (offline only:
+`test_gasifier_handlers.lua`); how the lines look on screen; a server.
+
+Evidence:
+[run 424](evidence/2026-11-14_rt-sp_harness_run424_controls_repair_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 425 (a gasifier's wear and Repair)
+
+Branch `feature/gas-generators` after `544209d`, 42.22.2, the working
+tree of launch 424 with two checks more in `RT.RP.step`: a gasifier put
+down new, given its record by a load of one log, its condition then set
+in the record. `tools/run-sp-harness.ps1 -Mode controls -TimeoutMinutes 30`:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 425 | 40/0 |
+
+Launch 424's 38 checks passed again.
+
+* `RTRP.gasifier_shows_its_wear_and_is_repaired`: new, the menu has
+  Status, Load and Light and no **Repair**. At 50 % **Status** ends with
+  "Condition: 50%" and "Worn: it gives 85% of what a new one gives", the
+  menu has **Repair**, and the repair brings it to 75 % for one pipe,
+  said over the character: "Repaired: condition now 75%."
+* `RTRP.worn_out_gasifier_lights_again_after_a_repair`: at 0 % and
+  `Faulted`, **Light** is greyed and a light request is refused with
+  `needs_repair`; **Repair** makes it `Ready` at 25 % for the other pipe,
+  and it lights.
+* The mode's end count: 21 replies over the character, 10 in a window.
+
+The console holds no warning or error of the mod.
+
+Not run: a gasifier worn by its own filter cycles; the rest as in launch
+424.
+
+Evidence:
+[run 425](evidence/2026-11-14_rt-sp_harness_run425_controls_gasifier_repair_42.22.2.txt).

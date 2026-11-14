@@ -134,4 +134,52 @@ function Picks.hopper(player, room)
     return load, got, items
 end
 
+-- A repair (UX review R8; the owner's choice of 2026-11-14: a simple
+-- material, no skill). Each gives back REPAIR_STEP of the condition and
+-- takes one piece of what the machine is made of, with the tool held and
+-- kept: the wooden fermenter a plank and two nails with a hammer, every
+-- other machine a metal pipe with a screwdriver. Four repairs cost about
+-- what a new machine does; they keep its place. Game values.
+Picks.REPAIR_STEP = 0.25
+Picks.REPAIRS = {
+    wood = { tools = { "Base.Hammer", "Base.BallPeenHammer", "Base.ClubHammer", "Base.HammerStone", "Base.WoodenMallet" },
+        parts = { ["Base.Plank"] = 1, ["Base.Nails"] = 2 } },
+    metal = { tools = { "Base.Screwdriver", "Base.Screwdriver_Old", "Base.Screwdriver_Improvised" },
+        parts = { ["Base.MetalPipe"] = 1 } },
+}
+Picks.REPAIR_KIND = { fermenter_barrel = "wood" }
+
+-- Whether a repair is offered and accepted at condition `cond`: only when
+-- the whole step fits, so that a repair always gives back what it says and
+-- no part is spent on a machine a few batches old.
+function Picks.repairable(cond)
+    return type(cond) == "number" and cond <= 1 - Picks.REPAIR_STEP + 1e-9
+end
+
+-- What repairing machine `machineId` asks for.
+function Picks.repairSpec(machineId)
+    return Picks.REPAIRS[Picks.REPAIR_KIND[machineId] or "metal"]
+end
+
+-- What a repair of `machineId` would take from the character: the tool
+-- (kept; a favourite one serves, it is not used up), the parts' items
+-- (favourites never), and what is missing: the first tool's type when no
+-- tool is carried, and each part's type once for every piece short.
+function Picks.repair(player, machineId)
+    local spec = Picks.repairSpec(machineId)
+    local inv, tool = player:getInventory(), nil
+    for _, t in ipairs(spec.tools) do
+        tool = tool or inv:getFirstTypeRecurse(t)
+    end
+    local items, missing = {}, {}
+    if tool == nil then missing[#missing + 1] = spec.tools[1] end
+    for _, fullType in ipairs(Tables.sortedKeys(spec.parts)) do
+        local found = candidates(player, function(it) return it:getFullType() == fullType end)
+        for i = 1, spec.parts[fullType] do
+            if found[i] then items[#items + 1] = found[i] else missing[#missing + 1] = fullType end
+        end
+    end
+    return { ok = #missing == 0, tool = tool, items = items, missing = missing }
+end
+
 return Picks

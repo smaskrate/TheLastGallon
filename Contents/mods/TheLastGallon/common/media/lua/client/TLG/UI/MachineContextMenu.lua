@@ -14,6 +14,7 @@ require "TLG/UI/Clicked"
 require "TLG/UI/Tip"
 require "TLG/UI/LoadPreview"
 require "TLG/UI/Say"
+require "TLG/UI/Repair"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.MachineMenu = TLG.UI.MachineMenu or {}
@@ -60,6 +61,8 @@ function Menu.did(reply, kind)
         return getText("IGUI_TLG_Did_addFuel", num(reply.addedKg))
     elseif c == "machine.loadDry" then
         return getText("IGUI_TLG_Did_loadDry", num(reply.ethanolL), num(reply.waterL), num(reply.limeKg))
+    elseif c == "machine.repair" then
+        return getText("IGUI_TLG_Did_repair", string.format("%.0f%%", (tonumber(reply.cond) or 0) * 100))
     elseif c == "machine.collect" and type(reply.collected) == "table" then
         return getText("IGUI_TLG_Did_collect", Fmt.amounts(reply.collected))
     elseif c == "machine.load" then
@@ -134,6 +137,10 @@ function Menu.describe(reply)
             lines[#lines + 1] = getText("IGUI_TLG_Firebox", wood)
         end
     end
+    -- Status says how worn the machine is and what that costs in yield:
+    -- before, the yield fell batch after batch with nothing to read it
+    -- from. RT-SP launch 424.
+    if reply.command == "machine.status" then lines[#lines + 1] = Fmt.condition(reply.cond) end
     if reply.outputs then
         for _, id in ipairs(TLG.Tables.sortedKeys(reply.outputs)) do
             lines[#lines + 1] = Fmt.componentName(id) .. ": " .. Fmt.amount(id, reply.outputs[id])
@@ -169,6 +176,7 @@ function Menu.failureText(reply)
     local key = "IGUI_TLG_MachineFail_" .. tostring(reply.reason)
     local text = getText(key)
     if text == key then text = Fmt.failure(reply) end
+    text = text .. TLG.UI.Repair.missingLines(reply)
     local found = FOUND[tostring(reply.reason)]
     if found and type(reply[found[1]]) == "number" then
         text = text .. " <LINE> " .. getText(found[2], num(reply[found[1]]))
@@ -366,6 +374,9 @@ local function addMachine(playerNum, context, item, title, world)
             addCollect(sub, player, ref, "ContextMenu_TLG_CollectBiodiesel", nil, BIODIESEL, world)
         end
     end
+    -- Repair, for a worn machine: only while it is idle and empty.
+    TLG.UI.Repair.add(sub, player, def.id, tonumber(rec.cond), rec.state ~= nil and rec.state ~= "Ready"
+        and getText("IGUI_TLG_MachineFail_machine_busy") or nil, world, function() req("machine.repair", { target = ref }) end)
     local c = Menu.controls(item, rec)
     if c.pause then sub:addOption(getText("ContextMenu_TLG_Pause"), nil, function() req("machine.pause", { target = ref }) end) end
     if c.resume then sub:addOption(getText("ContextMenu_TLG_Resume"), nil, function() req("machine.resume", { target = ref }) end) end

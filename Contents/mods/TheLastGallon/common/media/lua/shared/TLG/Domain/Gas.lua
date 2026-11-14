@@ -263,7 +263,7 @@ local function event(info, t, kind, reason)
     info.events[#info.events + 1] = { t = t, kind = kind, reason = reason }
 end
 
-local function effOf(st) return 1 - 0.3 * (1 - st.cond) end
+local function effOf(st) return Process.yieldAt(st.cond) end
 
 -- Recipe definition in force: the snapshot while lit, the registry otherwise.
 local function recipeOf(st)

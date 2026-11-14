@@ -488,6 +488,28 @@ function H.machineCollect(player, args)
         discarded = collected.byproducts })
 end
 
+-- Repair (R8): an idle, empty machine on the floor gets back a share of
+-- its condition for the parts Picks.repair chooses. Not while it holds a
+-- batch or its output (a spoiled batch is emptied with Abort first), and
+-- not when it is not worn. Nothing is taken unless the repair goes through.
+function H.machineRepair(player, args)
+    local st, err = machineState(player, args)
+    if not st then return err end
+    if not Machines.isPlaced(st.item) then return fail("not_placed") end
+    if st.rec.state ~= "Ready" then return fail("machine_busy") end
+    if not Picks.repairable(st.rec.cond) then return fail("not_worn") end
+    local pick = Picks.repair(player, st.rec.machine)
+    if not pick.ok then return fail("needs_repair_parts", { missing = pick.missing }) end
+    local r = Process.repair(st.rec, Picks.REPAIR_STEP)
+    if not r.ok then return fail(r.reason) end
+    local used = {}
+    for _, item in ipairs(pick.items) do
+        used[item:getFullType()] = (used[item:getFullType()] or 0) + 1
+        removeItem(item)
+    end
+    return commit(player, args, st, r.proc, { cond = r.proc.cond, used = used })
+end
+
 H.commands["machine.status"] = H.machineStatus
 H.commands["machine.loadFerment"] = H.machineLoadFerment
 H.commands["machine.loadWash"] = H.machineLoadWash
@@ -498,5 +520,6 @@ H.commands["machine.pause"] = H.machinePause
 H.commands["machine.resume"] = H.machineResume
 H.commands["machine.abort"] = H.machineAbort
 H.commands["machine.collect"] = H.machineCollect
+H.commands["machine.repair"] = H.machineRepair
 
 return H
