@@ -242,17 +242,27 @@ G.gasSquares = G.gasSquares or {}
 -- square is not scanned again (G.woodgasRefill), cleared when it is watched.
 G.woodgasWait = G.woodgasWait or {}
 G.WOODGAS_RETRY = 10 / 60
+-- Each watched square's squared distance in tiles to the nearest lit
+-- gasifier that can feed it, as last seen (a gasifier's action, the
+-- generator's own draw). When a gasifier cannot fill every generator in its
+-- reach, the minute pass serves the nearest first (D-040, the owner's choice
+-- of 2026-11-14); a square with none seen yet, as after a load until its
+-- first draw, comes after them. Kept in memory only, as the list is.
+G.gasNear = G.gasNear or {}
 
 local function squareKey(sq)
     return sq:getX() .. "," .. sq:getY() .. "," .. sq:getZ()
 end
 
-function G.watchGas(gen)
+-- `d2`, when given: the squared distance to a lit gasifier that watches it;
+-- the nearest one seen is kept.
+function G.watchGas(gen, d2)
     local sq = gen and gen:getSquare()
     if sq then
         local key = squareKey(sq)
         G.gasSquares[key] = true
         G.woodgasWait[key] = nil
+        if d2 ~= nil and (G.gasNear[key] == nil or d2 < G.gasNear[key]) then G.gasNear[key] = d2 end
     end
 end
 
@@ -272,7 +282,8 @@ function G.woodgasRefill(gen, rec, fuel, cap)
     local key, now = squareKey(gen:getSquare()), World.now()
     local wait = G.woodgasWait[key]
     if wait ~= nil and now < wait then return 0 end
-    local got = TLG.Integration.Gasifiers.drawNear(gen:getSquare(), GasFeed.nm3For("woodgas", cap - fuel), now)
+    local got, d2 = TLG.Integration.Gasifiers.drawNear(gen:getSquare(), GasFeed.nm3For("woodgas", cap - fuel), now)
+    G.gasNear[key] = d2
     if got <= 0 then
         G.woodgasWait[key] = now + G.WOODGAS_RETRY
         return 0
@@ -322,15 +333,25 @@ function G.gasRefill(gen)
     return r.moved
 end
 
+-- The pass's order: nearest a lit gasifier first, then by the square.
+local function nearestFirst(a, b)
+    local da, db = G.gasNear[a] or math.huge, G.gasNear[b] or math.huge
+    if da ~= db then return da < db end
+    return a < b
+end
+
 -- The authority's minute pass over the gas generators whose squares are
 -- loaded (D-040: the hour's first minute event runs before its burn,
--- launches 345-349). A square without its generator, or with one that has
--- no gas record and is not converted to gas, leaves the list.
+-- launches 345-349), nearest a lit gasifier first. A square without its
+-- generator, or with one that has no gas record and is not converted to
+-- gas, leaves the list.
 function G.gasMinute()
     if not World.isAuthority() then return end
     local cell = getCell()
     if cell == nil then return end
-    for _, key in ipairs(Tables.sortedKeys(G.gasSquares)) do
+    local keys = {}
+    for key in pairs(G.gasSquares) do keys[#keys + 1] = key end
+    for _, key in ipairs(Tables.sort(keys, nearestFirst)) do
         local x, y, z = string.match(key, "^(-?%d+),(-?%d+),(-?%d+)$")
         local sq = x and cell:getGridSquare(tonumber(x), tonumber(y), tonumber(z))
         if sq ~= nil then
@@ -339,6 +360,7 @@ function G.gasMinute()
             if gen == nil or (md[G.GAS_KEY] == nil and (md.tlgConv == nil or not G.isGas(gen))) then
                 G.gasSquares[key] = nil
                 G.woodgasWait[key] = nil
+                G.gasNear[key] = nil
             else
                 local ok, err = pcall(G.gasRefill, gen)
                 if not ok then TLG.Log.error("gas refill at %s: %s", key, tostring(err)) end

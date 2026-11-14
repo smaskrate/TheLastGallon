@@ -2108,6 +2108,114 @@ if MP.only == "gastimers" then
 end
 
 ------------------------------------------------------------------------------
+-- gasshare (one client, the shortest day; D-040, the owner's choice of
+-- 2026-11-14): a gasifier that cannot fill both generators in its reach
+-- fills the nearest first (MPServer.lua, buildGasShare). The server puts
+-- down two generators two tiles west and a tile east of a lit Wood
+-- Gasifier, the far one's square first by its key, and switches both on
+-- after the warm-up. In one call it leaves the gasifier one and a half
+-- steps' gas against a step's room in each, and runs the minute pass:
+-- the near one must be filled, the far one get the half step left. A few
+-- game minutes later, the gasifier having made more, both must be full.
+------------------------------------------------------------------------------
+if MP.only == "gasshare" then
+    local function build()
+        local SH = { warm = 1.2, settle = 0.2, after = 0.15 }
+        local function num(m, k) return tonumber(m[k]) or -1 end
+        local function hrs() return getGameTime():getWorldAgeHours() end
+        local function waitHours(name, h)
+            return { name = "mp_gs_" .. name, timeout = math.floor(h * 3600) + 1200, fn = function(ctx, ticks)
+                ctx.h0 = ctx.h0 or hrs()
+                if hrs() - ctx.h0 < h then return nil end
+                report():line("OBS  MP.gs %s: %.3f game hours passed", name, hrs() - ctx.h0)
+                return true
+            end }
+        end
+        local function both(m, prefix)
+            return string.format("far room %s (step %s, distance %s, on %s, gas %s); near room %s (step %s, distance %s, " ..
+                "on %s, gas %s)", tostring(m[prefix .. "FarRoom"] or m.farRoom), tostring(m[prefix .. "FarStep"] or m.farStep),
+                tostring(m[prefix .. "FarD2"] or m.farD2), tostring(m[prefix .. "FarOn"] or m.farOn),
+                tostring(m[prefix .. "FarHolds"] or m.farHolds), tostring(m[prefix .. "NearRoom"] or m.nearRoom),
+                tostring(m[prefix .. "NearStep"] or m.nearStep), tostring(m[prefix .. "NearD2"] or m.nearD2),
+                tostring(m[prefix .. "NearOn"] or m.nearOn), tostring(m[prefix .. "NearHolds"] or m.nearHolds))
+        end
+        local TOL = TLG.Domain.GasFeed.TOLERANCE
+
+        local setup = call("gs_setup", "setup_gasshare", {}, "setup_gasshare", function(m)
+            report():line("OBS  MP.gs site %s,%s clear=%s: far %s (%s), near %s (%s), gasifier %s lit %s with %s kg; " ..
+                "the far one first by its key %s; distances far %s near %s", tostring(m.x), tostring(m.y),
+                tostring(m.clear), tostring(m.farKey), tostring(m.farState), tostring(m.nearKey), tostring(m.nearState),
+                tostring(m.item), tostring(m.lit), tostring(m.kg), tostring(m.farFirstByKey), tostring(m.farD2),
+                tostring(m.nearD2))
+            check("gs_site", function()
+                return m.clear == "true" and m.farState == "Commissioned" and m.nearState == "Commissioned"
+                    and m.lit == "true", string.format("clear %s, far %s, near %s, lit %s", tostring(m.clear),
+                    tostring(m.farState), tostring(m.nearState), tostring(m.lit))
+            end)
+            check("gs_far_first_by_key_nearest_by_distance", function()
+                return m.farFirstByKey == "true" and m.farD2 == "4" and m.nearD2 == "1", string.format(
+                    "far first by key %s; distances far %s near %s", tostring(m.farFirstByKey), tostring(m.farD2),
+                    tostring(m.nearD2))
+            end)
+        end, 3600)
+
+        local start = call("gs_start", "start_gasshare", {}, "start_gasshare", function(m)
+            report():line("OBS  MP.gs started: %s", both(m, "x"))
+            check("gs_both_running_on_gas", function()
+                return m.farOn == "true" and m.nearOn == "true" and m.farHolds == "true" and m.nearHolds == "true",
+                    both(m, "x")
+            end)
+        end)
+
+        local short = call("gs_short", "short_gasshare", {}, "short_gasshare", function(m)
+            report():line("OBS  MP.gs at the caps: %s", both(m, "caps"))
+            report():line("OBS  MP.gs short: the buffer %s Nm3 drawn down to %s (a step is %s Nm3); before the pass %s",
+                tostring(m.bufferBefore), tostring(m.bufferKept), tostring(m.stepNm3), both(m, "before"))
+            report():line("OBS  MP.gs after the pass: %s; given %s Nm3, buffer %s; the far one's wait %s", both(m, "after"),
+                tostring(m.given), tostring(m.bufferAfter), tostring(m.farWait))
+            local step = num(m, "stepNm3")
+            check("gs_short_set_up", function()
+                return m.error == nil and math.abs(num(m, "bufferKept") - 1.5 * step) < 1e-6
+                    and math.abs(num(m, "beforeFarRoom") - num(m, "beforeFarStep")) < 1e-5
+                    and math.abs(num(m, "beforeNearRoom") - num(m, "beforeNearStep")) < 1e-5, string.format(
+                    "error %s; buffer %s against 1.5 steps %.7f; %s", tostring(m.error), tostring(m.bufferKept),
+                    1.5 * step, both(m, "before"))
+            end)
+            check("gs_nearest_filled_first", function()
+                return num(m, "afterNearRoom") <= TOL and num(m, "afterFarRoom") > TOL, both(m, "after")
+            end)
+            check("gs_far_got_what_was_left", function()
+                local half = num(m, "beforeFarStep") / 2
+                return math.abs(num(m, "afterFarRoom") - half) < 1e-5 and math.abs(num(m, "given") - 1.5 * step) < 1e-6
+                    and num(m, "bufferAfter") <= 1e-6, string.format("far room %s against half a step %.7f; given %s " ..
+                    "against %.7f; buffer %s", tostring(m.afterFarRoom), half, tostring(m.given), 1.5 * step,
+                    tostring(m.bufferAfter))
+            end)
+        end)
+
+        local probe = call("gs_probe", "probe_gasshare", {}, "probe_gasshare", function(m)
+            report():line("OBS  MP.gs %s game minutes on, at %s h: %s; gasifier %s, buffer %s, delivered %s; vault " ..
+                "restored %s dropped %s", tostring(SH.after * 60), tostring(m.hours), both(m, "x"), tostring(m.gstate),
+                tostring(m.buffer), tostring(m.delivered), tostring(m.vaultRestored), tostring(m.vaultDropped))
+            check("gs_both_full_as_it_made_more", function()
+                return num(m, "farRoom") <= TOL and num(m, "nearRoom") <= TOL and m.farOn == "true"
+                    and m.nearOn == "true", both(m, "x")
+            end)
+            check("gs_vault_kept", function()
+                return num(m, "vaultRestored") == 0 and num(m, "vaultDropped") == 0, string.format(
+                    "restored %s, dropped %s", tostring(m.vaultRestored), tostring(m.vaultDropped))
+            end)
+        end)
+
+        MP.stepsA = { MP.waitWorld, setup, waitHours("warm", SH.warm), start, waitHours("settle", SH.settle), short,
+            waitHours("after", SH.after), probe, once("mp_finish_a", function() send("finish", {}) end), MP.finish }
+        MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+    end
+    build()
+    return
+end
+
+------------------------------------------------------------------------------
 -- machinemenus (one client): the menus that read the client's copy of a
 -- record on a server. The machine menu's Pause, Resume and Abort batch for
 -- each of the nine kinds of machine, started by the server (spawn, then

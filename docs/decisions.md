@@ -2020,10 +2020,45 @@ gas probe (launch 342).
     took 3–7 ms, once 13 ms, against 2.5–2.7 ms in the bench, for reasons
     not separated. Every gasifier record written was sent and the client
     got all 3,145 each time. The vault put nothing back.
+  * Amended 2026-11-14, at the owner's word ("Nearest first", over
+    keeping the pass's order and over even shares): a gasifier that cannot
+    fill every generator in its reach fills the nearest first, and the
+    others get what is left. The minute pass serves the gas generators by
+    their squared distance in tiles to the nearest lit gasifier
+    (`Generators.gasNear`), then by their square, where before it went by
+    the square alone, its coordinates as text. The distance is the one the
+    generator's last draw found, or a lit gasifier's action gave it. It is
+    kept in memory only, so after a load a square comes after the others
+    until its first draw: the first pass after a load goes by the square.
+    While the gasifier can fill them all, nothing changes: a lit one on
+    wood alone makes 17.6 Nm³ an hour (2.75 L of petrol's worth) and has
+    its 2 Nm³ back within 7 minutes of a draw (the domain on the game's Lua
+    VM, 2026-11-14, a hopper of firewood), and a generator needs its step
+    only by the next hourly burn. The order matters when the hopper runs
+    low or the hour's draws pass that output. Verified offline
+    (`test_gas_generators.lua`: the nearest filled first though the far
+    one's square comes first, and the far one filled within four minutes)
+    and on a server (launch 412: one gasifier left 1.5 steps' gas against a
+    step's room in each of two generators, a tile and two tiles from it;
+    the near one was filled, the far one got the half step left, and both
+    were full 9 game minutes later).
+  * Added with it, not the owner's choice and put to the owner on
+    2026-11-14: a generator within reach of two gasifiers draws from the
+    nearest first, then by id, where before it went by id alone
+    (`Gasifiers.nearest`, `Gasifiers.drawNear`; offline in
+    `test_gas_generators.lua`). The alternative is the id order as before.
+  * A limit of the rule as built, found offline on 2026-11-14 and not
+    changed: the pass ranks a generator by its nearest lit gasifier,
+    whichever one ends up feeding it. Generator P a tile from gasifier X,
+    generator Q two tiles from X and a tile from gasifier Y, Y lit but
+    empty (its hopper out, still within its hold), Q's square first: both
+    rank 1, Q draws nothing from Y and then X's gas, and P gets what is
+    left (P 0.0775 L of a 0.235 L cap, Q full). Two gasifiers within reach
+    of the same generators are not run in game.
   * Not run: a handbook found at a container's first fill (the harness
-    filled them again); a real network; a buffer too small for two
-    generators' hourly draws (how it is shared is not decided); the gas
-    on a server with more than one client.
+    filled them again); a real network; the gas on a server with more than
+    one client; the performance mode since the nearest-first order (the
+    pass sorts by distance now).
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod

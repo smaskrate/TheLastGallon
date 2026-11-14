@@ -8533,3 +8533,51 @@ cans' records sent, timed on a server.
 
 Evidence:
 [run 411](evidence/2026-11-14_rt-mp_harness_run411_gastimers_repeat_42.22.2.txt).
+
+## 2026-11-14 — RT-MP launch 412 (a gasifier short of gas feeds the nearest generator first)
+
+Branch `feature/gas-generators` after `3f631fd`, 42.22.2, on a dedicated
+server with one client, on the shortest day, with the owner's choice of
+2026-11-14 built (D-040, "Nearest first"): the minute pass serves the gas
+generators nearest a lit gasifier first; with it, not chosen by the
+owner, a generator draws from the nearest gasifier first. Offline,
+`tools/run-tests.ps1` passed 325 of 325
+cases, two of them new in `test_gas_generators.lua`. A new case,
+`tools/run-mp-harness.ps1 -Only gasshare` (committed with this entry):
+the server puts down two generators converted to gas, the far one two
+tiles west of a Wood Gasifier and the near one a tile east of it, so the
+far one's square comes first by its key, which ordered the pass before.
+The gasifier is loaded with two logs and lit, and both generators are
+switched on after the warm-up, as a fixture (no menus). Then, in one call
+so the gasifier has no time to make more: both brought to their caps by
+the mod's pass, a step taken from each as the hourly burn takes it, the
+gasifier's buffer drawn down to one and a half steps' gas through the
+mod's own read, draw and write, and the minute pass run once.
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 412 | 9/0 |
+
+* The pass had the far generator at distance 4 (squared tiles) and the
+  near one at 1, from the gasifier's light.
+* Each had a step's room (0.002 L) and the buffer 0.0192 Nm3, one and a
+  half steps' gas (a step is 0.0128 Nm3). After the pass the near one was
+  full and the far one had half a step's room left (0.001 L): it got the
+  0.0064 Nm3 that was left, and the buffer was empty. The far one was not
+  set to wait, since it got some.
+* Nine game minutes later both were full and running: the gasifier, lit,
+  had made more (its record as last drawn from: Processing, 0.087 Nm3
+  left after the far one's refill).
+
+The vault, active on the server, put back and dropped nothing, and logged
+nothing but its start. No console of the client or the server holds a
+warning or error of the mod; each read 0.4.3.
+
+Not run: the hopper running out with two generators in game (the order
+is the same pass); two gasifiers within reach of the same generators, in
+game or offline (offline only one generator between two gasifiers, which
+draws from the nearer; a probe case, not kept, found the limit D-040
+records); the performance mode since the change.
+
+Evidence:
+[run 412](evidence/2026-11-14_rt-mp_harness_run412_gasshare_nearest_first_42.22.2.txt).

@@ -93,9 +93,11 @@ run 184's fireplace test
   each square in its list (a generator holding a gas record, or converted
   to gas) it reads the generator's gas record and, when the generator has
   room, refills it: from its propane tank in whole uses, or from the lit
-  gasifiers within two tiles. A gasifier has no timer of its own: its
-  record is brought forward when something reads it (its menu, or a
-  generator's draw).
+  gasifiers within two tiles, the nearest first. Since 2026-11-14 it
+  serves the squares nearest a lit gasifier first (D-040), a sort by a
+  distance kept in memory; the figures below were all taken before that.
+  A gasifier has no timer of its own: its record is brought forward when
+  something reads it (its menu, or a generator's draw).
 - **On demand:** the fuel and machine menus, the requests they send, and
   transfers. The machine menu brings the batch to now on every right-click,
   without saving it. **Status** saves the caught-up batch.
@@ -352,10 +354,11 @@ against 0.0017. Runs 406 and 407 timed every row within 3 % of run
 0.0017.
 
 Most generators stood within two tiles of two gasifiers, and a generator
-draws from the one with the lower id (D-040), so the draws spread as the
-items' ids fell: in run 399 two gasifiers served two generators each and
-two served none, in run 400 three and three. The gas given in all was
-every generator's step, 50 calls over.
+then drew from the one with the lower id (D-040; the nearest first since
+2026-11-14), so the draws spread as the items' ids fell: in run 399 two
+gasifiers served two generators each and two served none, in run 400
+three and three. The gas given in all was every generator's step, 50
+calls over.
 
 | Also | Run 399 | Run 400 | Run 404 | Run 405 |
 | --- | --- | --- | --- | --- |

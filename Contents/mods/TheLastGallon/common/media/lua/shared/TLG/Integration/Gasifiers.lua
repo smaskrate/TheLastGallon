@@ -19,6 +19,11 @@
 --                 at its next read, its hopper kept. No move hooks.
 --   the generator TLG/Integration/Generators draws from it on the minute pass
 --                 (GZ.drawNear) when no propane tank with uses is in.
+--   sharing       nearest first (D-040, the owner's choice of 2026-11-14): a
+--                 generator draws from the nearest gasifier first, and the
+--                 pass serves the generators nearest a lit gasifier first, so
+--                 one that cannot fill them all fills the nearest
+--                 (Generators.gasNear).
 require "TLG/Domain/Gas"
 require "TLG/Persistence/Migrations"
 require "TLG/Integration/World"
@@ -130,14 +135,47 @@ function GZ.near(sq, radius)
     return Tables.sort(out, function(a, b) return a:getID() < b:getID() end)
 end
 
+-- Gasifier items lying within `radius` tiles of `sq` on its floor, nearest
+-- first (squared distance in tiles), then in the order of their ids, each
+-- with its squared distance: { item, d2 }.
+function GZ.nearest(sq, radius)
+    local out = {}
+    if sq == nil then return out end
+    local cell = getCell()
+    for dx = -radius, radius do
+        for dy = -radius, radius do
+            local s = cell:getGridSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
+            local wobjs = s and s:getWorldObjects()
+            for i = 0, (wobjs and wobjs:size() or 0) - 1 do
+                local it = wobjs:get(i):getItem()
+                if GZ.machineFor(it) then out[#out + 1] = { item = it, d2 = dx * dx + dy * dy } end
+            end
+        end
+    end
+    return Tables.sort(out, function(a, b)
+        if a.d2 ~= b.d2 then return a.d2 < b.d2 end
+        return a.item:getID() < b.item:getID()
+    end)
+end
+
+-- Whether a stored record (raw, not brought to now) says lit.
+local function litStored(item)
+    local raw = item:getModData()[GZ.KEY]
+    return type(raw) == "table" and GZ.lit(raw)
+end
+
 -- On the authority: up to `nm3` of wood gas for a generator on `sq`, drawn
--- from the gasifiers within RADIUS in the order of their ids. Each one drawn
--- from, or put out because it moved, is written. Returns the Nm3 taken.
+-- from the gasifiers within RADIUS, nearest first, then in the order of
+-- their ids (D-040, the owner's choice of 2026-11-14). Each one drawn from,
+-- or put out because it moved, is written. Returns the Nm3 taken and the
+-- squared distance of the nearest one whose stored record says lit (nil
+-- when none does), by which the minute pass orders the generators.
 function GZ.drawNear(sq, nm3, now)
-    local got = 0
-    for _, item in ipairs(GZ.near(sq, GZ.RADIUS)) do
-        if got >= nm3 then break end
-        if item:getModData()[GZ.KEY] ~= nil then
+    local got, nearest = 0, nil
+    for _, f in ipairs(GZ.nearest(sq, GZ.RADIUS)) do
+        local item = f.item
+        if nearest == nil and litStored(item) then nearest = f.d2 end
+        if got < nm3 and item:getModData()[GZ.KEY] ~= nil then
             local st = GZ.read(item, false)
             if st ~= nil then
                 local before = st.state
@@ -152,7 +190,7 @@ function GZ.drawNear(sq, nm3, now)
             end
         end
     end
-    return got
+    return got, nearest
 end
 
 -- A gasifier item by id, on the square the reference names or in the
@@ -179,17 +217,19 @@ end
 
 -- The gas generators within RADIUS of a gasifier join the refills' list,
 -- and look for its gas at their next refill (an action on the gasifier:
--- the generator may have stopped looking, Generators.woodgasRefill).
+-- the generator may have stopped looking, Generators.woodgasRefill); a lit
+-- one gives each its distance, by which the minute pass serves the nearest
+-- first.
 function GZ.watchGenerators(item)
     local G, sq = TLG.Integration.Generators, GZ.square(item)
     if G == nil or sq == nil then return 0 end
-    local n, cell = 0, getCell()
+    local n, cell, lit = 0, getCell(), litStored(item)
     for dx = -GZ.RADIUS, GZ.RADIUS do
         for dy = -GZ.RADIUS, GZ.RADIUS do
             local s = cell:getGridSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
             local gen = s and s:getGenerator()
             if gen ~= nil then
-                G.watchGas(gen)
+                G.watchGas(gen, lit and (dx * dx + dy * dy) or nil)
                 n = n + 1
             end
         end

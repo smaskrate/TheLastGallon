@@ -37,11 +37,11 @@ local function fakeGame()
     getClimateManager = function() return { getTemperature = function() return 20 end } end
     G.profile = function(gen) return gen:getModData().gasConverted and "generator_gas" or "generator_si_stock" end
     G.failRoll = function() return 1 end
-    G.gasSquares, G.woodgasWait = {}, {}
+    G.gasSquares, G.woodgasWait, G.gasNear = {}, {}, {}
     function g.restore()
         for _, k in ipairs(GLOBALS) do _G[k] = saved[k] end
         G.profile, G.failRoll = savedProfile, savedFail
-        G.gasSquares, G.woodgasWait = {}, {}
+        G.gasSquares, G.woodgasWait, G.gasNear = {}, {}, {}
     end
     return g
 end
@@ -467,8 +467,8 @@ end)
 
 -- D-040: each generator's minute pass draws its room from the lit gasifiers
 -- within two tiles, out of the gasifier's own buffer, and the wood burned is
--- the gas made. One gasifier between two generators feeds both. How a
--- buffer too small for both is shared, D-040 does not say: not tested.
+-- the gas made. One gasifier between two generators feeds both. A buffer
+-- too small for both: the tests after this one.
 inGame("integration: one lit gasifier between two generators feeds both, and accounts for all its gas", function(g)
     local a = generatorAt(g, 70, 15, 0, true)
     local b = generatorAt(g, 72, 15, 0, true)
@@ -497,6 +497,71 @@ inGame("integration: one lit gasifier between two generators feeds both, and acc
     -- The warm-up's gas is flared, not made (Gas.lua stepRunning).
     T.near(t.produced, t.delivered + t.vented + st.buffer, 1e-9, "made = delivered + vented + held")
     T.near((t.fed - t0.fed) * 2.2, t.produced - t0.produced, 1e-6, "the wood burned is the gas made")
+end)
+
+-- D-040, the owner's choice of 2026-11-14: a gasifier that cannot fill
+-- every generator in its reach fills the nearest first, and the others get
+-- what is left. Here the far one's square comes first by its key, which
+-- ordered the pass before. Two hourly draws of 1.5 Nm3 against a buffer of
+-- 2.0: on firewood the gasifier makes 17.6 Nm3 an hour, so the far one is filled within
+-- minutes, long before the next hourly step.
+inGame("integration: a gasifier short of gas fills the nearest generator first, then the next as it makes more", function(g)
+    local far = generatorAt(g, 79, 25, 0, true)
+    local near = generatorAt(g, 82, 25, 0, true)
+    far.load, near.load = 0.234, 0.234
+    local item = gasifierAt(g, 81, 25)
+    lightGasifier(g, item, 100)
+    T.eq(GZ.watchGenerators(item), 2)
+    T.eq(G.gasNear["82,25,0"], 1, "one tile")
+    T.eq(G.gasNear["79,25,0"], 4, "two tiles")
+    g.hours = 101
+    G.gasMinute()
+    local cap = 0.234 + GasFeed.MARGIN
+    T.near(near.fuel, cap, 1e-9, "the nearest filled")
+    T.near(far.fuel, 2.0 / NM3_PER_L - cap, 1e-6, "the far one gets what was left of the 2.0 Nm3")
+    T.near(item.md.tlgGasifier.buffer, 0, 1e-9, "the buffer emptied")
+    T.eq(G.woodgasWait["79,25,0"], nil, "it got some: no wait")
+    for m = 1, 4 do
+        g.hours = 101 + m / 60
+        G.gasMinute()
+    end
+    T.near(near.fuel, cap, 1e-9, "the nearest stays full")
+    T.near(far.fuel, cap, 1e-6, "the far one filled within four minutes")
+    local t = item.md.tlgGasifier.totals
+    T.near(t.delivered, 2 * cap * NM3_PER_L, 1e-6, "both fills delivered")
+end)
+
+-- A generator within reach of two lit gasifiers draws from the nearest
+-- first, whatever their ids (before: the lower id first); the distance the
+-- pass orders by is the one its draw last found.
+inGame("integration: a generator draws from the nearest lit gasifier first, whatever their ids", function(g)
+    local gen = generatorAt(g, 90, 25, 0, true)
+    local far = gasifierAt(g, 92, 25, 100)
+    local near = gasifierAt(g, 91, 25, 200)
+    lightGasifier(g, far, 100)
+    lightGasifier(g, near, 100)
+    G.watchGas(gen)
+    g.hours = 101
+    G.gasMinute()
+    local cap = 0.015 + GasFeed.MARGIN
+    T.near(gen.fuel, cap, 1e-9)
+    T.near(near.md.tlgGasifier.totals.delivered, cap * NM3_PER_L, 1e-9, "all from the nearest")
+    T.eq(far.md.tlgGasifier.totals.delivered, 0, "none from the far one, its id lower")
+    T.eq(G.gasNear["90,25,0"], 1, "the draw keeps the nearest distance")
+    -- The near one taken away: the next draw comes from the far one, and
+    -- the distance follows.
+    near:pickUp()
+    gen.fuel = gen.fuel - 0.015
+    g.hours = 102 + 1 / 60
+    G.gasMinute()
+    T.near(gen.fuel, cap, 1e-9, "refilled from the far one")
+    T.near(far.md.tlgGasifier.totals.delivered, 0.015 * NM3_PER_L, 1e-9)
+    T.eq(G.gasNear["90,25,0"], 4)
+    -- The generator taken away: its square leaves the list, distance and all.
+    gen:getSquare().objs = {}
+    G.gasMinute()
+    T.eq(G.gasSquares["90,25,0"], nil)
+    T.eq(G.gasNear["90,25,0"], nil)
 end)
 
 inGame("integration: on a server a gasifier's record goes to the clients, which put it in their copy", function(g)

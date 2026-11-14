@@ -1,0 +1,64 @@
+===== launch 412: tools/run-mp-harness.ps1 -Only gasshare, branch feature/gas-generators after 3f631fd with the nearest-first draws and the gasshare case (committed with this file). The launcher's own lines were not kept; the client's and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP gs_setup begin
+OBS  MP.gs site 10666,10651 clear=true: far 10666,10651,0 (Commissioned), near 10669,10651,0 (Commissioned), gasifier 1205967471 lit true with 18 kg; the far one first by its key true; distances far 4 near 1
+PASS MP.gs_site_A :: clear true, far Commissioned, near Commissioned, lit true
+PASS MP.gs_far_first_by_key_nearest_by_distance_A :: far first by key true; distances far 4 near 1
+STEP mp_gs_warm begin
+OBS  MP.gs warm: 1.200 game hours passed
+STEP gs_start begin
+OBS  MP.gs started: far room 0.0020000 (step 0.0020000, distance 4, on true, gas true); near room 0.0020000 (step 0.0020000, distance 1, on true, gas true)
+PASS MP.gs_both_running_on_gas_A :: far room 0.0020000 (step 0.0020000, distance 4, on true, gas true); near room 0.0020000 (step 0.0020000, distance 1, on true, gas true)
+STEP mp_gs_settle begin
+OBS  MP.gs settle: 0.200 game hours passed
+STEP gs_short begin
+OBS  MP.gs at the caps: far room 0.0000000 (step 0.0020000, distance 4, on true, gas true); near room 0.0000000 (step 0.0020000, distance 1, on true, gas true)
+OBS  MP.gs short: the buffer 2.0000000 Nm3 drawn down to 0.0192000 (a step is 0.0128000 Nm3); before the pass far room 0.0020000 (step 0.0020000, distance 4, on true, gas true); near room 0.0020000 (step 0.0020000, distance 1, on true, gas true)
+OBS  MP.gs after the pass: far room 0.0010000 (step 0.0020000, distance 4, on true, gas true); near room 0.0000000 (step 0.0020000, distance 1, on true, gas true); given 0.0192000 Nm3, buffer 0.0000000; the far one's wait nil
+PASS MP.gs_short_set_up_A :: error nil; buffer 0.0192000 against 1.5 steps 0.0192000; far room 0.0020000 (step 0.0020000, distance 4, on true, gas true); near room 0.0020000 (step 0.0020000, distance 1, on true, gas true)
+PASS MP.gs_nearest_filled_first_A :: far room 0.0010000 (step 0.0020000, distance 4, on true, gas true); near room 0.0000000 (step 0.0020000, distance 1, on true, gas true)
+PASS MP.gs_far_got_what_was_left_A :: far room 0.0010000 against half a step 0.0010000; given 0.0192000 against 0.0192000; buffer 0.0000000
+STEP mp_gs_after begin
+OBS  MP.gs after: 0.150 game hours passed
+STEP gs_probe begin
+OBS  MP.gs 9 game minutes on, at 3.6152 h: far room 0.0000000 (step 0.0020000, distance 4, on true, gas true); near room 0.0000000 (step 0.0020000, distance 1, on true, gas true); gasifier Processing, buffer 0.0873927, delivered 2.0448000; vault restored 0 dropped 0
+PASS MP.gs_both_full_as_it_made_more_A :: far room 0.0000000 (step 0.0020000, distance 4, on true, gas true); near room 0.0000000 (step 0.0020000, distance 1, on true, gas true)
+PASS MP.gs_vault_kept_A :: restored 0, dropped 0
+STEP mp_finish_a begin
+STEP mp_finish begin
+SUMMARY pass=9 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: setup_gasshare role=A tag=gs_setup
+OBS  MPS.gasshare site 10666,10651: far 10666,10651,0, gasifier 10668,10651, near 10669,10651,0; lit true; distances far 4 near 1
+OBS  MPS.reply setup_gasshare clear=true farD2=4 farFirstByKey=true farKey=10666,10651,0 farState=Commissioned item=1205967471 kg=18 lit=true nearD2=1 nearKey=10669,10651,0 nearState=Commissioned role=A tag=gs_setup x=10666 y=10651
+OBS  MPS.ticks 300 OnTick events in 84401 ms
+OBS  MPS.message from tlga: start_gasshare role=A tag=gs_start
+OBS  MPS.reply start_gasshare farCap=0.0030000 farD2=4 farFuel=0.0010000 farHolds=true farOn=true farRoom=0.0020000 farStep=0.0020000 nearCap=0.0030000 nearD2=1 nearFuel=0.0010000 nearHolds=true nearOn=true nearRoom=0.0020000 nearStep=0.0020000 role=A tag=gs_start
+OBS  MPS.message from tlga: short_gasshare role=A tag=gs_short
+OBS  MPS.gasshare short: buffer 2.0000000 kept 0.0192000 (a step 0.0128000 Nm3); far room 0.0020000 -> 0.0010000, near room 0.0020000 -> 0.0000000; given 0.0192000, buffer after 0.0000000 
+OBS  MPS.reply short_gasshare afterFarCap=0.0030000 afterFarD2=4 afterFarFuel=0.0020000 afterFarHolds=true afterFarOn=true afterFarRoom=0.0010000 afterFarStep=0.0020000 afterNearCap=0.0030000 afterNearD2=1 afterNearFuel=0.0030000 afterNearHolds=true afterNearOn=true afterNearRoom=0.0000000 afterNearStep=0.0020000 beforeFarCap=0.0030000 beforeFarD2=4 beforeFarFuel=0.0010000 beforeFarHolds=true beforeFarOn=true beforeFarRoom=0.0020000 beforeFarStep=0.0020000 beforeNearCap=0.0030000 beforeNearD2=1 beforeNearFuel=0.0010000 beforeNearHolds=true beforeNearOn=true beforeNearRoom=0.0020000 beforeNearStep=0.0020000 bufferAfter=0.0000000 bufferBefore=2.0000000 bufferKept=0.0192000 capsFarCap=0.0030000 capsFarD2=4 capsFarFuel=0.0030000 capsFarHolds=true capsFarOn=true capsFarRoom=0.0000000 capsFarStep=0.0020000 capsNearCap=0.0030000 capsNearD2=1 capsNearFuel=0.0030000 capsNearHolds=true capsNearOn=true capsNearRoom=0.0000000 capsNearStep=0.0020000 farWait=nil given=0.0192000 role=A stepNm3=0.0128000 tag=gs_short
+OBS  MPS.message from tlga: probe_gasshare role=A tag=gs_probe
+OBS  MPS.reply probe_gasshare buffer=0.0873927 delivered=2.0448000 farCap=0.0030000 farD2=4 farFuel=0.0030000 farHolds=true farOn=true farRoom=0.0000000 farStep=0.0020000 gstate=Processing hours=3.6152 nearCap=0.0030000 nearD2=1 nearFuel=0.0030000 nearHolds=true nearOn=true nearRoom=0.0000000 nearStep=0.0020000 role=A tag=gs_probe vaultDropped=0 vaultRestored=0
+OBS  MPS.message from tlga: finish role=A

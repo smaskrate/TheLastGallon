@@ -3459,7 +3459,7 @@ local function buildGasTimers()
 
     -- From the caps, a step out before each call, so each call draws a
     -- step's gas from the gasifiers (a generator within two tiles of two
-    -- draws from the one with the lower id, so the gas is judged in all);
+    -- draws from the nearest, then the lower id, so the gas is judged in all);
     -- `around` wraps the timed calls alone. The gasifier records written
     -- and sent in the timed calls are kept in `out`.
     local function woodRefill(out, label, what, around, alone)
@@ -3587,3 +3587,198 @@ local function buildGasTimers()
     end
 end
 buildGasTimers()
+
+------------------------------------------------------------------------------
+-- gasshare (tools/run-mp-harness.ps1 -Only gasshare, one client, the
+-- shortest day; D-040, the owner's choice of 2026-11-14): a gasifier that
+-- cannot fill both generators in its reach fills the nearest first. The
+-- server puts down two generators converted to gas, the far one two tiles
+-- west of a Wood Gasifier and the near one a tile east of it, so the far
+-- one's square comes first by its key, which ordered the minute pass
+-- before the choice. A fixture, as gastimers: the gasifier loaded with two
+-- logs and lit by its handlers' own steps, each generator switched on
+-- directly after the warm-up. short_gasshare, in one call so the gasifier
+-- has no time to make more: both brought to their caps by the mod's own
+-- pass, a step taken from each as the hourly burn takes it, the gasifier's
+-- buffer drawn down to one and a half steps' gas through the mod's own
+-- read, draw and write, then the minute pass once. Raw reads only in the
+-- probe (the vault's reads may write). Built in a function of its own for
+-- the -debug compiler.
+------------------------------------------------------------------------------
+local function buildGasShare()
+    local GS = M.GS or {}
+    M.GS = GS
+
+    local function cell(x, y) return getCell():getGridSquare(x, y, 0) end
+    -- Clear ground from x - 1 to x + 4 and y - 1 to y + 1, nearest (x0, y0).
+    local function spot(x0, y0)
+        for r = 0, 20 do
+            for dx = -r, r do
+                for dy = -r, r do
+                    if math.max(math.abs(dx), math.abs(dy)) == r then
+                        local x, y, ok = x0 + dx, y0 + dy, true
+                        for cx = -1, 4 do
+                            for cy = -1, 1 do ok = ok and free(cell(x + cx, y + cy)) end
+                        end
+                        if ok then return x, y end
+                    end
+                end
+            end
+        end
+        return nil
+    end
+    local function genOf(which) return GS.x and generatorAt(GS[which].x, GS[which].y) or nil end
+    local function gasifier()
+        local s = GS.x and cell(GS.x + 2, GS.y)
+        local objs = s and s:getWorldObjects()
+        for i = 0, (objs and objs:size() or 0) - 1 do
+            local it = objs:get(i):getItem()
+            if it and it:getID() == GS.gid then return it end
+        end
+        return nil
+    end
+    local function power(g)
+        local p = -1
+        pcall(function() p = g:getTotalPowerUsing() end)
+        return p
+    end
+    -- One generator, raw: fuel, cap, room, running, holding gas, its
+    -- distance as the pass orders by it.
+    local function stateOf(which)
+        local G, F = TLG.Integration.Generators, TLG.Domain.GasFeed
+        local g = genOf(which)
+        local rec = g and g:getModData()[G.GAS_KEY]
+        rec = type(rec) == "table" and rec or nil
+        local cap = g and G.woodgasCap(g)
+        return { g = g, fuel = g and g:getFuel() or -1, cap = cap or -1, room = g and (cap - g:getFuel()) or 99,
+            on = g ~= nil and g:isActivated(), holds = g ~= nil and F.holdsGas(rec, g:getFuel()),
+            step = g and power(g) or -1, d2 = G.gasNear[GS[which].key] }
+    end
+    local function put(out, which, s)
+        out[which .. "Fuel"], out[which .. "Cap"] = string.format("%.7f", s.fuel), string.format("%.7f", s.cap)
+        out[which .. "Room"], out[which .. "Step"] = string.format("%.7f", s.room), string.format("%.7f", s.step)
+        out[which .. "On"], out[which .. "Holds"], out[which .. "D2"] = tostring(s.on), tostring(s.holds), tostring(s.d2)
+    end
+    local function rawGasifier()
+        local it = gasifier()
+        local r = it and it:getModData()[TLG.Integration.Gasifiers.KEY]
+        return type(r) == "table" and r or nil
+    end
+
+    function services.setup_gasshare(player, args)
+        local G, GZ, Gasifier, W = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Domain.Gas.Gasifier,
+            TLG.World
+        local x, y = spot(S.CX + 6, S.CY + 6)
+        local out = { clear = tostring(x ~= nil) }
+        if x == nil then
+            reply("setup_gasshare", args, out)
+            return
+        end
+        GS.x, GS.y = x, y
+        GS.far = { x = x, y = y, key = x .. "," .. y .. ",0" }
+        GS.near = { x = x + 3, y = y, key = (x + 3) .. "," .. y .. ",0" }
+        out.x, out.y, out.farKey, out.nearKey = x, y, GS.far.key, GS.near.key
+        out.farFirstByKey = tostring(GS.far.key < GS.near.key)
+        for _, which in ipairs({ "far", "near" }) do
+            local e = GS[which]
+            local g = generatorAt(e.x, e.y) or IsoGenerator.new(instanceItem("Base.Generator"), getCell(), cell(e.x, e.y))
+            g:setConnected(true)
+            g:setFuel(0)
+            out[which .. "State"] = tostring((commissionGas(g)))
+            g:sync()
+            g:transmitModData()
+        end
+        local item = cell(x + 2, y):AddWorldInventoryItem("TLG.Gasifier", 0.5, 0.5, 0)
+        GS.gid = item and item:getID()
+        local now, kg = W.now(), 2 * TLG.Feedstocks.contribution("Base.Log").wood
+        local st = item and GZ.read(item, true)
+        -- gasifier.load's and gasifier.light's steps (GasifierHandlers).
+        local function commit(r, site)
+            if not (r and r.ok) then return false end
+            if site then r.st.site = GZ.siteOf(GZ.square(item)) end
+            r.st.rev = (st.rev or 0) + 1
+            GZ.write(item, r.st)
+            GZ.watchGenerators(item)
+            st = r.st
+            return true
+        end
+        if st then
+            st = GZ.advance(item, st, now)
+            commit(Gasifier.load(st, { firewood = kg }, now))
+            out.lit = tostring(commit(Gasifier.start(st, now), true) and GZ.lit(st))
+        end
+        out.item, out.kg = tostring(GS.gid), kg
+        out.farD2, out.nearD2 = tostring(G.gasNear[GS.far.key]), tostring(G.gasNear[GS.near.key])
+        report():line("OBS  MPS.gasshare site %d,%d: far %s, gasifier %d,%d, near %s; lit %s; distances far %s near %s",
+            x, y, GS.far.key, x + 2, y, GS.near.key, tostring(out.lit), out.farD2, out.nearD2)
+        reply("setup_gasshare", args, out)
+    end
+
+    function services.start_gasshare(player, args)
+        local out = {}
+        for _, which in ipairs({ "far", "near" }) do
+            local g = genOf(which)
+            if g then
+                g:setActivated(true)
+                g:sync()
+            end
+            put(out, which, stateOf(which))
+        end
+        reply("start_gasshare", args, out)
+    end
+
+    function services.short_gasshare(player, args)
+        local G, GZ, F, Gasifier = TLG.Integration.Generators, TLG.Integration.Gasifiers, TLG.Domain.GasFeed,
+            TLG.Domain.Gas.Gasifier
+        local out = {}
+        local ok, err = pcall(function()
+            for _ = 1, 3 do
+                for k in pairs(G.woodgasWait) do G.woodgasWait[k] = nil end
+                G.gasMinute()
+            end
+            local a0, b0 = stateOf("far"), stateOf("near")
+            put(out, "capsFar", a0)
+            put(out, "capsNear", b0)
+            -- A step out of each, as the hourly burn takes it.
+            a0.g:setFuel(a0.fuel - a0.step)
+            b0.g:setFuel(b0.fuel - b0.step)
+            -- The buffer drawn down to 1.5 steps' gas (the steps are equal).
+            local it, now = gasifier(), TLG.World.now()
+            local st = GZ.advance(it, GZ.read(it, false), now)
+            local keep = 1.5 * F.nm3For("woodgas", b0.step)
+            local d = Gasifier.draw(st, math.max(0, st.buffer - keep), now)
+            GZ.write(it, d.st)
+            out.bufferBefore, out.bufferKept = string.format("%.7f", st.buffer), string.format("%.7f", d.st.buffer)
+            out.stepNm3 = string.format("%.7f", F.nm3For("woodgas", b0.step))
+            local given0 = d.st.totals.delivered
+            put(out, "beforeFar", stateOf("far"))
+            put(out, "beforeNear", stateOf("near"))
+            G.gasMinute()
+            put(out, "afterFar", stateOf("far"))
+            put(out, "afterNear", stateOf("near"))
+            local r = rawGasifier()
+            out.bufferAfter = string.format("%.7f", r and r.buffer or -1)
+            out.given = string.format("%.7f", (r and r.totals.delivered or 0) - given0)
+            out.farWait = tostring(G.woodgasWait[GS.far.key])
+        end)
+        if not ok then out.error = tostring(err) end
+        report():line("OBS  MPS.gasshare short: buffer %s kept %s (a step %s Nm3); far room %s -> %s, near room %s -> %s; " ..
+            "given %s, buffer after %s %s", tostring(out.bufferBefore), tostring(out.bufferKept), tostring(out.stepNm3),
+            tostring(out.beforeFarRoom), tostring(out.afterFarRoom), tostring(out.beforeNearRoom),
+            tostring(out.afterNearRoom), tostring(out.given), tostring(out.bufferAfter), tostring(out.error or ""))
+        reply("short_gasshare", args, out)
+    end
+
+    function services.probe_gasshare(player, args)
+        local out = { hours = string.format("%.4f", getGameTime():getWorldAgeHours()) }
+        put(out, "far", stateOf("far"))
+        put(out, "near", stateOf("near"))
+        local r = rawGasifier()
+        out.gstate, out.buffer = tostring(r and r.state), string.format("%.7f", r and r.buffer or -1)
+        out.delivered = string.format("%.7f", r and r.totals.delivered or -1)
+        local V = TLG.Authority.Vault
+        out.vaultRestored, out.vaultDropped = V.stats.restored, V.stats.dropped
+        reply("probe_gasshare", args, out)
+    end
+end
+buildGasShare()

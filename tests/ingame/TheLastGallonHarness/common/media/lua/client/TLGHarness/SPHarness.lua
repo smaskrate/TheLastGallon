@@ -20208,9 +20208,10 @@ function RT.PFG.build()
         local s2 = stateOf(list)
         -- Each call draws, for each generator, the step and the room it had
         -- (the game keeps the fuel as a float: 1e-4 Nm3 over the batch).
-        -- A generator within two tiles of two gasifiers draws from the one
-        -- with the lower id (Gasifiers.drawNear; launch 399 found two serving
-        -- two each here, two none), so the gas given is judged in all.
+        -- A generator within two tiles of two gasifiers draws from the
+        -- nearest, then the one with the lower id (Gasifiers.drawNear; before
+        -- 2026-11-14 the lower id alone, and launch 399 found two serving two
+        -- each here, two none), so the gas given is judged in all.
         R:check("RTPF.gas_woodgas_each_call_draws_a_step", function()
             local ok, given, want = #s2 == 8, 0, 0
             for i, x in ipairs(s2) do
