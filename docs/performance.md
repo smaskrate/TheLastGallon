@@ -764,7 +764,7 @@ To recompute only what changed, the server keeps in memory (not saved),
 per machine, each reading's and note's value and term: about 1,900 table
 entries for a machine with 480 of each, on top of the record itself.
 
-## The gas on a dedicated server (RT-MP launch 410)
+## The gas on a dedicated server (RT-MP launches 410–411)
 
 `tools/run-mp-harness.ps1 -Only gastimers` (2026-11-14, game 42.22.2, one
 client, on the shortest day) times the gas on the server as stage 13 of
@@ -782,100 +782,110 @@ checks it, times it and checks it again. On a server, setting a
 generator's fuel and every write send to the clients: the refills ran
 fixed batches of 50 calls and the sends alone batches of 200, never
 batches of a set time. Every record went back through the mod's own
-writers, and the vault put back, cleared or dropped nothing in the run.
-The server and its client ran on the reference machine, sharing its CPU.
-These are observations, not budgets.
+writers, and the vault put back, cleared or dropped nothing in either
+run. The server and its client ran on the reference machine, sharing its
+CPU. Launch 411 repeated launch 410 with the two wood-gas draw rows in
+the other order, and logged each pass with writes and each record the
+client did not find. These are observations, not budgets.
 
 The minute pass, milliseconds per call (the median of five batches), with
 single player's run 405:
 
-| The gas generators in the pass | Server (launch 410) | Single player (run 405) |
-| --- | --- | --- |
-| None | 0.0011 | 0.0017 |
-| 8 on propane, a part of a use below the cap | 0.123 | 0.133 |
-| 8 on propane, within the tolerance of the cap | 0.096 | 0.088 |
-| 8 on propane, each moving one use | 0.85 | 0.611 |
-| 8 on wood gas at their caps | 0.102 | 0.098 |
-| 8 on wood gas, each drawing a step | 1.85 | 1.591 |
-| The same, the gasifier record not sent to the clients | 1.55 | – |
-| All 16 (propane a part of a use below, wood gas at the caps) | 0.235 | 0.239 |
+| The gas generators in the pass | Launch 410 | Launch 411 | Single player (run 405) |
+| --- | --- | --- | --- |
+| None | 0.0011 | 0.0011 | 0.0017 |
+| 8 on propane, a part of a use below the cap | 0.123 | 0.118 | 0.133 |
+| 8 on propane, within the tolerance of the cap | 0.096 | 0.090 | 0.088 |
+| 8 on propane, each moving one use | 0.85 | 0.77 | 0.611 |
+| 8 on wood gas at their caps | 0.102 | 0.097 | 0.098 |
+| 8 on wood gas, each drawing a step | 1.85 | 1.70 | 1.591 |
+| The same, the gasifier record not sent to the clients | 1.55 | 1.76 | – |
+| All 16 (propane a part of a use below, wood gas at the caps) | 0.235 | 0.221 | 0.239 |
 
 As in single player, the refill rows leave out the fuel lowered before
-each call (on the server 0.012 ms for propane and 0.008 ms for wood gas,
-at the clock's limit). The states were reached as in single player but
-for amounts: within the tolerance, the fuel lowered to a use and
-0.00002 L below the cap and the pass moving that use; a use moved at
-each call, 1.5 uses out before it (single player: two steps). The
-propane generators had run through one hourly step since their tanks
-went in, which left each within the tolerance by the arithmetic of single
-player's row (0.00064 L of room after the connect, a step of 0.002 L, a
-use of 0.002604 L); for the first row each was lowered by half a use, as
-a burn lowers fuel.
+each call (on the server 0.012 ms for propane in both launches, and
+0.008 and 0.004 ms for wood gas, at the clock's limit). The states were
+reached as in single player but for amounts: within the tolerance, the
+fuel lowered to a use and 0.00002 L below the cap and the pass moving
+that use; a use moved at each call, 1.5 uses out before it (single
+player: two steps). The propane generators had run through one hourly
+step since their tanks went in, which left each within the tolerance by
+the arithmetic of single player's row (0.00064 L of room after the
+connect, a step of 0.002 L, a use of 0.002604 L); for the first row each
+was lowered by half a use, as a burn lowers fuel.
 
 With gas generators in it, the pass in its steady states cost within
-10 % of single player's; on the server each record it reads also goes
-through the vault (`Vault.guard`). The refills cost more: 0.106 ms a
-generator for a propane use against 0.076, and 0.231 ms for a wood-gas
-draw against 0.199. With the gasifier record's send to the clients
-(`WorldItemRecords.send`, D-041) taken out for the row, a draw cost
-0.194 ms. The send itself, timed alone (below), took 0.014 ms. The two
-draw rows ran once each, in that order, and differ by 0.025–0.06 ms a
-draw (by their fastest batches, their medians and their means); the row
-with the send spread more, 1.74–2.48 ms a call against 1.54–1.66, its
-first batch the slowest. What of the propane refill's extra 0.03 ms is
-the vault's work and what the sends' was not separated.
+12 % of single player's; on the server each record it reads also goes
+through the vault (`Vault.guard`). The refills cost more: 0.096–0.106 ms
+a generator for a propane use against 0.076, and 0.213–0.231 ms for a
+wood-gas draw against 0.199. What of the propane refill's extra is the
+vault's work and what the sends' was not separated.
 
-The sends alone, 1,000 calls each to the one client, on the first
-wood-gas generator and its gasifier:
+The draw rows with and without the gasifier record's send to the clients
+(`WorldItemRecords.send`, D-041, stubbed for the row) do not show the
+send: in each launch the row run first was the slower, by more than the
+send costs. Launch 410 ran the send first (1.85 ms a call against 1.55
+without it), launch 411 the other way round (1.76 without it against
+1.70). The send, timed alone, took 0.013–0.014 ms a record:
 
-| What is sent | ms per call (mean) |
-| --- | --- |
-| A gasifier record (`WorldItemRecords.send`, D-041) | 0.014 |
-| A generator's mod data (`transmitModData`, at each gas write) | 0.008 |
-| A generator's fields (`sync`, at each `setFuel`) | 0.002 |
-| A gasifier item's own sends (`syncItemFields`, its world object's `transmitModData`) | 0.002 |
+| What is sent, 1,000 calls to the one client (ms per call, mean) | Launch 410 | Launch 411 |
+| --- | --- | --- |
+| A gasifier record (`WorldItemRecords.send`, D-041) | 0.014 | 0.013 |
+| A generator's mod data (`transmitModData`, at each gas write) | 0.008 | 0.010 |
+| A generator's fields (`sync`, at each `setFuel`) | 0.002 | 0.001 |
+| A gasifier item's own sends (`syncItemFields`, its world object's `transmitModData`) | 0.002 | 0.002 |
 
-The last two are at the clock's limit: 2 ms over the 1,000 calls.
+The last two are at the clock's limit: 1 or 2 ms over the 1,000 calls.
+The sends ran on the first wood-gas generator and its gasifier.
 
 Then for six game hours the server timed each minute pass as the game
 made it, whole, and each refill in it, in whole milliseconds, so the
 figures are means:
 
-| Live, 6.2 game hours, the 16 running | Passes | Mean | Most |
-| --- | --- | --- | --- |
-| Passes without a write | 365 | 0.685 ms | 2 ms |
-| Passes with writes | 6 | 4.7 ms | 5 ms |
+| Live, 6.2 game hours, the 16 running | Launch 410 | Launch 411 |
+| --- | --- | --- |
+| Passes without a write: mean (most) | 0.685 ms (2 ms), 365 passes | 0.510 ms (2 ms), 365 passes |
+| Passes with writes: mean (most) | 4.7 ms (5 ms), 6 passes | 6.2 ms (13 ms), 6 passes |
+| A propane refill: without a write / moving uses (40) | 0.030 / 0.25 ms | 0.023 / 0.35 ms |
+| A wood-gas refill: without a write / a draw (48) | 0.019 / 0.35 ms | 0.019 / 0.48 ms |
 
-The 6 passes with writes came in 6.2 game hours, as many as the hourly
-steps; that each was the first pass after a step follows from D-040, but
-their minutes were not logged. Over 2,968 calls of each kind, a refill
-without a write took 0.030 ms for a propane generator and 0.019 ms for a
-wood-gas one; a propane refill moving uses took 0.25 ms (40 of them), a
-wood-gas draw 0.35 ms (48).
+Launch 411 logged the passes with writes: each was the pass at minute 1
+of a game hour, the first after the hourly step (D-040). Five wrote 24
+records, the 8 propane refills, the 8 wood-gas draws and their 8 gasifier
+records; one, in the hour no propane generator had a use's room, 16.
+They took 3, 4, 5, 5 and 7 ms, and one 13 ms (at 5.02 h; not traced).
 
-The passes without a write read 0 ms 116 times, 1 ms 248 times and 2 ms
-once (from their mean and their count at 1 ms or more). Their mean is
-about three times the bench's 16 as they stood (0.685 ms against 0.235),
-but it is their time only if passes start at any point of a millisecond,
-so the clock could account for most of that. It cannot for the passes
-with writes: a reading is off by less than a millisecond, and they took
-4.7 ms where the bench's two refill rows, 16 writes, come to 2.7 ms
-together. Inside both are the window's own timers around each refill
-(two clock reads and a count a refill, 16 refills a pass), and a pass
-once a game minute may run slower than one called in a loop. What each
-accounts for was not separated.
+The passes without a write read 0, 1 or 2 ms: in launch 410 0 ms 116
+times, 1 ms 248 times and 2 ms once, in launch 411 181, 182 and 2 times
+(from their means and their counts at 1 ms or more). Their means differ
+by 0.17 ms between the launches and are two to three times the bench's 16
+as they stood (0.235 and 0.221 ms). A mean of whole-millisecond readings
+is a pass's time only if passes start at any point of a millisecond, so
+the clock could account for most of that. It cannot for the passes with
+writes: a reading is off by less than a millisecond, and they took 3 ms
+and more where the bench's two refill rows, the same 24 writes, come to
+2.5–2.7 ms together. Inside both are the window's own timers around each
+refill (two clock reads and a count a refill, 16 refills a pass), and a
+pass once a game minute may run slower than one called in a loop. What
+each accounts for was not separated.
 
-Every gasifier record written was sent: 48 in the window, 2,040 in the
-draws' row, none in the row without the send. Over the run the server
-sent the client 3,145 gasifier records and the client got all of them,
-its handler taking 10 ms in all (about 0.003 ms a record, at the clock's
-limit). It found the item on its square for 3,131; the other 14 were not
-looked into. Evidence:
-[run 410](evidence/2026-11-14_rt-mp_harness_run410_gastimers_42.22.2.txt).
+Every gasifier record written was sent: 48 in each window, 2,040 in the
+draw row with the send, none in the row without it. In each run the
+server sent the client 3,145 gasifier records and the client got all of
+them, its handler taking 8–10 ms in all (about 0.003 ms a record, at the
+clock's limit). It found the item on its square for 3,131 and 3,132. In
+launch 411 the 13 it did not find were the setup's: the load and light
+records the server wrote in the same tick it put each gasifier down,
+which reached the client while its square held no world object yet.
+Every later record found its item. Launch 410 did not log them.
+Evidence:
+[run 410](evidence/2026-11-14_rt-mp_harness_run410_gastimers_42.22.2.txt),
+[run 411](evidence/2026-11-14_rt-mp_harness_run411_gastimers_repeat_42.22.2.txt).
 
 ## Not measured
 
-- **The gas on a server with more than one client:** launch 410 had one.
+- **The gas on a server with more than one client:** launches 410–411
+  had one.
   A gasifier record goes to every client (D-041), so its send grows with
   them. The machines' batches and the cans' records, sent the same way,
   were not timed on a server.

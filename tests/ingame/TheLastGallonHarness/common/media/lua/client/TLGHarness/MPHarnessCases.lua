@@ -1943,6 +1943,20 @@ if MP.only == "gastimers" then
                 GT.got = GT.got + 1
                 if r then GT.found = GT.found + 1 end
                 if type(args) == "table" and args.key == "tlgGasifier" then GT.gz = GT.gz + 1 end
+                -- Each record whose item this client did not find (launch
+                -- 410: 14 of 3,145, not traced): which, where, and what the
+                -- square held here.
+                if not r and GT.got - GT.found <= 40 then
+                    local a = type(args) == "table" and args or {}
+                    local sq = getCell() and getCell():getGridSquare(tonumber(a.x) or -1, tonumber(a.y) or -1,
+                        tonumber(a.z) or 0)
+                    local wo = sq and sq:getWorldObjects()
+                    report():line("OBS  MP.gt record not found: item %s key %s at %s,%s,%s (square loaded %s, %d world " ..
+                        "objects); state %s rev %s; record %d, world age %.4f h", tostring(a.id), tostring(a.key),
+                        tostring(a.x), tostring(a.y), tostring(a.z), tostring(sq ~= nil), wo and wo:size() or -1,
+                        tostring(type(a.rec) == "table" and a.rec.state), tostring(type(a.rec) == "table" and a.rec.rev),
+                        GT.got, hrs())
+                end
                 return r
             end
         end)
@@ -2019,8 +2033,10 @@ if MP.only == "gastimers" then
         end)
 
         local benches = {}
-        for _, row in ipairs({ "propane_part", "propane_full", "propane_refill", "woodgas_full", "woodgas_refill",
-            "woodgas_refill_no_item_send", "both", "sends" }) do
+        -- The draw rows without and with the send in the order launch 410
+        -- did not run them: it ran the send first (its batches spread).
+        for _, row in ipairs({ "propane_part", "propane_full", "propane_refill", "woodgas_full",
+            "woodgas_refill_no_item_send", "woodgas_refill", "both", "sends" }) do
             benches[#benches + 1] = call("gt_bench_" .. row, "bench_gastimers", { row = row }, "bench_gastimers",
                 function(m)
                     costs(m)

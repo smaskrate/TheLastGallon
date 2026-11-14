@@ -3123,14 +3123,21 @@ local function buildGasTimers()
         local pass, refill = G.gasMinute, G.gasRefill
         local function timedPass()
             local L = GT.live
-            local w0 = GT.gasWrites + GT.gzWrites
+            local g0, z0 = GT.gasWrites, GT.gzWrites
             GT.inPass = true
             local t0 = getTimestampMs()
             local ok, err = pcall(pass)
             local ms = getTimestampMs() - t0
             GT.inPass = false
+            local g, z = GT.gasWrites - g0, GT.gzWrites - z0
             L.passes[#L.passes + 1] = ms
-            L.passWrites[#L.passWrites + 1] = GT.gasWrites + GT.gzWrites - w0
+            L.passWrites[#L.passWrites + 1] = g + z
+            -- Each pass that wrote: when, and what (launch 410 did not log
+            -- them).
+            if g + z > 0 then
+                report():line("OBS  MPS.gastimers pass with writes at %.4f h (minute %d): %d gas, %d gasifier, %d ms",
+                    getGameTime():getWorldAgeHours(), getGameTime():getMinutes(), g, z, ms)
+            end
             if not ok then report():line("STEPERR MPS.gastimers pass :: %s", tostring(err)) end
         end
         -- Without Remove the pass stays as it is, and only its refills are
