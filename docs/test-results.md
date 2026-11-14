@@ -13,6 +13,7 @@ runtime tests.
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
+| RT-SP and RT-MP: loads leaving favourite items alone, the firebox's planks entry and the loads' tooltips (offline only: `test_biodiesel_commands.lua`, `test_menu_replies.lua`); on a server, whether the favourite mark a client sets reaches the server's copy of the item, which the loads read (`TLG/Integration/Picks.lua`) | Written 2026-11-14, not in the harness yet. Until the server case is run, a server may take favourite items |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
@@ -8581,3 +8582,195 @@ records); the performance mode since the change.
 
 Evidence:
 [run 412](evidence/2026-11-14_rt-mp_harness_run412_gasshare_nearest_first_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 413 (the menus' dialogs say what an action moved; greyed entries say why)
+
+Branch `feature/gas-generators` after `ea02775`, 42.22.2, with the first
+changes from the review in `ux-review-2026-11-14.md` (its R1, the first
+part of R4 and R10):
+
+* A machine's dialog after a load, a feed of the firebox or a collect
+  lists what the action took and gave. Outputs and what was thrown away
+  carry their unit. A load refused for a shortage says how much of that
+  material was found.
+* The workshop's dialog lists the parts handed over and still needed,
+  the parts a cancel or a removal gave back and lost, and the hours of
+  work done.
+* A greyed entry of the Fuel, Machine, Gasifier and Gas menus has a
+  tooltip with its reason (`TLG/UI/Tip.lua`); **Collect** names the can it
+  will fill.
+* Refusals that showed their code have a text; the three English strings
+  with "petrol" say "gasoline".
+
+Offline, `tools/run-tests.ps1` passed 331 of 331 cases, six of them new
+in `test_menu_replies.lua`; the compile check read 150 files without an
+error and `tools/check-translations.ps1` found 437 English keys with
+their Italian ones.
+
+`tools/run-sp-harness.ps1`, the full mode (phase A, save, reload,
+phase B):
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 413 | 105/0, then 14/0 |
+
+The counts are those of the full mode's earlier runs (launch 339).
+
+* `LOOP.menu_dialogs_translated`: the seven dialogs the ethanol loop
+  opened through the machine menu (the loads, **Feed the firebox**, the
+  two collects, **Status**) held no untranslated key. The log keeps the
+  text of the last one only, a Status.
+* `LOOP.work_ends_on_a_block`: the workshop's dialog read "Conversion in
+  progress / Stage: install parts / Work done: 6.0 of 13.0 h / A tool is
+  missing: / - Screwdriver".
+* The checks that read a dialog for a state, a pause or a refusal passed
+  as before.
+
+The console holds no warning or error of the mod; its one stack trace is
+the harness's own recursion probe. The mod read 0.4.3.
+
+Not run: the tooltips, which the harness does not look at (their look,
+and that each menu takes them from its own pool, need a look at the
+screen); the text of the new lines other than the workshop's hours;
+**Hand over parts**, **Cancel the project** and **Remove the
+conversion** for their lists of parts; a load refused for a shortage;
+the biodiesel machines' loads, the gasifier and the gas menu, which have
+their own modes; a server; the Italian texts in game.
+
+Evidence:
+[run 413](evidence/2026-11-14_rt-sp_harness_run413_menu_replies_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 414 (Status says how far a batch is and how long it takes)
+
+Branch `feature/gas-generators` after `ea02775`, 42.22.2, with launch
+413's changes and the review's R2: a machine's **Status** gives the share
+of the current stage done and an estimate of the time left
+(`Process.estimate`, worked out by the authority with the rates
+`Process.advance` uses, at today's temperature at the machine and with
+the firebox kept fed), the wood the firebox is short of, the work left of
+a paused batch and the hours a batch has stood still against the hours
+that spoil it. **Project status** of a conversion in progress carries the
+hours of work done and needed.
+
+Offline, `tools/run-tests.ps1` passed 337 of 337 cases: three new in
+`test_production.lua` (at a steady temperature and with enough wood, a
+batch finishes at the estimated hour, from its start and from the
+middle), one in `test_machine_commands.lua` (the same through the Status
+command on a placed vessel) and two in `test_menu_replies.lua` (the
+texts). `tools/run-tests.ps1 -Entry tests/audit/run_audit.lua` passed 40
+of 40.
+
+`tools/run-sp-harness.ps1 -Mode fireplace -TimeoutMinutes 60`, a January
+fermenter beside a map fireplace fed with logs, with a 12-hour trip away:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 414 | 21/0 |
+
+The same 21 checks as launch 184.
+
+* The Status asked once the fermenting had begun read "Working / Stage:
+  fermenting, 0% done / About 4 d 0 h left at today's temperature /
+  Temperature here today: 73.2 °F, in a room": the 96 hours of the stage
+  at full rate, at the 22.9 °C the batch counted then.
+* The batch finished 111.2 game hours after the load, later than that
+  estimate: on 17 January the fire went out during the trip and the batch
+  stood still (13.9 hours paused in that day's reads, 6.37 h on the
+  record's own count). The estimate holds for the day's temperature, as
+  its text says.
+
+The console holds no warning or error of the mod.
+
+Not run: a Status later in a batch, slowed, paused or stood still (their
+lines are covered offline only); a still's estimate and its line for a
+firebox short of wood; **Project status** with its hours; a server; the
+Italian texts.
+
+Evidence:
+[run 414](evidence/2026-11-14_rt-sp_harness_run414_fireplace_status_estimate_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 415 (loads choose their items in one place and leave favourites alone)
+
+Branch `feature/gas-generators` after `ea02775`, 42.22.2, with the
+changes of launches 413 and 414 and the review's R3:
+
+* What a load takes is chosen by `TLG/Integration/Picks.lua`, for the
+  authority and for the menus. It never chooses an item marked as a
+  favourite, and the menus do not choose a favourite fuel can.
+* **Feed the firebox** leaves planks alone; a second entry, **Feed the
+  firebox, planks too**, shown with a plank carried, sends
+  `machine.addFuel` with `planks`.
+* The mash, the wood loads, **Feed the firebox** and the gasifier's load
+  show what they would take in the entry's tooltip
+  (`TLG/UI/LoadPreview.lua`), or the refusal the click would get.
+
+Offline, `tools/run-tests.ps1` passed 342 of 342 cases, five of them for
+these changes: two in `test_biodiesel_commands.lua` (favourite wood,
+crops, water and yeast stay; planks burn only with the flag) and three in
+`test_menu_replies.lua` (the tooltips' texts, the machine's refusal
+first, the second firebox entry). `tools/run-tests.ps1 -Entry
+tests/audit/run_audit.lua` passed 40 of 40.
+
+`tools/run-sp-harness.ps1`, the full mode:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 415 | 106/0, then 14/0 |
+
+One check more than launch 413: `G04.native_burn_reconciled_proportionally`
+runs only when the generator's hourly burn falls in the half hour the
+harness waits (10.0000 to 9.9850 L here; no burn in launch 413).
+
+* The loads through the machine menu took what they took before the
+  change: the mash 6 kg of sugar from six items, 30 L of the 32 L of
+  water carried and the yeast; the firebox two logs (18 kg); the drying
+  column one of two bags of quicklime.
+* The seven dialogs of the ethanol loop held no untranslated key, and
+  the workshop's dialog showed its hours as in launch 413.
+
+The console holds no warning or error of the mod, and no failed preview
+(`load preview`); its stack trace is the harness's own recursion probe.
+
+Not run: a favourite item carried during a load, in single player or on
+a server; planks carried (neither entry's choice was exercised with
+them); the tooltips, which the harness does not look at; the biodiesel
+machines' loads and the gasifier's through the new selection, which have
+their own modes; the performance mode since the menus read the inventory
+for their previews.
+
+Evidence:
+[run 415](evidence/2026-11-14_rt-sp_harness_run415_picks_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 416 (the biodiesel chain's loads through the new selection)
+
+Branch `feature/gas-generators` after `ea02775`, 42.22.2, with the
+changes of launches 413 to 415, nothing added since.
+`tools/run-sp-harness.ps1 -Mode biodiesel -TimeoutMinutes 40`:
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 416 | 50/0 |
+
+The same count as the mode's earlier runs (launch 231).
+
+* Every load took what the definitions give, through
+  `TLG/Integration/Picks.lua`: 99 kg of logs into the wood retort and
+  into the ash barrel, 27 kg and three times 9 kg into the fireboxes,
+  2.97 L of water for 1.485 kg of ash into the leacher, 19 of 20 bottles
+  of oil (17.1 L) into the reactor, 5.053 L of wash water into the wash
+  tank.
+* New lines read in dialogs: a Status with "Firebox: 2.4 of 40 kg of
+  wood" and "Methanol: 5.01 L"; the wash tank's collect with "Collected
+  into the can: Biodiesel 16.84 L, Methanol 0.02 L, Plant oil 0.19 L,
+  Sediment 0.01 L, Water 0.01 L" and "Thrown away: Methanol 0.66 L,
+  Sediment 0.16 L, Water 4.99 L".
+* The three refused loads read their own text alone, as before.
+
+The console holds no warning or error of the mod and no failed preview.
+
+Not run: as in launch 415 (favourites, planks, the tooltips, the
+gasifier's load, the performance mode); the lines of a load's own dialog
+in this chain, whose text the mode does not keep.
+
+Evidence:
+[run 416](evidence/2026-11-14_rt-sp_harness_run416_biodiesel_picks_42.22.2.txt).

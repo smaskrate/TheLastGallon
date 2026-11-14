@@ -175,6 +175,8 @@ T.case("authority: a carried machine answers Status only", function()
         T.eq(s.ok, true)
         T.eq(s.state, "Paused")
         T.eq(s.pause, "not_placed")
+        T.ok(type(s.progress) == "table" and s.progress.workLeft > 0, "a batch in it: how far it is")
+        T.near(s.progress.stageDone, still:getModData().tlgProc.stageDone, 1e-12)
         T.near(work(still:getModData().tlgProc), 1, 1e-9, "the hour it stood, none carried")
         T.near(s.firebox, 27 - burnPerHour(), 1e-9, "wood burned only while it stood")
     end)
@@ -215,5 +217,42 @@ T.case("authority: a Resume sent for a carried machine cannot make its carried h
         local rec = Machines.advance(still, Machines.read(still, false), 7, World.env())
         T.near(work(rec), 2, 1e-9, "an hour before the pickup and an hour since the put-down")
         T.near(rec.firebox, 27 - 2 * burnPerHour(), 1e-9, "wood burned only while it stood")
+    end)
+end)
+
+-- A fermentation vessel lying on `sq`, with a mash loaded and started at
+-- hour 2.
+local function fermenting(sq, id)
+    local rec = Process.new({ id = id, machine = "fermenter_barrel", t = 2 })
+    rec = Process.start(Process.load(rec, "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 2).proc
+    local item = potStill(sq, rec)
+    function item:getFullType() return "TLG.FermenterVessel" end
+    return item
+end
+
+T.case("authority: Status of a running batch gives an estimate the batch then keeps", function()
+    inGame(function(g)
+        local vessel = fermenting(square(g, 1, 1), "P9")
+        local p = player(nil)
+        -- Just loaded: the first Status already has the temperature to estimate with.
+        local s = H.commands["machine.status"](p, req(vessel))
+        T.eq(s.state, "Processing"); T.eq(s.stage, "prepare")
+        T.ok(type(s.siteC) == "number", "the site's temperature is known at the first Status")
+        T.ok(type(s.progress) == "table" and type(s.progress.etaHours) == "number", "an estimate from the first Status")
+        T.near(s.progress.workLeft, 97, 1e-9)
+        -- Ten hours in, in a room at 22 C: full rate, the same end.
+        g.now = 12
+        s = H.commands["machine.status"](p, req(vessel))
+        T.eq(s.stage, "ferment")
+        T.near(s.progress.stageDone, 9, 1e-9); T.near(s.progress.stageHours, 96, 1e-9)
+        T.ok(s.progress.tempBound == true and s.progress.slowed == nil, "22 C: not slowed")
+        T.near(s.progress.etaHours, 87, 1e-9)
+        local finish = g.now + s.progress.etaHours
+        g.now = finish - 0.25
+        T.eq(H.commands["machine.status"](p, req(vessel)).state, "Processing", "a quarter of an hour before the estimate")
+        g.now = finish + 0.25
+        s = H.commands["machine.status"](p, req(vessel))
+        T.eq(s.state, "OutputReady", "a quarter of an hour after it")
+        T.eq(s.progress, nil)
     end)
 end)

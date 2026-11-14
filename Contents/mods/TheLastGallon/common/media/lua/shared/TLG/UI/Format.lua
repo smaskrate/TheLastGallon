@@ -30,12 +30,57 @@ Fmt.FAILURE_KEYS = {
     gas_generator = "IGUI_TLG_Fail_GasGenerator", not_gas_generator = "IGUI_TLG_Fail_NotGasGenerator",
     tank_connected = "IGUI_TLG_Fail_TankConnected", no_tank = "IGUI_TLG_Fail_NoTank",
     no_propane_tank = "IGUI_TLG_Fail_NoPropaneTank", not_drained = "IGUI_TLG_Fail_NotDrained",
+    -- Refusals every menu can get. A code without a key here or in the
+    -- menu's own list is shown as it is (IGUI_TLG_Fail_Generic): those are
+    -- malformed requests, which a menu never sends.
+    unknown_target = "IGUI_TLG_Fail_Gone", no_vehicle = "IGUI_TLG_Fail_Gone", no_generator = "IGUI_TLG_Fail_Gone",
+    no_engine = "IGUI_TLG_Fail_NoEngine", empty = "IGUI_TLG_Fail_Empty",
+    source_not_fuel = "IGUI_TLG_Fail_NotFuel", destination_not_fuel = "IGUI_TLG_Fail_NotFuel",
+    commit_failed = "IGUI_TLG_Fail_CommitFailed", future_schema = "IGUI_TLG_Fail_FutureSchema",
 }
 
 local function pct(x) return string.format("%.1f%%", (x or 0) * 100) end
 
 function Fmt.componentName(id)
     return tr("IGUI_TLG_Fuel_" .. id)
+end
+
+-- "12.30 L": an amount of a material in its unit (docs/contracts.md:
+-- liquids in litres, solids in kilograms, gases in cubic metres), from the
+-- material's phase in the registry. A material the registry does not know
+-- and the yeast starter, which is counted, get the bare number. Always two
+-- decimals: with an optional third parameter for the places, the call
+-- without it inside a concatenation (Fmt.amounts below) raised "invalid
+-- option to 'format'" on the game's Lua VM, where the same call on its own
+-- did not (tools/run-tests.ps1, 2026-11-14).
+local AMOUNT_KEYS = { liquid = "IGUI_TLG_Amount_L", solid = "IGUI_TLG_Amount_kg", gas = "IGUI_TLG_Amount_m3" }
+
+function Fmt.amount(id, x)
+    local number = string.format("%.2f", tonumber(x) or 0)
+    local def = TLG.Registry.get("fuel", id)
+    local key = def and id ~= "yeast_starter" and AMOUNT_KEYS[def.phase]
+    if key then return tr(key, number) end
+    return number
+end
+
+-- "Water 29.67 L, Stillage 0.40 kg": the materials of a table, by id.
+function Fmt.amounts(t)
+    local parts = {}
+    for _, id in ipairs(TLG.Tables.sortedKeys(t or {})) do
+        parts[#parts + 1] = Fmt.componentName(id) .. " " .. Fmt.amount(id, t[id])
+    end
+    return table.concat(parts, ", ")
+end
+
+-- A length of game time: "40 min" under an hour, "3.5 h" under ten hours,
+-- "17 h" under two days, then "2 d 10 h".
+function Fmt.duration(hours)
+    local h = math.max(0, tonumber(hours) or 0)
+    if h < 1 then return tr("IGUI_TLG_Dur_Min", tostring(math.max(1, math.floor(h * 60 + 0.5)))) end
+    if h < 10 then return tr("IGUI_TLG_Dur_Hours", string.format("%.1f", h)) end
+    local whole = math.floor(h + 0.5)
+    if whole < 48 then return tr("IGUI_TLG_Dur_Hours", tostring(whole)) end
+    return tr("IGUI_TLG_Dur_Days", tostring(math.floor(whole / 24)), tostring(whole - math.floor(whole / 24) * 24))
 end
 
 -- How long ago, in game time: "just now", minutes, hours, then days.

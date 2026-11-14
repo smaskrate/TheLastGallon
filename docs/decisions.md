@@ -422,6 +422,12 @@ their replacement.
   water; no schema change.
 
 ## D-018 Conversion work is a timed action at the device
+* Current rule (amended 2026-11-14): as decided below. The action still
+  shows no progress bar; the hours of work done and needed are text in
+  the dialogs: in the reply to each workshop step and in **Project
+  status** (`doneHours` and `totalHours` of `Project.status`). A
+  machine's **Status** gives its batch the same way, as text
+  (`Process.estimate`).
 * Decision: **Work on it** queues the timed action `ISTLGConversionWork`. The
   character walks to the engine area or next to the generator, joins the
   project (which forfeits any unreported gap) and reports every 15 minutes

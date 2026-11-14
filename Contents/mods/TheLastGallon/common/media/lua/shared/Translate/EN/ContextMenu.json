@@ -22,6 +22,7 @@
     "ContextMenu_TLG_CollectBiodiesel": "Collect biodiesel into a fuel can",
     "ContextMenu_TLG_PumpProduct": "Read what this pump gives",
     "ContextMenu_TLG_AddFirewood": "Feed the firebox",
+    "ContextMenu_TLG_AddFirewoodPlanks": "Feed the firebox, planks too",
     "ContextMenu_TLG_CollectEthanol": "Collect ethanol into a fuel can",
     "ContextMenu_TLG_LoadDry": "Dry ethanol with quicklime",
     "ContextMenu_TLG_Pause": "Pause",

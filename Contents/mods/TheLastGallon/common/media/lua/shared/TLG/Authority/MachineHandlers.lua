@@ -5,8 +5,10 @@ require "TLG/Authority/Handlers"
 require "TLG/Integration/Machines"
 require "TLG/Content/Feedstocks"
 require "TLG/Content/Biodiesel"
+require "TLG/Integration/Picks"
 
 local H = TLG.Authority.Handlers
+local Picks = TLG.Integration.Picks
 local Machines, Process, World = TLG.Integration.Machines, TLG.Domain.Process, TLG.World
 local C = TLG.Integration.Containers
 local Supply, Mixing, Aging, Tables = TLG.Domain.Supply, TLG.Domain.Mixing, TLG.Domain.Aging, TLG.Tables
@@ -18,53 +20,37 @@ local function fail(reason, extra)
     return r
 end
 
-local function sortedItems(player, pred)
-    local list = player:getInventory():getAllEvalRecurse(pred)
-    local out = {}
-    for i = 0, list:size() - 1 do out[#out + 1] = list:get(i) end
-    return Tables.sort(out, function(a, b) return a:getID() < b:getID() end)
-end
-
 local function removeItem(item)
     local container = item:getContainer()
     container:Remove(item)
     if isServer() and sendRemoveItemFromContainer then sendRemoveItemFromContainer(container, item) end
 end
 
+-- What each load takes is chosen by TLG/Integration/Picks.lua, which the
+-- menus use for their previews; favourite items are never chosen. The
+-- functions below take what it chose. With `dryRun` nothing is removed, so
+-- callers can validate a batch before taking anything.
+
 -- Consumes whole feedstock items until `need` units of `field` are reached
--- (never more than `max`). Returns the amount consumed. With `dryRun` nothing
--- is removed, so callers can validate a batch before taking anything.
-local function takeFeedstock(player, field, need, max, dryRun)
-    local got = 0
-    for _, item in ipairs(sortedItems(player, function(it)
-        local c = Feed.contribution(it:getFullType())
-        return c ~= nil and (c[field] or 0) > 0
-    end)) do
-        if got >= need then break end
-        local c = Feed.contribution(item:getFullType())[field]
-        if got + c <= max + 1e-9 then
-            if not dryRun then removeItem(item) end
-            got = got + c
-        end
+-- (never more than `max`), leaving out the item types in `skip`. Returns
+-- the amount consumed.
+local function takeFeedstock(player, field, need, max, dryRun, skip)
+    local got, items = Picks.feedstock(player, field, need, max, skip)
+    if not dryRun then
+        for _, item in ipairs(items) do removeItem(item) end
     end
     return got
 end
 
 -- Drains up to `litres` of clean water from the player's containers.
 local function takeWater(player, litres, dryRun)
-    local got = 0
-    for _, item in ipairs(sortedItems(player, function(it)
-        local fc = it:getFluidContainer()
-        return fc ~= nil and not fc:isEmpty() and fc:isPureFluid(Fluid.Water)
-    end)) do
-        if got >= litres - 1e-9 then break end
-        local fc = item:getFluidContainer()
-        local take = math.min(fc:getAmount(), litres - got)
-        if not dryRun then
-            fc:adjustAmount(fc:getAmount() - take)
-            item:syncItemFields()
+    local got, takes = Picks.water(player, litres)
+    if not dryRun then
+        for _, take in ipairs(takes) do
+            local fc = take.item:getFluidContainer()
+            fc:adjustAmount(fc:getAmount() - take.litres)
+            take.item:syncItemFields()
         end
-        got = got + take
     end
     return got
 end
@@ -114,7 +100,8 @@ function H.machineStatus(player, args)
     return { ok = true, requestId = args.requestId, state = s.state, pause = s.reason, stage = s.stage,
         outputs = st.rec.outputs, firebox = st.rec.firebox, cond = st.rec.cond, rev = st.rec.rev,
         machine = st.rec.machine, inputs = st.rec.inputs, stageDone = st.rec.stageDone,
-        siteC = siteC, siteNow = siteNow, site = site, stoppedEarly = st.rec.stoppedEarly }
+        siteC = siteC, siteNow = siteNow, site = site, stoppedEarly = st.rec.stoppedEarly,
+        progress = Process.estimate(st.rec, siteC) }
 end
 
 function H.machineLoadFerment(player, args)
@@ -123,17 +110,14 @@ function H.machineLoadFerment(player, args)
     if Machines.machineFor(st.item) ~= "fermenter_barrel" then return fail("wrong_machine") end
     if not Machines.isPlaced(st.item) then return fail("not_placed") end
     local recipe = TLG.Registry.need("recipe", "ethanol_ferment")
-    local sugarWanted = TLG.Num.clamp(tonumber(args.sugarKg) or recipe.inputs.sugar_eq.max, 0, recipe.inputs.sugar_eq.max)
-    local yeast = player:getInventory():getFirstTypeRecurse("Base.Yeast")
-        or player:getInventory():getFirstTypeRecurse("TLG.YeastStarter")
-    if yeast == nil then return fail("needs_yeast") end
     -- Validate with what is actually available before taking anything.
-    local sugarAvail = takeFeedstock(player, "sugar_eq", sugarWanted, recipe.inputs.sugar_eq.max, true)
     -- Without an amount (the menu sends none) the water follows the sugar
     -- actually there, 5 L per kg; it used to follow the 30 kg maximum, so up
     -- to 130 L went into a 6 kg mash (found 2026-10-31).
-    local waterWanted = TLG.Num.clamp(tonumber(args.waterL) or sugarAvail * 5, 0, recipe.inputs.water.max)
-    local waterAvail = takeWater(player, waterWanted, true)
+    local mash = Picks.mash(player, args.sugarKg, args.waterL)
+    local yeast = mash.yeast
+    if yeast == nil then return fail("needs_yeast") end
+    local sugarWanted, sugarAvail, waterWanted, waterAvail = mash.sugarWanted, mash.sugar, mash.waterWanted, mash.water
     local plan = Process.plan("ethanol_ferment", { sugar_eq = sugarAvail, water = waterAvail }, st.rec)
     if not plan.ok then return fail(plan.reason, { sugarAvailableKg = sugarAvail, waterAvailableL = waterAvail }) end
     local sugar = takeFeedstock(player, "sugar_eq", sugarWanted, recipe.inputs.sugar_eq.max)
@@ -193,7 +177,8 @@ function H.machineAddFuel(player, args)
     if not Machines.isPlaced(st.item) then return fail("not_placed") end
     local room = m.firebox.capacityKg - st.rec.firebox
     local wanted = TLG.Num.clamp(tonumber(args.kg) or room, 0, room)
-    local kg = takeFeedstock(player, "wood", wanted, room)
+    -- Planks only when the request says so (the menu's second entry).
+    local kg = takeFeedstock(player, "wood", wanted, room, false, args.planks ~= true and Picks.PLANKS or nil)
     if kg <= 0 then return fail("needs_wood") end
     local r = Process.addFirebox(st.rec, kg)
     if not r.ok then return fail(r.reason) end
@@ -291,13 +276,9 @@ local HANDS_ON = { retort = true, leacher = true, reactor = true, fire_pit = tru
 -- oil counts for what is left in it) while they fit under `max`. Returns
 -- the amount taken; with `dryRun` nothing is removed.
 local function takeAmounts(player, field, max, dryRun)
-    local got = 0
-    for _, item in ipairs(sortedItems(player, function(it) return Feed.amount(it, field) > 0 end)) do
-        local c = Feed.amount(item, field)
-        if got + c <= max + 1e-9 then
-            if not dryRun then removeItem(item) end
-            got = got + c
-        end
+    local got, items = Picks.amounts(player, field, max)
+    if not dryRun then
+        for _, item in ipairs(items) do removeItem(item) end
     end
     return got
 end

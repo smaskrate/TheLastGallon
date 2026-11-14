@@ -275,3 +275,113 @@ T.case("production: plan rejects NaN/negative amounts, stream recipes and oversi
     T.eq(Process.plan("ethanol_ferment", { sugar_eq = 1, water = 1 }, f).reason, "not_enough_sugar_eq",
         "deterministic first failure (sorted inputs)")
 end)
+-- A climate with the same outdoor temperature every day, and the
+-- temperature a fermenter's batch counts in it.
+local function steady(outdoorC)
+    local log = {}
+    for d = -10, 400 do log[d] = { t = outdoorC, rh = 0.7 } end
+    local env = TLG.Domain.Climate.new({ dayOfYear = 190, hourOfDay = 9 }, log)
+    return env, env:segments(0, 1, "sheltered", nil)[1].tempC
+end
+
+-- Advances in small steps until the batch finishes or stops; returns the
+-- hour it finished at and the record.
+local function finishedAt(proc, env)
+    local t = proc.t
+    local stop = proc.t + 24 * 60
+    repeat
+        t = t + 0.25
+        proc = Process.advance(proc, t, env)
+    until proc.state ~= "Processing" or t >= stop
+    return proc.completedAt, proc
+end
+
+T.case("production: the estimate of a batch at a steady temperature is when it finishes", function()
+    for _, outdoorC in ipairs({ 12, 28 }) do
+        local env, tempC = steady(outdoorC)
+        local f = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc
+        local e = Process.estimate(f, tempC)
+        T.near(e.stageHours, 1, 1e-9, "the preparation")
+        T.near(e.workLeft, 97, 1e-9)
+        T.ok(e.tempBound == true)
+        T.ok(tempC >= 8 and tempC <= 38, "it ferments at " .. tostring(tempC))
+        local slow = tempC < 18 or tempC > 32
+        T.eq(e.slowed == true, slow, "sheltered at " .. tostring(tempC))
+        T.near(e.etaHours, slow and 1 + 96 / 0.4 or 97, 1e-9)
+        T.near(finishedAt(f, env), e.etaHours, 1e-6, "as advance finishes it")
+        -- Part-way, from the record as it stands then.
+        local mid = Process.advance(f, 30.5, env)
+        local em = Process.estimate(mid, tempC)
+        T.eq(Process.status(mid).stage, "ferment")
+        T.near(em.stageDone, mid.stageDone, 1e-12); T.near(em.stageHours, 96, 1e-9)
+        T.near(30.5 + em.etaHours, e.etaHours, 1e-6, "the same end from the middle")
+        T.ok(em.woodShortKg == nil, "no firebox")
+    end
+end)
+
+T.case("production: the estimate says when it cannot tell, and how long a batch has stood still", function()
+    local env, tempC = steady(-10)
+    T.ok(tempC < 8, "too cold to ferment: " .. tostring(tempC))
+    local f = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc
+    -- The preparation runs at any temperature; the fermenting after it would not.
+    local e = Process.estimate(f, tempC)
+    T.ok(e.etaHours == nil, "a later stage stopped at this temperature")
+    T.near(e.workLeft, 97, 1e-9)
+    T.ok(e.maxPauseHours == nil, "the preparation has no limit")
+    f = Process.advance(f, 31, env)
+    T.eq(f.state, "Paused"); T.eq(f.pause, "too_cold")
+    e = Process.estimate(f, tempC)
+    T.ok(e.etaHours == nil)
+    T.near(e.pausedFor, 30, 1e-9); T.eq(e.maxPauseHours, 72)
+    T.near(e.workLeft, 96, 1e-9)
+    -- Warm again, the same record: an estimate, the stood-still hours kept.
+    e = Process.estimate(f, 22)
+    T.near(e.etaHours, 96, 1e-9); T.ok(e.slowed == nil)
+    T.near(e.pausedFor, 30, 1e-9)
+    -- A temperature-bound stage with no temperature known; a batch paused by hand.
+    T.ok(Process.estimate(f, nil).etaHours == nil)
+    local warm = steady(12)
+    local g = Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc
+    g = Process.pauseCmd(Process.advance(g, 5, warm)).proc
+    e = Process.estimate(g, 22)
+    T.ok(e.etaHours == nil, "paused by hand")
+    T.near(e.workLeft, 96 - g.stageDone, 1e-9)
+    -- Nothing running: no estimate.
+    T.eq(Process.estimate(fermenter(), 22), nil)
+    T.eq(Process.estimate(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 22), nil)
+    local done = runToEnd(Process.start(Process.load(fermenter(), "ethanol_ferment", { sugar_eq = 10, water = 50 }).proc, 0).proc,
+        F.env(), 24)
+    T.eq(done.state, "OutputReady"); T.eq(Process.estimate(done, 22), nil)
+end)
+
+T.case("production: the estimate of a still says how much wood its firebox is short of", function()
+    local env = F.env()
+    local m = R.need("machine", "reflux_still")
+    local perHour = 6 / (m.firebox.kwhPerKg * m.firebox.efficiency)
+    local function loaded(kg)
+        local s = Process.load(still(), "ethanol_distill", { ethanol = 10, water = 100 }).proc
+        return Process.start(Process.addFirebox(s, kg).proc, 0).proc
+    end
+    -- Enough wood: the estimate is when it finishes, with no temperature needed.
+    local s = loaded(m.firebox.capacityKg)
+    local e = Process.estimate(s, nil)
+    T.ok(e.tempBound == nil and e.slowed == nil)
+    T.near(e.etaHours, e.workLeft, 1e-9, "full rate")
+    T.ok(e.etaHours * perHour <= m.firebox.capacityKg, "a full firebox lasts the batch")
+    T.ok(e.woodShortKg == nil)
+    T.near(finishedAt(s, env), e.etaHours, 1e-6)
+    -- Three kilograms: short by the rest, and it does stop for want of heat.
+    s = loaded(3)
+    e = Process.estimate(s, nil)
+    T.near(e.woodShortKg, e.etaHours * perHour - 3, 1e-9)
+    local _, stopped = finishedAt(s, env)
+    T.eq(stopped.state, "Paused"); T.eq(stopped.pause, "no_heat")
+    -- Stopped: no temperature in the way, so the hours left once it is fed.
+    e = Process.estimate(stopped, nil)
+    T.near(e.etaHours, e.workLeft, 1e-9)
+    T.near(e.woodShortKg, e.workLeft * perHour, 1e-9, "an empty firebox")
+    local fed = Process.addFirebox(stopped, e.woodShortKg + 0.01).proc
+    local at, final = finishedAt(fed, env)
+    T.eq(final.state, "OutputReady")
+    T.near(at - stopped.t, e.etaHours, 1e-6, "fed with what it said, it finishes when it said")
+end)

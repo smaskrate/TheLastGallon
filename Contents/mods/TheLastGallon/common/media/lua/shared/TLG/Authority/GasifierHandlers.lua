@@ -16,6 +16,7 @@
 require "TLG/Authority/Handlers"
 require "TLG/Integration/Gasifiers"
 require "TLG/Content/Feedstocks"
+require "TLG/Integration/Picks"
 
 local H = TLG.Authority.Handlers
 local GZ, Gasifier, World, Tables = TLG.Integration.Gasifiers, TLG.Domain.Gas.Gasifier, TLG.World, TLG.Tables
@@ -30,39 +31,20 @@ local function fail(reason, extra)
     return r
 end
 
--- Wood and charcoal items, by the recipe input each fills.
-local INPUT = { wood = "firewood", charcoal = "charcoal" }
-
-local function feedField(item)
-    local c = Feed.contribution(item:getFullType())
-    if c == nil then return nil end
-    if (c.wood or 0) > 0 then return "wood", c.wood end
-    if (c.charcoal or 0) > 0 then return "charcoal", c.charcoal end
-    return nil
-end
-
 -- Whole wood and charcoal items from the inventory, in the order of their
--- ids, while they fit in `room` kg. Returns the load by recipe input, its
--- kg and the items; with `dryRun` nothing is taken.
+-- ids, while they fit in `room` kg, as TLG/Integration/Picks.lua chooses
+-- them (favourite items never). Returns the load by recipe input, its kg
+-- and the number of items; with `dryRun` nothing is taken.
 local function takeFeed(player, room, dryRun)
-    local list = player:getInventory():getAllEvalRecurse(function(it) return feedField(it) ~= nil end)
-    local items = {}
-    for i = 0, list:size() - 1 do items[#items + 1] = list:get(i) end
-    items = Tables.sort(items, function(a, b) return a:getID() < b:getID() end)
-    local load, got, n = {}, 0, 0
-    for _, item in ipairs(items) do
-        local field, kg = feedField(item)
-        if got + kg <= room + 1e-9 then
-            if not dryRun then
-                local c = item:getContainer()
-                c:Remove(item)
-                if isServer() and sendRemoveItemFromContainer then sendRemoveItemFromContainer(c, item) end
-            end
-            got, n = got + kg, n + 1
-            load[INPUT[field]] = (load[INPUT[field]] or 0) + kg
+    local load, got, items = TLG.Integration.Picks.hopper(player, room)
+    if not dryRun then
+        for _, item in ipairs(items) do
+            local c = item:getContainer()
+            c:Remove(item)
+            if isServer() and sendRemoveItemFromContainer then sendRemoveItemFromContainer(c, item) end
         end
     end
-    return load, got, n
+    return load, got, #items
 end
 
 -- What a reply tells of a gasifier.

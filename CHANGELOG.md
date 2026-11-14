@@ -1,5 +1,62 @@
 # Changelog
 
+## Unreleased
+
+Only the menus' texts are listed here so far; the gas generator, propane
+and the wood gasifier (D-040) are not.
+
+* After a load, a feed of the firebox or a collect, a machine's dialog
+  lists what the action took and gave, for example "Loaded: 6.00 kg of
+  sugar equivalent, 30.00 L of water and the yeast." A reactor's load
+  also says how much charcoal the emptied retort gave.
+* **Status** of a machine with a batch running says how far the current
+  stage is and about how long the batch still takes: "Stage: fermenting,
+  38% done" and "About 6 d 5 h left at today's temperature, which slows
+  it down". The time assumes today's temperature holds and the firebox
+  is kept fed; when the firebox holds too little wood to finish, Status
+  says how much more it needs. A paused batch shows the hours of work
+  left, and a fermentation that has stood still shows for how long,
+  against the hours that spoil it. **Project status** of a conversion in
+  progress shows the hours of work done and needed. Checked in single
+  player on a fermentation just begun (launch 414); the other lines are
+  not checked in game.
+* A machine's or a gasifier's load never takes an item marked as a
+  favourite: crops and sugar, water, yeast, wood, charcoal, oil and
+  quicklime stay in the bag, and a favourite fuel can is not chosen to
+  collect into. With only favourites carried the load is refused as if
+  there were none. The workshop's **Hand over parts** still takes
+  favourite parts. Not checked in game; on a server it relies on the
+  game sending the mark to the server, which is not checked either.
+* Changed: **Feed the firebox** no longer burns planks. With planks in
+  the bag a second entry, **Feed the firebox, planks too**, burns them as
+  well. Loading wood into the Wood Retort, the Ash Barrel and the Wood
+  Gasifier takes planks as before.
+* **Load mash and start fermenting**, the wood loads, **Feed the
+  firebox** and the gasifier's **Load the hopper with wood** show what
+  the click would take when the pointer is on them, or why it would be
+  refused. Not checked in game.
+* Amounts in the machines' dialogs carry their unit ("Ethanol:
+  12.30 L"), and the firebox line says how much the firebox holds.
+* A load refused because a material is short says how much of it was
+  found.
+* **Hand over parts** lists the parts taken and those still needed, with
+  the hours of work done so far. **Cancel the project** and **Remove the
+  conversion** list the parts returned and lost.
+* A greyed entry of the Fuel, Machine, Gasifier and Gas menus shows its
+  reason when the pointer is on it, for example "You need a fuel
+  sampling kit." **Collect ethanol into a fuel can** and **Collect
+  biodiesel into a fuel can** name the can they will fill and its free
+  room.
+* Refusals that showed an internal code have a text, for example "There
+  is no conversion project here." on a vehicle or generator without one.
+* The English texts say "gasoline" where three of them said "petrol".
+* Checked on 42.22.2 in single player (launch 413 in
+  `docs/test-results.md`): the full harness passed, the dialogs the
+  ethanol loop opened held no untranslated text, and the workshop's
+  dialog showed the hours. Not checked in game: the tooltips, the lists
+  of parts, a load refused for a shortage, the biodiesel machines, the
+  gasifier, a server and the Italian texts.
+
 ## 0.4.3 (2026-11-13)
 
 * Fixed: on a server, a machine's menu did not follow its batch, so

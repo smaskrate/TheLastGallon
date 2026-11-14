@@ -12,6 +12,7 @@ require "TLG/Authority/Resolver"
 require "TLG/Integration/ConversionDevices"
 require "TLG/Actions/ISTLGConversionWork"
 require "TLG/UI/Clicked"
+require "TLG/UI/Format"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.WorkshopMenu = TLG.UI.WorkshopMenu or {}
@@ -23,12 +24,6 @@ local function show(text)
         w, h, text, false, nil, nil, 0)
     modal:initialise()
     modal:addToUIManager()
-end
-
-local function textOr(key, fallbackKey, arg)
-    local t = getText(key, arg)
-    if t == key then return getText(fallbackKey, arg) end
-    return t
 end
 
 -- What is missing, in the player's words: items by display name (vanilla
@@ -48,18 +43,51 @@ function Menu.missingText(m)
     return m
 end
 
+-- "4 Screws, 1 Rubber Hose": parts by display name with their counts, from
+-- a table { fullType = count }; nil when it is empty or missing.
+function Menu.partsText(t)
+    if type(t) ~= "table" or TLG.Tables.isEmpty(t) then return nil end
+    local parts = {}
+    for _, id in ipairs(TLG.Tables.sortedKeys(t)) do
+        parts[#parts + 1] = tostring(t[id]) .. " " .. Menu.missingText(id)
+    end
+    return table.concat(parts, ", ")
+end
+
+-- A refusal's text: the workshop's own wording, else the shared one
+-- (TLG/UI/Format.lua).
+local function reasonText(reason)
+    local key = "IGUI_TLG_ConvReason_" .. tostring(reason)
+    local text = getText(key)
+    if text == key then return TLG.UI.Format.failure({ reason = reason }) end
+    return text
+end
+
+-- The text of a workshop reply. After the state it lists what the step
+-- moved, from the reply (TLG/Authority/ConversionHandlers.lua): the parts
+-- handed over and those still needed, the parts a cancel or a removal gave
+-- back and lost, and the hours of work done. The hours were read in a
+-- dialog in RT-SP launch 413; the lists of parts are NOT RUN in game.
 function Menu.describe(reply)
     if not reply.ok then
-        local lines = { textOr("IGUI_TLG_ConvReason_" .. tostring(reply.reason), "IGUI_TLG_Fail_Generic", tostring(reply.reason)) }
+        local lines = { reasonText(reply.reason) }
         for _, m in ipairs(reply.missing or {}) do lines[#lines + 1] = "- " .. Menu.missingText(m) end
         return table.concat(lines, " <LINE> ")
     end
     local lines = { getText("IGUI_TLG_ConvState_" .. tostring(reply.state)) }
     if reply.conversion then lines[#lines + 1] = getText("IGUI_TLG_Conversion_" .. reply.conversion) end
     if reply.stage then lines[#lines + 1] = getText("IGUI_TLG_ConvStage", getText("IGUI_TLG_ConvStage_" .. reply.stage)) end
+    if type(reply.doneHours) == "number" and type(reply.totalHours) == "number" and reply.totalHours > 0 then
+        lines[#lines + 1] = getText("IGUI_TLG_ConvHours", string.format("%.1f", reply.doneHours),
+            string.format("%.1f", reply.totalHours))
+    end
+    for _, row in ipairs({ { "consumed", "IGUI_TLG_ConvConsumed" }, { "outstanding", "IGUI_TLG_ConvOutstanding" },
+        { "returned", "IGUI_TLG_ConvReturned" }, { "lost", "IGUI_TLG_ConvLost" } }) do
+        local parts = Menu.partsText(reply[row[1]])
+        if parts then lines[#lines + 1] = getText(row[2], parts) end
+    end
     if reply.blocked then
-        lines[#lines + 1] = textOr("IGUI_TLG_ConvReason_" .. tostring(reply.blocked.reason), "IGUI_TLG_Fail_Generic",
-            tostring(reply.blocked.reason))
+        lines[#lines + 1] = reasonText(reply.blocked.reason)
         for _, m in ipairs(reply.blocked.missing or {}) do lines[#lines + 1] = "- " .. Menu.missingText(m) end
     end
     if reply.profile then lines[#lines + 1] = getText("IGUI_TLG_ConvProfile", getText("IGUI_TLG_Profile_" .. reply.profile)) end

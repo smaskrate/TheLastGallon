@@ -411,6 +411,14 @@ it is doing and the temperature at the machine. The entry shows for a
 click on the machine or close beside it, where the game's **Grab** entry
 for it does.
 
+With a batch running, **Status** also gives the share of the current
+stage that is done and about how long the batch still takes. The time is
+an estimate: it assumes today's temperature at the machine holds and the
+firebox is kept fed, and it says so when the cold or the heat slows the
+batch, or when the firebox holds too little wood to finish. A paused
+batch shows the hours of work left instead, and a fermentation that has
+stood still shows for how long, against the 3 days that spoil it.
+
 ![A placed Fermentation Vessel's menu with Machine (The Last Gallon) open: Status, Load mash and start fermenting, Pause, Abort batch](images/machine-menu.jpg)
 
 *The menu of a placed vessel with a batch running.*
@@ -479,9 +487,10 @@ you go.
    finished.
 2. Choose **Load wash from a nearby fermenter**. The pot still takes up to
    60 L of wash at a time.
-3. Choose **Feed the firebox**. It burns all the wood you carry that fits
-   (firewood, logs, twigs, and planks too), so leave building planks
-   behind. The firebox holds 30 kg: three logs (27 kg) distil about 60 L,
+3. Choose **Feed the firebox**. It burns the firewood, logs and twigs
+   you carry that fit, and leaves planks alone; with planks in your bag
+   a second entry, **Feed the firebox, planks too**, burns those as
+   well. The firebox holds 30 kg: three logs (27 kg) distil about 60 L,
    and a fourth log stays in your bag.
 4. When it has finished, choose **Collect ethanol into a fuel can** with an
    empty fuel can or one that holds only ethanol. The still never fills a
@@ -669,7 +678,15 @@ A log counts as 9 kg of wood, a piece of firewood as 2 kg, a plank as
 
 Loading wood and **Feed the firebox** both take all the wood you carry
 that fits. Where a machine has both, carry the firebox's wood and feed it,
-then fetch the wood for the load.
+then fetch the wood for the load. Loading wood takes planks too; **Feed
+the firebox** takes them only through its second entry, **Feed the
+firebox, planks too**.
+
+A load never takes an item you marked as a favourite (the game's
+**Favorite** entry in the inventory menu): mark the crops, the water
+bottle, the wood or the fuel can you want to keep. Hold the pointer on
+**Load mash and start fermenting**, on a wood load or on **Feed the
+firebox** to read what the click would take.
 
 ### 1. Distil wood into methanol
 

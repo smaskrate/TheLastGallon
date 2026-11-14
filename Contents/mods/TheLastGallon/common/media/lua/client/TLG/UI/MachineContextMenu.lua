@@ -11,11 +11,14 @@ require "TLG/Client/Net"
 require "TLG/Integration/Machines"
 require "TLG/UI/Format"
 require "TLG/UI/Clicked"
+require "TLG/UI/Tip"
+require "TLG/UI/LoadPreview"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.MachineMenu = TLG.UI.MachineMenu or {}
 local Menu = TLG.UI.MachineMenu
-local Machines, Fmt = TLG.Integration.Machines, TLG.UI.Format
+local Machines, Fmt, Tip = TLG.Integration.Machines, TLG.UI.Format, TLG.UI.Tip
+local Picks, Preview = TLG.Integration.Picks, TLG.UI.LoadPreview
 
 local function show(text)
     local w, h = 420, 240
@@ -42,13 +45,43 @@ local function kindText(key, kind)
     return getText(key)
 end
 
--- "Water 29.67, Stillage 0.40": what an abort threw away.
-local function amounts(t)
-    local parts = {}
-    for _, id in ipairs(TLG.Tables.sortedKeys(t)) do
-        parts[#parts + 1] = Fmt.componentName(id) .. " " .. string.format("%.2f", t[id])
+local function num(x) return string.format("%.2f", tonumber(x) or 0) end
+
+-- What a load, a feed or a collect took and gave, from the amounts the
+-- authority's reply carries (TLG/Authority/MachineHandlers.lua); nil for a
+-- reply that moved nothing (Status, Pause, Resume). The command names the
+-- action, since waterL is a mash's water, a leacher's and what the dried
+-- ethanol held. The collect line was read in a dialog in RT-SP launch
+-- 416; the loads' and the feed's lines are NOT RUN in game.
+function Menu.did(reply, kind)
+    local c = reply.command
+    if c == "machine.loadFerment" then
+        return getText("IGUI_TLG_Did_loadFerment", num(reply.sugarKg), num(reply.waterL))
+    elseif c == "machine.loadWash" then
+        return getText("IGUI_TLG_Did_loadWash", num(reply.washL))
+    elseif c == "machine.addFuel" then
+        return getText("IGUI_TLG_Did_addFuel", num(reply.addedKg))
+    elseif c == "machine.loadDry" then
+        return getText("IGUI_TLG_Did_loadDry", num(reply.ethanolL), num(reply.waterL), num(reply.limeKg))
+    elseif c == "machine.collect" and type(reply.collected) == "table" then
+        return getText("IGUI_TLG_Did_collect", Fmt.amounts(reply.collected))
+    elseif c == "machine.load" then
+        if kind == "retort" or kind == "fire_pit" then
+            return getText("IGUI_TLG_Did_load_wood", num(reply.woodKg))
+        elseif kind == "leacher" then
+            return getText("IGUI_TLG_Did_load_leacher", num(reply.ashKg), num(reply.waterL))
+        elseif kind == "reactor" then
+            local text = getText("IGUI_TLG_Did_load_reactor", num(reply.oilL), num(reply.methanolL), num(reply.lyeKg))
+            -- The load that took the retort's last methanol emptied it.
+            if (tonumber(reply.charcoal) or 0) > 0 then
+                text = text .. " <LINE> " .. getText("IGUI_TLG_Did_charcoal", tostring(reply.charcoal))
+            end
+            return text
+        elseif kind == "settler" then
+            return getText("IGUI_TLG_Did_load_settler", num(reply.crudeL), num(reply.washWaterL))
+        end
     end
-    return table.concat(parts, ", ")
+    return nil
 end
 
 function Menu.describe(reply)
@@ -56,26 +89,63 @@ function Menu.describe(reply)
     local kind = def and def.kind
     local lines = {}
     if reply.aborted then lines[1] = getText(reply.spoiled and "IGUI_TLG_AbortedSpoiled" or "IGUI_TLG_Aborted") end
+    lines[#lines + 1] = Menu.did(reply, kind)
     -- Output an abort kept is not a finished batch.
     local state = "IGUI_TLG_MachineState_" .. tostring(reply.state)
     if reply.stoppedEarly and reply.state == "OutputReady" then state = state .. "_stopped" end
     lines[#lines + 1] = kindText(state, kind)
     if reply.pause then lines[#lines + 1] = kindText("IGUI_TLG_Pause_" .. tostring(reply.pause), kind) end
-    if reply.stage then lines[#lines + 1] = getText("IGUI_TLG_Stage", getText("IGUI_TLG_Stage_" .. reply.stage)) end
+    -- How far the batch is and how long it still takes, as the authority
+    -- worked it out (Process.estimate): a client's copy of the record has
+    -- no hourly readings to tell the rate from. The stage's share and the
+    -- estimate were read in a dialog in RT-SP launch 414; the other lines
+    -- are NOT RUN in game.
+    local p = type(reply.progress) == "table" and reply.progress or nil
+    if reply.stage then
+        local name = getText("IGUI_TLG_Stage_" .. reply.stage)
+        if p and (tonumber(p.stageHours) or 0) > 0 then
+            local share = math.max(0, math.min(1, (tonumber(p.stageDone) or 0) / p.stageHours))
+            lines[#lines + 1] = getText("IGUI_TLG_StageDone", name, string.format("%.0f%%", share * 100))
+        else
+            lines[#lines + 1] = getText("IGUI_TLG_Stage", name)
+        end
+    end
+    if p then
+        if reply.state == "Processing" and type(p.etaHours) == "number" then
+            local key = p.slowed and "IGUI_TLG_EtaSlowed" or (p.tempBound and "IGUI_TLG_EtaTemp" or "IGUI_TLG_Eta")
+            lines[#lines + 1] = getText(key, Fmt.duration(p.etaHours))
+            if type(p.woodShortKg) == "number" then
+                lines[#lines + 1] = getText("IGUI_TLG_WoodShort", string.format("%.1f", p.woodShortKg))
+            end
+        elseif type(p.workLeft) == "number" then
+            lines[#lines + 1] = getText(reply.state == "Paused" and "IGUI_TLG_WorkLeft" or "IGUI_TLG_WorkLeftNow",
+                Fmt.duration(p.workLeft))
+        end
+        if type(p.maxPauseHours) == "number" and (tonumber(p.pausedFor) or 0) > 0 then
+            lines[#lines + 1] = getText("IGUI_TLG_StoodStill", Fmt.duration(p.pausedFor), Fmt.duration(p.maxPauseHours))
+        end
+    end
     if type(reply.siteC) == "number" and reply.site then
         lines[#lines + 1] = getText(reply.siteNow and "IGUI_TLG_SiteNow" or "IGUI_TLG_SiteToday",
             temperatureText(reply.siteC), getText("IGUI_TLG_Site_" .. reply.site))
     end
     if reply.firebox and reply.firebox > 0 then
-        lines[#lines + 1] = getText("IGUI_TLG_Firebox", string.format("%.1f", reply.firebox))
+        local wood = string.format("%.1f", reply.firebox)
+        if def and def.firebox and def.firebox.capacityKg then
+            lines[#lines + 1] = getText("IGUI_TLG_FireboxOf", wood, string.format("%.0f", def.firebox.capacityKg))
+        else
+            lines[#lines + 1] = getText("IGUI_TLG_Firebox", wood)
+        end
     end
     if reply.outputs then
         for _, id in ipairs(TLG.Tables.sortedKeys(reply.outputs)) do
-            lines[#lines + 1] = Fmt.componentName(id) .. ": " .. string.format("%.2f", reply.outputs[id])
+            lines[#lines + 1] = Fmt.componentName(id) .. ": " .. Fmt.amount(id, reply.outputs[id])
         end
     end
-    if reply.aborted and reply.discarded and not TLG.Tables.isEmpty(reply.discarded) then
-        lines[#lines + 1] = getText("IGUI_TLG_Discarded", amounts(reply.discarded))
+    -- What an abort threw away, a wash tank's load (the reactor's glycerin)
+    -- and the collect that emptied a machine (its stillage or spent lime).
+    if type(reply.discarded) == "table" and not TLG.Tables.isEmpty(reply.discarded) then
+        lines[#lines + 1] = getText("IGUI_TLG_Discarded", Fmt.amounts(reply.discarded))
     end
     if reply.aborted and reply.stoppedEarly and reply.state == "OutputReady" then
         lines[#lines + 1] = getText("IGUI_TLG_AbortAgain")
@@ -83,10 +153,35 @@ function Menu.describe(reply)
     return table.concat(lines, " <LINE> ")
 end
 
+-- What the authority counted of the material a load was short of, by the
+-- refusal's code. Only that material: the others are counted up to what
+-- the batch would take, not all the player has.
+local FOUND = {
+    not_enough_sugar_eq = { "sugarAvailableKg", "IGUI_TLG_Found_sugar" },
+    not_enough_water = { "waterAvailableL", "IGUI_TLG_Found_water" },
+    not_enough_firewood = { "woodAvailableKg", "IGUI_TLG_Found_wood" },
+    not_enough_plant_oil = { "oilAvailableL", "IGUI_TLG_Found_oil" },
+    not_enough_methanol = { "methanolAvailableL", "IGUI_TLG_Found_methanol" },
+    not_enough_lye = { "lyeAvailableKg", "IGUI_TLG_Found_lye" },
+    not_enough_wood_ash = { "ashAvailableKg", "IGUI_TLG_Found_ash" },
+}
+
+-- The text of a refusal: the machines' own wording, else the shared one,
+-- then what was found of the material that was short. NOT RUN in game.
+function Menu.failureText(reply)
+    local key = "IGUI_TLG_MachineFail_" .. tostring(reply.reason)
+    local text = getText(key)
+    if text == key then text = Fmt.failure(reply) end
+    local found = FOUND[tostring(reply.reason)]
+    if found and type(reply[found[1]]) == "number" then
+        text = text .. " <LINE> " .. getText(found[2], num(reply[found[1]]))
+    end
+    return text
+end
+
 local function onReply(reply)
     if not reply.ok then
-        show(getText("IGUI_TLG_MachineFail_" .. tostring(reply.reason)) ~= ("IGUI_TLG_MachineFail_" .. tostring(reply.reason))
-            and getText("IGUI_TLG_MachineFail_" .. tostring(reply.reason)) or Fmt.failure(reply))
+        show(Menu.failureText(reply))
         return
     end
     show(Menu.describe(reply))
@@ -124,7 +219,8 @@ local function fuelCanWithRoom(player, except, family)
     family = family or ETHANOL
     local list = player:getInventory():getAllEvalRecurse(function(it)
         local fc = it:getFluidContainer()
-        return it ~= except and fc ~= nil and fc:getFreeCapacity() > 0.1 and TLG.ContainerProfiles.items[it:getFullType()] ~= nil
+        return it ~= except and not Picks.kept(it) and fc ~= nil and fc:getFreeCapacity() > 0.1
+            and TLG.ContainerProfiles.items[it:getFullType()] ~= nil
     end)
     local topUp
     for i = 0, list:size() - 1 do
@@ -138,18 +234,65 @@ end
 -- The biodiesel chain's machines (D-036): one load each, named after what
 -- it takes (ContextMenu_TLG_Load_<kind>).
 local CHAIN = { retort = true, fire_pit = true, leacher = true, reactor = true, settler = true }
+-- The two that load wood from the inventory, by their recipe.
+local WOOD_LOAD = { retort = "methanol_wood_distill", fire_pit = "ash_burn" }
 
 -- A can holding ethanol and water only (still output to dry).
 local function hydrousEthanolCan(player)
     local list = player:getInventory():getAllEvalRecurse(function(it)
         local fc = it:getFluidContainer()
-        return fc ~= nil and not fc:isEmpty() and onlyEthanolAndWater(fc)
+        return not Picks.kept(it) and fc ~= nil and not fc:isEmpty() and onlyEthanolAndWater(fc)
     end)
     if list:size() > 0 then return list:get(0) end
     return nil
 end
 
-local function addMachine(playerNum, context, item, title)
+-- Collect into a fuel can: the entry names the can it will fill and its
+-- room, or is greyed with the can it needs (TLG/UI/Tip.lua).
+local function addCollect(sub, player, ref, labelKey, except, family, world)
+    local can = fuelCanWithRoom(player, except, family)
+    local o = sub:addOption(getText(labelKey), nil, function()
+        req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
+    end)
+    if can == nil then
+        Tip.grey(o, getText("IGUI_TLG_Tip_NeedCan_" .. family.main), world)
+    else
+        Tip.set(o, getText("IGUI_TLG_Tip_Into", tostring(can:getDisplayName()),
+            string.format("%.1f", can:getFluidContainer():getFreeCapacity())), world)
+    end
+end
+
+-- The machine's record brought to now without writing it, as Menu.controls
+-- reads it (on a multiplayer client: as the server last sent it); an empty
+-- table before the machine has one.
+local function recordNow(item)
+    local rec = item:getModData()[Machines.SIDECAR]
+    if type(rec) ~= "table" then return {} end
+    if not (isClient and isClient()) then
+        local ok, now = pcall(function() return Machines.advance(item, Machines.read(item, false), TLG.World.now(), TLG.World.env()) end)
+        if ok and type(now) == "table" then rec = now end
+    end
+    return rec
+end
+
+-- Feed the firebox takes logs, firewood and twigs. With planks carried a
+-- second entry burns those too (machine.addFuel with `planks`): they are
+-- building material first. Each entry says what it would take.
+local function addFirebox(sub, player, rec, def, ref, world)
+    local room = def.firebox.capacityKg - (tonumber(rec.firebox) or 0)
+    local o = sub:addOption(getText("ContextMenu_TLG_AddFirewood"), nil, function() req("machine.addFuel", { target = ref }) end)
+    Preview.attach(o, world, Preview.firebox, player, room, false)
+    local planks = player:getInventory():getAllEvalRecurse(function(it)
+        return Picks.PLANKS[it:getFullType()] == true and not Picks.kept(it)
+    end)
+    if planks:size() > 0 then
+        o = sub:addOption(getText("ContextMenu_TLG_AddFirewoodPlanks"), nil,
+            function() req("machine.addFuel", { target = ref, planks = true }) end)
+        Preview.attach(o, world, Preview.firebox, player, room, true)
+    end
+end
+
+local function addMachine(playerNum, context, item, title, world)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
     local def = TLG.Registry.need("machine", Machines.machineFor(item))
@@ -164,44 +307,36 @@ local function addMachine(playerNum, context, item, title)
         o.notAvailable = true
         return
     end
+    -- The record brought to now, read once for the previews and the controls.
+    local rec = recordNow(item)
     if kind == "fermenter" then
-        sub:addOption(getText("ContextMenu_TLG_LoadFerment"), nil,
+        local o = sub:addOption(getText("ContextMenu_TLG_LoadFerment"), nil,
             function() req("machine.loadFerment", { target = ref }) end)
+        Preview.attach(o, world, Preview.mash, player, rec)
     elseif kind == "still" then
         sub:addOption(getText("ContextMenu_TLG_LoadWash"), nil, function() req("machine.loadWash", { target = ref }) end)
-        sub:addOption(getText("ContextMenu_TLG_AddFirewood"), nil, function() req("machine.addFuel", { target = ref }) end)
-        local can = fuelCanWithRoom(player)
-        local o = sub:addOption(getText("ContextMenu_TLG_CollectEthanol"), nil, function()
-            req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
-        end)
-        if can == nil then o.notAvailable = true end
+        addFirebox(sub, player, rec, def, ref, world)
+        addCollect(sub, player, ref, "ContextMenu_TLG_CollectEthanol", nil, ETHANOL, world)
     elseif kind == "dryer" then
         local src = hydrousEthanolCan(player)
         local d = sub:addOption(getText("ContextMenu_TLG_LoadDry"), nil, function()
             req("machine.loadDry", { target = ref, source = { kind = "item", id = src:getID() } })
         end)
-        if src == nil then d.notAvailable = true end
-        local can = fuelCanWithRoom(player, src)
-        local o = sub:addOption(getText("ContextMenu_TLG_CollectEthanol"), nil, function()
-            req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
-        end)
-        if can == nil then o.notAvailable = true end
+        if src == nil then Tip.grey(d, getText("IGUI_TLG_MachineFail_no_source"), world) end
+        addCollect(sub, player, ref, "ContextMenu_TLG_CollectEthanol", src, ETHANOL, world)
     elseif CHAIN[kind] then
-        sub:addOption(getText("ContextMenu_TLG_Load_" .. kind), nil, function() req("machine.load", { target = ref }) end)
+        local o = sub:addOption(getText("ContextMenu_TLG_Load_" .. kind), nil, function() req("machine.load", { target = ref }) end)
+        if WOOD_LOAD[kind] then Preview.attach(o, world, Preview.woodLoad, player, WOOD_LOAD[kind], rec) end
         if def.firebox then
-            sub:addOption(getText("ContextMenu_TLG_AddFirewood"), nil, function() req("machine.addFuel", { target = ref }) end)
+            addFirebox(sub, player, rec, def, ref, world)
         end
         -- Only the wash tank's biodiesel goes into a can; the others hand
         -- their output to the next machine.
         if kind == "settler" then
-            local can = fuelCanWithRoom(player, nil, BIODIESEL)
-            local o = sub:addOption(getText("ContextMenu_TLG_CollectBiodiesel"), nil, function()
-                req("machine.collect", { target = ref, destination = { kind = "item", id = can:getID() } })
-            end)
-            if can == nil then o.notAvailable = true end
+            addCollect(sub, player, ref, "ContextMenu_TLG_CollectBiodiesel", nil, BIODIESEL, world)
         end
     end
-    local c = Menu.controls(item)
+    local c = Menu.controls(item, rec)
     if c.pause then sub:addOption(getText("ContextMenu_TLG_Pause"), nil, function() req("machine.pause", { target = ref }) end) end
     if c.resume then sub:addOption(getText("ContextMenu_TLG_Resume"), nil, function() req("machine.resume", { target = ref }) end) end
     if c.abort then sub:addOption(getText("ContextMenu_TLG_Abort"), nil, function() req("machine.abort", { target = ref }) end) end
@@ -211,7 +346,7 @@ function Menu.fill(playerNum, context, items)
     for _, entry in ipairs(items) do
         local item = firstItem(entry)
         if Machines.machineFor(item) then
-            addMachine(playerNum, context, item)
+            addMachine(playerNum, context, item, nil, false)
             return
         end
     end
@@ -236,7 +371,7 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
     for _, item in ipairs(items) do
         local title = getText("ContextMenu_TLG_Machine")
         if #items > 1 then title = title .. " - " .. item:getDisplayName() end
-        addMachine(playerNum, context, item, title)
+        addMachine(playerNum, context, item, title, true)
     end
 end
 
@@ -248,13 +383,8 @@ end
 -- comes without the hourly readings, and brought forward without them it
 -- can disagree with the server: in a cold room warmed by a fire, 7.8 stage
 -- hours done where the server had 9.0 (test_machine_sites).
-function Menu.controls(item)
-    local rec = item:getModData()[Machines.SIDECAR]
-    if type(rec) ~= "table" then return {} end
-    if not (isClient and isClient()) then
-        local ok, now = pcall(function() return Machines.advance(item, Machines.read(item, false), TLG.World.now(), TLG.World.env()) end)
-        if ok and type(now) == "table" then rec = now end
-    end
+function Menu.controls(item, known)
+    local rec = known or recordNow(item)
     local s = rec.state
     return {
         pause = s == "Processing",

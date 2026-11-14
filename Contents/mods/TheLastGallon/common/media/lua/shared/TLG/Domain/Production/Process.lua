@@ -206,16 +206,22 @@ local function stageHours(proc, st)
     return h
 end
 
+-- A stage's progress rate at a temperature, and the pause reason when the
+-- rate is zero.
+local function tempRate(st, tempC)
+    if st.tempMin and tempC < st.tempMin then return 0, "too_cold" end
+    if st.tempMax and tempC > st.tempMax then return 0, "too_hot" end
+    if st.slowBelow and tempC < st.slowBelow then return st.slowRate or 0.4, nil end
+    if st.slowAbove and tempC > st.slowAbove then return st.slowRate or 0.4, nil end
+    return 1, nil
+end
+
 -- Progress rate in a segment and the pause reason when the rate is zero.
 local function stageRate(proc, st, seg, m)
     if st.heatKW and st.heatKW > 0 then
         if not m.firebox or proc.firebox <= 1e-9 then return 0, "no_heat" end
     end
-    if st.tempMin and seg.tempC < st.tempMin then return 0, "too_cold" end
-    if st.tempMax and seg.tempC > st.tempMax then return 0, "too_hot" end
-    if st.slowBelow and seg.tempC < st.slowBelow then return st.slowRate or 0.4, nil end
-    if st.slowAbove and seg.tempC > st.slowAbove then return st.slowRate or 0.4, nil end
-    return 1, nil
+    return tempRate(st, seg.tempC)
 end
 
 local function completeBatch(out, m)
@@ -447,6 +453,59 @@ function Process.status(proc)
     local running = proc.state == "Processing" or proc.state == "Paused"
     local st = running and proc.recipe and proc.recipe.params.stages[proc.stage] or nil
     return { state = proc.state, reason = proc.pause, stage = st and st.id or nil }
+end
+
+-- How far a running or paused batch is and how long it still takes, for
+-- display; nil for any other state. `tempC` is the temperature the batch
+-- counts today at its site (Climate.siteDayMean), nil when unknown.
+--   stageDone, stageHours  hours done and needed in the current stage
+--   workLeft               hours of work left in this and the later stages,
+--                          at full rate
+--   etaHours               hours until it finishes if `tempC` holds and the
+--                          firebox is kept fed; nil when it cannot be told:
+--                          paused by hand, a stage stopped at `tempC`, or a
+--                          stage bound to a temperature with `tempC` nil
+--   tempBound              a stage still to do depends on the temperature
+--   slowed                 one of them runs below full rate at `tempC`
+--   woodShortKg            wood the stages still to do burn beyond what the
+--                          firebox holds (only with etaHours)
+--   pausedFor, maxPauseHours  hours the batch has stood still and the hours
+--                          that spoil it, when the current stage has a limit
+-- The rates are the ones advance uses: at a constant temperature and with
+-- enough wood, etaHours is when advance finishes the batch.
+function Process.estimate(proc, tempC)
+    if (proc.state ~= "Processing" and proc.state ~= "Paused") or proc.recipe == nil then return nil end
+    local stages = proc.recipe.params.stages
+    local cur = stages[proc.stage]
+    if cur == nil then return nil end
+    local m = Registry.need("machine", proc.machine)
+    local e = { stageDone = proc.stageDone, stageHours = stageHours(proc, cur), workLeft = 0 }
+    if cur.maxPauseHours then e.pausedFor, e.maxPauseHours = proc.pausedFor or 0, cur.maxPauseHours end
+    local eta, wood = 0, 0
+    for i = proc.stage, #stages do
+        local st = stages[i]
+        local need = stageHours(proc, st)
+        if i == proc.stage then need = math.max(0, need - proc.stageDone) end
+        e.workLeft = e.workLeft + need
+        local rate = 1
+        if st.tempMin or st.tempMax or st.slowBelow or st.slowAbove then
+            e.tempBound = true
+            rate = tempC ~= nil and tempRate(st, tempC) or 0
+        end
+        if rate <= 0 then
+            eta = nil
+        elseif eta ~= nil then
+            if rate < 1 then e.slowed = true end
+            eta = eta + need / rate
+            if st.heatKW and st.heatKW > 0 and m.firebox then
+                wood = wood + need / rate * st.heatKW / (m.firebox.kwhPerKg * m.firebox.efficiency)
+            end
+        end
+    end
+    if proc.manualPause then eta = nil end
+    e.etaHours = eta
+    if eta ~= nil and wood > (proc.firebox or 0) + 1e-9 then e.woodShortKg = wood - (proc.firebox or 0) end
+    return e
 end
 
 return Process

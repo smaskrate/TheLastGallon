@@ -136,25 +136,25 @@ T.case("integration: an abort's dialog says what was kept and what was thrown aw
         IGUI_TLG_Aborted = true, IGUI_TLG_AbortedSpoiled = true, IGUI_TLG_AbortAgain = true, IGUI_TLG_Discarded = true,
         IGUI_TLG_MachineState_Ready = true, IGUI_TLG_MachineState_OutputReady_stopped = true,
         IGUI_TLG_MachineState_OutputReady_stopped_fermenter = true, IGUI_TLG_Fuel_ethanol = true, IGUI_TLG_Fuel_water = true,
-        IGUI_TLG_Fuel_sugar_eq = true, IGUI_TLG_Fuel_spent_lime = true,
+        IGUI_TLG_Fuel_sugar_eq = true, IGUI_TLG_Fuel_spent_lime = true, IGUI_TLG_Amount_kg = true, IGUI_TLG_Amount_L = true,
     })
     local ok, err = pcall(function()
         -- Fermenter: the wash so far stays for a still; a second Abort throws it away.
         local text = Menu.describe({ ok = true, aborted = true, state = "OutputReady", stoppedEarly = true,
             machine = "fermenter_barrel", outputs = { ethanol = 0.17, water = 30, sugar_eq = 5.69 }, kept = {}, discarded = {} })
         T.ok(has(text, "[IGUI_TLG_Aborted]") and has(text, "[IGUI_TLG_MachineState_OutputReady_stopped_fermenter]"), text)
-        T.ok(has(text, "[IGUI_TLG_Fuel_sugar_eq]: 5.69") and has(text, "[IGUI_TLG_AbortAgain]"), text)
+        T.ok(has(text, "[IGUI_TLG_Fuel_sugar_eq]: [IGUI_TLG_Amount_kg:5.69]") and has(text, "[IGUI_TLG_AbortAgain]"), text)
         T.ok(not has(text, "IGUI_TLG_Discarded"), "nothing thrown away: " .. text)
         -- Drying column: the shared stopped wording and the spent lime listed.
         text = Menu.describe({ ok = true, aborted = true, state = "OutputReady", stoppedEarly = true, machine = "drying_column",
             outputs = { ethanol = 4, water = 0.51 }, discarded = { spent_lime = 4.49 } })
         T.ok(has(text, "[IGUI_TLG_MachineState_OutputReady_stopped]"), text)
-        T.ok(has(text, "[IGUI_TLG_Discarded:[IGUI_TLG_Fuel_spent_lime] 4.49]"), text)
+        T.ok(has(text, "[IGUI_TLG_Discarded:[IGUI_TLG_Fuel_spent_lime] [IGUI_TLG_Amount_kg:4.49]]"), text)
         -- A spoiled batch thrown away.
         text = Menu.describe({ ok = true, aborted = true, spoiled = true, state = "Ready", machine = "fermenter_barrel",
             outputs = {}, discarded = { sugar_eq = 6, water = 30 } })
         T.ok(has(text, "[IGUI_TLG_AbortedSpoiled]") and has(text, "[IGUI_TLG_MachineState_Ready]"), text)
-        T.ok(has(text, "[IGUI_TLG_Fuel_sugar_eq] 6.00") and not has(text, "IGUI_TLG_AbortAgain"), text)
+        T.ok(has(text, "[IGUI_TLG_Fuel_sugar_eq] [IGUI_TLG_Amount_kg:6.00]") and not has(text, "IGUI_TLG_AbortAgain"), text)
         -- A later Status of the kept output: stopped, not finished; no abort lines.
         text = Menu.describe({ ok = true, state = "OutputReady", stoppedEarly = true, machine = "drying_column", outputs = { ethanol = 4 } })
         T.ok(has(text, "[IGUI_TLG_MachineState_OutputReady_stopped]") and not has(text, "IGUI_TLG_Abort"), text)

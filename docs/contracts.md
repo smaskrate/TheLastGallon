@@ -71,7 +71,8 @@ return Thing
   eff, skill, frac) return { outputs = {}, byproducts = {}, props = {} } end`.
   Stages: `{ id, hours | hoursFrom, labor, heatKW, tempMin, tempMax, slowBelow,
   slowAbove, slowRate, maxPauseHours }`. `Process.new/plan/load/start/advance/
-  collect/abort/repair/decommission`.
+  collect/abort/repair/decommission`; `Process.status` and
+  `Process.estimate(proc, tempC)` are read-only views for display.
 - Authority (`TLG.Authority.Transactions`): endpoints with `key`,
   `canAccess(actor)`, `read()`, `write(record, change)`, optional `consumer`.
 - Records of items no character carries

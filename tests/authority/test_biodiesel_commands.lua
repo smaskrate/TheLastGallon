@@ -262,6 +262,7 @@ T.case("biodiesel: reactor, wash tank and the hours between give washed biodiese
         g.now = 2 + 10.5 + 0.01
         local s = H.commands["machine.status"](p, req(reactor))
         T.eq(s.state, "OutputReady", tostring(s.pause))
+        T.eq(s.progress, nil, "finished: nothing left to estimate")
         local conversion = R.need("recipe", "biodiesel_react").params.baseConversion
         T.near(s.outputs.biodiesel, 27 * conversion, 1e-6, "the oil converted")
         -- The crude goes to the wash tank, never into a can.
@@ -395,5 +396,80 @@ T.case("biodiesel: machine.load is refused for the ethanol machines, and for a c
         local inv = p:getInventory()
         function inv:getItemWithIDRecursiv(id) return id == reactor:getID() and reactor or nil end
         T.eq(H.commands["machine.load"](p, req(reactor)).reason, "not_placed")
+    end)
+end)
+
+-- Marks an item as the player's favourite.
+local function favourite(item)
+    function item:isFavorite() return true end
+    return item
+end
+
+T.case("loads: a favourite item is never taken, and the firebox takes planks only when asked", function()
+    inGame(function(g)
+        local retort = machine("TLG.WoodRetort", square(g, 1, 1), nil)
+        local p = player()
+        -- Firebox: the favourite log and the planks stay; the other log goes in.
+        favourite(p:give("Base.Log"))
+        p:give("Base.Log")
+        for _ = 1, 4 do p:give("Base.Plank") end
+        local r = H.commands["machine.addFuel"](p, req(retort))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.near(r.addedKg, 9, 1e-9, "one log")
+        T.eq(p:count("Base.Log"), 1, "the favourite log is kept")
+        T.eq(p:count("Base.Plank"), 4, "no plank without the flag")
+        -- Nothing but planks and a favourite left: refused, as with no wood.
+        T.eq(H.commands["machine.addFuel"](p, req(retort)).reason, "needs_wood")
+        -- With the flag the planks burn; a favourite plank does not.
+        favourite(p:give("Base.Plank"))
+        r = H.commands["machine.addFuel"](p, req(retort, { planks = true }))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.near(r.addedKg, 4 * 1.5, 1e-9, "four planks")
+        T.eq(p:count("Base.Plank"), 1, "the favourite plank is kept")
+        T.eq(p:count("Base.Log"), 1)
+        -- A batch's wood: the same rule for favourites (planks count here).
+        local barrel = machine("TLG.AshBarrel", square(g, 2, 1), nil)
+        local q = player()
+        favourite(q:give("Base.Log"))
+        for _ = 1, 2 do q:give("Base.Log") end
+        r = H.commands["machine.load"](q, req(barrel))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.near(r.woodKg, 18, 1e-9)
+        T.eq(q:count("Base.Log"), 1, "the favourite log is kept")
+    end)
+end)
+
+T.case("loads: a mash leaves favourite crops, water and yeast alone", function()
+    inGame(function(g)
+        local vessel = machine("TLG.FermenterVessel", square(g, 1, 1), nil)
+        local p = player()
+        for _ = 1, 3 do p:give("Base.Sugar") end
+        for _ = 1, 20 do favourite(p:give("Base.Potato")) end
+        local keptWater = p:giveWater(10)
+        for _, it in ipairs(p.items) do
+            if it:getFluidContainer() == keptWater then favourite(it) end
+        end
+        local water = p:giveWater(40)
+        -- The only yeast is a favourite: no mash.
+        local yeast = favourite(p:give("Base.Yeast"))
+        T.eq(H.commands["machine.loadFerment"](p, req(vessel)).reason, "needs_yeast")
+        T.eq(p:count("Base.Sugar"), 3, "nothing taken")
+        -- Another yeast: the sugar, its water and that yeast go in.
+        p:give("Base.Yeast")
+        local r = H.commands["machine.loadFerment"](p, req(vessel))
+        T.eq(r.ok, true, tostring(r.reason))
+        T.near(r.sugarKg, 3, 1e-9, "the sugar, not the potatoes")
+        T.near(r.waterL, 15, 1e-9, "5 L for each kg")
+        T.eq(p:count("Base.Sugar"), 0)
+        T.eq(p:count("Base.Potato"), 20, "the favourite potatoes are kept")
+        T.near(keptWater.amount, 10, 1e-12, "the favourite water is kept")
+        T.near(water.amount, 25, 1e-9)
+        T.eq(p:count("Base.Yeast"), 1)
+        T.ok(yeast:isFavorite() and p.items[#p.items] ~= nil, "the favourite yeast is the one left")
+        local left
+        for _, it in ipairs(p.items) do
+            if it:getFullType() == "Base.Yeast" then left = it end
+        end
+        T.eq(left, yeast)
     end)
 end)

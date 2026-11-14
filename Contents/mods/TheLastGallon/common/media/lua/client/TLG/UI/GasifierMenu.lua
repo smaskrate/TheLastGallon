@@ -9,6 +9,8 @@ require "TLG/Integration/Gasifiers"
 require "TLG/UI/Format"
 require "TLG/UI/Clicked"
 require "TLG/Content/Feedstocks"
+require "TLG/UI/Tip"
+require "TLG/UI/LoadPreview"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.GasifierMenu = TLG.UI.GasifierMenu or {}
@@ -99,12 +101,12 @@ end
 function Menu.hasWood(player)
     local list = player:getInventory():getAllEvalRecurse(function(it)
         local c = TLG.Feedstocks.contribution(it:getFullType())
-        return c ~= nil and ((c.wood or 0) > 0 or (c.charcoal or 0) > 0)
+        return c ~= nil and ((c.wood or 0) > 0 or (c.charcoal or 0) > 0) and not TLG.Integration.Picks.kept(it)
     end)
     return list:size() > 0
 end
 
-local function addGasifier(playerNum, context, item, title)
+local function addGasifier(playerNum, context, item, title, world)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
     local root = context:addOption(title or getText("ContextMenu_TLG_Gasifier"), nil, nil)
@@ -122,12 +124,22 @@ local function addGasifier(playerNum, context, item, title)
     local s = Gasifier.status(st)
     local m = TLG.Registry.need("machine", st.machine)
     local load = sub:addOption(getText("ContextMenu_TLG_GasifierLoad"), nil, function() req("gasifier.load", ref) end)
-    if s.hopperKg >= m.capacity - 1e-9 or not Menu.hasWood(player) then load.notAvailable = true end
+    if s.hopperKg >= m.capacity - 1e-9 then
+        TLG.UI.Tip.grey(load, getText("IGUI_TLG_GasifierFail_hopper_full"), world)
+    elseif not Menu.hasWood(player) then
+        TLG.UI.Tip.grey(load, getText("IGUI_TLG_GasifierFail_needs_wood"), world)
+    else
+        TLG.UI.LoadPreview.attach(load, world, TLG.UI.LoadPreview.hopper, player, m.capacity - s.hopperKg)
+    end
     if GZ.lit(st) then
         sub:addOption(getText("ContextMenu_TLG_GasifierPutOut"), nil, function() req("gasifier.putOut", ref) end)
     else
         local light = sub:addOption(getText("ContextMenu_TLG_GasifierLight"), nil, function() req("gasifier.light", ref) end)
-        if s.hopperKg <= 0 or st.state == "Faulted" then light.notAvailable = true end
+        if st.state == "Faulted" then
+            TLG.UI.Tip.grey(light, getText("IGUI_TLG_GasifierFail_needs_repair"), world)
+        elseif s.hopperKg <= 0 then
+            TLG.UI.Tip.grey(light, getText("IGUI_TLG_GasifierFail_hopper_empty"), world)
+        end
     end
     if st.state ~= "Processing" and (st.filter > 0 or not Tables.isEmpty(st.held)) then
         sub:addOption(getText("ContextMenu_TLG_GasifierService"), nil, function() req("gasifier.service", ref) end)
@@ -143,7 +155,7 @@ function Menu.fill(playerNum, context, items)
     for _, entry in ipairs(items) do
         local item = firstItem(entry)
         if GZ.machineFor(item) then
-            addGasifier(playerNum, context, item)
+            addGasifier(playerNum, context, item, nil, false)
             return
         end
     end
@@ -166,7 +178,7 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
     for _, item in ipairs(items) do
         local title = getText("ContextMenu_TLG_Gasifier")
         if #items > 1 then title = title .. " - " .. item:getDisplayName() end
-        addGasifier(playerNum, context, item, title)
+        addGasifier(playerNum, context, item, title, true)
     end
 end
 

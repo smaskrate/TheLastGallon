@@ -5,11 +5,12 @@ require "TLG/UI/Format"
 require "TLG/Integration/Native"
 require "TLG/Actions/ISTLGPourFuel"
 require "TLG/UI/Clicked"
+require "TLG/UI/Tip"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.FuelMenu = TLG.UI.FuelMenu or {}
 local Menu = TLG.UI.FuelMenu
-local Fmt, Native = TLG.UI.Format, TLG.Integration.Native
+local Fmt, Native, Tip = TLG.UI.Format, TLG.Integration.Native, TLG.UI.Tip
 local Containers, Resolver = TLG.Integration.Containers, TLG.Authority.Resolver
 
 local function show(text)
@@ -56,7 +57,7 @@ local function isFuelCan(item, kind)
     return false
 end
 
-local function addContainer(playerNum, context, item, kind, title)
+local function addContainer(playerNum, context, item, kind, title, world)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
     local fc = Containers.fluidOf(item, kind)
@@ -71,13 +72,19 @@ local function addContainer(playerNum, context, item, kind, title)
     sub:addOption(getText("ContextMenu_TLG_Look"), nil, function() request("sample", { target = ref, method = "visual" }) end)
     local kit = sub:addOption(getText("ContextMenu_TLG_SampleKit"), nil,
         function() request("sample", { target = ref, method = "kit" }) end)
-    if not player:getInventory():getFirstTypeRecurse("TLG.FuelSampleKit") then kit.notAvailable = true end
+    if not player:getInventory():getFirstTypeRecurse("TLG.FuelSampleKit") then
+        Tip.grey(kit, getText("IGUI_TLG_Fail_NeedsKit"), world)
+    end
     local stab = sub:addOption(getText("ContextMenu_TLG_Stabilize"), nil,
         function() request("treat", { target = ref, op = "stabilize" }) end)
-    if not player:getInventory():getFirstTypeRecurse("TLG.FuelStabilizer") then stab.notAvailable = true end
+    if not player:getInventory():getFirstTypeRecurse("TLG.FuelStabilizer") then
+        Tip.grey(stab, getText("IGUI_TLG_Fail_NeedsStabilizer"), world)
+    end
     local filt = sub:addOption(getText("ContextMenu_TLG_Filter"), nil,
         function() request("treat", { target = ref, op = "filter" }) end)
-    if not player:getInventory():getFirstTypeRecurse("TLG.FuelFilter") then filt.notAvailable = true end
+    if not player:getInventory():getFirstTypeRecurse("TLG.FuelFilter") then
+        Tip.grey(filt, getText("IGUI_TLG_Fail_NeedsFilter"), world)
+    end
     sub:addOption(getText("ContextMenu_TLG_DrainWater"), nil, function() request("treat", { target = ref, op = "separate" }) end)
     if side == nil or side.sealed ~= false then
         sub:addOption(getText("ContextMenu_TLG_Unseal"), nil, function() request("treat", { target = ref, op = "unseal" }) end)
@@ -96,7 +103,7 @@ function Menu.fill(playerNum, context, items)
     for _, entry in ipairs(items) do
         local item = firstItem(entry)
         if isFuelCan(item) then
-            addContainer(playerNum, context, item, "item")
+            addContainer(playerNum, context, item, "item", nil, false)
             return
         end
     end
@@ -161,7 +168,7 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
                 or Containers.fluidOf(entry.owner, entry.kind):getUiName()
             title = title .. " - " .. name
         end
-        addContainer(playerNum, context, entry.owner, entry.kind, title)
+        addContainer(playerNum, context, entry.owner, entry.kind, title, true)
     end
 end
 

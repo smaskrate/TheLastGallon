@@ -177,6 +177,7 @@ H.commands["conversion.status"] = function(player, args)
     local s = project and CS.status(project, CD.actor(player, project), d.device) or nil
     return { ok = true, requestId = args.requestId, state = project and project.state or "none",
         conversion = project and project.conversion, stage = s and s.stage, blocked = project and project.blocked,
+        doneHours = s and s.doneHours, totalHours = s and s.totalHours,
         options = options, profile = (d.device.kind == "vehicle") and TLG.Integration.Vehicles.profile(getVehicleById(args.device.id))
             or TLG.Integration.Generators.profile(d.holder) }
 end

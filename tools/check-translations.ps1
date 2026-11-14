@@ -78,6 +78,9 @@ foreach ($s in "Ready","InputsReserved","Processing","Paused","OutputReady","Fau
 foreach ($s in "OutputReady_fermenter","OutputReady_still","OutputReady_dryer","OutputReady_stopped","OutputReady_stopped_fermenter") { [void]$referenced.Add("IGUI_TLG_MachineState_$s") }
 foreach ($s in "sugar_eq","stillage","spent_lime","quicklime_kg","yeast_starter") { [void]$referenced.Add("IGUI_TLG_Fuel_$s") }
 foreach ($s in "not_processing","not_paused","nothing_to_abort","batch_spoiled") { [void]$referenced.Add("IGUI_TLG_MachineFail_$s") }
+foreach ($s in "needs_repair","firebox_full","no_firebox","use_still","wrong_machine","over_capacity") { [void]$referenced.Add("IGUI_TLG_MachineFail_$s") }
+foreach ($s in "ethanol","biodiesel") { [void]$referenced.Add("IGUI_TLG_Tip_NeedCan_$s") }
+foreach ($s in "malformed_project","not_started","project_closed","already_commissioned","not_in_progress","not_commissioned","engine_replaced") { [void]$referenced.Add("IGUI_TLG_ConvReason_$s") }
 foreach ($s in "no_heat","too_cold","too_hot","paused_by_player","not_placed","output_full","batch_spoiled") { [void]$referenced.Add("IGUI_TLG_Pause_$s") }
 foreach ($s in "output_full_fermenter") { [void]$referenced.Add("IGUI_TLG_Pause_$s") }
 foreach ($s in "prepare","ferment","heat_up","distill","dry") { [void]$referenced.Add("IGUI_TLG_Stage_$s") }

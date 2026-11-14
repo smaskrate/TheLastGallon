@@ -6,6 +6,7 @@ require "TLG/Client/Net"
 require "TLG/UI/Format"
 require "TLG/UI/Clicked"
 require "TLG/Integration/Generators"
+require "TLG/UI/Tip"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.GasMenu = TLG.UI.GasMenu or {}
@@ -101,7 +102,9 @@ function Menu.fill(playerNum, context, worldobjects, test)
         local opt = sub:addOption(getText("ContextMenu_TLG_GasConnectTank"), nil, function()
             TLG.Net.request("gas.connect", { device = ref }, onReply)
         end)
-        if not Menu.tankNear(player, gen) then opt.notAvailable = true end
+        if not Menu.tankNear(player, gen) then
+            TLG.UI.Tip.grey(opt, getText("IGUI_TLG_Fail_NoPropaneTank"), true)
+        end
     end
     sub:addOption(getText("ContextMenu_TLG_GasStatus"), nil, function()
         TLG.Net.request("gas.status", { device = ref }, onReply)
