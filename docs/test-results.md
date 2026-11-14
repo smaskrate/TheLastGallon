@@ -8915,3 +8915,32 @@ list).
 
 Evidence:
 [run 419](evidence/2026-11-14_rt-sp_harness_run419_wrong_fuel_tank_fuel_42.22.2.txt).
+
+## 2026-11-14 — RT-SP launch 420 (the full mode after R5)
+
+Branch `feature/gas-generators` at `07424b8`, 42.22.2, nothing added
+since. `tools/run-sp-harness.ps1 -TimeoutMinutes 60` (the full mode):
+
+| Launch | Result (pass/fail) |
+| --- | --- |
+| 420 | 106/0, then 14/0 after the reload |
+
+The same counts as launch 417.
+
+* The game's own refuels with the right fuel went through the settles
+  that now also judge the tank (`Vehicles.warnWrongFuel`,
+  `Generators.warnWrongFuel`): can to vehicle (`CHAIN.2`), can to
+  generator (`CHAIN.4`) and pump to vehicle (`G06.pump_to_vehicle`, the
+  first run of the pump's settle with R5) kept their litres and their
+  records, and neither the result file nor the console holds a wrong-fuel
+  line.
+* The Fuel menu's entries on cans and the world menu's checks passed as
+  before, with the tank's entry added to `FuelMenu.fillWorld`.
+
+The console holds no warning or error of the mod.
+
+Not run: the line after a pump gave the wrong fuel (the mode's pump gives
+petrol to a petrol car); the rest as in launch 419.
+
+Evidence:
+[run 420](evidence/2026-11-14_rt-sp_harness_run420_full_after_r5_42.22.2.txt).
