@@ -26,7 +26,8 @@
   over the load the game last counted for it. The game burns fuel once an
   hour, so the time is in whole hours, good to within one, or "less than
   an hour". Under it are the tank and the lit gasifiers within two tiles.
-  Checked in single player on wood gas (launch 439): "about 1 h" after
+  With a gasifier lit and no tank it says the gasifier refills it; a
+  generator that never ran says the time shows once it has run. Checked in single player on wood gas (launch 439): "about 1 h" after
   **Put out**, and the generator stopped 1.97 h later. On propane not run
   in game.
 * New machine, the **Wood Gasifier**, welded in hand from a metal drum,
@@ -44,7 +45,8 @@
   the gasifier from Welding 4, as it does for any recipe read from a
   magazine. Without it a character learns the recipe at Welding 7.
 * A generator on wood gas holds only the next hour's burn and a little
-  more, which the gasifier tops up every game minute, so the game's
+  more, refilled from the gasifier within a game minute of each hourly
+  burn, so the game's
   **Generator Info** window shows it at "Fuel: 1%" while it burns less
   than 0.1 L an hour (one powering a fridge-freezer burns 0.015 L an hour
   at the default fuel use). The gasifier's **Status** says when its fire

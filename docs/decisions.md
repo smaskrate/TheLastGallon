@@ -1938,7 +1938,10 @@ gas probe (launch 342).
     fills to it before the first step (launch 358).
   * A wood-gas generator holds a few millilitres, one step and the margin,
     so the game's own generator window shows it all but empty. The player
-    guide must say so before 0.5.0 ships.
+    guide must say so before 0.5.0 ships. Done 2026-11-15: the guide's
+    "Wood gas" section says the window shows "Fuel: 1%" while the hour's
+    burn stays under 0.1 L (`engine-capabilities.md`, the window's
+    rounding).
   * One source at a time, which the design above did not say: a propane
     tank with uses left is the source; a generator without one takes wood
     gas. To run on wood gas with a tank in, take the tank out. Put to the
@@ -1999,7 +2002,8 @@ gas probe (launch 342).
     (D-038 amendment), the game's own skill call answering false; taught
     by the game at Welding 7 without the book, and made. The player guide
     must say that with the handbook read the gasifier is made from Welding
-    4, as it says of the biodiesel machines, before 0.5.0 ships. The
+    4, as it says of the biodiesel machines, before 0.5.0 ships (checked
+    2026-11-15: its "Wood gas" section says so). The
     handbook was found in a container of the map, taken and read (launch
     395), and the server's loot lists gave it (launches 393–394).
   * When things move, in single player (launch 397): one gasifier fed two

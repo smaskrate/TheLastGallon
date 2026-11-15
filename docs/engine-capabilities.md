@@ -584,6 +584,10 @@ Source evidence:
   `isActivated/setActivated`, `failToStart()`, `getCondition`,
   `getGeneratorItemType()`, `getItemsPowered()`, `getTotalPowerUsing()`.
   `update()` reads `SandboxOptions.generatorFuelConsumption` and writes `fuel`.
+  `getFuelPercentage()` is `fuel / 10 * 100`, with 10 as a constant rather
+  than `getMaxFuel()` (javap on 42.22.2, 2026-11-15). SRC
+  `ISGeneratorInfoWindow.lua:54` rounds it up (`math.ceil`) for its "Fuel:"
+  line, so any fuel above 0 up to 0.1 L reads "Fuel: 1%".
 * SRC `ISAddFuel.lua:54-58`: litres from the can map 1:1 to generator fuel up
   to `getMaxFuel()`; the can is reduced with `adjustAmount`.
 * SRC `ISTakeGenerator.lua:41-53`: pickup creates the item, copies condition

@@ -1151,7 +1151,8 @@ at once and lets its gas out. A generator stops an hour or two after its
 gasifier goes out.
 
 A generator on wood gas holds only the next hour's burn and a little
-more, which the gasifier tops up every game minute. The game's
+more; the gasifier refills it within a game minute of each hourly burn.
+The game's
 **Generator Info** window therefore shows it at "Fuel: 1%" however much
 wood is in the hopper, as long as the generator burns less than 0.1 L an
 hour; one powering a fridge-freezer burns 0.015 L an hour at the default
