@@ -10,7 +10,7 @@ runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP and RT-MP: with a machine's menu entry named after it (run since: launches 432–435, 438, 439, 443–445, 448, 449–477 and 478–490: the single-player modes the 0.5.0 section of `release-checklist.md` lists, and the server's menu, gas and fuel cases), the server's full run and its cases `carry`, `machines`, `stills`, `conversion`, `carconv`, `effects`, `timers`, `death`, `biodiesel`, `audit`, the handbook cases, `gasfeed`, `gastimers` and `gasshare`; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Not launched since the change: each last ran between launches 13 and 412 |
+| RT-SP and RT-MP: two machines under one click, with a machine's menu entry named after it. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)". Every single-player mode and server case the 0.5.0 section of `release-checklist.md` listed has run since the entries took their names, each with the answers of its last run (launches 432–435, 438, 439, 443–445, 448 and 449–511) | No mode or case right-clicks two machines at once; the picture was not taken again |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
 | RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443; in Italian on a biodiesel reactor with its source lines, closed when the reactor was lifted: launch 445; on a server's client, a reactor's line for its leacher changed by the card's own refresh at speed 1 after ten game minutes, closed six tiles away and by Grab: launch 446): dragging it and its cross with the mouse, the wash tank's line for its reactor, several cards at once and their cost (each refresh writes the record and on a server sends it to the clients; not measured), a second player's card in split screen, a second client on a server (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture; all of them were run since and passed (`controls`, `docs-shots`, `italian`, `pickup`, `pot-still`, `biodiesel`, the three still modes, `winter` and `fires`: launches 443–445, 449, 452, 453, 478–480, 485 and 487) | The steps are `RT.cardStep` (`controls`), `RT.itCard` (`italian`) and the server case `ux` |
@@ -27,6 +27,7 @@ runtime tests.
 | RT-SP: a machine's wear from real batches up to a refused load and the load after a repair, a busy machine's greyed **Repair**, a favourite part left alone, a gasifier worn by its own filter cycles (offline only: `test_machine_commands.lua`, `test_gasifier_handlers.lua`, `test_say.lua`; a pot still, a fermenter and a gasifier with the condition written into the record: launches 424 and 425). RT-MP: all of R8 | Not in the harness yet (UX review R8, D-043, 2026-11-14) |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
+| RT-MP: a Diesel Generator's sprite taken away on the server reaching a client, and the mod's repair bringing it back there (launch 302). In launches 304 and 501 the strip left the generator with no sprite, the game's `transmitUpdatedSpriteToClients` threw a `NullPointerException` on it, and the client kept the sprite, so `client_sees_the_generator_sprite_back` passed without the client having lost it. The server's side held in each | The harness's strip step (`MPServer.lua`, `services.sprite_repair`) sends a generator with no sprite |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
 | Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.4.3 since 2026-11-13, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.4.2 and 0.4.1 |
 
@@ -9884,3 +9885,115 @@ Evidence:
 [run 488](evidence/2026-11-15_rt-sp_harness_run488_transfer_liquid_after_r12_42.22.2.txt),
 [run 489](evidence/2026-11-15_rt-sp_harness_run489_diesel_pumps_after_r12_42.22.2.txt),
 [run 490](evidence/2026-11-15_rt-sp_harness_run490_wrong_fuel_more_after_r12_42.22.2.txt).
+
+## 2026-11-15 — RT-MP launches 491–511 (the server's full run and its cases not run since the menus took their machines' names)
+
+Branch `feature/gas-generators` at `dc18555`, 42.22.2, a clean tree, a
+dedicated server and clients without `-debug`. The same driver as
+launches 449–490 ran them one after the other and kept each launch's
+reports and the flagged lines of its consoles before the next launch.
+
+| Launch | Command (`tools/run-mp-harness.ps1`) | Result (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 491 | `-Clients 2` (the full run) | A 28/0, B 11/0 | launch 217, the same |
+| 492 | `-Clients 2 -Restart` | A 37/0, B 12/0 | the security audit's run 29 (2026-11-05), the same |
+| 493 | `-Clients 2 -Only carry` | A 12/0, B 8/0 | launch 151, the same |
+| 494 | `-Clients 2 -Only machines` | A 15/0, B 2/0 | launch 224, the same |
+| 495 | `-Clients 2 -Only death` | A 5/0, B 6/0 | launch 222, the same |
+| 496 | `-Clients 2 -Only effects` | A 22/0, B 9/0 | launch 270, the same |
+| 497 | `-Clients 1 -Only stills` | 13/0 | the audit's run 26, the same |
+| 498 | `-Clients 1 -Only conversion` | 7/0 | the audit's run 25, the same |
+| 499 | `-Clients 1 -Only carconv` | 7/0 | launch 169, the same |
+| 500 | `-Clients 1 -Only timers` | 6/0 | the audit's run 27, the same |
+| 501 | `-Clients 1 -Only biodiesel` | 25/0 | launch 304, the same |
+| 502 | `-Clients 1 -Only audit -NonAdmin` | 20/0 | the audit's run 23, the same |
+| 503 | `-Clients 1 -Only handbook -NonAdmin` | 9/0 | launch 329, the same |
+| 504 | `-Clients 1 -Only handbook3 -NonAdmin` | 5/6 | launch 333, the same six checks failed |
+| 505 | `-Clients 1 -Only handbook3u -NonAdmin` | 5/0 | launch 328, the same |
+| 506 | `-Clients 1 -Only onebelow -NonAdmin` | 7/1 | launch 335, the same check failed |
+| 507 | `-Clients 1 -Only onebelow3 -NonAdmin` | 5/0 | launch 337, the same |
+| 508 | `-Clients 1 -Only handbookgas` | 9/0 | launch 394, the same |
+| 509 | `-Clients 1 -Only gasfeed` | 7/0 | launch 384, the same |
+| 510 | `-Clients 1 -Only gastimers` | 49/0 | launch 411, the same |
+| 511 | `-Clients 1 -Only gasshare` | 9/0 | launch 412, the same |
+
+No step timed out or was skipped.
+
+**The handbook cases' failures** are the game's rule found in launches
+325–338: a recipe learned by reading its book or magazine can be crafted
+one level below its `SkillRequired`. In launch 504 the six failed
+checks are launch 333's: the Wood Retort and the Wash Tank made at
+Welding 3 where the test expects a refusal, the Reactor made at Welding
+4, and the three later tries without materials. In launch 506 the one
+failed check is launch 335's, which compares the game's Make Bone Spoon,
+refused one level below, with the mod's Ash Barrel, made. These cases
+had not run since `tryCraft` gained its strict refusals and the
+server's `probe_handbook` and `roll_handbook` their optional arguments
+(launches 393–395); they gave the same answers.
+`onebelow2` and `onebelow4` try only the game's own Make Metal Sheet and
+were not run.
+
+**The sprite strip in `biodiesel` (launch 501)** did not reach the
+client, as in launch 304. The harness's strip step takes the Diesel
+Generator's sprite away with `setSprite(nil)` and sends the change with
+`transmitUpdatedSpriteToClients` (`MPServer.lua:1410`). The server then
+had no sprite at all, and the game's send threw a
+`NullPointerException` on it (`IsoObject.java:4682`, reading the
+sprite's `id`), caught by the harness's `pcall`; its reply still said
+`sent=true`. The client went on showing `tlg_generators_01_0`, so the
+check `client_sees_the_generator_sprite_back` passed without the client
+having lost the sprite. The server's side held: its generator had no
+sprite after the strip and `tlg_generators_01_0` after the mod's
+`Generators.onLoadSquare`. In launch 302 the server read a sprite
+without a name after the strip, the send went through and the client
+showed none.
+
+**Consoles.** The driver kept the flagged lines of every client's and
+server's console before the next launch, and all were read. Apart from
+the mod's info lines they hold the game's own lines seen in earlier
+launches (the missing `actiongroups` and `AnimSets` folders, the world
+generator's `WindowShape`, `AntiCheatPacketException` in the settings),
+the harness's deep-recursion probe and these:
+
+* launches 491 and 493, the server: `ISEquipHeavyItem.complete` failing
+  on `DoRemoveItem` for a vessel taken off the floor, the game's own
+  error on a server recorded in `engine-capabilities.md` (launches
+  141–145);
+* launch 501, the server: the sprite send above;
+* launch 502, the server: the vault's three lines for the audit case's
+  forgeries, as in the audit's run 23: the can's and the pump's supply
+  `restored (content differs)`, the generator's project `dropped (unknown
+  id)`.
+
+The mod logged no other warning or error.
+
+With these, every server case that the 0.5.0 section of
+`release-checklist.md` listed as not run since the menus took their
+machines' names has run, and each gave the answers of its last run.
+Launch 497's exit code was not kept: a file watch held the driver's
+list open, so the driver stopped after copying the launch's reports and
+consoles, and launches 498–502 were started again. Its client's report
+ends with `DONE`.
+
+Evidence:
+[run 491](evidence/2026-11-15_rt-mp_harness_run491_full_two_clients_after_r12_42.22.2.txt),
+[run 492](evidence/2026-11-15_rt-mp_harness_run492_full_restart_after_r12_42.22.2.txt),
+[run 493](evidence/2026-11-15_rt-mp_harness_run493_carry_after_r12_42.22.2.txt),
+[run 494](evidence/2026-11-15_rt-mp_harness_run494_machines_after_r12_42.22.2.txt),
+[run 495](evidence/2026-11-15_rt-mp_harness_run495_death_after_r12_42.22.2.txt),
+[run 496](evidence/2026-11-15_rt-mp_harness_run496_effects_after_r12_42.22.2.txt),
+[run 497](evidence/2026-11-15_rt-mp_harness_run497_stills_after_r12_42.22.2.txt),
+[run 498](evidence/2026-11-15_rt-mp_harness_run498_conversion_after_r12_42.22.2.txt),
+[run 499](evidence/2026-11-15_rt-mp_harness_run499_carconv_after_r12_42.22.2.txt),
+[run 500](evidence/2026-11-15_rt-mp_harness_run500_timers_after_r12_42.22.2.txt),
+[run 501](evidence/2026-11-15_rt-mp_harness_run501_biodiesel_after_r12_42.22.2.txt),
+[run 502](evidence/2026-11-15_rt-mp_harness_run502_audit_non_admin_after_r12_42.22.2.txt),
+[run 503](evidence/2026-11-15_rt-mp_harness_run503_handbook_non_admin_after_r12_42.22.2.txt),
+[run 504](evidence/2026-11-15_rt-mp_harness_run504_handbook3_non_admin_six_failures_after_r12_42.22.2.txt),
+[run 505](evidence/2026-11-15_rt-mp_harness_run505_handbook3u_non_admin_after_r12_42.22.2.txt),
+[run 506](evidence/2026-11-15_rt-mp_harness_run506_onebelow_non_admin_after_r12_42.22.2.txt),
+[run 507](evidence/2026-11-15_rt-mp_harness_run507_onebelow3_non_admin_after_r12_42.22.2.txt),
+[run 508](evidence/2026-11-15_rt-mp_harness_run508_handbookgas_after_r12_42.22.2.txt),
+[run 509](evidence/2026-11-15_rt-mp_harness_run509_gasfeed_after_r12_42.22.2.txt),
+[run 510](evidence/2026-11-15_rt-mp_harness_run510_gastimers_after_r12_42.22.2.txt),
+[run 511](evidence/2026-11-15_rt-mp_harness_run511_gasshare_after_r12_42.22.2.txt).

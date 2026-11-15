@@ -386,7 +386,7 @@ Where it stands against the gates:
 | 1 | PARTIAL | Wood gas the player's own way in single player: the conversion through the Workshop menu, the tank drained from the Fuel menu, the handbook read, the gasifier made, put down, loaded and lit from the menus, and a generator run three hours on its gas (launches 387–388). Propane connected through the Gas menu and run four hours (launch 352). Open: the conversion refused below its skills or without the recipe; how long a full propane tank lasts; wet wood; a filter filled by real hours of burning; the generator switched on from its own menu rather than by the test |
 | 2, 3 | PARTIAL | The gas is paid as the game burns it: propane taken equal to the hourly steps over four hours (launch 352), wood gas given equal to the steps and the wood burned equal to the gas (launch 358), eight hours asleep without a stop (launch 383). The timed drain moved 2 L in single player (launch 438) and 3 L on a server (launch 446); the station pour put 2 L into a pump of 5,175 L on a server (launch 447). Open: the station pour in single player; the drain's time and look |
 | 4 | PARTIAL | The domain suite, 381 cases, the gasifier's among them: the wood burned is the gas drawn, also over launch 358's four hours |
-| 5 | PARTIAL | On a dedicated server: propane (launches 354–356, 385), wood gas (361, 377), two clients with one joining while the gasifier burns and a server restart (389–392), the gasifier's recipe in the crafting window and the handbook in the server's loot (393–394), generators and gasifiers moved (408–409), the gas's cost (410–411), the nearest generator fed first (412); the UX changes on one client (446–447, 451: the Status card, the tank entries, the drain, the station pour, a reply over the character, a favourite mark); since the menus took their machines' names, the machine menu cases, `menus`, the gas cases and `fuel`, `knowledge` and `wrongfuel` (launches 461–472, all passed). Open: the full run and the other cases written before that change have not run since (`test-results.md`, launches 449–472); two clients for the refuel line; the Workshop menu from a client's copy; **Repair**; a real network |
+| 5 | PARTIAL | On a dedicated server: propane (launches 354–356, 385), wood gas (361, 377), two clients with one joining while the gasifier burns and a server restart (389–392), the gasifier's recipe in the crafting window and the handbook in the server's loot (393–394), generators and gasifiers moved (408–409), the gas's cost (410–411), the nearest generator fed first (412); the UX changes on one client (446–447, 451: the Status card, the tank entries, the drain, the station pour, a reply over the character, a favourite mark); since the menus took their machines' names, the machine menu cases, `menus`, the gas cases and `fuel`, `knowledge` and `wrongfuel` (launches 461–472, all passed), and the full run with two clients and through a restart, `carry`, `machines`, `death`, `effects`, `stills`, `conversion`, `carconv`, `timers`, `biodiesel`, `audit`, the handbook cases, `gasfeed`, `gastimers` and `gasshare` (launches 491–511), each with the answers of its last run. Open: two clients for the refuel line; a generator's sprite taken away reaching a client (`biodiesel`'s strip did not reach it in launches 304 and 501); the Workshop menu from a client's copy; **Repair**; a real network |
 | 6 | PARTIAL | Propane through a save, a reload and a trip (launch 352); a wood-gas save continued (launch 358); a server restart with the gasifier lit (launch 392); a generator taken up and put down with its tank (launch 352) and with its wood-gas record (launches 397, 408–409); a lit gasifier taken up goes out and keeps its wood (launches 358, 361). Open: as for 0.4.3 |
 | 7 | OPEN | Not run with 0.5.0: a save made with 0.4.3 continued; a generator converted to gas in a save from 0.4.1 or earlier taking gas, once drained; the existing-save and removal scenarios |
 | 8 | PARTIAL | The gas runs on the game's own generator, converted; `support-matrix.md` has the gas rows |
@@ -408,6 +408,16 @@ Of the single-player modes, the full run (launch 435: 106/0, 14/0),
 their names. The last thirteen had not run since launches 13 to 322; each
 passed as many checks as then.
 
+Of the server cases, the full run with two clients (launch 491: A 28/0,
+B 11/0) and through a restart (492: A 37/0, B 12/0), `carry`,
+`machines`, `death`, `effects`, `stills`, `conversion`, `carconv`,
+`timers`, `biodiesel`, `audit`, `handbook`, `handbook3`, `handbook3u`,
+`onebelow`, `onebelow3`, `handbookgas`, `gasfeed`, `gastimers` and
+`gasshare` (493–511) have run since, each with the answers of its last
+run. `handbook3` (5/6) and `onebelow` (7/1) fail the same checks as in
+launches 333 and 335: the game lets a recipe learned from its book be
+crafted one level below its skill.
+
 The Fuel menu's pours and drain take the pump or generator nearest the
 character (D-044, the owner's choice after launch 450, where the first
 one found was the other pump of a pair); checked on a server in launch
@@ -419,17 +429,15 @@ menu names the engine now that its copy of the world record carries
 
 Before release, in this order:
 
-1. Run the server cases still not run since the menus' names and
-   replies changed (gate 5's full run and other cases).
-2. Settle the open texts of gate 10: the package's Workshop text, the
+1. Settle the open texts of gate 10: the package's Workshop text, the
    Generator Info line's biogas, the Italian state word.
-3. Give `mod.info`, `Core.lua` and the changelog 0.5.0, merge the branch
+2. Give `mod.info`, `Core.lua` and the changelog 0.5.0, merge the branch
    into `main`, and build the package with `tools/package.ps1` from a
    clean tree.
-4. Install the zip clean and play it: the full run, the gas modes, the
+3. Install the zip clean and play it: the full run, the gas modes, the
    gas server cases and `ux`; continue a save made with the 0.4.3 zip
    with it.
-5. The owner uploads it, with the Workshop page's new pictures.
+4. The owner uploads it, with the Workshop page's new pictures.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
