@@ -11,6 +11,7 @@ runtime tests.
 | Area | Reason |
 | --- | --- |
 | RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
+| RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
@@ -9238,3 +9239,54 @@ every multiplayer case.
 
 Evidence:
 [run 435](evidence/2026-11-15_rt-sp_harness_run435_full_after_r12_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launches 436–437 (the manual's biodiesel and gas pages, UX review R7)
+
+Branch `feature/gas-generators` after `34ae493`, the R7 change not yet
+committed, 42.22.2. The `manual` and `manual-italian` modes have four new
+steps (`RT.MN.page` in `SPHarness.lua`): for a new Field Manual, Biodiesel
+Handbook and Wood Gas Handbook in the inventory, the game's inventory
+menu is built, the page's entry is looked for beside the game's own, and
+the entry's own handler opens the page. The manual's two pages and their
+larger-print panels are photographed.
+
+| Launch | Command | Result (pass/fail) |
+| --- | --- | --- |
+| 436 | `tools/run-sp-harness.ps1 -Mode manual` | 18/0 |
+| 437 | `tools/run-sp-harness.ps1 -Mode manual-italian` | 18/0 |
+
+* The manual's menu had **Read: Biodiesel** and **Read: Gas generators**
+  beside **Inspect**; the Biodiesel Handbook's had the first and the Wood
+  Gas Handbook's the second, each beside **Read**. None was greyed. In
+  Italian: **Leggi: biodiesel**, **Leggi: generatori a gas**, beside
+  **Ispeziona** and **Leggi**.
+* Each entry opened the game's print media window with the page's title
+  ("Field Manual: Biodiesel", "Field Manual: Gas Generators"; "Manuale
+  da campo: biodiesel", "Manuale da campo: generatori a gas"), the page
+  1100x500 at scale 1.
+* The harness's measure (each text element's top and the game's text
+  height): the columns end at 325 to 383 in English and 340 to 412 in
+  Italian, on a page 500 high whose column rules end at 470. The longest
+  is the Italian biodiesel page's third column (412).
+* The four photographs of the pages, looked at by Claude, agree: every
+  column ends above the foot of the column rules, and the Italian
+  accents and "°C" draw.
+* The larger-print panel of the Italian gas page showed the title, the
+  first heading and its paragraphs, with a scroll bar.
+* The steps the modes had before passed as before: the 11 loot lists, 143
+  manuals in 3500 fills (launch 436), the ethanol page, **Inspect** and
+  the read recorded.
+
+Neither console holds an exception or a warning or error of the mod.
+
+Not run: the entries greyed in the dark or asleep, and absent for a
+character who cannot read (offline only); a controller; a real
+right-click (the harness builds the game's menu and calls the entry's
+handler); the handbooks' pages photographed (opened and measured only);
+a server.
+
+Evidence:
+[run 436](evidence/2026-11-15_rt-sp_harness_run436_manual_pages_42.22.2.txt),
+photographs in [evidence/run436](evidence/run436);
+[run 437](evidence/2026-11-15_rt-sp_harness_run437_manual_pages_italian_42.22.2.txt),
+photographs in [evidence/run437](evidence/run437).

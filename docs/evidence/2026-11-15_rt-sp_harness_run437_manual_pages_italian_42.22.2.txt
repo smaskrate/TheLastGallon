@@ -1,0 +1,49 @@
+# TLG single-player harness, field manual
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=53165355467330751418 hours=2.0097 DayLength=4
+STEP rtmi_setup begin
+OBS  RTMI.scripts TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest; TLG.FermenterVessel WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter icon texture=C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png; TLG.FuelSampleKit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.model_scripts_loaded :: TLG.Fermenter mesh=TLG/Fermenter texture=TLG/Fermenter; TLGHarness.FermenterTestTrue mesh=TLGHarness/FermenterTest texture=TLGHarness/FermenterTest
+PASS RTMI.vessel_wired :: WorldStaticModel=TLG.Fermenter StaticModel=TLG.FermenterHeld Icon=TLG_Fermenter; kit WorldStaticModel=TLGHarness.FermenterTestTrue
+PASS RTMI.icon_texture_found :: C:\Users\Manuel\AppData\Local\TheLastGallon\devcache\mods\TheLastGallon\common\media\textures\Item_TLG_Fermenter.png
+PASS RTMI.machine_categories_named :: TLG.FermenterVessel=Tool ("Attrezzo"); TLG.PotStill=Tool ("Attrezzo"); TLG.RefluxStill=Tool ("Attrezzo"); TLG.DryingColumn=Tool ("Attrezzo")
+PASS RTMI.clear_ground_found :: from 10660,10645: 10660,10645
+STEP rtmn_go begin
+STEP rtmn_lists begin
+PASS RTMN.loot_lists :: in 11 lists: BookstoreBlueCollar=2 CrateFarming=2 CrateGenerator=2 CrateMechanics=1 FarmerTools=2 GasStorageMechanics=1 Homesteading=2 LibraryMagazines=1 MechanicShelfBooks=2 StoreShelfMechanics=1 ToolStoreBooks=2; missing: none
+STEP rtmn_roll begin
+OBS  RTMN.rolls manuals per 500 fills: GasStorageMechanics=9 CrateMechanics=13 MechanicShelfBooks=17 CrateFarming=23 ToolStoreBooks=29 BookstoreBlueCollar=17 LibraryMagazines=17
+PASS RTMN.spawned_from_loot :: 125 manuals in 3500 fills
+PASS RTMN.rolled_manual_is_print_media :: printMedia id=TLG_ManualFuelSystems title=Manuale da campo: sistemi di carburante page resolves=true
+STEP rtmn_measure begin
+OBS  RTMN.page 1100x500 shown at scale 1.00; element_10 x=30 y=138 h=230 bottom=368; element_11 x=396 y=100 h=18 bottom=118; element_12 x=396 y=138 h=202 bottom=340; element_13 x=752 y=100 h=18 bottom=118; element_14 x=752 y=138 h=288 bottom=426; element_7 x=30 y=12 h=23 bottom=35; element_8 x=32 y=54 h=13 bottom=67; element_9 x=30 y=100 h=18 bottom=118
+OBS  RTMN.screenshot tlg_rtmn_text_panel.png ok=true
+STEP rtmn_page_manualfuelsystems_biodiesel begin
+PASS RTMN.manualfuelsystems_biodiesel_entry :: 'Leggi: biodiesel' offered=true greyed=false; the game's own entry: Ispeziona
+PASS RTMN.manualfuelsystems_biodiesel_opens :: title 'Manuale da campo: biodiesel'; page 1100x500 at scale 1.00; 8 texts, lowest bottom 412; element_10 x=30 bottom=340; element_11 x=396 bottom=118; element_12 x=396 bottom=383; element_13 x=752 bottom=118; element_14 x=752 bottom=412; element_7 x=30 bottom=35; element_8 x=32 bottom=67; element_9 x=30 bottom=118
+OBS  RTMN.screenshot tlg_rtmn_manualfuelsystems_biodiesel.png ok=true
+OBS  RTMN.screenshot tlg_rtmn_manualfuelsystems_biodiesel_text.png ok=true
+STEP rtmn_page_manualfuelsystems_gas begin
+PASS RTMN.manualfuelsystems_gas_entry :: 'Leggi: generatori a gas' offered=true greyed=false; the game's own entry: Ispeziona
+PASS RTMN.manualfuelsystems_gas_opens :: title 'Manuale da campo: generatori a gas'; page 1100x500 at scale 1.00; 8 texts, lowest bottom 383; element_10 x=30 bottom=368; element_11 x=396 bottom=118; element_12 x=396 bottom=340; element_13 x=752 bottom=118; element_14 x=752 bottom=383; element_7 x=30 bottom=35; element_8 x=32 bottom=67; element_9 x=30 bottom=118
+OBS  RTMN.screenshot tlg_rtmn_manualfuelsystems_gas.png ok=true
+OBS  RTMN.screenshot tlg_rtmn_manualfuelsystems_gas_text.png ok=true
+STEP rtmn_page_biodieselhandbook_biodiesel begin
+PASS RTMN.biodieselhandbook_biodiesel_entry :: 'Leggi: biodiesel' offered=true greyed=false; the game's own entry: Leggi
+PASS RTMN.biodieselhandbook_biodiesel_opens :: title 'Manuale da campo: biodiesel'; page 1100x500 at scale 1.00; 8 texts, lowest bottom 412; element_10 x=30 bottom=340; element_11 x=396 bottom=118; element_12 x=396 bottom=383; element_13 x=752 bottom=118; element_14 x=752 bottom=412; element_7 x=30 bottom=35; element_8 x=32 bottom=67; element_9 x=30 bottom=118
+STEP rtmn_page_woodgashandbook_gas begin
+PASS RTMN.woodgashandbook_gas_entry :: 'Leggi: generatori a gas' offered=true greyed=false; the game's own entry: Leggi
+PASS RTMN.woodgashandbook_gas_opens :: title 'Manuale da campo: generatori a gas'; page 1100x500 at scale 1.00; 8 texts, lowest bottom 383; element_10 x=30 bottom=368; element_11 x=396 bottom=118; element_12 x=396 bottom=340; element_13 x=752 bottom=118; element_14 x=752 bottom=383; element_7 x=30 bottom=35; element_8 x=32 bottom=67; element_9 x=30 bottom=118
+STEP rtmn_read begin
+PASS RTMN.menu_offers_inspect :: Ispeziona=true Leggi=false
+OBS  RTMN.reading action=ISReadABook
+PASS RTMN.read_recorded :: isPrintMediaRead(TLG_ManualFuelSystems)=true literature read=true
+STEP rtmi_shot_rtmn_page begin
+OBS  RTMI.screenshot tlg_rtmn_page.png ok=true ; interface shown; zoom 1.00; player 10660,10643; game hour 9.24
+STEP rt_finish begin
+OBS  RT.summary replies: 0 over the character, 0 in a window; last line (-): none
+OBS  RT.summary game hours -1.00 -> 2.25
+SUMMARY pass=18 fail=0
+DONE

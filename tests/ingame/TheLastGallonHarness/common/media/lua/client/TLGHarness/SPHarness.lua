@@ -13374,8 +13374,77 @@ RT.MN.read = { name = "rtmn_read", timeout = 9000, fn = function(ctx, ticks)
     return true
 end }
 
+-- A further page (R7) from the inventory menu of `itemId`: the menu built
+-- for a new item has the page's entry beside the game's own Inspect or
+-- Read, and choosing it opens the page in the game's print media window.
+-- Each text element's bottom is measured against the page's height. With
+-- `shots`, the page and its larger-print panel are photographed.
+function RT.MN.page(itemId, id, shots)
+    local tag = string.lower((string.gsub(itemId, "^TLG%.", ""))) .. "_" .. id
+    return { name = "rtmn_page_" .. tag, timeout = 900, fn = function(ctx, ticks)
+        local p = player()
+        if ticks == 1 then
+            ISTimedActionQueue.clear(p)
+            ctx.item = p:getInventory():AddItem(itemId)
+            local context = ISInventoryPaneContextMenu.createMenu(0, true, { ctx.item }, 100, 100)
+            local name = getText(TLG.Integration.Manual.PAGES[id].entry)
+            local option = context and context:getOptionFromName(name)
+            local own
+            for _, key in ipairs({ "ContextMenu_Inspect", "ContextMenu_Read", "ContextMenu_ReRead" }) do
+                if context and context:getOptionFromName(getText(key)) then own = getText(key) end
+            end
+            if context then context:setVisible(false) end
+            R:check("RTMN." .. tag .. "_entry", function()
+                return option ~= nil and not option.notAvailable and own ~= nil,
+                    string.format("'%s' offered=%s greyed=%s; the game's own entry: %s", name, tostring(option ~= nil),
+                        tostring(option ~= nil and option.notAvailable == true), tostring(own))
+            end)
+            if option then ctx.win = option.onSelect(option.target, option.param1) end
+            return nil
+        end
+        if ctx.win == nil then
+            if ticks == 2 then R:check("RTMN." .. tag .. "_opens", function() return false, "no window" end) end
+            p:getInventory():Remove(ctx.item)
+            return true
+        end
+        if ticks == 40 then
+            local page, lines, worst = ctx.win.children.body.children.printMedia, {}, 0
+            for k, c in pairs(page.children) do
+                if c.text ~= nil and c.javaObj then
+                    local bottom = (c.y or 0) + c.javaObj:getTextHeight() * (c.scaleY or 1)
+                    if bottom > worst then worst = bottom end
+                    lines[#lines + 1] = string.format("%s x=%s bottom=%.0f", k, tostring(c.x), bottom)
+                end
+            end
+            table.sort(lines)
+            R:check("RTMN." .. tag .. "_opens", function()
+                return #lines >= 8 and worst <= page.height and ctx.win.textTitle == getText(TLG.Integration.Manual.PAGES[id].title),
+                    string.format("title '%s'; page %sx%s at scale %.2f; %d texts, lowest bottom %.0f; %s", tostring(ctx.win.textTitle),
+                        tostring(page.width), tostring(page.height), page.scaleX or 1, #lines, worst, table.concat(lines, "; "))
+            end)
+            if shots then
+                local file = "tlg_rtmn_" .. tag .. ".png"
+                local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+                R:line("OBS  RTMN.screenshot %s ok=%s", file, tostring(ok))
+            end
+        end
+        if shots and ticks == 80 then ctx.win.children.bottomButtons.children.readNewspaper:onLeftClick() end
+        if shots and ticks == 130 then
+            local file = "tlg_rtmn_" .. tag .. "_text.png"
+            local ok = pcall(function() getCore():TakeFullScreenshot(file) end)
+            R:line("OBS  RTMN.screenshot %s ok=%s", file, tostring(ok))
+        end
+        if ticks < (shots and 170 or 70) then return nil end
+        UIManager.RemoveElement(ctx.win.javaObj)
+        p:getInventory():Remove(ctx.item)
+        return true
+    end }
+end
+
 if REQUEST == "sp-rtman" or REQUEST == "sp-rtmanit" then
     RT.manualSteps = { RT.waitWorld, RT.MI.setup, RT.MI.goTo("rtmn_go", "tests"), RT.MN.lists, RT.MN.roll, RT.MN.measure,
+        RT.MN.page("TLG.ManualFuelSystems", "biodiesel", true), RT.MN.page("TLG.ManualFuelSystems", "gas", true),
+        RT.MN.page("TLG.BiodieselHandbook", "biodiesel", false), RT.MN.page("TLG.WoodGasHandbook", "gas", false),
         RT.MN.read, RT.MI.shot("rtmn_page", false), RT.finish }
 end
 

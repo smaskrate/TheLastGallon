@@ -66,6 +66,32 @@ foreach ($lang in "EN", "IT") {
         }
     }
 }
+# The manual's pages (R7): the larger-print text of a page is its headings
+# and paragraphs in the page's order, and a column is no longer than the
+# ethanol page's longest (its first in Italian, 863 characters with two
+# for each paragraph break; that page was read in game in Italian, launch
+# 106). A column of many short paragraphs is taller than its count says.
+foreach ($lang in "EN", "IT") {
+    $ui = Get-Content (Join-Path $tr "$lang\IG_UI.json") -Raw -Encoding UTF8 | ConvertFrom-Json
+    foreach ($stem in "IGUI_TLG_Manual", "IGUI_TLG_Manual_Biodiesel", "IGUI_TLG_Manual_Gas") {
+        $page = [string]$ui."${stem}_Page"
+        $text = [string]$ui."${stem}_Text"
+        if (-not $page -or -not $text) { $problems += "$lang/IG_UI.json: ${stem}_Page or ${stem}_Text is missing"; continue }
+        $parts = @()
+        foreach ($m in [regex]::Matches($page, '<type:text, x:\d+, y:(100|138)[^>]*>([^<]*)')) {
+            $body = $m.Groups[2].Value
+            if ($m.Groups[1].Value -eq "138") {
+                $length = $body.Length
+                if ($length -gt 863) { $problems += "$lang/IG_UI.json ${stem}_Page: a column of $length characters (863 at most)" }
+                $parts += $body -split [regex]::Escape("^^")
+            } else {
+                $parts += $body
+            }
+        }
+        if ($parts.Count -lt 6) { $problems += "$lang/IG_UI.json ${stem}_Page: its headings and columns were not found (pattern out of date?)" }
+        if (($parts -join '\n\n') -cne $text) { $problems += "$lang/IG_UI.json ${stem}_Text is not ${stem}_Page's headings and paragraphs in order" }
+    }
+}
 foreach ($m in [regex]::Matches(((Get-ChildItem (Join-Path $media "scripts") -Filter "TLG_*.txt" | ForEach-Object { Get-Content $_.FullName -Raw }) -join "`n"), '(?m)^\s*item\s+([A-Za-z0-9_]+)\s*\r?$')) {
     [void]$referenced.Add("TLG." + $m.Groups[1].Value)
 }

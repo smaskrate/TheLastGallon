@@ -258,7 +258,9 @@
   save.
   manual, manual-italian: the fuel systems field manual: the loot lists
   that hold it, manuals rolled from them as the game fills a container,
-  its page measured with its text panel shown, and a rolled manual read
+  its page measured with its text panel shown, the biodiesel and gas
+  pages opened from the menus of a manual and of the two handbooks,
+  measured and photographed, and a rolled manual read
   through the inventory menu's Inspect (manual-italian: the client in
   Italian); no save.
   crafting: the crafting window, opened with the button beside the

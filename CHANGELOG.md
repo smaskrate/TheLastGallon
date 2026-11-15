@@ -2,9 +2,21 @@
 
 ## Unreleased
 
-Only the menus' texts are listed here so far; the gas generator, propane
-and the wood gasifier (D-040) are not.
+The gas generator, propane and the wood gasifier themselves (D-040) are
+not listed here yet; the entries below are the changes to menus, texts
+and instructions.
 
+* New: biodiesel and gas have instructions in the game. The Field
+  Manual's menu has **Read: Biodiesel** and **Read: Gas generators**,
+  each a page like the manual's own: the five machines, a batch step by
+  step and its amounts; the gas conversion, propane and the Wood
+  Gasifier. The Biodiesel Handbook's menu has the first and the Wood Gas
+  Handbook's the second, and the three items' tooltips say so. Before,
+  the manual covered ethanol only and the handbooks taught recipes and
+  nothing else. A manual or handbook found before this version has the
+  entries too. The player guide has a new section, "A generator on gas".
+  Checked in single player, in English and Italian (launches 436 and
+  437).
 * Changed: a machine's menu entry carries its name, "Pot Still (The Last
   Gallon)", "Wood Retort (The Last Gallon)", "Wood Gasifier (The Last
   Gallon)", in place of "Machine (The Last Gallon)" and "Gasifier (The

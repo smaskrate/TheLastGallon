@@ -330,7 +330,10 @@ both on one computer (RT-MP, 2026-11-03 to 2026-11-06):
   heavy items are left as the game leaves them.
 - Reading print media, the field manual included, is recorded on the
   server and not on the reading player's client, as for the game's own
-  fliers.
+  fliers. The manual's biodiesel and gas pages (**Read: Biodiesel**,
+  **Read: Gas generators**, also in the two handbooks' menus) are opened
+  by the client alone and record nothing. **RT-SP** (launches 436 and
+  437, English and Italian); on a server NOT RUN.
 - A server must reach the mod's folder by its real path. Through a
   junction the game cannot start a server with a mod that ships animation
   files, as this one does for its carry pose (tried; a symbolic link was

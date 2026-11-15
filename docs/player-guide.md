@@ -426,12 +426,25 @@ machine or engine stops. The notebook button at the bottom of its window
 shows the same text in larger print. It teaches no recipe; everything on
 it is also in this guide.
 
+The manual's menu has two more entries, **Read: Biodiesel** and **Read:
+Gas generators**. Each opens a page of the same kind at once: the five
+biodiesel machines, a batch step by step and its amounts; the gas
+conversion, propane and the Wood Gasifier. The Biodiesel Handbook's menu
+has the first and the Wood Gas Handbook's the second, beside the game's
+**Read**, so the instructions are with the book that teaches the recipes.
+The entries are greyed in the dark and while asleep, as **Inspect** is.
+Opening a page takes no time and marks nothing as read.
+
 ![The field manual's text in the larger-print window](images/field-manual-window.jpg)
 
 *The field manual's page in the larger-print window.*
 
 **Checked in game,** in English and Italian: manuals rolled from the loot
 lists as the game fills containers, and one read through **Inspect**.
+The two **Read: …** entries, in the menus of a manual and of both
+handbooks, and their pages, in both languages (launches 436 and 437).
+**Not checked in game:** the entries greyed in the dark, a controller, a
+server.
 
 ## Making ethanol
 
@@ -998,7 +1011,9 @@ conversion** ask before they act, since both lose parts.
 
 ![A generator's menu with Workshop: convert this generator open: Project status, Start: Flex-fuel generator conversion, Hand over parts, Work on it, Cancel the project, Remove the conversion](images/workshop-menu.jpg)
 
-*A basic generator's menu: the flex-fuel conversion is the one it offers.*
+*A basic generator's menu in version 0.4.3, which offered the flex-fuel
+conversion only. The menu now also has **Start: Gas generator
+conversion**; the picture is not taken again yet.*
 
 ![Project status of the generator: Conversion in progress, Flex-fuel generator conversion, Stage: inspect, Engine now: stock gasoline generator](images/project-status.jpg)
 
@@ -1016,12 +1031,10 @@ conversion** ask before they act, since both lose parts.
 cars, pickup trucks, step vans and the other generator models have their
 own conversions. Diesel vehicles and the Diesel Generator have none.
 
-Versions 0.1.0 to 0.4.1 also offered **Start: Gas generator conversion**,
-which leaves a generator with nothing to run on until a later version
-brings its gas. A generator converted to gas then can be given back with
-**Remove the conversion**, which returns half of its parts; a gas
-project still in progress can be ended with **Cancel the project**,
-which returns three quarters of them.
+A generator's menu also has **Start: Gas generator conversion**, which
+makes it run on propane or wood gas: see
+[A generator on gas](#a-generator-on-gas). Versions 0.4.2 and 0.4.3 did
+not offer it.
 
 **Checked in game:** a standard car and the basic generator converted
 from this menu, with the walk to the engine, the work stopping once the
@@ -1030,6 +1043,102 @@ ran on ethanol. **Project status** read on a generator with a project
 started.
 
 **Not checked in game:** cancelling, removing, and the other models.
+
+## A generator on gas
+
+A generator converted to gas burns propane from a tank, or wood gas from
+a Wood Gasifier beside it. It takes no liquid fuel after that: the game's
+**Add Fuel** and the mod's pour leave it as it is, and it has no **Fuel
+in this generator** entry.
+
+### The conversion
+
+Right-click the generator, **Workshop: convert this generator** > **Start:
+Gas generator conversion**, and go on as for a flex conversion
+([Converting an engine](#converting-an-engine)).
+
+| | Gas generator conversion |
+| --- | --- |
+| Skills | Mechanics 3, Electrical 3 |
+| Recipe (magazine) | Generator ("How to Use Generators") |
+| Parts | 2 rubber hoses, 1 metal pipe, 1 small metal sheet, 6 screws, 1 electric wire |
+| Tools | a screwdriver, a wrench, a pipe wrench, pliers |
+| Work | 9 hours |
+
+The work stops after the first half hour until the tank is empty: on a
+fuel can choose **Fuel (The Last Gallon)** > **Drain the generator into
+this can**. **Remove the conversion** makes it a petrol generator again,
+gives back a connected propane tank and returns half of the parts.
+
+### Propane
+
+Right-click the converted generator and choose **Gas (The Last Gallon)** >
+**Connect a propane tank**. The tank is taken from your inventory or from
+the floor beside the generator, and goes into it as into the game's
+barbecue; the generator holds one at a time. The generator draws from the
+tank as it runs. **Gas status** shows what is left in the tank and in the
+generator.
+
+**Remove the propane tank** gives the tank back with the gas the
+generator has not burned yet. The generator then runs on what little is
+left in it and stops. While a tank with gas is connected the generator
+draws no wood gas. A generator taken up and put down keeps its tank.
+
+### Wood gas
+
+The Wood Gasifier turns wood into gas for the converted generators within
+two tiles of it. The crafting window lists it as **Make Wood Gasifier**:
+
+| Ingredients and tools | Skill | Where you make it |
+| --- | --- | --- |
+| a metal drum, two sheets of metal, three metal pipes, two metal bars; a blowtorch and a welding mask | Welding 5 | welded in hand |
+
+Your character must know the recipe: read the **Wood Gas Handbook**,
+found where the Field Manual is, or reach Welding 7. Learned from the
+handbook, the gasifier can be made from Welding 4, as the game allows for
+any recipe read from a magazine.
+
+1. Place the gasifier on the ground within two tiles of the generator. Its
+   options are under **Wood Gasifier (The Last Gallon)**.
+2. Carry wood and choose **Load the hopper with wood**. It takes logs,
+   firewood, planks, twigs and charcoal, up to 120 kg.
+3. Choose **Light**. It warms up for half an hour, then its gas fills the
+   generator, which can be started.
+
+**Status** shows the wood in the hopper, the warm-up, the gas in hand,
+how full the filter is and when the fire goes out. The gasifier makes gas
+as the generators draw it. It goes out three hours after it stops: when
+the wood runs out, when the filter is full, or when no generator draws
+gas. **Clean out tar and ash** empties the filter. **Put out** stops it
+at once and lets its gas out. A generator stops an hour or two after its
+gasifier goes out.
+
+The gasifier burns only while you are in the area: after a trip that
+takes you far from it, it is out with its wood and the generator is off.
+Picked up while lit, it goes out and keeps its wood. Every full filter
+wears it a little ([Wear and Repair](#wear-and-repair)).
+
+### What has been checked
+
+**Checked in game.** In single player: the conversion through the
+Workshop menu, the tank drained with the Fuel menu, the Wood Gas Handbook
+read, the gasifier made, put down, loaded and lit through its menu, and
+the generator run on its gas for three hours (launches 387–388); a
+generator on a propane tank for four hours, the tank connected, removed
+and given back by **Remove the conversion**, liquid fuel refused, the
+generator taken up and put down, a trip away, a save (launches 351–352);
+the gasifier put out, lit again, picked up while lit, a trip away and a
+save (launch 358); one gasifier feeding two generators (launch 397). On
+a dedicated server: the gasifier loaded, lit and put out from two
+clients, a client joining while it burns and a server restart (launches
+389–392); the gasifier's recipe in the crafting window, refused and made
+at the levels above (launch 394).
+
+**Not checked in game:** the conversion refused below its skills or
+without the recipe; how long a propane tank lasts; wet wood; a filter
+filled by real hours of burning; the generator switched on from its own
+menu rather than by the test; a real network. The fuller list is in
+[support-matrix.md](support-matrix.md).
 
 ## Stations
 

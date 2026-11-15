@@ -53,5 +53,7 @@
     "ContextMenu_TLG_GasifierLight": "Accendi",
     "ContextMenu_TLG_GasifierPutOut": "Spegni",
     "ContextMenu_TLG_GasifierService": "Togli catrame e cenere",
-    "ContextMenu_TLG_GasifierStatus": "Stato"
+    "ContextMenu_TLG_GasifierStatus": "Stato",
+    "ContextMenu_TLG_ManualPage_biodiesel": "Leggi: biodiesel",
+    "ContextMenu_TLG_ManualPage_gas": "Leggi: generatori a gas"
 }

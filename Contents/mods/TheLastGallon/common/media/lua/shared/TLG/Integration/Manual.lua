@@ -6,6 +6,14 @@
 -- page explains start-up, fuel compatibility and troubleshooting of the
 -- ethanol loop; the manual teaches no recipe and gates nothing (spec: other
 -- ways to learn must stay open). It is found in the loot lists below.
+--
+-- Biodiesel and gas each have a page of their own (Manual.PAGES), opened
+-- from the inventory menu of the manual and of the handbook of that subject
+-- (TLG/UI/ManualMenu.lua). The game shows one page for an item, and print
+-- media fields on a handbook would replace its Read entry with Inspect
+-- (SRC ISInventoryPaneContextMenu.lua, tests.isPrintMedia), so these pages
+-- hang on the item's type: a manual or handbook of an older save has them
+-- too. Opening one records nothing.
 TLG = TLG or {}
 TLG.Integration = TLG.Integration or {}
 TLG.Integration.Manual = TLG.Integration.Manual or {}
@@ -58,6 +66,26 @@ Manual.HANDBOOK_RECIPES = { "TLG_MakeWoodRetort", "TLG_MakeAshBarrel", "TLG_Make
 -- at the same weights.
 Manual.WOODGAS_HANDBOOK = "TLG.WoodGasHandbook"
 Manual.WOODGAS_RECIPES = { "TLG_MakeGasifier" }
+
+-- The further pages: the menu entry that opens one, and the window's title,
+-- page and larger-print text, as the game's print media have them.
+Manual.PAGES = {
+    biodiesel = { entry = "ContextMenu_TLG_ManualPage_biodiesel", title = "IGUI_TLG_Manual_Biodiesel_Title",
+        page = "IGUI_TLG_Manual_Biodiesel_Page", text = "IGUI_TLG_Manual_Biodiesel_Text" },
+    gas = { entry = "ContextMenu_TLG_ManualPage_gas", title = "IGUI_TLG_Manual_Gas_Title",
+        page = "IGUI_TLG_Manual_Gas_Page", text = "IGUI_TLG_Manual_Gas_Text" },
+}
+-- The pages each item offers, in the menu's order.
+Manual.PAGES_OF = {
+    [Manual.ITEM] = { "biodiesel", "gas" },
+    [Manual.HANDBOOK] = { "biodiesel" },
+    [Manual.WOODGAS_HANDBOOK] = { "gas" },
+}
+
+-- The page ids an item of `fullType` offers; none for any other item.
+function Manual.pagesOf(fullType)
+    return Manual.PAGES_OF[fullType] or {}
+end
 
 -- Adds `itemType` (the manual when nil) to `lists`
 -- (ProceduralDistributions.list) before the game parses them. A list this

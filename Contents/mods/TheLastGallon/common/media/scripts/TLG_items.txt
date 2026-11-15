@@ -46,7 +46,10 @@ module TLG
 
     /* Manual: read like the game's print media, it shows a page on
        start-up, fuel compatibility and troubleshooting of the ethanol loop
-       (Integration/Manual.lua). It teaches no recipe. Found in garage, gas
+       (Integration/Manual.lua). Its inventory menu also opens a page on
+       biodiesel and one on gas generators (UI/ManualMenu.lua), as the two
+       handbooks' menus open the page of their subject. It teaches no
+       recipe. Found in garage, gas
        station, farm, generator crate, bookstore and library loot. */
     item ManualFuelSystems
     {

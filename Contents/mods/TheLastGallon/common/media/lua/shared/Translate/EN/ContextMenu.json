@@ -53,5 +53,7 @@
     "ContextMenu_TLG_GasifierLight": "Light",
     "ContextMenu_TLG_GasifierPutOut": "Put out",
     "ContextMenu_TLG_GasifierService": "Clean out tar and ash",
-    "ContextMenu_TLG_GasifierStatus": "Status"
+    "ContextMenu_TLG_GasifierStatus": "Status",
+    "ContextMenu_TLG_ManualPage_biodiesel": "Read: Biodiesel",
+    "ContextMenu_TLG_ManualPage_gas": "Read: Gas generators"
 }
