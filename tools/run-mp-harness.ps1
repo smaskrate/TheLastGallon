@@ -152,6 +152,16 @@
   machinemenus2: the same with two clients (-Clients 2), the rejoin left out:
   after each of A's steps B reads its own copy and menu, and A reads its own
   after B pauses and resumes a fermenter.
+  ux: the UX review's changes on a server's client (one client, on the
+  shortest day). A biodiesel reactor's Status card, with a lye leacher and
+  a wood retort beside it: opened from the menu, its line for the leacher
+  changed by its own refresh after the server starts the leacher, closed
+  six tiles away and by the world menu's Grab. At the fuel case's site: a
+  generator's Fuel in this generator entry and its Look and smell, its
+  Generator Info line, Drain the generator into this can and Pour into
+  the station reservoir judged by the server's litres, Open or Seal said
+  over the character, the car's Fuel in this vehicle, and a can's
+  favourite mark read on the server.
 .PARAMETER NoMod
   Server and clients without The Last Gallon, the harness alone: a control
   for what vanilla does (with -Only heavy).
@@ -178,7 +188,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "handbookgas", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers", "gasshare", "machinemenu", "machinemenus", "machinemenus2")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "handbookgas", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers", "gasshare", "machinemenu", "machinemenus", "machinemenus2", "ux")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"
@@ -281,7 +291,7 @@ end
 # shortest day (DayLength 1: 15 minutes, Sandbox_DayLength_option1), and
 # the fuel case's generator and car burn enough there to be seen (run 156
 # read none in half a minute on the default day).
-$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers", "death", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers", "gasshare") -contains $Only) { "`n    DayLength = 1," } else { "" }
+$dayLength = if (@("conversion", "fuel", "carconv", "stills", "effects", "timers", "death", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers", "gasshare", "ux") -contains $Only) { "`n    DayLength = 1," } else { "" }
 # The audit case (AuditCases.lua) runs with the grid on: without power
 # IsoObject.getPipedFuelAmount reports no fuel at all (BC 42.21; audit run 1
 # found "no pump with stock" with ElecShutModifier = 0), so the pumps' case

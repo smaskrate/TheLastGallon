@@ -13,17 +13,17 @@ runtime tests.
 | RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
-| RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443): its text in Italian, dragging it and its cross with the mouse, its refresh at speed 1 after ten game minutes, its closing when the machine is picked up, the line of the machines it takes from on a biodiesel chain, several cards at once and their cost (each refresh writes the record; not measured), a second player's card in split screen, a server's client, where each refresh also sends the record to the clients (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture, and only `controls` and `docs-shots` (launch 444) were run since | Only the `controls` mode has the step (`RT.cardStep`), on one machine in English |
+| RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443; in Italian on a biodiesel reactor with its source lines, closed when the reactor was lifted: launch 445; on a server's client, a reactor's line for its leacher changed by the card's own refresh at speed 1 after ten game minutes, closed six tiles away and by Grab: launch 446): dragging it and its cross with the mouse, the wash tank's line for its reactor, several cards at once and their cost (each refresh writes the record and on a server sends it to the clients; not measured), a second player's card in split screen, a second client on a server (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture, and only `controls`, `docs-shots` and `italian` (launches 444 and 445) were run since | The steps are `RT.cardStep` (`controls`), `RT.itCard` (`italian`) and the server case `ux` |
 | RT-SP and RT-MP: the game's speed across the mod's windows and questions (UX review R14; the game's own window left 1 and the mod's left 3 when closed by the OK handler at speed 3: launch 440): a click on OK with the mouse and the speed buttons on screen, the yes/no questions (**Cancel the project**, **Remove the conversion**, a second **Abort batch**, a harmful pour; offline: `test_say.lua`), a paused game, a controller, a server's client | The `controls` mode's step calls the OK button's handler and reads the speed controls |
 | RT-SP and RT-MP: **Gas status** with the hours of gas left (UX review R11; on wood gas the text read and the estimate against the stop, 1 h against 1.97 h: launch 439): the window on a generator on propane and on one never switched on; whether the window (420x220) holds its longest line, in Italian; the estimate after the load changes (offline: `test_gas_feed.lua`, `test_gas_handlers.lua`, `test_gasifier_menu.lua`). The gas page of the manual names this line since; launches 436–437 photographed its earlier sentence | The gas modes read the window's text, not the screen; `gas-propane` not launched since |
-| RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action, both on a server, where the action's new last field (`source`) is sent to the server's copy and the pump goes as the object faced, as the game's own **Take Fuel** sends one. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438) | The `gas-player` mode waits for the drain and reads the litres; no mode clicks the station pour |
+| RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action; the station pour into a pump with room, in single player or on a server. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438; on a server the action's `source` reached the server's copy and 3 L moved: launch 446). On a server the station pour into an untouched pump holding 15,208 L moved nothing: a pump first read with more than 10,000 L has no room (`Stations.read`), refused as `destination_full`, a reason with no text of its own (launch 446) | `gas-player` (single player) and `ux` (server) click the drain; `ux` clicks the station pour, on an untouched pump |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
-| RT-SP and RT-MP: loads leaving favourite items alone, the firebox's planks entry and the loads' tooltips (offline only: `test_biodiesel_commands.lua`, `test_menu_replies.lua`); on a server, whether the favourite mark a client sets reaches the server's copy of the item, which the loads read (`TLG/Integration/Picks.lua`) | Written 2026-11-14, not in the harness yet. Until the server case is run, a server may take favourite items |
+| RT-SP and RT-MP: loads leaving favourite items alone, the firebox's planks entry and the loads' tooltips (offline only: `test_biodiesel_commands.lua`, `test_menu_replies.lua`). On a server the mark a client sets with the game's own menu function reaches the server's copy of the item, which the loads read (`TLG/Integration/Picks.lua`; launch 446) | Written 2026-11-14; no load with a favourite is in the harness yet |
 | RT-MP: the Workshop menu choosing its entries from a client's copy of the project (`WorkshopMenu.projectState`: a generator's mod data, a vehicle's Engine part's). RT-SP and RT-MP: the yes/no question before **Cancel the project**, **Remove the conversion** and a second **Abort batch**, which the harness answers without opening it (`TLGHarness/Confirm.lua`); a controller on it | Written 2026-11-14. If a client's copy lacked a project the server has, the menu would offer only **Start: …**, which the server refuses, and nothing to carry on with: to be run on a server before a release for servers |
-| RT-SP: the Fuel entry of a tank from a real right-click on a vehicle (launch 419 stood in for the game's pick under the cursor), a tank's samples after a save and reload, the line after a refuel at a pump or a stopped refuel (offline only: `test_tank_fuel.lua`), the Generator Info window on screen (its text: launch 419). RT-MP, all of R5: the Fuel entry of a tank and its dialogs; that the refuel line reaches only the player who poured; whether a client's world record carries `dieselVehicles` (until shown, a client's menu leaves the engine line out, D-042); Generator Info from a client's copy of the generator's mod data | Not in the harness yet (UX review R5, 2026-11-14; single player otherwise run in launch 419). The server rows are to be run before a release for servers |
-| RT-SP and RT-MP: a reply said over the character (`TLG/UI/Say.lua`): how the line looks, two lines sent one after the other, a line while the game is paused, a controller's second player (offline only: `test_say.lua`). The screenshot modes (`docs-shots`, `sp-rtds`) expect a window for every reply they photograph and were not run since | UX review R6, 2026-11-14: the harness reads a line's text where the menu says it and cannot see the screen. To be looked at in play |
+| RT-SP: the Fuel entry of a tank from a real right-click on a vehicle (launch 419 stood in for the game's pick under the cursor), a tank's samples after a save and reload, the line after a refuel at a pump or a stopped refuel (offline only: `test_tank_fuel.lua`), the Generator Info window on screen (its text: launch 419). RT-MP: that the refuel line reaches only the player who poured (two clients). On a server's client the tank entries of a generator and a car, their dialogs naming the engine, and Generator Info from the client's copy were run, and the client's world record carries `dieselVehicles` (launch 446); the client's menu still leaves the engine line out (D-042) | UX review R5, 2026-11-14; single player run in launch 419, the server's client in launch 446 (`ux`, one client) |
+| RT-SP and RT-MP: a reply said over the character (`TLG/UI/Say.lua`; on a server's client a can's **Open** answered by the server was said as a line with no window: launch 446): how the line looks, two lines sent one after the other, a line while the game is paused, a controller's second player (offline only: `test_say.lua`). The screenshot modes (`docs-shots`, `sp-rtds`) expect a window for every reply they photograph and were not run since | UX review R6, 2026-11-14: the harness reads a line's text where the menu says it and cannot see the screen. To be looked at in play |
 | RT-SP: a machine's wear from real batches up to a refused load and the load after a repair, a busy machine's greyed **Repair**, a favourite part left alone, a gasifier worn by its own filter cycles (offline only: `test_machine_commands.lua`, `test_gasifier_handlers.lua`, `test_say.lua`; a pot still, a fermenter and a gasifier with the condition written into the record: launches 424 and 425). RT-MP: all of R8 | Not in the harness yet (UX review R8, D-043, 2026-11-14) |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
@@ -9536,3 +9536,69 @@ than its calls.
 Evidence:
 [run 445](evidence/2026-11-15_rt-sp_harness_run445_italian_machine_card_42.22.2.txt),
 [the card](evidence/2026-11-15_run445_machine_card_italian.png).
+
+## 2026-11-15 — RT-MP launch 446 (the UX review's changes on a server's client)
+
+Branch `feature/gas-generators` at `ad6c183`, the new case not yet
+committed, 42.22.2, a dedicated server and one client, the shortest day
+(DayLength 1). Command: `tools/run-mp-harness.ps1 -Only ux -Clients 1
+-TimeoutMinutes 30`. **12/1**. The case `ux` is new
+(`MPHarnessCases.lua`); the server's `probe_fuel` now also gives each
+item's favourite mark.
+
+* The Status card. The server put a Biodiesel Reactor down, a Lye Leacher
+  a tile from it and a Wood Retort two tiles away. **Status** from the
+  reactor's menu opened one card 3 ticks (30 ms) after the click, titled
+  "Biodiesel Reactor", with "Takes from: Lye Leacher, 1 tile away. Ready"
+  and "Takes from: Wood Retort, 2 tiles away. Ready"; nothing was said and
+  no window opened.
+* The server then started the leacher's batch. The card asked again by
+  itself 0.169 game hours (ten game minutes) and 6,450 ms after its first
+  fill, at the game's speed 1, and its leacher line read "Working". The
+  client's copy of the leacher's record was Processing.
+* Six tiles away the card closed at the next tick. Opened again, it
+  closed when the reactor was taken with the world menu's Grab.
+* At the fuel case's site, 3 L were poured into a generator through the
+  mod's pour (the server's generator 3 L). Its **Fuel in this generator**
+  entry listed What I know about it, Look and smell and Take a sample
+  (kit), with no engine line in the client's menu. **Look and smell**,
+  answered by the server, opened a window with "Engine: stock gasoline
+  generator". Generator Info's line from the client's copy was "Runs on:
+  gasoline". The client's copy of the world record has `dieselVehicles`
+  true.
+* **Drain the generator into this can**, clicked in the Fuel menu of a can
+  holding 1 L, queued the can's equip and the pour action, and the server
+  moved the generator's 3 L into the can: the generator 0 L, the can's
+  record 4 L, the client's can 4 L. The action's `source` reached the
+  server's copy.
+* **Failed: Pour into the station reservoir.** Clicked in the Fuel menu of
+  a can holding 2 L, two tiles from the pump, the action ran as long as
+  the drain and nothing moved: the pump 15,208 units before and after, no
+  record written, the can 2 L. Read in the code, not seen in the reply: a
+  pump the mod reads for the first time gets a reservoir of
+  `max(10000, litres)` (`Stations.read`), so a pump at 15,208 L has no
+  room, and the transfer is refused as `destination_full`
+  (`Mixing.previewTransfer`). That reason has no text of its own
+  (`Format.FAILURE_KEYS`), so the player gets the generic refusal with the
+  code in it. The line the client said was not captured.
+* **Open** on a can, answered by the server, was said over the character,
+  "Opened. Open containers age faster and take on moisture.", with no
+  window.
+* At the car's filler, **Fuel in this vehicle** listed the same three
+  entries with no engine line; **What I know about it** opened a window
+  naming the engine, "Engine: stock gasoline engine".
+* A can marked as a favourite with the game's own menu function
+  (`ISInventoryPaneContextMenu.onFavorite`) was a favourite in the
+  server's copy 180 ticks later.
+
+The client's console holds no error of the mod. The server's holds one
+stack trace, the harness's own deep-recursion probe at start-up
+(`LuaProbe.lua`).
+
+Not run: the station pour into a pump with room; the refuel line reaching
+only the player who poured (two clients); a load leaving a favourite
+alone; the Workshop menu from a client's copy and Repair on a server; the
+other multiplayer cases since the menus' names and replies changed.
+
+Evidence:
+[run 446](evidence/2026-11-15_rt-mp_harness_run446_ux_42.22.2.txt).

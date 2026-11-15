@@ -413,6 +413,9 @@ function services.probe_fuel(player, args)
         local fc = it and it:getFluidContainer()
         items[#items + 1] = id .. "=" .. (fc and string.format("%.4f", fc:getAmount()) or "nil") .. " " .. S.sidecar(it)
         out["recL" .. id] = litres(it and it:getModData().tlg)
+        -- Whether the server's copy carries the favourite mark a client set
+        -- (the ux case; the loads leave favourites alone, Picks.lua).
+        out["fav" .. id] = tostring(it and it:isFavorite())
     end
     out.items = table.concat(items, " | ")
     reply("probe_fuel", args, out)

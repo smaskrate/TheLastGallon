@@ -6284,3 +6284,391 @@ if MP.only == "death" then
         once("mp_finish_a", function() send("finish", {}) end), MP.finish,
     }
 end
+
+------------------------------------------------------------------------------
+-- ux (one client, the shortest day; 2026-11-15): the UX review's changes on
+-- a server's client.
+-- * The Status card (section 5): a biodiesel reactor the server puts down,
+--   a lye leacher a tile from it and a wood retort two tiles away. Status
+--   from the reactor's menu must open one card once the server's reply
+--   arrives, with a line for each source. The server then starts the
+--   leacher's batch, and the card's own refresh (ten game minutes, at the
+--   game's speed 1) must show the leacher's new state, the client's copy
+--   of its record following (D-041). The card closes when the player walks
+--   six tiles away, and, opened again, when the reactor is taken with the
+--   world menu's Grab.
+-- * At the fuel case's site (setup_fuel): a can poured into a generator; the
+--   generator's tank entry, Fuel in this generator, with no engine line in
+--   the client's menu and the engine named in the server's Look and smell;
+--   Generator Info's Runs on line from the client's copy; Drain the
+--   generator into this can and Pour into the station reservoir clicked in
+--   a can's Fuel menu (R13, timed actions whose `source` the server must
+--   get), each judged by the server's litres; Open or Seal on a can, whose
+--   answer must be said over the character with no window (R6); the car's
+--   Fuel in this vehicle and What I know about it; a can marked as a
+--   favourite through the game's own menu function, read on the server.
+------------------------------------------------------------------------------
+if MP.only == "ux" then
+    -- In a function of its own and without a local of the main chunk, which
+    -- is near the -debug compiler's 200 locals (machinemenus).
+    TLGH.uxCase = function()
+        local UX = { lines = {}, windows = {}, opened = {} }
+        local Say, Card, Fuel = TLG.UI.Say, TLG.UI.MachineCard, TLG.UI.FuelMenu
+        local function has(text, part) return text ~= nil and part ~= nil and string.find(text, part, 1, true) ~= nil end
+        local function itemOf(key)
+            local m = UX[key]
+            if not (m and m.id) then return nil end
+            local sq = getCell():getGridSquare(m.x, m.y, 0)
+            local objs = sq and sq:getWorldObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local it = objs:get(i):getItem()
+                if it and it:getID() == m.id then return it end
+            end
+            return player():getInventory():getItemWithIDRecursiv(m.id)
+        end
+        local function spawnAt(key, t, x, y)
+            return call("ux_spawn_" .. key, "spawn", { item = t, x = x, y = y }, "spawned", function(m)
+                UX[key] = { x = x, y = y, id = tonumber(m.id), t = t }
+                report():line("OBS  MP.ux %s %s at %d,%d, id %s", key, t, x, y, tostring(m.id))
+            end)
+        end
+        -- Builds the menu `fill` fills, opens `rootText` and clicks `text` as
+        -- ISContextMenu does. Returns whether it was clicked and the submenu.
+        local function clickIn(fill, rootText, text)
+            local c = ISContextMenu.get(0, 100, 100)
+            fill(c)
+            local root = c:getOptionFromName(rootText)
+            local sub = root and root.subOption and c:getSubMenu(root.subOption)
+            local opt = sub and text and sub:getOptionFromName(text)
+            c:setVisible(false)
+            if opt == nil or opt.notAvailable or opt.onSelect == nil then return false, sub end
+            local ok, err = pcall(opt.onSelect, opt.target, opt.param1, opt.param2, opt.param3, opt.param4)
+            if not ok then report():line("OBS  MP.ux entry \"%s\" raised %s", tostring(text), tostring(err)) end
+            return ok, sub
+        end
+        local function names(sub)
+            local out = {}
+            for i = 1, (sub and sub.numOptions or 1) - 1 do
+                local o = sub.options[i]
+                if o then out[#out + 1] = tostring(o.name) end
+            end
+            return out
+        end
+        local function stateText(machineKind, state)
+            local key = "IGUI_TLG_MachineState_" .. tostring(state)
+            local own = getText(key .. "_" .. machineKind)
+            return own ~= key .. "_" .. machineKind and own or getText(key)
+        end
+        local function cardKey() return UX.reactor and ("machine:" .. tostring(UX.reactor.id)) or "?" end
+        local function cardText()
+            local c = Say.cards[cardKey()]
+            return c and c.cardText
+        end
+        local function closeWindows()
+            for _, w in ipairs(UX.opened) do pcall(function() w:removeFromUIManager() end) end
+            UX.opened = {}
+        end
+        -- What the mod says over the character and the windows it opens, as
+        -- this client gets them.
+        local capture = once("mp_ux_capture", function()
+            UX.line, UX.window = Say.line, Say.window
+            Say.line = function(text, good)
+                local how = UX.line(text, good)
+                UX.lines[#UX.lines + 1] = { text = tostring(text), how = how }
+                return how
+            end
+            Say.window = function(text, w, hh)
+                UX.windows[#UX.windows + 1] = tostring(text)
+                local modal = UX.window(text, w, hh)
+                UX.opened[#UX.opened + 1] = modal
+                return modal
+            end
+        end)
+        local release = once("mp_ux_release", function()
+            closeWindows()
+            Say.closeCards()
+            if UX.line then Say.line, Say.window = UX.line, UX.window end
+        end)
+        -- Status from the reactor's menu; waits for the card the reply opens.
+        local function openCard(name)
+            return { name = "mp_ux_" .. name, timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    Say.closeCards()
+                    ctx.windows, ctx.lines = #UX.windows, #UX.lines
+                    local it = itemOf("reactor")
+                    ctx.clicked = it ~= nil and clickIn(function(c) TLG.UI.MachineMenu.fill(0, c, { it }) end,
+                        TLG.UI.MachineMenu.rootTitle(it), getText("ContextMenu_TLG_MachineStatus"))
+                    ctx.t0 = getTimestampMs()
+                    return nil
+                end
+                if cardText() == nil and ticks < 1500 then return nil end
+                local st = Card.open[cardKey()]
+                UX.at1, UX.ms1, UX.text1 = st and st.atHours, st and st.atMs, cardText()
+                local card = Say.cards[cardKey()]
+                report():line("OBS  MP.ux %s: clicked %s; a card after %d ms (%d ticks): title '%s'; text: %s", name,
+                    tostring(ctx.clicked), getTimestampMs() - ctx.t0, ticks, tostring(card and card.title), tostring(UX.text1))
+                UX[name] = card ~= nil and #UX.windows == ctx.windows and #UX.lines == ctx.lines
+                    and card.title == getItemNameFromFullType("TLG.BiodieselReactor")
+                return true
+            end }
+        end
+        local function sourceLine(fullType, kind, tiles, state)
+            return getText(tiles == 1 and "IGUI_TLG_Card_Source1" or "IGUI_TLG_Card_Source", getItemNameFromFullType(fullType),
+                tostring(tiles), stateText(kind, state))
+        end
+        local rx, ry = S.CX - 6, S.CY + 4
+        local steps = { MP.waitWorld, capture,
+            spawnAt("reactor", "TLG.BiodieselReactor", rx, ry),
+            spawnAt("leacher", "TLG.LyeLeacher", rx + 1, ry),
+            spawnAt("retort", "TLG.WoodRetort", rx, ry + 2),
+            wait("mp_ux_machines_arrive", 180),
+            walkTo("mp_ux_walk_to_reactor", rx - 1, ry),
+            openCard("card_open"),
+            once("mp_ux_card_opened", function()
+                local want1 = sourceLine("TLG.LyeLeacher", "leacher", 1, "Ready")
+                local want2 = sourceLine("TLG.WoodRetort", "retort", 2, "Ready")
+                check("ux_card_opens_with_its_sources", function()
+                    return UX.card_open == true and has(UX.text1, want1) and has(UX.text1, want2), string.format(
+                        "card %s; text: %s || wanted the lines \"%s\" and \"%s\"", tostring(UX.card_open), tostring(UX.text1),
+                        want1, want2)
+                end)
+            end),
+            call("ux_start_leacher", "start_running", function()
+                return { id = UX.leacher.id, x = UX.leacher.x, y = UX.leacher.y }
+            end, "started_running", function(m)
+                UX.leacherState = m.state
+                report():line("OBS  MP.ux the server started the leacher's batch: %s/%s %s", tostring(m.state),
+                    tostring(m.pause), tostring(m.reason or ""))
+            end),
+            { name = "mp_ux_card_refresh", timeout = 6000, fn = function(ctx, ticks)
+                local st = Card.open[cardKey()]
+                if st and st.atHours == UX.at1 and ticks < 5400 then return nil end
+                local text2 = cardText()
+                local want = sourceLine("TLG.LyeLeacher", "leacher", 1, UX.leacherState)
+                local leacher = itemOf("leacher")
+                local rec = leacher and leacher:getModData().tlgProc
+                local copy = type(rec) == "table" and tostring(rec.state) or "none"
+                report():line("OBS  MP.ux card filled at %s game h and %s ms, again at %s h and %s ms (%d ticks); text: %s",
+                    tostring(UX.at1), tostring(UX.ms1), tostring(st and st.atHours), tostring(st and st.atMs), ticks,
+                    tostring(text2))
+                check("ux_card_refresh_shows_the_new_source_state", function()
+                    return st ~= nil and UX.at1 ~= nil and st.atHours > UX.at1 and has(text2, want)
+                        and copy == tostring(UX.leacherState) and Say.cards[cardKey()] ~= nil, string.format(
+                        "refilled %s after %.3f game h and %s ms; text: %s || wanted \"%s\"; the client's copy of the leacher %s",
+                        tostring(st ~= nil and UX.at1 ~= nil and st.atHours > UX.at1), (st and st.atHours or 0) - (UX.at1 or 0),
+                        tostring(st and UX.ms1 and st.atMs - UX.ms1), tostring(text2), want, copy)
+                end)
+                return true
+            end },
+            walkTo("mp_ux_walk_away", rx, ry - 6),
+            { name = "mp_ux_card_away", timeout = 900, fn = function(ctx, ticks)
+                if ticks == 1 then ctx.lines, ctx.windows = #UX.lines, #UX.windows end
+                if Say.cards[cardKey()] ~= nil and ticks < 600 then return nil end
+                check("ux_card_closes_out_of_reach", function()
+                    return Say.cards[cardKey()] == nil and Card.open[cardKey()] == nil and #UX.lines == ctx.lines
+                        and #UX.windows == ctx.windows, string.format("card open %s after %d ticks six tiles away",
+                        tostring(Say.cards[cardKey()] ~= nil), ticks)
+                end)
+                return true
+            end },
+            walkTo("mp_ux_walk_back", rx - 1, ry),
+            openCard("card_open_again"),
+            { name = "mp_ux_card_grab", timeout = 2400, fn = function(ctx, ticks)
+                local p = player()
+                if not ctx.queued then
+                    local it = itemOf("reactor")
+                    local wi = it and it:getWorldItem()
+                    if not (UX.card_open_again and wi) then
+                        report():line("FAIL MP.ux_card_grab_%s :: card %s, reactor on the floor %s", MP.role,
+                            tostring(UX.card_open_again), tostring(wi ~= nil))
+                        return true
+                    end
+                    ISWorldObjectContextMenu.onGrabWItem(nil, wi, 0)
+                    ctx.queued = ticks
+                    return nil
+                end
+                if ticks - ctx.queued < 60 or not TLGH.Steps.actionsIdle(p) then return nil end
+                ctx.idle = ctx.idle or ticks
+                if ticks - ctx.idle < 120 then return nil end
+                local it = itemOf("reactor")
+                check("ux_card_closes_when_the_machine_is_grabbed", function()
+                    return it ~= nil and it:getWorldItem() == nil and Say.cards[cardKey()] == nil, string.format(
+                        "carried %s; card open %s", tostring(it ~= nil and it:getWorldItem() == nil),
+                        tostring(Say.cards[cardKey()] ~= nil))
+                end)
+                local sq = getCell():getGridSquare(rx, ry, 0)
+                if it and sq then ISTimedActionQueue.add(ISDropWorldItemAction:new(p, it, sq, 0.5, 0.5, 0, 0, false)) end
+                return true
+            end },
+            idle("mp_ux_reactor_put_back"),
+            -- The fuel site.
+            FU.setup, wait("mp_ux_site_arrives", 300),
+            giveCan("ux_give_pour_can", { petrol = "3" }, "uxPour"), arrived("uxPour"),
+            walkTo("mp_ux_walk_to_generator", function() return site("g1x") + 1, site("g1y") end),
+            pour("ux_pour_generator", "uxPour", 1, false),
+            probeFuel("ux_after_pour", function(m)
+                UX.g1 = tonumber(m.g1Fuel)
+                check("ux_generator_has_fuel", function()
+                    return near(UX.g1, 3, 2e-3), string.format("generator %.4f L", UX.g1 or -1)
+                end)
+            end),
+            { name = "mp_ux_generator_tank", timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local g = gen(1)
+                    local c = ISContextMenu.get(0, 100, 100)
+                    ctx.tank = g and Fuel.tankAt(0, { g })
+                    if ctx.tank then Fuel.addTank(0, c, ctx.tank) end
+                    local root = c:getOptionFromName(getText("ContextMenu_TLG_FuelGenerator"))
+                    ctx.names = names(root and root.subOption and c:getSubMenu(root.subOption))
+                    c:setVisible(false)
+                    ctx.windows = #UX.windows
+                    local orig = TLG.Net.request
+                    TLG.Net.request = function(cmd, a, onReply)
+                        return orig(cmd, a, function(r)
+                            ctx.reply = r
+                            if onReply then onReply(r) end
+                        end)
+                    end
+                    ctx.clicked = ctx.tank ~= nil and clickIn(function(cc) Fuel.addTank(0, cc, ctx.tank) end,
+                        getText("ContextMenu_TLG_FuelGenerator"), getText("ContextMenu_TLG_Look"))
+                    TLG.Net.request = orig
+                    return nil
+                end
+                if (ctx.reply == nil or #UX.windows == ctx.windows) and ticks < 1500 then return nil end
+                local r = ctx.reply or {}
+                local text = UX.windows[ctx.windows + 1]
+                local engineLine = r.engine and TLG.UI.Format.engine(r.engine)
+                report():line("OBS  MP.ux Fuel in this generator > %s; Look and smell -> ok=%s engine=%s; window: %s",
+                    table.concat(ctx.names, " / "), tostring(r.ok), tostring(r.engine), tostring(text))
+                check("ux_generator_tank_entry_names_the_engine_in_the_dialog", function()
+                    return ctx.tank ~= nil and ctx.tank.kind == "generator" and ctx.names[1] == getText("ContextMenu_TLG_ShowKnown")
+                        and r.ok == true and engineLine ~= nil and has(text, engineLine) and not has(text, "IGUI_TLG_"),
+                        string.format("entry %s; first entry '%s'; reply ok=%s engine %s; window %s", tostring(ctx.tank ~= nil),
+                            tostring(ctx.names[1]), tostring(r.ok), tostring(r.engine), tostring(text))
+                end)
+                local info, want = nil, getText("IGUI_TLG_GenFuel", getText("IGUI_TLG_GenFuel_generator_si_stock"))
+                pcall(function() info = TLG.UI.GeneratorInfo.line(gen(1)) end)
+                local world
+                pcall(function() world = TLG.World.get() end)
+                report():line("OBS  MP.ux Generator Info line from this client's copy: %s; this client's world record: %s, " ..
+                    "dieselVehicles=%s", tostring(info), tostring(world ~= nil), tostring(world and world.dieselVehicles))
+                check("ux_generator_info_runs_on_from_the_clients_copy", function()
+                    return info == want, string.format("'%s', want '%s'", tostring(info), want)
+                end)
+                closeWindows()
+                return true
+            end },
+            giveCan("ux_give_drain_can", { petrol = "1" }, "uxDrain"), arrived("uxDrain"),
+            act("ux_drain", function(ctx, p)
+                local it = inventoryItem(FU.uxDrain)
+                local clicked = it ~= nil and clickIn(function(c) Fuel.fill(0, c, { it }) end, getText("ContextMenu_TLG_Fuel"),
+                    getText("ContextMenu_TLG_DrainGenerator"))
+                if not clicked then error("no Drain the generator into this can entry") end
+            end, 180),
+            probeFuel("ux_after_drain", function(m)
+                local rec = tonumber(m["recL" .. tostring(FU.uxDrain)])
+                check("ux_drain_moves_the_generators_fuel_into_the_can", function()
+                    return near(tonumber(m.g1Fuel), 0, 2e-3) and near(canL("uxDrain"), 1 + (UX.g1 or 0), 2e-3)
+                        and near(rec, canL("uxDrain"), 2e-3), string.format(
+                        "server: generator %.4f L (was %.4f); can record %.4f L; this client's can %.4f L",
+                        tonumber(m.g1Fuel) or -1, UX.g1 or -1, rec or -1, canL("uxDrain"))
+                end)
+            end),
+            giveCan("ux_give_station_can", { petrol = "2" }, "uxStation"), arrived("uxStation"),
+            walkTo("mp_ux_walk_to_pump", function() return site("px") + 2, site("py") end),
+            probeFuel("ux_before_station", function(m) UX.units0 = tonumber(m.pumpUnits) end),
+            act("ux_station_pour", function(ctx, p)
+                local it = inventoryItem(FU.uxStation)
+                local clicked = it ~= nil and clickIn(function(c) Fuel.fill(0, c, { it }) end, getText("ContextMenu_TLG_Fuel"),
+                    getText("ContextMenu_TLG_PourStation"))
+                if not clicked then error("no Pour into the station reservoir entry") end
+            end, 180),
+            probeFuel("ux_after_station", function(m)
+                check("ux_station_pour_fills_the_reservoir", function()
+                    return tonumber(m.pumpUnits) ~= nil and UX.units0 ~= nil and tonumber(m.pumpUnits) >= UX.units0 + 1.99
+                        and near(canL("uxStation"), 0, 2e-3) and m.pumpSide ~= "nil", string.format(
+                        "server: pump %s -> %s units, record %s; this client's can %.4f L", tostring(UX.units0),
+                        tostring(m.pumpUnits), tostring(m.pumpSide), canL("uxStation"))
+                end)
+            end),
+            giveCan("ux_give_line_can", { petrol = "1" }, "uxLine"), arrived("uxLine"),
+            { name = "mp_ux_line", timeout = 1200, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local it = inventoryItem(FU.uxLine)
+                    ctx.lines, ctx.windows = #UX.lines, #UX.windows
+                    ctx.op = "unseal"
+                    local ok = it ~= nil and clickIn(function(c) Fuel.fill(0, c, { it }) end, getText("ContextMenu_TLG_Fuel"),
+                        getText("ContextMenu_TLG_Unseal"))
+                    if not ok and it ~= nil then
+                        ctx.op = "seal"
+                        ok = clickIn(function(c) Fuel.fill(0, c, { it }) end, getText("ContextMenu_TLG_Fuel"),
+                            getText("ContextMenu_TLG_Seal"))
+                    end
+                    ctx.clicked = ok
+                    return nil
+                end
+                if #UX.lines == ctx.lines and ticks < 900 then return nil end
+                local said = UX.lines[ctx.lines + 1]
+                local want = getText("IGUI_TLG_TreatDone_" .. ctx.op)
+                report():line("OBS  MP.ux %s clicked %s; said: %s (%s); windows opened %d", ctx.op, tostring(ctx.clicked),
+                    tostring(said and said.text), tostring(said and said.how), #UX.windows - ctx.windows)
+                check("ux_treatment_is_said_over_the_character", function()
+                    return said ~= nil and said.text == want and said.how == "line" and #UX.windows == ctx.windows,
+                        string.format("said '%s' as %s, want '%s'; windows opened %d", tostring(said and said.text),
+                            tostring(said and said.how), want, #UX.windows - ctx.windows)
+                end)
+                return true
+            end },
+            act("ux_walk_to_filler", function(ctx, p)
+                local part = tank()
+                ISTimedActionQueue.add(ISPathFindAction:pathToVehicleArea(p, part:getVehicle(), part:getArea()))
+            end, 120),
+            { name = "mp_ux_vehicle_tank", timeout = 1800, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    local v = car()
+                    local c = ISContextMenu.get(0, 100, 100)
+                    ctx.tank = v and Fuel.tankAt(0, { v })
+                    if ctx.tank then Fuel.addTank(0, c, ctx.tank) end
+                    local root = c:getOptionFromName(getText("ContextMenu_TLG_FuelVehicle"))
+                    ctx.names = names(root and root.subOption and c:getSubMenu(root.subOption))
+                    c:setVisible(false)
+                    ctx.windows = #UX.windows
+                    ctx.clicked = ctx.tank ~= nil and clickIn(function(cc) Fuel.addTank(0, cc, ctx.tank) end,
+                        getText("ContextMenu_TLG_FuelVehicle"), getText("ContextMenu_TLG_ShowKnown"))
+                    return nil
+                end
+                if #UX.windows == ctx.windows and ticks < 1500 then return nil end
+                local text = UX.windows[ctx.windows + 1]
+                report():line("OBS  MP.ux Fuel in this vehicle > %s; What I know about it: %s", table.concat(ctx.names, " / "),
+                    tostring(text))
+                check("ux_vehicle_tank_entry_and_what_i_know", function()
+                    return ctx.tank ~= nil and ctx.tank.kind == "vehicle" and ctx.names[1] == getText("ContextMenu_TLG_ShowKnown")
+                        and text ~= nil and not has(text, "IGUI_TLG_"), string.format("entry %s; first entry '%s'; window %s",
+                        tostring(ctx.tank ~= nil), tostring(ctx.names[1]), tostring(text))
+                end)
+                closeWindows()
+                return true
+            end },
+            giveCan("ux_give_favourite_can", { petrol = "1" }, "uxFav"), arrived("uxFav"),
+            once("mp_ux_mark_favourite", function()
+                local it = inventoryItem(FU.uxFav)
+                if it then ISInventoryPaneContextMenu.onFavorite({ it }, nil, true) end
+                report():line("OBS  MP.ux can %s marked as a favourite on this client: %s", tostring(FU.uxFav),
+                    tostring(it and it:isFavorite()))
+            end),
+            wait("mp_ux_favourite_travels", 180),
+            probeFuel("ux_favourite_on_the_server", function(m)
+                local fav = m["fav" .. tostring(FU.uxFav)]
+                check("ux_favourite_mark_reaches_the_server", function()
+                    return fav == "true", string.format("the server's copy of can %s: isFavorite %s", tostring(FU.uxFav),
+                        tostring(fav))
+                end)
+            end),
+            release,
+            once("mp_finish_b", function() send("finish", {}) end), MP.finish,
+        }
+        MP.stepsA = steps
+        MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+    end
+    TLGH.uxCase()
+end

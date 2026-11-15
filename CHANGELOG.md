@@ -81,8 +81,10 @@
   carried machine's Status, Status asked with a controller, the
   gasifier's Status and Gas status stay windows. Run in game
   on one machine in English (RT-SP launches 442 and 443) and in Italian
-  on a biodiesel reactor beside a leacher and two retorts (launch 445);
-  not on a server.
+  on a biodiesel reactor beside a leacher and two retorts (launch 445).
+  On a server's client the card opened, its own refresh showed a
+  neighbour's new state, and it closed six tiles away and when the
+  machine was taken with Grab (RT-MP launch 446).
 * Fixed: closing one of the mod's windows (**Status**, a test's result,
   **Project status**) or answering one of its yes/no questions leaves
   the game's speed as it was.
@@ -98,7 +100,10 @@
   each litre. Before, both moved the fuel at once. A drain lasts as long
   as the litres it will move, the can's room or what the generator holds.
   In single player a drain from the menu moved a generator's 2 L (launch
-  438); its time and look, and the station pour, are not run in game.
+  438), and on a server 3 L (launch 446); its time and look are not run
+  in game. The station pour was refused on a server by a pump holding
+  more than 10,000 L that the mod had not read before, which counts as
+  full (launch 446); into a pump with room it is not run in game.
 * New: biodiesel and gas have instructions in the game. The Field
   Manual's menu has **Read: Biodiesel** and **Read: Gas generators**,
   each a page like the manual's own: the five machines, a batch step by
@@ -194,8 +199,9 @@
   quicklime stay in the bag, and a favourite fuel can is not chosen to
   collect into. With only favourites carried the load is refused as if
   there were none. The workshop's **Hand over parts** still takes
-  favourite parts. Not checked in game; on a server it relies on the
-  game sending the mark to the server, which is not checked either.
+  favourite parts. Not checked in game. On a server the loads read the
+  server's copy of the item, and the game sends a client's mark there
+  (launch 446).
 * Changed: **Feed the firebox** no longer burns planks. With planks in
   the bag a second entry, **Feed the firebox, planks too**, burns them as
   well. Loading wood into the Wood Retort, the Ash Barrel and the Wood

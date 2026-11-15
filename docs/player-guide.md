@@ -92,10 +92,12 @@ The card was opened, refreshed, closed by walking away and photographed
 in English on a pot still (RT-SP launches 442 and 443). In Italian it was
 opened and photographed on a biodiesel reactor with its "Prende da"
 lines, and closed when the reactor was lifted with the calls the game's
-grab makes (launch 445).
+grab makes (launch 445). On a server's client it opened, refreshed by
+itself at normal speed, and closed when the player walked away and when
+the reactor was taken with Grab (launch 446).
 
-**Not checked in game:** dragging the card, its closing through the
-game's own Grab entry, and how the lines look over the character. The lines' texts ran through the harness (launches 421 and
+**Not checked in game:** dragging the card, and how the lines look over
+the character. The lines' texts ran through the harness (launches 421 and
 422), which cannot see the screen.
 
 ## Inspecting fuel
