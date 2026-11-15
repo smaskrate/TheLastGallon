@@ -6319,15 +6319,18 @@ if MP.only == "ux" then
         local UX = { lines = {}, windows = {}, opened = {} }
         local Say, Card, Fuel = TLG.UI.Say, TLG.UI.MachineCard, TLG.UI.FuelMenu
         local function has(text, part) return text ~= nil and part ~= nil and string.find(text, part, 1, true) ~= nil end
-        -- The pump the Fuel menu's pour takes for a character on x,y: the
-        -- first pump in its scan's order (FuelContextMenu nearbyPump).
-        function UX.menuPumpAt(x, y)
+        -- The pump the Fuel menu's pour took before the owner's choice of
+        -- 2026-11-15 for a character on x,y: the first pump in its scan's
+        -- order, from the west and the north. Logged beside the one it
+        -- takes now, the nearest (FuelMenu.nearbyPump).
+        function UX.firstFoundAt(x, y, is)
+            is = is or TLG.Integration.Stations.isPump
             for dx = -2, 2 do
                 for dy = -2, 2 do
                     local s = getCell():getGridSquare(x + dx, y + dy, 0)
                     local objs = s and s:getObjects()
                     for i = 0, (objs and objs:size() or 0) - 1 do
-                        if TLG.Integration.Stations.isPump(objs:get(i)) then return s:getX(), s:getY() end
+                        if is(objs:get(i)) then return s:getX(), s:getY() end
                     end
                 end
             end
@@ -6335,10 +6338,12 @@ if MP.only == "ux" then
         end
         function UX.menuPumpNow()
             local sq = player():getSquare()
-            local x, y = UX.menuPumpAt(sq:getX(), sq:getY())
-            local at = x and string.format("%d,%d", x, y) or "none"
-            report():line("OBS  MP.ux at %d,%d the Fuel menu's pump is %s; the case's pump %d,%d", sq:getX(), sq:getY(), at,
-                site("px"), site("py"))
+            local p = Fuel.nearbyPump(player())
+            local ps = p and p:getSquare()
+            local at = ps and string.format("%d,%d", ps:getX(), ps:getY()) or "none"
+            local fx, fy = UX.firstFoundAt(sq:getX(), sq:getY())
+            report():line("OBS  MP.ux at %d,%d the Fuel menu's pump is %s; the first found would be %s; the case's pump %d,%d",
+                sq:getX(), sq:getY(), at, fx and string.format("%d,%d", fx, fy) or "none", site("px"), site("py"))
             return at
         end
         local function itemOf(key)
@@ -6585,6 +6590,27 @@ if MP.only == "ux" then
                 return true
             end },
             giveCan("ux_give_drain_can", { petrol = "1" }, "uxDrain"), arrived("uxDrain"),
+            -- Two tiles south of g1, which holds the fuel: g2, empty, two
+            -- tiles west of it, is the first generator found from there and
+            -- offered no drain before the owner's choice of 2026-11-15; the
+            -- nearest is g1.
+            walkTo("mp_ux_walk_south_of_generator", function() return site("g1x"), site("g1y") + 2 end),
+            { name = "mp_ux_menu_generator", timeout = 60, fn = function(ctx, ticks)
+                local sq = player():getSquare()
+                local g = Fuel.nearbyGenerator(player())
+                local gs = g and g:getSquare()
+                local fx, fy = UX.firstFoundAt(sq:getX(), sq:getY(), function(o) return instanceof(o, "IsoGenerator") end)
+                UX.menuGen = gs and string.format("%d,%d", gs:getX(), gs:getY()) or "none"
+                UX.firstGen = fx and string.format("%d,%d", fx, fy) or "none"
+                report():line("OBS  MP.ux at %d,%d the Fuel menu's generator is %s; the first found would be %s; g1 %d,%d",
+                    sq:getX(), sq:getY(), UX.menuGen, UX.firstGen, site("g1x"), site("g1y"))
+                check("ux_drain_takes_the_nearest_generator", function()
+                    return UX.menuGen == string.format("%d,%d", site("g1x"), site("g1y")), string.format(
+                        "the menu's generator %s, the first found %s, g1 %d,%d", UX.menuGen, UX.firstGen, site("g1x"),
+                        site("g1y"))
+                end)
+                return true
+            end },
             act("ux_drain", function(ctx, p)
                 local it = inventoryItem(FU.uxDrain)
                 local clicked = it ~= nil and clickIn(function(c) Fuel.fill(0, c, { it }) end, getText("ContextMenu_TLG_Fuel"),
@@ -6610,20 +6636,13 @@ if MP.only == "ux" then
             giveCan("ux_give_station_can", { petrol = "2" }, "uxStation"), arrived("uxStation"),
             giveCan("ux_give_station_can2", { petrol = "2" }, "uxStation2"), arrived("uxStation2"),
             giveCan("ux_give_take_can", { petrol = "0" }, "uxTake"), arrived("uxTake"),
-            -- The Fuel menu pours into the first pump it finds within two
-            -- tiles, scanning from two tiles west and north of the
-            -- character (FuelContextMenu nearbyPump), not into the nearest:
-            -- launch 450 stood two tiles east of the pump and its pours left
-            -- the cans without reaching it. The character stands two tiles
-            -- east and two south, where the pump's square is the first the
-            -- scan visits, and the pump the menu takes is logged and checked.
-            { name = "mp_ux_menu_pump_from_the_east", timeout = 60, fn = function(ctx, ticks)
-                local x, y = UX.menuPumpAt(site("px") + 2, site("py"))
-                report():line("OBS  MP.ux from %d,%d the Fuel menu's pump would be %s,%s; the case's pump %d,%d",
-                    site("px") + 2, site("py"), tostring(x), tostring(y), site("px"), site("py"))
-                return true
-            end },
-            walkTo("mp_ux_walk_to_pump", function() return site("px") + 2, site("py") + 2 end),
+            -- The Fuel menu pours into the nearest pump within two tiles.
+            -- The character stands two tiles east of the case's pump, the
+            -- nearest from there; where the pump's pair stands a tile north,
+            -- the first pump found from there is that one, where launch 450's
+            -- pours went before the owner's choice of 2026-11-15. The pump
+            -- the menu takes is logged and checked.
+            walkTo("mp_ux_walk_to_pump", function() return site("px") + 2, site("py") end),
             { name = "mp_ux_menu_pump_1", timeout = 60, fn = function(ctx, ticks)
                 UX.menuPump1 = UX.menuPumpNow()
                 return true
@@ -6668,9 +6687,9 @@ if MP.only == "ux" then
                 report():line("OBS  MP.ux taken from the pump: %s -> %s units; the can %.4f L", tostring(UX.units0),
                     tostring(UX.units1), canL("uxTake"))
             end),
-            -- The take walked the character to the pump; back to where the
-            -- menu's scan finds it first.
-            walkTo("mp_ux_walk_to_pump_again", function() return site("px") + 2, site("py") + 2 end),
+            -- The take walked the character to the pump; back to where it
+            -- stood.
+            walkTo("mp_ux_walk_to_pump_again", function() return site("px") + 2, site("py") end),
             { name = "mp_ux_menu_pump_2", timeout = 60, fn = function(ctx, ticks)
                 UX.menuPump2 = UX.menuPumpNow()
                 return true

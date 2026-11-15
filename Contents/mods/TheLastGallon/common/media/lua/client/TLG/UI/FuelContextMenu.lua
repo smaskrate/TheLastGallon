@@ -225,39 +225,42 @@ local function nearbyVehicleTank(player)
     return nil
 end
 
-local function nearbyGenerator(player)
+-- The object `is` accepts nearest the character within two tiles, counted
+-- square to square. Of two as near, the first met scanning from the west and
+-- the north. A pour or a drain goes to the pump or generator beside the
+-- character (the owner's choice, 2026-11-15): taking the first one found,
+-- the pour reached the other pump of a station's pair (RT-MP launch 450).
+local function nearest(player, is)
     local sq = player:getSquare()
     if sq == nil then return nil end
+    local best, bestD = nil, nil
     for dx = -2, 2 do
         for dy = -2, 2 do
             local s = getCell():getGridSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
-            if s then
-                local objs = s:getObjects()
-                for i = 0, objs:size() - 1 do
-                    if instanceof(objs:get(i), "IsoGenerator") then return objs:get(i) end
+            local objs = s and s:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                local o = objs:get(i)
+                if is(o) then
+                    local d = dx * dx + dy * dy
+                    if bestD == nil or d < bestD then best, bestD = o, d end
+                    break
                 end
             end
         end
     end
-    return nil
+    return best
+end
+
+local function nearbyGenerator(player)
+    return nearest(player, function(o) return instanceof(o, "IsoGenerator") end)
 end
 
 local function nearbyPump(player)
-    local sq = player:getSquare()
-    if sq == nil then return nil end
-    for dx = -2, 2 do
-        for dy = -2, 2 do
-            local s = getCell():getGridSquare(sq:getX() + dx, sq:getY() + dy, sq:getZ())
-            if s then
-                local objs = s:getObjects()
-                for i = 0, objs:size() - 1 do
-                    if TLG.Integration.Stations.isPump(objs:get(i)) then return objs:get(i) end
-                end
-            end
-        end
-    end
-    return nil
+    return nearest(player, TLG.Integration.Stations.isPump)
 end
+
+-- What the pour and drain entries take, for the in-game harness.
+Menu.nearbyGenerator, Menu.nearbyPump = nearbyGenerator, nearbyPump
 
 -- Vanilla has no way to empty a generator; conversions require a drained
 -- fuel system, so TLG offers an authoritative drain into a can.

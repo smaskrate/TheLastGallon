@@ -2272,3 +2272,29 @@ values, not measured in play.
 
 **Not done.** The biogas machines and the domain's `Treatment.repair`
 have no menu; `Maintenance` is still a state nothing enters.
+
+## D-044 A pour or a drain takes the nearest pump or generator
+
+Decided 2026-11-15 by the owner ("Yes, the nearest"), after launch 450.
+
+**Before.** The Fuel menu's **Pour into the station reservoir**, **Pour
+into the generator** and **Drain the generator into this can** took the
+first pump or generator found within two tiles of the character, scanning
+from the west and the north. A station's pumps stand in pairs a tile
+apart: two tiles east of the south pump of a pair, the scan met the north
+one first, and in launch 450 two pours left their cans and did not reach
+the pump beside the character. From two tiles south of a generator with
+fuel, an empty one two tiles west of it was found first and no drain was
+offered.
+
+**Now.** Each takes the pump or generator nearest the character within
+two tiles, counted square to square; of two as near, the first met from
+the west (`FuelContextMenu.lua`, `nearest`). The character still turns to
+the one it pours into or drains. Offline: `test_tank_menu.lua`. In game on
+a server (launch 477): from two tiles east of the south pump of a pair
+the pour went into it, where the scan meets the north one first; from
+two tiles south of the generator with fuel the drain took it, where the
+scan meets the empty one first.
+
+**Not done.** The Workshop menu, for a generator the click is not on,
+still takes the first one found (`WorkshopMenu.lua`, `nearbyGenerator`).

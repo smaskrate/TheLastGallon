@@ -108,9 +108,16 @@
   the mod reads for the first time with more than 10,000 L counts as
   full and refuses the pour (launch 446 poured nothing into one of
   15,208 L).
+* Fixed: **Pour into the station reservoir**, **Pour into the generator**
+  and **Drain the generator into this can** take the pump or generator
+  nearest the character. Before, they took the first one found within two
+  tiles, which at a pair of pumps could be the other pump. Checked on a
+  server (launch 477).
 * Fixed: a pour into something full was refused with the internal code
   `destination_full` in the text. It now says "It is full: there is no
-  room for more fuel." Checked offline; not seen in game.
+  room for more fuel." On a server the harness read that line said over
+  the character, refusing a pump of 14,307 L (launch 473); not looked at
+  on screen.
 * New: biodiesel and gas have instructions in the game. The Field
   Manual's menu has **Read: Biodiesel** and **Read: Gas generators**,
   each a page like the manual's own: the five machines, a batch step by

@@ -346,3 +346,53 @@ T.case("integration: Drain the generator and Pour into the station reservoir que
         if not ok then error(err, 0) end
     end)
 end)
+
+T.case("integration: a pour or a drain takes the nearest pump or generator, not the first one found", function()
+    world(function(w)
+        local saved = { queue = ISTimedActionQueue, pane = ISInventoryPaneContextMenu }
+        local queued = {}
+        w.player.isTimedActionInstant = function() return false end
+        ISTimedActionQueue = { add = function(action) queued[#queued + 1] = action end }
+        ISInventoryPaneContextMenu = { transferIfNeeded = function() end }
+        local ok, err = pcall(function()
+            local function pumpAt(x, y)
+                local s = w.square(x, y)
+                local p = { class = "IsoObject", getSquare = function() return s end, getObjectIndex = function() return 3 end,
+                    getPipedFuelAmount = function() return 100 end, hasModData = function() return false end }
+                s.objects[#s.objects + 1] = p
+                return p
+            end
+            -- Launch 450's layout: a station's pumps a tile apart, the
+            -- character two tiles east of the south one. The scan meets the
+            -- north one first; the south one is nearer (2 tiles against 2.24).
+            local north, south = pumpAt(8, 9), pumpAt(8, 10)
+            T.ok(Menu.nearbyPump(w.player) == south, "the pump beside the character")
+            local fc = { getAmount = function() return 2 end, getFreeCapacity = function() return 8 end,
+                isEmpty = function() return false end }
+            local can = { getID = function() return 9 end, getWorldItem = function() return nil end,
+                getFluidContainerFromSelfOrWorldItem = function() return fc end }
+            local sub = w.context()
+            Menu.addPourOptions(w.player, sub, can)
+            for _, o in ipairs(sub.options) do
+                if o.name == bracket("ContextMenu_TLG_PourStation") then o.fn() end
+            end
+            T.eq(#queued, 1)
+            T.eq(queued[1].destination.x, 8); T.eq(queued[1].destination.y, 10, "poured into the south pump")
+            T.ok(queued[1].faceObject == south and queued[1].faceObject ~= north, "and faces it")
+            -- Generators: one a tile west and two north (2.24), met first;
+            -- one two tiles east (2), nearer: the drain takes it.
+            local far, near = w.generator(9, 8), w.generator(12, 10)
+            far.fuel, near.fuel = 3, 3
+            T.ok(Menu.nearbyGenerator(w.player) == near)
+            sub = w.context()
+            Menu.addDrainOptions(w.player, sub, can)
+            sub.options[1].fn()
+            T.eq(queued[2].source.x, 12); T.ok(queued[2].faceObject == near)
+            -- As near as each other: the first met, from the west.
+            local west = w.generator(8, 10)
+            T.ok(Menu.nearbyGenerator(w.player) == west, "two tiles west and two east: the west one")
+        end)
+        ISTimedActionQueue, ISInventoryPaneContextMenu = saved.queue, saved.pane
+        if not ok then error(err, 0) end
+    end)
+end)

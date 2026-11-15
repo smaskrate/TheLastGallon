@@ -391,7 +391,7 @@ Where it stands against the gates:
 | 7 | OPEN | Not run with 0.5.0: a save made with 0.4.3 continued; a generator converted to gas in a save from 0.4.1 or earlier taking gas, once drained; the existing-save and removal scenarios |
 | 8 | PARTIAL | The gas runs on the game's own generator, converted; `support-matrix.md` has the gas rows |
 | 9 | PARTIAL | The Wood Gasifier's floor model is the one the owner supplied, with its provenance in `art-src/woodgasifier`, and its icon is rendered from it (launch 448); the Wood Gas Handbook's icon is made from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card (launch 444) and picture 12 of the gasifier (launch 448) are not uploaded |
-| 10 | PARTIAL | 519 Italian strings as shipped and the Status card read in Italian (launch 445); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. Open: the 520th string, "It is full: there is no room for more fuel.", added after launch 445; the Generator Info line of a gas generator names biogas, which has no machine; the package's Workshop text (`tools/package.ps1`) still says "Not in this version: wood gas, biogas, propane"; the Italian state word after a feminine machine name ("Storta per legna … Pronto", launch 445), not decided |
+| 10 | PARTIAL | 519 Italian strings as shipped and the Status card read in Italian (launch 445); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. The 520th string, "It is full: there is no room for more fuel.", added after launch 445, said on a server's client in English (launch 473). Open: that string in Italian in game; the Generator Info line of a gas generator names biogas, which has no machine; the package's Workshop text (`tools/package.ps1`) still says "Not in this version: wood gas, biogas, propane"; the Italian state word after a feminine machine name ("Storta per legna … Pronto", launch 445), not decided |
 | 11 | PARTIAL | Single player's whole performance mode passed its 53 budgets with the gas (launches 405–407); the gas's cost on a server with one client (launches 410–411). Open: the mode since the nearest-first order; several Status cards open and what their refreshes cost; several clients |
 | 12 | OPEN | No 0.5.0 package |
 | 13 | PARTIAL | The Wood Gasifier's model is the owner's, supplied on 2026-11-15 (D-039 amendment), drawn whole on the floor in launch 448; its size, 1.2 m wide, the owner judged right. Open: one look for every state, cold, warming and running not drawn apart; its icon not looked at in the game's interface; a turned gasifier; its look on a server |
@@ -408,11 +408,10 @@ still modes, `realtime`, `winter`,
 `transfer-liquid`, `diesel-pumps` and `wrong-fuel-more`, last run between
 launches 13 and 322.
 
-The Fuel menu's **Pour into the station reservoir** pours into the first
-pump within two tiles in its scan's order, not into the nearest
-(`FuelContextMenu.lua`). At a pair of pumps that can be the other one: in
-launch 450 two pours left their cans and did not reach the case's pump.
-Not decided.
+The Fuel menu's pours and drain take the pump or generator nearest the
+character (D-044, the owner's choice after launch 450, where the first
+one found was the other pump of a pair); checked on a server in launch
+477.
 
 Not decided, put to the owner on 2026-11-15: whether a client's Fuel
 menu names the engine now that its copy of the world record carries

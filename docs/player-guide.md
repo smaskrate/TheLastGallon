@@ -214,10 +214,9 @@ full: a pour into it is refused with "It is full: there is no room for
 more fuel." until fuel is taken from it, and then it takes back as much
 as was taken.
 
-Where two pumps stand side by side, the pour may go into the other one:
-the menu takes the first pump it finds within two tiles, from the west
-and the north, not the nearest. Your character turns to face the pump it
-pours into.
+Where two pumps or generators stand within two tiles, the pour or drain
+takes the one nearest your character, and your character turns to face
+it.
 
 These pours move any fuel the mod knows, with its condition, not only
 petrol. If the result would be a blend the engine cannot use, or one that
@@ -233,11 +232,16 @@ transfer. On a server, a pour with its result shown to the player; a
 drain from the menu that moved a generator's 3 L into a can (launch 446);
 **Pour into the station reservoir** putting 2 L into a pump of 5,175 L
 (launch 447) and into one of 263 L, then again after a take (launch
-451), and nothing into one of 15,208 L (launch 446).
+451), and nothing into one of 15,208 L (launch 446); a pump of 14,307 L
+refused with "It is full: there is no room for more fuel." said over the
+character, then taking back 2 of the 10 L taken from it (launch 473); the
+pour into the pump beside the character where another stands a tile
+from it, and the drain from the generator with fuel where an empty one
+stands two tiles from it (launch 477).
 
 **Not checked in game:** **Pour into the station reservoir** in single
-player; the refusal "It is full: there is no room for more fuel." on
-screen; the time and look of **Drain the generator into this can**; a
+player; the refusal "It is full: there is no room for more fuel." looked
+at on screen (the harness reads the line, not the screen); the time and look of **Drain the generator into this can**; a
 drain from the menu moved a generator's 2 L in single player in launch
 438.
 
