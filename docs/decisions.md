@@ -2296,5 +2296,6 @@ the pour went into it, where the scan meets the north one first; from
 two tiles south of the generator with fuel the drain took it, where the
 scan meets the empty one first.
 
-**Not done.** The Workshop menu, for a generator the click is not on,
-still takes the first one found (`WorkshopMenu.lua`, `nearbyGenerator`).
+**Left as it is.** The Workshop menu, for a generator the click is not
+on, takes the first one found (`WorkshopMenu.lua`, `nearbyGenerator`): the
+owner chose to leave it ("Leave it", 2026-11-15).
