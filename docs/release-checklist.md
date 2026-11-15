@@ -402,15 +402,17 @@ Of the single-player modes, the full run (launch 435: 106/0, 14/0),
 `pickup`, `pot-still`, `biodiesel`, `gas-propane`, `gas-sleep`,
 `gas-moves`, `context-menus`, `context-menus-zoom`, `fireplace` and
 `wrong-fuel` (449–460, all passed) have run since the machines' menu
-entries took their names. Thirteen modes that open a machine's menu or
-read a reply have not: the three still modes, `realtime`, `winter`,
+entries took their names. Thirteen others have not run since: the three
+still modes, `realtime`, `winter`,
 `fireplace-reload`, `fires`, `successor`, `knowledge`, `knowledge-save`,
 `transfer-liquid`, `diesel-pumps` and `wrong-fuel-more`, last run between
 launches 13 and 322.
 
 The Fuel menu's **Pour into the station reservoir** pours into the first
-pump within two tiles in its scan's order, not into the nearest; at a
-pair of pumps it can pour into the other one (launch 450). Not decided.
+pump within two tiles in its scan's order, not into the nearest
+(`FuelContextMenu.lua`). At a pair of pumps that can be the other one: in
+launch 450 two pours left their cans and did not reach the case's pump.
+Not decided.
 
 Not decided, put to the owner on 2026-11-15: whether a client's Fuel
 menu names the engine now that its copy of the world record carries

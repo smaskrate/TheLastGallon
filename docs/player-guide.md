@@ -233,8 +233,7 @@ transfer. On a server, a pour with its result shown to the player; a
 drain from the menu that moved a generator's 3 L into a can (launch 446);
 **Pour into the station reservoir** putting 2 L into a pump of 5,175 L
 (launch 447) and into one of 263 L, then again after a take (launch
-451), and nothing into one of 15,208 L (launch 446); a pour that went into
-the other pump of a pair (launch 450).
+451), and nothing into one of 15,208 L (launch 446).
 
 **Not checked in game:** **Pour into the station reservoir** in single
 player; the refusal "It is full: there is no room for more fuel." on
