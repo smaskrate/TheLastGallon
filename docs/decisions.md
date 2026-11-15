@@ -2339,3 +2339,11 @@ what it burns, its handbook and levels, and **Gas status**. Its last
 line names only biogas and electrical networks as not in this version.
 The upload folder's `workshop.txt` is the owner's file and keeps its
 0.4.3 text until the 0.5.0 package goes there, on the owner's word.
+
+**The mod list's description** (`mod.info`), chosen by the owner the
+same day ("Three pathways, one list") after the release commit had added
+a gas clause to it: "… or make your own: ethanol (…) for a converted
+generator or car, biodiesel from wood and cooking oil for diesel
+engines, and wood gas from a Wood Gasifier for a generator converted to
+gas, which also burns propane." Propane is named last, since the player
+finds it rather than makes it.
