@@ -16,7 +16,7 @@ runtime tests.
 | RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443; in Italian on a biodiesel reactor with its source lines, closed when the reactor was lifted: launch 445; on a server's client, a reactor's line for its leacher changed by the card's own refresh at speed 1 after ten game minutes, closed six tiles away and by Grab: launch 446): dragging it and its cross with the mouse, the wash tank's line for its reactor, several cards at once and their cost (each refresh writes the record and on a server sends it to the clients; not measured), a second player's card in split screen, a second client on a server (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture, and only `controls`, `docs-shots` and `italian` (launches 444 and 445) were run since | The steps are `RT.cardStep` (`controls`), `RT.itCard` (`italian`) and the server case `ux` |
 | RT-SP and RT-MP: the game's speed across the mod's windows and questions (UX review R14; the game's own window left 1 and the mod's left 3 when closed by the OK handler at speed 3: launch 440): a click on OK with the mouse and the speed buttons on screen, the yes/no questions (**Cancel the project**, **Remove the conversion**, a second **Abort batch**, a harmful pour; offline: `test_say.lua`), a paused game, a controller, a server's client | The `controls` mode's step calls the OK button's handler and reads the speed controls |
 | RT-SP and RT-MP: **Gas status** with the hours of gas left (UX review R11; on wood gas the text read and the estimate against the stop, 1 h against 1.97 h: launch 439): the window on a generator on propane and on one never switched on; whether the window (420x220) holds its longest line, in Italian; the estimate after the load changes (offline: `test_gas_feed.lua`, `test_gas_handlers.lua`, `test_gasifier_menu.lua`). The gas page of the manual names this line since; launches 436–437 photographed its earlier sentence | The gas modes read the window's text, not the screen; `gas-propane` not launched since |
-| RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action; the station pour into a pump with room, in single player or on a server. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438; on a server the action's `source` reached the server's copy and 3 L moved: launch 446). On a server the station pour into an untouched pump holding 15,208 L moved nothing: a pump first read with more than 10,000 L has no room (`Stations.read`), refused as `destination_full`, a reason with no text of its own (launch 446) | `gas-player` (single player) and `ux` (server) click the drain; `ux` clicks the station pour, on an untouched pump |
+| RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action; the station pour into a pump with room, in single player or on a server, and whether a server's copy of the action gets the pump as the object faced. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438; on a server the action's `source` reached the server's copy and 3 L moved: launch 446). On a server the station pour into an untouched pump holding 15,208 L moved nothing (launch 446): either the server's copy never ran, or the code's refusal held, since a pump first read with more than 10,000 L has no room (`Stations.read`, `destination_full`, a reason with no text of its own) | `gas-player` (single player) and `ux` (server) click the drain; `ux` clicks the station pour, on an untouched pump |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
@@ -9556,8 +9556,9 @@ item's favourite mark.
   itself 0.169 game hours (ten game minutes) and 6,450 ms after its first
   fill, at the game's speed 1, and its leacher line read "Working". The
   client's copy of the leacher's record was Processing.
-* Six tiles away the card closed at the next tick. Opened again, it
-  closed when the reactor was taken with the world menu's Grab.
+* The card had closed by the time the player stood six tiles away.
+  Opened again, it closed when the reactor was taken with the world
+  menu's Grab.
 * At the fuel case's site, 3 L were poured into a generator through the
   mod's pour (the server's generator 3 L). Its **Fuel in this generator**
   entry listed What I know about it, Look and smell and Take a sample
@@ -9574,13 +9575,17 @@ item's favourite mark.
 * **Failed: Pour into the station reservoir.** Clicked in the Fuel menu of
   a can holding 2 L, two tiles from the pump, the action ran as long as
   the drain and nothing moved: the pump 15,208 units before and after, no
-  record written, the can 2 L. Read in the code, not seen in the reply: a
-  pump the mod reads for the first time gets a reservoir of
-  `max(10000, litres)` (`Stations.read`), so a pump at 15,208 L has no
-  room, and the transfer is refused as `destination_full`
-  (`Mixing.previewTransfer`). That reason has no text of its own
-  (`Format.FAILURE_KEYS`), so the player gets the generic refusal with the
-  code in it. The line the client said was not captured.
+  record written, the can 2 L. The launch does not show which of two
+  causes it was, since the line the client said was not captured:
+  - the transfer reached the server and was refused. A pump the mod reads
+    for the first time gets a reservoir of `max(10000, litres)`
+    (`Stations.read`), so a pump at 15,208 L has no room, and the code
+    refuses that as `destination_full` (`Mixing.previewTransfer`), a
+    reason with no text of its own (`Format.FAILURE_KEYS`): the player
+    would get the generic refusal with the code in it. The rule is the
+    domain's, so it holds in single player too;
+  - the server's copy of the action never ran: the pump, sent as the
+    object faced, is the field a server has not been seen to get.
 * **Open** on a can, answered by the server, was said over the character,
   "Opened. Open containers age faster and take on moisture.", with no
   window.
@@ -9595,7 +9600,8 @@ The client's console holds no error of the mod. The server's holds one
 stack trace, the harness's own deep-recursion probe at start-up
 (`LuaProbe.lua`).
 
-Not run: the station pour into a pump with room; the refuel line reaching
+Not run: whether the server's copy of the station pour gets the pump as
+the object faced; the station pour into a pump with room; the refuel line reaching
 only the player who poured (two clients); a load leaving a favourite
 alone; the Workshop menu from a client's copy and Repair on a server; the
 other multiplayer cases since the menus' names and replies changed.
