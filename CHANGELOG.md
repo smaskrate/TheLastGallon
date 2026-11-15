@@ -39,7 +39,9 @@
   goes out three hours after it stops: out of wood, its filter full, or no
   generator drawing. **Clean out tar and ash** empties the filter; **Put
   out** stops it at once. It burns only while a player is in the area.
-  Its model and icon are the mod's own, built from simple shapes.
+  On the floor it is a green drum and a filter drum on a steel frame, 1.2
+  m wide, the model the owner supplied; its icon is rendered from it.
+  Seen in single player (launch 448).
 * New item, the **Wood Gas Handbook**, found where the Field Manual is.
   Reading it teaches the gasifier's recipe; with it read, the game makes
   the gasifier from Welding 4, as it does for any recipe read from a

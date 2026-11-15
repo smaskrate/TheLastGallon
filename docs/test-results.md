@@ -9651,3 +9651,32 @@ game (no pump above 10,000 L in this world); the revised case.
 
 Evidence:
 [run 447](evidence/2026-11-15_rt-mp_harness_run447_ux_station_pour_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launch 448 (the wood gasifier's supplied model)
+
+Branch `feature/gas-generators` after `f652759`, the supplied model and
+its icon not yet committed, 42.22.2. Command:
+`tools/run-sp-harness.ps1 -Mode gas-player`, the mode of launch 438,
+unchanged. **15/0.**
+
+* The model the owner supplied on 2026-11-15, at scale 0.8, was drawn
+  whole with its texture on the floor two tiles from a vanilla generator:
+  a green drum with a lid and an ash door at its foot, a pipe from its
+  side into a grey filter drum, both on a steel frame with four feet. On
+  the photographs its lid is about level with the character's shoulders
+  and higher than the placeholder's drum was in launch 388; this is read
+  from them, not measured.
+* The rest went as in launch 438: the conversion with the tank drained,
+  the handbook read, the gasifier made, put down, loaded with 30 kg and
+  lit from the right-click menu, and the generator run 3 game hours on
+  0.128 Nm³ without a stop.
+
+The console holds no exception and no warning or error of the mod; its
+errors are the game's own, at loading the map.
+
+Not run: the gasifier turned where it is put down; its icon in the game's
+interface (the photographs hide it); its look on a server.
+
+Evidence:
+[run 448](evidence/2026-11-15_rt-sp_harness_run448_gas_player_supplied_gasifier_42.22.2.txt),
+photographs in [evidence/run448](evidence/run448).

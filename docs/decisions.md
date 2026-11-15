@@ -1696,6 +1696,12 @@ their replacement.
     run), and no vehicle conversion to wood gas is defined.
   * The gasifier gets a shape-built model first (the tooling of D-029);
     the owner may supply one before the release, as for the stills.
+    * Amendment (2026-11-15): the owner supplied the model and its
+      texture, which replace the shape-built one (provenance in
+      `art-src/woodgasifier`, as for D-036's machines); its icon is
+      rendered from it. Scale 0.8: the drum about 0.6 m across, the whole
+      1.2 m wide. Seen in game in launch 448; the size is the owner's to
+      judge.
   * Building the gasifier asks a Welding level and a learned recipe, as
     the biodiesel machines do since 0.4.0 (D-038). The level is left to
     the implementation, from the game's own welded recipes.

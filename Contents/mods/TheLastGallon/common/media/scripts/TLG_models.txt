@@ -185,13 +185,16 @@ module TLG
         scale = 1.0,
     }
 
-    /* Gasifier (D-040): built from shapes (tools/blender/pz_icon_props.py,
-       the tooling of D-029), 1.0 along its width. 0.93 makes it 1.4 m
-       wide, its drum 0.86 m tall, a 200 L drum's height. */
+    /* Gasifier (D-040): the model the user supplied on 2026-11-15
+       (provenance in art-src/woodgasifier), shipped as the biodiesel
+       machines' are. A drum with a lid and an ash door, a pipe from its
+       side into a filter drum, both on a steel frame; 1.0 along its width.
+       0.8 makes the drum about 0.6 m across, as a 200 L drum is: the whole
+       1.2 m wide and 1.12 m to the lid. */
     model Gasifier
     {
         mesh = TLG/Gasifier,
         texture = TLG/Gasifier,
-        scale = 0.93,
+        scale = 0.8,
     }
 }

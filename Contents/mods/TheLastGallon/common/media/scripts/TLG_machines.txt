@@ -402,7 +402,9 @@ module TLG
 
     /* The wood gasifier (D-040): placed within two tiles of a generator
        converted to gas, it feeds it wood gas (Integration/Gasifiers.lua).
-       Its floor model and icon are built from shapes (TLG_models.txt). It
+       Its floor model is the one the user supplied on 2026-11-15
+       (TLG_models.txt); its icon is rendered from it
+       (tools/make-model-icons.ps1). It
        must be learned, from TLG.WoodGasHandbook or at MetalWelding 7, and
        asks level 5 as the reactor does: its hearth and gas line must be
        gas-tight. */

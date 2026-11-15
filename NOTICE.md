@@ -5,7 +5,8 @@
   below. Every other item's icon (`media/textures/Item_TLG_*.png`) was
   made for the mod: the
   vessel's drawn by `tools/make-icons.ps1`, the stills', the drying
-  column's and the fuel filter's rendered from their own supplied models
+  column's, the fuel filter's, the biodiesel machines' and the wood
+  gasifier's rendered from their own supplied models
   by `tools/make-model-icons.ps1`, and the sampling kit's, the yeast
   starter's, the stabilizer's and the manual's rendered by the same tool
   from simple shapes built for them (`tools/blender/pz_icon_props.py`).
@@ -36,6 +37,11 @@
   five were generated under it was not asked (`PROVENANCE.md` in
   `art-src/woodretort`, `art-src/ashbarrel`, `art-src/lyeleacher`,
   `art-src/biodieselreactor` and `art-src/biodieselwashtank`).
+* The wood gasifier's model and texture (`Gasifier` in the same folders)
+  were supplied for this mod on 2026-11-15. Its model file's names are
+  Tripo's, as the earlier models' are. The basis for its distribution is
+  the same commercial Tripo licence; whether it was generated under it
+  was not asked (`art-src/woodgasifier/PROVENANCE.md`).
 * The diesel generator's tile sprite and icon
   (`media/textures/TLG/Tile_DieselGenerator.png`,
   `media/textures/Item_TLG_DieselGenerator.png`) are Project Zomboid's
@@ -57,7 +63,8 @@
 * The Workshop preview and the mod list's poster (`preview.png` beside
   the item's `Contents` folder, and `42/poster.png`, the same picture)
   were made for the mod by `tools/make-preview.ps1`: the ten supplied
-  models above and the mod's four small item models, rendered in Blender
+  machine models listed before the wood gasifier's and the mod's four
+  small item models, rendered in Blender
   (`tools/blender/pz_preview.py`)
   under the title, set in Bahnschrift (Microsoft) and Stencil (URW and
   Microsoft), fonts installed on the computer it was made on. The picture

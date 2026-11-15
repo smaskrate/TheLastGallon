@@ -390,15 +390,15 @@ Where it stands against the gates:
 | 6 | PARTIAL | Propane through a save, a reload and a trip (launch 352); a wood-gas save continued (launch 358); a server restart with the gasifier lit (launch 392); a generator taken up and put down with its tank (launch 352) and with its wood-gas record (launches 397, 408–409); a lit gasifier taken up goes out and keeps its wood (launches 358, 361). Open: as for 0.4.3 |
 | 7 | OPEN | Not run with 0.5.0: a save made with 0.4.3 continued; a generator converted to gas in a save from 0.4.1 or earlier taking gas, once drained; the existing-save and removal scenarios |
 | 8 | PARTIAL | The gas runs on the game's own generator, converted; `support-matrix.md` has the gas rows |
-| 9 | PARTIAL | The Wood Gasifier's floor model and icon are built from shapes, and the Wood Gas Handbook's icon from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card, made in launch 444, is not uploaded |
+| 9 | PARTIAL | The Wood Gasifier's floor model is the one the owner supplied, with its provenance in `art-src/woodgasifier`, and its icon is rendered from it (launch 448); the Wood Gas Handbook's icon is made from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card (launch 444) and picture 12 of the gasifier (launch 448) are not uploaded |
 | 10 | PARTIAL | 519 Italian strings as shipped and the Status card read in Italian (launch 445); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. Open: the 520th string, "It is full: there is no room for more fuel.", added after launch 445; the Generator Info line of a gas generator names biogas, which has no machine; the package's Workshop text (`tools/package.ps1`) still says "Not in this version: wood gas, biogas, propane"; the Italian state word after a feminine machine name ("Storta per legna … Pronto", launch 445), not decided |
 | 11 | PARTIAL | Single player's whole performance mode passed its 53 budgets with the gas (launches 405–407); the gas's cost on a server with one client (launches 410–411). Open: the mode since the nearest-first order; several Status cards open and what their refreshes cost; several clients |
 | 12 | OPEN | No 0.5.0 package |
-| 13 | PARTIAL | The Wood Gasifier's model is a shape-built placeholder with one look for every state (`asset-requirements.md`); D-039 leaves the owner free to supply one before the release, as for the stills |
+| 13 | PARTIAL | The Wood Gasifier's model is the owner's, supplied on 2026-11-15 (D-039 amendment), drawn whole on the floor in launch 448. Open: one look for every state, cold, warming and running not drawn apart; its size, 1.2 m wide, is the owner's to judge; its icon not looked at in the game's interface; a turned gasifier; its look on a server |
 
 Of the single-player modes, the full run (launch 435: 106/0, 14/0),
 `controls` (443), `docs-shots` (444), `italian` (445), `gas-player`
-(438), `gas-wood` (439), `manual` and `manual-italian` (436–437) have run
+(438, 448), `gas-wood` (439), `manual` and `manual-italian` (436–437) have run
 since the machines' menu entries took their names. The other modes that
 open a machine's menu or read a reply (`pickup`, `pot-still`,
 `biodiesel`, `gas-propane`, `gas-sleep`, the right-click cases among
@@ -414,8 +414,7 @@ Before release, in this order:
    run since the menus' names and replies changed, and the revised `ux`
    case.
 2. Settle the open texts of gate 10: the package's Workshop text, the
-   Generator Info line's biogas, the Italian state word; and whether the
-   gasifier keeps its placeholder model (gate 13).
+   Generator Info line's biogas, the Italian state word.
 3. Give `mod.info`, `Core.lua` and the changelog 0.5.0, merge the branch
    into `main`, and build the package with `tools/package.ps1` from a
    clean tree.

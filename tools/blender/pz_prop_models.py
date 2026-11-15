@@ -8,8 +8,7 @@ writes <models_dir>/<Name>.fbx and <textures_dir>/<Name>.png for each
 prop in pz_icon_props.PROPS, or only the props named, as it lies on the
 floor (`floor`): the sampling kit's hose coiled flat in front of its jars,
 the manual on its back; the others stand. They have half the icons' sides
-(DETAIL 0.5), which keeps the four small items under about 1,000
-triangles; the gasifier, a machine of fifteen parts, has 1,212.
+(DETAIL 0.5), which keeps each under about 1,000 triangles.
 
 The FBX is the supplied models' kind (docs/engine-capabilities.md, "The
 supplied fermenter, an FBX"): one mesh with one material, Y up through
