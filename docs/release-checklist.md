@@ -21,7 +21,7 @@ game's own Lua, BC its bytecode.
 | 7 | Existing and late-world bootstrap scenarios pass | PARTIAL | An existing save gaining the packaged mod (run 40), fuel first found late in a new world (run 53) and the mod removed and added back (runs 55, 61) verified RT-SP. NOT RUN: the other two policies, a server, the missing-mods prompt |
 | 8 | Supported chassis and maps documented | PARTIAL | `support-matrix.md`; `Base.CarNormal`, `Base.Generator` (stock and flex-converted) and the Muldraugh Gas2Go verified RT-SP. `Base.PickUpTruck` stock verified RT-SP (run 62, 29/0, phase A's vehicle steps): refuel from a can and at a pump, siphon, idle burn, the TLG pours, start gate and stall. Its flex conversion and other chassis NOT RUN |
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
-| 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 261 Italian strings as shipped in a client set to Italian (run 205); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
+| 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 519 Italian strings as shipped in a client set to Italian, and the Status card read in Italian (launch 445); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
 | 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.3 package is the zip of `14a36ed` (SHA-256 `4A7897A0…F9A472ED`), installed clean and played on 42.22.2 in launch 373 (106/0, 14/0), and a save made with the 0.4.2 zip continued with it (launch 375: 3/0, 22/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.3 since 2026-11-13; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
@@ -683,14 +683,15 @@ Death:
 
 - Every shipped key exists in English and Italian
   (`check-translations.ps1`); English resolves in the client (RT-SP).
-- In a client set to Italian, all 261 Italian strings came back exactly as
-  shipped (run 205, 5/0): menu, interface, fluid and sandbox texts, every
-  item name, the seven recipe names (read as the crafting window reads
-  them, `Translator.getRecipeName`) and the 14 strings D-034 added for
-  **What I know about it**; none unresolved, no accent garbled.
-  Placeholders were filled, and the Fuel menu, **Look and smell**, the
-  machine menu and **Status** read Italian. How the fonts draw the accents
-  was not looked at.
+- In a client set to Italian, all 519 Italian strings came back exactly as
+  shipped (launch 445, 8/0): menu, interface, fluid, sandbox and tooltip
+  texts, every item name and the recipe names (read as the crafting window
+  reads them, `Translator.getRecipeName`); none unresolved, no accent
+  garbled. Placeholders were filled, and the Fuel menu, **Look and
+  smell**, the machine menu and **Status** read Italian, the last as a
+  card on a biodiesel reactor with its "Prende da" lines; the card's
+  screenshot shows the accents drawn. Elsewhere, how the fonts draw the
+  accents was not looked at.
 - The field manual's page (D-026) was read in game in English and Italian
   (runs 101–103, 10/0 each). **Inspect** showed the page in the game's
   print media window, and the Italian page's accents and `°C` drew

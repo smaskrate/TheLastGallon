@@ -344,6 +344,10 @@
   the mod, then that save continued with it.
   italian: the client in Italian; every Italian string the mod ships must
   come back exactly as shipped, and the Fuel and machine menus read Italian.
+  Then Status as a card on a biodiesel reactor, a lye leacher one tile
+  away and two wood retorts two tiles away: its title, text and source
+  lines Italian as shipped, photographed (tlg_rti_card.png); the card
+  closes when the reactor is lifted.
   docs-shots: the player guide's screenshots, summer with the grid on,
   temperatures in degrees Celsius. The Fuel submenu on a full and an empty
   petrol can, the results of a kit sample and, two game hours later, a

@@ -9486,3 +9486,53 @@ until it is uploaded.
 
 Evidence:
 [run 444](evidence/2026-11-15_rt-sp_harness_run444_docs_shots_status_card_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launch 445 (the Status card in Italian, on a biodiesel reactor)
+
+Branch `feature/gas-generators` at `ed939cb`, the harness change not yet
+committed, 42.22.2. Command: `tools/run-sp-harness.ps1 -Mode italian
+-TimeoutMinutes 20`. **8/0** (launch 433: 5/0); the three new checks are
+the step `RT.itCard`.
+
+* 519 of 519 Italian strings came back as shipped (ContextMenu 57, Fluids
+  8, IG_UI 386, ItemName 18, Recipes 13, Sandbox 19, Tooltip 18), none
+  unresolved or garbled. The Fuel and machine menus read Italian, as in
+  launch 433.
+* A Biodiesel Reactor was put down on the character's tile, a Lye Leacher
+  one tile away and two Wood Retorts two tiles away, none started.
+  **Stato** from the reactor's menu opened one card and no window, titled
+  "Reattore per biodiesel". Its text is the reactor's Status followed by
+  two lines, each equal to its shipped template filled in: "Prende da:
+  Lisciviatore, a 1 casella. Pronto" and "Prende da: 2 x Storta per legna,
+  la più vicina a 2 caselle. Pronto".
+* The card stood at 700,120, 357 by 117 pixels. The screenshot shows its
+  five lines whole at 1280x720, with the accent of "più" drawn (looked at
+  by the agent).
+* `Card.sourceLines`, asked directly in the Italian client, gave each form
+  the layout does not show as its template fills: one machine two tiles
+  away ("a 2 caselle"), three retorts sharing a line with the nearest one
+  tile away ("la più vicina a 1 casella"), a retort's state named for its
+  kind ("Terminato: metanolo pronto per un reattore"), and "Niente da cui
+  prende entro due caselle." with none in reach.
+* The reactor was lifted with the calls of the game's single-player grab
+  (`RT.P.liftUnseen`): the card closed 4 ticks later, with nothing said
+  over the character and no window.
+
+The console holds no exception of the mod. Its only warnings of the mod
+are the 110 `MissingFormatArgumentException` lines the string check
+causes by asking each template without its arguments.
+
+The state word comes from the state's key, so the retorts' shared line
+ends "Pronto" after a feminine name ("Storta per legna"). Only some
+states have a key of their own for a machine kind, such as
+`IGUI_TLG_MachineState_OutputReady_retort`. Not changed.
+
+Not run: the wash tank's line for its reactor; dragging the card and its
+cross with the mouse; the refresh at speed 1 and a refresh that changes
+the text; several cards at once and what their refreshes cost; split
+screen; a server's client; a lift through the game's Grab entry rather
+than its calls.
+
+Evidence:
+[run 445](evidence/2026-11-15_rt-sp_harness_run445_italian_machine_card_42.22.2.txt),
+[the card](evidence/2026-11-15_run445_machine_card_italian.png).

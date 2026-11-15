@@ -17,7 +17,9 @@ and instructions.
   Fermentation Vessel, nearest 1 tile away. Working"). One card for each machine; no buttons, the actions stay in the menu. A
   carried machine's Status, Status asked with a controller, the
   gasifier's Status and Gas status are windows as before. Run in game
-  on one machine in English (RT-SP launches 442 and 443); not in Italian, not on a server.
+  on one machine in English (RT-SP launches 442 and 443) and in Italian
+  on a biodiesel reactor beside a leacher and two retorts (launch 445);
+  not on a server.
 * Fixed: closing one of the mod's windows (**Status**, a test's result,
   **Project status**) or answering one of its yes/no questions leaves
   the game's speed as it was.

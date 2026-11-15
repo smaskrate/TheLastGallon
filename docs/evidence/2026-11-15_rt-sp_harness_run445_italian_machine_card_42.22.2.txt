@@ -1,0 +1,29 @@
+# TLG single-player harness, the client in Italian
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=15601153589316280957 hours=2.0096 DayLength=4
+STEP rti_setup begin
+STEP rti_text begin
+PASS RTI.language_is_italian :: Translator.getLanguage() = IT
+OBS  RTI.strings ContextMenu 57/57, Fluids 8/8, IG_UI 386/386, ItemName 18/18, Recipes 13/13, Sandbox 19/19, Tooltip 18/18; samples: Carburante (The Last Gallon) | Condizioni sconosciute: non ancora campionato. Un carburante sconosciuto non è necessariamente cattivo. | Salvataggi esistenti
+PASS RTI.every_string_as_shipped :: 519 of 519 as shipped, 0 unresolved, 0 garbled; off: none
+PASS RTI.placeholders_filled :: "Carburante principale: Etanolo" | "Condizioni: Buono (stima 0.1, più o meno 0.3)"
+STEP rti_menus begin
+OBS  RTI.look menu "Osserva e annusa" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTI.fuel_menu "Carburante (The Last Gallon)" > Cosa so di questo carburante / Osserva e annusa / Preleva un campione (kit) / Aggiungi stabilizzante / Filtra / Lascia decantare e scarica l'acqua / Apri; Look and smell: Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.0, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+PASS RTI.fuel_menu_italian :: 7 entries; look dialog Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.0, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+OBS  RTI.status menu "Stato" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTI.machine_menu Status: Pronto <LINE> Temperatura qui adesso: 67.4 °F, all'aperto <LINE> Condizione: 100%
+PASS RTI.machine_menu_italian :: Pronto <LINE> Temperatura qui adesso: 67.4 °F, all'aperto <LINE> Condizione: 100%
+STEP rti_card begin
+OBS  RTI.card_status menu "Stato" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+PASS RTI.card_italian :: reply ok=true; cards 1, windows opened 0; title 'Reattore per biodiesel'; text: Pronto <LINE> Temperatura qui adesso: 67.4 °F, all'aperto <LINE> Condizione: 100% <LINE> Prende da: Lisciviatore, a 1 casella. Pronto <LINE> Prende da: 2 x Storta per legna, la più vicina a 2 caselle. Pronto || wanted: Pronto <LINE> Temperatura qui adesso: 67.4 °F, all'aperto <LINE> Condizione: 100% <LINE> Prende da: Lisciviatore, a 1 casella. Pronto <LINE> Prende da: 2 x Storta per legna, la più vicina a 2 caselle. Pronto
+OBS  RTI.card at 700,120, 357 by 117 pixels, shown true
+PASS RTI.card_source_lines_italian :: one machine two tiles away: Prende da: Lisciviatore, a 2 caselle. Pronto || three of one kind and state, nearest one tile away: Prende da: 3 x Storta per legna, la più vicina a 1 casella. Pronto || a state named for the retort: Prende da: Storta per legna, a 1 casella. Terminato: metanolo pronto per un reattore || none in reach: Niente da cui prende entro due caselle.
+PASS RTI.card_closes_when_the_machine_is_lifted :: lifted for 4 ticks: card open false, carried true; lines said 0, windows opened 0
+STEP rt_finish begin
+OBS  RT.summary replies: 0 over the character, 3 in a window; last line (-): none
+OBS  RT.summary game hours -1.00 -> 2.02
+SUMMARY pass=8 fail=0
+DONE

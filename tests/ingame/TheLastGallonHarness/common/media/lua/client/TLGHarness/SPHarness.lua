@@ -156,7 +156,8 @@
 --   ex-b  -> main menu continues a save played without the mod (the
 --            TheLastGallonPreInstall driver, "ex-a"), now with it: phase B
 --   ex-c  -> main menu continues that save again: phase C
---   sp-it -> the client in Italian: every Italian string and two menus
+--   sp-it -> the client in Italian: every Italian string, two menus and a
+--            machine's Status card on a biodiesel reactor
 -- Results: <cachedir>/Lua/TLG_harness_sp.txt. Never shipped.
 --
 -- The end-to-end proof moves ONE batch of fuel station -> can -> vehicle ->
@@ -16295,7 +16296,131 @@ RT.itMenus = { name = "rti_menus", timeout = 600, fn = function(ctx, ticks)
     return true
 end }
 
-RT.italianSteps = { RT.waitWorld, RT.itSetup, RT.itText, RT.itMenus, RT.finish }
+-- A machine's Status card in Italian (UX review, section 5). A biodiesel
+-- reactor beside the character, a lye leacher one tile away and two wood
+-- retorts two tiles away, none started: Status from the reactor's menu opens
+-- one card and no window, its title the reactor's Italian name, its text
+-- the reactor's Status and then one line for the leacher and one shared by
+-- the two retorts, each as the shipped Italian template fills. The card is
+-- photographed (tlg_rti_card.png). Card.sourceLines is then asked for the
+-- forms the layout does not show: one machine two tiles away, several one
+-- tile away, a state named for the machine's kind, none in reach. Last the
+-- reactor is lifted as a grab no Lua sees (RT.P.liftUnseen): the card
+-- closes, with nothing said and no window.
+RT.itCard = { name = "rti_card", timeout = 1500, fn = function(ctx, ticks)
+    local I, Say, Card, Machines = RT.I, TLG.UI.Say, TLG.UI.MachineCard, TLG.Integration.Machines
+    if RT.skip("rti_card") then return true end
+    local function fill(tpl, ...)
+        local args = { ... }
+        return (string.gsub(tpl or "?", "%%(%d)", function(n) return tostring(args[tonumber(n)]) end))
+    end
+    local function count()
+        local n = 0
+        for _ in pairs(Say.cards) do n = n + 1 end
+        return n
+    end
+    if ticks == 1 then
+        closeDialogs()
+        H.dialogs.keepCards = true
+        local here = player():getSquare()
+        local x, y, z = here:getX(), here:getY(), here:getZ()
+        local function put(fullType, dx, dy)
+            local s = sq(x + dx, y + dy, z)
+            if s == nil then return nil end
+            local item = instanceItem(fullType)
+            s:AddWorldInventoryItem(item, 0.5, 0.5, 0, false)
+            return item
+        end
+        ctx.reactor = put("TLG.BiodieselReactor", 0, 0)
+        ctx.leacher = put("TLG.LyeLeacher", 1, 0)
+        ctx.retorts = { put("TLG.WoodRetort", -2, 0), put("TLG.WoodRetort", 0, 2) }
+        return nil
+    end
+    if ticks < 20 then return nil end
+    local ready = I.want.IGUI_TLG_MachineState_Ready or "?"
+    if ticks == 20 then
+        if ctx.reactor == nil or ctx.leacher == nil or ctx.retorts[1] == nil or ctx.retorts[2] == nil then
+            R:check("RTI.card_italian", function() return false, "a square around the character was not there" end)
+            H.dialogs.keepCards = false
+            return true
+        end
+        ctx.key = Card.keyOf(ctx.reactor)
+        ctx.windows, ctx.lines = #H.dialogs.open, H.dialogs.lines or 0
+        ctx.r = machineClick("RTI.card_status", ctx.reactor, "ContextMenu_TLG_MachineStatus")
+        local card = Say.cards[ctx.key]
+        ctx.text, ctx.title = card and card.cardText, card and card.title
+        ctx.want = {
+            fill(I.want.IGUI_TLG_Card_Source1, ctx.leacher:getDisplayName(), 1, ready),
+            fill(I.want.IGUI_TLG_Card_Sources, 2, ctx.retorts[1]:getDisplayName(), 2, ready),
+        }
+        local whole = TLG.UI.MachineMenu.describe(ctx.r) .. " <LINE> " .. ctx.want[1] .. " <LINE> " .. ctx.want[2]
+        R:check("RTI.card_italian", function()
+            return ctx.r.ok == true and card ~= nil and count() == 1 and #H.dialogs.open == ctx.windows
+                and ctx.title == ctx.reactor:getDisplayName() and I.clean(ctx.title) and I.clean(ctx.text)
+                and ctx.text == whole,
+                string.format("reply ok=%s; cards %d, windows opened %d; title '%s'; text: %s || wanted: %s", tostring(ctx.r.ok),
+                    count(), #H.dialogs.open - ctx.windows, tostring(ctx.title), tostring(ctx.text), whole)
+        end)
+        if card == nil then
+            H.dialogs.keepCards = false
+            return true
+        end
+        return nil
+    end
+    if ticks == 60 then
+        local card = Say.cards[ctx.key]
+        if card then
+            R:line("OBS  RTI.card at %d,%d, %d by %d pixels, shown %s", card:getX(), card:getY(), card:getWidth(),
+                card:getHeight(), tostring(card:getIsVisible()))
+        end
+        pcall(function() getCore():TakeFullScreenshot("tlg_rti_card.png") end)
+        return nil
+    end
+    if ticks == 100 then
+        local ret, lea = Machines.machineFor(ctx.retorts[1]), Machines.machineFor(ctx.leacher)
+        local retort, leacher = ctx.retorts[1]:getDisplayName(), ctx.leacher:getDisplayName()
+        local function src(machine, fullType, state, tiles)
+            return { machine = machine, type = fullType, state = state, tiles = tiles }
+        end
+        local cases = {
+            { "one machine two tiles away", { sources = { src(lea, "TLG.LyeLeacher", "Ready", 2) }, takesFrom = true },
+                fill(I.want.IGUI_TLG_Card_Source, leacher, 2, ready) },
+            { "three of one kind and state, nearest one tile away", { sources = {
+                src(ret, "TLG.WoodRetort", "Ready", 1), src(ret, "TLG.WoodRetort", "Ready", 1),
+                src(ret, "TLG.WoodRetort", "Ready", 2) }, takesFrom = true },
+                fill(I.want.IGUI_TLG_Card_Sources1, 3, retort, 1, ready) },
+            { "a state named for the retort", { sources = { src(ret, "TLG.WoodRetort", "OutputReady", 1) }, takesFrom = true },
+                fill(I.want.IGUI_TLG_Card_Source1, retort, 1, I.want.IGUI_TLG_MachineState_OutputReady_retort) },
+            { "none in reach", { sources = {}, takesFrom = true }, I.want.IGUI_TLG_Card_NoSource or "?" },
+        }
+        local all, seen = true, {}
+        for _, c in ipairs(cases) do
+            local lines = Card.sourceLines(c[2])
+            local got = table.concat(lines, " | ")
+            local ok = #lines == 1 and got == c[3] and I.clean(got)
+            all = all and ok
+            seen[#seen + 1] = string.format("%s: %s%s", c[1], got, ok and "" or (" (wanted: " .. tostring(c[3]) .. ")"))
+        end
+        R:check("RTI.card_source_lines_italian", function() return all, table.concat(seen, " || ") end)
+        RT.P.liftUnseen(ctx.reactor)
+        ctx.t1 = ticks
+        return nil
+    end
+    if ticks < 100 then return nil end
+    if Say.cards[ctx.key] ~= nil and ticks - ctx.t1 < 600 then return nil end
+    H.dialogs.keepCards = false
+    R:check("RTI.card_closes_when_the_machine_is_lifted", function()
+        return Say.cards[ctx.key] == nil and Card.open[ctx.key] == nil and RT.P.carried(ctx.reactor)
+            and (H.dialogs.lines or 0) == ctx.lines and #H.dialogs.open == ctx.windows, string.format(
+            "lifted for %d ticks: card open %s, carried %s; lines said %d, windows opened %d", ticks - ctx.t1,
+            tostring(Say.cards[ctx.key] ~= nil), tostring(RT.P.carried(ctx.reactor)), (H.dialogs.lines or 0) - ctx.lines,
+            #H.dialogs.open - ctx.windows)
+    end)
+    closeDialogs()
+    return true
+end }
+
+RT.italianSteps = { RT.waitWorld, RT.itSetup, RT.itText, RT.itMenus, RT.itCard, RT.finish }
 
 ------------------------------------------------------------------------------
 -- The biodiesel chain (request "sp-rtbd", D-036). Summer with the grid on:
