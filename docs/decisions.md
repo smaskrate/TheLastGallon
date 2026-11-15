@@ -147,6 +147,17 @@ their replacement.
   delivered and the can's fluids to the reservoir blend, with the fractional
   remainder kept. Verified RT-SP 2026-10-31: 10 L into a can = −10 units,
   59 L into a car = −59 units, composition and degradation carried.
+* Amended 2026-11-15, at the owner's word ("Keep them full", over giving
+  such pumps room): a pump's reservoir is what the pump holds when the mod
+  first reads it, and at least 10,000 L (`Stations.read`,
+  `max(10000, litres)`, kept in its record). A pump first read above
+  10,000 L is therefore full: **Pour into the station reservoir** is
+  refused with "It is full: there is no room for more fuel." until fuel
+  is taken from it, and then takes as much as was taken. Found on a server
+  by RT-MP launch 446 (a pump of 15,208 L took nothing); launch 447 put
+  2 L into a pump of 5,175 L, and `test_fuel_reads.lua` shows the rule.
+  Reason: the refusal now says what holds, and a larger reservoir would
+  change what the records in existing saves keep.
 
 ## D-011 Electrical priorities only where control exists
 * Decision: dispatch priorities apply to TLG-owned consumers (chargers,

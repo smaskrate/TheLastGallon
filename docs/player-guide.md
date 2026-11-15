@@ -208,6 +208,12 @@ All four take time, the same for each litre: your character holds the
 can and faces the tank, the pump or the generator until the fuel has
 moved. Walking away stops it with nothing moved.
 
+A station's reservoir holds 10,000 L, or what its pump held when the mod
+first saw it if that was more. A pump that held more than 10,000 L is
+full: a pour into it is refused with "It is full: there is no room for
+more fuel." until fuel is taken from it, and then it takes back as much
+as was taken.
+
 These pours move any fuel the mod knows, with its condition, not only
 petrol. If the result would be a blend the engine cannot use, or one that
 would damage it ([Wrong fuel](#wrong-fuel)), nothing is poured and a
@@ -218,12 +224,16 @@ petrol accepted, a blend the engine cannot use refused (nothing moved)
 and poured after **Yes**, dried ethanol accepted without the dialog by a
 converted generator and car; petrol into a diesel Ambulance refused, then
 poured after **Yes**; a generator's fuel moved into a can by the mod's
-transfer. On a server, a pour with its result shown to the player.
+transfer. On a server, a pour with its result shown to the player; a
+drain from the menu that moved a generator's 3 L into a can (launch 446);
+**Pour into the station reservoir** putting 2 L into a pump of 5,175 L
+(launch 447), and nothing into one of 15,208 L (launch 446).
 
-**Not checked in game:** **Pour into the station reservoir**, and
-the time and look of **Drain the generator into this can**, which now
-takes time; a drain from the menu moved a generator's 2 L in launch 438
-(the entry was run while it moved the fuel at once: launches 387–388).
+**Not checked in game:** **Pour into the station reservoir** in single
+player; the refusal "It is full: there is no room for more fuel." on
+screen; the time and look of **Drain the generator into this can**; a
+drain from the menu moved a generator's 2 L in single player in launch
+438.
 
 ## Engines
 
