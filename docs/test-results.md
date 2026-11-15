@@ -10,7 +10,7 @@ runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP and RT-MP: two machines under one click, with a machine's menu entry named after it. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)". Every single-player mode and server case the 0.5.0 section of `release-checklist.md` listed has run since the entries took their names, each with the answers of its last run (launches 432–435, 438, 439, 443–445, 448 and 449–511) | No mode or case right-clicks two machines at once; the picture was not taken again |
+| RT-SP and RT-MP: two machines under one click, with a machine's menu entry named after it. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)". Since the entries took their names, the single-player modes the 0.5.0 section of `release-checklist.md` listed and every case of `tools/run-mp-harness.ps1`, with `-Restart`, `-DropVault` and `-ModAway`, have run (launches 432–435, 438, 439, 443–445, 448 and 449–516); `-NoMod`, the control without the mod, has not. Launch 450's `ux` failed, before D-044; the launches from 478 on gave the answers of their last runs, `handbook3` and `onebelow` failing the same checks as in launches 333 and 335 (the game's one-level-below rule) | No mode or case right-clicks two machines at once; the picture was not taken again |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
 | RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443; in Italian on a biodiesel reactor with its source lines, closed when the reactor was lifted: launch 445; on a server's client, a reactor's line for its leacher changed by the card's own refresh at speed 1 after ten game minutes, closed six tiles away and by Grab: launch 446): dragging it and its cross with the mouse, the wash tank's line for its reactor, several cards at once and their cost (each refresh writes the record and on a server sends it to the clients; not measured), a second player's card in split screen, a second client on a server (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture; all of them were run since and passed (`controls`, `docs-shots`, `italian`, `pickup`, `pot-still`, `biodiesel`, the three still modes, `winter` and `fires`: launches 443–445, 449, 452, 453, 478–480, 485 and 487) | The steps are `RT.cardStep` (`controls`), `RT.itCard` (`italian`) and the server case `ux` |
@@ -27,7 +27,7 @@ runtime tests.
 | RT-SP: a machine's wear from real batches up to a refused load and the load after a repair, a busy machine's greyed **Repair**, a favourite part left alone, a gasifier worn by its own filter cycles (offline only: `test_machine_commands.lua`, `test_gasifier_handlers.lua`, `test_say.lua`; a pot still, a fermenter and a gasifier with the condition written into the record: launches 424 and 425). RT-MP: all of R8 | Not in the harness yet (UX review R8, D-043, 2026-11-14) |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
-| RT-MP: a Diesel Generator's sprite taken away on the server reaching a client, and the mod's repair bringing it back there (launch 302). In launches 304 and 501 the strip left the generator with no sprite, the game's `transmitUpdatedSpriteToClients` threw a `NullPointerException` on it, and the client kept the sprite, so `client_sees_the_generator_sprite_back` passed without the client having lost it. The server's side held in each | The harness's strip step (`MPServer.lua`, `services.sprite_repair`) sends a generator with no sprite |
+| RT-MP: a Diesel Generator's sprite taken away on the server reaching a client, and the mod's repair bringing it back there (launch 302). In launches 304 and 501 the strip left the generator with no sprite and the client kept the sprite, so `client_sees_the_generator_sprite_back` passed without the client having lost it; in launch 501's server log the game's `transmitUpdatedSpriteToClients` threw a `NullPointerException` on the generator without a sprite (launch 304's log was read for the mod's lines only). The server's side held in each | The harness's strip step (`MPServer.lua`, `services.sprite_repair`) sends a generator with no sprite |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
 | Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.4.3 since 2026-11-13, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.4.2 and 0.4.1 |
 
@@ -9929,9 +9929,8 @@ failed check is launch 335's, which compares the game's Make Bone Spoon,
 refused one level below, with the mod's Ash Barrel, made. These cases
 had not run since `tryCraft` gained its strict refusals and the
 server's `probe_handbook` and `roll_handbook` their optional arguments
-(launches 393–395); they gave the same answers.
-`onebelow2` and `onebelow4` try only the game's own Make Metal Sheet and
-were not run.
+(launches 393–395); they gave the same answers. `onebelow2` and
+`onebelow4` ran in launches 514–515.
 
 **The sprite strip in `biodiesel` (launch 501)** did not reach the
 client, as in launch 304. The harness's strip step takes the Diesel
@@ -9949,16 +9948,22 @@ without a name after the strip, the send went through and the client
 showed none.
 
 **Consoles.** The driver kept the flagged lines of every client's and
-server's console before the next launch, and all were read. Apart from
-the mod's info lines they hold the game's own lines seen in earlier
-launches (the missing `actiongroups` and `AnimSets` folders, the world
-generator's `WindowShape`, `AntiCheatPacketException` in the settings),
-the harness's deep-recursion probe and these:
+server's console before the next launch, and all were read. For launch
+492 it kept only the server's session after the restart: the restart
+moves the first session's log into `mpserver\Logs\logs_<time>\`, and
+that log was read afterwards. Apart from the mod's info lines the logs
+hold the game's own lines seen in earlier launches (the missing
+`actiongroups` and `AnimSets` folders, the world generator's
+`WindowShape`, `AntiCheatPacketException` in the settings), the
+harness's deep-recursion probe and these:
 
-* launches 491 and 493, the server: `ISEquipHeavyItem.complete` failing
-  on `DoRemoveItem` for a vessel taken off the floor, the game's own
-  error on a server recorded in `engine-capabilities.md` (launches
-  141–145);
+* launches 491, 492 (before the restart) and 493, the server: the game's
+  `ISEquipHeavyItem.complete` failing on `DoRemoveItem` when client A
+  takes the game's own `Base.LargeMeteorite` off the floor (the step
+  `mp_take_meteorite`, between the meteorite's spawn and the vessel's
+  take; its check `meteorite_left_on_floor_by_the_game` expects the game
+  to leave it on its square). `engine-capabilities.md` records the
+  error (runs 141–145);
 * launch 501, the server: the sprite send above;
 * launch 502, the server: the vault's three lines for the audit case's
   forgeries, as in the audit's run 23: the can's and the pump's supply
@@ -9969,7 +9974,10 @@ The mod logged no other warning or error.
 
 With these, every server case that the 0.5.0 section of
 `release-checklist.md` listed as not run since the menus took their
-machines' names has run, and each gave the answers of its last run.
+machines' names has run, and each gave the answers of its last run. The
+list left out `heavy`, `gensprite`, `onebelow2`, `onebelow4` and the
+restart with `-DropVault`, which launches 512–516 ran.
+
 Launch 497's exit code was not kept: a file watch held the driver's
 list open, so the driver stopped after copying the launch's reports and
 consoles, and launches 498–502 were started again. Its client's report
@@ -9997,3 +10005,56 @@ Evidence:
 [run 509](evidence/2026-11-15_rt-mp_harness_run509_gasfeed_after_r12_42.22.2.txt),
 [run 510](evidence/2026-11-15_rt-mp_harness_run510_gastimers_after_r12_42.22.2.txt),
 [run 511](evidence/2026-11-15_rt-mp_harness_run511_gasshare_after_r12_42.22.2.txt).
+
+## 2026-11-15 — RT-MP launches 512–516 (the server cases the checklist's list left out)
+
+Branch `feature/gas-generators` at `d664041`, whose code is `dc18555`'s,
+42.22.2, a clean tree. The cases and switches of
+`tools/run-mp-harness.ps1` were compared with the launches since the
+menus took their machines' names (446–511); these five had not run
+since. The same driver ran them.
+
+| Launch | Command (`tools/run-mp-harness.ps1`) | Result (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 512 | `-Clients 1 -Only heavy` | 2/0 | launch 219, the same |
+| 513 | `-Clients 1 -Only gensprite -ModAway` | 8/0 | launch 307, the same |
+| 514 | `-Clients 1 -Only onebelow2 -NonAdmin` | 6/0 | launch 336, the same |
+| 515 | `-Clients 1 -Only onebelow4 -NonAdmin` | 5/0 | launch 338, the same |
+| 516 | `-Clients 2 -Restart -DropVault` | A 38/0, B 12/0 | the security audit's run 30 (2026-11-05), the same |
+
+No step timed out or was skipped. Not run: `-NoMod`, the server and
+clients without The Last Gallon, a control for what the game does.
+
+* Launch 513: the server's second session named the harness alone, and
+  the client found the generator kept as `TLG.DieselGenerator` without
+  its sprite. In the third the server logged "generator
+  TLG.DieselGenerator: its sprite tlg_generators_01_0 was missing and is
+  back", and the client saw the sprite with its picture.
+* Launch 516: before the restart the vault started from id 1 with 16
+  records; the store was then saved without it. The restarted server
+  started its vault from id 14 and adopted the can (`supply …-12`) and
+  the fermenter (`process …-13`) with its 480 hourly readings, as in the
+  audit's run 30.
+
+**Consoles.** Every server session's log was read, those of 513's first
+two sessions and 516's first in `mpserver\Logs\logs_<time>\`, and each
+client's console. Besides the lines named for launches 491–511 they
+hold:
+
+* launches 512 and 516 (before the restart), the server: the game's
+  `DoRemoveItem` failure for the meteorite taken off the floor, as in
+  launches 491–493;
+* launch 513, the session without the mod: the harness's own files
+  failing on the mod's missing tables, on the server (`Domain`, `Boot`:
+  "harness crashed") and on the client (`Integration`, in
+  `SPHarness.lua`). Launch 307 recorded that the server's harness does
+  not load in that session.
+
+The mod logged no warning or error.
+
+Evidence:
+[run 512](evidence/2026-11-15_rt-mp_harness_run512_heavy_after_r12_42.22.2.txt),
+[run 513](evidence/2026-11-15_rt-mp_harness_run513_gensprite_mod_away_after_r12_42.22.2.txt),
+[run 514](evidence/2026-11-15_rt-mp_harness_run514_onebelow2_non_admin_after_r12_42.22.2.txt),
+[run 515](evidence/2026-11-15_rt-mp_harness_run515_onebelow4_non_admin_after_r12_42.22.2.txt),
+[run 516](evidence/2026-11-15_rt-mp_harness_run516_full_restart_dropvault_after_r12_42.22.2.txt).
