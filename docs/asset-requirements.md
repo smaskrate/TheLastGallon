@@ -15,7 +15,8 @@ stand-ins seen in run 66, none was checked rendering in game.
 Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 **B** biodiesel, wood gas, biogas and propane (domain only, not wired,
 except the biodiesel chain's five machines and the diesel generator, which are items since
-0.2.0; D-036),
+0.2.0, D-036, and the wood gasifier, an item on `feature/gas-generators` for
+0.5.0, not released, D-040),
 **C** electricity, further vehicle conversions and stations.
 
 ## State of the shipped assets (tier A)
@@ -50,9 +51,10 @@ except the biodiesel chain's five machines and the diesel generator, which are i
   Sampling, treatments, the machine menu, draining a generator and pouring
   into a station run as instant requests with no action, animation or
   sound. A running machine makes no sound.
-* **Audit.** `asset-audit.csv` has 60 rows: the 57 below and three added on
-  2026-11-10: I15, the biodiesel machines' icons, and A31 and I16, the
-  diesel generator's world sprite and icon. It had 25 (unchanged since
+* **Audit.** `asset-audit.csv` has 62 rows: the 57 below, three added on
+  2026-11-10 (I15, the biodiesel machines' icons, and A31 and I16, the
+  diesel generator's world sprite and icon) and two on 2026-11-15 (I17,
+  the two handbooks' icons, and I18, the wood gasifier's). It had 25 (unchanged since
   `c8e7295`, 2026-10-30) and lacked the ash pit, the wood retort (it pointed
   at the still), the three TLG generators, the heat loop, the propane bulk
   tank, the IBC tank, by-product items, conversion badges and release art.
@@ -89,9 +91,10 @@ audit marks the rows that wait on them.
    sprites and cannot be an item's world model (the audit named them for
    A05, A06 and A10 until 2026-11-02). The audit names the `FlaxPress` item
    model for A05 and no vanilla model for A06 and A10: none exists in the
-   42.21 model scripts. The stationary gasifier (est. 2×2), the digesters
-   (900 kg), gas holder, bulk tanks, solar array, wind turbine and
-   waterwheel are not things a player carries. If they become world objects
+   42.21 model scripts. The digesters (900 kg), gas holder, bulk tanks,
+   solar array, wind turbine and waterwheel are not things a player
+   carries. The wood gasifier, listed here until 2026-11-15 as one of them
+   (est. 2×2), is a 16 kg item placed on the floor (D-040). If they become world objects
    (B42 entities or tiles), their art becomes isometric sprites with a tile
    definition instead of models: a different deliverable.
 2. **Budget.** Spec §22 plans about 6–10 new world models for the full
@@ -209,7 +212,7 @@ on the floor; its caption runs into the middle one's.
 | A06 | `TLG.BiodieselReactor` (`biodiesel_reactor`) | Heated drum with stirrer, firebox | supplied model: an open steel drum with a stirrer's crank over it and a drain pipe at its foot, 1.15 m to the top of the crank (scale 0.77); it shows no firebox |
 | A06 | `TLG.BiodieselWashTank` (`biodiesel_wash_tank`) | Cone-bottom settling tank with drain valve, small firebox | supplied model: a steel drum with a cone bottom on three legs and a drain pipe under the cone, 1.5 m tall (scale 1.0); it shows no firebox |
 | A31 | `TLG.DieselGenerator` | A generator that reads apart from vanilla's on the ground | made: a tile sprite, not a model (`tlg_generators_01_0`, one 128×256 picture): vanilla's red generator turned dark green, the owner's choice |
-| A08 | `gasifier_stationary` | Hopper, firebox, cyclone, cooler, filter; cold, warming and running looks | est. 2×2 (decision 1) |
+| A08 | `TLG.Gasifier` (`gasifier_stationary`) | Hopper, firebox, cyclone, cooler, filter; cold, warming and running looks | placeholder made: a steel drum with a cyclone on one side and a filter box on the other, the gas pipe over the drum, 1.4 m wide (scale 0.93); one look for every state; not released |
 | A09 | `gasifier_vehicle` | Mounted unit for `Base.CarNormal`, `Base.SmallCar`, `Base.PickUpTruck`, `Base.StepVan` | blocked on G11 |
 | A10 | `biogas_digester` | 900 kg tank with gas outlet | |
 | A10 | `biogas_digester_heated` | The digester with firebox and heat coil | |
@@ -276,6 +279,26 @@ sprite on a second client or a dedicated server.
 ![Two dark green generators of the vanilla generator's shape standing on the ground on either side of the character, and vanilla's red generator to the left](evidence/run243/tlg_rtdg_generators.png)
 
 Launch 243.
+
+The wood gasifier (`TLG.Gasifier`, D-040) is on `feature/gas-generators`
+for 0.5.0 and not released. Its floor model and icon are the mod's own,
+built since 2026-11-13 from simple shapes (`tools/blender/pz_icon_props.py`,
+builder `gasifier`; `tools/make-prop-models.ps1` and
+`tools/make-model-icons.ps1`), like the small items of tier A: a steel drum
+with its lid, an air ring and a rusty ash door at its foot, a cyclone over
+its dust cone, a rusty filter box, the gas pipe over the drum and a red
+valve on the outlet; 1,212 triangles in five colours, 1.4 m wide at scale
+0.93. It has one look for every state. The game drew it whole on the
+ground beside a vanilla generator and taller than it (launch 388): the
+drum's top is level with the character's chest, where launch 241 put the
+biodiesel machines' drums at her waist. This is read from the photograph,
+not measured, and whether the size is right is for the owner to judge.
+NOT RUN: a turned gasifier, its icon seen in the game's interface. The
+asset picker offers both for replacement.
+
+![The wood gasifier on the ground at zoom 0.5, right of the character and a vanilla generator: a dark drum on a firebox with a brown door at its foot, a brown filter box on its left and a grey pipe from its top into a grey cyclone on its right](evidence/run388/tlg_rtgy_zoom_05.png)
+
+Launch 388.
 
 ### C. Electricity, further conversions, stations
 
@@ -356,8 +379,8 @@ Release art (audit R01–R04):
   retort, ash pit, lye leacher, reactor, wash tank, stationary gasifier,
   gasifier kit, two digesters, gas holder (11). C: battery bank,
   controller, charging point, two solar ids, wind turbine, waterwheel,
-  diesel and CHP generators (9). Audit I10, I11. Five of B's are made
-  (audit I15): `TLG_WoodRetort`, `TLG_AshBarrel`, `TLG_LyeLeacher`,
+  diesel and CHP generators (9). Audit I10, I11. Six of B's are made:
+  the gasifier's (audit I18, below) and five in audit I15: `TLG_WoodRetort`, `TLG_AshBarrel`, `TLG_LyeLeacher`,
   `TLG_BiodieselReactor` and `TLG_BiodieselWashTank`, 32×32, rendered since
   2026-11-10 by `tools/make-model-icons.ps1` from the supplied models.
   None was looked at in game: launch 231 found the placeholder icons under
@@ -366,6 +389,17 @@ Release art (audit R01–R04):
   is made: vanilla's `Item_Generator` with its red turned to a dark green
   by `tools/make-tile-sprites.ps1`, like the sprite, and The Indie
   Stone's art like it. Not looked at in the game's interface.
+* The wood gasifier's icon, `TLG_Gasifier` (32×32; audit I18), is made:
+  rendered by `tools/make-model-icons.ps1` from the shapes its floor model
+  is built from, a placeholder like the model. Not released; not looked
+  at in the game's interface.
+* Icons for the two handbooks (32×32; audit I17), both made from the field
+  manual's icon: `TLG_BiodieselHandbook` (released in 0.4.0) with its
+  colour channels exchanged and scaled (`NOTICE.md`), and
+  `TLG_WoodGasHandbook` (not released) with a slate-blue cover and a red
+  badge. On the ground both use the manual's floor model, in the hand the
+  game's Magazine model. Neither is recorded as looked at in the game's
+  interface.
 * B: icons for by-products vanilla lacks: wood ash, lye, wood tar, dry wood
   chips (4; audit I12). Press cake and digestate may reuse vanilla items:
   `Base.AnimalFeedBag` (icon `AnimalFeed`), and `Base.Fertilizer` (icon
@@ -432,8 +466,8 @@ the first to cut.
 
 | Tier | New 3D models | Icons | UI symbols | Original sounds | Release art |
 | --- | --- | --- | --- | --- | --- |
-| A | 9, all made: 5 supplied, 4 the mod's own | 9, all made: the vessel's drawn, 8 rendered | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster and icon made; banner and screenshots not made |
-| B | 15: 5 made, supplied by the owner (D-036); of the other 10, 2 blocked on G11, 1 optional. Also 1 tile sprite, the diesel generator's, made from vanilla's (recoloured) | 16: 5 made, rendered from the supplied models; the diesel generator's made from vanilla's (recoloured) | 2 badges | about 10 | — |
+| A | 9, all made: 5 supplied, 4 the mod's own | 9, all made: the vessel's drawn, 8 rendered | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster and icon made; 13 Workshop screenshots cut, not uploaded; banner not made |
+| B | 15: 6 made, 5 supplied by the owner (D-036) and the gasifier's a shape-built placeholder (D-040, not released); of the other 9, 2 blocked on G11, 1 optional. Also 1 tile sprite, the diesel generator's, made from vanilla's (recoloured) | 18: 9 made: 5 rendered from the supplied models, the gasifier's from its shapes, the two handbooks' from the manual's icon, the diesel generator's from vanilla's (recoloured) | 2 badges | about 10 | — |
 | C | 13 (1 blocked on G11, 1 optional) | 9 | about 5 | about 9 | — |
 
 Not needed (spec §20, §22): new maps, character models or animations
