@@ -15,6 +15,7 @@ require "TLG/UI/Tip"
 require "TLG/UI/LoadPreview"
 require "TLG/UI/Say"
 require "TLG/UI/Repair"
+require "TLG/UI/MachineCard"
 
 TLG.UI = TLG.UI or {}
 TLG.UI.MachineMenu = TLG.UI.MachineMenu or {}
@@ -346,7 +347,15 @@ local function addMachine(playerNum, context, item, title, world)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
     local ref = Machines.refFor(item)
-    sub:addOption(getText("ContextMenu_TLG_MachineStatus"), nil, function() req("machine.status", { target = ref }) end)
+    -- Status of a machine on the ground is a card that stays open and keeps
+    -- itself up to date (TLG/UI/MachineCard.lua); a carried machine's, a
+    -- controller's and a refusal go the usual way.
+    sub:addOption(getText("ContextMenu_TLG_MachineStatus"), nil, function()
+        TLG.Net.request("machine.status", { target = ref }, function(reply)
+            local Card = TLG.UI.MachineCard
+            if reply.ok and Card.wanted(playerNum, item) then Card.show(item, ref, reply, playerNum) else onReply(reply) end
+        end)
+    end)
     if not Machines.isPlaced(item) then
         local o = sub:addOption(getText("ContextMenu_TLG_PlaceFirst"), nil, nil)
         o.notAvailable = true

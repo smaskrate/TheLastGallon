@@ -56,27 +56,45 @@ inventory, says what it is for and where its command is.
 
 ## How the mod answers
 
-What you do from the mod's menus is answered in one of two ways.
+What you do from the mod's menus is answered in one of three ways.
 
 * A line over your character, as the game's own short messages: what an
   action did ("Added 9.00 kg of wood to the firebox. Firebox: 9.0 of
   40 kg of wood", "Stabilizer added. The fuel will age more slowly from
   now on."), green, and a refusal of one sentence ("You need a fuel
   sampling kit."), red. There is nothing to close.
-* A window to close with **OK**: what you read (**Status**, **What I know
-  about it**, a test's result, the workshop's answers), a refusal that
-  lists what was found or what is missing, an aborted batch, and a
-  collect or load that threw something away. Closing it leaves the
-  game's speed as it was, as answering one of the mod's yes/no questions
-  does: you can read a **Status** while waiting at a
-  faster speed.
+* A window to close with **OK**: what you read (a gasifier's **Status**,
+  **Gas status**, **What I know about it**, a test's result, the
+  workshop's answers), a refusal that lists what was found or what is
+  missing, an aborted batch, and a collect or load that threw something
+  away. Closing it leaves the game's speed as it was, as answering one of
+  the mod's yes/no questions does.
+* A card that stays open, for the **Status** of a machine on the ground:
+  a small window with the machine's name, beside the middle of the
+  screen, that you can drag aside and close with its cross. It shows what
+  **Status** shows and, for a machine that takes from another, the
+  machines it takes from within two tiles and their state ("Takes from:
+  Lye Leacher, 1 tile away. Finished: lye ready for a reactor"). Machines
+  of one type in one state share a line, with their number and the
+  nearest one's distance ("Takes from: 3 x Fermentation Vessel, nearest 1
+  tile away. Working"). It brings
+  itself up to date every ten minutes of game time, so it can stay open
+  while you wait, and each machine has one card: **Status** again brings
+  it forward. It closes by itself when you move more than two and a half
+  tiles from the machine or pick the machine up. It has no buttons: the
+  actions stay in the machine's menu. A carried machine's **Status**, and
+  **Status** asked with a controller, are the window.
 
 A line lasts a few seconds. After a load or a feed, a machine's state and
 how long the batch takes are in its **Status**.
 
-**Not checked in game:** how the lines look over the character. Their
-texts ran through the harness (launches 421 and 422), which cannot see
-the screen.
+The card was opened, refreshed, closed by walking away and photographed
+in English on a pot still (RT-SP launches 442 and 443).
+
+**Not checked in game:** the card in Italian, dragging it, its closing
+when the machine is picked up, and how the lines look over the
+character. The lines' texts ran through the harness (launches 421 and
+422), which cannot see the screen.
 
 ## Inspecting fuel
 

@@ -6,7 +6,8 @@
 --
 -- The menus choose by the kind of reply (their own `line` functions), not
 -- by the text's length: a translation must not turn a line into a window.
--- Every reply of the five menus goes through Say.window or Say.line; the
+-- Every reply of the five menus goes through Say.window, Say.line or, for a
+-- machine's Status, Say.card; the
 -- in-game harness reads the texts here (TLGHarness, captureDialogs).
 --
 -- The line is the game's own text over the character (BC
@@ -72,6 +73,87 @@ function Say.window(text, width, height)
     modal:initialise()
     modal:addToUIManager()
     return modal
+end
+
+-- A card: a small window that stays open and is not in the way, as the
+-- game's Generator Info is (SRC client/ISUI/ISGeneratorInfoWindow.lua: a
+-- collapsable window around a tooltip panel, sized by its text). One card
+-- for each `key`; calling again sets its text and brings it forward, or,
+-- with `behind`, only sets its text.
+-- `onUpdate(key)` is called at each frame the card is shown (the caller
+-- paces what it does there) and `onClose(key)` when it goes, however it
+-- goes: its close button, Say.closeCard, Say.closeCards. Where the game's
+-- window classes are missing the text opens the window instead. Returns
+-- "card" or "window". UX review, section 5.
+Say.cards = Say.cards or {}
+local CardWindow
+
+local function cardClass()
+    if ISCollapsableWindow == nil or ISToolTip == nil then return nil end
+    if CardWindow then return CardWindow end
+    CardWindow = ISCollapsableWindow:derive("TLGCardWindow")
+    function CardWindow:createChildren()
+        ISCollapsableWindow.createChildren(self)
+        self.panel = ISToolTip:new()
+        self.panel.followMouse = false
+        self.panel:initialise()
+        self:addView(self.panel)
+    end
+    function CardWindow:update()
+        ISCollapsableWindow.update(self)
+        self.panel.maxLineWidth = 400
+        self.panel.description = self.cardText
+        self:setWidth(math.max(self.panel:getWidth(), 220))
+        self:setHeight(self:titleBarHeight() + self.panel:getHeight())
+        if self.onUpdate then self.onUpdate(self.cardKey) end
+    end
+    -- The close button: the base class only hides the window, and a hidden
+    -- card would go on asking.
+    function CardWindow:close() Say.closeCard(self.cardKey) end
+    return CardWindow
+end
+
+function Say.card(key, title, text, onUpdate, onClose, behind)
+    local class = cardClass()
+    if class == nil then
+        Say.window(text)
+        return "window"
+    end
+    local card = Say.cards[key]
+    if card == nil then
+        -- Beside the centre, each new card a little lower than the last.
+        local n = 0
+        for _ in pairs(Say.cards) do n = n + 1 end
+        card = class:new(getCore():getScreenWidth() / 2 + 60, 120 + 40 * (n - math.floor(n / 8) * 8), 320, 120)
+        card.cardKey = key
+        card:setResizable(false)
+        card:initialise()
+        card:addToUIManager()
+        Say.cards[key] = card
+    end
+    local new = card.cardText == nil
+    card.title, card.cardText, card.onUpdate, card.onClose = title, text, onUpdate, onClose
+    -- A card filled again by itself stays where it is among the windows.
+    if behind and not new then return "card" end
+    card:setVisible(true)
+    card:bringToTop()
+    return "card"
+end
+
+-- Removes the card of `key`, if there is one, and tells its owner.
+function Say.closeCard(key)
+    local card = Say.cards[key]
+    if card == nil then return end
+    Say.cards[key] = nil
+    card.onUpdate = nil
+    pcall(function() card:setVisible(false); card:removeFromUIManager() end)
+    if card.onClose then pcall(card.onClose, key) end
+end
+
+function Say.closeCards()
+    local keys = {}
+    for key in pairs(Say.cards) do keys[#keys + 1] = key end
+    for _, key in ipairs(keys) do Say.closeCard(key) end
 end
 
 -- `text` over the character, green when `good` and red otherwise. Text

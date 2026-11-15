@@ -6,6 +6,18 @@ The gas generator, propane and the wood gasifier themselves (D-040) are
 not listed here yet; the entries below are the changes to menus, texts
 and instructions.
 
+* New: **Status** of a machine on the ground opens a card that stays
+  open instead of a window to close: a small window with the machine's
+  name that shows what Status shows, brings itself up to date every ten
+  minutes of game time and closes by itself when you walk away or pick
+  the machine up. For a machine that takes from another it also lists
+  the machines it takes from within two tiles and their state ("Takes
+  from: Lye Leacher, 1 tile away. Finished: lye ready for a reactor").
+  Machines of one type in one state share a line ("Takes from: 3 x
+  Fermentation Vessel, nearest 1 tile away. Working"). One card for each machine; no buttons, the actions stay in the menu. A
+  carried machine's Status, Status asked with a controller, the
+  gasifier's Status and Gas status are windows as before. Run in game
+  on one machine in English (RT-SP launches 442 and 443); not in Italian, not on a server.
 * Fixed: closing one of the mod's windows (**Status**, a test's result,
   **Project status**) or answering one of its yes/no questions leaves
   the game's speed as it was.

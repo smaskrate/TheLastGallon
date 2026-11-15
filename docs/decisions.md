@@ -397,13 +397,17 @@ their replacement.
   on the server (300 ticks in 78.8 s at its start), which the watch needs.
 
 ## D-016 UI feedback through rich-text dialogs
-* Current rule (amended 2026-11-14, UX review R6): a window is for what
+* Current rule (amended 2026-11-14, UX review R6, and 2026-11-15, the
+  card): a window is for what
   is read and for what must not be missed; what an action did is a line
   over the character (`TLG/UI/Say.lua`: the game's `HaloTextHelper`,
   green for done, red for a refusal). The menus choose by the kind of
   reply, never by the text's length, so that a translation does not turn
   a line into a window:
-  * windows: **Status** of a machine, a gasifier and the gas, **What I
+  * a card that stays open: **Status** of a machine on the ground (the
+    amendment of 2026-11-15 below);
+  * windows: **Status** of a gasifier, of the gas and of a carried
+    machine, **What I
     know about it**, a test's result, every workshop answer (they list
     parts and hours), a refusal with a list (what was found, what is
     missing), an abort, a collect or a load that threw something away,
@@ -421,6 +425,25 @@ their replacement.
   (`Say.closeWith`). Consequence accepted: after an action the state,
   stage and site temperature are read in **Status**, no longer in the
   action's own answer; a line lasts a few seconds and can be missed.
+* Amendment of 2026-11-15 (UX review, section 5; the owner's go-ahead the
+  same day): **Status** of a machine on the ground is a card, a small
+  window that stays open (`TLG/UI/MachineCard.lua`, `Say.card`, on the
+  model of the game's Generator Info window), one for each machine. It
+  shows Status and the machines the machine takes from (those of one type
+  in one state on one line with their number, the owner's choice after
+  launch 442 showed four lines for four vessels), asks
+  `machine.status` again every ten game minutes and never within three
+  real seconds, and closes without a word, at the next frame, when its
+  player is more than 2.5 tiles from the machine or the machine is picked up,
+  and at its next refresh on any refusal. A refresh leaves the card where
+  it is among the windows. No buttons: the actions stay in the menu. A
+  carried machine's Status, a controller's, the gasifier's Status and Gas
+  status stay windows. The review recommended the card only if a playtest
+  showed Status still repetitive with the time left on it; no playtest
+  was held, and R14's fix had already removed the loss of speed at each
+  OK. Each refresh makes the authority write the record and, on a server,
+  send it to the clients; its cost with several cards open is not
+  measured.
 * Decision: inspection and machine results are shown in `ISModalRichText`
   dialogs built from translated keys; unknown condition has its own wording.
 * Reason: readable without relying on colour or tiny world labels (spec §16).

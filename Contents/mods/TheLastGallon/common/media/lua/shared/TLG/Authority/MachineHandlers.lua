@@ -90,6 +90,38 @@ local function commit(player, args, st, rec, extra)
     return r
 end
 
+-- The machine kinds a machine of each kind takes its load from, within two
+-- tiles (the loads below).
+H.TAKES_FROM = {
+    still = { "fermenter" }, leacher = { "fire_pit" }, reactor = { "retort", "leacher" }, settler = { "reactor" },
+}
+
+-- The machines `item` takes from that stand within two tiles, each with its
+-- state now: read and brought forward, never written. For the Status card
+-- (TLG/UI/MachineCard.lua): { machine, type, state, tiles }, nearest first.
+function H.machineSources(item)
+    local out = {}
+    local def = TLG.Registry.get("machine", Machines.machineFor(item) or "")
+    local kinds, here = def and H.TAKES_FROM[def.kind], Machines.square(item)
+    if kinds == nil or here == nil then return out, kinds ~= nil end
+    for _, kind in ipairs(kinds) do
+        for _, it in ipairs(Machines.nearbyMachines(here, 2, kind)) do
+            local rec = Machines.read(it, false)
+            local sq = Machines.square(it)
+            if rec and sq then
+                rec = Machines.advance(it, rec, World.now(), World.env())
+                out[#out + 1] = { machine = rec.machine, type = it:getFullType(), state = Process.status(rec).state,
+                    tiles = math.max(math.abs(sq:getX() - here:getX()), math.abs(sq:getY() - here:getY())) }
+            end
+        end
+    end
+    table.sort(out, function(a, b)
+        if a.tiles ~= b.tiles then return a.tiles < b.tiles end
+        return tostring(a.machine) < tostring(b.machine)
+    end)
+    return out, true
+end
+
 function H.machineStatus(player, args)
     local st, err = machineState(player, args)
     if not st then return err end
@@ -97,7 +129,9 @@ function H.machineStatus(player, args)
     Machines.write(st.item, st.rec)
     local s = Process.status(st.rec)
     local siteC, siteNow, site = Machines.siteTemp(st.item, st.rec, World.now(), World.env())
+    local sources, takesFrom = H.machineSources(st.item)
     return { ok = true, requestId = args.requestId, state = s.state, pause = s.reason, stage = s.stage,
+        placed = Machines.isPlaced(st.item), sources = sources, takesFrom = takesFrom,
         outputs = st.rec.outputs, firebox = st.rec.firebox, cond = st.rec.cond, rev = st.rec.rev,
         machine = st.rec.machine, inputs = st.rec.inputs, stageDone = st.rec.stageDone,
         siteC = siteC, siteNow = siteNow, site = site, stoppedEarly = st.rec.stoppedEarly,

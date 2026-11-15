@@ -473,3 +473,33 @@ T.case("loads: a mash leaves favourite crops, water and yeast alone", function()
         T.eq(left, yeast)
     end)
 end)
+
+-- For the Status card (TLG/UI/MachineCard.lua): the machines a machine
+-- takes from, as the authority finds them, read and never written.
+T.case("status: a chain machine's Status names the machines it takes from, nearest first, without writing them", function()
+    inGame(function(g)
+        local reactor, retort, leacher = reactorSite(g, 10, 2)
+        local before = TLG.Tables.deepCopy(rec(retort))
+        local s = H.commands["machine.status"](player(), req(reactor))
+        T.eq(s.ok, true, tostring(s.reason))
+        T.eq(s.placed, true); T.eq(s.takesFrom, true)
+        T.eq(#s.sources, 2)
+        -- The retort stands straight above the reactor, the leacher on the diagonal: one tile each, by name.
+        T.eq(s.sources[1].machine, "lye_leacher"); T.eq(s.sources[1].type, "TLG.LyeLeacher")
+        T.eq(s.sources[1].state, "OutputReady"); T.eq(s.sources[1].tiles, 1)
+        T.eq(s.sources[2].machine, "wood_retort"); T.eq(s.sources[2].tiles, 1)
+        T.eq(rec(retort).rev, before.rev); T.eq(rec(retort).t, before.t)
+        -- A machine two tiles off is found, one three tiles off is not.
+        local far = machine("TLG.WoodRetort", square(g, 3, 4), finished("wood_retort", { methanol = 1 }))
+        s = H.commands["machine.status"](player(), req(reactor))
+        T.eq(#s.sources, 3); T.eq(s.sources[3].tiles, 2)
+        machine("TLG.WoodRetort", square(g, 4, 2), finished("wood_retort", { methanol = 1 }))
+        T.eq(#H.commands["machine.status"](player(), req(reactor)).sources, 3)
+        -- A machine that takes from none says so; one with nothing near has an empty list.
+        s = H.commands["machine.status"](player(), req(far))
+        T.eq(s.takesFrom, false); T.eq(#s.sources, 0)
+        local alone = machine("TLG.BiodieselWashTank", square(g, 20, 20), nil)
+        s = H.commands["machine.status"](player(), req(alone))
+        T.eq(s.takesFrom, true); T.eq(#s.sources, 0)
+    end)
+end)

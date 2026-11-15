@@ -1344,6 +1344,24 @@ local function captureDialogs(on)
             H.dialogs.windows = (H.dialogs.windows or 0) + 1
             return o
         end
+        -- A machine's Status is a card since the review's section 5: its
+        -- text is kept with the windows', each time it is filled, and the
+        -- card is closed again.
+        if Say and not H.dialogs.card then
+            H.dialogs.card = Say.card
+            Say.card = function(key, title, text, ...)
+                local how = H.dialogs.card(key, title, text, ...)
+                if how == "card" then
+                    H.dialogs.texts[#H.dialogs.texts + 1] = tostring(text)
+                    H.dialogs.windows = (H.dialogs.windows or 0) + 1
+                    H.dialogs.cards = (H.dialogs.cards or 0) + 1
+                    -- A card left open would go on asking through the steps
+                    -- that follow: closed at once, unless a step keeps it.
+                    if not H.dialogs.keepCards then Say.closeCard(key) end
+                end
+                return how
+            end
+        end
         if Say and not H.dialogs.line then
             H.dialogs.line = Say.line
             Say.line = function(text, good)
@@ -1359,6 +1377,7 @@ local function captureDialogs(on)
     elseif not on and H.dialogs.orig then
         ISModalRichText.new, H.dialogs.orig = H.dialogs.orig, nil
         if Say and H.dialogs.line then Say.line, H.dialogs.line = H.dialogs.line, nil end
+        if Say and H.dialogs.card then Say.card, H.dialogs.card = H.dialogs.card, nil end
     end
 end
 
@@ -1375,6 +1394,7 @@ end
 
 local function closeDialogs()
     for _, o in ipairs(H.dialogs.open) do pcall(function() o:removeFromUIManager() end) end
+    pcall(function() TLG.UI.Say.closeCards() end)
     H.dialogs.open = {}
 end
 
@@ -6121,7 +6141,88 @@ RT.speedKept = { name = "rt_speed_kept", timeout = 900, fn = function(ctx, ticks
     return true
 end }
 
-RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.RP.step, RT.speedKept, RT.finish }
+-- A machine's Status as a card (UX review, section 5), on the mode's pot
+-- still: Status from its menu opens one card and no window; past ten game
+-- minutes and three real seconds the card has asked again and is still the
+-- one card; with the character six tiles away it closes at the next
+-- frame, and nothing is said over the character.
+RT.cardStep = { name = "rt_card", timeout = 6000, fn = function(ctx, ticks)
+    local Say, Card = TLG.UI.Say, TLG.UI.MachineCard
+    local still = RT.C.items and RT.C.items[5]
+    if still == nil or still:getWorldItem() == nil then
+        R:check("RT.card_opens", function() return false, "no pot still on the ground" end)
+        return true
+    end
+    local key = Card.keyOf(still)
+    local function count()
+        local n = 0
+        for _ in pairs(Say.cards) do n = n + 1 end
+        return n
+    end
+    local sq = still:getWorldItem():getSquare()
+    if ticks == 1 then
+        Say.closeCards()
+        H.dialogs.keepCards = true
+        ISTimedActionQueue.clear(player())
+        player():setPosition(sq:getX() + 1.5, sq:getY() + 0.5, 0)
+        return nil
+    end
+    if ticks < 20 then return nil end
+    if ticks == 20 then
+        ctx.windows, ctx.lines = #H.dialogs.open, H.dialogs.lines or 0
+        ctx.r = machineClick("RT.card_status", still, "ContextMenu_TLG_MachineStatus")
+        local card, st = Say.cards[key], Card.open[key]
+        ctx.text, ctx.at = card and card.cardText, st and st.atHours
+        R:check("RT.card_opens", function()
+            return ctx.r.ok == true and card ~= nil and count() == 1 and #H.dialogs.open == ctx.windows
+                and type(ctx.text) == "string" and ctx.text ~= "" and card.title == still:getDisplayName(),
+                string.format("reply ok=%s; cards %d, windows opened %d; title '%s'; text: %s", tostring(ctx.r.ok), count(),
+                    #H.dialogs.open - ctx.windows, tostring(card and card.title), tostring(ctx.text))
+        end)
+        if card == nil then
+            H.dialogs.keepCards = false
+            return true
+        end
+        RT.speed(20)
+        ctx.t0 = ticks
+        return nil
+    end
+    if ctx.phase == nil then
+        local st = Card.open[key]
+        if st and st.atHours == ctx.at and ticks - ctx.t0 < 2400 then return nil end
+        local card = Say.cards[key]
+        R:check("RT.card_keeps_itself_up_to_date", function()
+            return st ~= nil and st.atHours > ctx.at and card ~= nil and count() == 1 and #H.dialogs.open == ctx.windows,
+                string.format("filled at %s h, again at %s h after %d ticks; cards %d, windows opened %d; shown %s, w %s h %s; text: %s",
+                    tostring(ctx.at), tostring(st and st.atHours), ticks - ctx.t0, count(), #H.dialogs.open - ctx.windows,
+                    tostring(card and card:getIsVisible()), tostring(card and card:getWidth()), tostring(card and card:getHeight()),
+                    tostring(card and card.cardText))
+        end)
+        pcall(function() getCore():TakeFullScreenshot("tlg_rt_card.png") end)
+        ctx.phase, ctx.t1 = "shot", ticks
+        return nil
+    end
+    if ctx.phase == "shot" then
+        if ticks - ctx.t1 < 40 then return nil end
+        player():setPosition(sq:getX() + 6.5, sq:getY() + 0.5, 0)
+        ctx.phase, ctx.t1 = "away", ticks
+        return nil
+    end
+    if Say.cards[key] ~= nil and ticks - ctx.t1 < 2400 then return nil end
+    RT.speed(1)
+    H.dialogs.keepCards = false
+    R:check("RT.card_closes_out_of_reach_without_a_word", function()
+        return Say.cards[key] == nil and Card.open[key] == nil and (H.dialogs.lines or 0) == ctx.lines
+            and #H.dialogs.open == ctx.windows, string.format(
+            "six tiles away for %d ticks: card open %s; lines said %d, windows opened %d", ticks - ctx.t1,
+            tostring(Say.cards[key] ~= nil), (H.dialogs.lines or 0) - ctx.lines, #H.dialogs.open - ctx.windows)
+    end)
+    player():setPosition(sq:getX() + 1.5, sq:getY() + 0.5, 0)
+    return true
+end }
+
+RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.RP.step, RT.speedKept, RT.cardStep,
+    RT.finish }
 
 ------------------------------------------------------------------------------
 -- Stills and drying column picked up (request "sp-rts"): D-015 on the

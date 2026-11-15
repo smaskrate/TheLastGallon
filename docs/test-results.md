@@ -13,6 +13,7 @@ runtime tests.
 | RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
+| RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443): its text in Italian, dragging it and its cross with the mouse, its refresh at speed 1 after ten game minutes, its closing when the machine is picked up, the line of the machines it takes from on a biodiesel chain, several cards at once and their cost (each refresh writes the record; not measured), a second player's card in split screen, a server's client, where each refresh also sends the record to the clients (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture, and only `controls` was run since; `docs-shots` photographs Status as a window and its `05` Workshop cut shows the old one | Only the `controls` mode has the step (`RT.cardStep`), on one machine in English |
 | RT-SP and RT-MP: the game's speed across the mod's windows and questions (UX review R14; the game's own window left 1 and the mod's left 3 when closed by the OK handler at speed 3: launch 440): a click on OK with the mouse and the speed buttons on screen, the yes/no questions (**Cancel the project**, **Remove the conversion**, a second **Abort batch**, a harmful pour; offline: `test_say.lua`), a paused game, a controller, a server's client | The `controls` mode's step calls the OK button's handler and reads the speed controls |
 | RT-SP and RT-MP: **Gas status** with the hours of gas left (UX review R11; on wood gas the text read and the estimate against the stop, 1 h against 1.97 h: launch 439): the window on a generator on propane and on one never switched on; whether the window (420x220) holds its longest line, in Italian; the estimate after the load changes (offline: `test_gas_feed.lua`, `test_gas_handlers.lua`, `test_gasifier_menu.lua`). The gas page of the manual names this line since; launches 436–437 photographed its earlier sentence | The gas modes read the window's text, not the screen; `gas-propane` not launched since |
 | RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action, both on a server, where the action's new last field (`source`) is sent to the server's copy and the pump goes as the object faced, as the game's own **Take Fuel** sends one. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438) | The `gas-player` mode waits for the drain and reads the litres; no mode clicks the station pour |
@@ -9379,3 +9380,78 @@ controller; a server's client.
 
 Evidence:
 [run 440](evidence/2026-11-15_rt-sp_harness_run440_controls_speed_kept_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launches 441 and 442 (a machine's Status as a card, UX review section 5)
+
+Branch `feature/gas-generators` after `d73a879`, the card not yet
+committed, 42.22.2. Command: `tools/run-sp-harness.ps1 -Mode controls`,
+with the new step `RT.cardStep` after `RT.speedKept`.
+
+**Launch 441: 43/1.** The failure is the step's, not the card's: between
+ticks 2 and 19 the step fell through to the refresh check before it had
+opened the card, and the check raised an error on a time it did not have
+yet. The screenshot of that launch was taken without a card and is not
+kept. The step now waits for tick 20. Nothing in the mod changed between
+the two launches.
+
+**Launch 442: 44/0.**
+
+* **Status** from the pot still's menu opened one card and no window. Its
+  title is "Pot Still"; its text is Status, then one line for each
+  fermentation vessel within two tiles.
+* At game speed 20 the card asked again by itself: filled at 81.764 game
+  hours, again at 82.031, 181 ticks later. That is 16 game minutes, not
+  ten. Hypothesis, not measured: the three real seconds (`Card.MIN_MS`)
+  were the longer wait at that speed. Still one card, no window, the card
+  shown, 314 by 197 pixels. The text was the same both times, so a changed
+  text reaching the card was not seen.
+* With the character six tiles away the card was closed 4 ticks later;
+  nothing was said over the character and no window opened.
+* The screenshot shows the card at the right of the middle of the screen,
+  every line whole, at 1280x720.
+
+The mode's site has four fermentation vessels beside the still, so the
+card shows four "Takes from: Fermentation Vessel" lines, told apart only
+by distance and state. The console of launch 442 holds no exception.
+
+After this launch, at the owner's choice, machines of one type in one
+state share a line with their number and the nearest one's distance
+("Takes from: 3 x Fermentation Vessel, nearest 1 tile away. Working").
+The screenshot of launch 442 shows the card before the change; launch
+443 ran with it.
+
+Not run: the card in Italian; dragging it and its cross with the mouse;
+the refresh at speed 1 (ten game minutes), a refresh that changes the
+text, a refresh while the card is behind another window; closing when the
+machine is picked up; the sources line on a biodiesel chain (leacher, reactor,
+settler); several cards at once and what the refreshes cost (not
+measured); split screen; a server's client. The other single-player modes
+that read a machine's Status text were not run again. `docs-shots` still
+photographs Status as a window.
+
+Evidence:
+[run 441](evidence/2026-11-15_rt-sp_harness_run441_controls_machine_card_step_error_42.22.2.txt),
+[run 442](evidence/2026-11-15_rt-sp_harness_run442_controls_machine_card_42.22.2.txt),
+[the card](evidence/2026-11-15_run442_machine_card.png).
+
+## 2026-11-15 — RT-SP launch 443 (the card's shared line for the machines it takes from)
+
+Branch `feature/gas-generators` after `d73a879`, the card not yet
+committed, 42.22.2. Command: `tools/run-sp-harness.ps1 -Mode controls`.
+**44/0**, the same checks as launch 442.
+
+* The pot still's card, beside the same four fermentation vessels, shows
+  two lines for them in place of four: "Takes from: 3 x Fermentation
+  Vessel, nearest 1 tile away. Working" and "Takes from: Fermentation
+  Vessel, 1 tile away. Ready".
+* The card is 369 by 165 pixels (launch 442: 314 by 197); the screenshot
+  shows every line whole at 1280x720.
+* It asked again by itself (81.761 to 82.032 game hours, 184 ticks, the
+  text the same) and was closed 6 ticks after the character stood six
+  tiles away, with nothing said and no window.
+
+The console holds no exception. Not run: as for launch 442.
+
+Evidence:
+[run 443](evidence/2026-11-15_rt-sp_harness_run443_controls_machine_card_grouped_42.22.2.txt),
+[the card](evidence/2026-11-15_run443_machine_card_grouped.png).
