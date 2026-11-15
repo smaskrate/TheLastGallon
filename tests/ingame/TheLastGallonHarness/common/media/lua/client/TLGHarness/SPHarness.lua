@@ -16338,6 +16338,8 @@ RT.itCard = { name = "rti_card", timeout = 1500, fn = function(ctx, ticks)
     end
     if ticks < 20 then return nil end
     local ready = I.want.IGUI_TLG_MachineState_Ready or "?"
+    -- A feminine machine's own state word ("Storta per legna ... Pronta").
+    local readyRetort = I.want.IGUI_TLG_MachineState_Ready_retort or "?"
     if ticks == 20 then
         if ctx.reactor == nil or ctx.leacher == nil or ctx.retorts[1] == nil or ctx.retorts[2] == nil then
             R:check("RTI.card_italian", function() return false, "a square around the character was not there" end)
@@ -16351,7 +16353,7 @@ RT.itCard = { name = "rti_card", timeout = 1500, fn = function(ctx, ticks)
         ctx.text, ctx.title = card and card.cardText, card and card.title
         ctx.want = {
             fill(I.want.IGUI_TLG_Card_Source1, ctx.leacher:getDisplayName(), 1, ready),
-            fill(I.want.IGUI_TLG_Card_Sources, 2, ctx.retorts[1]:getDisplayName(), 2, ready),
+            fill(I.want.IGUI_TLG_Card_Sources, 2, ctx.retorts[1]:getDisplayName(), 2, readyRetort),
         }
         local whole = TLG.UI.MachineMenu.describe(ctx.r) .. " <LINE> " .. ctx.want[1] .. " <LINE> " .. ctx.want[2]
         R:check("RTI.card_italian", function()
@@ -16388,7 +16390,7 @@ RT.itCard = { name = "rti_card", timeout = 1500, fn = function(ctx, ticks)
             { "three of one kind and state, nearest one tile away", { sources = {
                 src(ret, "TLG.WoodRetort", "Ready", 1), src(ret, "TLG.WoodRetort", "Ready", 1),
                 src(ret, "TLG.WoodRetort", "Ready", 2) }, takesFrom = true },
-                fill(I.want.IGUI_TLG_Card_Sources1, 3, retort, 1, ready) },
+                fill(I.want.IGUI_TLG_Card_Sources1, 3, retort, 1, readyRetort) },
             { "a state named for the retort", { sources = { src(ret, "TLG.WoodRetort", "OutputReady", 1) }, takesFrom = true },
                 fill(I.want.IGUI_TLG_Card_Source1, retort, 1, I.want.IGUI_TLG_MachineState_OutputReady_retort) },
             { "none in reach", { sources = {}, takesFrom = true }, I.want.IGUI_TLG_Card_NoSource or "?" },
@@ -19776,6 +19778,14 @@ function RT.GY.build()
                     p and sumOf(p.credit) or -1, tostring(G.profile(g)), tostring(G.isGas(g)), tostring(text))
         end)
         if not (p and p.state == "Commissioned") then RT.abort = "the gas conversion was not commissioned" end
+        -- The game's Generator Info text opens with the mod's line, which
+        -- names only the gases a player can have (biogas has no machine).
+        local info = ISGeneratorInfoWindow.getRichText(g, true)
+        local want = getText("IGUI_TLG_GenFuel", getText("IGUI_TLG_GenFuel_generator_gas"))
+        R:check("RTGY.generator_info_names_propane_and_wood_gas", function()
+            return type(info) == "string" and string.sub(info, 1, #want) == want
+                and not has(string.lower(info), "biogas") and not has(info, "IGUI_TLG"), tostring(info)
+        end)
     end)
 
     -- The Wood Gas Handbook read with the inventory menu's Read at Welding

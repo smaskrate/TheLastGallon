@@ -130,6 +130,27 @@ T.case("integration: a finished machine's Status says what waits and where it go
     if not ok then error(err, 0) end
 end)
 
+-- Italian gives the wood retort, the wash tank and the drying column, whose
+-- names are feminine, state words of their own ("Pronta"); English repeats
+-- the shared words under those keys.
+T.case("integration: a machine with a state key of its kind says that word, another the shared one", function()
+    local saved = getText
+    getText = lookup({
+        IGUI_TLG_MachineState_Ready = true, IGUI_TLG_MachineState_Ready_retort = true,
+        IGUI_TLG_MachineState_Faulted = true, IGUI_TLG_MachineState_Faulted_settler = true,
+    })
+    local ok, err = pcall(function()
+        local text = Menu.describe({ state = "Ready", machine = "wood_retort" })
+        T.ok(has(text, "[IGUI_TLG_MachineState_Ready_retort]"), text)
+        text = Menu.describe({ state = "Faulted", machine = "biodiesel_wash_tank" })
+        T.ok(has(text, "[IGUI_TLG_MachineState_Faulted_settler]"), text)
+        text = Menu.describe({ state = "Ready", machine = "lye_leacher" })
+        T.ok(has(text, "[IGUI_TLG_MachineState_Ready]") and not has(text, "_leacher"), text)
+    end)
+    getText = saved
+    if not ok then error(err, 0) end
+end)
+
 T.case("integration: an abort's dialog says what was kept and what was thrown away", function()
     local saved = getText
     getText = lookup({

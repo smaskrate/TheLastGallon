@@ -10058,3 +10058,50 @@ Evidence:
 [run 514](evidence/2026-11-15_rt-mp_harness_run514_onebelow2_non_admin_after_r12_42.22.2.txt),
 [run 515](evidence/2026-11-15_rt-mp_harness_run515_onebelow4_non_admin_after_r12_42.22.2.txt),
 [run 516](evidence/2026-11-15_rt-mp_harness_run516_full_restart_dropvault_after_r12_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launches 517–518 (gate 10's texts: feminine state words in Italian, no biogas on a gas generator)
+
+Branch `feature/gas-generators` after `13e5984`, with the changes of
+D-045 (committed with this entry), 42.22.2. Offline first: the domain
+tests 384 of 384, two of them new (`test_machine_menu.lua`: a machine's
+**Stato** takes the state key of its kind when there is one, another the
+shared key; `test_machine_card.lua`: the same for a card's source
+lines); the compile check 165 files, no errors;
+`tools/check-translations.ps1` OK, 532 English keys with Italian parity.
+
+| Launch | Command | Result (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 517 | `tools/run-sp-harness.ps1 -Mode italian` | 8/0 | launch 445, 8/0 |
+| 518 | `tools/run-sp-harness.ps1 -Mode gas-player` | 16/0 | launch 474, 15/0; one check new |
+
+* Launch 517: 532 of 532 Italian strings came back from the game as
+  shipped (ContextMenu 57, Fluids 8, IG_UI 399, ItemName 18, Recipes 13,
+  Sandbox 19, Tooltip 18), among them the twelve new state words and
+  `IGUI_TLG_Fail_Full`, "È pieno: non c'è spazio per altro carburante."
+  The reactor's card read "Prende da: Lisciviatore, a 1 casella. Pronto"
+  and "Prende da: 2 x Storta per legna, la più vicina a 2 caselle.
+  Pronta"; asked directly, three retorts sharing a line ended "Pronta"
+  and a finished retort "Terminato: metanolo pronto per un reattore".
+  The screenshot shows the card's lines whole (looked at by the agent).
+* Launch 518: after the conversion commissioned from the menus, the
+  game's Generator Info text (`ISGeneratorInfoWindow.getRichText`) began
+  "Runs on: gas (propane or wood gas)" and did not name biogas
+  (`RTGY.generator_info_names_propane_and_wood_gas`, new). The other 15
+  checks passed as in launch 474.
+
+No step timed out or was skipped. Launch 518's console holds no
+warning, error or exception; launch 517's only the 110
+`MissingFormatArgumentException` warnings the string check causes by
+asking each template without its arguments, as in launch 445.
+
+Not run: the new words on a wash tank or a drying column, and the
+machine's own **Stato** of a feminine machine, in game (offline only);
+"È pieno: …" on screen; the Generator Info window on screen, and on a
+generator on propane; the sampling kit's verdict naming a gas
+generator's engine; the package's Workshop text, which is built at the
+release's packaging step.
+
+Evidence:
+[run 517](evidence/2026-11-15_rt-sp_harness_run517_italian_feminine_state_words_42.22.2.txt),
+[the card](evidence/2026-11-15_run517_machine_card_italian_pronta.png),
+[run 518](evidence/2026-11-15_rt-sp_harness_run518_gas_player_generator_info_line_42.22.2.txt).

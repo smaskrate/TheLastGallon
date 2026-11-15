@@ -119,6 +119,24 @@ T.case("integration: a card's text is Status and the machines it takes from", fu
     end)
 end)
 
+T.case("integration: a source line takes the state word of its machine's kind when there is one", function()
+    stage(function()
+        -- As the game's Translator: a key it does not know comes back as it is.
+        local known = { IGUI_TLG_Card_Source1 = true, IGUI_TLG_Card_Sources = true, IGUI_TLG_MachineState_Ready = true,
+            IGUI_TLG_MachineState_Ready_retort = true }
+        getText = function(key, ...)
+            if not known[key] then return key end
+            return bracket(key, ...)
+        end
+        local lines = Card.sourceLines({ takesFrom = true, sources = {
+            { machine = "lye_leacher", type = "TLG.LyeLeacher", state = "Ready", tiles = 1 },
+            { machine = "wood_retort", type = "TLG.WoodRetort", state = "Ready", tiles = 2 },
+            { machine = "wood_retort", type = "TLG.WoodRetort", state = "Ready", tiles = 2 } } })
+        T.eq(lines[1], "[IGUI_TLG_Card_Source1:name of TLG.LyeLeacher,1,[IGUI_TLG_MachineState_Ready]]")
+        T.eq(lines[2], "[IGUI_TLG_Card_Sources:2,name of TLG.WoodRetort,2,[IGUI_TLG_MachineState_Ready_retort]]")
+    end)
+end)
+
 T.case("integration: an open card asks again when due, fills from the answer and closes without a word on a refusal", function()
     stage(function(s)
         local ref = { kind = "machine", id = 7 }

@@ -118,6 +118,16 @@
   room for more fuel." On a server the harness read that line said over
   the character, refusing a pump of 14,307 L (launch 473); not looked at
   on screen.
+* Fixed: in Italian the wood retort, the wash tank and the drying
+  column, whose names are feminine, give their state as such: **Pronta**,
+  **Caricata, non avviata**, **Guasta**, **Smontata**, in their **Stato**
+  and on a card's source lines. Before, every machine said "Pronto".
+  Checked in single player on a card's line for two retorts (launch 517).
+* Changed: a gas generator's line in the Generator Info window, "Runs on:
+  gas (propane or wood gas)", and its engine in the Workshop menu and the
+  sampling kit's verdict no longer name biogas, which no machine makes.
+  Checked in single player on a generator converted from the menus
+  (launch 518).
 * New: biodiesel and gas have instructions in the game. The Field
   Manual's menu has **Read: Biodiesel** and **Read: Gas generators**,
   each a page like the manual's own: the five machines, a batch step by

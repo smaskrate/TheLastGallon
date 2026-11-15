@@ -2299,3 +2299,40 @@ scan meets the empty one first.
 **Left as it is.** The Workshop menu, for a generator the click is not
 on, takes the first one found (`WorkshopMenu.lua`, `nearbyGenerator`): the
 owner chose to leave it ("Leave it", 2026-11-15).
+
+## D-045 Gate 10's open texts: feminine state words, no biogas on a gas generator, a gas section on the Workshop page
+
+Decided 2026-11-15 by the owner, choosing each draft put to them
+("Feminine forms", "Drop biogas", "Use this draft").
+
+**State words in Italian.** A machine's state word comes from its
+state's key, and a kind may have a key of its own, which both the
+machine's **Stato** and a card's source lines ask for first
+(`MachineContextMenu.lua`, `kindText`; `MachineCard.lua`,
+`sourceLines`). The three machines with feminine Italian names, the wood
+retort ("Storta per legna", kind `retort`), the wash tank ("Vasca di
+lavaggio del biodiesel", `settler`) and the drying column ("Colonna di
+disidratazione dell'etanolo", `dryer`), now have their own keys for the
+four states whose word agrees with the machine: **Pronta**, **Caricata,
+non avviata**, **Guasta** and **Smontata**. English repeats its shared
+words under those keys. The words for working, paused and maintenance
+agree with nothing, and the "Terminato: …" and "Interrotto: …" lines
+read as the work's, so they stay. Before, a reactor's card read
+"Prende da: 2 x Storta per legna, la più vicina a 2 caselle. Pronto"
+(launch 445); it now ends "Pronta" (launch 517).
+
+**Biogas.** A gas generator's lines named biogas, which no machine in
+the game makes: the Generator Info line "Runs on: gas (propane, biogas or
+wood gas)" and the profile "gas generator (propane/biogas/wood gas)" of
+the Workshop menu and the sampling kit. Both, in English and Italian, now
+name propane and wood gas. The domain still lets a gas generator burn
+biogas (`Consumers.lua`), for a later version with a digester. In game
+the Generator Info text of a generator converted from the menus opens
+with "Runs on: gas (propane or wood gas)" (launch 518).
+
+**The Workshop text** of `tools/package.ps1` has a section "Make your
+own: gas" after the biodiesel one: the conversion, the Wood Gasifier and
+what it burns, its handbook and levels, and **Gas status**. Its last
+line names only biogas and electrical networks as not in this version.
+The upload folder's `workshop.txt` is the owner's file and keeps its
+0.4.3 text until the 0.5.0 package goes there, on the owner's word.
