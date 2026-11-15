@@ -10,7 +10,7 @@ runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–434: `docs-shots`, `italian`, `controls`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
+| RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
@@ -9217,3 +9217,24 @@ Evidence:
 [run 432](evidence/2026-11-15_rt-sp_harness_run432_docs_shots_menu_names_42.22.2.txt),
 [run 433](evidence/2026-11-15_rt-sp_harness_run433_italian_menu_names_42.22.2.txt),
 [run 434](evidence/2026-11-15_rt-sp_harness_run434_controls_menu_names_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launch 435 (the full mode after R8, R9 and R12)
+
+Branch `feature/gas-generators` at `47faaf6`, 42.22.2, a clean tree. The
+full mode had last run in launch 421, before Repair, the item tooltips
+and the machines' named menu entries. `tools/run-sp-harness.ps1 -TimeoutMinutes 30`:
+
+| Launch | Phase A (pass/fail) | Phase B, after save and reload (pass/fail) |
+| --- | --- | --- |
+| 435 | 106/0 | 14/0 |
+
+The machine menus of this mode are found under the machines' names. The
+console holds no warning or error of the mod; its one exception is the
+harness's own deep-recursion probe (`lua.deep recursion 3000`).
+
+Not run: the other modes that open a machine's menu (`pickup`,
+`pot-still`, `biodiesel`, the gas modes, the right-click cases) and
+every multiplayer case.
+
+Evidence:
+[run 435](evidence/2026-11-15_rt-sp_harness_run435_full_after_r12_42.22.2.txt).
