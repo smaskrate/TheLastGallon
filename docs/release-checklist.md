@@ -690,8 +690,8 @@ Death:
   garbled. Placeholders were filled, and the Fuel menu, **Look and
   smell**, the machine menu and **Status** read Italian, the last as a
   card on a biodiesel reactor with its "Prende da" lines; the card's
-  screenshot shows the accents drawn. Elsewhere, how the fonts draw the
-  accents was not looked at.
+  screenshot shows the "ù" of "più" drawn. Elsewhere, how the fonts draw
+  the accents was not looked at.
 - The field manual's page (D-026) was read in game in English and Italian
   (runs 101–103, 10/0 each). **Inspect** showed the page in the game's
   print media window, and the Italian page's accents and `°C` drew

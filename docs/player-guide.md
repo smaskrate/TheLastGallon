@@ -89,11 +89,13 @@ A line lasts a few seconds. After a load or a feed, a machine's state and
 how long the batch takes are in its **Status**.
 
 The card was opened, refreshed, closed by walking away and photographed
-in English on a pot still (RT-SP launches 442 and 443).
+in English on a pot still (RT-SP launches 442 and 443). In Italian it was
+opened and photographed on a biodiesel reactor with its "Prende da"
+lines, and closed when the reactor was lifted with the calls the game's
+grab makes (launch 445).
 
-**Not checked in game:** the card in Italian, dragging it, its closing
-when the machine is picked up, and how the lines look over the
-character. The lines' texts ran through the harness (launches 421 and
+**Not checked in game:** dragging the card, its closing through the
+game's own Grab entry, and how the lines look over the character. The lines' texts ran through the harness (launches 421 and
 422), which cannot see the screen.
 
 ## Inspecting fuel
