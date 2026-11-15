@@ -356,6 +356,74 @@ its SHA-256 in `dist/TheLastGallon-0.4.3.sha256`, and its `mod.info`
 reads 0.4.3 (gate 12). Open: the game loading the mod from that
 download, and how the Workshop page shows the change note.
 
+## Version 0.5.0 (not released)
+
+Version 0.5.0 is on the branch `feature/gas-generators`, with 0.4.3
+merged in; `main` is 0.4.3. The branch's `mod.info` and `TLG/Core.lua`
+still read 0.4.3, no package has been built and nothing has been
+uploaded. What it adds over 0.4.3, as the shipped changelog's
+Unreleased section lists it:
+
+* Gas generators, the third pathway (D-039, D-040, D-041): **Start: Gas
+  generator conversion** offered again, propane through **Gas (The Last
+  Gallon)**, the Wood Gasifier and the Wood Gas Handbook, **Gas status**
+  with the hours of gas left.
+* The changes of the UX review of 2026-11-14 (`ux-review-2026-11-14.md`,
+  R1–R14 and its section 5): fuller replies, **Status** with progress
+  and time left and as a card that stays open, loads that leave
+  favourites alone, menus that say why an entry is greyed, a tank's Fuel
+  entry naming its engine (D-042), replies said over the character, the
+  manual's biodiesel and gas pages, wear and **Repair** (D-043), item
+  tooltips, named menu entries, timed drains and station pours, windows
+  that keep the game's speed.
+* A pump first read above 10,000 L is full to pours, at the owner's word
+  (D-010, amended 2026-11-15), and that refusal has a text of its own.
+
+Where it stands against the gates:
+
+| # | For 0.5.0 | Evidence and what is open |
+| --- | --- | --- |
+| 1 | PARTIAL | Wood gas the player's own way in single player: the conversion through the Workshop menu, the tank drained from the Fuel menu, the handbook read, the gasifier made, put down, loaded and lit from the menus, and a generator run three hours on its gas (launches 387–388). Propane connected through the Gas menu and run four hours (launch 352). Open: the conversion refused below its skills or without the recipe; how long a full propane tank lasts; wet wood; a filter filled by real hours of burning; the generator switched on from its own menu rather than by the test |
+| 2, 3 | PARTIAL | The gas is paid as the game burns it: propane taken equal to the hourly steps over four hours (launch 352), wood gas given equal to the steps and the wood burned equal to the gas (launch 358), eight hours asleep without a stop (launch 383). The timed drain moved 2 L in single player (launch 438) and 3 L on a server (launch 446); the station pour put 2 L into a pump of 5,175 L on a server (launch 447). Open: the station pour in single player; the drain's time and look |
+| 4 | PARTIAL | The domain suite, 381 cases, the gasifier's among them: the wood burned is the gas drawn, also over launch 358's four hours |
+| 5 | PARTIAL | On a dedicated server: propane (launches 354–356, 385), wood gas (361, 377), two clients with one joining while the gasifier burns and a server restart (389–392), the gasifier's recipe in the crafting window and the handbook in the server's loot (393–394), generators and gasifiers moved (408–409), the gas's cost (410–411), the nearest generator fed first (412); the UX changes on one client (446–447: the Status card, the tank entries, the drain, the station pour, a reply over the character, a favourite mark). Open: the multiplayer cases written before the menus were named after their machines and replies went over the character have not run since; two clients for the refuel line; the Workshop menu from a client's copy; **Repair**; a real network |
+| 6 | PARTIAL | Propane through a save, a reload and a trip (launch 352); a wood-gas save continued (launch 358); a server restart with the gasifier lit (launch 392); a generator taken up and put down with its tank (launch 352) and with its wood-gas record (launches 397, 408–409); a lit gasifier taken up goes out and keeps its wood (launches 358, 361). Open: as for 0.4.3 |
+| 7 | OPEN | Not run with 0.5.0: a save made with 0.4.3 continued; a generator converted to gas in a save from 0.4.1 or earlier taking gas, once drained; the existing-save and removal scenarios |
+| 8 | PARTIAL | The gas runs on the game's own generator, converted; `support-matrix.md` has the gas rows |
+| 9 | PARTIAL | The Wood Gasifier's floor model and icon are built from shapes, and the Wood Gas Handbook's icon from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card, made in launch 444, is not uploaded |
+| 10 | PARTIAL | 519 Italian strings as shipped and the Status card read in Italian (launch 445); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. Open: the 520th string, "It is full: there is no room for more fuel.", added after launch 445; the Generator Info line of a gas generator names biogas, which has no machine; the package's Workshop text (`tools/package.ps1`) still says "Not in this version: wood gas, biogas, propane"; the Italian state word after a feminine machine name ("Storta per legna … Pronto", launch 445), not decided |
+| 11 | PARTIAL | Single player's whole performance mode passed its 53 budgets with the gas (launches 405–407); the gas's cost on a server with one client (launches 410–411). Open: the mode since the nearest-first order; several Status cards open and what their refreshes cost; several clients |
+| 12 | OPEN | No 0.5.0 package |
+| 13 | PARTIAL | The Wood Gasifier's model is a shape-built placeholder with one look for every state (`asset-requirements.md`); D-039 leaves the owner free to supply one before the release, as for the stills |
+
+Of the single-player modes, the full run (launch 435: 106/0, 14/0),
+`controls` (443), `docs-shots` (444), `italian` (445), `gas-player`
+(438), `gas-wood` (439), `manual` and `manual-italian` (436–437) have run
+since the machines' menu entries took their names. The other modes that
+open a machine's menu or read a reply (`pickup`, `pot-still`,
+`biodiesel`, `gas-propane`, `gas-sleep`, the right-click cases among
+them) have not.
+
+Not decided, put to the owner on 2026-11-15: whether a client's Fuel
+menu names the engine now that its copy of the world record carries
+`dieselVehicles` (D-042; launch 446).
+
+Before release, in this order:
+
+1. Run the single-player modes and the multiplayer cases that have not
+   run since the menus' names and replies changed, and the revised `ux`
+   case.
+2. Settle the open texts of gate 10: the package's Workshop text, the
+   Generator Info line's biogas, the Italian state word; and whether the
+   gasifier keeps its placeholder model (gate 13).
+3. Give `mod.info`, `Core.lua` and the changelog 0.5.0, merge the branch
+   into `main`, and build the package with `tools/package.ps1` from a
+   clean tree.
+4. Install the zip clean and play it: the full run, the gas modes, the
+   gas server cases and `ux`; continue a save made with the 0.4.3 zip
+   with it.
+5. The owner uploads it, with the Workshop page's new pictures.
+
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
 NOT RUN or open. Gates 4, 8 and 14 are complete in the table above. How
