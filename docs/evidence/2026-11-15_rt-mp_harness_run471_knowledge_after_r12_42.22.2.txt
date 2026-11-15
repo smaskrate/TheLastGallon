@@ -1,0 +1,47 @@
+===== launch 471: tools/run-mp-harness.ps1 -Only knowledge -Clients 1 -TimeoutMinutes 30, branch feature/gas-generators at 87357b1 with the ux case's pump check (in the same commit as this file). The launcher's own lines were not kept; the clients' and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP give_knowledge_items begin
+STEP mp_kn_have begin
+PASS MP.kn_items_A :: can 2049286740, kits 1
+STEP kn_kit begin
+PASS MP.kn_kit_A :: ok=true reason=nil duplicate=nil state=nil
+STEP kn_look begin
+PASS MP.kn_look_A :: ok=true reason=nil duplicate=nil state=nil
+OBS  MP.kn_client_copy_A the client's own player mod data: knowledge none; the can's record id S1404535937-12
+STEP mp_kn_known begin
+OBS  MP.kn_known_A menu entry=true; dialog: What I know about this fuel <LINE> <LINE> Sampling kit, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.5, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.4, give or take 1.1) <LINE> No free water detected
+PASS MP.kn_known_lists_both_tests_A :: What I know about this fuel <LINE> <LINE> Sampling kit, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.5, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.4, give or take 1.1) <LINE> No free water detected
+PASS MP.kn_known_sealed_no_note_A :: What I know about this fuel <LINE> <LINE> Sampling kit, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.5, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.4, give or take 1.1) <LINE> No free water detected
+STEP kn_unseal begin
+PASS MP.kn_unseal_A :: ok=true reason=nil duplicate=nil state=nil
+STEP mp_kn_unseal_settles begin
+STEP mp_kn_known_open begin
+OBS  MP.kn_known_open_A menu entry=true; dialog: What I know about this fuel <LINE> <LINE> Sampling kit, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.5, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> Since this test, fuel was poured in or out or treated, or the container opened or closed. <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.4, give or take 1.1) <LINE> No free water detected <LINE> Since this test, fuel was poured in or out or treated, or the container opened or closed. <LINE> <LINE> The container is open: the fuel may have aged or taken up water since, so its actual condition may differ.
+PASS MP.kn_known_open_note_A :: What I know about this fuel <LINE> <LINE> Sampling kit, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.5, give or take 0.5) <LINE> No free water detected <LINE> Composition: Gasoline 100.0% <LINE> Since this test, fuel was poured in or out or treated, or the container opened or closed. <LINE> <LINE> Look and smell, just now: <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.4, give or take 1.1) <LINE> No free water detected <LINE> Since this test, fuel was poured in or out or treated, or the container opened or closed. <LINE> <LINE> The container is open: the fuel may have aged or taken up water since, so its actual condition may differ.
+STEP mp_finish begin
+SUMMARY pass=8 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=4
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: give items=Base.PetrolCan;TLG.FuelSampleKit petrol=5 role=A tag=give_knowledge_items
+OBS  MPS.reply given ids=Base.PetrolCan=2049286740;TLG.FuelSampleKit=590311920 role=A tag=give_knowledge_items

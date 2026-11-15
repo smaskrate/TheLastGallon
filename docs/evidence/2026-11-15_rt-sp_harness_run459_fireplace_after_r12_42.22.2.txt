@@ -1,0 +1,65 @@
+# TLG single-player harness, real game clock, fireplace
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=41011136327303148798 hours=2.0096 DayLength=4
+STEP rt_setup begin
+OBS  RT.speed multiplier=100 true=100.0 game hours in 300 ticks=2.2222 (about 0.02 at x1) load=0.0/12.0 full=false
+PASS RT.game_clock_runs_fast :: 2.2222 game h in 300 ticks
+STEP rtf_find begin
+OBS  RTF.hop 1 (cell 41_40) at 10544,10288: 9409 tiles loaded after 120 ticks; 0 fire objects []; new fireplaces with a free room tile beside them 0
+OBS  RTF.hop 2 (cell 41_40) at 10544,10384: 9409 tiles loaded after 120 ticks; 0 fire objects []; new fireplaces with a free room tile beside them 0
+OBS  RTF.hop 3 (cell 41_40) at 10544,10480: 9409 tiles loaded after 120 ticks; 0 fire objects []; new fireplaces with a free room tile beside them 0
+OBS  RTF.hop 4 (cell 41_40) at 10640,10288: 9409 tiles loaded after 120 ticks; 1 fire objects [fireplace fixtures_fireplaces_01_5 at 10677,10296]; new fireplaces with a free room tile beside them 1
+OBS  RTF.hop 5 (cell 41_40) at 10640,10384: 9409 tiles loaded after 120 ticks; 0 fire objects []; new fireplaces with a free room tile beside them 0
+OBS  RTF.hop 6 (cell 41_40) at 10640,10480: 9409 tiles loaded after 120 ticks; 0 fire objects []; new fireplaces with a free room tile beside them 0
+OBS  RTF.hop 7 (cell 41_40) at 10736,10288: 9409 tiles loaded after 120 ticks; 0 fire objects []; new fireplaces with a free room tile beside them 0
+OBS  RTF.hop 8 (cell 41_40) at 10736,10384: 9409 tiles loaded after 120 ticks; 0 fire objects []; new fireplaces with a free room tile beside them 0
+OBS  RTF.hop 9 (cell 41_40) at 10736,10480: 9409 tiles loaded after 120 ticks; 2 fire objects [brazier crafted_02_42 at 10694,10478; campfire camping_03_19 at 10725,10479]; new fireplaces with a free room tile beside them 0
+STEP rtf_light begin
+OBS  RTF.fuel a log adds 360 min (ISCampingMenu.getFuelDurationForItem), cap 480 min (getCampingFuelMax ok=true)
+OBS  RTF.fireplace fireplace fixtures_fireplaces_01_5 at 10677,10296, its tile in a room=true, lit=false fuel 0
+OBS  RTF.snapshot unlit lit=false fuel 0 min radius 1: warm 0, cold 360, blocked 0, mismatch 0 (none)
+OBS  RTF.snapshot lit=true fuel 360 min radius 8: warm 34, cold 168, blocked 158, mismatch 0 (none)
+OBS  RTF.snapshot lit=true fuel 40 min radius 5: warm 19, cold 292, blocked 49, mismatch 0 (none)
+OBS  RTF.snapshot lit=true fuel 20 min radius 3: warm 11, cold 336, blocked 13, mismatch 0 (none)
+OBS  RTF.snapshot lit=true fuel 5 min radius 1: warm 0, cold 360, blocked 0, mismatch 0 (none)
+PASS RTF.unlit_tiles_unwarmed :: lit=false fuel 0 min radius 1: warm 0, cold 360, blocked 0, mismatch 0 (none)
+PASS RTF.tiles_follow_the_heat_formula :: 0 tiles off the formula in 4 lit snapshots; 34 warmed at 360 min
+PASS RTF.radius_follows_fuel :: warmed tiles at 360 min (radius 8) 34, 40 min (5) 19, 20 min (3) 11, 5 min (1) 0
+PASS RTF.machine_tile_warmed_while_fuel_lasts :: warm, warm, warm, cold
+OBS  RTF.machine tile 10679,10297, 2.24 tiles from the fire; fire lit=true with 365 min, logs so far 2
+STEP rtf_ferment begin
+PASS RTF.site_seen :: room=true z=0
+OBS  RTF.load menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTF.loaded :: sugar=6 water=30
+OBS  RTF.status_fireplace menu "Status" -> ok=true reason=nil state=Processing stage=ferment outputs={} consumed=nil
+PASS RTF.fire_burned_while_away :: left lit=true with 365 min; back after 721 min: lit=false with 0 min (burning on: 0)
+OBS  RTF.credit last note before leaving: {c=35,f=365,r=true,t=34.3393440246582,x=-2,y=-1}; covers 6.08 of 12.01 h away
+PASS RTF.no_notes_while_unloaded :: 0 notes in hours spent away
+PASS RTF.away_hours_credited :: 6.08 h of the trip covered by the fire's noted fuel
+OBS  RTF.trip away 12.01 game h, tiles unloaded=true, hours unread 12, filed for them 0, fire on return lit=false fuel 0 min (left lit=true with 365), log added=true, lit now=true
+PASS RTF.nothing_filed_while_unloaded :: 12 hours unloaded, 0 filed
+PASS RTF.work_over_the_trip :: 29.10 to 42.02 h in: did 7.5570 h, rule with the credit 7.5570 h
+OBS  RTF.day 01-15: air read at the machine 22.0 (13 h); recorded t -7.58 r0 6.13; day temperature 22.04 C, work 12.02 h, paused 0.00 h; logs 2
+OBS  RTF.day 01-16: air read at the machine 21.4 (17 h); recorded t -7.66 r0 5.19; day temperature 21.34 C, work 17.08 h, paused 0.00 h; logs 3
+OBS  RTF.day 01-17: air read at the machine 22.7 (19 h); recorded t -3.10 r0 7.73; day temperature 19.48 C, work 18.58 h, paused 13.92 h; logs 4
+OBS  RTF.day 01-18: air read at the machine 22.6 (24 h); recorded t -1.79 r0 8.57; day temperature 22.58 C, work 24.07 h, paused 0.00 h; logs 4
+OBS  RTF.day 01-19: air read at the machine 22.4 (24 h); recorded t -2.78 r0 7.95; day temperature 22.39 C, work 24.07 h, paused 0.00 h; logs 4
+OBS  RTF.day 01-20: air read at the machine 21.9 (1 h); recorded t -4.04 r0 6.38; day temperature 21.73 C, work 1.16 h, paused 0.00 h; logs 0
+OBS  RTF.end state=OutputReady pause=nil pausedFor 6.37 h, after 110.2 game h; logs put on during the batch 17 (360 min each, cap 480); status: Working <LINE> Stage: fermenting, 0% done <LINE> About 4 d 0 h left at today's temperature <LINE> Temperature here today: 69.9 °F, in a room <LINE> Condition: 100%
+OBS  RTF.hours read 98, fire lit at 98 of them: lowest fuel 82 min, lowest air 20.42 C, smallest warming 9.67 C
+PASS RTF.machine_air_is_the_formula :: 98 hours, worst 0.00000 C (01-16 hour 26: lit=true fuel 85: game 21.2235, formula 21.2235)
+PASS RTF.readings_filed_fireplace :: 98 hours, worst 0.000000 (hour 113: filed 21.857666015625, game 21.8577)
+PASS RTF.notes_filed_fireplace :: 100 hours noted, 100 with the fire, 0 off (none); fed before leaving: {added=false,fuel=380}
+PASS RTF.day_temperature_from_readings_fireplace :: 97 reads, worst 0.000000 (01-20: status 22.0555, readings 22.0555)
+PASS RTF.progress_follows_site_temperature_fireplace :: 91 hours, worst 0.0000 h (01-18, 77.2 h in at 22.36 C: did 1.0000 h, rule 1.0000 h)
+PASS RTF.readings_resume_after_return :: 68 hours filed after the return
+PASS RTF.status_names_the_site :: Working <LINE> Stage: fermenting, 0% done <LINE> About 4 d 0 h left at today's temperature <LINE> Temperature here today: 69.9 °F, in a room <LINE> Condition: 100%
+PASS RTF.batch_finishes :: state=OutputReady after 110.2 game h
+PASS RTF.never_paused_on_days_read_throughout :: 0 paused reads (first: none)
+STEP rt_finish begin
+OBS  RT.summary replies: 1 over the character, 1 in a window; last line (green): Loaded: 6.00 kg of sugar equivalent, 30.00 L of water and the yeast.
+OBS  RT.summary game hours 2.01 -> 114.58
+SUMMARY pass=21 fail=0
+DONE

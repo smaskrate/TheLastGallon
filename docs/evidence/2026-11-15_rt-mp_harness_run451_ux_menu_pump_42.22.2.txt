@@ -1,0 +1,205 @@
+===== launch 451: tools/run-mp-harness.ps1 -Only ux -Clients 1 -TimeoutMinutes 30, branch feature/gas-generators at 87357b1 with the ux case standing where the Fuel menu's scan finds the pump first (committed with this file). The launcher's own lines were not kept; the clients' and the server's harness reports follow.
+===== client mp-a: %LOCALAPPDATA%\TheLastGallon\mpclient1\Lua\TLG_harness_mp.txt
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+OBS  MP.connect A as tlga to 127.0.0.1:16361 (joining)
+# TLG multiplayer harness, client A
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=true
+OBS  MP.connected A (saved player: false)
+OBS  MP.creation profession next (profession unemployed)
+OBS  MP.creation main next
+OBS  MP.game_start A
+STEP mp_wait_world begin
+OBS  MP.world A user=tlga at 10660,10645 isClient=true online=1 role=admin zombies in cell=0 Zombies=6 fog=0.00
+PASS MP.joined_A :: isClient=true user=tlga
+STEP mp_ux_capture begin
+STEP ux_spawn_reactor begin
+OBS  MP.ux reactor TLG.BiodieselReactor at 10654,10649, id 1738339503
+STEP ux_spawn_leacher begin
+OBS  MP.ux leacher TLG.LyeLeacher at 10655,10649, id 708368165
+STEP ux_spawn_retort begin
+OBS  MP.ux retort TLG.WoodRetort at 10654,10651, id 1171532530
+STEP mp_ux_machines_arrive begin
+STEP mp_ux_walk_to_reactor begin
+STEP mp_ux_card_open begin
+OBS  MP.ux card_open: clicked true; a card after 32 ms (3 ticks): title 'Biodiesel Reactor'; text: Ready <LINE> Temperature here now: 57.6 Â°F, outdoors <LINE> Condition: 100% <LINE> Takes from: Lye Leacher, 1 tile away. Ready <LINE> Takes from: Wood Retort, 2 tiles away. Ready
+STEP mp_ux_card_opened begin
+PASS MP.ux_card_opens_with_its_sources_A :: card true; text: Ready <LINE> Temperature here now: 57.6 Â°F, outdoors <LINE> Condition: 100% <LINE> Takes from: Lye Leacher, 1 tile away. Ready <LINE> Takes from: Wood Retort, 2 tiles away. Ready || wanted the lines "Takes from: Lye Leacher, 1 tile away. Ready" and "Takes from: Wood Retort, 2 tiles away. Ready"
+STEP ux_start_leacher begin
+OBS  MP.ux the server started the leacher's batch: Processing/nil 
+STEP mp_ux_card_refresh begin
+OBS  MP.ux card filled at 2.2819089889526367 game h and 1794754367271 ms, again at 2.4496850967407227 h and 1794754373587 ms (375 ticks); text: Ready <LINE> Temperature here now: 58.1 Â°F, outdoors <LINE> Condition: 100% <LINE> Takes from: Lye Leacher, 1 tile away. Working <LINE> Takes from: Wood Retort, 2 tiles away. Ready
+PASS MP.ux_card_refresh_shows_the_new_source_state_A :: refilled true after 0.168 game h and 6316 ms; text: Ready <LINE> Temperature here now: 58.1 Â°F, outdoors <LINE> Condition: 100% <LINE> Takes from: Lye Leacher, 1 tile away. Working <LINE> Takes from: Wood Retort, 2 tiles away. Ready || wanted "Takes from: Lye Leacher, 1 tile away. Working"; the client's copy of the leacher Processing
+STEP mp_ux_walk_away begin
+STEP mp_ux_card_away begin
+PASS MP.ux_card_closes_out_of_reach_A :: card open false after 1 ticks six tiles away
+STEP mp_ux_walk_back begin
+STEP mp_ux_card_open_again begin
+OBS  MP.ux card_open_again: clicked true; a card after 33 ms (3 ticks): title 'Biodiesel Reactor'; text: Ready <LINE> Temperature here now: 58.6 Â°F, outdoors <LINE> Condition: 100% <LINE> Takes from: Lye Leacher, 1 tile away. Working <LINE> Takes from: Wood Retort, 2 tiles away. Ready
+STEP mp_ux_card_grab begin
+PASS MP.ux_card_closes_when_the_machine_is_grabbed_A :: carried true; card open false
+STEP mp_ux_reactor_put_back begin
+STEP fuel_site begin
+OBS  MP.fuel site: pump 10636,10629 (263 units), car 237, generators 10632,10635 and 10630,10635 
+STEP mp_ux_site_arrives begin
+STEP ux_give_pour_can begin
+STEP mp_uxPour_arrives begin
+OBS  MP.uxPour in the inventory=true, 3.0000 L
+STEP mp_ux_walk_to_generator begin
+STEP mp_ux_pour_generator begin
+OBS  MP.ux_pour_generator queued: ISTLGPourFuel
+STEP ux_after_pour begin
+OBS  MP.ux_after_pour server: pump units=263 nil
+OBS  MP.ux_after_pour server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.ux_after_pour server: g1 fuel 3.0000 L, record 3.0000 L, on=false {cond=1.0000,deg={gasoline=0.3182},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={gasoline=3.0000,water=0.0000},rev=1.0000,stab=0.0000,t=3.3664,v=1.0000}
+OBS  MP.ux_after_pour server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.ux_after_pour server: carried generator record 0.0000 L nil; items 1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000}
+PASS MP.ux_generator_has_fuel_A :: generator 3.0000 L
+STEP mp_ux_generator_tank begin
+OBS  MP.ux Fuel in this generator > What I know about it / Look and smell / Take a sample (kit); Look and smell -> ok=true engine=generator_si_stock; window: Fuel inspection <LINE> <LINE> Engine: stock gasoline generator <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.8, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough)
+PASS MP.ux_generator_tank_entry_names_the_engine_in_the_dialog_A :: entry true; first entry 'What I know about it'; reply ok=true engine generator_si_stock; window Fuel inspection <LINE> <LINE> Engine: stock gasoline generator <LINE> <LINE> Main fuel: Gasoline <LINE> Condition: Good (estimate 0.8, give or take 1.1) <LINE> No free water detected <LINE> Method: look and smell (rough)
+OBS  MP.ux Generator Info line from this client's copy: Runs on: gasoline; this client's world record: true, dieselVehicles=true
+PASS MP.ux_generator_info_runs_on_from_the_clients_copy_A :: 'Runs on: gasoline', want 'Runs on: gasoline'
+STEP ux_give_drain_can begin
+STEP mp_uxDrain_arrives begin
+OBS  MP.uxDrain in the inventory=true, 1.0000 L
+STEP mp_ux_drain begin
+OBS  MP.ux_drain queued: ISEquipWeaponAction, ISTLGPourFuel
+STEP ux_after_drain begin
+OBS  MP.ux_after_drain server: pump units=263 nil
+OBS  MP.ux_after_drain server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.ux_after_drain server: g1 fuel 0.0000 L, record 0.0000 L, on=false {cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000}
+OBS  MP.ux_after_drain server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.ux_after_drain server: carried generator record 0.0000 L nil; items 1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000}
+PASS MP.ux_drain_moves_the_generators_fuel_into_the_can_A :: server: generator 0.0000 L (was 3.0000); can record 4.0000 L; this client's can 4.0000 L
+STEP ux_give_station_can begin
+STEP mp_uxStation_arrives begin
+OBS  MP.uxStation in the inventory=true, 2.0000 L
+STEP ux_give_station_can2 begin
+STEP mp_uxStation2_arrives begin
+OBS  MP.uxStation2 in the inventory=true, 2.0000 L
+STEP ux_give_take_can begin
+STEP mp_uxTake_arrives begin
+OBS  MP.uxTake in the inventory=true, 0.0000 L
+STEP mp_ux_menu_pump_from_the_east begin
+OBS  MP.ux from 10638,10629 the Fuel menu's pump would be 10636,10629; the case's pump 10636,10629
+STEP mp_ux_walk_to_pump begin
+STEP mp_ux_menu_pump_1 begin
+OBS  MP.ux at 10637,10631 the Fuel menu's pump is 10636,10629; the case's pump 10636,10629
+STEP ux_before_station begin
+OBS  MP.ux_before_station server: pump units=263 nil
+OBS  MP.ux_before_station server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.ux_before_station server: g1 fuel 0.0000 L, record 0.0000 L, on=false {cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000}
+OBS  MP.ux_before_station server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.ux_before_station server: carried generator record 0.0000 L nil; items 1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=2.0000 no-sidecar | 105378979=2.0000 no-sidecar | 175869754=0.0000 no-sidecar
+STEP mp_ux_station_pour_untouched begin
+OBS  MP.ux_station_pour_untouched queued: ISEquipWeaponAction, ISTLGPourFuel
+STEP ux_after_station_untouched begin
+OBS  MP.ux_after_station_untouched server: pump units=265 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2036},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795}},q={gasoline=264.7522,sediment=0.0988,water=0.1489},rev=1.0000,stab=0.0000,t=3.7795,v=1.0000}
+OBS  MP.ux_after_station_untouched server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.ux_after_station_untouched server: g1 fuel 0.0000 L, record 0.0000 L, on=false {cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000}
+OBS  MP.ux_after_station_untouched server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.ux_after_station_untouched server: carried generator record 0.0000 L nil; items 1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=2.0000 no-sidecar | 175869754=0.0000 no-sidecar
+OBS  MP.ux station pour into the untouched pump: said nil (nil); pump 263 -> 265 units, record {cap=10000.0000,cond=1.0000,deg={gasoline=0.2036},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795}},q={gasoline=264.7522,sediment=0.0988,water=0.1489},rev=1.0000,stab=0.0000,t=3.7795,v=1.0000}
+PASS MP.ux_untouched_pump_follows_the_reservoir_rule_A :: the menu's pump 10636,10629; at most 10,000 L: pump 263 -> 265 units, record {cap=10000.0000,cond=1.0000,deg={gasoline=0.2036},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795}},q={gasoline=264.7522,sediment=0.0988,water=0.1489},rev=1.0000,stab=0.0000,t=3.7795,v=1.0000}; this client's can 0.0000 L; said nil
+STEP mp_ux_take_from_pump begin
+OBS  MP.ux_take_from_pump queued: ISWalkToTimedAction, ISEquipWeaponAction, ISTakeFuel
+STEP ux_after_take begin
+OBS  MP.ux_after_take server: pump units=255 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2037},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795}},q={gasoline=254.7616,sediment=0.0951,water=0.1433},rev=2.0000,stab=0.0000,t=4.2007,v=1.0000}
+OBS  MP.ux_after_take server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.ux_after_take server: g1 fuel 0.0000 L, record 0.0000 L, on=false {cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000}
+OBS  MP.ux_after_take server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.ux_after_take server: carried generator record 0.0000 L nil; items 1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=2.0000 no-sidecar | 175869754=10.0000 {cond=1.0000,deg={gasoline=0.2037},dirty=0.0000,id=S1404355951-19,mic=0.0000,prov={1={from=R1404355951-18,k=pump,n=10.0000,t=4.2007}},q={gasoline=9.9907,sediment=0.0037,water=0.0056},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.2007,v=1.0000}
+OBS  MP.ux taken from the pump: 265 -> 255 units; the can 10.0000 L
+STEP mp_ux_walk_to_pump_again begin
+STEP mp_ux_menu_pump_2 begin
+OBS  MP.ux at 10637,10631 the Fuel menu's pump is 10636,10629; the case's pump 10636,10629
+STEP mp_ux_station_pour begin
+OBS  MP.ux_station_pour queued: ISEquipWeaponAction, ISTLGPourFuel
+STEP ux_after_station begin
+OBS  MP.ux_after_station server: pump units=257 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2030},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795},2={from=S1404355951-20,k=in,n=2.0000,t=4.4139}},q={gasoline=256.7616,sediment=0.0951,water=0.1433},rev=3.0000,stab=0.0000,t=4.4139,v=1.0000}
+OBS  MP.ux_after_station server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.ux_after_station server: g1 fuel 0.0000 L, record 0.0000 L, on=false {cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000}
+OBS  MP.ux_after_station server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.ux_after_station server: carried generator record 0.0000 L nil; items 1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.4139,v=1.0000} | 175869754=10.0000 {cond=1.0000,deg={gasoline=0.2037},dirty=0.0000,id=S1404355951-19,mic=0.0000,prov={1={from=R1404355951-18,k=pump,n=10.0000,t=4.2007}},q={gasoline=9.9907,sediment=0.0037,water=0.0056},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.2007,v=1.0000}
+PASS MP.ux_station_pour_fills_a_pump_with_room_A :: the menu's pump 10636,10629; server: pump 265 -> 255 units after the take, 257 after the pour, record {cap=10000.0000,cond=1.0000,deg={gasoline=0.2030},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795},2={from=S1404355951-20,k=in,n=2.0000,t=4.4139}},q={gasoline=256.7616,sediment=0.0951,water=0.1433},rev=3.0000,stab=0.0000,t=4.4139,v=1.0000}; this client's can 0.0000 L; said nil
+STEP ux_give_line_can begin
+STEP mp_uxLine_arrives begin
+OBS  MP.uxLine in the inventory=true, 1.0000 L
+STEP mp_ux_line begin
+OBS  MP.ux unseal clicked true; said: Opened. Open containers age faster and take on moisture. (line); windows opened 0
+PASS MP.ux_treatment_is_said_over_the_character_A :: said 'Opened. Open containers age faster and take on moisture.' as line, want 'Opened. Open containers age faster and take on moisture.'; windows opened 0
+STEP mp_ux_walk_to_filler begin
+OBS  MP.ux_walk_to_filler queued: ISPathFindAction
+STEP mp_ux_vehicle_tank begin
+OBS  MP.ux Fuel in this vehicle > What I know about it / Look and smell / Take a sample (kit); What I know about it: What I know about this fuel <LINE> <LINE> Engine: stock gasoline engine <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+PASS MP.ux_vehicle_tank_entry_and_what_i_know_A :: entry true; first entry 'What I know about it'; window What I know about this fuel <LINE> <LINE> Engine: stock gasoline engine <LINE> <LINE> Condition unknown: not sampled yet. Unknown fuel is not necessarily bad fuel.
+STEP ux_give_favourite_can begin
+STEP mp_uxFav_arrives begin
+OBS  MP.uxFav in the inventory=true, 1.0000 L
+STEP mp_ux_mark_favourite begin
+OBS  MP.ux can 2126440310 marked as a favourite on this client: true
+STEP mp_ux_favourite_travels begin
+STEP ux_favourite_on_the_server begin
+OBS  MP.ux_favourite_on_the_server server: pump units=257 {cap=10000.0000,cond=1.0000,deg={gasoline=0.2030},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795},2={from=S1404355951-20,k=in,n=2.0000,t=4.4139}},q={gasoline=256.7616,sediment=0.0951,water=0.1433},rev=3.0000,stab=0.0000,t=4.4139,v=1.0000}
+OBS  MP.ux_favourite_on_the_server server: tank 0.0000 L, record 0.0000 L, engine running=false nil
+OBS  MP.ux_favourite_on_the_server server: g1 fuel 0.0000 L, record 0.0000 L, on=false {cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000}
+OBS  MP.ux_favourite_on_the_server server: g2 fuel 0.0000 L, record 0.0000 L, on=false nil
+OBS  MP.ux_favourite_on_the_server server: carried generator record 0.0000 L nil; items 1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.4139,v=1.0000} | 175869754=10.0000 {cond=1.0000,deg={gasoline=0.2037},dirty=0.0000,id=S1404355951-19,mic=0.0000,prov={1={from=R1404355951-18,k=pump,n=10.0000,t=4.2007}},q={gasoline=9.9907,sediment=0.0037,water=0.0056},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.2007,v=1.0000} | 1224976910=1.0000 {cond=1.0000,deg={gasoline=0.1280},dirty=0.0000,id=S1404355951-21,mic=0.0000,prov={},q={gasoline=1.0000},rev=1.0000,sealed=false,stab=0.0000,storage=gascan_plastic,t=4.4966,v=1.0000} | 2126440310=1.0000 no-sidecar
+PASS MP.ux_favourite_mark_reaches_the_server_A :: the server's copy of can 2126440310: isFavorite true
+STEP mp_ux_release begin
+STEP mp_finish_b begin
+STEP mp_finish begin
+SUMMARY pass=14 fail=0
+DONE
+===== server: %LOCALAPPDATA%\TheLastGallon\mpserver\Lua\TLG_harness_mpserver.txt
+# TLG multiplayer harness, server
+game=42.22.2 3d39148846 classpath=1
+isServer=true isClient=false
+OBS  MPS.sandbox Zombies=6 PopulationMultiplier=0 Start=0 Peak=0 DayLength=1
+OBS  MPS.fog intensity 0.00 when the override was set
+OBS  MPS.takes watched=true
+OBS  MPS.put_downs watched=true
+OBS  MPS.message from tlga: spawn item=TLG.BiodieselReactor role=A tag=ux_spawn_reactor x=10654 y=10649
+OBS  MPS.reply spawned batch=nil id=1738339503 item=TLG.BiodieselReactor role=A tag=ux_spawn_reactor x=10654 y=10649
+OBS  MPS.message from tlga: spawn item=TLG.LyeLeacher role=A tag=ux_spawn_leacher x=10655 y=10649
+OBS  MPS.reply spawned batch=nil id=708368165 item=TLG.LyeLeacher role=A tag=ux_spawn_leacher x=10655 y=10649
+OBS  MPS.message from tlga: spawn item=TLG.WoodRetort role=A tag=ux_spawn_retort x=10654 y=10651
+OBS  MPS.reply spawned batch=nil id=1171532530 item=TLG.WoodRetort role=A tag=ux_spawn_retort x=10654 y=10651
+OBS  MPS.message from tlga: start_running id=708368165 role=A tag=ux_start_leacher x=10655 y=10649
+OBS  MPS.reply started_running found=true id=708368165 pause=nil role=A state=Processing tag=ux_start_leacher
+OBS  MPS.put_down of 1738339503 at 10654,10649 from t=2.7694: pause none -> none, state Ready
+OBS  MPS.ticks 300 OnTick events in 80338 ms
+OBS  MPS.message from tlga: setup_fuel role=A tag=fuel_site
+OBS  MPS.reply fuel_site car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 px=10636 py=10629 role=A tag=fuel_site units=263
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=3 role=A tag=ux_give_pour_can
+OBS  MPS.reply given ids=Base.PetrolCan=1565179491 role=A tag=ux_give_pour_can
+OBS  MPS.message from tlga: probe_fuel car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 ids=1565179491 px=10636 py=10629 role=A tag=ux_after_pour
+OBS  MPS.reply probe_fuel engine=false fav1565179491=false g1Fuel=3 g1On=false g1RecL=3 g1Side={cond=1.0000,deg={gasoline=0.3182},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={gasoline=3.0000,water=0.0000},rev=1.0000,stab=0.0000,t=3.3664,v=1.0000} g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} pumpSide=nil pumpUnits=263 recL1565179491=0 role=A tag=ux_after_pour tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=1 role=A tag=ux_give_drain_can
+OBS  MPS.reply given ids=Base.PetrolCan=98496046 role=A tag=ux_give_drain_can
+OBS  MPS.message from tlga: probe_fuel car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 ids=1565179491;98496046 px=10636 py=10629 role=A tag=ux_after_drain
+OBS  MPS.reply probe_fuel engine=false fav1565179491=false fav98496046=false g1Fuel=0 g1On=false g1RecL=0 g1Side={cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000} g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} pumpSide=nil pumpUnits=263 recL1565179491=0 recL98496046=4 role=A tag=ux_after_drain tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=2 role=A tag=ux_give_station_can
+OBS  MPS.reply given ids=Base.PetrolCan=373292188 role=A tag=ux_give_station_can
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=2 role=A tag=ux_give_station_can2
+OBS  MPS.reply given ids=Base.PetrolCan=105378979 role=A tag=ux_give_station_can2
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=0 role=A tag=ux_give_take_can
+OBS  MPS.reply given ids=Base.PetrolCan=175869754 role=A tag=ux_give_take_can
+OBS  MPS.message from tlga: probe_fuel car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 ids=1565179491;98496046;373292188;105378979;175869754 px=10636 py=10629 role=A tag=ux_before_station
+OBS  MPS.reply probe_fuel engine=false fav105378979=false fav1565179491=false fav175869754=false fav373292188=false fav98496046=false g1Fuel=0 g1On=false g1RecL=0 g1Side={cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000} g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=2.0000 no-sidecar | 105378979=2.0000 no-sidecar | 175869754=0.0000 no-sidecar pumpSide=nil pumpUnits=263 recL105378979=0 recL1565179491=0 recL175869754=0 recL373292188=0 recL98496046=4 role=A tag=ux_before_station tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_fuel car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 ids=1565179491;98496046;373292188;105378979;175869754 px=10636 py=10629 role=A tag=ux_after_station_untouched
+OBS  MPS.reply probe_fuel engine=false fav105378979=false fav1565179491=false fav175869754=false fav373292188=false fav98496046=false g1Fuel=0 g1On=false g1RecL=0 g1Side={cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000} g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=2.0000 no-sidecar | 175869754=0.0000 no-sidecar pumpSide={cap=10000.0000,cond=1.0000,deg={gasoline=0.2036},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795}},q={gasoline=264.7522,sediment=0.0988,water=0.1489},rev=1.0000,stab=0.0000,t=3.7795,v=1.0000} pumpUnits=265 recL105378979=0 recL1565179491=0 recL175869754=0 recL373292188=0 recL98496046=4 role=A tag=ux_after_station_untouched tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_fuel car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 ids=1565179491;98496046;373292188;105378979;175869754 px=10636 py=10629 role=A tag=ux_after_take
+OBS  MPS.reply probe_fuel engine=false fav105378979=false fav1565179491=false fav175869754=false fav373292188=false fav98496046=false g1Fuel=0 g1On=false g1RecL=0 g1Side={cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000} g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=2.0000 no-sidecar | 175869754=10.0000 {cond=1.0000,deg={gasoline=0.2037},dirty=0.0000,id=S1404355951-19,mic=0.0000,prov={1={from=R1404355951-18,k=pump,n=10.0000,t=4.2007}},q={gasoline=9.9907,sediment=0.0037,water=0.0056},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.2007,v=1.0000} pumpSide={cap=10000.0000,cond=1.0000,deg={gasoline=0.2037},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795}},q={gasoline=254.7616,sediment=0.0951,water=0.1433},rev=2.0000,stab=0.0000,t=4.2007,v=1.0000} pumpUnits=255 recL105378979=0 recL1565179491=0 recL175869754=10.000000000000002 recL373292188=0 recL98496046=4 role=A tag=ux_after_take tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: probe_fuel car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 ids=1565179491;98496046;373292188;105378979;175869754 px=10636 py=10629 role=A tag=ux_after_station
+OBS  MPS.reply probe_fuel engine=false fav105378979=false fav1565179491=false fav175869754=false fav373292188=false fav98496046=false g1Fuel=0 g1On=false g1RecL=0 g1Side={cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000} g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.4139,v=1.0000} | 175869754=10.0000 {cond=1.0000,deg={gasoline=0.2037},dirty=0.0000,id=S1404355951-19,mic=0.0000,prov={1={from=R1404355951-18,k=pump,n=10.0000,t=4.2007}},q={gasoline=9.9907,sediment=0.0037,water=0.0056},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.2007,v=1.0000} pumpSide={cap=10000.0000,cond=1.0000,deg={gasoline=0.2030},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795},2={from=S1404355951-20,k=in,n=2.0000,t=4.4139}},q={gasoline=256.7616,sediment=0.0951,water=0.1433},rev=3.0000,stab=0.0000,t=4.4139,v=1.0000} pumpUnits=257 recL105378979=0 recL1565179491=0 recL175869754=10.000000000000002 recL373292188=0 recL98496046=4 role=A tag=ux_after_station tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=1 role=A tag=ux_give_line_can
+OBS  MPS.reply given ids=Base.PetrolCan=1224976910 role=A tag=ux_give_line_can
+OBS  MPS.message from tlga: give items=Base.PetrolCan petrol=1 role=A tag=ux_give_favourite_can
+OBS  MPS.reply given ids=Base.PetrolCan=2126440310 role=A tag=ux_give_favourite_can
+OBS  MPS.message from tlga: probe_fuel car=237 g1x=10632 g1y=10635 g2x=10630 g2y=10635 ids=1565179491;98496046;373292188;105378979;175869754;1224976910;2126440310 px=10636 py=10629 role=A tag=ux_favourite_on_the_server
+OBS  MPS.reply probe_fuel engine=false fav105378979=false fav1224976910=false fav1565179491=false fav175869754=false fav2126440310=true fav373292188=false fav98496046=false g1Fuel=0 g1On=false g1RecL=0 g1Side={cond=1.0000,deg={},id=G1404355951-15,kind=generator,mic=0.0000,profile=generator_si_stock,prov={1={from=S1404355951-14,k=in,n=3.0000,t=3.3664}},q={},rev=2.0000,stab=0.0000,t=3.5103,v=1.0000} g2Fuel=0 g2On=false g2RecL=0 g2Side=nil genItemRecL=0 genItemSide=nil items=1565179491=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-14,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.3664,v=1.0000} | 98496046=4.0000 {cond=1.0000,deg={gasoline=0.3181},dirty=0.0000,id=S1404355951-16,mic=0.0000,prov={1={from=G1404355951-15,k=in,n=3.0000,t=3.5103}},q={gasoline=4.0000},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.5103,v=1.0000} | 373292188=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-17,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=3.7795,v=1.0000} | 105378979=0.0000 {cond=1.0000,deg={},dirty=0.0000,id=S1404355951-20,mic=0.0000,prov={},q={},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.4139,v=1.0000} | 175869754=10.0000 {cond=1.0000,deg={gasoline=0.2037},dirty=0.0000,id=S1404355951-19,mic=0.0000,prov={1={from=R1404355951-18,k=pump,n=10.0000,t=4.2007}},q={gasoline=9.9907,sediment=0.0037,water=0.0056},rev=1.0000,sealed=true,stab=0.0000,storage=gascan_plastic,t=4.2007,v=1.0000} | 1224976910=1.0000 {cond=1.0000,deg={gasoline=0.1280},dirty=0.0000,id=S1404355951-21,mic=0.0000,prov={},q={gasoline=1.0000},rev=1.0000,sealed=false,stab=0.0000,storage=gascan_plastic,t=4.4966,v=1.0000} | 2126440310=1.0000 no-sidecar pumpSide={cap=10000.0000,cond=1.0000,deg={gasoline=0.2030},frac=0.0000,id=R1404355951-18,mic=0.0000,product=gasoline,prov={1={from=S1404355951-17,k=in,n=2.0000,t=3.7795},2={from=S1404355951-20,k=in,n=2.0000,t=4.4139}},q={gasoline=256.7616,sediment=0.0951,water=0.1433},rev=3.0000,stab=0.0000,t=4.4139,v=1.0000} pumpUnits=257 recL105378979=0 recL1224976910=1 recL1565179491=0 recL175869754=10.000000000000002 recL2126440310=0 recL373292188=0 recL98496046=4 role=A tag=ux_favourite_on_the_server tankL=0 tankRecL=0 tankSide=nil
+OBS  MPS.message from tlga: finish role=A

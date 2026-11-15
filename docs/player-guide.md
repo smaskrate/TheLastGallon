@@ -214,6 +214,11 @@ full: a pour into it is refused with "It is full: there is no room for
 more fuel." until fuel is taken from it, and then it takes back as much
 as was taken.
 
+Where two pumps stand side by side, the pour may go into the other one:
+the menu takes the first pump it finds within two tiles, from the west
+and the north, not the nearest. Your character turns to face the pump it
+pours into.
+
 These pours move any fuel the mod knows, with its condition, not only
 petrol. If the result would be a blend the engine cannot use, or one that
 would damage it ([Wrong fuel](#wrong-fuel)), nothing is poured and a
@@ -227,7 +232,9 @@ poured after **Yes**; a generator's fuel moved into a can by the mod's
 transfer. On a server, a pour with its result shown to the player; a
 drain from the menu that moved a generator's 3 L into a can (launch 446);
 **Pour into the station reservoir** putting 2 L into a pump of 5,175 L
-(launch 447), and nothing into one of 15,208 L (launch 446).
+(launch 447) and into one of 263 L, then again after a take (launch
+451), and nothing into one of 15,208 L (launch 446); a pour that went into
+the other pump of a pair (launch 450).
 
 **Not checked in game:** **Pour into the station reservoir** in single
 player; the refusal "It is full: there is no room for more fuel." on

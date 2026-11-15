@@ -6319,6 +6319,28 @@ if MP.only == "ux" then
         local UX = { lines = {}, windows = {}, opened = {} }
         local Say, Card, Fuel = TLG.UI.Say, TLG.UI.MachineCard, TLG.UI.FuelMenu
         local function has(text, part) return text ~= nil and part ~= nil and string.find(text, part, 1, true) ~= nil end
+        -- The pump the Fuel menu's pour takes for a character on x,y: the
+        -- first pump in its scan's order (FuelContextMenu nearbyPump).
+        function UX.menuPumpAt(x, y)
+            for dx = -2, 2 do
+                for dy = -2, 2 do
+                    local s = getCell():getGridSquare(x + dx, y + dy, 0)
+                    local objs = s and s:getObjects()
+                    for i = 0, (objs and objs:size() or 0) - 1 do
+                        if TLG.Integration.Stations.isPump(objs:get(i)) then return s:getX(), s:getY() end
+                    end
+                end
+            end
+            return nil
+        end
+        function UX.menuPumpNow()
+            local sq = player():getSquare()
+            local x, y = UX.menuPumpAt(sq:getX(), sq:getY())
+            local at = x and string.format("%d,%d", x, y) or "none"
+            report():line("OBS  MP.ux at %d,%d the Fuel menu's pump is %s; the case's pump %d,%d", sq:getX(), sq:getY(), at,
+                site("px"), site("py"))
+            return at
+        end
         local function itemOf(key)
             local m = UX[key]
             if not (m and m.id) then return nil end
@@ -6588,7 +6610,24 @@ if MP.only == "ux" then
             giveCan("ux_give_station_can", { petrol = "2" }, "uxStation"), arrived("uxStation"),
             giveCan("ux_give_station_can2", { petrol = "2" }, "uxStation2"), arrived("uxStation2"),
             giveCan("ux_give_take_can", { petrol = "0" }, "uxTake"), arrived("uxTake"),
-            walkTo("mp_ux_walk_to_pump", function() return site("px") + 2, site("py") end),
+            -- The Fuel menu pours into the first pump it finds within two
+            -- tiles, scanning from two tiles west and north of the
+            -- character (FuelContextMenu nearbyPump), not into the nearest:
+            -- launch 450 stood two tiles east of the pump and its pours left
+            -- the cans without reaching it. The character stands two tiles
+            -- east and two south, where the pump's square is the first the
+            -- scan visits, and the pump the menu takes is logged and checked.
+            { name = "mp_ux_menu_pump_from_the_east", timeout = 60, fn = function(ctx, ticks)
+                local x, y = UX.menuPumpAt(site("px") + 2, site("py"))
+                report():line("OBS  MP.ux from %d,%d the Fuel menu's pump would be %s,%s; the case's pump %d,%d",
+                    site("px") + 2, site("py"), tostring(x), tostring(y), site("px"), site("py"))
+                return true
+            end },
+            walkTo("mp_ux_walk_to_pump", function() return site("px") + 2, site("py") + 2 end),
+            { name = "mp_ux_menu_pump_1", timeout = 60, fn = function(ctx, ticks)
+                UX.menuPump1 = UX.menuPumpNow()
+                return true
+            end },
             probeFuel("ux_before_station", function(m) UX.units0 = tonumber(m.pumpUnits) end),
             act("ux_station_pour_untouched", function(ctx, p)
                 UX.saidBefore1 = #UX.lines
@@ -6604,18 +6643,20 @@ if MP.only == "ux" then
                     tostring(said and said.text), tostring(said and said.how), tostring(UX.units0), tostring(m.pumpUnits),
                     tostring(m.pumpSide))
                 local full = (UX.units0 or 0) > 10000
+                local aimed = UX.menuPump1 == string.format("%d,%d", site("px"), site("py"))
                 check("ux_untouched_pump_follows_the_reservoir_rule", function()
                     if full then
-                        return tonumber(m.pumpUnits) == UX.units0 and near(canL("uxStation"), 2, 2e-3) and said ~= nil
-                            and said.text == want, string.format(
-                            "above 10,000 L: pump %s -> %s units; this client's can %.4f L; said '%s', want '%s'",
-                            tostring(UX.units0), tostring(m.pumpUnits), canL("uxStation"), tostring(said and said.text), want)
+                        return aimed and tonumber(m.pumpUnits) == UX.units0 and near(canL("uxStation"), 2, 2e-3)
+                            and said ~= nil and said.text == want, string.format(
+                            "the menu's pump %s; above 10,000 L: pump %s -> %s units; this client's can %.4f L; said '%s', " ..
+                            "want '%s'", tostring(UX.menuPump1), tostring(UX.units0), tostring(m.pumpUnits), canL("uxStation"),
+                            tostring(said and said.text), want)
                     end
-                    return tonumber(m.pumpUnits) ~= nil and tonumber(m.pumpUnits) >= UX.units0 + 1.99
+                    return aimed and tonumber(m.pumpUnits) ~= nil and tonumber(m.pumpUnits) >= UX.units0 + 1.99
                         and near(canL("uxStation"), 0, 2e-3) and m.pumpSide ~= "nil" and said == nil, string.format(
-                        "at most 10,000 L: pump %s -> %s units, record %s; this client's can %.4f L; said %s",
-                        tostring(UX.units0), tostring(m.pumpUnits), tostring(m.pumpSide), canL("uxStation"),
-                        tostring(said and said.text))
+                        "the menu's pump %s; at most 10,000 L: pump %s -> %s units, record %s; this client's can %.4f L; " ..
+                        "said %s", tostring(UX.menuPump1), tostring(UX.units0), tostring(m.pumpUnits), tostring(m.pumpSide),
+                        canL("uxStation"), tostring(said and said.text))
                 end)
                 UX.units0 = tonumber(m.pumpUnits)
             end),
@@ -6627,6 +6668,13 @@ if MP.only == "ux" then
                 report():line("OBS  MP.ux taken from the pump: %s -> %s units; the can %.4f L", tostring(UX.units0),
                     tostring(UX.units1), canL("uxTake"))
             end),
+            -- The take walked the character to the pump; back to where the
+            -- menu's scan finds it first.
+            walkTo("mp_ux_walk_to_pump_again", function() return site("px") + 2, site("py") + 2 end),
+            { name = "mp_ux_menu_pump_2", timeout = 60, fn = function(ctx, ticks)
+                UX.menuPump2 = UX.menuPumpNow()
+                return true
+            end },
             act("ux_station_pour", function(ctx, p)
                 UX.saidBefore2 = #UX.lines
                 local it = inventoryItem(FU.uxStation2)
@@ -6637,12 +6685,13 @@ if MP.only == "ux" then
             probeFuel("ux_after_station", function(m)
                 local said = UX.lines[(UX.saidBefore2 or 0) + 1]
                 check("ux_station_pour_fills_a_pump_with_room", function()
-                    return UX.units1 ~= nil and UX.units1 < (UX.units0 or 0) and tonumber(m.pumpUnits) ~= nil
+                    return UX.menuPump2 == string.format("%d,%d", site("px"), site("py")) and UX.units1 ~= nil
+                        and UX.units1 < (UX.units0 or 0) and tonumber(m.pumpUnits) ~= nil
                         and tonumber(m.pumpUnits) >= UX.units1 + 1.99 and near(canL("uxStation2"), 0, 2e-3) and m.pumpSide ~= "nil"
                         and said == nil, string.format(
-                        "server: pump %s -> %s units after the take, %s after the pour, record %s; this client's can %.4f L; " ..
-                        "said %s", tostring(UX.units0), tostring(UX.units1), tostring(m.pumpUnits), tostring(m.pumpSide),
-                        canL("uxStation2"), tostring(said and said.text))
+                        "the menu's pump %s; server: pump %s -> %s units after the take, %s after the pour, record %s; " ..
+                        "this client's can %.4f L; said %s", tostring(UX.menuPump2), tostring(UX.units0), tostring(UX.units1),
+                        tostring(m.pumpUnits), tostring(m.pumpSide), canL("uxStation2"), tostring(said and said.text))
                 end)
             end),
             giveCan("ux_give_line_can", { petrol = "1" }, "uxLine"), arrived("uxLine"),
