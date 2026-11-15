@@ -11,7 +11,8 @@
 --                fuel (drain it first).
 --   gas.remove   the tank comes out with the propane the buffer has not
 --                burned, in whole uses (GasFeed.disconnect).
---   gas.status   the buffer's litres and propane, the tank's uses.
+--   gas.status   the buffer's litres and propane, the tank's uses, the hourly
+--                step and the hours the gas lasts at it.
 require "TLG/Authority/Handlers"
 require "TLG/Integration/Generators"
 
@@ -179,7 +180,14 @@ H.commands["gas.status"] = function(player, args)
         local st = GZ.read(item, false)
         if st and GZ.lit(GZ.advance(item, st, World.now())) then lit = lit + 1 end
     end
+    -- The load as the game last counted it, in litres an hour, and the
+    -- hours the gas in the generator and its tank lasts at it (R11).
+    local step = 0
+    local ok, v = pcall(function() return gen:getTotalPowerUsing() end)
+    if ok and type(v) == "number" and v == v and v > 0 then step = v end
     return { ok = true, requestId = args.requestId, gas = G.isGas(gen), holdsGas = held, fuel = fuel,
+        step = step, hoursLeft = held and GasFeed.hoursLeft(fuel, tank and tank.uses, step)
+            or GasFeed.hoursLeft(0, tank and tank.uses, step),
         cap = G.gasCap(gen), propaneKg = Gas.toKg("propane", cur.propane or 0), woodgasNm3 = cur.woodgas or 0,
         tankUses = tank and tank.uses, tankKg = tank and Gas.toKg("propane", Gas.usesToNm3(tank.uses)),
         gasifiers = lit }

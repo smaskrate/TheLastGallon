@@ -1082,8 +1082,16 @@ Right-click the converted generator and choose **Gas (The Last Gallon)** >
 **Connect a propane tank**. The tank is taken from your inventory or from
 the floor beside the generator, and goes into it as into the game's
 barbecue; the generator holds one at a time. The generator draws from the
-tank as it runs. **Gas status** shows what is left in the tank and in the
-generator.
+tank as it runs. **Gas status** says how long the gas lasts, "Gas for
+about 4 d 12 h at the load it has now": the gas in the generator and in
+its tank, over the load the game last counted for the generator (it keeps
+that figure after a stop). The game burns fuel once an hour, so the time is
+good to within an hour and is given in whole hours, or as "less than an
+hour"; switch an appliance on or off and it changes. A generator that
+has never run has no load to reckon with, and the line says so. With no
+tank and a gasifier lit, the line gives the hour or so of gas in the
+generator and adds that the gasifier refills it as it runs. Under it are
+the propane tank and the lit gasifiers within two tiles.
 
 **Remove the propane tank** gives the tank back with the gas the
 generator has not burned yet. The generator then runs on what little is

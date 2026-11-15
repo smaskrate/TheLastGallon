@@ -6,6 +6,17 @@ The gas generator, propane and the wood gasifier themselves (D-040) are
 not listed here yet; the entries below are the changes to menus, texts
 and instructions.
 
+* Changed: **Gas status** of a gas generator says how long its gas
+  lasts, "Gas for about 4 d 12 h at the load it has now", counting the
+  gas in the generator and in its propane tank over the load the game
+  last counted for it. The game burns fuel once an hour, so the time is
+  in whole hours, good to within one, or "less than an hour". Before,
+  it gave the gas as litres of petrol to three
+  decimals and wood gas in cubic metres. With a gasifier lit and no tank
+  it says the gasifier refills it; a generator that never ran says the
+  time shows once it has run. Checked in single player on wood gas
+  (launch 439): "about 1 h" after Put out, and the generator stopped
+  1.97 h later. On propane not run in game.
 * Changed: **Pour into the station reservoir** and **Drain the generator
   into this can** take time, as the pours into a vehicle and a generator
   do: the can in hand, the pump or generator faced, the same time for

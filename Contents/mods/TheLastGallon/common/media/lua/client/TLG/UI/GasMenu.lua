@@ -18,19 +18,35 @@ local Say = TLG.UI.Say
 
 local function show(text) Say.window(text, 420, 220) end
 
+-- How long the gas lasts, to the hour and no finer: the game burns once an
+-- hour and a generator stops at the step that empties it, so the hours left
+-- are good to within one (launch 358: 0.006 L at 0.005 L an hour, stopped
+-- 1.97 h later). Under an hour it says so; from two days on, days and hours.
+function Menu.span(hours)
+    local whole = math.floor(math.max(0, tonumber(hours) or 0))
+    if whole < 1 then return getText("IGUI_TLG_GasSpanUnderHour") end
+    if whole < 48 then return getText("IGUI_TLG_GasSpanAbout", getText("IGUI_TLG_Dur_Hours", tostring(whole))) end
+    return getText("IGUI_TLG_GasSpanAbout", getText("IGUI_TLG_Dur_Days", tostring(math.floor(whole / 24)),
+        tostring(whole - math.floor(whole / 24) * 24)))
+end
+
 -- The text of a gas.status reply.
 function Menu.describe(r)
-    -- A wood-gas generator holds a few millilitres (one hourly step): three
-    -- decimals, and propane named only when there is some.
+    -- How long the gas lasts at the load the generator has now (R11), in
+    -- place of the buffer's litres of petrol: with no tank and a gasifier
+    -- lit, the generator holds about an hour's gas and is refilled as it
+    -- runs, and the line says so. A generator that never ran has no load to
+    -- reckon with.
     local lines = { getText("IGUI_TLG_GasTitle") }
-    local litres = string.format("%.3f", r.fuel or 0)
-    if (r.propaneKg or 0) > 0 then
-        lines[2] = getText("IGUI_TLG_GasBuffer", litres, string.format("%.3f", r.propaneKg))
+    local holds = r.holdsGas or (r.tankUses or 0) >= 1
+    if not holds then
+        lines[2] = getText("IGUI_TLG_GasEmpty")
+    elseif r.hoursLeft == nil then
+        lines[2] = getText("IGUI_TLG_GasLeftUnknown")
+    elseif (r.gasifiers or 0) > 0 and not ((r.tankUses or 0) >= 1) then
+        lines[2] = getText("IGUI_TLG_GasLeftFed", Menu.span(r.hoursLeft))
     else
-        lines[2] = getText("IGUI_TLG_GasBufferOnly", litres)
-    end
-    if (r.woodgasNm3 or 0) > 0 then
-        lines[#lines + 1] = getText("IGUI_TLG_GasWoodgas", string.format("%.3f", r.woodgasNm3))
+        lines[2] = getText("IGUI_TLG_GasLeft", Menu.span(r.hoursLeft))
     end
     if r.tankUses then
         lines[#lines + 1] = getText("IGUI_TLG_GasTank", tostring(r.tankUses), string.format("%.2f", r.tankKg or 0))

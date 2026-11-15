@@ -171,7 +171,7 @@ T.case("integration: the gasifier's Status says what it does and what keeps it l
     if not ok then error(err, 0) end
 end)
 
-T.case("integration: Gas status names propane only when there is some, and a wood-gas buffer to the millilitre", function()
+T.case("integration: Gas status says how long the gas lasts at the load now, not litres of petrol", function()
     local saved = getText
     getText = function(key, ...)
         local args = { ... }
@@ -179,17 +179,31 @@ T.case("integration: Gas status names propane only when there is some, and a woo
     end
     local ok, err = pcall(function()
         local GasMenu = TLG.UI.GasMenu
-        local wood = GasMenu.describe({ fuel = 0.006, propaneKg = 0, woodgasNm3 = 0.0384, gasifiers = 1 })
-        T.ok(string.find(wood, "[IGUI_TLG_GasBufferOnly:0.006]", 1, true) ~= nil, wood)
-        T.ok(string.find(wood, "IGUI_TLG_GasBuffer:", 1, true) == nil, "no propane named: " .. wood)
-        T.ok(string.find(wood, "[IGUI_TLG_GasWoodgas:0.038]", 1, true) ~= nil, wood)
-        T.ok(string.find(wood, "[IGUI_TLG_GasGasifiers:1]", 1, true) ~= nil, wood)
-        T.ok(string.find(wood, "[IGUI_TLG_GasNoTank]", 1, true) ~= nil, wood)
-        local propane = GasMenu.describe({ fuel = 9.99936, propaneKg = 6.917, tankUses = 1160, tankKg = 2.089,
-            gasifiers = 0 })
-        T.ok(string.find(propane, "[IGUI_TLG_GasBuffer:9.999,6.917]", 1, true) ~= nil, propane)
-        T.ok(string.find(propane, "IGUI_TLG_GasWoodgas", 1, true) == nil, propane)
-        T.ok(string.find(propane, "[IGUI_TLG_GasTank:1160,2.09]", 1, true) ~= nil, propane)
+        local function has(text, part) return string.find(text, part, 1, true) ~= nil end
+        -- Wood gas, a gasifier lit, no tank: about an hour in it, refilled.
+        local wood = GasMenu.describe({ holdsGas = true, fuel = 0.006, hoursLeft = 1.2, propaneKg = 0,
+            woodgasNm3 = 0.0384, gasifiers = 1 })
+        T.ok(has(wood, "[IGUI_TLG_GasLeftFed:[IGUI_TLG_GasSpanAbout:[IGUI_TLG_Dur_Hours:1]]]"), wood)
+        T.ok(has(wood, "[IGUI_TLG_GasGasifiers:1]"), wood)
+        T.ok(has(wood, "[IGUI_TLG_GasNoTank]"), wood)
+        T.ok(not has(wood, "0.006") and not has(wood, "0.038"), "no litres of petrol, no m3: " .. wood)
+        -- The gasifier out, under an hour in it: no minutes (the game burns by the hour).
+        local out = GasMenu.describe({ holdsGas = true, fuel = 0.003, hoursLeft = 0.6, gasifiers = 0 })
+        T.ok(has(out, "[IGUI_TLG_GasLeft:[IGUI_TLG_GasSpanUnderHour]]"), out)
+        -- Propane: the tank counted, in days and hours.
+        local propane = GasMenu.describe({ holdsGas = true, fuel = 9.99936, hoursLeft = 2604, propaneKg = 6.917,
+            tankUses = 1160, tankKg = 2.089, gasifiers = 0 })
+        T.ok(has(propane, "[IGUI_TLG_GasLeft:[IGUI_TLG_GasSpanAbout:[IGUI_TLG_Dur_Days:108,12]]]"), propane)
+        T.ok(has(propane, "[IGUI_TLG_GasTank:1160,2.09]"), propane)
+        -- A tank in and a gasifier lit: the tank is what it burns.
+        T.ok(has(GasMenu.describe({ holdsGas = true, hoursLeft = 30, tankUses = 500, tankKg = 0.9, gasifiers = 1 }),
+            "[IGUI_TLG_GasLeft:[IGUI_TLG_GasSpanAbout:[IGUI_TLG_Dur_Hours:30]]]"))
+        -- Never switched on: gas in it, no load to reckon with.
+        local unknown = GasMenu.describe({ holdsGas = true, fuel = 0.001, hoursLeft = nil, gasifiers = 1 })
+        T.ok(has(unknown, "[IGUI_TLG_GasLeftUnknown]"), unknown)
+        -- Nothing in it and no tank.
+        local empty = GasMenu.describe({ holdsGas = false, fuel = 0, hoursLeft = 0, gasifiers = 0 })
+        T.ok(has(empty, "[IGUI_TLG_GasEmpty]") and has(empty, "[IGUI_TLG_GasNoTank]"), empty)
     end)
     getText = saved
     if not ok then error(err, 0) end

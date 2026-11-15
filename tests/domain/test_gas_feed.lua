@@ -131,3 +131,18 @@ T.case("gas feed: holding gas, venting, and the buffer read as propane", functio
     T.eq(e.wearFactor, 1)
     T.eq(Consumers.evaluate("generator_gas", F.supply(F.new({ id = "GS-9" }), 0), {}).grade, "empty")
 end)
+
+T.case("gas feed: the hours left are the litres in the generator and its tank over the hourly step", function()
+    -- A full tank is worth 13.02 L of petrol; at 0.005 L an hour, 2604 h.
+    T.near(F.hoursLeft(0, 5000, 0.005), 4.48 * L_PER_NM3 / 0.005, 1e-6)
+    T.near(F.hoursLeft(9.99936, 1160, 0.005), (9.99936 + 1160 * 4.48 / 5000 * L_PER_NM3) / 0.005, 1e-6)
+    -- Wood gas: no tank, the buffer alone.
+    T.near(F.hoursLeft(0.006, nil, 0.005), 1.2, 1e-9)
+    T.eq(F.hoursLeft(0, nil, 0.005), 0)
+    T.eq(F.hoursLeft(-1, nil, 0.005), 0, "never negative")
+    -- No load known: no estimate.
+    T.eq(F.hoursLeft(5, 100, 0), nil)
+    T.eq(F.hoursLeft(5, 100, nil), nil)
+    T.eq(F.hoursLeft(5, 100, 0 / 0), nil)
+    T.eq(F.hoursLeft(5, 100, -1), nil)
+end)

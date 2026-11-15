@@ -49,6 +49,19 @@ function F.propaneLitres(nm3)
     return nm3 * propaneMJ() / litreMJ()
 end
 
+-- The hours a generator runs on what it holds (`fuel`, litres) and on the
+-- propane tank in it (`tankUses`, or nil), at `step` litres an hour: the
+-- game burns the load as last counted at each hourly step (launches 342,
+-- 345-349), so this is an estimate at that load. nil when no load is
+-- known (a generator never switched on reports 0).
+function F.hoursLeft(fuel, tankUses, step)
+    if type(step) ~= "number" or step ~= step or step <= 0 then return nil end
+    local litres = math.max(0, tonumber(fuel) or 0)
+    local nm3 = tankUses ~= nil and Gas.usesToNm3(tankUses) or nil
+    if nm3 then litres = litres + F.propaneLitres(nm3) end
+    return litres / step
+end
+
 function F.new(o)
     o = o or {}
     return { v = F.SCHEMA, id = o.id, buf = {}, fuel = 0, t = o.t or 0 }

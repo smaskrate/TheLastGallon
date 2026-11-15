@@ -13,6 +13,7 @@ runtime tests.
 | RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
+| RT-SP and RT-MP: **Gas status** with the hours of gas left (UX review R11; on wood gas the text read and the estimate against the stop, 1 h against 1.97 h: launch 439): the window on a generator on propane and on one never switched on; whether the window (420x220) holds its longest line, in Italian; the estimate after the load changes (offline: `test_gas_feed.lua`, `test_gas_handlers.lua`, `test_gasifier_menu.lua`). The gas page of the manual names this line since; launches 436–437 photographed its earlier sentence | The gas modes read the window's text, not the screen; `gas-propane` not launched since |
 | RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action, both on a server, where the action's new last field (`source`) is sent to the server's copy and the pump goes as the object faced, as the game's own **Take Fuel** sends one. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438) | The `gas-player` mode waits for the drain and reads the litres; no mode clicks the station pour |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
@@ -9319,3 +9320,34 @@ the station reservoir**, which no mode clicks; a server.
 
 Evidence:
 [run 438](evidence/2026-11-15_rt-sp_harness_run438_gas_player_timed_drain_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launch 439 (Gas status with the hours of gas left, UX review R11; the gas-wood mode after R12)
+
+Branch `feature/gas-generators` after `b944ecd`, the R11 change not yet
+committed, 42.22.2. Command: `tools/run-sp-harness.ps1 -Mode gas-wood`,
+the mode of launch 358, with two new lines in its log: the Gas status
+window's text with the reply's hourly step and hours left, and the same
+asked straight after **Put out**, beside the time the generator then
+stops. **19/0, then 4/0** after the save and its continue.
+
+* With the gasifier lit and no tank, the window read "Gas generator",
+  "Gas in it for about 1 h at the load it has now; a lit gasifier refills
+  it as it runs", "No propane tank connected.", "Lit gasifiers within two
+  tiles: 1". The reply behind it: a step of 0.005 L an hour and 1.2 hours
+  left (0.0384 Nm³ of wood gas in the generator).
+* Straight after **Put out** the text was "Gas for about 1 h at the load
+  it has now" with no lit gasifier; the generator stopped 1.974 h later.
+  The estimate was 0.97 h short, inside the hour the guide gives it: the
+  generator runs to the hourly step that empties it.
+* The mode's other steps went as in launch 358, the gasifier's menu under
+  its new name (R12).
+
+The console holds no exception and no warning or error of the mod.
+
+Not run: the window on screen (the harness reads its text; its size with
+the longest line, in Italian, was not looked at); a generator on propane,
+where the estimate counts the tank; one never switched on; the estimate
+after an appliance comes on or goes off; a server.
+
+Evidence:
+[run 439](evidence/2026-11-15_rt-sp_harness_run439_gas_wood_hours_left_42.22.2.txt).

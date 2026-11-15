@@ -18954,6 +18954,9 @@ RT.WD.status = { name = "rtwd_status", timeout = 600, fn = function(ctx, ticks)
     local s = prMenu("RTWD.gas_status", "ContextMenu_TLG_GasStatus")
     local z = wdMenu("RTWD.gasifier_status", "ContextMenu_TLG_GasifierStatus")
     local text = H.dialogs.texts[#H.dialogs.texts] or ""
+    -- The Gas status window's own text and the estimate behind it (R11).
+    R:line("OBS  RTWD.gas_status_text step %s L/h, hours left %s; window: %s", tostring(s.step), tostring(s.hoursLeft),
+        tostring(H.dialogs.texts[#H.dialogs.texts - 1]))
     closeDialogs()
     R:line("OBS  RTWD.status Gas status: wood gas %s Nm3, lit gasifiers %s, tank %s; the gasifier's Status: %s",
         tostring(s.woodgasNm3), tostring(s.gasifiers), tostring(s.tankUses), text)
@@ -18997,6 +19000,10 @@ RT.WD.putOut = { name = "rtwd_put_out", timeout = 40000, fn = function(ctx, tick
     if not ctx.r then
         ctx.r = wdMenu("RTWD.put_out", "ContextMenu_TLG_GasifierPutOut")
         ctx.h = hours()
+        -- The estimate once the gasifier is out, against when A then stops (R11).
+        ctx.est = ask("RTWD.gas_status_after_put_out", "gas.status",
+            { device = TLG.Authority.Resolver.refForObject(prGen(), "generator") })
+        ctx.estText = ctx.est.ok and TLG.UI.GasMenu.describe(ctx.est) or "?"
         RT.WD.state("put_out")
         PR.watch(true)
         RT.speed(20)
@@ -19008,6 +19015,8 @@ RT.WD.putOut = { name = "rtwd_put_out", timeout = 40000, fn = function(ctx, tick
     RT.speed(1)
     PR.watch(false)
     RT.WD.state("A_stopped")
+    R:line("OBS  RTWD.estimate_against_the_stop after Put out: step %s L/h, hours left %s, \"%s\"; A stopped %.3f h after",
+        tostring(ctx.est and ctx.est.step), tostring(ctx.est and ctx.est.hoursLeft), tostring(ctx.estText), hours() - ctx.h)
     R:check("RTWD.put_out_and_A_stops", function()
         return ctx.r.ok == true and ctx.r.state == "Ready" and (ctx.r.vented or 0) > 0 and not g:isActivated()
             and g:getFuel() <= 1e-6 and hours() - ctx.h <= 2.05, string.format(

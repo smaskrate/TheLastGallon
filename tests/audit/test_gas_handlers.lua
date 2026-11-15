@@ -158,6 +158,15 @@ T.case("gas: status reads the buffer and the tank", function()
     T.near(s.propaneKg, Gas.toKg("propane", 3840 * Gas.NM3_PER_USE), 1e-6)
     T.eq(s.tankUses, 1160)
     T.eq(s.cap, 10)
+    -- The hours left at the load now (R11): the buffer and the tank over
+    -- the hourly step; none while no load is known.
+    T.eq(s.step, 0.002)
+    T.near(s.hoursLeft, (3840 + 1160) * L_PER_USE / 0.002, 1e-3)
+    gen.step = 0.005
+    T.near(H.dispatch(player, "gas.status", { device = ref, requestId = rid() }).hoursLeft, 5000 * L_PER_USE / 0.005, 1e-3)
+    gen.step = 0
+    s = H.dispatch(player, "gas.status", { device = ref, requestId = rid() })
+    T.eq(s.step, 0); T.eq(s.hoursLeft, nil)
 end)
 
 T.case("gas: over connect, hourly steps, refills and removal no propane is made or lost", function()
