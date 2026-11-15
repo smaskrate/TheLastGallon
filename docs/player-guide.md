@@ -1150,6 +1150,14 @@ gas. **Clean out tar and ash** empties the filter. **Put out** stops it
 at once and lets its gas out. A generator stops an hour or two after its
 gasifier goes out.
 
+A generator on wood gas holds only the next hour's burn and a little
+more, which the gasifier tops up every game minute. The game's
+**Generator Info** window therefore shows it at "Fuel: 1%" however much
+wood is in the hopper, as long as the generator burns less than 0.1 L an
+hour; one powering a fridge-freezer burns 0.015 L an hour at the default
+fuel use. To know how long it will run, read the gasifier's **Status**,
+which says when its fire goes out.
+
 The gasifier burns only while you are in the area: after a trip that
 takes you far from it, it is out with its wood and the generator is off.
 Picked up while lit, it goes out and keeps its wood. Every full filter
@@ -1174,7 +1182,9 @@ at the levels above (launch 394).
 **Not checked in game:** the conversion refused below its skills or
 without the recipe; how long a propane tank lasts; wet wood; a filter
 filled by real hours of burning; the generator switched on from its own
-menu rather than by the test; a real network. The fuller list is in
+menu rather than by the test; a real network; the **Generator Info**
+window of a generator on gas, whose "Fuel: 1%" follows from the game's
+code and the fuel read in game. The fuller list is in
 [support-matrix.md](support-matrix.md).
 
 ## Stations

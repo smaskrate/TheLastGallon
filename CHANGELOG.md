@@ -2,10 +2,71 @@
 
 ## Unreleased
 
-The gas generator, propane and the wood gasifier themselves (D-040) are
-not listed here yet; the entries below are the changes to menus, texts
-and instructions.
-
+* Gas generators. A generator converted to gas runs on propane from the
+  game's propane tanks or on wood gas from a new machine, the Wood
+  Gasifier. `docs/player-guide.md`, "A generator on gas", has the steps;
+  in the game the Field Manual's **Read: Gas generators** has them.
+* **Start: Gas generator conversion** is offered again in a generator's
+  **Workshop: convert this generator** menu; 0.4.2 hid it because nothing
+  gave a converted generator gas. The work stops after its first half
+  hour until the generator's fuel is drained into a can. A converted
+  generator takes no liquid fuel: the game's **Add Fuel** and the mod's
+  pour leave it as it is. **Remove the conversion** makes it a petrol
+  generator again, gives back its propane tank and returns half of the
+  parts.
+* Propane: **Gas (The Last Gallon)** > **Connect a propane tank** puts a
+  propane tank from the bag, or from the floor beside the generator, into
+  the generator, as the game's barbecue takes one. The generator burns it
+  as it runs. **Remove the propane tank** gives the tank back with the gas
+  not yet burned. One tank at a time; while a tank with gas is in, the
+  generator draws no wood gas. A generator that still holds petrol is
+  refused until it is drained.
+* **Gas status** says how long the gas lasts: "Gas for about 4 d 12 h at
+  the load it has now", counting the gas in the generator and in its tank
+  over the load the game last counted for it. The game burns fuel once an
+  hour, so the time is in whole hours, good to within one, or "less than
+  an hour". Under it are the tank and the lit gasifiers within two tiles.
+  Checked in single player on wood gas (launch 439): "about 1 h" after
+  **Put out**, and the generator stopped 1.97 h later. On propane not run
+  in game.
+* New machine, the **Wood Gasifier**, welded in hand from a metal drum,
+  two sheets of metal, three metal pipes and two metal bars, with a
+  blowtorch and a welding mask, at Welding 5 with the recipe learned.
+  Put down within two tiles of gas generators, loaded with wood (logs,
+  firewood, planks, twigs and charcoal, up to 120 kg) and lit, it warms up
+  for half an hour and then keeps them supplied, the nearest first. It
+  goes out three hours after it stops: out of wood, its filter full, or no
+  generator drawing. **Clean out tar and ash** empties the filter; **Put
+  out** stops it at once. It burns only while a player is in the area.
+  Its model and icon are the mod's own, built from simple shapes.
+* New item, the **Wood Gas Handbook**, found where the Field Manual is.
+  Reading it teaches the gasifier's recipe; with it read, the game makes
+  the gasifier from Welding 4, as it does for any recipe read from a
+  magazine. Without it a character learns the recipe at Welding 7.
+* A generator on wood gas holds only the next hour's burn and a little
+  more, which the gasifier tops up every game minute, so the game's
+  **Generator Info** window shows it at "Fuel: 1%" while it burns less
+  than 0.1 L an hour (one powering a fridge-freezer burns 0.015 L an hour
+  at the default fuel use). The gasifier's **Status** says when its fire
+  goes out. The 1% follows from the game's code and the fuel read in
+  game; the window on screen was not looked at.
+* A save from an earlier version: a generator converted to gas before
+  0.4.2 hid the conversion can now take gas, once any petrol in it is
+  drained. Not checked in game.
+* Checked on 42.22.2 (launches 350–412 in `docs/test-results.md`). In
+  single player: the conversion through the Workshop menu, with the tank
+  drained from the Fuel menu; propane connected, burned, removed and given
+  back, through a save and a trip; the Wood Gas Handbook read, the
+  gasifier made, put down, loaded and lit from the menus, and a generator
+  run three hours on its gas; eight hours asleep beside a wood-gas
+  generator without a stop; one gasifier feeding two generators;
+  generators and gasifiers taken up and put down. On a dedicated server:
+  propane; the gasifier's menus from two players, a player joining while
+  it burns and a server restart; the crafting window and the handbook in
+  the server's loot; the moves. Not checked: the conversion refused below
+  its skills or without the recipe, how long a full propane tank lasts,
+  wet wood, a filter filled by real hours of burning, the generator
+  switched on from its own menu rather than by the test, a real network.
 * New: **Status** of a machine on the ground opens a card that stays
   open instead of a window to close: a small window with the machine's
   name that shows what Status shows, brings itself up to date every ten
@@ -16,7 +77,7 @@ and instructions.
   Machines of one type in one state share a line ("Takes from: 3 x
   Fermentation Vessel, nearest 1 tile away. Working"). One card for each machine; no buttons, the actions stay in the menu. A
   carried machine's Status, Status asked with a controller, the
-  gasifier's Status and Gas status are windows as before. Run in game
+  gasifier's Status and Gas status stay windows. Run in game
   on one machine in English (RT-SP launches 442 and 443) and in Italian
   on a biodiesel reactor beside a leacher and two retorts (launch 445);
   not on a server.
@@ -29,17 +90,6 @@ and instructions.
   player (launch 440): at the game's speed 3 the game's own
   window left normal speed and the mod's left the speed as it was. The
   yes/no questions are not run in game.
-* Changed: **Gas status** of a gas generator says how long its gas
-  lasts, "Gas for about 4 d 12 h at the load it has now", counting the
-  gas in the generator and in its propane tank over the load the game
-  last counted for it. The game burns fuel once an hour, so the time is
-  in whole hours, good to within one, or "less than an hour". Before,
-  it gave the gas as litres of petrol to three
-  decimals and wood gas in cubic metres. With a gasifier lit and no tank
-  it says the gasifier refills it; a generator that never ran says the
-  time shows once it has run. Checked in single player on wood gas
-  (launch 439): "about 1 h" after Put out, and the generator stopped
-  1.97 h later. On propane not run in game.
 * Changed: **Pour into the station reservoir** and **Drain the generator
   into this can** take time, as the pours into a vehicle and a generator
   do: the can in hand, the pump or generator faced, the same time for
@@ -60,8 +110,7 @@ and instructions.
   437).
 * Changed: a machine's menu entry carries its name, "Pot Still (The Last
   Gallon)", "Wood Retort (The Last Gallon)", "Wood Gasifier (The Last
-  Gallon)", in place of "Machine (The Last Gallon)" and "Gasifier (The
-  Last Gallon)". With several machines under one click each entry says
+  Gallon)", in place of "Machine (The Last Gallon)". With several machines under one click each entry says
   which it is. Checked in single player on a vessel, the stills and a
   gasifier, in English and Italian (launches 432–434).
 * New: each of the mod's 18 items has a tooltip of a sentence or two,
