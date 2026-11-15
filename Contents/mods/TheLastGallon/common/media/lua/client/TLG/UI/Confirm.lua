@@ -3,7 +3,8 @@
 -- own dialog, opened as the game opens its sleep question (SRC
 -- client/ISUI/ISWorldObjectContextMenu.lua, sleepDialog): at 0,0 the dialog
 -- centres itself on the player's screen, and with a controller it takes
--- the focus. The in-game harness answers yes by replacing Confirm.ask.
+-- the focus. Answering it leaves the game's speed as it was (Say.keepSpeed,
+-- R14). The in-game harness answers yes by replacing Confirm.ask.
 -- NOT RUN in game.
 TLG.UI = TLG.UI or {}
 TLG.UI.Confirm = TLG.UI.Confirm or {}
@@ -14,6 +15,7 @@ function Confirm.ask(text, onYes, playerNum)
     local dialog = ISModalDialog:new(0, 0, 420, 180, text, true, nil, function(_, button)
         if button.internal == "YES" then onYes() end
     end, playerNum)
+    if TLG.UI.Say then TLG.UI.Say.keepSpeed(dialog) end
     dialog:initialise()
     dialog:addToUIManager()
     if JoypadState ~= nil and JoypadState.players ~= nil and JoypadState.players[playerNum + 1] then

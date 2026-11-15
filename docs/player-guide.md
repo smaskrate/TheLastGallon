@@ -66,7 +66,10 @@ What you do from the mod's menus is answered in one of two ways.
 * A window to close with **OK**: what you read (**Status**, **What I know
   about it**, a test's result, the workshop's answers), a refusal that
   lists what was found or what is missing, an aborted batch, and a
-  collect or load that threw something away.
+  collect or load that threw something away. Closing it leaves the
+  game's speed as it was, as answering one of the mod's yes/no questions
+  does: you can read a **Status** while waiting at a
+  faster speed.
 
 A line lasts a few seconds. After a load or a feed, a machine's state and
 how long the batch takes are in its **Status**.

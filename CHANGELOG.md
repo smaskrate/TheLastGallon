@@ -6,6 +6,15 @@ The gas generator, propane and the wood gasifier themselves (D-040) are
 not listed here yet; the entries below are the changes to menus, texts
 and instructions.
 
+* Fixed: closing one of the mod's windows (**Status**, a test's result,
+  **Project status**) or answering one of its yes/no questions leaves
+  the game's speed as it was.
+  The game's own window sets the speed to normal when it
+  closes, so a **Status** read while waiting days at a faster speed
+  dropped the wait to normal speed at each **OK**. Checked in single
+  player (launch 440): at the game's speed 3 the game's own
+  window left normal speed and the mod's left the speed as it was. The
+  yes/no questions are not run in game.
 * Changed: **Gas status** of a gas generator says how long its gas
   lasts, "Gas for about 4 d 12 h at the load it has now", counting the
   gas in the generator and in its propane tank over the load the game

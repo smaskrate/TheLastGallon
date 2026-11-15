@@ -6065,7 +6065,63 @@ RT.RP.step = { name = "rtrp_wear_and_repair", timeout = 900, fn = function(ctx, 
     return true
 end }
 
-RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.RP.step, RT.finish }
+-- The game's speed across a window's OK (UX review R14). At speed 3, the
+-- game's own window closed with its OK button's handler: the speed after
+-- (the review's hypothesis: 1). Then the mod's window (Say.window) closed
+-- the same way: the speed stays 3. Then the mod's window at speed 1.
+RT.speedKept = { name = "rt_speed_kept", timeout = 900, fn = function(ctx, ticks)
+    local sc = UIManager.getSpeedControls()
+    local function speed() return sc:getCurrentGameSpeed() end
+    local function okOf(modal) modal:onClick(modal.ok) end
+    if ticks == 1 then
+        ctx.before = speed()
+        sc:SetCurrentGameSpeed(3)
+        return nil
+    end
+    if ticks == 20 then
+        ctx.set = speed()
+        local w, h = 300, 160
+        local modal = ISModalRichText:new(100, 100, w, h, "The game's window", false, nil, nil, 0)
+        modal:initialise()
+        modal:addToUIManager()
+        ctx.game = modal
+        return nil
+    end
+    if ticks == 40 then
+        okOf(ctx.game)
+        ctx.afterGame = speed()
+        sc:SetCurrentGameSpeed(3)
+        return nil
+    end
+    if ticks == 60 then
+        ctx.mod = TLG.UI.Say.window("The mod's window")
+        return nil
+    end
+    if ticks == 80 then
+        ctx.fast = speed()
+        okOf(ctx.mod)
+        ctx.afterMod = speed()
+        ctx.shown = ctx.mod:isVisible()
+        sc:SetCurrentGameSpeed(1)
+        return nil
+    end
+    if ticks == 100 then
+        ctx.mod1 = TLG.UI.Say.window("The mod's window at speed 1")
+        return nil
+    end
+    if ticks < 120 then return nil end
+    okOf(ctx.mod1)
+    R:line("OBS  RT.speed_across_the_game_window speed %s -> set %s -> after the game's own window's OK %s",
+        tostring(ctx.before), tostring(ctx.set), tostring(ctx.afterGame))
+    R:check("RT.mod_window_keeps_the_speed", function()
+        return ctx.set == 3 and ctx.fast == 3 and ctx.afterMod == 3 and ctx.shown == false and speed() == 1,
+            string.format("at speed %s, after the mod's window's OK %s (window still shown %s); at speed 1, after it %s",
+                tostring(ctx.fast), tostring(ctx.afterMod), tostring(ctx.shown), tostring(speed()))
+    end)
+    return true
+end }
+
+RT.controlSteps = { RT.waitWorld, RT.setup, RT.controlSetup, RT.controlRun, RT.RP.step, RT.speedKept, RT.finish }
 
 ------------------------------------------------------------------------------
 -- Stills and drying column picked up (request "sp-rts"): D-015 on the

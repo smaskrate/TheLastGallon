@@ -205,3 +205,68 @@ T.case("integration: the Repair entry shows on a worn machine, with what it take
         if not ok then error(err, 0) end
     end)
 end)
+
+-- The game's window sets the game's speed to 1 when it closes; the mod's
+-- windows give the speed back (UX review R14).
+T.case("integration: closing a window leaves the game's speed as it was", function()
+    stage(function(s)
+        local savedUI = UIManager
+        local ok, err = pcall(function()
+            local speed, sets, destroyed = 3, 0, 0
+            local controls = { getCurrentGameSpeed = function() return speed end,
+                SetCurrentGameSpeed = function(_, v) speed = v; sets = sets + 1 end }
+            UIManager = { getSpeedControls = function() return controls end }
+            -- The game's destroy, as far as the speed goes.
+            ISModalRichText.destroy = function(self)
+                destroyed = destroyed + 1
+                self.closed = true
+                UIManager.getSpeedControls():SetCurrentGameSpeed(1)
+            end
+            local modal = Say.window("Status")
+            T.ok(modal.destroy == Say.close, "the window closes through Say.close")
+            modal:destroy()
+            T.ok(modal.closed, "closed as the game closes it"); T.eq(destroyed, 1)
+            T.eq(speed, 3, "the faster speed is back")
+            -- At normal speed nothing is set again.
+            speed, sets = 1, 0
+            Say.window("Status"):destroy()
+            T.eq(speed, 1); T.eq(sets, 1, "only the game's own set")
+            -- Paused when it was opened and closed: paused after.
+            speed = 0
+            Say.window("Status"):destroy()
+            T.eq(speed, 0)
+            -- No speed controls (a server's client): closed, nothing else.
+            UIManager = { getSpeedControls = function() return nil end }
+            ISModalRichText.destroy = function(self) self.closed = true end
+            modal = Say.window("Status")
+            modal:destroy()
+            T.ok(modal.closed)
+            UIManager = nil
+            modal = Say.window("Status")
+            modal:destroy()
+            T.ok(modal.closed)
+        end)
+        UIManager = savedUI
+        if not ok then error(err, 0) end
+    end)
+end)
+
+T.case("integration: a yes/no question of the game's keeps the speed when it is answered", function()
+    local savedUI, savedDialog = UIManager, ISModalDialog
+    local ok, err = pcall(function()
+        local speed = 2
+        local controls = { getCurrentGameSpeed = function() return speed end,
+            SetCurrentGameSpeed = function(_, v) speed = v end }
+        UIManager = { getSpeedControls = function() return controls end }
+        ISModalDialog = { destroy = function(self)
+            self.closed = true
+            UIManager.getSpeedControls():SetCurrentGameSpeed(1)
+        end }
+        local dialog = {}
+        T.ok(Say.keepSpeed(dialog) == dialog, "returns the dialog")
+        dialog:destroy()
+        T.ok(dialog.closed, "closed as the game closes it"); T.eq(speed, 2)
+    end)
+    UIManager, ISModalDialog = savedUI, savedDialog
+    if not ok then error(err, 0) end
+end)

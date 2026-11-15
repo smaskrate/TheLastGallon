@@ -28,11 +28,47 @@ function Say.from(playerNum)
     if type(playerNum) == "number" then Say.playerNum = playerNum end
 end
 
--- A window with `text` (the game's rich text), to close with OK.
+-- The game's speed as its speed controls have it, or nil where the game
+-- has none.
+local function gameSpeed()
+    local ok, speed = pcall(function() return UIManager.getSpeedControls():getCurrentGameSpeed() end)
+    if ok and type(speed) == "number" then return speed end
+    return nil
+end
+
+-- Runs `destroy(modal)`, the game's way to close the window, and then
+-- gives the game back the speed it had. Both of the game's windows set
+-- the speed to 1 when they close (SRC client/ISUI/ISModalRichText.lua and
+-- ISModalDialog.lua, destroy; launch 440 for the first), so a Status read while waiting
+-- at a faster speed drops the wait to normal speed at its OK (UX review
+-- R14). A paused game stays paused.
+function Say.closeWith(modal, destroy)
+    local before = gameSpeed()
+    destroy(modal)
+    if before ~= nil and before ~= gameSpeed() then
+        pcall(function() UIManager.getSpeedControls():SetCurrentGameSpeed(before) end)
+    end
+end
+
+-- A window of the mod's (ISModalRichText) closed with the speed kept.
+function Say.close(modal)
+    Say.closeWith(modal, ISModalRichText.destroy)
+end
+
+-- Makes a yes/no question of the game's (an ISModalDialog) keep the speed
+-- when it is answered; returns the dialog.
+function Say.keepSpeed(dialog)
+    dialog.destroy = function(self) Say.closeWith(self, ISModalDialog.destroy) end
+    return dialog
+end
+
+-- A window with `text` (the game's rich text), to close with OK. Closing
+-- it leaves the game's speed as it was (Say.close).
 function Say.window(text, width, height)
     local w, h = width or 420, height or 240
     local modal = ISModalRichText:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
         w, h, text, false, nil, nil, Say.playerNum)
+    modal.destroy = Say.close
     modal:initialise()
     modal:addToUIManager()
     return modal

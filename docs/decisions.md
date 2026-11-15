@@ -415,8 +415,10 @@ their replacement.
   A text with a line break, a missing character or a failing call opens
   the window: a reply is never dropped. Reason: one window to close for
   each feed of a firebox, and closing a window sets the game's speed back
-  to 1 (`ISModalRichText.destroy`; whether that is felt in play was not
-  verified, review R14). Consequence accepted: after an action the state,
+  to 1 (`ISModalRichText.destroy`, and `ISModalDialog.destroy` for a yes/no
+  question; seen for the first in launch 440). Since 2026-11-15 (review R14)
+  the mod's windows and questions give the speed back when they close
+  (`Say.closeWith`). Consequence accepted: after an action the state,
   stage and site temperature are read in **Status**, no longer in the
   action's own answer; a line lasts a few seconds and can be missed.
 * Decision: inspection and machine results are shown in `ISModalRichText`

@@ -13,6 +13,7 @@ runtime tests.
 | RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
+| RT-SP and RT-MP: the game's speed across the mod's windows and questions (UX review R14; the game's own window left 1 and the mod's left 3 when closed by the OK handler at speed 3: launch 440): a click on OK with the mouse and the speed buttons on screen, the yes/no questions (**Cancel the project**, **Remove the conversion**, a second **Abort batch**, a harmful pour; offline: `test_say.lua`), a paused game, a controller, a server's client | The `controls` mode's step calls the OK button's handler and reads the speed controls |
 | RT-SP and RT-MP: **Gas status** with the hours of gas left (UX review R11; on wood gas the text read and the estimate against the stop, 1 h against 1.97 h: launch 439): the window on a generator on propane and on one never switched on; whether the window (420x220) holds its longest line, in Italian; the estimate after the load changes (offline: `test_gas_feed.lua`, `test_gas_handlers.lua`, `test_gasifier_menu.lua`). The gas page of the manual names this line since; launches 436–437 photographed its earlier sentence | The gas modes read the window's text, not the screen; `gas-propane` not launched since |
 | RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action, both on a server, where the action's new last field (`source`) is sent to the server's copy and the pump goes as the object faced, as the game's own **Take Fuel** sends one. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438) | The `gas-player` mode waits for the drain and reads the litres; no mode clicks the station pour |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
@@ -9351,3 +9352,30 @@ after an appliance comes on or goes off; a server.
 
 Evidence:
 [run 439](evidence/2026-11-15_rt-sp_harness_run439_gas_wood_hours_left_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launch 440 (the game's speed across a window's OK, UX review R14)
+
+Branch `feature/gas-generators` after `7f5d8c6`, the R14 change not yet
+committed, 42.22.2. Command: `tools/run-sp-harness.ps1 -Mode controls`,
+with the new last step `RT.speedKept`. **41/0** (launch 434: 40/0, the
+same checks without this one).
+
+* The review's hypothesis holds. With the game's speed controls at 3, the
+  game's own window (`ISModalRichText`), closed by its OK button's
+  handler, left the speed at 1.
+* The mod's window (`Say.window`), closed the same way at speed 3, left
+  the speed at 3 and was no longer shown. Closed at speed 1, it left 1.
+
+The speed controls already read 3 when the step began, as the mode's
+earlier steps had left them. The console holds no exception and no
+warning or error of the mod.
+
+Not run: a click on OK with the mouse and the speed buttons seen on
+screen (the step calls the button's handler and reads the speed
+controls); the yes/no questions (**Cancel the project**, **Remove the
+conversion**, a second **Abort batch**, a harmful pour), which the mod
+now closes the same way (offline: `test_say.lua`); a paused game; a
+controller; a server's client.
+
+Evidence:
+[run 440](evidence/2026-11-15_rt-sp_harness_run440_controls_speed_kept_42.22.2.txt).

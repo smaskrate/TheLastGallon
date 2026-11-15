@@ -207,6 +207,7 @@ local function queuePour(player, item, destination, face, experimental, source)
                 w, h, text, true, nil, function(_, button)
                     if button.internal == "YES" then queuePour(player, item, destination, face, true, source) end
                 end)
+            Say.keepSpeed(dlg)
             dlg:initialise()
             dlg:addToUIManager()
         else
