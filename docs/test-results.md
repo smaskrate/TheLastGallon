@@ -10097,9 +10097,9 @@ asking each template without its arguments, as in launch 445.
 Not run: the new words on a wash tank or a drying column, and the
 machine's own **Stato** of a feminine machine, in game (offline only);
 "È pieno: …" on screen; the Generator Info window on screen, and on a
-generator on propane; the sampling kit's verdict naming a gas
-generator's engine; the package's Workshop text, which is built at the
-release's packaging step.
+generator on propane; the Workshop menu's "Engine now: gas generator
+(propane/wood gas)"; the package's Workshop text, which is built at the
+release's packaging step (`tools/package.ps1` parses without errors).
 
 Evidence:
 [run 517](evidence/2026-11-15_rt-sp_harness_run517_italian_feminine_state_words_42.22.2.txt),

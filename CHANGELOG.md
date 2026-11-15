@@ -124,10 +124,11 @@
   and on a card's source lines. Before, every machine said "Pronto".
   Checked in single player on a card's line for two retorts (launch 517).
 * Changed: a gas generator's line in the Generator Info window, "Runs on:
-  gas (propane or wood gas)", and its engine in the Workshop menu and the
-  sampling kit's verdict no longer name biogas, which no machine makes.
-  Checked in single player on a generator converted from the menus
-  (launch 518).
+  gas (propane or wood gas)", and its engine as the Workshop menu names
+  it, "Engine now: gas generator (propane/wood gas)", no longer name
+  biogas, which no machine makes. The Generator Info line was checked in
+  single player on a generator converted from the menus (launch 518);
+  the Workshop menu's line is not run in game.
 * New: biodiesel and gas have instructions in the game. The Field
   Manual's menu has **Read: Biodiesel** and **Read: Gas generators**,
   each a page like the manual's own: the five machines, a batch step by

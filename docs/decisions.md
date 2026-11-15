@@ -2319,16 +2319,19 @@ words under those keys. The words for working, paused and maintenance
 agree with nothing, and the "Terminato: …" and "Interrotto: …" lines
 read as the work's, so they stay. Before, a reactor's card read
 "Prende da: 2 x Storta per legna, la più vicina a 2 caselle. Pronto"
-(launch 445); it now ends "Pronta" (launch 517).
+(launch 445); it now ends "Pronta" (launch 517). The keys follow the
+three Italian names: a machine renamed to a masculine name loses its
+keys, one renamed to a feminine name gains them.
 
 **Biogas.** A gas generator's lines named biogas, which no machine in
 the game makes: the Generator Info line "Runs on: gas (propane, biogas or
-wood gas)" and the profile "gas generator (propane/biogas/wood gas)" of
-the Workshop menu and the sampling kit. Both, in English and Italian, now
-name propane and wood gas. The domain still lets a gas generator burn
-biogas (`Consumers.lua`), for a later version with a digester. In game
-the Generator Info text of a generator converted from the menus opens
-with "Runs on: gas (propane or wood gas)" (launch 518).
+wood gas)" and the profile "gas generator (propane/biogas/wood gas)",
+which the Workshop menu shows as "Engine now: …". Both, in English and
+Italian, now name propane and wood gas. The domain still lets a gas
+generator burn biogas (`Consumers.lua`), for a later version with a
+digester. In game the Generator Info text of a generator converted from
+the menus opens with "Runs on: gas (propane or wood gas)" (launch 518);
+the Workshop menu's line is not run in game.
 
 **The Workshop text** of `tools/package.ps1` has a section "Make your
 own: gas" after the biodiesel one: the conversion, the Wood Gasifier and
