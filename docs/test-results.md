@@ -13,7 +13,7 @@ runtime tests.
 | RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
-| RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443): its text in Italian, dragging it and its cross with the mouse, its refresh at speed 1 after ten game minutes, its closing when the machine is picked up, the line of the machines it takes from on a biodiesel chain, several cards at once and their cost (each refresh writes the record; not measured), a second player's card in split screen, a server's client, where each refresh also sends the record to the clients (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture, and only `controls` was run since; `docs-shots` photographs Status as a window and its `05` Workshop cut shows the old one | Only the `controls` mode has the step (`RT.cardStep`), on one machine in English |
+| RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443): its text in Italian, dragging it and its cross with the mouse, its refresh at speed 1 after ten game minutes, its closing when the machine is picked up, the line of the machines it takes from on a biodiesel chain, several cards at once and their cost (each refresh writes the record; not measured), a second player's card in split screen, a server's client, where each refresh also sends the record to the clients (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture, and only `controls` and `docs-shots` (launch 444) were run since | Only the `controls` mode has the step (`RT.cardStep`), on one machine in English |
 | RT-SP and RT-MP: the game's speed across the mod's windows and questions (UX review R14; the game's own window left 1 and the mod's left 3 when closed by the OK handler at speed 3: launch 440): a click on OK with the mouse and the speed buttons on screen, the yes/no questions (**Cancel the project**, **Remove the conversion**, a second **Abort batch**, a harmful pour; offline: `test_say.lua`), a paused game, a controller, a server's client | The `controls` mode's step calls the OK button's handler and reads the speed controls |
 | RT-SP and RT-MP: **Gas status** with the hours of gas left (UX review R11; on wood gas the text read and the estimate against the stop, 1 h against 1.97 h: launch 439): the window on a generator on propane and on one never switched on; whether the window (420x220) holds its longest line, in Italian; the estimate after the load changes (offline: `test_gas_feed.lua`, `test_gas_handlers.lua`, `test_gasifier_menu.lua`). The gas page of the manual names this line since; launches 436–437 photographed its earlier sentence | The gas modes read the window's text, not the screen; `gas-propane` not launched since |
 | RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action, both on a server, where the action's new last field (`source`) is sent to the server's copy and the pump goes as the object faced, as the game's own **Take Fuel** sends one. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438) | The `gas-player` mode waits for the drain and reads the litres; no mode clicks the station pour |
@@ -9455,3 +9455,34 @@ The console holds no exception. Not run: as for launch 442.
 Evidence:
 [run 443](evidence/2026-11-15_rt-sp_harness_run443_controls_machine_card_grouped_42.22.2.txt),
 [the card](evidence/2026-11-15_run443_machine_card_grouped.png).
+
+## 2026-11-15 — RT-SP launch 444 (`docs-shots` with Status as a card)
+
+Branch `feature/gas-generators` at `38197ea`, the harness change not yet
+committed, 42.22.2. Command: `tools/run-sp-harness.ps1 -Mode docs-shots`.
+**68/0** (launch 432: 68/0).
+
+The step that photographs the vessel's Status (`RT.DS.status`) now keeps
+the card open for the photograph and checks the card; before, the
+harness's capture closed a card as soon as it was filled.
+
+* The card stood at 700,120, 255 by 117 pixels, titled "Fermentation
+  Vessel": Working, Stage: fermenting, 1% done, About 3 d 23 h left at
+  today's temperature, Temperature here today: 22.0 °C, in a room,
+  Condition: 100%. A vessel takes from no machine, so it has no "Takes
+  from" line.
+* The other eleven photographs were taken and their checks passed; only
+  the Status photograph was looked at.
+* From `tlg_rtds_vessel_status.png` of this launch: the guide's
+  `docs/images/vessel-status.jpg` (cut 560,100 480x350) and the Workshop
+  page's `art-src/workshop/05-machine-status.jpg` (cut 380,60 800x450,
+  now in `tools/make-workshop-shots.ps1`). The other Workshop cuts were
+  not made again.
+
+The console holds no exception. Not run: `make-workshop-shots.ps1` as a
+whole with the new cut (the two pictures were cut by hand with its
+settings); the Workshop page itself still carries the old picture 05
+until it is uploaded.
+
+Evidence:
+[run 444](evidence/2026-11-15_rt-sp_harness_run444_docs_shots_status_card_42.22.2.txt).

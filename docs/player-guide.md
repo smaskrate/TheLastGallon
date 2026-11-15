@@ -519,9 +519,9 @@ stood still shows for how long, against the 3 days that spoil it.
 
 *The menu of a placed vessel with a batch running.*
 
-![Status of the vessel: Working, Stage: fermenting, Temperature here today: 22.0 °C, in a room](images/vessel-status.jpg)
+![The vessel's Status card, titled Fermentation Vessel: Working, Stage: fermenting, 1% done, About 3 d 23 h left at today's temperature, Temperature here today: 22.0 °C, in a room, Condition: 100%](images/vessel-status.jpg)
 
-*Its Status: fermenting in a room at 22 °C, with the power grid on.*
+*Its Status, a card that stays open: fermenting in a room at 22 °C, with the power grid on.*
 
 **Checked in game:** every recipe of the mod (the machines, the sampling
 kit, the filter cartridge and the stabilizer) found by name in the

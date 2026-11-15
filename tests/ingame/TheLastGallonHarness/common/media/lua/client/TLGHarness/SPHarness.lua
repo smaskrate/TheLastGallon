@@ -15316,9 +15316,17 @@ function RT.DS.dialogShot(spec)
         if ticks == 1 then
             D.console(false)
             ctx.n = #H.dialogs.texts
+            -- An answer that is a card (spec.card gives its key) is kept
+            -- open for the photograph; closeDialogs closes it at the end.
+            if spec.card then H.dialogs.keepCards = true end
             ctx.reply = spec.choose() or {}
+            H.dialogs.keepCards = false
             ctx.text = H.dialogs.texts[ctx.n + 1]
-            ctx.dlg = #H.dialogs.texts > ctx.n and H.dialogs.open[#H.dialogs.open] or nil
+            if spec.card then
+                ctx.dlg = TLG.UI.Say.cards[spec.card()]
+            else
+                ctx.dlg = #H.dialogs.texts > ctx.n and H.dialogs.open[#H.dialogs.open] or nil
+            end
             return nil
         end
         if ticks == D.settle then
@@ -15585,6 +15593,7 @@ RT.DS.machineMenu = RT.DS.menuShot({ name = "machine_menu", root = function() re
         getText("ContextMenu_TLG_Pause"), getText("ContextMenu_TLG_Abort") } end })
 
 RT.DS.status = RT.DS.dialogShot({ name = "vessel_status",
+    card = function() return TLG.UI.MachineCard.keyOf(RT.DS.vessel) end,
     choose = function() return machineClick("RTDS.status", RT.DS.vessel, "ContextMenu_TLG_MachineStatus") end,
     want = function() return { getText("IGUI_TLG_MachineState_Processing"), getText("IGUI_TLG_Site_room") } end })
 

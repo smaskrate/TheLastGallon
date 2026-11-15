@@ -29,7 +29,7 @@ $cuts = @(
     @("02-kit-sample-result",  "tlg_rtds_kit_result.png",           240, 105, 800, 450),
     @("03-what-i-know",        "tlg_rtds_what_i_know.png",          240, 105, 800, 450),
     @("04-machine-menu",       "tlg_rtds_machine_menu.png",         400,  20, 860, 484),
-    @("05-machine-status",     "tlg_rtds_vessel_status.png",        240, 105, 800, 450),
+    @("05-machine-status",     "tlg_rtds_vessel_status.png",        380,  60, 800, 450),
     @("06-workshop-menu",      "tlg_rtds_workshop_menu.png",        380,  20, 860, 484),
     @("07-project-status",     "tlg_rtds_project_status.png",       240, 105, 800, 450),
     @("08-crafting-window",    "tlg_rtds_crafting_window.png",      160,   0, 928, 522),
