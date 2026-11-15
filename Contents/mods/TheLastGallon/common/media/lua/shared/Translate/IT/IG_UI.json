@@ -84,6 +84,7 @@
     "IGUI_TLG_Fail_Gone": "Non è più lì.",
     "IGUI_TLG_Fail_NoEngine": "Questo veicolo non ha il motore.",
     "IGUI_TLG_Fail_Empty": "Non contiene carburante.",
+    "IGUI_TLG_Fail_Full": "È pieno: non c'è spazio per altro carburante.",
     "IGUI_TLG_Fail_NotFuel": "Quel contenitore contiene qualcosa che non è carburante.",
     "IGUI_TLG_Fail_CommitFailed": "Non è stato possibile aggiornare il contenitore. Riprova.",
     "IGUI_TLG_Fail_FutureSchema": "È stato salvato da una versione più recente di The Last Gallon. Aggiorna la mod per usarlo.",

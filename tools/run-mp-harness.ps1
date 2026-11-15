@@ -159,7 +159,10 @@
   six tiles away and by the world menu's Grab. At the fuel case's site: a
   generator's Fuel in this generator entry and its Look and smell, its
   Generator Info line, Drain the generator into this can and Pour into
-  the station reservoir judged by the server's litres, Open or Seal said
+  the station reservoir judged by the server's litres (the pour into the
+  untouched pump, refused as full if the world's draw put more than
+  10,000 L in it, else taken in; then after Take Fuel into a pump with
+  room), Open or Seal said
   over the character, the car's Fuel in this vehicle, and a can's
   favourite mark read on the server.
 .PARAMETER NoMod

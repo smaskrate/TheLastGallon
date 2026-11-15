@@ -101,9 +101,14 @@
   as the litres it will move, the can's room or what the generator holds.
   In single player a drain from the menu moved a generator's 2 L (launch
   438), and on a server 3 L (launch 446); its time and look are not run
-  in game. The station pour moved nothing on a server, into a pump
-  holding 15,208 L that the mod had not read before (launch 446), and is
-  not run in single player.
+  in game. On a server the station pour put 2 L into a pump holding
+  5,175 L (launch 447); in single player it is not run in game. A pump
+  the mod reads for the first time with more than 10,000 L counts as
+  full and refuses the pour (launch 446 poured nothing into one of
+  15,208 L).
+* Fixed: a pour into something full was refused with the internal code
+  `destination_full` in the text. It now says "It is full: there is no
+  room for more fuel." Checked offline; not seen in game.
 * New: biodiesel and gas have instructions in the game. The Field
   Manual's menu has **Read: Biodiesel** and **Read: Gas generators**,
   each a page like the manual's own: the five machines, a batch step by

@@ -35,6 +35,9 @@ Fmt.FAILURE_KEYS = {
     -- malformed requests, which a menu never sends.
     unknown_target = "IGUI_TLG_Fail_Gone", no_vehicle = "IGUI_TLG_Fail_Gone", no_generator = "IGUI_TLG_Fail_Gone",
     no_engine = "IGUI_TLG_Fail_NoEngine", empty = "IGUI_TLG_Fail_Empty",
+    -- A pour into a full container, tank or station reservoir (RT-MP
+    -- launch 446 found it shown as its code).
+    destination_full = "IGUI_TLG_Fail_Full",
     source_not_fuel = "IGUI_TLG_Fail_NotFuel", destination_not_fuel = "IGUI_TLG_Fail_NotFuel",
     commit_failed = "IGUI_TLG_Fail_CommitFailed", future_schema = "IGUI_TLG_Fail_FutureSchema",
     -- Repair (R8).

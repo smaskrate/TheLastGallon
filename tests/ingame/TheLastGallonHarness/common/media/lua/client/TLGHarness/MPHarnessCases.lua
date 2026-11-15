@@ -6302,8 +6302,12 @@ end
 --   the client's menu and the engine named in the server's Look and smell;
 --   Generator Info's Runs on line from the client's copy; Drain the
 --   generator into this can and Pour into the station reservoir clicked in
---   a can's Fuel menu (R13, timed actions whose `source` the server must
---   get), each judged by the server's litres; Open or Seal on a can, whose
+--   a can's Fuel menu (R13, timed actions whose `source` and object faced
+--   the server must get), each judged by the server's litres: the station
+--   pour first into the untouched pump, refused with its text if the
+--   world's draw put more than 10,000 L in it (the mod's rule makes it
+--   full), else taken in; then after Take Fuel into a pump with room;
+--   Open or Seal on a can, whose
 --   answer must be said over the character with no window (R6); the car's
 --   Fuel in this vehicle and What I know about it; a can marked as a
 --   favourite through the game's own menu function, read on the server.
@@ -6574,21 +6578,71 @@ if MP.only == "ux" then
                         tonumber(m.g1Fuel) or -1, UX.g1 or -1, rec or -1, canL("uxDrain"))
                 end)
             end),
+            -- The station pour, twice. First into the untouched pump: the
+            -- mod's rule (Stations.read) makes a pump first read above
+            -- 10,000 L full, so there the pour must be refused with its text,
+            -- said after the action (launch 446, 15,208 units), and below it
+            -- the 2 L must go in (launch 447, 5,175 units). The pump's stock
+            -- is the new world's draw. Then, with 10 L taken out through the
+            -- game's Take Fuel, a second can into a pump that has room.
             giveCan("ux_give_station_can", { petrol = "2" }, "uxStation"), arrived("uxStation"),
+            giveCan("ux_give_station_can2", { petrol = "2" }, "uxStation2"), arrived("uxStation2"),
+            giveCan("ux_give_take_can", { petrol = "0" }, "uxTake"), arrived("uxTake"),
             walkTo("mp_ux_walk_to_pump", function() return site("px") + 2, site("py") end),
             probeFuel("ux_before_station", function(m) UX.units0 = tonumber(m.pumpUnits) end),
-            act("ux_station_pour", function(ctx, p)
+            act("ux_station_pour_untouched", function(ctx, p)
+                UX.saidBefore1 = #UX.lines
                 local it = inventoryItem(FU.uxStation)
                 local clicked = it ~= nil and clickIn(function(c) Fuel.fill(0, c, { it }) end, getText("ContextMenu_TLG_Fuel"),
                     getText("ContextMenu_TLG_PourStation"))
                 if not clicked then error("no Pour into the station reservoir entry") end
             end, 180),
+            probeFuel("ux_after_station_untouched", function(m)
+                local said = UX.lines[(UX.saidBefore1 or 0) + 1]
+                local want = getText("IGUI_TLG_Fail_Full")
+                report():line("OBS  MP.ux station pour into the untouched pump: said %s (%s); pump %s -> %s units, record %s",
+                    tostring(said and said.text), tostring(said and said.how), tostring(UX.units0), tostring(m.pumpUnits),
+                    tostring(m.pumpSide))
+                local full = (UX.units0 or 0) > 10000
+                check("ux_untouched_pump_follows_the_reservoir_rule", function()
+                    if full then
+                        return tonumber(m.pumpUnits) == UX.units0 and near(canL("uxStation"), 2, 2e-3) and said ~= nil
+                            and said.text == want, string.format(
+                            "above 10,000 L: pump %s -> %s units; this client's can %.4f L; said '%s', want '%s'",
+                            tostring(UX.units0), tostring(m.pumpUnits), canL("uxStation"), tostring(said and said.text), want)
+                    end
+                    return tonumber(m.pumpUnits) ~= nil and tonumber(m.pumpUnits) >= UX.units0 + 1.99
+                        and near(canL("uxStation"), 0, 2e-3) and m.pumpSide ~= "nil" and said == nil, string.format(
+                        "at most 10,000 L: pump %s -> %s units, record %s; this client's can %.4f L; said %s",
+                        tostring(UX.units0), tostring(m.pumpUnits), tostring(m.pumpSide), canL("uxStation"),
+                        tostring(said and said.text))
+                end)
+                UX.units0 = tonumber(m.pumpUnits)
+            end),
+            act("ux_take_from_pump", function(ctx, p)
+                ISWorldObjectContextMenu.onTakeFuelNew(nil, pumpObj(), nil, inventoryItem(FU.uxTake), 0)
+            end, 180),
+            probeFuel("ux_after_take", function(m)
+                UX.units1 = tonumber(m.pumpUnits)
+                report():line("OBS  MP.ux taken from the pump: %s -> %s units; the can %.4f L", tostring(UX.units0),
+                    tostring(UX.units1), canL("uxTake"))
+            end),
+            act("ux_station_pour", function(ctx, p)
+                UX.saidBefore2 = #UX.lines
+                local it = inventoryItem(FU.uxStation2)
+                local clicked = it ~= nil and clickIn(function(c) Fuel.fill(0, c, { it }) end, getText("ContextMenu_TLG_Fuel"),
+                    getText("ContextMenu_TLG_PourStation"))
+                if not clicked then error("no Pour into the station reservoir entry") end
+            end, 180),
             probeFuel("ux_after_station", function(m)
-                check("ux_station_pour_fills_the_reservoir", function()
-                    return tonumber(m.pumpUnits) ~= nil and UX.units0 ~= nil and tonumber(m.pumpUnits) >= UX.units0 + 1.99
-                        and near(canL("uxStation"), 0, 2e-3) and m.pumpSide ~= "nil", string.format(
-                        "server: pump %s -> %s units, record %s; this client's can %.4f L", tostring(UX.units0),
-                        tostring(m.pumpUnits), tostring(m.pumpSide), canL("uxStation"))
+                local said = UX.lines[(UX.saidBefore2 or 0) + 1]
+                check("ux_station_pour_fills_a_pump_with_room", function()
+                    return UX.units1 ~= nil and UX.units1 < (UX.units0 or 0) and tonumber(m.pumpUnits) ~= nil
+                        and tonumber(m.pumpUnits) >= UX.units1 + 1.99 and near(canL("uxStation2"), 0, 2e-3) and m.pumpSide ~= "nil"
+                        and said == nil, string.format(
+                        "server: pump %s -> %s units after the take, %s after the pour, record %s; this client's can %.4f L; " ..
+                        "said %s", tostring(UX.units0), tostring(UX.units1), tostring(m.pumpUnits), tostring(m.pumpSide),
+                        canL("uxStation2"), tostring(said and said.text))
                 end)
             end),
             giveCan("ux_give_line_can", { petrol = "1" }, "uxLine"), arrived("uxLine"),

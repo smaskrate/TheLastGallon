@@ -13,7 +13,7 @@ game's own Lua, BC its bytecode.
 | # | Gate (spec §25) | Status | Summary |
 | --- | --- | --- | --- |
 | 1 | Every advertised pathway has a playable tested loop | PARTIAL | Ethanol, the only advertised pathway, verified RT-SP through the player's path, from crafting the machines to a converted generator and car running on the ethanol (runs 12, 38), and through both stills, the batch controls, winter, fires and the crafting window. Other pathways are domain-only and not advertised |
-| 2 | Every supported transfer path preserves fuel state | PARTIAL | Every supported path verified RT-SP, item↔item RT-DS; a can's water stays in its fluids (run 59). Station-reservoir pour SRC-ONLY; on a server it moved nothing into an untouched pump above 10,000 L (launch 446), cause not separated |
+| 2 | Every supported transfer path preserves fuel state | PARTIAL | Every supported path verified RT-SP, item↔item RT-DS; a can's water stays in its fluids (run 59). Station-reservoir pour SRC-ONLY in single player; on a server 2 L into a pump with room (launch 447), and none into a pump first read above 10,000 L, which the mod's rule makes full (launch 446) |
 | 3 | Native and mod quantities reconciled | PARTIAL | Vehicle idle burn, generator burn and driving burn (run 176) reconciled RT-SP, poor fuel's engine effects included (run 179, D-031). Third-party paths NOT RUN |
 | 4 | Production and energy invariants pass | PARTIAL | Domain invariants pass (142 cases, incl. energy balance, mass balance per converter); one in-game ethanol batch matched the model (runs 7–9), and a pot-still batch run in two loads matched it to 1e-6 L, kg and h, wear included (run 28); no in-game energy run |
 | 5 | Multiplayer and dedicated-server tests pass | PARTIAL | Verified RT-MP on a dedicated server with two clients on this computer: the mod's requests, the fuel paths, the vessel's take, carry and death, conversions, the stills, engine effects, timers, knowledge and a restart. NOT RUN: a real network, a still or drying column picked up while working, driving on poor fuel |
@@ -440,10 +440,10 @@ not advertised.
   a can filled to the brim at a pump and a vehicle siphoned into a can
   each moved 10 L with its fuel state carried.
 - Station-reservoir pour SRC-ONLY in single player (`support-matrix.md`).
-  On a server it moved nothing into an untouched pump holding 15,208 L
-  (RT-MP launch 446): either the server's copy of the action never ran,
-  or the transfer was refused because a pump first read above 10,000 L
-  has no room (`Stations.read`). Not separated yet.
+  On a server it put 2 L into a pump of 5,175 L (RT-MP launch 447). A
+  pump first read above 10,000 L is full by the mod's rule
+  (`Stations.read`) and refuses the pour: launch 446 moved nothing into
+  one of 15,208 L.
 
 ### Gate 3: native and mod quantities reconciled
 

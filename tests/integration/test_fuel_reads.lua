@@ -473,3 +473,33 @@ T.case("integration: a pump's first record holds its draw's fuel, in a world wit
     g.restore()
     if not ok then error(err, 0) end
 end)
+
+-- A pump the mod reads for the first time gets a reservoir of at least
+-- 10,000 L, or what it holds when that is more (Stations.read). Above
+-- 10,000 L it is therefore full, and a pour into it moves nothing and is
+-- refused as destination_full (Mixing.previewTransfer, which
+-- Transactions.transfer rejects with). RT-MP launch 446 poured 2 L into an
+-- untouched pump of 15,208 units and nothing moved. Below 10,000 L the pump
+-- takes a pour.
+T.case("integration: a pump first read above 10,000 L is full and refuses a pour as destination_full", function()
+    local S, Supply, Mixing = I.Stations, D.Supply, D.Mixing
+    local g = fakeGame(200)
+    local ok, err = pcall(function()
+        local srv = World.server()
+        srv.seed, srv.nextId = 7, 1
+        local full = S.read(stationPump(6, 15208), false)
+        T.eq(full.cap, 15208, "the reservoir is what the pump holds")
+        T.ok(Supply.free(full) <= 1e-9, "no room")
+        local can = Supply.new({ storage = "gascan_plastic", cap = 10, t = full.t, q = { gasoline = 2 } })
+        local p = Mixing.previewTransfer(can, full, 2)
+        T.eq(p.moved, 0, "nothing moves")
+        T.eq(p.reason, "destination_full")
+        local roomy = S.read(stationPump(7, 9000), false)
+        T.eq(roomy.cap, 10000)
+        p = Mixing.previewTransfer(Supply.new({ storage = "gascan_plastic", cap = 10, t = roomy.t, q = { gasoline = 2 } }),
+            roomy, 2)
+        T.ok(math.abs(p.moved - 2) < 1e-9, "a pump below 10,000 L takes the 2 L")
+    end)
+    g.restore()
+    if not ok then error(err, 0) end
+end)

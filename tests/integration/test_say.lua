@@ -200,6 +200,8 @@ T.case("integration: the Repair entry shows on a worn machine, with what it take
                 "[IGUI_TLG_MachineFail_needs_repair_parts] <LINE> - <Base.MetalPipe>", "the list, each part once (the stand-in translator knows every key)")
             T.eq(Fmt.failure({ reason = "not_worn" }), "[IGUI_TLG_Fail_NotWorn]")
             T.eq(Fmt.failure({ reason = "needs_repair_parts" }), "[IGUI_TLG_Fail_RepairParts]")
+            -- A pour into a full reservoir (RT-MP launch 446): its text, not its code.
+            T.eq(Fmt.failure({ reason = "destination_full" }), "[IGUI_TLG_Fail_Full]")
         end)
         getItemNameFromFullType, ISWorldObjectContextMenu, Picks.repair = saved.name, saved.world, saved.pick
         if not ok then error(err, 0) end
