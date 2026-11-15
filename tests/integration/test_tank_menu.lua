@@ -272,3 +272,77 @@ T.case("integration: Generator Info says which fuel the generator takes", functi
         T.eq(Window.getRichText({}, true), "game text")
     end)
 end)
+
+-- A can's entries that drain a generator and pour into a station's
+-- reservoir queue the pour action (R13): before, each sent the transfer at
+-- once.
+T.case("integration: Drain the generator and Pour into the station reservoir queue the timed action", function()
+    world(function(w)
+        local saved = { queue = ISTimedActionQueue, pane = ISInventoryPaneContextMenu, request = TLG.Net and TLG.Net.request }
+        local queued, requests = {}, 0
+        w.player.isTimedActionInstant = function() return false end
+        ISTimedActionQueue = { add = function(action) queued[#queued + 1] = action end }
+        ISInventoryPaneContextMenu = { transferIfNeeded = function(_, item) w.moved = item end }
+        if TLG.Net then TLG.Net.request = function() requests = requests + 1 end end
+        local ok, err = pcall(function()
+            local fc = { getAmount = function() return 6 end, getFreeCapacity = function() return 4 end,
+                isEmpty = function() return false end }
+            local can = { getID = function() return 7 end, getWorldItem = function() return nil end,
+                getFluidContainerFromSelfOrWorldItem = function() return fc end }
+            local function entry(sub, key)
+                for _, o in ipairs(sub.options) do
+                    if o.name == bracket(key) then return o end
+                end
+                return nil
+            end
+            -- Nothing near: neither entry.
+            local sub = w.context()
+            Menu.addDrainOptions(w.player, sub, can)
+            Menu.addPourOptions(w.player, sub, can)
+            T.eq(#sub.options, 0)
+            -- A generator with 3 L two tiles away: the drain, as long as its
+            -- 3 L, the can's room asked for.
+            local gen = w.generator(12, 10)
+            gen.fuel = 3
+            sub = w.context()
+            Menu.addDrainOptions(w.player, sub, can)
+            local drain = entry(sub, "ContextMenu_TLG_DrainGenerator")
+            T.ok(drain ~= nil, "offered")
+            drain.fn()
+            T.eq(#queued, 1); T.eq(requests, 0, "no request sent at the click")
+            local a = queued[1]
+            T.eq(a.Type, "ISTLGPourFuel"); T.ok(a.item == can and w.moved == can, "the can, taken in hand")
+            T.eq(a.source.kind, "generator"); T.eq(a.source.x, 12); T.eq(a.source.y, 10)
+            T.ok(a.destination == nil, "a drain has no destination: the can is it")
+            T.ok(a.faceObject == gen, "the generator faced")
+            T.eq(a.amount, 4); T.eq(a.litres, 3); T.eq(a.experimental, false)
+            -- A generator on gas, an empty one, a full can: no drain.
+            gen.gas = true
+            sub = w.context(); Menu.addDrainOptions(w.player, sub, can); T.eq(#sub.options, 0, "gas")
+            gen.gas, gen.fuel = nil, 0
+            sub = w.context(); Menu.addDrainOptions(w.player, sub, can); T.eq(#sub.options, 0, "empty")
+            gen.fuel = 3
+            fc.getFreeCapacity = function() return 0.01 end
+            sub = w.context(); Menu.addDrainOptions(w.player, sub, can); T.eq(#sub.options, 0, "no room")
+            -- A pump a tile away: the pour into its reservoir, the pump the
+            -- destination and faced, what the can holds.
+            local s = w.square(10, 11)
+            local pump = { class = "IsoObject", getSquare = function() return s end, getObjectIndex = function() return 2 end,
+                getPipedFuelAmount = function() return 100 end, hasModData = function() return false end }
+            s.objects[#s.objects + 1] = pump
+            sub = w.context()
+            Menu.addPourOptions(w.player, sub, can)
+            local pour = entry(sub, "ContextMenu_TLG_PourStation")
+            T.ok(pour ~= nil, "offered")
+            pour.fn()
+            T.eq(#queued, 2); T.eq(requests, 0)
+            a = queued[2]
+            T.eq(a.destination.kind, "pump"); T.eq(a.destination.y, 11); T.eq(a.destination.index, 2)
+            T.ok(a.source == nil, "a pour: the can is the source")
+            T.ok(a.faceObject == pump); T.eq(a.amount, 6); T.eq(a.litres, nil)
+        end)
+        ISTimedActionQueue, ISInventoryPaneContextMenu = saved.queue, saved.pane
+        if TLG.Net then TLG.Net.request = saved.request end
+        if not ok then error(err, 0) end
+    end)
+end)

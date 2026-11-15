@@ -179,6 +179,10 @@ also offers, depending on what is near you:
   that holds fuel, when the can has room. The game itself has no way to
   empty a generator, and a conversion needs its fuel system drained.
 
+All four take time, the same for each litre: your character holds the
+can and faces the tank, the pump or the generator until the fuel has
+moved. Walking away stops it with nothing moved.
+
 These pours move any fuel the mod knows, with its condition, not only
 petrol. If the result would be a blend the engine cannot use, or one that
 would damage it ([Wrong fuel](#wrong-fuel)), nothing is poured and a
@@ -188,11 +192,13 @@ dialog says why; choose **Yes** in it to pour anyway.
 petrol accepted, a blend the engine cannot use refused (nothing moved)
 and poured after **Yes**, dried ethanol accepted without the dialog by a
 converted generator and car; petrol into a diesel Ambulance refused, then
-poured after **Yes**; a generator drained into a can by the request the
-menu sends. On a server, a pour with its result shown to the player.
+poured after **Yes**; a generator's fuel moved into a can by the mod's
+transfer. On a server, a pour with its result shown to the player.
 
-**Not checked in game:** **Pour into the station reservoir**, and the
-menu entry **Drain the generator into this can** itself.
+**Not checked in game:** **Pour into the station reservoir**, and
+the time and look of **Drain the generator into this can**, which now
+takes time; a drain from the menu moved a generator's 2 L in launch 438
+(the entry was run while it moved the fuel at once: launches 387–388).
 
 ## Engines
 

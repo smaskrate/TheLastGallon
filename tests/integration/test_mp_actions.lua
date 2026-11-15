@@ -99,6 +99,34 @@ T.case("integration: a multiplayer pour's result reaches the player's onDone", f
         local solo = ISTLGPourFuel:new(player, item, dest, nil, false, onDone)
         solo:complete()
         T.ok(got ~= nil and got.reason == "incompatible", "onDone called"); T.eq(#sent, 1, "nothing sent")
+        T.eq(dispatched.source.kind, "item"); T.eq(dispatched.source.id, 42); T.ok(dispatched.destination == dest)
+        T.eq(dispatched.amount, 3, "a pour asks for what the can holds")
+        T.eq(solo:getDuration(), 75, "25 a litre")
+        T.eq(solo:isValid(), true)
+        -- A pour into a station's reservoir is the same action with the
+        -- pump as its destination (R13).
+        local pump = { kind = "pump", x = 5, y = 6, z = 0, index = 2 }
+        local station = ISTLGPourFuel:new(player, item, pump, nil, false, onDone)
+        station:complete()
+        T.ok(dispatched.destination == pump and dispatched.source.id == 42, "the can into the pump")
+        -- A drain (R13) runs the other way: the source's fuel into the can,
+        -- asked for the can's room, and as long as the litres it will move.
+        fc.getFreeCapacity = function() return 8 end
+        local genRef = { kind = "generator", x = 1, y = 2, z = 0, index = 3 }
+        local gen = { getFuel = function() return 2 end }
+        local drain = ISTLGPourFuel:new(player, item, nil, gen, false, onDone, nil, genRef)
+        T.eq(drain.amount, 8, "the can's room"); T.eq(drain.litres, 2, "what the generator holds, when less")
+        T.eq(drain:getDuration(), 50); T.eq(drain:isValid(), true)
+        drain:complete()
+        T.ok(dispatched.source == genRef, "the generator is the source")
+        T.eq(dispatched.destination.kind, "item"); T.eq(dispatched.destination.id, 42); T.eq(dispatched.amount, 8)
+        gen.getFuel = function() return 30 end
+        T.eq(ISTLGPourFuel:new(player, item, nil, gen, false, onDone, nil, genRef):getDuration(), 200, "the can's room, 8 L")
+        T.eq(ISTLGPourFuel:new(player, item, nil, nil, false, onDone, nil, genRef).litres, 8, "no object to read: the room")
+        fc.getFreeCapacity = function() return 0.01 end
+        T.eq(drain:isValid(), false, "a full can takes nothing")
+        fc.isEmpty = function() return true end
+        T.eq(solo:isValid(), false, "an empty can pours nothing")
     end)
     for _, k in ipairs(names) do _G[k] = saved[k] end
     TLG.Net = savedNet

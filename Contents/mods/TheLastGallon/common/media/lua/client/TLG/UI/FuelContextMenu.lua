@@ -190,7 +190,7 @@ end
 -- Pouring into engines goes through the authoritative transfer so that any
 -- fuel (not only Petrol) and its condition reach the tank, and incompatible
 -- blends need an explicit experimental confirmation.
-local function queuePour(player, item, destination, face, experimental)
+local function queuePour(player, item, destination, face, experimental, source)
     local world = item:getWorldItem()
     if world then
         ISWorldObjectContextMenu.onGrabWItem({}, world, player:getPlayerNum())
@@ -205,14 +205,14 @@ local function queuePour(player, item, destination, face, experimental)
             local w, h = 440, 260
             local dlg = ISModalDialog:new(getCore():getScreenWidth() / 2 - w / 2, getCore():getScreenHeight() / 2 - h / 2,
                 w, h, text, true, nil, function(_, button)
-                    if button.internal == "YES" then queuePour(player, item, destination, face, true) end
+                    if button.internal == "YES" then queuePour(player, item, destination, face, true, source) end
                 end)
             dlg:initialise()
             dlg:addToUIManager()
         else
             Say.refusal(Fmt.failure(reply))
         end
-    end))
+    end, nil, source))
 end
 
 local function nearbyVehicleTank(player)
@@ -337,9 +337,10 @@ function Menu.addDrainOptions(player, sub, item)
     local free = Containers.fluidOf(item, "item"):getFreeCapacity()
     local g = nearbyGenerator(player)
     if g and free > 0.05 and g:getFuel() > 0 and not holdsGas(g) then
+        -- A timed action, as the pours are (R13): the can in hand, the
+        -- generator faced, as long a litre as a pour.
         sub:addOption(getText("ContextMenu_TLG_DrainGenerator"), nil, function()
-            request("transfer", { source = TLG.Authority.Resolver.refForObject(g, "generator"),
-                destination = itemRef(item), amount = free })
+            queuePour(player, item, nil, g, false, TLG.Authority.Resolver.refForObject(g, "generator"))
         end)
     end
 end
@@ -348,10 +349,9 @@ function Menu.addPourOptions(player, sub, item)
     local pump = nearbyPump(player)
     if pump then
         -- Restored station: the reservoir becomes player-run storage.
+        -- A timed action, as the pours into engines are (R13).
         sub:addOption(getText("ContextMenu_TLG_PourStation"), nil, function()
-            request("transfer", { source = itemRef(item),
-                destination = TLG.Authority.Resolver.refForObject(pump, "pump"),
-                amount = Containers.fluidOf(item, "item"):getAmount() })
+            queuePour(player, item, TLG.Authority.Resolver.refForObject(pump, "pump"), pump, false)
         end)
     end
     local v = nearbyVehicleTank(player)

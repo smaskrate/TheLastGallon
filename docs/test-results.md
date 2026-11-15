@@ -13,6 +13,7 @@ runtime tests.
 | RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–435: `docs-shots`, `italian`, `controls`, `full`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
+| RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal shown after the action, both on a server, where the action's new last field (`source`) is sent to the server's copy and the pump goes as the object faced, as the game's own **Take Fuel** sends one. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438) | The `gas-player` mode waits for the drain and reads the litres; no mode clicks the station pour |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
@@ -9290,3 +9291,31 @@ Evidence:
 photographs in [evidence/run436](evidence/run436);
 [run 437](evidence/2026-11-15_rt-sp_harness_run437_manual_pages_italian_42.22.2.txt),
 photographs in [evidence/run437](evidence/run437).
+
+## 2026-11-15 — RT-SP launch 438 (the timed drain of a generator, UX review R13; the gas-player mode after R12)
+
+Branch `feature/gas-generators` after `d9c1787`, the R13 change not yet
+committed, 42.22.2. Command: `tools/run-sp-harness.ps1 -Mode gas-player`,
+the mode of launches 387–388, unchanged. **15/0.**
+
+* **Drain the generator into this can**, clicked in the can's Fuel menu,
+  queued an action instead of answering at once (the click's result reads
+  "queued"). When the character's actions were done the generator's tank
+  had gone from 2 L to 0 and the can held 2 L. The conversion then went
+  on to "Converted and commissioned".
+* The rest went as in launches 387–388: the handbook read, the gasifier
+  made, put down, loaded with 30 kg and lit from the right-click menu
+  under its new name, **Wood Gasifier (The Last Gallon)** (R12), and the
+  generator run 3 game hours on 0.128 Nm³ without a stop.
+
+The console holds no exception and no warning or error of the mod. During
+the run the owner clicked in the game's window by mistake and thought an
+action was cancelled; no check failed.
+
+Not run: how long the drain takes and how it looks (the mode waits for
+the action and reads the litres; it does not time or photograph it); a
+drain stopped by walking away; a refusal after the action; **Pour into
+the station reservoir**, which no mode clicks; a server.
+
+Evidence:
+[run 438](evidence/2026-11-15_rt-sp_harness_run438_gas_player_timed_drain_42.22.2.txt).

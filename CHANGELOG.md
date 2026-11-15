@@ -6,6 +6,13 @@ The gas generator, propane and the wood gasifier themselves (D-040) are
 not listed here yet; the entries below are the changes to menus, texts
 and instructions.
 
+* Changed: **Pour into the station reservoir** and **Drain the generator
+  into this can** take time, as the pours into a vehicle and a generator
+  do: the can in hand, the pump or generator faced, the same time for
+  each litre. Before, both moved the fuel at once. A drain lasts as long
+  as the litres it will move, the can's room or what the generator holds.
+  In single player a drain from the menu moved a generator's 2 L (launch
+  438); its time and look, and the station pour, are not run in game.
 * New: biodiesel and gas have instructions in the game. The Field
   Manual's menu has **Read: Biodiesel** and **Read: Gas generators**,
   each a page like the manual's own: the five machines, a batch step by
