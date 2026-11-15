@@ -9512,14 +9512,15 @@ RT.U.new = { name = "rtu_new_content", timeout = 1200, fn = function(ctx, ticks)
     if not ctx.placed then
         local missing = {}
         for _, t in ipairs({ "TLG.WoodRetort", "TLG.AshBarrel", "TLG.LyeLeacher", "TLG.BiodieselReactor", "TLG.BiodieselWashTank",
-            "TLG.DieselGenerator" }) do
+            "TLG.DieselGenerator", "TLG.Gasifier", "TLG.WoodGasHandbook" }) do
             if instanceItem(t) == nil then missing[#missing + 1] = t end
         end
         for _, f in ipairs({ "TLG_Biodiesel", "TLG_Methanol", "TLG_PlantOil" }) do
             if Fluid.Get(f) == nil then missing[#missing + 1] = f end
         end
         R:check("RTU.this_versions_items_exist", function()
-            return #missing == 0, #missing == 0 and "the five biodiesel machines, the Diesel Generator, biodiesel, methanol and plant oil"
+            return #missing == 0, #missing == 0 and ("the five biodiesel machines, the Diesel Generator, the Wood Gasifier,"
+                .. " the Wood Gas Handbook, biodiesel, methanol and plant oil")
                 or ("missing: " .. table.concat(missing, ", "))
         end)
         local spots = RT.M.spots(1)
