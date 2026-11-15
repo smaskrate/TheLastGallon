@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.0 (2026-11-15)
 
 * Gas generators. A generator converted to gas runs on propane from the
   game's propane tanks or on wood gas from a new machine, the Wood

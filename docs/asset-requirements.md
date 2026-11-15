@@ -15,8 +15,7 @@ stand-ins seen in run 66, none was checked rendering in game.
 Tiers: **A** the shipped ethanol loop (needed for release gates 9 and 13),
 **B** biodiesel, wood gas, biogas and propane (domain only, not wired,
 except the biodiesel chain's five machines and the diesel generator, which are items since
-0.2.0, D-036, and the wood gasifier, an item on `feature/gas-generators` for
-0.5.0, not released, D-040),
+0.2.0, D-036, and the wood gasifier, an item since 0.5.0, D-040),
 **C** electricity, further vehicle conversions and stations.
 
 ## State of the shipped assets (tier A)
@@ -280,8 +279,8 @@ sprite on a second client or a dedicated server.
 
 Launch 243.
 
-The wood gasifier (`TLG.Gasifier`, D-040) is on `feature/gas-generators`
-for 0.5.0 and not released. Its model was supplied by the owner on
+The wood gasifier (`TLG.Gasifier`, D-040) is an item since 0.5.0. Its
+model was supplied by the owner on
 2026-11-15 and is kept as delivered in `art-src/woodgasifier`, with a
 `PROVENANCE.md`; it ships as the biodiesel machines' do. It is an FBX of
 873 triangles with a 512×512 texture: a green steel drum with a lid and
@@ -394,12 +393,12 @@ Release art (audit R01–R04):
   Stone's art like it. Not looked at in the game's interface.
 * The wood gasifier's icon, `TLG_Gasifier` (32×32; audit I18), is made:
   rendered since 2026-11-15 by `tools/make-model-icons.ps1` from the
-  supplied model, from the front. Not released; not looked at in the
+  supplied model, from the front; since 0.5.0. Not looked at in the
   game's interface (launch 448 hid it).
 * Icons for the two handbooks (32×32; audit I17), both made from the field
   manual's icon: `TLG_BiodieselHandbook` (released in 0.4.0) with its
   colour channels exchanged and scaled (`NOTICE.md`), and
-  `TLG_WoodGasHandbook` (not released) with a slate-blue cover and a red
+  `TLG_WoodGasHandbook` (since 0.5.0) with a slate-blue cover and a red
   badge. On the ground both use the manual's floor model, in the hand the
   game's Magazine model. Neither is recorded as looked at in the game's
   interface.
@@ -470,7 +469,7 @@ the first to cut.
 | Tier | New 3D models | Icons | UI symbols | Original sounds | Release art |
 | --- | --- | --- | --- | --- | --- |
 | A | 9, all made: 5 supplied, 4 the mod's own | 9, all made: the vessel's drawn, 8 rendered | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster and icon made; 13 Workshop screenshots cut, not uploaded; banner not made |
-| B | 15: 6 made, all supplied by the owner: 5 for the biodiesel chain (D-036) and the gasifier's (D-040, not released); of the other 9, 2 blocked on G11, 1 optional. Also 1 tile sprite, the diesel generator's, made from vanilla's (recoloured) | 18: 9 made: 6 rendered from the supplied models, the gasifier's among them, the two handbooks' from the manual's icon, the diesel generator's from vanilla's (recoloured) | 2 badges | about 10 | — |
+| B | 15: 6 made, all supplied by the owner: 5 for the biodiesel chain (D-036) and the gasifier's (D-040, since 0.5.0); of the other 9, 2 blocked on G11, 1 optional. Also 1 tile sprite, the diesel generator's, made from vanilla's (recoloured) | 18: 9 made: 6 rendered from the supplied models, the gasifier's among them, the two handbooks' from the manual's icon, the diesel generator's from vanilla's (recoloured) | 2 badges | about 10 | — |
 | C | 13 (1 blocked on G11, 1 optional) | 9 | about 5 | about 9 | — |
 
 Not needed (spec §20, §22): new maps, character models or animations

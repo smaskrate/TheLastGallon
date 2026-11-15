@@ -6,7 +6,8 @@ A mod for Project Zomboid **Build 42.22.2**. Fuel ages, takes up water and
 gathers dirt; engines start harder, lose power and wear on poor fuel; you
 can ferment, distil and dry your own ethanol and convert a generator or a
 car to run on it, or make biodiesel from wood and cooking oil for diesel
-engines. The current version is 0.4.3, of 2026-11-13
+engines, or run a converted generator on propane or on wood gas from a
+Wood Gasifier. The current version is 0.5.0, of 2026-11-15
 ([CHANGELOG.md](CHANGELOG.md)). The specification it was built from is
 [The_Last_Gallon_Implementation_Plan.md](The_Last_Gallon_Implementation_Plan.md).
 

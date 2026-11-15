@@ -356,13 +356,13 @@ its SHA-256 in `dist/TheLastGallon-0.4.3.sha256`, and its `mod.info`
 reads 0.4.3 (gate 12). Open: the game loading the mod from that
 download, and how the Workshop page shows the change note.
 
-## Version 0.5.0 (not released)
+## Version 0.5.0 (2026-11-15)
 
-Version 0.5.0 is on the branch `feature/gas-generators`, with 0.4.3
-merged in; `main` is 0.4.3. The branch's `mod.info` and `TLG/Core.lua`
-still read 0.4.3, no package has been built and nothing has been
-uploaded. What it adds over 0.4.3, as the shipped changelog's
-Unreleased section lists it:
+Version 0.5.0 is the release commit on `main`, which took the branch
+`feature/gas-generators` by fast-forward; its `mod.info` and
+`TLG/Core.lua` read 0.5.0, and `mod.info`'s description names the gas.
+Nothing has been uploaded. What it adds over 0.4.3, as the shipped
+changelog's 0.5.0 section lists it:
 
 * Gas generators, the third pathway (D-039, D-040, D-041): **Start: Gas
   generator conversion** offered again, propane through **Gas (The Last
