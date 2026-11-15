@@ -230,11 +230,26 @@ in progress or finished, and the mod leaves it as it is: **Hand over
 parts** and **Work on it** still apply to one in progress. **Cancel the
 project** ends it; the parts of stages not begun come back in full,
 those of a begun stage three quarters, rounded down for each item. A
-finished one leaves a generator that takes gas only, which nothing gives
-it yet; **Remove the conversion** gives back the stock engine and half of
+finished one leaves a generator that takes gas only, which nothing gave
+it before 0.5.0; **Remove the conversion** gives back the stock engine and half of
 the parts, rounded down. The domain test cancels and removes a gas
 project (`tests/domain/test_conversions.lua`). None of this was run in
 game with a gas project, and no save holding one was loaded with 0.4.2.
+
+### The gas conversion is offered again (0.5.0, D-040)
+
+From 0.5.0 the Workshop menu lists **Start: Gas generator conversion**
+again, and a generator converted to gas runs on propane from a tank or on
+wood gas from a Wood Gasifier. Two records are new, each written by its
+first use: a generator's gas feed (`tlgGas`) and a gasifier's state
+(`tlgGasifier`), both in the table above. A save from an earlier version
+has neither and needs no change. A gas conversion finished in a save from
+0.1.0 to 0.4.1 may leave a generator that still holds petrol: its liquid
+paths stay open, and **Connect a propane tank** refuses it until it is
+drained (`not_drained`; on a fuel can, **Fuel (The Last Gallon)** >
+**Drain the generator into this can**), as D-040 rules. Not run in game:
+a save holding such a generator, loaded with 0.5.0; wood gas fed to one
+that still holds petrol.
 
 ## Settings changes
 Changing **Fuel ageing speed** appends a dated entry to `balanceHistory`;
