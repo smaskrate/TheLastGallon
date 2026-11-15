@@ -295,8 +295,8 @@ the front. It replaced the shape-built placeholder the mod made on
 The game drew it whole with its texture on the ground beside a vanilla
 generator (launch 448): the lid is about level with the character's
 shoulders and higher than the placeholder's drum was in launch 388. This
-is read from the photograph, not measured, and whether the size is right
-is for the owner to judge. NOT RUN: a turned gasifier, its icon seen in
+is read from the photograph, not measured. The owner judged the size
+right on 2026-11-15 ("Size is right"). NOT RUN: a turned gasifier, its icon seen in
 the game's interface, a server.
 
 ![The wood gasifier on the ground at zoom 0.5, right of the character and a vanilla generator: a green drum with a lid and an ash door, a pipe from its side into a grey filter drum, both on a steel frame with four feet](evidence/run448/tlg_rtgy_zoom_05.png)

@@ -1700,8 +1700,8 @@ their replacement.
       texture, which replace the shape-built one (provenance in
       `art-src/woodgasifier`, as for D-036's machines); its icon is
       rendered from it. Scale 0.8: the drum about 0.6 m across, the whole
-      1.2 m wide. Seen in game in launch 448; the size is the owner's to
-      judge.
+      1.2 m wide. Seen in game in launch 448; the owner judged the size
+      right ("Size is right", 2026-11-15).
   * Building the gasifier asks a Welding level and a learned recipe, as
     the biodiesel machines do since 0.4.0 (D-038). The level is left to
     the implementation, from the game's own welded recipes.
