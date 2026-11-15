@@ -393,7 +393,7 @@ Where it stands against the gates:
 | 9 | PARTIAL | The Wood Gasifier's floor model is the one the owner supplied, with its provenance in `art-src/woodgasifier`, and its icon is rendered from it (launch 448); the Wood Gas Handbook's icon is made from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card (launch 444) and picture 12 of the gasifier (launch 448) are not uploaded |
 | 10 | PARTIAL | All 532 Italian strings as shipped, among them "It is full: there is no room for more fuel." and the feminine state words, and the Status card read in Italian, its retorts' line ending "Pronta" (launches 445, 517; D-045); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. "It is full: …" said on a server's client in English (launch 473). A gas generator's Generator Info line names propane and wood gas, no biogas (launch 518; D-045). The package's Workshop text (`tools/package.ps1`) has a gas section, and its "Not in this version" names biogas and electrical networks (D-045). Open: "It is full: …" on screen in Italian; the upload folder's `workshop.txt`, the owner's, still has the 0.4.3 text |
 | 11 | PARTIAL | Single player's whole performance mode passed its 53 budgets with the gas (launches 405–407); the gas's cost on a server with one client (launches 410–411). Open: the mode since the nearest-first order; several Status cards open and what their refreshes cost; several clients |
-| 12 | PARTIAL | The 0.5.0 package is the zip of `d6f0c9b` on `main` (189 files, 8,628,223 bytes, SHA-256 `88B8E943…7BE016C8`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Open: installed clean and played; a 0.4.3 save continued with it |
+| 12 | PARTIAL | The 0.5.0 package is the zip of `b686cce` on `main` (189 files, 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Open: installed clean and played; a 0.4.3 save continued with it |
 | 13 | PARTIAL | The Wood Gasifier's model is the owner's, supplied on 2026-11-15 (D-039 amendment), drawn whole on the floor in launch 448; its size, 1.2 m wide, the owner judged right. Open: one look for every state, cold, warming and running not drawn apart; its icon not looked at in the game's interface; a turned gasifier; its look on a server |
 
 Of the single-player modes, the full run (launch 435: 106/0, 14/0),
@@ -432,7 +432,7 @@ menu names the engine now that its copy of the world record carries
 
 Before release, in this order:
 
-1. Install the zip of `d6f0c9b` clean and play it: the full run, the gas
+1. Install the zip of `b686cce` clean and play it: the full run, the gas
    modes, the gas server cases and `ux`; continue a save made with the
    0.4.3 zip with it.
 2. On the owner's word, put the package in the upload folder and give
@@ -448,7 +448,9 @@ Done on 2026-11-15, on the owner's word ("Yes, go ahead"): `mod.info`,
 pushed). A first package, the zip of `121bab9` (`616A0327…59ED2CE`), was
 built and checked; its `migrations.md` still said nothing gives a gas
 generator gas, so it was built again from `d6f0c9b`, which adds the 0.5.0
-note, and that zip is the package above. The package's test run
+note (`88B8E943…7BE016C8`). The owner then chose a new wording for
+`mod.info`'s description (D-045), and the zip of `b686cce` is the package
+above. The package's test run
 prints five of the mod's `load preview` error lines, each leaving its
 entry without a tooltip, as `LoadPreview.attach` intends, and every case
 passes: four from `test_gasifier_menu.lua`'s "the gasifier menu offers
