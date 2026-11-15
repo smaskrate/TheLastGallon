@@ -401,12 +401,12 @@ Of the single-player modes, the full run (launch 435: 106/0, 14/0),
 (438, 448), `gas-wood` (439), `manual` and `manual-italian` (436–437),
 `pickup`, `pot-still`, `biodiesel`, `gas-propane`, `gas-sleep`,
 `gas-moves`, `context-menus`, `context-menus-zoom`, `fireplace` and
-`wrong-fuel` (449–460, all passed) have run since the machines' menu
-entries took their names. Thirteen others have not run since: the three
-still modes, `realtime`, `winter`,
-`fireplace-reload`, `fires`, `successor`, `knowledge`, `knowledge-save`,
-`transfer-liquid`, `diesel-pumps` and `wrong-fuel-more`, last run between
-launches 13 and 322.
+`wrong-fuel` (449–460), and the three still modes, `realtime`,
+`successor`, `knowledge`, `knowledge-save`, `winter`, `fireplace-reload`,
+`fires`, `transfer-liquid`, `diesel-pumps` and `wrong-fuel-more`
+(478–490), all passed, have run since the machines' menu entries took
+their names. The last thirteen had not run since launches 13 to 322; each
+passed as many checks as then.
 
 The Fuel menu's pours and drain take the pump or generator nearest the
 character (D-044, the owner's choice after launch 450, where the first
@@ -419,9 +419,8 @@ menu names the engine now that its copy of the world record carries
 
 Before release, in this order:
 
-1. Run the single-player modes and the server cases still not run since
-   the menus' names and replies changed (the thirteen modes above; gate
-   5's full run and other cases).
+1. Run the server cases still not run since the menus' names and
+   replies changed (gate 5's full run and other cases).
 2. Settle the open texts of gate 10: the package's Workshop text, the
    Generator Info line's biogas, the Italian state word.
 3. Give `mod.info`, `Core.lua` and the changelog 0.5.0, merge the branch

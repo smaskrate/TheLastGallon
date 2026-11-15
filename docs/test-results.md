@@ -10,10 +10,10 @@ runtime tests.
 
 | Area | Reason |
 | --- | --- |
-| RT-SP and RT-MP: with a machine's menu entry named after it (run since: launches 432–435, 438, 439, 443–445, 448 and 449–472, among them `pickup`, `pot-still`, `biodiesel`, the gas modes, the right-click modes, `fireplace`, `wrong-fuel` and the server's menu, gas and fuel cases), the single-player modes `still-pickup`, `still-save`, `still-controls`, `realtime`, `winter`, `fireplace-reload`, `fires`, `successor`, `knowledge`, `knowledge-save`, `transfer-liquid`, `diesel-pumps` and `wrong-fuel-more`; the server's full run and its cases `carry`, `machines`, `stills`, `conversion`, `carconv`, `effects`, `timers`, `death`, `biodiesel`, `audit`, the handbook cases, `gasfeed`, `gastimers` and `gasshare`; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Not launched since the change: each last ran between launches 13 and 412 |
+| RT-SP and RT-MP: with a machine's menu entry named after it (run since: launches 432–435, 438, 439, 443–445, 448, 449–477 and 478–490: the single-player modes the 0.5.0 section of `release-checklist.md` lists, and the server's menu, gas and fuel cases), the server's full run and its cases `carry`, `machines`, `stills`, `conversion`, `carconv`, `effects`, `timers`, `death`, `biodiesel`, `audit`, the handbook cases, `gasfeed`, `gastimers` and `gasshare`; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Not launched since the change: each last ran between launches 13 and 412 |
 | RT-SP and RT-MP: the manual's biodiesel and gas pages (UX review R7; the entries, the pages and the larger-print panel in single player, English and Italian: launches 436 and 437): the **Read: …** entries greyed in the dark or asleep and absent for a character who cannot read, a controller, the pages on a server's client; the biodiesel chain and a gas generator played from the in-game texts alone, the review's own check for R7 (offline: `test_manual_menu.lua`). The guide's `workshop-menu.jpg` is of 0.4.3 and lacks **Start: Gas generator conversion** | The harness opens the pages in the light, awake, with the mouse; the play-through is the owner's |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
-| RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443; in Italian on a biodiesel reactor with its source lines, closed when the reactor was lifted: launch 445; on a server's client, a reactor's line for its leacher changed by the card's own refresh at speed 1 after ten game minutes, closed six tiles away and by Grab: launch 446): dragging it and its cross with the mouse, the wash tank's line for its reactor, several cards at once and their cost (each refresh writes the record and on a server sends it to the clients; not measured), a second player's card in split screen, a second client on a server (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture; `controls`, `docs-shots`, `italian`, `pickup`, `pot-still` and `biodiesel` were run since (launches 443–445, 449, 452 and 453), `winter`, the three still modes and `fires` were not | The steps are `RT.cardStep` (`controls`), `RT.itCard` (`italian`) and the server case `ux` |
+| RT-SP and RT-MP: a machine's **Status** as a card (UX review, section 5; opened, refreshed at speed 20, closed six tiles away and photographed in English on the pot still: launches 442 and 443; in Italian on a biodiesel reactor with its source lines, closed when the reactor was lifted: launch 445; on a server's client, a reactor's line for its leacher changed by the card's own refresh at speed 1 after ten game minutes, closed six tiles away and by Grab: launch 446): dragging it and its cross with the mouse, the wash tank's line for its reactor, several cards at once and their cost (each refresh writes the record and on a server sends it to the clients; not measured), a second player's card in split screen, a second client on a server (offline only: `test_machine_card.lua`, `test_biodiesel_commands.lua`). Every single-player mode that reads a machine's Status text now reads it from the card through the harness's capture; all of them were run since and passed (`controls`, `docs-shots`, `italian`, `pickup`, `pot-still`, `biodiesel`, the three still modes, `winter` and `fires`: launches 443–445, 449, 452, 453, 478–480, 485 and 487) | The steps are `RT.cardStep` (`controls`), `RT.itCard` (`italian`) and the server case `ux` |
 | RT-SP and RT-MP: the game's speed across the mod's windows and questions (UX review R14; the game's own window left 1 and the mod's left 3 when closed by the OK handler at speed 3: launch 440): a click on OK with the mouse and the speed buttons on screen, the yes/no questions (**Cancel the project**, **Remove the conversion**, a second **Abort batch**, a harmful pour; offline: `test_say.lua`), a paused game, a controller, a server's client | The `controls` mode's step calls the OK button's handler and reads the speed controls |
 | RT-SP and RT-MP: **Gas status** with the hours of gas left (UX review R11; on wood gas the text read and the estimate against the stop, 1 h against 1.97 h: launch 439): the window on a generator on propane and on one never switched on; whether the window (420x220) holds its longest line, in Italian; the estimate after the load changes (offline: `test_gas_feed.lua`, `test_gas_handlers.lua`, `test_gasifier_menu.lua`). The gas page of the manual names this line since; launches 436–437 photographed its earlier sentence | The gas modes read the window's text, not the screen; `gas-propane` (launch 454) does not open the window |
 | RT-SP and RT-MP: **Pour into the station reservoir** and **Drain the generator into this can** as timed actions (UX review R13): the animation with the can in hand, the time taken, a drain stopped by walking away, the refusal looked at on screen after the action, among them "It is full: there is no room for more fuel." from a pump first read above 10,000 L, which that rule makes full (`Stations.read`; offline: `test_fuel_reads.lua`; launch 446 moved nothing into one of 15,208 L; on a server's client the line was said over the character for a pump of 14,307 L: launch 473); the station pour in single player. The drain plays the pour's animation and sound (offline: `test_mp_actions.lua`, `test_tank_menu.lua`; the drain entry queued and the 2 L moved in single player: launch 438; on a server the action's `source` reached the server's copy and 3 L moved: launch 446; on a server the station pour put 2 L into a pump of 5,175 L: launch 447; into an untouched pump of 263 L, and after a take into the same pump again: launch 451). The pours and the drain take the nearest pump or generator (D-044; offline: `test_tank_menu.lua`; on a server, where the first one found is another: launch 477; before D-044, launch 450's pours left their cans and did not reach the case's pump) | `gas-player` (single player) and `ux` (server) click the drain; `ux` clicks the station pour twice from two tiles east of its pump and the drain from two tiles south of its generator |
@@ -9836,3 +9836,51 @@ Evidence:
 [run 475](evidence/2026-11-15_rt-sp_harness_run475_gas_propane_nearest_42.22.2.txt),
 [run 476](evidence/2026-11-15_rt-sp_harness_run476_docs_shots_nearest_42.22.2.txt),
 [run 477](evidence/2026-11-15_rt-mp_harness_run477_ux_nearest_generator_and_pump_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launches 478–490 (the thirteen single-player modes not run since the menus took their machines' names)
+
+Branch `feature/gas-generators` at `06365b3`, 42.22.2, a clean tree. The
+same driver as launches 449–477 ran them one after the other.
+
+| Launch | Mode | Result (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 478 | `still-pickup` | 46/0 | launch 46, 46/0 |
+| 479 | `still-save` | 29/0; after the save 24/0 | launch 48, the same |
+| 480 | `still-controls` | 28/0 | launch 50, 28/0 |
+| 481 | `realtime` | 11/0 | launch 14, 11/0 |
+| 482 | `successor` | 18/0 | launch 202, 18/0 |
+| 483 | `knowledge` | 10/0 | launch 201, 10/0 |
+| 484 | `knowledge-save` | 7/0; after the save 9/0 | launch 207, the same |
+| 485 | `winter` | 25/0 | launch 19, 25/0 |
+| 486 | `fireplace-reload` | 8/0; after the save 20/0 | launch 25, the same |
+| 487 | `fires` | 39/0 | launch 35, 39/0 |
+| 488 | `transfer-liquid` | 40/0 | launch 215, 40/0 |
+| 489 | `diesel-pumps` | 18/0 | launch 265, 18/0 |
+| 490 | `wrong-fuel-more` | 39/0 | launch 320, 39/0 |
+
+No step timed out or was skipped. The console of each launch from 484 on
+was read before the next launch: 14 to 26 of the mod's info lines and no
+warning, error or exception. For launches 478–483 the driver counted no
+warning, error or exception, without noting the console it read.
+
+With these, every single-player mode that the 0.5.0 section of
+`release-checklist.md` listed as not run since the menus took their
+machines' names has run and passed. Not run since that change: the
+server's full run and its cases `carry`, `machines`, `stills`,
+`conversion`, `carconv`, `effects`, `timers`, `death`, `biodiesel`,
+`audit`, the handbook cases, `gasfeed`, `gastimers` and `gasshare`.
+
+Evidence:
+[run 478](evidence/2026-11-15_rt-sp_harness_run478_still_pickup_after_r12_42.22.2.txt),
+[run 479](evidence/2026-11-15_rt-sp_harness_run479_still_save_after_r12_42.22.2.txt),
+[run 480](evidence/2026-11-15_rt-sp_harness_run480_still_controls_after_r12_42.22.2.txt),
+[run 481](evidence/2026-11-15_rt-sp_harness_run481_realtime_after_r12_42.22.2.txt),
+[run 482](evidence/2026-11-15_rt-sp_harness_run482_successor_after_r12_42.22.2.txt),
+[run 483](evidence/2026-11-15_rt-sp_harness_run483_knowledge_after_r12_42.22.2.txt),
+[run 484](evidence/2026-11-15_rt-sp_harness_run484_knowledge_save_after_r12_42.22.2.txt),
+[run 485](evidence/2026-11-15_rt-sp_harness_run485_winter_after_r12_42.22.2.txt),
+[run 486](evidence/2026-11-15_rt-sp_harness_run486_fireplace_reload_after_r12_42.22.2.txt),
+[run 487](evidence/2026-11-15_rt-sp_harness_run487_fires_after_r12_42.22.2.txt),
+[run 488](evidence/2026-11-15_rt-sp_harness_run488_transfer_liquid_after_r12_42.22.2.txt),
+[run 489](evidence/2026-11-15_rt-sp_harness_run489_diesel_pumps_after_r12_42.22.2.txt),
+[run 490](evidence/2026-11-15_rt-sp_harness_run490_wrong_fuel_more_after_r12_42.22.2.txt).
