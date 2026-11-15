@@ -256,7 +256,7 @@ if MP.only == "machinemenu" then
         local function submenu()
             local c = ISContextMenu.get(0, 100, 100)
             TLG.UI.MachineMenu.fill(0, c, { vessel() })
-            local root = c:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+            local root = vessel() and c:getOptionFromName(TLG.UI.MachineMenu.rootTitle(vessel()))
             local sub = root and root.subOption and c:getSubMenu(root.subOption)
             c:setVisible(false)
             return sub
@@ -2263,16 +2263,17 @@ if MP.only == "machinemenus" or MP.only == "machinemenus2" then
             end
             return player():getInventory():getItemWithIDRecursiv(m.id)
         end
-        local function submenu(fill, rootKey)
+        local function submenu(fill, rootKey, rootText)
             local c = ISContextMenu.get(0, 100, 100)
             fill(c)
-            local root = c:getOptionFromName(getText(rootKey))
+            local root = c:getOptionFromName(rootText or getText(rootKey))
             local sub = root and root.subOption and c:getSubMenu(root.subOption)
             c:setVisible(false)
             return sub
         end
         local function machineSub(key)
-            return submenu(function(c) TLG.UI.MachineMenu.fill(0, c, { itemOf(key) }) end, "ContextMenu_TLG_Machine")
+            return submenu(function(c) TLG.UI.MachineMenu.fill(0, c, { itemOf(key) }) end, nil,
+                itemOf(key) and TLG.UI.MachineMenu.rootTitle(itemOf(key)) or "?")
         end
         local function offered(key)
             local sub, out = machineSub(key), {}
@@ -5375,6 +5376,13 @@ local MNC = (function()
         end
         return false
     end
+    -- A machine's entry, whichever machine: each is named after its item.
+    local function anyMachine(menu)
+        for fullType in pairs(TLG.Integration.Machines.ITEMS) do
+            if entry(menu, TLG.UI.MachineMenu.rootTitle(instanceItem(fullType))) then return true end
+        end
+        return false
+    end
     -- The game's menu for a click at (x, y) on `objects`, the cursor at (mx, my).
     local function menuAt(objects, x, y, mx, my)
         local realX, realY = getMouseXScaled, getMouseYScaled
@@ -5383,7 +5391,7 @@ local MNC = (function()
         getMouseXScaled, getMouseYScaled = realX, realY
         local menu = getPlayerContextMenu(0)
         local r = { ok = ok, err = err, fuel = entry(menu, getText("ContextMenu_TLG_Fuel")),
-            machine = entry(menu, getText("ContextMenu_TLG_Machine")), grab = entry(menu, getText("ContextMenu_Grab")),
+            machine = anyMachine(menu), grab = entry(menu, getText("ContextMenu_Grab")),
             gen = entry(menu, getText("ContextMenu_TLG_ConvGenerator")), car = entry(menu, getText("ContextMenu_TLG_ConvVehicle")) }
         pcall(function() menu:hideAndChildren() end)
         return r

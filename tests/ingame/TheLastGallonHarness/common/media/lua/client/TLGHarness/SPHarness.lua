@@ -1421,7 +1421,7 @@ local function menuClick(label, fill, rootText, text)
 end
 
 local function machineClick(label, item, key)
-    return menuClick(label, function(c) TLG.UI.MachineMenu.fill(0, c, { item }) end, getText("ContextMenu_TLG_Machine"),
+    return menuClick(label, function(c) TLG.UI.MachineMenu.fill(0, c, { item }) end, TLG.UI.MachineMenu.rootTitle(item),
         getText(key))
 end
 
@@ -4463,7 +4463,7 @@ end
 function RT.P.menuWhileCarried(item)
     local context = ISContextMenu.get(0, 100, 100)
     TLG.UI.MachineMenu.fill(0, context, { item })
-    local root = context:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+    local root = context:getOptionFromName(TLG.UI.MachineMenu.rootTitle(item))
     local sub = root and root.subOption and context:getSubMenu(root.subOption)
     local status = sub and sub:getOptionFromName(getText("ContextMenu_TLG_MachineStatus"))
     local place = sub and sub:getOptionFromName(getText("ContextMenu_TLG_PlaceFirst"))
@@ -5562,7 +5562,7 @@ function RT.C.offered(i) return RT.menuOffered(RT.C.items[i]) end
 function RT.menuOffered(item)
     local context = ISContextMenu.get(0, 100, 100)
     TLG.UI.MachineMenu.fill(0, context, { item })
-    local root = context:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+    local root = context:getOptionFromName(TLG.UI.MachineMenu.rootTitle(item))
     local sub = root and root.subOption and context:getSubMenu(root.subOption)
     local out = {}
     for j = 1, (sub and sub.numOptions or 1) - 1 do
@@ -5896,7 +5896,7 @@ RT.RP = {}
 function RT.RP.entry(item)
     local context = ISContextMenu.get(0, 100, 100)
     TLG.UI.MachineMenu.fill(0, context, { item })
-    local root = context:getOptionFromName(getText("ContextMenu_TLG_Machine"))
+    local root = context:getOptionFromName(TLG.UI.MachineMenu.rootTitle(item))
     local sub = root and root.subOption and context:getSubMenu(root.subOption)
     local o = sub and sub:getOptionFromName(getText("ContextMenu_TLG_Repair"))
     context:setVisible(false)
@@ -15024,7 +15024,7 @@ function RT.DS.menuShot(spec)
             D.console(false)
             D.windows(false)
             local x = spec.x or D.x
-            ctx.root = getText(spec.rootKey)
+            ctx.root = spec.root and spec.root() or getText(spec.rootKey)
             ctx.how = "the game's right-click builder"
             local ok, err = D.asPlayer(function() spec.build(x, D.y) end)
             ctx.menu = getPlayerContextMenu(0)
@@ -15332,9 +15332,9 @@ RT.DS.toVessel = { name = "rtds_to_vessel", timeout = 300, fn = function(ctx, ti
     return ticks >= 40 or nil
 end }
 
-RT.DS.machineMenu = RT.DS.menuShot({ name = "machine_menu", rootKey = "ContextMenu_TLG_Machine",
+RT.DS.machineMenu = RT.DS.menuShot({ name = "machine_menu", root = function() return TLG.UI.MachineMenu.rootTitle(RT.DS.vessel) end,
     build = function(x, y)
-        local root = getText("ContextMenu_TLG_Machine")
+        local root = TLG.UI.MachineMenu.rootTitle(RT.DS.vessel)
         local world = RT.DS.vessel:getWorldItem()
         R:check("RTDS.machine_world_menu", function()
             local c = ISWorldObjectContextMenu.createMenu(0, { world }, x, y, false)
@@ -15347,7 +15347,7 @@ RT.DS.machineMenu = RT.DS.menuShot({ name = "machine_menu", rootKey = "ContextMe
                 R:check("RTDS.floor_menu_" .. fullType .. "_" .. tostring(stacked), function()
                     local entry = stacked and { items = { item, item } } or item
                     local c = ISInventoryPaneContextMenu.createMenu(0, false, { entry }, x, y)
-                    return c ~= nil and RT.DS.index(c, root) ~= nil, "floor inventory right-click builder"
+                    return c ~= nil and RT.DS.index(c, TLG.UI.MachineMenu.rootTitle(item)) ~= nil, "floor inventory right-click builder"
                 end)
             end
             TLG.Integration.Machines.liftFromGround(item)
@@ -16049,7 +16049,7 @@ RT.itMenus = { name = "rti_menus", timeout = 600, fn = function(ctx, ticks)
     s:AddWorldInventoryItem(item, 0.5, 0.5, 0, false)
     n = #H.dialogs.texts
     local r = menuClick("RTI.status", function(c) TLG.UI.MachineMenu.fill(0, c, { item }) end,
-        I.want.ContextMenu_TLG_Machine or "?", I.want.ContextMenu_TLG_MachineStatus or "?")
+        (string.gsub(I.want.ContextMenu_TLG_MachineRoot or "?", "%%1", item:getDisplayName())), I.want.ContextMenu_TLG_MachineStatus or "?")
     local status = H.dialogs.texts[n + 1]
     closeDialogs()
     R:line("OBS  RTI.machine_menu Status: %s", tostring(status))
@@ -23388,6 +23388,15 @@ function RT.CM.entry(menu, text)
     return false
 end
 
+-- A machine's entry, whichever machine: each is named after its item
+-- (MachineMenu.rootTitle).
+function RT.CM.machine(menu)
+    for fullType in pairs(TLG.Integration.Machines.ITEMS) do
+        if RT.CM.entry(menu, TLG.UI.MachineMenu.rootTitle(instanceItem(fullType))) then return true end
+    end
+    return false
+end
+
 function RT.CM.exact(menu, text)
     for i, o in pairs(menu.options or {}) do
         if type(i) == "number" and i < (menu.numOptions or 1e9) and type(o) == "table" and tostring(o.name) == text then return true end
@@ -23403,7 +23412,7 @@ function RT.CM.menuAt(objects, x, y, mx, my)
     getMouseXScaled, getMouseYScaled = realX, realY
     local menu = getPlayerContextMenu(0)
     local r = { ok = ok, err = err,
-        fuel = RT.CM.entry(menu, getText("ContextMenu_TLG_Fuel")), machine = RT.CM.entry(menu, getText("ContextMenu_TLG_Machine")),
+        fuel = RT.CM.entry(menu, getText("ContextMenu_TLG_Fuel")), machine = RT.CM.machine(menu),
         grab = RT.CM.entry(menu, getText("ContextMenu_Grab")), gen = RT.CM.entry(menu, getText("ContextMenu_TLG_ConvGenerator")),
         car = RT.CM.entry(menu, getText("ContextMenu_TLG_ConvVehicle")),
         -- The game's own entry for a vehicle under the cursor: with the debug

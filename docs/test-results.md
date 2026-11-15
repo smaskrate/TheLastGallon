@@ -10,6 +10,7 @@ runtime tests.
 
 | Area | Reason |
 | --- | --- |
+| RT-SP and RT-MP: with a machine's menu entry named after it (launches 432–434: `docs-shots`, `italian`, `controls`), the other single-player modes that open a machine's menu and every multiplayer case, whose harness lines changed; two machines under one click. The guide's `machine-menu.jpg` still shows "Machine (The Last Gallon)" | Written 2026-11-15, not launched since |
 | RT-SP: an item tooltip under the real pointer in the inventory, the tooltips of 16 of the 18 items on screen and all of them in Italian on screen (the game returns every text as shipped in both languages and draws the Pot Still's and the Fuel Sampling Kit's: launches 426–431) | The harness places the tooltip; it does not move the pointer |
 | RT-SP: **Pour into the station reservoir**; driving another chassis, a converted car or off-road (a standard car is driven on the road: launches 174–176) | Not in the harness yet |
 | RT-SP: the workshop menu's **Cancel the project** and **Remove the conversion** (**Project status**: launches 211–212); the sandbox options screen and the workshop and crafting windows in Italian (every shipped Italian string comes back from the game as shipped: launches 44, 194 and 205) | Not in the harness yet |
@@ -9173,3 +9174,46 @@ Evidence:
 [run 429](evidence/2026-11-15_rt-sp_harness_run429_italian_42.22.2.txt),
 [run 430](evidence/2026-11-15_rt-sp_harness_run430_docs_shots_tooltips_42.22.2.txt),
 [run 431](evidence/2026-11-15_rt-sp_harness_run431_italian_42.22.2.txt).
+
+## 2026-11-15 — RT-SP launches 432–434 (a machine's menu entry named after it)
+
+Branch `feature/gas-generators` after `38bb365`, 42.22.2, the working
+tree with UX review R12: the machine menu's root is the machine's name
+(`MachineMenu.rootTitle`, "%1 (The Last Gallon)") and the gasifier's is
+"Wood Gasifier (The Last Gallon)". Every harness case that opens one of
+these menus finds its root by that name.
+
+| Launch | Mode | Result (pass/fail) |
+| --- | --- | --- |
+| 432 | `docs-shots` | 68/0 |
+| 433 | `italian` | 5/0 |
+| 434 | `controls` | 40/0 |
+
+* Launch 432: the game's right-click builder gives a placed vessel
+  "Equip in Both Hands | Place Item | More | Fermentation Vessel (The
+  Last Gallon)", with Status, Load, Pause and Abort under it. The 18
+  floor-menu checks, two for each of the nine machine types, each find
+  the entry under that type's own name. The wider entry makes the game
+  open the submenu to the left of the menu at the harness's place for it.
+* Launch 433: 503 of 503 strings as shipped; **Stato** is clicked under
+  the root built from the shipped Italian text and the vessel's Italian
+  name.
+* Launch 434: the 40 checks of launch 425, the stills' and the
+  fermenter's entries clicked under their names, the gasifier's under
+  "Wood Gasifier (The Last Gallon)".
+* The consoles hold no warning or error of the mod; the Italian one
+  only the mode's `MissingFormatArgumentException` warnings.
+
+The nine interface cuts of `art-src/workshop` were made again from
+launch 432; `04-machine-menu.jpg` shows the new entry (read by the
+agent).
+
+Not run: the other modes that open a machine's menu (`full`, `pickup`,
+`pot-still`, `biodiesel`, the gas modes, the right-click cases) and
+every multiplayer case, whose harness lines changed too; two machines
+under one click; the guide's `machine-menu.jpg`, still of 2026-11-12.
+
+Evidence:
+[run 432](evidence/2026-11-15_rt-sp_harness_run432_docs_shots_menu_names_42.22.2.txt),
+[run 433](evidence/2026-11-15_rt-sp_harness_run433_italian_menu_names_42.22.2.txt),
+[run 434](evidence/2026-11-15_rt-sp_harness_run434_controls_menu_names_42.22.2.txt).

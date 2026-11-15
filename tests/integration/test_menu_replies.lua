@@ -355,7 +355,8 @@ T.case("integration: the firebox's second entry shows with a plank carried that 
     end
     local square = { getX = function() return 10 end, getY = function() return 20 end, getZ = function() return 0 end }
     local still = { class = "InventoryItem", getFullType = function() return "TLG.PotStill" end,
-        getID = function() return 5 end, getModData = function() return {} end }
+        getID = function() return 5 end, getModData = function() return {} end,
+        getDisplayName = function() return "Pot Still" end }
     still.getWorldItem = function() return { getSquare = function() return square end } end
     local sent, carried = {}, nil
     instanceof = function(value, class) return value.class == class end
@@ -543,7 +544,8 @@ T.case("integration: Abort batch on what an abort kept asks before throwing it a
     local md, sent, asked = {}, {}, {}
     local square = { getX = function() return 10 end, getY = function() return 20 end, getZ = function() return 0 end }
     local still = { class = "InventoryItem", getFullType = function() return "TLG.PotStill" end,
-        getID = function() return 5 end, getModData = function() return md end }
+        getID = function() return 5 end, getModData = function() return md end,
+        getDisplayName = function() return "Pot Still" end }
     still.getWorldItem = function() return { getSquare = function() return square end } end
     instanceof = function(value, class) return value.class == class end
     getText = function(key) return key end

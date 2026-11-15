@@ -22,11 +22,17 @@ local function menuFor(fullType, check)
     end
     local square = { getX = function() return 10 end, getY = function() return 20 end, getZ = function() return 0 end }
     local item = { class = "InventoryItem", getFullType = function() return fullType end,
-        getID = function() return 5 end, getModData = function() return {} end }
+        getID = function() return 5 end, getModData = function() return {} end,
+        getDisplayName = function() return "name of " .. fullType end }
     item.getWorldItem = function() return { getSquare = function() return square end } end
     local sent = {}
     instanceof = function(value, class) return value.class == class end
-    getText = function(key) return key end
+    -- The root entry is asked for with the machine's own name (UX review R12).
+    local rootName
+    getText = function(key, a)
+        if key == "ContextMenu_TLG_MachineRoot" then rootName = a end
+        return key
+    end
     getSpecificPlayer = function() return { getInventory = function() return {
         getAllEvalRecurse = function() return { size = function() return 0 end } end,
     } end } end
@@ -35,6 +41,8 @@ local function menuFor(fullType, check)
     local c = context()
     local ok, err = pcall(function()
         Menu.fill(0, c, { item })
+        T.eq(c.options[1].name, "ContextMenu_TLG_MachineRoot")
+        T.eq(rootName, "name of " .. fullType)
         local byName = {}
         for _, o in ipairs(c.options[1].sub.options) do byName[o.name] = o end
         check(byName, sent)

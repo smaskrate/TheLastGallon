@@ -329,13 +329,20 @@ local function addFirebox(sub, player, rec, def, ref, world)
     end
 end
 
+-- The root entry carries the machine's own name, "Pot Still (The Last
+-- Gallon)" (UX review R12): until 0.4.3 it was "Machine (The Last Gallon)"
+-- for every machine, with the name added only when the click was on several.
+function Menu.rootTitle(item)
+    return getText("ContextMenu_TLG_MachineRoot", item:getDisplayName())
+end
+
 local function addMachine(playerNum, context, item, title, world)
     Say.from(playerNum)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
     local def = TLG.Registry.need("machine", Machines.machineFor(item))
     local kind = def.kind
-    local root = context:addOption(title or getText("ContextMenu_TLG_Machine"), nil, nil)
+    local root = context:addOption(title or Menu.rootTitle(item), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
     local ref = Machines.refFor(item)
@@ -423,9 +430,7 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
     if #items == 0 then return end
     if test then return ISWorldObjectContextMenu.setTest() end
     for _, item in ipairs(items) do
-        local title = getText("ContextMenu_TLG_Machine")
-        if #items > 1 then title = title .. " - " .. item:getDisplayName() end
-        addMachine(playerNum, context, item, title, true)
+        addMachine(playerNum, context, item, nil, true)
     end
 end
 

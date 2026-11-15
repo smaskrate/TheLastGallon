@@ -439,7 +439,7 @@ on a server.
 The mod's own oil press is not shipped: vanilla's gives the oil. A
 generator converted to gas (D-040) runs on propane, from a tank connected
 with **Gas (The Last Gallon)** > **Connect a propane tank**, or on wood
-gas, from a lit Wood Gasifier within two tiles (**Gasifier (The Last
+gas, from a lit Wood Gasifier within two tiles (**Wood Gasifier (The Last
 Gallon)**). Biogas and electricity are implemented as domain modules with
 tests only; no game-facing adapters, placeable items or UI exist for them
 yet. They are not advertised as playable.

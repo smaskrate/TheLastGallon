@@ -5,6 +5,12 @@
 Only the menus' texts are listed here so far; the gas generator, propane
 and the wood gasifier (D-040) are not.
 
+* Changed: a machine's menu entry carries its name, "Pot Still (The Last
+  Gallon)", "Wood Retort (The Last Gallon)", "Wood Gasifier (The Last
+  Gallon)", in place of "Machine (The Last Gallon)" and "Gasifier (The
+  Last Gallon)". With several machines under one click each entry says
+  which it is. Checked in single player on a vessel, the stills and a
+  gasifier, in English and Italian (launches 432–434).
 * New: each of the mod's 18 items has a tooltip of a sentence or two,
   in English and Italian: what the item is for and where its command
   is ("Used by Take a sample (kit), in the Fuel menu of a can or a tank.",

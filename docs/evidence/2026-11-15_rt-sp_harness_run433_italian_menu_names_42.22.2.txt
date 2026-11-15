@@ -1,0 +1,23 @@
+# TLG single-player harness, the client in Italian
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=33217468033185626600 hours=2.0096 DayLength=4
+STEP rti_setup begin
+STEP rti_text begin
+PASS RTI.language_is_italian :: Translator.getLanguage() = IT
+OBS  RTI.strings ContextMenu 55/55, Fluids 8/8, IG_UI 372/372, ItemName 18/18, Recipes 13/13, Sandbox 19/19, Tooltip 18/18; samples: Carburante (The Last Gallon) | Condizioni sconosciute: non ancora campionato. Un carburante sconosciuto non è necessariamente cattivo. | Salvataggi esistenti
+PASS RTI.every_string_as_shipped :: 503 of 503 as shipped, 0 unresolved, 0 garbled; off: none
+PASS RTI.placeholders_filled :: "Carburante principale: Etanolo" | "Condizioni: Buono (stima 0.1, più o meno 0.3)"
+STEP rti_menus begin
+OBS  RTI.look menu "Osserva e annusa" -> ok=true reason=nil state=nil stage=nil outputs=nil consumed=nil
+OBS  RTI.fuel_menu "Carburante (The Last Gallon)" > Cosa so di questo carburante / Osserva e annusa / Preleva un campione (kit) / Aggiungi stabilizzante / Filtra / Lascia decantare e scarica l'acqua / Apri; Look and smell: Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.1, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+PASS RTI.fuel_menu_italian :: 7 entries; look dialog Ispezione del carburante <LINE> <LINE> Carburante principale: Benzina <LINE> Condizioni: Buono (stima 0.1, più o meno 1.1) <LINE> Nessuna acqua libera rilevata <LINE> Metodo: osservazione e odore (approssimativo)
+OBS  RTI.status menu "Stato" -> ok=true reason=nil state=Ready stage=nil outputs={} consumed=nil
+OBS  RTI.machine_menu Status: Pronto <LINE> Temperatura qui adesso: 73.7 °F, all'aperto <LINE> Condizione: 100%
+PASS RTI.machine_menu_italian :: Pronto <LINE> Temperatura qui adesso: 73.7 °F, all'aperto <LINE> Condizione: 100%
+STEP rt_finish begin
+OBS  RT.summary replies: 0 over the character, 2 in a window; last line (-): none
+OBS  RT.summary game hours -1.00 -> 2.01
+SUMMARY pass=5 fail=0
+DONE

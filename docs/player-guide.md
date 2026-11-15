@@ -461,7 +461,8 @@ Filter Cartridge, the Ethanol Drying Column, the Pot Still and the Reflux
 Column Still.*
 
 Every machine works only while it stands on the ground. Right-click it and
-open **Machine (The Last Gallon)** for its options; **Status** shows what
+open the entry with its name, **Fermentation Vessel (The Last Gallon)** or
+**Pot Still (The Last Gallon)**, for its options; **Status** shows what
 it is doing and the temperature at the machine. The entry shows for a
 click on the machine or close beside it, where the game's **Grab** entry
 for it does.
@@ -474,7 +475,7 @@ batch, or when the firebox holds too little wood to finish. A paused
 batch shows the hours of work left instead, and a fermentation that has
 stood still shows for how long, against the 3 days that spoil it.
 
-![A placed Fermentation Vessel's menu with Machine (The Last Gallon) open: Status, Load mash and start fermenting, Pause, Abort batch](images/machine-menu.jpg)
+![A placed Fermentation Vessel's menu, its entry open (the picture is of 0.4.3, when the entry was Machine (The Last Gallon)): Status, Load mash and start fermenting, Pause, Abort batch](images/machine-menu.jpg)
 
 *The menu of a placed vessel with a batch running.*
 
@@ -744,7 +745,8 @@ the containers again until one held it), and a save from an earlier
 version.
 
 Like the ethanol machines, each works only while it stands on the ground,
-and its options are under **Machine (The Last Gallon)**.
+and its options are under the entry with its name, as **Wood Retort (The
+Last Gallon)**.
 
 ### How much of each
 

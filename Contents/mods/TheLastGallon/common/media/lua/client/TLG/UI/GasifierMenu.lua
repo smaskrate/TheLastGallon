@@ -128,6 +128,8 @@ local function addGasifier(playerNum, context, item, title, world)
     Say.from(playerNum)
     local player = getSpecificPlayer(playerNum)
     if item == nil or player == nil then return end
+    -- The entry is named after the item, as a machine's is (UX review R12): one
+    -- item type, so the name is in the text itself.
     local root = context:addOption(title or getText("ContextMenu_TLG_Gasifier"), nil, nil)
     local sub = ISContextMenu:getNew(context)
     context:addSubMenu(root, sub)
@@ -198,9 +200,7 @@ function Menu.fillWorld(playerNum, context, worldobjects, test)
     if #items == 0 then return end
     if test then return ISWorldObjectContextMenu.setTest() end
     for _, item in ipairs(items) do
-        local title = getText("ContextMenu_TLG_Gasifier")
-        if #items > 1 then title = title .. " - " .. item:getDisplayName() end
-        addGasifier(playerNum, context, item, title, true)
+        addGasifier(playerNum, context, item, nil, true)
     end
 end
 
