@@ -393,7 +393,7 @@ Where it stands against the gates:
 | 9 | PARTIAL | The Wood Gasifier's floor model is the one the owner supplied, with its provenance in `art-src/woodgasifier`, and its icon is rendered from it (launch 448); the Wood Gas Handbook's icon is made from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card (launch 444) and picture 12 of the gasifier (launch 448) are not uploaded |
 | 10 | PARTIAL | All 532 Italian strings as shipped, among them "It is full: there is no room for more fuel." and the feminine state words, and the Status card read in Italian, its retorts' line ending "Pronta" (launches 445, 517; D-045); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. "It is full: …" said on a server's client in English (launch 473). A gas generator's Generator Info line names propane and wood gas, no biogas (launch 518; D-045). The package's Workshop text (`tools/package.ps1`) has a gas section, and its "Not in this version" names biogas and electrical networks (D-045). Open: "It is full: …" on screen in Italian; the upload folder's `workshop.txt`, the owner's, still has the 0.4.3 text |
 | 11 | PARTIAL | Single player's whole performance mode passed its 53 budgets with the gas (launches 405–407); the gas's cost on a server with one client (launches 410–411). Open: the mode since the nearest-first order; several Status cards open and what their refreshes cost; several clients |
-| 12 | PARTIAL | The 0.5.0 package is the zip of `b686cce` on `main` (189 files, 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Installed clean and played on 42.22.2 (launch 519: 106/0, then 14/0); its mod folder through the gas modes, the gas server cases and `ux` (launches 521–537, each with the counts of its last run on the tree once `gas-sleep`'s first sleep ran its 8 hours); a 0.4.3 save continued with it (launch 538). Open: an install through the Workshop; the removal and existing-save scenarios on this zip |
+| 12 | PARTIAL | The 0.5.0 package is the zip of `b686cce` on `main` (189 files, 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Installed clean and played on 42.22.2 (launch 519: 106/0, then 14/0); its mod folder through the eight gas modes (`gas-propane`, `gas-sleep`, `gas-wood`, `gas-player`, `gas-moves`, `handbook-loot-woodgas`, `gas-probe`, `gas-measures`), the gas server cases, `ux` and `pot-still` (launches 521–535, 537, 539–541, each with the counts of its last run on the tree once `gas-sleep`'s first sleep ran its 8 hours); a 0.4.3 save continued with it (launch 538). Not run on it: `performance-gas`. Open: an install through the Workshop; the removal and existing-save scenarios on this zip |
 | 13 | PARTIAL | The Wood Gasifier's model is the owner's, supplied on 2026-11-15 (D-039 amendment), drawn whole on the floor in launch 448; its size, 1.2 m wide, the owner judged right. Open: one look for every state, cold, warming and running not drawn apart; its icon not looked at in the game's interface; a turned gasifier; its look on a server |
 
 Of the single-player modes, the full run (launch 435: 106/0, 14/0),
@@ -442,15 +442,15 @@ Before release, in this order:
 Done on 2026-11-16, on the owner's word ("Yes, run them"): the zip of
 `b686cce` installed clean and played (launch 519), its mod folder through
 `gas-propane`, `gas-sleep`, `gas-wood`, `gas-player`, `gas-moves`,
-`handbook-loot-woodgas` and the server cases `gaspropane`, `gaswood`,
-`gaswood2`, `gasmoves`, `gasfeed`, `gastimers`, `gasshare`, `handbookgas`
-and `ux` (521–535, 537), and a save made with the 0.4.3 zip continued with
-it (538). Launches 520 and 536, the same continued save, found two calls
+`handbook-loot-woodgas`, `gas-probe`, `gas-measures`, `pot-still` and the
+server cases `gaspropane`, `gaswood`, `gaswood2`, `gasmoves`, `gasfeed`,
+`gastimers`, `gasshare`, `handbookgas` and `ux` (521–535, 537, 539–541),
+and a save made with the 0.4.3 zip continued with it (538). Launches 520 and 536, the same continued save, found two calls
 of the harness that 0.4.3 lacks (fixed in `cbd3458` and `62ce5cd`; the
 harness does not ship). Launch 522's first sleep ended after 5 of its 8
 game hours, as launch 357's did; launch 537 ran both sleeps whole, and
 why the two woke early is not known (`test-results.md`, launches
-519–538).
+519–541).
 
 Done on 2026-11-15, on the owner's word ("Yes, go ahead"): `mod.info`,
 `Core.lua` and the changelog give 0.5.0 (`121bab9`), `main` took

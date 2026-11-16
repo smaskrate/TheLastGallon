@@ -10106,12 +10106,12 @@ Evidence:
 [the card](evidence/2026-11-15_run517_machine_card_italian_pronta.png),
 [run 518](evidence/2026-11-15_rt-sp_harness_run518_gas_player_generator_info_line_42.22.2.txt).
 
-## 2026-11-16 — RT-SP and RT-MP launches 519–538 (the 0.5.0 package installed clean, a 0.4.3 save continued, the gas modes and server cases on its mod folder, gate 12)
+## 2026-11-16 — RT-SP and RT-MP launches 519–541 (the 0.5.0 package installed clean, a 0.4.3 save continued, the gas modes and server cases on its mod folder, gate 12)
 
 Build 42.22.2. The package is the zip of `b686cce` on `main`: 189 files,
 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`, built by
 `tools\package.ps1` on 2026-11-15. The harness was at `6417690` for
-launches 519–535, `cbd3458` for 536–537 and `62ce5cd` for 538; the harness
+launches 519–535, `cbd3458` for 536–537 and `62ce5cd` for 538–541; the harness
 does not ship, and none of these commits changes the package. A driver
 ran the launches one after the other and kept each one's result files
 before the next began. After each launch it compared the mod folder of
@@ -10147,6 +10147,9 @@ once and checked against the manifest, into the dev caches with
 | 536 | as 520, the harness fixed (`cbd3458`) | 3/0, then 22/0 | launch 375, the same |
 | 537 | as 522, the wake logged (`cbd3458`) | 5/0 | launch 455, the same |
 | 538 | as 536, one harness call guarded (`62ce5cd`) | 3/0, then 22/0 | launch 375, the same |
+| 539 | `run-sp-harness.ps1 -Mode gas-probe` | 5/0, then 7/0 | launch 386, the same |
+| 540 | `run-sp-harness.ps1 -Mode gas-measures` | 11/0 | launch 381, the same |
+| 541 | `run-sp-harness.ps1 -Mode pot-still` | 28/0 | launch 452, the same |
 
 Launch 519: the game read `mod.info` 0.5.0, equal to `TLG.VERSION`, and
 the mod logged "The Last Gallon 0.5.0 ready" at both loads. The
@@ -10183,9 +10186,12 @@ folder and continues the save.
   Handbook among them (`RTU.this_versions_items_exist`, extended in
   `6417690`). A Diesel Generator put down has its sprite's picture.
 
-The gas modes and server cases (521–537):
+The gas modes, the server cases and `pot-still` (521–535, 537, 539–541):
 * Each passed with the counts of its last run on the tree, but `gas-sleep`
   in launch 522.
+* `pot-still` (541) loads its machines and asks their **Status** through
+  the machine menu, so it runs the harness's `machineClick` as `cbd3458`
+  left it on 0.5.0's menus.
 * Every load of every game, server and client logged "The Last Gallon
   0.5.0 ready". Client B of launch 529 logged it twice, because it leaves
   and joins again.
@@ -10210,8 +10216,11 @@ The gas modes and server cases (521–537):
   tiles, no rain, outdoors.
 * Why launches 357 and 522 woke early is still not known.
 
+No step timed out, was skipped or raised an error but in launch 520: its
+first launch's `rtm_stock` raised, and its second skipped three steps.
+
 Not run on this zip:
-* `gas-probe`, `gas-measures` and `performance-gas`;
+* `performance-gas`;
 * `gaswood2 -Restart`;
 * the other single-player modes and server cases;
 * the removal and existing-save scenarios;
@@ -10239,4 +10248,7 @@ Evidence:
 [run 535](evidence/2026-11-16_rt-mp_harness_run535_ux_0.5.0_zip_42.22.2.txt),
 [run 536](evidence/2026-11-16_rt-sp_harness_run536_upgrade_0.4.3_to_0.5.0_one_harness_exception_42.22.2.txt),
 [run 537](evidence/2026-11-16_rt-sp_harness_run537_gas_sleep_0.5.0_zip_42.22.2.txt),
-[run 538](evidence/2026-11-16_rt-sp_harness_run538_upgrade_0.4.3_to_0.5.0_42.22.2.txt).
+[run 538](evidence/2026-11-16_rt-sp_harness_run538_upgrade_0.4.3_to_0.5.0_42.22.2.txt),
+[run 539](evidence/2026-11-16_rt-sp_harness_run539_gas_probe_0.5.0_zip_42.22.2.txt),
+[run 540](evidence/2026-11-16_rt-sp_harness_run540_gas_measures_0.5.0_zip_42.22.2.txt),
+[run 541](evidence/2026-11-16_rt-sp_harness_run541_pot_still_0.5.0_zip_42.22.2.txt).
