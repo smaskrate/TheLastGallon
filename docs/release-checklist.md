@@ -528,6 +528,13 @@ changelog, `mod.info` and `TLG.VERSION` in `Core.lua`. No other Lua, no
 string and no script. Not in it: D-042's open question, whether a
 client's Fuel menu names the engine.
 
+Not run on 0.5.1, the owner's choice on 2026-11-16 ("No need for the
+rehearsals since we changed only docs"): the clean install of its zip
+and a 0.5.0 save continued with it. Its mod files are the 0.5.0
+package's but for the version line of `mod.info` and `Core.lua`, and
+that package was installed clean (launch 519) and continued a 0.4.3 save
+(launch 538). Not done yet: the upload folder and the upload.
+
 Done on 2026-11-16, on the owner's word ("Yes, build it"): the 0.5.1
 package is the zip of `018dcca` (189 files, 8,628,588 bytes, SHA-256
 `5EBC59D8…5518025A`), built by `tools/package.ps1` from a clean tree
@@ -542,9 +549,7 @@ the shipped changelog, player guide, support matrix and `migrations.md`,
 and `workshop.txt` (its version, wrong-fuel and removal lines). The zip
 of `b686cce` is unchanged (`E6D1BF5C…0ACB1652`). No other game file
 differs, so the modes and server cases run on the 0.5.0 package's mod
-folder hold for this one's: they are carried over, not run again. Not
-done yet: the clean install and the upgrade from 0.5.0, the upload
-folder and the upload.
+folder hold for this one's: they are carried over, not run again.
 
 Done on 2026-11-16, on the owner's word ("Yes, start step 1"):
 `mod.info`, `Core.lua` and the player guide's version line give 0.5.1,
