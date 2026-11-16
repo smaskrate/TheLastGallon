@@ -77,13 +77,13 @@ What you do from the mod's menus is answered in one of three ways.
   Lye Leacher, 1 tile away. Finished: lye ready for a reactor"). Machines
   of one type in one state share a line, with their number and the
   nearest one's distance ("Takes from: 3 x Fermentation Vessel, nearest 1
-  tile away. Working"). It brings
-  itself up to date every ten minutes of game time, so it can stay open
-  while you wait, and each machine has one card: **Status** again brings
-  it forward. It closes by itself when you move more than two and a half
-  tiles from the machine or pick the machine up. It has no buttons: the
-  actions stay in the machine's menu. A carried machine's **Status**, and
-  **Status** asked with a controller, are the window.
+  tile away. Working"). It brings itself up to date every ten minutes of
+  game time, so it can stay open while you wait, and each machine has one
+  card: **Status** again brings it forward. It closes by itself when you
+  move more than two and a half tiles from the machine or pick the machine
+  up. It has no buttons: the actions stay in the machine's menu. A carried
+  machine's **Status**, and **Status** asked with a controller, are the
+  window.
 
 A line lasts a few seconds. After a load or a feed, a machine's state and
 how long the batch takes are in its **Status**.
@@ -228,7 +228,8 @@ petrol accepted, a blend the engine cannot use refused (nothing moved)
 and poured after **Yes**, dried ethanol accepted without the dialog by a
 converted generator and car; petrol into a diesel Ambulance refused, then
 poured after **Yes**; a generator's fuel moved into a can by the mod's
-transfer. On a server, a pour with its result shown to the player; a
+transfer; a drain from the menu that moved a generator's 2 L into a can
+(launch 438). On a server, a pour with its result shown to the player; a
 drain from the menu that moved a generator's 3 L into a can (launch 446);
 **Pour into the station reservoir** putting 2 L into a pump of 5,175 L
 (launch 447) and into one of 263 L, then again after a take (launch
@@ -241,9 +242,8 @@ stands two tiles from it (launch 477).
 
 **Not checked in game:** **Pour into the station reservoir** in single
 player; the refusal "It is full: there is no room for more fuel." looked
-at on screen (the harness reads the line, not the screen); the time and look of **Drain the generator into this can**; a
-drain from the menu moved a generator's 2 L in single player in launch
-438.
+at on screen (the harness reads the line, not the screen); the time and
+look of **Drain the generator into this can**.
 
 ## Engines
 
@@ -337,10 +337,10 @@ lower a generator's power.
 | over 60 % | 3 in 10, and never below 10 °C | 40 % less | 1.05 a litre | 0.35 an hour |
 
 Where a tank holds two wrong fuels, or a wrong fuel and too much ethanol,
-the worse value of each column counts. This wear adds to the wear of
-stale fuel: both multiply. A car that starts less often
-than usual also stalls now and then while it runs, the more often the
-worse it starts, as on any poor fuel; generators do not stall.
+the worse value of each column counts. This wear combines with the wear
+of stale fuel: the two multiply. A car that starts less often than usual
+also stalls now and then while it runs, the more often the worse it
+starts, as on any poor fuel; generators do not stall.
 
 An engine that fails stops, with its condition at 0. A car's engine then
 does not start again until it is repaired. A generator is switched off and
@@ -357,9 +357,11 @@ What tells you:
   character names the wrong fuel;
 * when a start is refused and damages the engine, and when an engine
   fails, a line says so;
-* the dialog of a refused pour gives the engine's verdict on the blend.
-
-The mod has no entry that reads the verdict for a tank already filled.
+* the dialog of a refused pour gives the engine's verdict on the blend;
+* a kit sample of the tank ([The fuel in a tank](#the-fuel-in-a-tank))
+  says what the fuel it found means for the engine. It goes by the blend
+  the kit found, given in steps of 5 %, so a small share of the wrong fuel
+  does not show in it.
 
 The cure is to take the fuel out. Siphon a vehicle's tank with the game's
 **Siphon Gasoline** until it is empty, and fill it with the right fuel.
@@ -375,7 +377,8 @@ Generator included, and about three pumps in four give petrol
 fuel is not refused: when the refuel ends, a line over the character
 says so, "Wrong fuel in the tank (Gasoline): do not start the engine".
 Empty the tank before starting; an engine that never ran on it took no
-damage. The line is checked in single player after **Add Fuel** and a refuel from a can (launch 419), not at a pump.
+damage. The line was checked in single player after **Add Fuel** and a
+refuel from a can (launch 419), not at a pump.
 
 The sandbox option **Wrong fuel damages engines** turned off brings back
 the behaviour of version 0.2.0: any such fuel above a trace stops the
@@ -490,10 +493,10 @@ Opening a page takes no time and marks nothing as read.
 
 *The field manual's page in the larger-print window.*
 
-**Checked in game,** in English and Italian: manuals rolled from the loot
-lists as the game fills containers, and one read through **Inspect**.
-The two **Read: …** entries, in the menus of a manual and of both
-handbooks, and their pages, in both languages (launches 436 and 437).
+**Checked in game:** in English and Italian, manuals rolled from the loot
+lists as the game fills containers and one read through **Inspect**; the
+two **Read: …** entries, in the menus of a manual and of both handbooks,
+and their pages (launches 436 and 437).
 **Not checked in game:** the entries greyed in the dark, a controller, a
 server.
 
@@ -791,7 +794,7 @@ machines must learn the recipes like anyone else. Machines already made
 keep working. The handbook appears only in containers the game has not
 filled yet, so look in places you have not visited.
 
-**Checked in game.** In single player: what each recipe asks, the levels
+**Checked in game:** in single player, what each recipe asks, the levels
 that allow and teach, the handbook read from the inventory menu, and all
 five machines made in the crafting window with the levels and recipes in
 place; a handbook rolled into a shelf of a gas station's storage room,
@@ -933,9 +936,9 @@ read in Italian (their Italian texts load as shipped).
 
 ## Diesel
 
-In a world started with this version some vehicles and some station pumps
-are diesel. A world started earlier keeps every vehicle and pump on petrol
-([Existing saves](#existing-saves)).
+In a world started as a new game with version 0.2.0 or later, some
+vehicles and some station pumps are diesel. In an older save every
+vehicle and pump stays petrol ([Existing saves](#existing-saves)).
 
 ### Diesel vehicles
 
@@ -1064,7 +1067,7 @@ conversion** ask before they act, since both lose parts.
 
 *A basic generator's menu in version 0.4.3, which offered the flex-fuel
 conversion only. The menu now also has **Start: Gas generator
-conversion**; the picture is not taken again yet.*
+conversion**.*
 
 ![Project status of the generator: Conversion in progress, Flex-fuel generator conversion, Stage: inspect, Engine now: stock gasoline generator](images/project-status.jpg)
 
@@ -1084,8 +1087,7 @@ own conversions. Diesel vehicles and the Diesel Generator have none.
 
 A generator's menu also has **Start: Gas generator conversion**, which
 makes it run on propane or wood gas: see
-[A generator on gas](#a-generator-on-gas). Versions 0.4.2 and 0.4.3 did
-not offer it.
+[A generator on gas](#a-generator-on-gas).
 
 **Checked in game:** a standard car and the basic generator converted
 from this menu, with the walk to the engine, the work stopping once the
@@ -1174,12 +1176,11 @@ gasifier goes out.
 
 A generator on wood gas holds only the next hour's burn and a little
 more; the gasifier refills it within a game minute of each hourly burn.
-The game's
-**Generator Info** window therefore shows it at "Fuel: 1%" however much
-wood is in the hopper, as long as the generator burns less than 0.1 L an
-hour; one powering a fridge-freezer burns 0.015 L an hour at the default
-fuel use. To know how long it will run, read the gasifier's **Status**,
-which says when its fire goes out.
+The game's **Generator Info** window therefore shows it at "Fuel: 1%"
+however much wood is in the hopper, as long as the generator burns less
+than 0.1 L an hour; one powering a fridge-freezer burns 0.015 L an hour
+at the default fuel use. To know how long it will run, read the
+gasifier's **Status**, which says when its fire goes out.
 
 The gasifier burns only while you are in the area: after a trip that
 takes you far from it, it is out with its wood and the generator is off.
@@ -1188,7 +1189,7 @@ wears it a little ([Wear and Repair](#wear-and-repair)).
 
 ### What has been checked
 
-**Checked in game.** In single player: the conversion through the
+**Checked in game:** in single player, the conversion through the
 Workshop menu, the tank drained with the Fuel menu, the Wood Gas Handbook
 read, the gasifier made, put down, loaded and lit through its menu, and
 the generator run on its gas for three hours (launches 387–388); a
@@ -1217,8 +1218,8 @@ a trace of water, but about one in ten is contaminated: its fuel makes a
 stock car hard to start until you drain the water or dilute it with
 cleaner fuel. Sample before you fill up at a station you do not know.
 Every litre you take leaves the station's reservoir exactly once. In a
-world started with this version, about one pump in four gives diesel
-([Diesel pumps](#diesel-pumps)).
+world started as a new game with version 0.2.0 or later, about one pump
+in four gives diesel ([Diesel pumps](#diesel-pumps)).
 
 **Checked in game:** the reservoir accounting.
 
@@ -1270,12 +1271,11 @@ stays as it was.
   pumps of the station gave petrol;
 * a world started with version 0.1.2 and one started with 0.2.0, each
   then continued with this version (the 0.2.0 world keeps its diesel
-  vehicles and pumps).
-  Its cans, a pump, an Ambulance, a car and a generator read as 0.1.2 had
-  recorded them; a vessel's batch was still running; the Ambulance started
-  on its petrol and the pump still gave petrol; this version's machines
-  and fuels exist in that save, and a Diesel Generator put down there had
-  its picture.
+  vehicles and pumps). In the 0.1.2 world, the cans, a pump, an
+  Ambulance, a car and a generator read as 0.1.2 had recorded them; a
+  vessel's batch was still running; the Ambulance started on its petrol
+  and the pump still gave petrol; this version's machines and fuels exist
+  in that save, and a Diesel Generator put down there had its picture.
 
 **Not checked in game:** the other two settings (**Age from world start**
 and **Start ageing at installation**), servers, and a save from version
@@ -1313,7 +1313,6 @@ station's pumps gave the same fuel as before.
 **Not checked in game:** the mod's other fluids and items, diesel in a
 vehicle's tank or a can, how a Diesel Generator without its picture looks
 and what can be done with it, converted engines, and a save whose mod was
-uninstalled,
-where the game asks about missing mods.
+uninstalled, where the game asks about missing mods.
 
 The technical details are in `docs/migrations.md`.

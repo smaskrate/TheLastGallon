@@ -444,6 +444,12 @@ mod folder, 22/0, every budget held (launch 544, `test-results.md`);
 then, on the owner's word ("Yes, run it"), the whole mode, 82/0, all 53
 budgets held (launch 545).
 
+Done on 2026-11-16, after the upload, on the owner's word ("Yes, fix
+both"): the Workshop text's removal line, in `tools/package.ps1` and in
+the upload folder's `workshop.txt`, names the mod's fluids instead of the
+ethanol alone ("Gate 12" under "Gate details"). The folder's other files
+are untouched; the live page changes at the next upload.
+
 Done on 2026-11-16, on the owner's word ("Yes, run them", to the question
 whether to run the removal and existing-save scenarios on the zip before
 the upload): the zip of `b686cce` on a world played without the mod
@@ -991,7 +997,7 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line. On 2026-11-16, on the owner's word ("Yes, do it"), it was set to "Version 0.5.0", the package's eight lines of "Make your own: gas" went in after the biodiesel section, and its "Not in this version" line now names biogas and electrical networks, keeping the owner's "Coming soon"; nothing else changed. It now differs from the package's text in five lines: the id, "not tested/supported", "Coming soon", the tags and the visibility. Its CRLF line ends stay.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line. On 2026-11-16, on the owner's word ("Yes, do it"), it was set to "Version 0.5.0", the package's eight lines of "Make your own: gas" went in after the biodiesel section, and its "Not in this version" line now names biogas and electrical networks, keeping the owner's "Coming soon"; nothing else changed. It now differs from the package's text in five lines: the id, "not tested/supported", "Coming soon", the tags and the visibility. Its CRLF line ends stay. On 2026-11-16, after the upload, on the owner's word ("Yes, fix both"), its removal line and the package's took the same new wording: the player guide's path stands beside "the player guide", and the game drops "the mod's fluids in your containers (ethanol, diesel, biodiesel, and the water and sediment in old fuel)" instead of "the ethanol", as the player guide and `migrations.md` say; only ethanol was seen dropped in game (run 54). Nothing else changed, and the five differing lines are as before. The Workshop page keeps the old line until the owner uploads again.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
