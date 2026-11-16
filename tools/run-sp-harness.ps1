@@ -384,7 +384,8 @@ param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
         "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "removal-d", "upgrade-a", "upgrade-b", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
     [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
 $ErrorActionPreference = "Stop"
-if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
+. (Join-Path $PSScriptRoot "desktop-lock.ps1")
+if (Test-SessionLocked) {
     # A locked Windows session cannot present the OpenGL window; the client
     # stalls after the intro videos (2026-10-30, docs/test-results.md).
     Write-Host "The Windows session is locked; unlock the desktop and run again."

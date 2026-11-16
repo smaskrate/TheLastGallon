@@ -195,7 +195,8 @@ param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$Timeo
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"
-if (Get-Process -Name LogonUI -ErrorAction SilentlyContinue) {
+. (Join-Path $PSScriptRoot "desktop-lock.ps1")
+if (Test-SessionLocked) {
     Write-Host "The Windows session is locked; unlock the desktop and run again."
     exit 2
 }
