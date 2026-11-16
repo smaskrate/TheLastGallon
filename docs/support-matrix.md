@@ -34,7 +34,7 @@ Evidence levels:
 | Pump → vehicle (`ISRefuelFromGasPump`) | action wrap; pump corrected from 1.25 L/unit to 1 L/unit | yes | same | **Verified RT-SP** (run 5: 59 L = −59 units) |
 | Can → generator (`ISAddFuel`) | action wrap | yes | native | **Verified RT-SP** |
 | Station → can → vehicle → can → generator | all of the above, one batch | yes, end to end | — | **Verified RT-SP** (runs 3–5: 10.00000 L every hop) |
-| TLG pour (`ISTLGPourFuel`, any fuel) | authoritative transfer | yes | TLG sets native | **Verified RT-SP** into generators and a car: petrol accepted, an incompatible result refused without confirmation (nothing moved), accepted with confirmation; dried ethanol accepted without confirmation by a flex-converted generator and car (run 8) |
+| TLG pour (`ISTLGPourFuel`, any fuel) | authoritative transfer | yes | TLG sets native | **Verified RT-SP** into generators and a car: gasoline accepted, an incompatible result refused without confirmation (nothing moved), accepted with confirmation; dried ethanol accepted without confirmation by a flex-converted generator and car (run 8) |
 | Generator pickup (`ISTakeGenerator`) | wrap copies sidecar to the new hand item | yes | native fuel copied by vanilla | **Verified RT-SP**, incl. taking a second generator while carrying one (the action queued directly in phase A; from the world menu in run 85) |
 | Generator drop: drop action, the menus' unequip (`ISUnequipAction`: a second generator or a heavy item taken, a weapon equipped), `forceDropHeavyItems`, inventory drag to the floor; `IsoGenerator.new` | wraps re-attach the sidecar to the converted object | yes | native | **Verified RT-SP** (the drop action, `forceDropHeavyItems` and the drag; the menus' unequip in run 85: a second generator taken from the world menu, a bat equipped from the inventory menu); drops done by Java alone are not seen |
 | Can left on the ground, save and reload | record stays in item modData; adapter reads the fluid from the item or its world object | yes | native | **Read verified RT-SP** (run 5: record found after reload, the fluid sits on the world object). **Pour into the generator** from a placed can's menu **verified RT-SP** (2026-11-08): the character picked the can up, then poured |
@@ -67,11 +67,11 @@ Vanilla's refuel menus offer only containers that hold `Petrol`
 offered (RT-SP), pure ethanol is not. Pour other fuels with the TLG pour,
 from the **Fuel (The Last Gallon)** menu. A container placed on the ground
 has the same menu, from a right-click on its world model or on its entry in
-the floor inventory. Verified RT-SP on 2026-11-08 for a petrol can (holding
-petrol, and empty), a water bottle holding petrol and a bucket holding
-ethanol: **What I know about it**, **Take a sample (kit)** and a treatment
-were each answered for the placed container. A pour into an engine picks
-the container up first.
+the floor inventory. Verified RT-SP on 2026-11-08 for a gasoline can
+(holding gasoline, and empty), a water bottle holding gasoline and a
+bucket holding ethanol: **What I know about it**, **Take a sample (kit)**
+and a treatment were each answered for the placed container. A pour into
+an engine picks the container up first.
 
 ## Vehicles
 
@@ -82,9 +82,9 @@ the container up first.
 | Other vanilla cars | engine_si_stock (assumed: every vanilla tank is "Gasoline") | — | SRC (content type), NOT RUN |
 | Base.CarNormal, converted | engine_si_flex | flex_car_normal | **Verified RT-SP** (run 8): commissioned, ran on home-made ethanol (started first try), conversion survives reload |
 | Other conversion chassis | see `TLG/Content/Conversions.lua` (no diesel chassis, and not `TLG.DieselGenerator`, is among them) | flex / others | domain-tested only, NOT RUN |
-| Base.VanAmbulance, Base.VanSeats, Base.VanRadio, Base.PickUpVanLightsFire, in a world started as a new game with 0.2.0 or later | engine_ci_stock; an unrecorded tank is read as diesel | — | **Verified RT-SP** (launch 240): profile and fuel; the ambulance started on its diesel and took biodiesel through the mod's pour; a petrol pour into the pickup van refused. Refuel at a diesel pump and start, and a pickup van filled at a petrol pump refused at the start (launch 244, `Base.PickUpVan`). **Verified RT-MP** (launch 248): the ambulance read as diesel on the client and started |
+| Base.VanAmbulance, Base.VanSeats, Base.VanRadio, Base.PickUpVanLightsFire, in a world started as a new game with 0.2.0 or later | engine_ci_stock; an unrecorded tank is read as diesel | — | **Verified RT-SP** (launch 240): profile and fuel; the ambulance started on its diesel and took biodiesel through the mod's pour; a gasoline pour into the pickup van refused. Refuel at a diesel pump and start, and a pickup van filled at a gasoline pump refused at the start (launch 244, `Base.PickUpVan`). **Verified RT-MP** (launch 248): the ambulance read as diesel on the client and started |
 | The other variants of `PickUpVan*`, `VanSeats*`, `VanRadio*`, `VanAmbulance*` (`Vehicles.DIESEL_FAMILIES`, by the script name's beginning) | engine_ci_stock, as above | — | domain-tested (the names), NOT RUN in game |
-| Any chassis in a world started before 0.2.0, or in a save the mod was added to | engine_si_stock (the world's record has no `dieselVehicles`, or `false`) | — | domain-tested; an ambulance in a save that gained the mod (launch 254) and in a save made with 0.1.2 (launch 257) read as petrol, and the 0.1.2 save's recorded ambulance started on it |
+| Any chassis in a world started before 0.2.0, or in a save the mod was added to | engine_si_stock (the world's record has no `dieselVehicles`, or `false`) | — | domain-tested; an ambulance in a save that gained the mod (launch 254) and in a save made with 0.1.2 (launch 257) read as gasoline, and the 0.1.2 save's recorded ambulance started on it |
 
 A tank's capacity varies with the condition of the tank fitted
 (`conditionAffectsCapacity`, SRC `template_gastank.txt`); the mod reads it
@@ -101,11 +101,11 @@ stock engine lean (D-037).
 
 Wrong fuel (D-037, launches 271 and 281, `Base.CarNormal`, `Base.VanAmbulance`,
 `Base.PickUpVanLightsFire`): the verdict for every band of
-`balance.md`'s table; a start refused on 40 % diesel cost the petrol car 1
-engine condition and 2 % battery charge and showed the driver a line; on
+`balance.md`'s table; a start refused on 40 % diesel cost the gasoline car
+1 engine condition and 2 % battery charge and showed the driver a line; on
 20 % diesel 4 L cost it 3 engine and 2 exhaust (`Muffler`) condition; the
-ambulance on a third petrol lost 2 engine condition for 2 L; the pickup
-van on pure petrol failed when the draw was held at 0 (condition 0,
+ambulance on a third gasoline lost 2 engine condition for 2 L; the pickup
+van on pure gasoline failed when the draw was held at 0 (condition 0,
 stopped, no restart); the ambulance siphoned with vanilla's
 `ISTakeGasolineFromVehicle`, refilled with diesel and started clean. The
 draws were held and the litres taken from the tank by the test.
@@ -117,9 +117,9 @@ litre; a failed `Base.PickUpVanLightsFire` was repaired with
 `ISRepairEngine` and a failed Diesel Generator with `ISFixGenerator`,
 and each ran on diesel; with no draw held, twelve starts each of a car
 and a generator on a refusing and on a harming blend, an idling
-ambulance failing on petrol and an idling car stalling on a fifth
+ambulance failing on gasoline and an idling car stalling on a fifth
 diesel, each as its draw gave; driving (`Base.VanAmbulance` on diesel,
-biodiesel, 30 % petrol and petrol alone, `Base.CarNormal` on a fifth
+biodiesel, 30 % gasoline and gasoline alone, `Base.CarNormal` on a fifth
 diesel) with the table's power, wear and exhaust, and a stall on the
 move; at −5 °C biodiesel gelling above a fifth and ethanol's refused
 start. On a dedicated server, as an admin and as a plain player, the
@@ -137,11 +137,11 @@ engine stalled at 24.7 km/h, burned nothing more, and the car rolled to a
 stop. No part was damaged. Not run: other chassis, a converted car on the
 move, off-road driving.
 
-Poor fuel on the move (D-031, RT-SP run 179, `Base.CarNormal`): on petrol
-aged to 2.6, the engine ran at 3406 of its 4000 power from its first game
-minute and had its power back two game minutes after stopping, quality and
-loudness unchanged. The Engine part lost the condition its litres owed (at
-100 times the rate in the test). With the sandbox option
+Poor fuel on the move (D-031, RT-SP run 179, `Base.CarNormal`): on
+gasoline aged to 2.6, the engine ran at 3406 of its 4000 power from its
+first game minute and had its power back two game minutes after stopping,
+quality and loudness unchanged. The Engine part lost the condition its
+litres owed (at 100 times the rate in the test). With the sandbox option
 **Bad fuel can stall engines** off, a blend no stock engine takes ran at
 half power with no stall.
 
@@ -170,18 +170,18 @@ the Gas2Go pump: 0.22–0.23 %, `startFactor=0.5`). The
 - **Verified RT-SP** on `Base.Generator`: max fuel 10 L; idle burn 0.015 L
   in 0.5–1.3 game hours, connected with no appliance drawing; the native
   burn is reconciled proportionally into the record.
-- Start gate (`ISActivateGenerator`): activates on petrol, refused on a
+- Start gate (`ISActivateGenerator`): activates on gasoline, refused on a
   tank of diesel, which costs it condition (launches 263, 272, 278, 279; until
   0.2.0 the refusal was on E100, RT-SP run 6, which now starts 3 times in 10
   and wears: D-037).
 - Wrong fuel (D-037, launch 271): on 40 % diesel the start refused, 1
   condition lost, the line shown; drained into a can by the mod's
-  transfer, refilled with petrol, the verdict clean. NOT RUN: running on
+  transfer, refilled with gasoline, the verdict clean. NOT RUN: running on
   10 to 30 % diesel, a flex generator with diesel.
 - Flex conversion (RT-SP run 8): commissioned on a `Base.Generator`, which
   then took dried ethanol without confirmation, activated on it and kept
   the conversion and fuel across reload.
-- Wear (D-031, RT-SP run 179): a `Base.Generator` on petrol aged to 3.0,
+- Wear (D-031, RT-SP run 179): a `Base.Generator` on gasoline aged to 3.0,
   run 6 game hours, was charged by the next refuel exactly the wear its
   0.012 L owed (at 100 times the rate in the test), and only once. On a
   dedicated server a refuel from the world menu charged the wear due
@@ -199,11 +199,11 @@ list that offers `Base.Generator` offers it at half that weight.
 
 - **Verified RT-SP** (launches 236–243): put down, it is an `IsoGenerator`
   that keeps its item type; biodiesel through the mod's pour, started, run
-  two game hours with its record following; petrol through vanilla's
-  `ISAddFuel` recorded as petrol (its start is refused when the roll is
+  two game hours with its record following; gasoline through vanilla's
+  `ISAddFuel` recorded as gasoline (its start is refused when the roll is
   lost, launch 264; under 0.2.0 always); taken with
   vanilla's `ISTakeGenerator` as itself, a vanilla generator beside it as
-  `Base.Generator`; on pure petrol (launch 271, D-037) it started, 1 L
+  `Base.Generator`; on pure gasoline (launch 271, D-037) it started, 1 L
   gone cost it 46 condition (67 hours at the reference load with
   `GeneratorFuelConsumption` 0.1), it failed when the draw was held at 0,
   was switched off and vanilla's switch-on was invalid at condition 0;
@@ -230,10 +230,10 @@ reservoirs still age (NOT RUN).
 
 Diesel pumps (D-036): in a world started as a new game with 0.2.0 or
 later, a pump's first record holds diesel for about one pump in four
-(`WorldInit.stationProduct`, seeded per pump) and petrol otherwise; the
+(`WorldInit.stationProduct`, seeded per pump) and gasoline otherwise; the
 record keeps what the pump gives. The pump's menu has **Read what this
 pump gives**. **Verified RT-SP** (launch 244): the entry on a diesel and
-on a petrol pump; vanilla's `ISTakeFuel` into an empty can (the can's
+on a gasoline pump; vanilla's `ISTakeFuel` into an empty can (the can's
 fluids `TLG_Diesel`, no `Petrol`) and `ISRefuelFromGasPump` into an empty
 tank, litre for litre. **Verified RT-MP** (launch 248): the entry's answer
 and a can filled, on the client. In both the pump was made a diesel pump
@@ -279,10 +279,10 @@ both on one computer (RT-MP, 2026-11-03 to 2026-11-06):
     dropped from the inventory, it runs again at once where it lands;
   - at the pumps: a pump into a can, a can into a car, a pump into a car,
     a can into a generator, each with its fuel's record; the TLG pour
-    into a generator, diesel refused into a petrol one and poured on
+    into a generator, diesel refused into a gasoline one and poured on
     confirmation into another, with the result shown to the player
     (launches 269 and 277; ethanol until 0.2.0);
-  - a generator started on petrol and refused on diesel, the refusal's
+  - a generator started on gasoline and refused on diesel, the refusal's
     line reaching the player's client from the server (launch 277), its burn
     followed, its record carried when it is taken and put back; a car
     started with its key and idling, its burn followed;

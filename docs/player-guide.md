@@ -119,13 +119,13 @@ tile's width of it. The entries:
   when the container is open, it warns that the fuel may have changed, so
   its actual condition may differ.
 
-![A petrol can's menu with Fuel (The Last Gallon) open: What I know about it, Look and smell, Take a sample (kit), Add stabilizer, Filter, Let settle and drain water, Open](images/fuel-menu.jpg)
+![A gasoline can's menu with Fuel (The Last Gallon) open: What I know about it, Look and smell, Take a sample (kit), Add stabilizer, Filter, Let settle and drain water, Open](images/fuel-menu.jpg)
 
-*The menu of a sealed petrol can, with a kit, a stabilizer and a filter cartridge carried.*
+*The menu of a sealed gasoline can, with a kit, a stabilizer and a filter cartridge carried.*
 
 ![Take a sample (kit) result: gasoline, condition good, free water about 0.3 %, composition gasoline 100 %](images/kit-sample-result.jpg)
 
-*A kit sample of petrol holding 0.3 % water: the kit finds the water and gives the blend.*
+*A kit sample of gasoline holding 0.3 % water: the kit finds the water and gives the blend.*
 
 ![Look and smell result for the same can: condition good, no free water detected](images/look-and-smell-result.jpg)
 
@@ -162,7 +162,7 @@ Gallon)** is its own.
   the engine can use the fuel, whether it damages it, and why. This goes
   by what the kit found. A kit gives the blend in steps of 5 %, so a
   small share of the wrong fuel, which already wears a diesel engine from
-  2 % of petrol, does not show in it. A look finds no blend and gets no
+  2 % of gasoline, does not show in it. A look finds no blend and gets no
   such line.
 
 **Checked in game** (single player, launch 419): the entry at the fuel cap
@@ -187,7 +187,7 @@ These are in the same **Fuel (The Last Gallon)** menu:
 * **Clean empty container** removes old residue, so it cannot spoil new
   fuel.
 
-![The Fuel (The Last Gallon) menu of an empty petrol can, ending with Clean empty container](images/fuel-menu-empty-can.jpg)
+![The Fuel (The Last Gallon) menu of an empty gasoline can, ending with Clean empty container](images/fuel-menu-empty-can.jpg)
 
 *On an empty can the menu adds Clean empty container.*
 
@@ -219,20 +219,20 @@ takes the one nearest your character, and your character turns to face
 it.
 
 These pours move any fuel the mod knows, with its condition, not only
-petrol. If the result would be a blend the engine cannot use, or one that
-would damage it ([Wrong fuel](#wrong-fuel)), nothing is poured and a
+gasoline. If the result would be a blend the engine cannot use, or one
+that would damage it ([Wrong fuel](#wrong-fuel)), nothing is poured and a
 dialog says why; choose **Yes** in it to pour anyway.
 
 **Checked in game:** in single player, pours into generators and a car:
-petrol accepted, a blend the engine cannot use refused (nothing moved)
+gasoline accepted, a blend the engine cannot use refused (nothing moved)
 and poured after **Yes**, dried ethanol accepted without the dialog by a
-converted generator and car; petrol into a diesel Ambulance refused, then
-poured after **Yes**; a generator's fuel moved into a can by the mod's
-transfer; a drain from the menu that moved a generator's 2 L into a can
-(launch 438). On a server, a pour with its result shown to the player; a
-drain from the menu that moved a generator's 3 L into a can (launch 446);
-**Pour into the station reservoir** putting 2 L into a pump of 5,175 L
-(launch 447) and into one of 263 L, then again after a take (launch
+converted generator and car; gasoline into a diesel Ambulance refused,
+then poured after **Yes**; a generator's fuel moved into a can by the
+mod's transfer; a drain from the menu that moved a generator's 2 L into a
+can (launch 438). On a server, a pour with its result shown to the player;
+a drain from the menu that moved a generator's 3 L into a can (launch
+446); **Pour into the station reservoir** putting 2 L into a pump of 5,175
+L (launch 447) and into one of 263 L, then again after a take (launch
 451), and nothing into one of 15,208 L (launch 446); a pump of 14,307 L
 refused with "It is full: there is no room for more fuel." said over the
 character, then taking back 2 of the 10 L taken from it (launch 473); the
@@ -270,10 +270,10 @@ still costs them power.
 the move (the car rolls to a stop); a converted car and generator running
 on home-made ethanol; a car burning fuel at the game's own rate while
 driving, the mod taking nothing extra and the tank keeping its blend; on
-stale petrol a car running at 85 % of its power, getting it back when
+stale gasoline a car running at 85 % of its power, getting it back when
 stopped and its engine wearing for the litres it burned; with the option
 off, a car on unsuitable fuel running at half power without stalling; a
-generator on stale petrol worn when next refuelled.
+generator on stale gasoline worn when next refuelled.
 
 **Not checked in game:** the mechanics window (it opens while the car
 stands still and lists the engine's power) while the power is lowered.
@@ -282,17 +282,18 @@ stands still and lists the engine's power) while the power is lowered.
 
 An engine that gets another engine's fuel is damaged by it. A trace does
 nothing; beyond that, the more of the wrong fuel is in the tank, the
-worse. Petrol or ethanol in a diesel does the most lasting harm, because
-the diesel keeps running on it. Diesel in a petrol engine mostly stops it.
+worse. Gasoline or ethanol in a diesel does the most lasting harm, because
+the diesel keeps running on it. Diesel in a gasoline engine mostly stops
+it.
 
-| Fuel in the tank | Petrol engine (cars, the red generators) | Converted (flex) engine | Diesel vehicle | Diesel Generator |
+| Fuel in the tank | Gasoline engine (cars, the red generators) | Converted (flex) engine | Diesel vehicle | Diesel Generator |
 | --- | --- | --- | --- | --- |
-| Petrol | its fuel | its fuel | runs badly, wears fast, can fail | the same |
-| Ethanol | its limit is 25 % (generators 15 %); more wears it | its fuel | as petrol, but worse; over 30 % no start | the same |
-| Diesel | wears it; over 30 % no start | as a petrol engine | its fuel | its fuel |
-| Biodiesel | as diesel, with a fifth more wear | as a petrol engine | fine up to 20 % ([Diesel](#diesel)) | its fuel |
+| Gasoline | its fuel | its fuel | runs badly, wears fast, can fail | the same |
+| Ethanol | its limit is 25 % (generators 15 %); more wears it | its fuel | as gasoline, but worse; over 30 % no start | the same |
+| Diesel | wears it; over 30 % no start | as a gasoline engine | its fuel | its fuel |
+| Biodiesel | as diesel, with a fifth more wear | as a gasoline engine | fine up to 20 % ([Diesel](#diesel)) | its fuel |
 
-A flex conversion widens petrol and ethanol only: diesel and biodiesel
+A flex conversion widens gasoline and ethanol only: diesel and biodiesel
 harm a converted engine as they harm a stock one.
 
 In the tables below, the share is the wrong fuel's part of all the fuel in
@@ -302,7 +303,7 @@ Engine wear is in condition points, of 100: for a car by the litre burned
 runs with a fridge plugged in. The power loss is a car's; the mod cannot
 lower a generator's power.
 
-**Diesel or biodiesel in a petrol or flex engine**
+**Diesel or biodiesel in a gasoline or flex engine**
 
 | Share | Starts | Power | Engine wear, car | Engine wear, generator | Also |
 | --- | --- | --- | --- | --- | --- |
@@ -311,7 +312,7 @@ lower a generator's power.
 | 10 to 30 % | 4 in 10 | 40 % less | 0.75 a litre | 0.25 an hour | a car's exhaust loses 0.5 a litre |
 | over 30 % | never | | | | each try costs the engine 1 or 2 points and a car 2 % of its battery charge |
 
-**Petrol in a diesel**
+**Gasoline in a diesel**
 
 | Share | Starts | Power | Engine wear, vehicle | Engine wear, Diesel Generator | Also |
 | --- | --- | --- | --- | --- | --- |
@@ -325,11 +326,11 @@ lower a generator's power.
 | Share | What happens |
 | --- | --- |
 | up to 2 % | nothing |
-| 2 to 10 % | as 15 to 50 % petrol |
-| 10 to 30 % | as over 50 % petrol, the chance of failing included |
+| 2 to 10 % | as 15 to 50 % gasoline |
+| 10 to 30 % | as over 50 % gasoline, the chance of failing included |
 | over 30 % | it never starts, and each try costs the engine 1 or 2 points and a vehicle 2 % of its battery charge |
 
-**Ethanol in a stock petrol engine, past its limit**
+**Ethanol in a stock gasoline engine, past its limit**
 
 | Share | Starts | Power | Engine wear, car | Engine wear, generator |
 | --- | --- | --- | --- | --- |
@@ -345,7 +346,7 @@ starts, as on any poor fuel; generators do not stall.
 An engine that fails stops, with its condition at 0. A car's engine then
 does not start again until it is repaired. A generator is switched off and
 the game does not switch it on at condition 0: repair it with the game's
-**Fix Generator**. Over a 40 L tank of petrol a diesel vehicle fails a
+**Fix Generator**. Over a 40 L tank of gasoline a diesel vehicle fails a
 little more often than not.
 
 A generator's wear and its failure are counted the next time you refuel,
@@ -371,8 +372,8 @@ kind. Damage already done stays until repaired.
 
 **Pour into this vehicle's tank** and **Pour into the generator** refuse a
 pour that would harm the engine and say why. The game's own actions do not
-check. **Add Fuel** offers petrol cans to every generator, the Diesel
-Generator included, and about three pumps in four give petrol
+check. **Add Fuel** offers cans of gasoline to every generator, the Diesel
+Generator included, and about three pumps in four give gasoline
 ([Diesel pumps](#diesel-pumps)). A tank filled that way with the wrong
 fuel is not refused: when the refuel ends, a line over the character
 says so, "Wrong fuel in the tank (Gasoline): do not start the engine".
@@ -386,7 +387,7 @@ engine from starting and stalls a running one, and damages nothing.
 
 **Bad fuel can stall engines** is for cars only. With it off, no car's
 start is refused: a car then runs, at half power, even on fuel listed
-above as "never", and wears for it (a petrol car 1.35 a litre on over
+above as "never", and wears for it (a gasoline car 1.35 a litre on over
 30 % diesel, with its exhaust losing 1 a litre; a diesel 2.85 a litre on
 over 30 % ethanol, with 4 chances in 100 for each litre of failing). A
 generator's start is refused, and costs it, whatever that option says.
@@ -398,22 +399,23 @@ such a blend, siphon or drain it before you start the engine.
 
 **Checked in game** (single player, a new world):
 
-* the verdict the mod gives for every row above on a petrol car and a
+* the verdict the mod gives for every row above on a gasoline car and a
   diesel Ambulance, with its text;
-* a petrol car on 40 % diesel: the start refused, 1 point off the engine
+* a gasoline car on 40 % diesel: the start refused, 1 point off the engine
   and 2 % off the battery, and the line over the character;
 * that car running on 20 % diesel: the line at the start, and for 4 L, 3
   points off the engine and 2 off the exhaust;
-* 5 L of petrol poured into an Ambulance holding 10 L of diesel: refused,
-  then poured after the confirmation; the Ambulance running on that third
-  of petrol: for 2 L, 2 points off the engine;
-* a Dash Bulldriver running on pure petrol: its engine failed when the
+* 5 L of gasoline poured into an Ambulance holding 10 L of diesel:
+  refused, then poured after the confirmation; the Ambulance running on
+  that third of gasoline: for 2 L, 2 points off the engine;
+* a Dash Bulldriver running on pure gasoline: its engine failed when the
   draw fell that way, stopped, said so, and did not start again;
 * the cure: that Ambulance siphoned empty into two cans, which held the
   blend; 10 L of diesel poured in; the verdict clean; a start;
 * a red generator on 40 % diesel: the start refused, 1 or 2 points off,
-  the line shown; drained into a can; petrol poured in; the verdict clean;
-* a Diesel Generator on pure petrol: it started; a litre gone cost it 46
+  the line shown; drained into a can; gasoline poured in; the verdict
+  clean;
+* a Diesel Generator on pure gasoline: it started; a litre gone cost it 46
   points (at the sandbox's default generator consumption a litre lasts
   67 hours); when the draw fell it failed, was switched off, and the game
   refused to switch it on;
@@ -427,18 +429,18 @@ Checked later with no draw set (each draw was written down, and each
 outcome was the one its draw gives):
 
 * driving at 25 km/h: an Ambulance on diesel (nothing lowered or worn),
-  on biodiesel alone, on 30 % petrol and on petrol alone, and a petrol
-  car on 20 % diesel. Power, engine wear and exhaust wear
-  followed the table. The Ambulance on 30 % petrol stalled on the move
+  on biodiesel alone, on 30 % gasoline and on gasoline alone, and a
+  gasoline car on 20 % diesel. Power, engine wear and exhaust wear
+  followed the table. The Ambulance on 30 % gasoline stalled on the move
   and rolled to a stop;
-* a petrol car refused twelve times on 40 % diesel, losing 1 point seven
-  times and 2 points five times; an Ambulance on 30 % petrol started six
+* a gasoline car refused twelve times on 40 % diesel, losing 1 point seven
+  times and 2 points five times; an Ambulance on 30 % gasoline started six
   times of twelve;
-* an Ambulance idling on pure petrol failed, and a petrol car idling on
-  20 % diesel stalled; here the litres were taken out of the tank by the
-  test;
+* an Ambulance idling on pure gasoline failed, and a gasoline car idling
+  on 20 % diesel stalled; here the litres were taken out of the tank by
+  the test;
 * a car converted to flex fuel at the workshop: diesel and biodiesel harm
-  it as they harm a petrol engine, in every band; a refused start cost
+  it as they harm a gasoline engine, in every band; a refused start cost
   it 2 points and 2 % of the battery; 4 L on 20 % diesel cost 3 points
   off the engine and 2 off the exhaust;
 * repairs: a Dash Bulldriver's failed engine brought back with the game's
@@ -447,7 +449,7 @@ outcome was the one its draw gives):
   and switched on on diesel. One **Fix Generator** uses one piece of
   scrap electronics, and at condition 50 or less the game itself fails
   every other start of a generator;
-* in January at −5 °C: a petrol car on pure ethanol refused twelve
+* in January at −5 °C: a gasoline car on pure ethanol refused twelve
   starts of twelve, at no cost.
 
 On a server, one client, as an admin and as a plain player: the verdicts;
@@ -458,11 +460,11 @@ tank** refused until confirmed; the option off. Each was seen on the
 server and on the client.
 
 Saves from versions 0.2.0 and 0.1.2, each holding a car with 40 % diesel
-in its petrol (0.2.0 also a Diesel Generator on pure petrol), continued
-with this version: the records unchanged; the car's start refused as
-before, now costing 1 or 2 engine points and 2 % of the battery, with the
-line; the Diesel Generator, which 0.2.0 would not start, started, with the
-line; the option on without anything set.
+in its gasoline (0.2.0 also a Diesel Generator on pure gasoline),
+continued with this version: the records unchanged; the car's start
+refused as before, now costing 1 or 2 engine points and 2 % of the
+battery, with the line; the Diesel Generator, which 0.2.0 would not start,
+started, with the line; the option on without anything set.
 
 **Not checked in game:** on a server, driving, the cold, a converted
 engine with diesel and a repair; ethanol's rows beyond the verdict and
@@ -938,7 +940,7 @@ read in Italian (their Italian texts load as shipped).
 
 In a world started as a new game with version 0.2.0 or later, some
 vehicles and some station pumps are diesel. In an older save every
-vehicle and pump stays petrol ([Existing saves](#existing-saves)).
+vehicle and pump stays gasoline ([Existing saves](#existing-saves)).
 
 ### Diesel vehicles
 
@@ -951,15 +953,15 @@ These have a diesel engine and are found with diesel in the tank:
 * the LBMW Radio Van and the Triple-N Van;
 * the Ambulance.
 
-Every other vehicle is petrol, the two-seat Franklin Valuline trade vans,
-the Chevalier D6 and the Chevalier Step Van included. The game shows no
-sign of the engine type. The mod names it in the vehicle's Fuel entry,
+Every other vehicle is gasoline, the two-seat Franklin Valuline trade
+vans, the Chevalier D6 and the Chevalier Step Van included. The game shows
+no sign of the engine type. The mod names it in the vehicle's Fuel entry,
 opened from the fuel cap ([The fuel in a tank](#the-fuel-in-a-tank)).
 
 A diesel vehicle runs on diesel and on biodiesel. Up to 20 % biodiesel in
 its diesel costs nothing; with more it starts less reliably, has less
-power and wears faster. Petrol or ethanol in its tank damages it, and
-diesel damages a petrol engine: [Wrong fuel](#wrong-fuel) has the rows.
+power and wears faster. Gasoline or ethanol in its tank damages it, and
+diesel damages a gasoline engine: [Wrong fuel](#wrong-fuel) has the rows.
 **Pour into this vehicle's tank** refuses such a pour and says why. The
 game's own refuelling, from a can or at a pump, does not check.
 
@@ -973,11 +975,12 @@ switched on the same way.
 
 ![Two green Diesel Generators beside the game's red generator](images/diesel-generator.jpg)
 
-*Two Diesel Generators and, on the left, the game's red petrol generator.*
+*Two Diesel Generators and, on the left, the game's red gasoline
+generator.*
 
 It burns diesel or biodiesel in any blend, pure biodiesel included. Fill
 it with **Pour into the generator**. The game's own **Add Fuel** takes
-petrol cans only, and petrol damages the Diesel Generator
+cans of gasoline only, and gasoline damages the Diesel Generator
 ([Wrong fuel](#wrong-fuel)).
 
 The game's **Generator Info** window has a line with the fuel a generator
@@ -987,13 +990,14 @@ checked in single player (launch 419); the window was not looked at.
 
 ### Diesel pumps
 
-About one pump in four gives diesel instead of petrol. Each pump is drawn
-on its own, so a station may have several diesel pumps or none. Right-click
-a pump and choose **Read what this pump gives** before you fill up.
+About one pump in four gives diesel instead of gasoline. Each pump is
+drawn on its own, so a station may have several diesel pumps or none.
+Right-click a pump and choose **Read what this pump gives** before you
+fill up.
 
 The game's own **Take Fuel** and **Refuel from Gas Pump** deliver what the
 pump holds, with its water and sediment. The game offers **Take Fuel** for
-an empty can or one that already holds petrol, so a can holding diesel
+an empty can or one that already holds gasoline, so a can holding diesel
 cannot be topped up at a pump: bring empty cans.
 
 ### What has been checked
@@ -1002,24 +1006,24 @@ cannot be topped up at a pump: bring empty cans.
 
 * in a new world, a six-seat Franklin Valuline, an LBMW Radio Van, an
   Ambulance and a Fire Department Dash Bulldriver read as diesel, and a
-  Chevalier D6 and a Franklin Valuline trade van as petrol; the Ambulance
-  started on the diesel it was found with and took 5 L of biodiesel; a
-  petrol pour into the Dash Bulldriver was refused;
+  Chevalier D6 and a Franklin Valuline trade van as gasoline; the
+  Ambulance started on the diesel it was found with and took 5 L of
+  biodiesel; a gasoline pour into the Dash Bulldriver was refused;
 * the Diesel Generator fuelled with biodiesel, started and run for two
-  hours; petrol put into another with **Add Fuel** went in as petrol;
+  hours; gasoline put into another with **Add Fuel** went in as gasoline;
   one picked up and put down again, and one left on the ground through a
   save and a reload, each still a Diesel Generator with its fuel; rolled
   from the generator crates' loot list as the game fills a container;
 * a pump's **Read what this pump gives**; an empty can and an Ambulance's
   empty tank filled with diesel at a diesel pump with the game's own
   actions, the Ambulance then starting; a Dash Bulldriver filled at a
-  petrol pump held petrol;
+  gasoline pump held gasoline;
 * on a server: the Diesel Generator seen, fuelled, started, picked up and
   put down; the Ambulance read as diesel and started; a diesel pump read
   and a can filled at it.
 
-The pumps in these tests were set to diesel or petrol by the test; a pump
-left to the world's own draw was read, not filled from.
+The pumps in these tests were set to diesel or gasoline by the test; a
+pump left to the world's own draw was read, not filled from.
 
 Driving and the cold: an Ambulance drove 352 tiles at 25 km/h on diesel
 and again on pure biodiesel, where it ran at 85 % of its power. In
@@ -1120,7 +1124,7 @@ Gas generator conversion**, and go on as for a flex conversion
 
 The work stops after the first half hour until the tank is empty: on a
 fuel can choose **Fuel (The Last Gallon)** > **Drain the generator into
-this can**. **Remove the conversion** makes it a petrol generator again,
+this can**. **Remove the conversion** makes it a gasoline generator again,
 gives back a connected propane tank and returns half of the parts.
 
 ### Propane
@@ -1237,7 +1241,7 @@ in four gives diesel ([Diesel pumps](#diesel-pumps)).
 | A biodiesel machine says "No finished ash barrel within two tiles." (or wood retort, lye leacher, reactor) | the machine it takes from has not finished, or stands more than two tiles away | Read that machine's **Status**; wait for it, or move the two together |
 | The reactor says "The leacher holds too little lye for a batch." or "The retort holds too little methanol for a batch." | the smallest batch is 5 L of oil, which takes 63 g of lye and 0.75 L of methanol | Run another barrel and leacher, or another retort load |
 | "This goes to the next machine, not into a can." | methanol, lye and crude biodiesel are never collected | Load the next machine in the chain |
-| After refuelling, an engine starts badly, loses power or will not start, or a line over the character names a wrong fuel | petrol or ethanol in a diesel tank, diesel in a petrol one, or too much ethanol for a stock engine | Stop the engine: it wears while it runs. Siphon a vehicle's tank, or empty the generator with **Drain the generator into this can**, and refill with the right fuel ([Wrong fuel](#wrong-fuel)). Choose **Read what this pump gives** before filling |
+| After refuelling, an engine starts badly, loses power or will not start, or a line over the character names a wrong fuel | gasoline or ethanol in a diesel tank, diesel in a gasoline one, or too much ethanol for a stock engine | Stop the engine: it wears while it runs. Siphon a vehicle's tank, or empty the generator with **Drain the generator into this can**, and refill with the right fuel ([Wrong fuel](#wrong-fuel)). Choose **Read what this pump gives** before filling |
 | A vessel is **Faulted**: "Reason: the batch spoiled while stalled" | it was stopped for 3 days in all, pauses by hand included | **Abort batch** empties it; then load a new mash |
 
 ## Existing saves
@@ -1256,7 +1260,7 @@ the mod's default for this: the sandbox option **Existing saves** set to
 
 Diesel vehicles and diesel pumps exist only in a world started as a new
 game with version 0.2.0 or later: in an older save every vehicle and pump
-stays petrol. The biodiesel machines work in any save.
+stays gasoline. The biodiesel machines work in any save.
 
 A save made with an earlier version of the mod continues with this one.
 Replace the mod's folder and load the save: the fuel the mod had recorded
@@ -1267,15 +1271,16 @@ stays as it was.
 * a world played 10 days without the mod, then with this version. A can
   first looked at and a station pump recorded at installation were fresh,
   and the look was remembered; a can first used 6 days later was a fifth
-  of the way to the world's age; an Ambulance read as petrol and all eight
-  pumps of the station gave petrol;
+  of the way to the world's age; an Ambulance read as gasoline and all
+  eight pumps of the station gave gasoline;
 * a world started with version 0.1.2 and one started with 0.2.0, each
   then continued with this version (the 0.2.0 world keeps its diesel
   vehicles and pumps). In the 0.1.2 world, the cans, a pump, an
   Ambulance, a car and a generator read as 0.1.2 had recorded them; a
-  vessel's batch was still running; the Ambulance started on its petrol
-  and the pump still gave petrol; this version's machines and fuels exist
-  in that save, and a Diesel Generator put down there had its picture.
+  vessel's batch was still running; the Ambulance started on its gasoline
+  and the pump still gave gasoline; this version's machines and fuels
+  exist in that save, and a Diesel Generator put down there had its
+  picture.
 
 **Not checked in game:** the other two settings (**Age from world start**
 and **Start ageing at installation**), servers, and a save from version
@@ -1297,18 +1302,18 @@ picture is the mod's: while the save is played without the mod the
 generator has no picture. If you put the mod back, the picture comes
 back when the game loads the generator's tile.
 
-Petrol stays, and so does what the mod recorded about it. If you put the
+Gasoline stays, and so does what the mod recorded about it. If you put the
 mod back later, it finds that record as it was; the world's fuel history
-does not start again, so nothing comes back fresh. Petrol poured out of a
-can meanwhile leaves the rest as it was. Petrol added meanwhile counts as
-fuel of unknown origin from the next time the mod sees the can.
+does not start again, so nothing comes back fresh. Gasoline poured out of
+a can meanwhile leaves the rest as it was. Gasoline added meanwhile counts
+as fuel of unknown origin from the next time the mod sees the can.
 
 **Checked in game:** the mod taken off a save with the load screen's
 **Choose Mods...**, a day played, and the mod put back. A vessel with a
-batch running, a Wood Retort and a can of ethanol were gone; a petrol can
-poured from and one topped up read as described above; a Diesel Generator
-on the ground was left without its picture, its fuel record kept; the
-station's pumps gave the same fuel as before.
+batch running, a Wood Retort and a can of ethanol were gone; a gasoline
+can poured from and one topped up read as described above; a Diesel
+Generator on the ground was left without its picture, its fuel record
+kept; the station's pumps gave the same fuel as before.
 
 **Not checked in game:** the mod's other fluids and items, diesel in a
 vehicle's tank or a can, how a Diesel Generator without its picture looks

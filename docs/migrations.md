@@ -150,28 +150,28 @@ Two optional fields carry it; neither changes a schema version:
   made by an earlier version has no such field, which reads as `false`.
   Where it is `true`, the chassis of `Vehicles.DIESEL_FAMILIES` have the
   profile `engine_ci_stock` and an unrecorded tank is read as diesel;
-  elsewhere every vehicle keeps `engine_si_stock` and petrol.
+  elsewhere every vehicle keeps `engine_si_stock` and gasoline.
 * A pump's sidecar keeps `product`, `"diesel"` or `"gasoline"`, from its
   first record on. In a world with `dieselVehicles` it is drawn from the
   world's seed and the pump's key; elsewhere it is `"gasoline"`. A sidecar
   from an earlier version has no such field and reads as `"gasoline"`.
 
-So a save from 0.1.x keeps its vehicles and pumps on petrol under 0.2.0.
+So a save from 0.1.x keeps its vehicles and pumps on gasoline under 0.2.0.
 Launch 257 played a new world with the 0.1.2 zip and continued it with the
 0.2.0 zip (`tools/rehearse-install.ps1 -Scenario upgrade`):
 
 * The records 0.1.2 wrote (three cans, a pump, an ambulance, a car and a
-  generator) were unchanged before any read. A petrol can, the ethanol
+  generator) were unchanged before any read. A gasoline can, the ethanol
   can, both vehicles, the generator and the pump then read as their
   records. A fermenter's batch was still running.
 * The world record was the same one. It has no `dieselVehicles`, and its
   `modVersion` stays `0.1.2`: that field is the version that created the
   record, and nothing updates it.
-* The pump 0.1.2 recorded had no `product`; it read as petrol, delivered
+* The pump 0.1.2 recorded had no `product`; it read as gasoline, delivered
   2 L of it, and its record then named `"gasoline"`. All eight pumps of
-  the station gave petrol.
-* The recorded ambulance kept `engine_si_stock` and its petrol and
-  started; an ambulance met for the first time read as petrol too.
+  the station gave gasoline.
+* The recorded ambulance kept `engine_si_stock` and its gasoline and
+  started; an ambulance met for the first time read as gasoline too.
 * 0.2.0's items and fluids exist in that save, and a Diesel Generator put
   down there has its sprite and picture: the tile sheet works in a save
   made without it.
@@ -211,14 +211,14 @@ now lets the engine start, or try to, and damages it.
 Launches 283 and 285 played a world with the 0.2.0 zip and one with the
 0.1.2 zip and continued each with the 0.3.0 zip
 (`tools/rehearse-install.ps1 -Scenario upgrade -FromVersion <version>`).
-Each world held a car with 40 % diesel in its petrol, and the 0.2.0 world
-a Diesel Generator with petrol alone; both releases judged them
+Each world held a car with 40 % diesel in its gasoline, and the 0.2.0
+world a Diesel Generator with gasoline alone; both releases judged them
 incompatible. Under 0.3.0 the records were unchanged before any read;
 the option read as on; the car's start was refused and cost it 1 to 2
 engine condition and 2 % battery charge; the Diesel Generator started.
 The 0.2.0 world kept `dieselVehicles`, its ambulance's diesel and its
-pumps' products; the 0.1.2 world kept petrol everywhere. The cans, the
-fermenter's batch, the pump and the petrol generator read as in launch
+pumps' products; the 0.1.2 world kept gasoline everywhere. The cans, the
+fermenter's batch, the pump and the gasoline generator read as in launch
 257.
 
 ### The gas conversion is not offered (0.4.2, D-040)
@@ -244,12 +244,12 @@ wood gas from a Wood Gasifier. Two records are new, each written by its
 first use: a generator's gas feed (`tlgGas`) and a gasifier's state
 (`tlgGasifier`), both in the table above. A save from an earlier version
 has neither and needs no change. A gas conversion finished in a save from
-0.1.0 to 0.4.1 may leave a generator that still holds petrol: its liquid
+0.1.0 to 0.4.1 may leave a generator that still holds gasoline: its liquid
 paths stay open, and **Connect a propane tank** refuses it until it is
 drained (`not_drained`; on a fuel can, **Fuel (The Last Gallon)** >
 **Drain the generator into this can**), as D-040 rules. Not run in game:
 a save holding such a generator, loaded with 0.5.0; wood gas fed to one
-that still holds petrol.
+that still holds gasoline.
 
 ## Settings changes
 Changing **Fuel ageing speed** appends a dated entry to `balanceHistory`;
