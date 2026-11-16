@@ -110,7 +110,7 @@ stall engines** (D-031).
 A fuel the engine is not built for no longer just blocks the start. Each
 rule sums the share of its fuels in the tank and takes the last band the
 share is above. All numbers are game values, first estimates; the order
-of harm follows real engines (petrol or ethanol in a diesel keeps it
+of harm follows real engines (gasoline or ethanol in a diesel keeps it
 running and wrecks it; diesel in a spark engine mostly stops it).
 
 | Rule | Engines | Share above | Start × | Power × | Wear × | Also |
@@ -118,13 +118,13 @@ running and wrecks it; diesel in a spark engine mostly stops it).
 | Diesel + biodiesel in a spark engine | the four `*_si_*` profiles | 1 % | 0.9 | 0.85 | 3 | |
 | | | 10 % | 0.4 | 0.6 | 6 | exhaust 0.5 a litre |
 | | | 30 % | no start | — | 10 | exhaust 1.0 a litre; 1–2 engine condition and 2 % battery charge at each refused start |
-| Petrol in a diesel | the four `*_ci_*` profiles | 2 % | 0.9 | 0.9 | 3 | |
+| Gasoline in a diesel | the four `*_ci_*` profiles | 2 % | 0.9 | 0.9 | 3 | |
 | | | 15 % | 0.5 | 0.7 | 8 | |
 | | | 50 % | 0.25 | 0.5 | 15 | failure 2 % a litre |
 | Ethanol in a diesel | the four `*_ci_*` profiles | 2 % | 0.5 | 0.7 | 8 | |
 | | | 10 % | 0.25 | 0.5 | 15 | failure 2 % a litre |
 | | | 30 % | no start | — | 20 | failure 4 % a litre; 1–2 condition at each refused start |
-| Ethanol past a stock petrol engine's `max` | `engine_si_stock` (25 %), `generator_si_stock` (15 %) | its max | 0.5 | 0.75 | 4 | |
+| Ethanol past a stock gasoline engine's `max` | `engine_si_stock` (25 %), `generator_si_stock` (15 %) | its max | 0.5 | 0.75 | 4 | |
 | | | 60 % | 0.3 | 0.6 | 8 | no start below 10 °C |
 
 * The first threshold of each rule is the profile's `foreignMax`, the
@@ -133,8 +133,8 @@ running and wrecks it; diesel in a spark engine mostly stops it).
   first band still counts toward it.
 * Biodiesel in a spark engine wears a fifth more than diesel, in
   proportion to its share of the wrong fuel.
-* Where two rules apply (petrol and ethanol in a diesel; diesel and too
-  much ethanol in a stock petrol engine) the worse value of each factor
+* Where two rules apply (gasoline and ethanol in a diesel; diesel and too
+  much ethanol in a stock gasoline engine) the worse value of each factor
   counts; they do not multiply. The wrong-fuel wear factor does multiply
   with the factors of stale or dirty fuel.
 * The ethanol row starts at 0.5 so that the start factor does not rise

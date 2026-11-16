@@ -29,7 +29,7 @@ alternative), **NOT RUN**.
 | G01 Packaging | What structure loads? | **PASS (DS + SP)** | `common/` + `42/` layout loads; all TLG items, 7 craft recipes, fluids and custom sandbox options load (boot 4); translations resolve on the client (RT-SP), in English and in Italian (runs 43–44), not on the DS |
 | G02 Fluids | Type, mixtures, metadata | **PASS (DS + SP)** | Mod fluids register and blend; transfers proportional; condition carried through the wrapped `FluidContainer.Transfer` (RT-DS) and every vanilla fuel action (RT-SP); the **Transfer Liquid** window's pours, followed once per pour, carry water and sediment too (runs 213, 215; D-035); a can on the ground keeps its fluid on the world object after reload |
 | G03 Vehicle consumption | Where does driving/idling change quantity? | **PASS (SP + MP)** idle, start gate, stall, power and wear; driving SP | Vanilla burns the fuel, idling and driving, and the mod reconciles it proportionally; the mod never subtracts. Refuel, siphon, start gate, stall and poor fuel's power and wear (D-031): SP runs 3–6 and 179, MP runs 160, 165, 169 and 188. Driving burn (0.778 L over 352 tiles at 25 km/h) and a stall on the move: SP run 176. See G03 below |
-| G04 Generator consumption | Extend fuel/burn? | **PASS (SP + MP)** burn and start gate | Native burn reconciled proportionally; `ISActivateGenerator` activates on petrol and is refused on E100 (SP runs 3–6; MP runs 160, 162) |
+| G04 Generator consumption | Extend fuel/burn? | **PASS (SP + MP)** burn and start gate | Native burn reconciled proportionally; `ISActivateGenerator` activates on gasoline and is refused on E100 (SP runs 3–6; MP runs 160, 162) |
 | G05 Generator lifecycle | State survives pickup? | **PASS (SP + MP)** with adapter | Pickup, the drop action, `forceDropHeavyItems`, the menus' unequip and a drag to the floor carry the record (SP runs 3–6 and 85); taken and put back on a server (MP run 160) |
 | G06 Stations | Per-pump or shared? | **PASS (SP + MP)** | Per-object piped units; TLG corrects both vanilla paths to 1 L/unit (10 L = −10 units, 59 L = −59 units; SP runs 3–5); pump to can and pump to car on a server (MP run 160) |
 | G07 Action authority | Which stage mutates on the server? | **PASS (MP)** for the mod's requests and the vessel's pickup; vanilla's heavy pickup FAIL | B42 actions mutate in `complete()`, which the server runs at the action's end (BC); the server answers the mod's requests (RT-MP runs 139–162). Vanilla cannot take a heavy item off the floor on a server (run 144); the mod takes the vessel there itself (D-030, runs 146–147). See G07 below |
@@ -157,7 +157,7 @@ RT-DS results (`TLG_harness_server.txt`):
   `Fluid.Get("TLG.TLG_Ethanol")` returns nil (lookup key is the bare name).
 * `Categories { Fuel }` + `BlendWhiteList { Fuel }`: Petrol and TLG_Ethanol
   blend both ways; Petrol does **not** blend with Water and
-  `canAddFluid(Water)` on a petrol container is false.
+  `canAddFluid(Water)` on a gasoline container is false.
 * Spawned `Base.PetrolCan` has capacity 10 and starts full of Petrol (10 L).
   `Base.JerryCan` capacity 20 (SRC `items/normal.txt`).
 * `FluidContainer.Transfer(a, b, 4)` from 6 Petrol + 2 Ethanol moved 3 + 1
@@ -198,7 +198,7 @@ RT-DS results (`TLG_harness_server.txt`):
   [0, capacity] and has no fullness check. A fluid holding less than
   1e-4 L is removed as empty (`removeFluidInstanceIfEmpty`, called after
   an adjust). Reading has no threshold (`createFluidSample` copies every
-  fluid). Run 58: a full 10 L petrol can lowered to 9.9998884 L of Petrol
+  fluid). Run 58: a full 10 L gasoline can lowered to 9.9998884 L of Petrol
   read `amount 10.0000000`, `full=true`, and refused 1.117e-4 L of
   `TLG_FuelWater`; a 5 L can took the same water. The mod writes its
   compositions around both rules (D-007 amendment; run 59).
@@ -248,7 +248,7 @@ RT-SP (runs 3–5, `Base.CarNormal`, 59 L tank):
 
 * Can → tank (`ISAddGasolineToVehicle`) and tank → can (`ISTakeGasolineFromVehicle`)
   move exactly the litres taken and carry composition, contaminants and
-  degradation (largest deviation 2e-8); an E25 blend (6 L petrol + 2 L
+  degradation (largest deviation 2e-8); an E25 blend (6 L gasoline + 2 L
   ethanol) arrives as 6 + 2 in the tank record.
 * Phase A's vehicle steps also pass on a `Base.PickUpTruck` (run 62,
   **29/0**).
@@ -315,7 +315,7 @@ Source evidence:
   global later has no effect. The harness counts writes in VehiclePart's
   method table instead (`getmetatable(part).__index`): three arguments
   are vanilla's burn, one is anyone else's.
-* Run 176, a `Base.CarNormal` on E10 (9 L petrol + 1 L ethanol through
+* Run 176, a `Base.CarNormal` on E10 (9 L gasoline + 1 L ethanol through
   `ISAddGasolineToVehicle`), 352 tiles at 25 km/h in 14.1 game minutes:
   the tank lost 0.778136 L in 14 burns of exactly that sum, and nothing
   else wrote the tank. The next read was `reconciled`, the total equal to
@@ -398,7 +398,7 @@ Source evidence:
   The wear is charged on the litres burned, so it holds either way.
 * Run 179, cars driven with the stall option off (so a random stall at
   1.2 % a game minute could not cut a leg):
-  * on petrol aged to 2.6: power 4000 → 3406 (factor 0.851429) 0.12 game
+  * on gasoline aged to 2.6: power 4000 → 3406 (factor 0.851429) 0.12 game
     minutes after the cruise began, held for 352 tiles, quality 100 and
     loudness 40 kept, and 4000 again two game minutes after the stop with
     no state left;
@@ -427,7 +427,7 @@ drives, B watches). Run 188: A **22/0**, B **9/0**.
   the world sound that draws zombies, which reads the server's loudness.
   A client applies each engine packet (`VehicleUpdatePacket` flag 4) by
   calling the state's `engineDo…` and then `setEngineFeature(q, l, p)`.
-* On the server the mod's minute pass lowered a car on petrol aged to 2.6
+* On the server the mod's minute pass lowered a car on gasoline aged to 2.6
   from 4000 to 3406 at the first pass that saw it run, and held it for 100
   game minutes of idling. Quality 97 and loudness 40 stayed as they were.
   Both clients showed 3406 30 and 31 ticks after they saw the engine run
@@ -473,7 +473,7 @@ RT-SP (runs 3–6, `Base.Generator`, max fuel 10 L):
   next read. Of that 0.015, the generator's own draw is 0.002 and 0.013
   came from objects in range, which were not looked at (written earlier
   as "no appliance drawing").
-* Start gate (run 6, vanilla `ISActivateGenerator`): a generator on petrol
+* Start gate (run 6, vanilla `ISActivateGenerator`): a generator on gasoline
   (grade good) activated; a generator holding 3 L of E100, filled through the
   confirmed TLG pour, was refused (`too_much_ethanol`, `failToStart`) and
   stayed off.
@@ -732,8 +732,8 @@ Source evidence:
   run 41).
 * A transition baseline takes the world-age supply's quantities, which can
   include water breathed in over the world's age that the native fluid
-  does not hold. Run 41's look recorded 9.999969 L petrol and 0.0000307 L
-  water for a can holding 10 L of petrol; run 40's pour-written records
+  does not hold. Run 41's look recorded 9.999969 L gasoline and 0.0000307 L
+  water for a can holding 10 L of gasoline; run 40's pour-written records
   had the same shape. By the code, a difference under
   `C.FLOAT_TOLERANCE` (1e-4 L) is adopted from the native composition at
   the next read; larger ones (older worlds, bigger containers) go through
@@ -969,7 +969,7 @@ server").
 * `IsoGameCharacter.Kill(nil)` kills the player (god mode off). The body
   (an `IsoDeadBody`, its container `inventoryfemale` or `inventorymale`)
   appears some moments later: none was found 30 ticks after the death in
-  run 197. It holds the inventory: the petrol can and its record. A heavy
+  run 197. It holds the inventory: the gasoline can and its record. A heavy
   item carried in both arms is dropped on the floor at the feet instead:
   the vessel in runs 198–199. No Lua hook runs for that drop.
 * SRC `ISPostDeathUI`: its **Respawn** button shows 3 seconds after the
