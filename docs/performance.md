@@ -16,13 +16,18 @@ other runs:
   (`-Mode performance-gas`), runs 400 and 405–407 the whole mode with
   them, runs 406 and 407 with more frame samples. Runs 404–407 came after
   the gas pass's early return for a propane generator with less than a
-  use of room.
+  use of room;
+- runs 544–545 (2026-11-16, game 42.22.2), on the 0.5.0 package's mod
+  folder, after the UX review (replies said over the character, the
+  menus' new entries) and D-040's nearest-first order: run 544 the gas
+  stages alone, run 545 the whole mode.
 
-Runs 405–407, the latest runs of the whole mode, passed all 53 budgets: the 40 that runs 398 and 400 passed, the first runs to check
+Run 545, the latest run of the whole mode, passed all 53 budgets, as
+runs 405–407 did: the 40 that runs 398 and 400 passed, the first runs to check
 the 18 set from run 341, and the gas stages' 13, set from run 400, one
-of them reset from run 404 after the early return. Runs 401 and 404, the
-gas stages alone, passed the 13 before them, run 404 against that one's
-budget before the reset (see "Budgets").
+of them reset from run 404 after the early return. Runs 401, 404 and
+544, the gas stages alone, passed the 13 before them, run 404 against
+that one's budget before the reset (see "Budgets").
 Run 341 passed 21 of the 22 budgets set
 before it. The fuel menu's budget had most likely been set from a menu
 that never opened (see "The fuel menu"); it is now set from run 341, with
@@ -43,7 +48,9 @@ in `docs/evidence/`:
 [run 404](evidence/2026-11-13_rt-sp_harness_run404_performance_gas_early_return_42.22.2.txt),
 [run 405](evidence/2026-11-13_rt-sp_harness_run405_performance_whole_early_return_42.22.2.txt),
 [run 406](evidence/2026-11-13_rt-sp_harness_run406_performance_frames_diagnosis_42.22.2.txt),
-[run 407](evidence/2026-11-13_rt-sp_harness_run407_performance_petrol_comparison_42.22.2.txt) and
+[run 407](evidence/2026-11-13_rt-sp_harness_run407_performance_petrol_comparison_42.22.2.txt),
+[run 544](evidence/2026-11-16_rt-sp_harness_run544_performance_gas_0.5.0_zip_42.22.2.txt),
+[run 545](evidence/2026-11-16_rt-sp_harness_run545_performance_whole_0.5.0_zip_42.22.2.txt) and
 run 184's fireplace test
 ([run 184](evidence/2026-11-04_rt-sp_harness_run184_fireplace.txt)).
 
@@ -228,10 +235,12 @@ every 2.5 seconds, 25 seconds and 2.5 minutes.
 - Frames: 20 seconds at normal speed after each stage. For each frame, the
   game's own main-thread time (`getCPUTime`: the frame step from logic
   through render preparation and Lua events, in whole milliseconds) and the
-  time between frames. Every menu load opens a reply dialog, and the
-  harness leaves the 32 of the fermenter loads on screen, so every frame
-  stage from stage 5 on has them. From run 340 a last stage closes every
-  reply dialog and samples frames again. From run 406 the whole mode also
+  time between frames. Until 0.5.0 every menu load opened a reply dialog,
+  and the harness left the 32 of the fermenter loads on screen, so every
+  frame stage from stage 5 on had them (runs 181–407). In 0.5.0 a load's
+  reply is a line over the character: run 545 had none in a window. From
+  run 340 a last stage closes every reply dialog and samples frames
+  again. From run 406 the whole mode also
   samples frames after each of the square-load hook's two timings, the
   second just before the gas, and after the gas frames with the 16
   generators switched off; from run 407, also with them switched on
@@ -549,6 +558,48 @@ timers with engines running read up to 9 % apart between whole-mode
 runs, run 405 the lowest. In runs 406 and 407 the UI held 26 elements
 from the dialogs' closing to the last sample, and the clock stayed in
 daylight.
+
+### What 0.5.0 changed (runs 544–545)
+
+Run 545 timed 44 of the 53 workloads within 6 % of run 407. The other
+nine are menus, which the UX review changed: named entries, the reasons
+of greyed entries, what a load would take, **Repair** and the condition.
+Each costs more, once a right-click, and stays under half its budget.
+What in them costs the difference was not timed apart.
+
+| Menu | Run 407 | Run 545 | Budget |
+| --- | --- | --- | --- |
+| Fuel menu of a can | 0.372 | 0.470 | 1.1 |
+| Machine menu, a fermenter | 0.271 | 0.310 | 0.8 |
+| Machine menu, the five biodiesel machines | 0.264–0.336 | 0.305–0.429 | 0.8–1.0 |
+| Gas menu, wood gas | 0.155 | 0.188 | 0.46 |
+| Gasifier menu | 0.353 | 0.382 | 1.0 |
+
+Mean main-thread time per frame, in milliseconds:
+
+| Stage | Run 407 | Run 545 |
+| --- | --- | --- |
+| Empty road | 1.30 | 1.28 |
+| 32 fermenters, 8 engines idling | 3.20 | 1.60 |
+| Every workload running | 3.12 | 1.62 |
+| The dialogs closed | 1.64 | 1.69 |
+| The gas added | 1.83 | 2.02 |
+| The gas generators switched off | 1.70 | 1.69 |
+| Switched on again | 1.79 | 1.92 |
+| 16 petrol generators instead, running | 1.72 | 1.92 |
+| The petrol generators switched off | 1.61 | 1.66 |
+
+With the replies said over the character, the stages with every
+workload running take what they took with the dialogs closed: the 1.5 ms
+the 32 dialogs cost is gone. The gas added 0.33 ms from the dialogs'
+closing, within the 0.20–0.39 ms of runs 398–407. Gas and petrol
+generators running took 1.92 ms each, and switching them off took 0.32
+and 0.26 ms off a frame: the cost comes with generators running, as in
+run 407. In runs 544 and 545 each of the eight gasifiers, one beside
+each generator, fed the generator nearest it (0.0192 each), where by id
+alone (run 404) two fed two generators each and two none; the total
+given was the same. Every stage held 60 frames a
+second, with 25 to 26 UI elements, the clock in daylight.
 
 ### The fuel menu (run 341)
 
@@ -895,7 +946,9 @@ Evidence:
 - **More than 16 gas generators,** or gasifiers that several generators
   draw from in one pass; and the game's own cost of running generators
   apart from the mod's (see "Frames with the gas").
-- **Running generators' frame cost:** one petrol pair only (run 407), at
+- **The menus' added cost since 0.5.0,** part by part (see "What 0.5.0
+  changed").
+- **Running generators' frame cost:** one petrol pair only (runs 407 and 545), at
   about the limit of what 20-second samples resolve; nothing switched off
   and on on the bare road; no run without the mod (see "Frames with the
   gas").

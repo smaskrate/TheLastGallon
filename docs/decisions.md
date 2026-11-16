@@ -2131,9 +2131,10 @@ gas probe (launch 342).
     of the same generators are not run in game.
   * Not run: a handbook found at a container's first fill (the harness
     filled them again); a real network; the gas on a server with more than
-    one client; the whole performance mode since the nearest-first order
-    (the pass sorts by distance now). Its gas stages ran on 2026-11-16
-    within every budget (launch 544).
+    one client. The performance mode, not run since the nearest-first
+    order (the pass sorts by distance now), ran on 2026-11-16 within every
+    budget, each gasifier feeding the generator nearest it (launches
+    544–545).
 
 ## D-041 On a server the authority sends the records of items no character carries
 * Decision: on a server, each record the authority writes into the mod

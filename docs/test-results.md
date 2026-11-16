@@ -10356,9 +10356,10 @@ call, in ms:
   (named entries, the reasons of greyed entries, **Repair** and the
   condition); what in them costs the difference was not timed apart. Each
   is paid once a right-click.
-* The four gasifiers now gave 0.0192 to each of the eight generators at
-  their caps, each drawn from its nearer gasifier. In launch 404, by id
-  alone, two gave 0.0384 and two none. After 50 draws they gave 5.12 Nm3 in all, every generator's
+* Each of the eight gasifiers, one beside each generator, gave 0.0192,
+  one generator's step, to bring the generators to their caps: each
+  generator drew from the gasifier nearest it. In launch 404, by id
+  alone, two gasifiers gave 0.0384, two generators' steps, and two none. After 50 draws they gave 5.12 Nm3 in all, every generator's
   step, as in launch 404.
 * Frames, mean main-thread step: 1.32 ms on the bare road, 1.25 ms with
   the gas running (launch 404: 1.33 and 1.24).
@@ -10374,3 +10375,75 @@ server with more than one client.
 
 Evidence:
 [run 544](evidence/2026-11-16_rt-sp_harness_run544_performance_gas_0.5.0_zip_42.22.2.txt).
+
+## 2026-11-16 — RT-SP launch 545 (the whole performance mode on the 0.5.0 package's mod folder, gate 11)
+
+Build 42.22.2, the reference machine (`performance.md`), the mod and
+harness as in launch 544: the 0.5.0 package's mod folder, matching the
+zip's 187 files after the launch, and the harness at `62ce5cd`. Command:
+`tools/run-sp-harness.ps1 -Mode performance -TimeoutMinutes 30`.
+**82/0** in 10 minutes, all 53 budgets among them, as in launch 407, the
+last run of the whole mode. It is the first since the UX review (replies
+said over the character, the menus' new entries) and D-040's
+nearest-first order.
+
+* 44 of the 53 timings are within 6 % of launch 407's. The other nine
+  are menus, which the UX review changed (named entries, the reasons of
+  greyed entries, what a load would take, **Repair** and the condition,
+  the can **Collect** fills). Medians per call, in ms:
+
+  | Menu | 545 | 407 | Budget |
+  | --- | --- | --- | --- |
+  | Fuel menu of a can | 0.470 | 0.372 | 1.1 |
+  | Machine menu, a fermenter | 0.310 | 0.271 | 0.8 |
+  | Machine menu, Ash Barrel | 0.305 | 0.264 | 0.8 |
+  | Machine menu, Lye Leacher | 0.339 | 0.282 | 0.9 |
+  | Machine menu, Biodiesel Reactor | 0.364 | 0.305 | 0.9 |
+  | Machine menu, Wood Retort | 0.381 | 0.286 | 0.9 |
+  | Machine menu, Biodiesel Wash Tank | 0.429 | 0.336 | 1.0 |
+  | Gas menu, wood gas | 0.188 | 0.155 | 0.46 |
+  | Gasifier menu | 0.382 | 0.353 | 1.0 |
+
+  Each is paid once a right-click and stays under half its budget. The
+  Gas menu on propane cost 0.143 ms against 0.141. What in the menus
+  costs the difference was not timed apart.
+* Frames, mean main-thread time, launch 545 against 407:
+
+  | Stage | 545 | 407 |
+  | --- | --- | --- |
+  | Empty road | 1.28 | 1.30 |
+  | 400 cans with records | 1.32 | 1.26 |
+  | 20 parked cars | 1.30 | 1.32 |
+  | 32 fermenters, 8 engines idling | 1.60 | 3.20 |
+  | Every workload running | 1.62 | 3.12 |
+  | The dialogs closed | 1.69 | 1.64 |
+  | Before the gas | 1.65 | 1.58 |
+  | The gas added | 2.02 | 1.83 |
+  | The 16 gas generators switched off | 1.69 | 1.70 |
+  | Switched on again | 1.92 | 1.79 |
+  | 16 petrol generators instead, running | 1.92 | 1.72 |
+  | The petrol generators switched off | 1.66 | 1.61 |
+
+* The stages with the machines loaded took half the time: launch 407 had
+  the 32 reply dialogs of the fermenter loads on screen, launch 545 none.
+  Its 59 replies were said over the character, none in a window, and the
+  dialogs' closing found none open. With every workload running a frame
+  took what it took with the dialogs closed.
+* The gas added 0.33 ms from the dialogs' closing (launch 407: 0.20 ms;
+  launches 398–406: 0.33–0.39 ms). Switching the gas generators off took
+  0.32 ms off a frame, the petrol ones 0.26 ms, and the two kinds running
+  took 1.92 ms each: as in launch 407, the frame cost comes with
+  generators running, not with the gas feed.
+* The gas stages repeated launch 544: every budget held, and each
+  gasifier fed the one generator nearest it.
+* Every stage held 60 frames a second; the UI held 25 to 26 elements, and
+  the clock stayed in daylight (09:08 to 12:15).
+* The console logged "The Last Gallon 0.5.0 ready" and holds no warning
+  or error of the mod. Its one Lua exception is the harness's own
+  `getLockFPS` probe, as in launches 398–407 and 544.
+
+Not run: several Status cards open and what their refreshes cost; the
+gas on a server with more than one client; a run without the mod.
+
+Evidence:
+[run 545](evidence/2026-11-16_rt-sp_harness_run545_performance_whole_0.5.0_zip_42.22.2.txt).
