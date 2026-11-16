@@ -332,7 +332,7 @@ launch failed one check written for the releases before 0.3.0, since
 fixed). Not run on it: the other modes, the other multiplayer cases
 (launch 367 ran its mod files), the removal and existing-save scenarios.
 
-The upload folder holds this package since 2026-11-13, on the owner's
+The upload folder held this package from 2026-11-13 to 2026-11-16, on the owner's
 word ("If there are not other things to test, prepare it"): its
 `Contents` mirrored and its `preview.png` copied from the zip, unpacked
 and checked against its manifest, and the folder's 168 files checked by
@@ -451,7 +451,10 @@ That file, the owner's, took the package's gas section and "Not in this
 version" line (D-045) and "Version 0.5.0", nothing else ("Gate 12" under
 "Gate details" says how it differs from the package's). The change note is
 `docs/workshop-change-note-0.5.0.txt`. The 0.4.3 package, kept in
-`dist`, can put the folder back as it was.
+`dist`, can put the folder's `Contents` and `preview.png` back;
+`workshop.txt`'s three edits, recorded under "Gate 12", can be undone by
+hand. The Workshop page's new pictures are
+`art-src/workshop/05-machine-status.jpg` and `12-wood-gasifier.jpg`.
 
 Done on 2026-11-16, on the owner's word ("Yes, run them"): the zip of
 `b686cce` installed clean and played (launch 519), its mod folder through
@@ -968,8 +971,8 @@ The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
 `docs/workshop-change-note-0.5.0.txt`, written on 2026-11-16: the changes
 from 0.4.3, which the item serves, to 0.5.0, what was checked in game and
-what was not, in the form with bullet characters described below (51
-lines, 6,330 bytes). It is not in the package. Its 0.4.1 form,
+what was not, in the form with bullet characters described below (52
+lines, 6,536 bytes). It is not in the package. Its 0.4.1 form,
 `docs/workshop-change-note-0.4.1.txt` (the changes from 0.1.1), was
 pasted by the owner at the 0.4.1 upload
 (2026-11-11), who sent a picture of the item's change-notes page: `[b]`

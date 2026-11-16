@@ -44,8 +44,9 @@ Changes since 0.4.3, the version uploaded here before: gas generators, and chang
 • This version's package installed clean and played.
 
 [b]Not checked in game[/b]
-• The conversion refused without its skills or recipe; how long a propane tank lasts; wet wood; a filter filled by real hours of burning; the Generator Info window of a generator on gas.
-• How the lines over your character look on screen; the station pour in single player; the time and look of a drain; a load leaving a favourite alone; the questions before "Cancel the project" and "Remove the conversion".
+• The conversion refused without its skills or recipe; a gas generator switched on from its own menu; how long a propane tank lasts; wet wood; a filter filled by real hours of burning; the Generator Info window of a generator on gas.
+• On screen: the lines over your character and what an entry shows under the pointer. Status's progress and time left beyond a fermentation just begun.
+• The station pour in single player; the time and look of a drain; the wrong-fuel line after a refuel at a pump; a load with planks or a favourite carried; the questions before "Cancel the project" and "Remove the conversion".
 • On a server: "Repair", the Workshop menu and the manual's new pages. A real network.
 
 The player guide (docs/player-guide.md in the mod's folder) has the steps and the numbers. docs/CHANGELOG.md lists the changes by version.
