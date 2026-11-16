@@ -143,20 +143,36 @@ function World.ensure(isNewGame)
     return md
 end
 
--- Multiplayer: the server owns the record; clients receive a copy for UI
--- previews (replication NOT RUN, engine-capabilities G07/G08).
+-- Multiplayer: the server owns the record; a client asks for a copy when
+-- the game starts and gets it again whenever the server sends it. A
+-- client's copy carried `dieselVehicles` in RT-MP launch 446.
 function World.transmit()
     if isServer() then ModData.transmit(World.KEY) end
 end
 
 function World.requestFromServer()
-    if isClient() then ModData.request(World.KEY) end
+    if isClient() then
+        World.received = false
+        ModData.request(World.KEY)
+    end
 end
 
+-- A copy counts once it is a record the authority created: WorldInit.create
+-- sets its schema `v`, in every version since 0.1.0. Before that the
+-- client's table is the empty one ModData.getOrCreate makes, or the
+-- server's own before it created the record, and either reads as a world
+-- without diesel vehicles.
 function World.onReceive(key, data)
     if key == World.KEY and isClient() and type(data) == "table" then
         ModData.add(World.KEY, data)
+        World.received = data.v ~= nil
     end
+end
+
+-- Whether this process holds the world record as the authority created it:
+-- the authority always, a client once the server's copy has come.
+function World.hasRecord()
+    return World.isAuthority() or World.received == true
 end
 
 function World.get()

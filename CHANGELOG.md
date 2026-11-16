@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+* On a server, **Fuel in this vehicle** and **Fuel in this generator**
+  name the engine in their first line, as in single player ("Engine:
+  stock diesel engine"). A vehicle's line is missing for a moment after
+  joining, until the server has sent the world's details. Checked on a
+  dedicated server with one player (launches 546–549 in
+  `docs/test-results.md`): the line in both menus, and the engine named
+  as the server has it for a gasoline car and generator, a diesel
+  ambulance, a Diesel Generator and converted flex engines.
+
 ## 0.5.1 (2026-11-16)
 
 * Nothing in the mod's behaviour changed: only its documents and its

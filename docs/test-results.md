@@ -10447,3 +10447,57 @@ gas on a server with more than one client; a run without the mod.
 
 Evidence:
 [run 545](evidence/2026-11-16_rt-sp_harness_run545_performance_whole_0.5.0_zip_42.22.2.txt).
+
+## 2026-11-16 — RT-MP launches 546–549 (a client's Fuel menu names the engine, D-042 amended)
+
+Build 42.22.2, a dedicated server and one client on this computer, each
+case's site as the case sets it up. `main` at `b020e86` with the change
+not yet committed: `Menu.engineOf` names the engine on a client from its
+copies, a vehicle's once its copy of the world record has come
+(`World.onReceive`, `World.hasRecord`), and the cases `ux`, `wrongfuel`,
+`conversion` and `carconv` check the client's line against the server.
+Command: `tools/run-mp-harness.ps1 -Clients 1 -Only <case>
+-TimeoutMinutes 40`, the four one after another.
+
+The launchers judged the desktop unlocked by its input desktop
+(`tools/desktop-lock.ps1`, new). At 13:59 and 14:25 the earlier test had
+refused to start: a `LogonUI.exe` started at an unlock at 14:25:45 was
+still running at 14:36, with the session active and the input desktop
+"Default". No game was launched then.
+
+| Launch | Case | Results (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 546 | `ux` | 15/0 | launch 535, the same count; two checks now expect the engine line |
+| 547 | `wrongfuel` | 31/0 | launch 472, 30/0; one check new |
+| 548 | `conversion` | 8/0 | launch 498, 7/0; one check new |
+| 549 | `carconv` | 8/0 | launch 499, 7/0; one check new |
+
+* Launch 546: **Fuel in this generator** listed "Engine: stock gasoline
+  generator", then **What I know about it**, **Look and smell** and
+  **Take a sample (kit)**; **Look and smell**, answered by the server,
+  opened a window with the same engine line. Generator Info read "Runs
+  on: gasoline", and the client's copy of the world record had
+  `dieselVehicles` true. **Fuel in this vehicle** began with "Engine:
+  stock gasoline engine", the line **What I know about it** opened with.
+* Launch 547: the client named the car `engine_si_stock`, the ambulance
+  `engine_ci_stock` (diesel, by its copy of the world record), the
+  gasoline generator `generator_si_stock` and the Diesel Generator
+  `generator_ci_bio`, each as the server's site report named it; the
+  client held a created world record.
+* Launches 548 and 549: once the conversion was commissioned, the client
+  named the generator `generator_si_flex` and the car `engine_si_flex`,
+  as the server's probe did.
+
+The clients' and the server's consoles hold no error of the mod. Their
+stack traces are the game's own (the mod's missing `actiongroups`
+folder) and, on the server, the harness's deep-recursion probe.
+
+Not run: a vehicle's line in the moment before the world record's copy
+comes (offline only, `test_tank_menu.lua`); two clients; the new lock
+check on a locked screen.
+
+Evidence:
+[run 546](evidence/2026-11-16_rt-mp_harness_run546_ux_client_engine_line_42.22.2.txt),
+[run 547](evidence/2026-11-16_rt-mp_harness_run547_wrongfuel_client_engine_line_42.22.2.txt),
+[run 548](evidence/2026-11-16_rt-mp_harness_run548_conversion_client_engine_line_42.22.2.txt),
+[run 549](evidence/2026-11-16_rt-mp_harness_run549_carconv_client_engine_line_42.22.2.txt).

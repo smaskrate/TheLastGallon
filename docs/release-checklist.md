@@ -427,9 +427,12 @@ character (D-044, the owner's choice after launch 450, where the first
 one found was the other pump of a pair); checked on a server in launch
 477.
 
-Not decided, put to the owner on 2026-11-15: whether a client's Fuel
-menu names the engine now that its copy of the world record carries
-`dieselVehicles` (D-042; launch 446).
+Put to the owner on 2026-11-15 and decided on 2026-11-16, after 0.5.1
+("Show it on clients"): a client's Fuel menu names the engine from its
+copies, a vehicle's once its copy of the world record has come (D-042,
+amended). In the repository, not in a release; checked on a server with
+one client in launches 546–549 (`ux`, `wrongfuel`, `conversion`,
+`carconv`).
 
 Released on 2026-11-16: the owner uploaded it from the upload folder at
 07:45, as Steam records, before launches 542–543 ran and before the

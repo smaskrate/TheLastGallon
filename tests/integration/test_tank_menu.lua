@@ -57,7 +57,7 @@ local GLOBALS = { "instanceof", "getCore", "getCell", "JoypadState", "IsoObjectP
 -- tiles; getText as the game's Translator with every key known.
 local function world(fn)
     local saved = { translate = Fmt.translate, holdsGas = G.holdsGas, profile = G.profile, isGas = G.isGas,
-        vehicleProfile = TLG.Integration.Vehicles.profile }
+        vehicleProfile = TLG.Integration.Vehicles.profile, received = TLG.World.received }
     for _, k in ipairs(GLOBALS) do saved[k] = _G[k] end
     local w = { squares = {}, picked = nil, kit = false, ms = 0 }
     local function list(t)
@@ -131,6 +131,7 @@ local function world(fn)
     G.isGas = saved.isGas
     Fmt.translate, G.holdsGas, G.profile, TLG.Integration.Vehicles.profile = saved.translate, saved.holdsGas, saved.profile,
         saved.vehicleProfile
+    TLG.World.received = saved.received
     if not ok then error(err, 0) end
 end
 
@@ -192,11 +193,19 @@ T.case("integration: a tank's Fuel entry names the engine and offers the three t
         T.ok(c.options[1].sub.options[4].notAvailable == nil)
         -- The menu's test call: there is something to show.
         T.eq(Menu.fillWorld(0, w.context(), { w.at.floor }, true), "test")
-        -- A client of a server does not work the engine out: the replies name it.
+        -- A client of a server names the engine from its copies (D-042,
+        -- amended), a vehicle's only once the world record's copy has come.
         isClient = function() return true end
+        TLG.World.received = false
         c = w.context()
         Menu.fillWorld(0, c, { w.at.floor }, false)
-        T.eq(names(c.options[1].sub), "[ContextMenu_TLG_ShowKnown] | [ContextMenu_TLG_Look] | [ContextMenu_TLG_SampleKit]")
+        T.eq(names(c.options[1].sub), "[ContextMenu_TLG_ShowKnown] | [ContextMenu_TLG_Look] | [ContextMenu_TLG_SampleKit]",
+            "no copy of the world record yet: no line")
+        TLG.World.received = true
+        c = w.context()
+        Menu.fillWorld(0, c, { w.at.floor }, false)
+        T.eq(names(c.options[1].sub), "[IGUI_TLG_EngineIs:[IGUI_TLG_Profile_engine_ci_stock]] | [ContextMenu_TLG_ShowKnown] | "
+            .. "[ContextMenu_TLG_Look] | [ContextMenu_TLG_SampleKit]", "the copy has come")
         isClient = function() return false end
         -- A generator, and one that holds gas.
         w.picked = nil
@@ -206,11 +215,46 @@ T.case("integration: a tank's Fuel entry names the engine and offers the three t
         Menu.fillWorld(0, c, { gen }, false)
         T.eq(c.options[1].name, "[ContextMenu_TLG_FuelGenerator]")
         T.ok(has(names(c.options[1].sub), "[IGUI_TLG_EngineIs:[IGUI_TLG_Profile_generator_ci_bio]]"))
+        -- A generator's profile is its own record's: on a client it needs no
+        -- copy of the world record.
+        isClient = function() return true end
+        TLG.World.received = false
+        c = w.context()
+        Menu.fillWorld(0, c, { gen }, false)
+        T.ok(has(names(c.options[1].sub), "[IGUI_TLG_EngineIs:[IGUI_TLG_Profile_generator_ci_bio]]"), "a client, no world record")
+        isClient = function() return false end
         gen.gas = true
         c = w.context()
         Menu.fillWorld(0, c, { gen }, false)
         T.eq(#c.options, 0, "no Fuel entry on a gas generator")
     end)
+end)
+
+T.case("integration: a client counts the world record once the server's created one has come", function()
+    local W = TLG.World
+    local saved = { md = ModData, client = isClient, server = isServer, received = W.received }
+    local kept = {}
+    ModData = { add = function(k, d) kept[k] = d end, request = function() end }
+    isServer, isClient = function() return false end, function() return true end
+    local ok, err = pcall(function()
+        W.requestFromServer()
+        T.ok(not W.hasRecord(), "asked for, not come")
+        W.onReceive("OtherMod", { v = 1 })
+        T.ok(not W.hasRecord(), "another key")
+        W.onReceive(W.KEY, false)
+        T.ok(not W.hasRecord(), "not a table")
+        W.onReceive(W.KEY, {})
+        T.ok(not W.hasRecord(), "the server's table before it created the record")
+        T.ok(kept[W.KEY] ~= nil, "kept as the copy all the same")
+        W.onReceive(W.KEY, { v = 1, dieselVehicles = false })
+        T.ok(W.hasRecord(), "a created record, here one without diesel vehicles")
+        W.requestFromServer()
+        T.ok(not W.hasRecord(), "asked for again: the copy before does not count")
+        isClient = function() return false end
+        T.ok(W.hasRecord(), "the authority always holds it")
+    end)
+    ModData, isClient, isServer, W.received = saved.md, saved.client, saved.server, saved.received
+    if not ok then error(err, 0) end
 end)
 
 T.case("integration: a tank's dialogs name the engine and say what a kit's sample means for it", function()

@@ -153,8 +153,9 @@ Gallon)** is its own.
 
 * The first line names the engine: "Engine: stock diesel engine",
   "Engine: flex-fuel engine (gasoline/ethanol)". It does nothing when
-  clicked. On a server the line is not in the menu; the two dialogs below
-  begin with it instead.
+  clicked. On a server a vehicle's line is missing for a moment after you
+  join, until the server has sent your game the world's details; the
+  dialogs below name the engine too.
 * **Look and smell** and **Take a sample (kit)** test the fuel in the
   tank as they test a can's, with the same precision, and
   **What I know about it** lists them the same way.
@@ -167,8 +168,11 @@ Gallon)** is its own.
 
 **Checked in game** (single player, launch 419): the entry at the fuel cap
 and not away from it, the three tests on an ambulance and on a Diesel
-Generator, the kit's line for the engine. **Not checked in game:** a real
-right-click on a vehicle, a save and reload, a server.
+Generator, the kit's line for the engine. On a server with one player
+(launches 546–549): the engine line in both menus, and the engine named
+as the server has it for a diesel ambulance, a Diesel Generator and
+converted engines. **Not checked in game:** a real right-click on a
+vehicle, a save and reload, two players on a server.
 
 ## Treating fuel
 

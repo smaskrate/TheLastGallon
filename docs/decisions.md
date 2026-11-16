@@ -2235,6 +2235,27 @@ with the engine's exact verdict on it, and no menu asked.
   misfuelling this is meant to prevent. The authority's replies name it.
   Generator Info reads the client's copy of the generator's mod data
   (NOT RUN on a server).
+* Amended 2026-11-16, at the owner's word ("Show it on clients", over
+  keeping the line out): on a server's client the menu names the engine
+  too, from the copies the server sends when it changes them: the world
+  record's `dieselVehicles` for a diesel chassis (`Vehicles.baseProfile`),
+  the Engine part's or the generator's conversion project, and the
+  generator's own record, which Generator Info reads there. RT-MP launch
+  446 found the client's copy of the world record with `dieselVehicles`
+  true, and Generator Info's line from the client's copy right ("Runs
+  on: gasoline"). A vehicle's line waits for the world record's copy: a
+  client counts it once it is a record the authority created, with its
+  schema `v` (`World.onReceive`, `World.hasRecord`), since the empty table
+  before reads as a world without diesel vehicles. A generator's needs no
+  world record. Offline: `test_tank_menu.lua` (a vehicle's line before
+  and after the copy, a generator's without it; `onReceive` with another
+  key, a non-table, an empty table and a created record). Verified RT-MP
+  with one client, each the client's line against the server's profile
+  (launches 546–549): the line in both menus on a gasoline car and
+  generator (`ux`), the diesel ambulance and the Diesel Generator
+  (`wrongfuel`), and the flex generator and car once commissioned
+  (`conversion`, `carconv`). The moment before the copy comes is checked
+  offline only; two clients NOT RUN.
 
 ## D-043 Machines show their wear and can be repaired
 

@@ -4166,6 +4166,13 @@ end
 
 CV.profile = probeGen("converted_generator", function(m)
     check("generator_converted_to_flex", function() return m.profile == "generator_si_flex", "profile=" .. tostring(m.profile) end)
+    -- This client's Fuel menu names the converted engine as the server has
+    -- it, from its copy of the generator's project (D-042, amended).
+    local mine
+    pcall(function() mine = TLG.UI.FuelMenu.engineOf({ kind = "generator", owner = cvGen() }) end)
+    check("client_menu_names_the_flex_generator", function()
+        return mine ~= nil and mine == m.profile, string.format("this client %s, the server %s", tostring(mine), tostring(m.profile))
+    end)
 end)
 
 CV.pour = act("pour_ethanol_into_flex", function(ctx, p)
@@ -4266,6 +4273,13 @@ end
 
 CC.profile = probeCar("converted_car", function(m)
     check("car_converted_to_flex", function() return m.profile == "engine_si_flex", "profile=" .. tostring(m.profile) end)
+    -- This client's Fuel menu names the converted engine as the server has
+    -- it, from its copy of the Engine part's project (D-042, amended).
+    local mine
+    pcall(function() mine = TLG.UI.FuelMenu.engineOf({ kind = "vehicle", owner = ccCar() }) end)
+    check("client_menu_names_the_flex_car", function()
+        return mine ~= nil and mine == m.profile, string.format("this client %s, the server %s", tostring(mine), tostring(m.profile))
+    end)
 end)
 
 -- From the filler, where the mod's menu offers the pour (FuelContextMenu:
@@ -5135,6 +5149,26 @@ local WFC = (function()
         end)
     end)
 
+    -- The client's Fuel menu names each engine as the server has it (D-042,
+    -- amended 2026-11-16): the ambulance as diesel by this client's copy of
+    -- the world record (`dieselVehicles`), the Diesel Generator by its own.
+    W.engines = once("mp_wf_client_engines", function()
+        local function of(kind, owner)
+            local p
+            if owner then pcall(function() p = TLG.UI.FuelMenu.engineOf({ kind = kind, owner = owner }) end) end
+            return p
+        end
+        local got = { of("vehicle", veh("car")), of("vehicle", veh("amb")), of("generator", W.gen(1)), of("generator", W.gen(2)) }
+        local want = { W.site.carProfile, W.site.ambProfile, W.site.g1Profile, W.site.g2Profile }
+        check("wf_client_menu_names_each_engine_as_the_server", function()
+            local same = true
+            for i = 1, 4 do same = same and got[i] ~= nil and got[i] == want[i] end
+            return same, string.format("this client: car %s, ambulance %s, generators %s and %s; the server: %s, %s, %s, %s; "
+                .. "world record copy %s", tostring(got[1]), tostring(got[2]), tostring(got[3]), tostring(got[4]),
+                tostring(want[1]), tostring(want[2]), tostring(want[3]), tostring(want[4]), tostring(TLG.World.hasRecord()))
+        end)
+    end)
+
     W.canToAmb = act("wf_can_to_ambulance", function(ctx, p)
         ISVehiclePartMenu.onAddGasoline(p, veh("amb"):getPartById("GasTank"))
     end, 180)
@@ -5177,7 +5211,7 @@ local WFC = (function()
     end
 
     W.steps = {
-        MP.waitWorld, W.setup, wait("mp_wf_site_arrives", 300), W.seen,
+        MP.waitWorld, W.setup, wait("mp_wf_site_arrives", 300), W.seen, W.engines,
         giveCan("wf_give_can_car", { petrol = "10" }, "wfCan1"), arrived("wfCan1"), FU.canToCar,
         giveCan("wf_give_can_ambulance", { petrol = "10" }, "wfCan2"), arrived("wfCan2"), W.canToAmb,
         -- The verdicts.
@@ -6298,8 +6332,9 @@ end
 --   six tiles away, and, opened again, when the reactor is taken with the
 --   world menu's Grab.
 -- * At the fuel case's site (setup_fuel): a can poured into a generator; the
---   generator's tank entry, Fuel in this generator, with no engine line in
---   the client's menu and the engine named in the server's Look and smell;
+--   generator's tank entry, Fuel in this generator, whose first line in the
+--   client's menu names the engine as the server's Look and smell does
+--   (D-042, amended 2026-11-16);
 --   Generator Info's Runs on line from the client's copy; Drain the
 --   generator into this can and Pour into the station reservoir clicked in
 --   a can's Fuel menu (R13, timed actions whose `source` and object faced
@@ -6571,11 +6606,12 @@ if MP.only == "ux" then
                 local engineLine = r.engine and TLG.UI.Format.engine(r.engine)
                 report():line("OBS  MP.ux Fuel in this generator > %s; Look and smell -> ok=%s engine=%s; window: %s",
                     table.concat(ctx.names, " / "), tostring(r.ok), tostring(r.engine), tostring(text))
-                check("ux_generator_tank_entry_names_the_engine_in_the_dialog", function()
-                    return ctx.tank ~= nil and ctx.tank.kind == "generator" and ctx.names[1] == getText("ContextMenu_TLG_ShowKnown")
-                        and r.ok == true and engineLine ~= nil and has(text, engineLine) and not has(text, "IGUI_TLG_"),
-                        string.format("entry %s; first entry '%s'; reply ok=%s engine %s; window %s", tostring(ctx.tank ~= nil),
-                            tostring(ctx.names[1]), tostring(r.ok), tostring(r.engine), tostring(text))
+                check("ux_generator_tank_entry_names_the_engine_as_the_dialog", function()
+                    return ctx.tank ~= nil and ctx.tank.kind == "generator" and engineLine ~= nil and ctx.names[1] == engineLine
+                        and ctx.names[2] == getText("ContextMenu_TLG_ShowKnown")
+                        and r.ok == true and has(text, engineLine) and not has(text, "IGUI_TLG_"),
+                        string.format("entry %s; entries '%s', '%s'; reply ok=%s engine %s; window %s", tostring(ctx.tank ~= nil),
+                            tostring(ctx.names[1]), tostring(ctx.names[2]), tostring(r.ok), tostring(r.engine), tostring(text))
                 end)
                 local info, want = nil, getText("IGUI_TLG_GenFuel", getText("IGUI_TLG_GenFuel_generator_si_stock"))
                 pcall(function() info = TLG.UI.GeneratorInfo.line(gen(1)) end)
@@ -6763,10 +6799,15 @@ if MP.only == "ux" then
                 local text = UX.windows[ctx.windows + 1]
                 report():line("OBS  MP.ux Fuel in this vehicle > %s; What I know about it: %s", table.concat(ctx.names, " / "),
                     tostring(text))
-                check("ux_vehicle_tank_entry_and_what_i_know", function()
-                    return ctx.tank ~= nil and ctx.tank.kind == "vehicle" and ctx.names[1] == getText("ContextMenu_TLG_ShowKnown")
-                        and text ~= nil and not has(text, "IGUI_TLG_"), string.format("entry %s; first entry '%s'; window %s",
-                        tostring(ctx.tank ~= nil), tostring(ctx.names[1]), tostring(text))
+                -- The menu's first line is the engine line the server's
+                -- What I know about it names (D-042, amended).
+                local engineLine = ctx.names[1]
+                check("ux_vehicle_tank_entry_names_the_engine_as_what_i_know", function()
+                    return ctx.tank ~= nil and ctx.tank.kind == "vehicle" and engineLine ~= nil
+                        and engineLine ~= getText("ContextMenu_TLG_ShowKnown") and ctx.names[2] == getText("ContextMenu_TLG_ShowKnown")
+                        and text ~= nil and has(text, engineLine) and not has(text, "IGUI_TLG_"),
+                        string.format("entry %s; entries '%s', '%s'; window %s", tostring(ctx.tank ~= nil), tostring(ctx.names[1]),
+                        tostring(ctx.names[2]), tostring(text))
                 end)
                 closeWindows()
                 return true

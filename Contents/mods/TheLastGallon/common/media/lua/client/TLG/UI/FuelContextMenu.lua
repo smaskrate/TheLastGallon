@@ -299,12 +299,16 @@ function Menu.tankAt(playerNum, worldobjects)
     return nil
 end
 
--- The engine's profile where this process is the authority. A client's copy
--- of the world record is not known to tell a diesel chassis from a petrol
--- one (Vehicles.baseProfile), so there the line is left out and the
--- authority's replies name the engine (Format.known, onReply).
+-- The engine's profile, from this process's records. On a server's client
+-- they are copies the server sends when it changes them: the generator's
+-- own record (as Generator Info reads it), the Engine part's conversion
+-- project, and the world record, whose `dieselVehicles` tells a diesel
+-- chassis from a gasoline one (Vehicles.baseProfile). Until the world
+-- record's copy has come a vehicle gets no line: the empty copy reads as a
+-- world without diesel vehicles, and a diesel van named gasoline would
+-- cause the misfuelling the line is there to prevent (D-042, amended).
 function Menu.engineOf(tank)
-    if not TLG.World.isAuthority() then return nil end
+    if tank.kind == "vehicle" and not TLG.World.hasRecord() then return nil end
     local ok, profile = pcall(function()
         if tank.kind == "vehicle" then return TLG.Integration.Vehicles.profile(tank.owner) end
         return TLG.Integration.Generators.profile(tank.owner)
