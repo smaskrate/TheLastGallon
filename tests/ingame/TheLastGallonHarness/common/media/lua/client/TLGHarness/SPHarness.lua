@@ -1395,7 +1395,9 @@ end
 
 local function closeDialogs()
     for _, o in ipairs(H.dialogs.open) do pcall(function() o:removeFromUIManager() end) end
-    pcall(function() TLG.UI.Say.closeCards() end)
+    -- No TLG.UI.Say until 0.5.0: the upgrade's launch 1 runs on 0.4.3, and
+    -- -debug logs an error raised inside pcall too (launch 536).
+    if TLG.UI.Say and TLG.UI.Say.closeCards then pcall(TLG.UI.Say.closeCards) end
     H.dialogs.open = {}
 end
 
