@@ -318,7 +318,8 @@ file, so its 52/0 holds for it too.
 The release commit dates the changelog and gives the player guide its
 0.4.3 version line (the zip of `d0da92c` still read 0.4.2 there) and the
 server checks of launches 362–372 in its lists of what has been checked.
-The change note is `docs/workshop-change-note-0.4.3.txt`.
+The change note was `docs/workshop-change-note-0.4.3.txt`, renamed for
+0.5.0.
 
 The 0.4.3 package is the zip of `14a36ed` (168 files, 7,892,551 bytes,
 SHA-256 `4A7897A0…F9A472ED`), built from a clean tree. It differs from
@@ -391,9 +392,9 @@ Where it stands against the gates:
 | 7 | PARTIAL | A save made with the 0.4.3 zip continued with the 0.5.0 zip (launch 538: 3/0, then 22/0): the records as 0.4.3 left them, the fermenter's batch kept, a refused start on the old blend at a cost, the Wood Gasifier and the Wood Gas Handbook among this version's items. Open: a generator converted to gas in a save from 0.4.1 or earlier taking gas, once drained; the existing-save and removal scenarios |
 | 8 | PARTIAL | The gas runs on the game's own generator, converted; `support-matrix.md` has the gas rows |
 | 9 | PARTIAL | The Wood Gasifier's floor model is the one the owner supplied, with its provenance in `art-src/woodgasifier`, and its icon is rendered from it (launch 448); the Wood Gas Handbook's icon is made from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card (launch 444) and picture 12 of the gasifier (launch 448) are not uploaded |
-| 10 | PARTIAL | All 532 Italian strings as shipped, among them "It is full: there is no room for more fuel." and the feminine state words, and the Status card read in Italian, its retorts' line ending "Pronta" (launches 445, 517; D-045); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. "It is full: …" said on a server's client in English (launch 473). A gas generator's Generator Info line names propane and wood gas, no biogas (launch 518; D-045). The package's Workshop text (`tools/package.ps1`) has a gas section, and its "Not in this version" names biogas and electrical networks (D-045). Open: "It is full: …" on screen in Italian; the upload folder's `workshop.txt`, the owner's, still has the 0.4.3 text |
+| 10 | PARTIAL | All 532 Italian strings as shipped, among them "It is full: there is no room for more fuel." and the feminine state words, and the Status card read in Italian, its retorts' line ending "Pronta" (launches 445, 517; D-045); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. "It is full: …" said on a server's client in English (launch 473). A gas generator's Generator Info line names propane and wood gas, no biogas (launch 518; D-045). The package's Workshop text (`tools/package.ps1`) has a gas section, and its "Not in this version" names biogas and electrical networks (D-045); since 2026-11-16 the upload folder's `workshop.txt`, the owner's, has that section and that line, keeping the owner's "Coming soon". Open: "It is full: …" on screen in Italian |
 | 11 | PARTIAL | Single player's whole performance mode passed its 53 budgets with the gas (launches 405–407); the gas's cost on a server with one client (launches 410–411). Open: the mode since the nearest-first order; several Status cards open and what their refreshes cost; several clients |
-| 12 | PARTIAL | The 0.5.0 package is the zip of `b686cce` on `main` (189 files, 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Installed clean and played on 42.22.2 (launch 519: 106/0, then 14/0); its mod folder through the eight gas modes (`gas-propane`, `gas-sleep`, `gas-wood`, `gas-player`, `gas-moves`, `handbook-loot-woodgas`, `gas-probe`, `gas-measures`), the gas server cases, `ux` and `pot-still` (launches 521–535, 537, 539–541, each with the counts of its last run on the tree once `gas-sleep`'s first sleep ran its 8 hours); a 0.4.3 save continued with it (launch 538). Not run on it: `performance-gas`. Open: an install through the Workshop; the removal and existing-save scenarios on this zip |
+| 12 | PARTIAL | The 0.5.0 package is the zip of `b686cce` on `main` (189 files, 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Installed clean and played on 42.22.2 (launch 519: 106/0, then 14/0); its mod folder through the eight gas modes (`gas-propane`, `gas-sleep`, `gas-wood`, `gas-player`, `gas-moves`, `handbook-loot-woodgas`, `gas-probe`, `gas-measures`), the gas server cases, `ux` and `pot-still` (launches 521–535, 537, 539–541, each with the counts of its last run on the tree once `gas-sleep`'s first sleep ran its 8 hours); a 0.4.3 save continued with it (launch 538). The upload folder holds it since 2026-11-16: its `Contents` and `preview.png` match the manifest, both ways, and its `workshop.txt` is the owner's. Not run on it: `performance-gas`. Open: an install through the Workshop; the removal and existing-save scenarios on this zip |
 | 13 | PARTIAL | The Wood Gasifier's model is the owner's, supplied on 2026-11-15 (D-039 amendment), drawn whole on the floor in launch 448; its size, 1.2 m wide, the owner judged right. Open: one look for every state, cold, warming and running not drawn apart; its icon not looked at in the game's interface; a turned gasifier; its look on a server |
 
 Of the single-player modes, the full run (launch 435: 106/0, 14/0),
@@ -430,14 +431,27 @@ Not decided, put to the owner on 2026-11-15: whether a client's Fuel
 menu names the engine now that its copy of the world record carries
 `dieselVehicles` (D-042; launch 446).
 
-Before release, in this order:
+Before release: the owner uploads it from the upload folder, with the
+Workshop page's new pictures, and pastes
+`docs/workshop-change-note-0.5.0.txt` into the uploader's change-notes
+box.
 
-1. On the owner's word, put the package in the upload folder and give
-   its `workshop.txt`, the owner's file, the package's gas section and
-   "Not in this version" line (D-045), keeping the owner's edits; write
-   `docs/workshop-change-note-0.5.0.txt` for the uploader's change-notes
-   box.
-2. The owner uploads it, with the Workshop page's new pictures.
+Done on 2026-11-16, on the owner's word ("Yes, do it", to the question
+whether to update the upload folder's `workshop.txt` and write the 0.5.0
+change note): the package went into the upload folder, as the first step
+before release asked, since a 0.5.0 text over the 0.4.3 files would have
+uploaded the wrong mod. The folder's 168 files matched the 0.4.3
+package's manifest, both ways, but for the owner's `workshop.txt`, so
+the mirror removed nothing of the owner's. The zip of `b686cce`, its
+hash checked, was unpacked afresh and its 189 files matched its
+manifest; its `Contents` was mirrored over the folder's and its
+`preview.png` copied (the same picture as before). The folder's 189
+files now match the 0.5.0 manifest, both ways, but for `workshop.txt`.
+That file, the owner's, took the package's gas section and "Not in this
+version" line (D-045) and "Version 0.5.0", nothing else ("Gate 12" under
+"Gate details" says how it differs from the package's). The change note is
+`docs/workshop-change-note-0.5.0.txt`. The 0.4.3 package, kept in
+`dist`, can put the folder back as it was.
 
 Done on 2026-11-16, on the owner's word ("Yes, run them"): the zip of
 `b686cce` installed clean and played (launch 519), its mod folder through
@@ -932,11 +946,12 @@ mode, and the harness runs with `-nosteam`. Before 0.4.1 the item served
 0.1.1, uploaded by the owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
-(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.4.3 package's
-`Contents` and `preview.png` since 2026-11-13 (launch 373; "Version
-0.4.3" above). Before it, the 0.1.2 package's from 2026-11-10, then the
-0.3.0, 0.3.1, 0.3.2, 0.4.0 and 0.4.1 packages' on 2026-11-11 and the 0.4.2
-package's on 2026-11-12; 0.2.0 was never put there. For 0.4.0:
+(`<user>/Zomboid/Workshop/TheLastGallon`) holds the 0.5.0 package's
+`Contents` and `preview.png` since 2026-11-16 ("Version 0.5.0" above).
+Before it, the 0.1.2 package's from 2026-11-10, then the 0.3.0, 0.3.1,
+0.3.2, 0.4.0 and 0.4.1 packages' on 2026-11-11, the 0.4.2 package's on
+2026-11-12 and the 0.4.3 package's from 2026-11-13 (launch 373); 0.2.0
+was never put there. For 0.4.0:
 the release zip `A4B7336D…1BBD7B14` was checked against its manifest,
 its `Contents` mirrored over the folder's, and the folder's 165 files
 checked by hash, both ways. Later that day the zip of `a0d293e` (`87ED49FD…5A47A297`), unpacked and checked against its manifest by launch 317, replaced it there: its `Contents` mirrored over the folder's and its `preview.png` copied, the folder's 166 files checked by hash, both ways. The folder's `preview.png` and `42/poster.png` are the picture of fourteen models (SHA-256 `13A1A39F…7309D5D1`). It has not been uploaded. Its `workshop.txt` is the
@@ -947,13 +962,14 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line. On 2026-11-16, on the owner's word ("Yes, do it"), it was set to "Version 0.5.0", the package's eight lines of "Make your own: gas" went in after the biodiesel section, and its "Not in this version" line now names biogas and electrical networks, keeping the owner's "Coming soon"; nothing else changed. It now differs from the package's text in five lines: the id, "not tested/supported", "Coming soon", the tags and the visibility. Its CRLF line ends stay.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.4.3.txt`, written on 2026-11-13: the changes
-from 0.4.2, which the item serves, to 0.4.3, in the form with bullet
-characters described below. It is not in the package. Its 0.4.1 form,
+`docs/workshop-change-note-0.5.0.txt`, written on 2026-11-16: the changes
+from 0.4.3, which the item serves, to 0.5.0, what was checked in game and
+what was not, in the form with bullet characters described below (51
+lines, 6,330 bytes). It is not in the package. Its 0.4.1 form,
 `docs/workshop-change-note-0.4.1.txt` (the changes from 0.1.1), was
 pasted by the owner at the 0.4.1 upload
 (2026-11-11), who sent a picture of the item's change-notes page: `[b]`

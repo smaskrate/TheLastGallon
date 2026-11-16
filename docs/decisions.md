@@ -2337,8 +2337,10 @@ the Workshop menu's line is not run in game.
 own: gas" after the biodiesel one: the conversion, the Wood Gasifier and
 what it burns, its handbook and levels, and **Gas status**. Its last
 line names only biogas and electrical networks as not in this version.
-The upload folder's `workshop.txt` is the owner's file and keeps its
-0.4.3 text until the 0.5.0 package goes there, on the owner's word.
+The upload folder's `workshop.txt` is the owner's file and kept its
+0.4.3 text until the 0.5.0 package went there, on the owner's word, on
+2026-11-16; it then took the gas section and that line, keeping the
+owner's "Coming soon" (`release-checklist.md`, gate 12).
 
 **The mod list's description** (`mod.info`), chosen by the owner the
 same day ("Three pathways, one list") after the release commit had added
