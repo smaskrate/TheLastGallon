@@ -1441,9 +1441,12 @@ local function menuClick(label, fill, rootText, text)
     return reply
 end
 
+-- Until 0.4.3 every machine's root entry was "Machine (The Last Gallon)":
+-- the upgrade's launch 1 runs this harness on such a release (launch 520).
 local function machineClick(label, item, key)
-    return menuClick(label, function(c) TLG.UI.MachineMenu.fill(0, c, { item }) end, TLG.UI.MachineMenu.rootTitle(item),
-        getText(key))
+    local Menu = TLG.UI.MachineMenu
+    local root = Menu.rootTitle and Menu.rootTitle(item) or getText("ContextMenu_TLG_Machine")
+    return menuClick(label, function(c) Menu.fill(0, c, { item }) end, root, getText(key))
 end
 
 -- The Workshop menu is for the generator or vehicle clicked (0.3.1). The
@@ -18340,6 +18343,29 @@ RT.gasMeasureSteps = { RT.waitWorld, RT.GM.setup, RT.GM.chargerCheck, RT.GM.step
 ------------------------------------------------------------------------------
 RT.GS = { margin = 1e-3, hours = 8 }
 
+-- What may end a sleep early, read at the wake: launches 357 and 522 woke
+-- after 4 and 5 of the 8 hours, and why is not known.
+function RT.GS.wakeNotes(p)
+    local parts = {}
+    pcall(function() parts[#parts + 1] = string.format("fatigue %.3f", p:getStats():get(CharacterStat.FATIGUE)) end)
+    pcall(function()
+        local t, list = {}, p:getCharacterTraits():getKnownTraits()
+        for i = 0, list:size() - 1 do t[#t + 1] = tostring(list:get(i)) end
+        parts[#parts + 1] = "traits [" .. table.concat(t, ",") .. "]"
+    end)
+    pcall(function()
+        local n, zs = 0, getCell():getZombieList()
+        for i = 0, zs:size() - 1 do
+            local z = zs:get(i)
+            if p:DistTo(z:getX(), z:getY()) <= 20 then n = n + 1 end
+        end
+        parts[#parts + 1] = string.format("%d zombies within 20 tiles", n)
+    end)
+    pcall(function() parts[#parts + 1] = "raining " .. tostring(RainManager.isRaining()) end)
+    pcall(function() parts[#parts + 1] = "outside " .. tostring(p:isOutside()) end)
+    return table.concat(parts, ", ")
+end
+
 function RT.GS.sleep(label, refill)
     return { name = "rtgs_" .. label, timeout = 240000, fn = function(ctx, ticks)
         local GM, GS = RT.GM, RT.GS
@@ -18379,12 +18405,15 @@ function RT.GS.sleep(label, refill)
             R:line("OBS  RTGS.%s asleep at %.5f h (clock %02d:%02d), to wake at %.2f; A fuel %.7f, load %.7f, refill %s",
                 label, hours(), getGameTime():getHour(), getGameTime():getMinutes(), wake, a:getFuel(), GM.power(a),
                 tostring(refill))
+            R:line("OBS  RTGS.%s falling asleep: %s", label, RT.GS.wakeNotes(p))
             return nil
         end
         if p:isAsleep() and hours() - ctx.h0 < 24 then return nil end
         -- Awake: a few ticks more, so the tick watcher records the last step.
         if not ctx.awake then
             ctx.awake = ticks
+            R:line("OBS  RTGS.%s woke at clock %02d:%02d, asleep %s: %s", label, getGameTime():getHour(),
+                getGameTime():getMinutes(), tostring(p:isAsleep()), RT.GS.wakeNotes(p))
             return nil
         end
         if ticks - ctx.awake < 30 then return nil end
