@@ -1,5 +1,4 @@
 [b]Version 0.5.0[/b]
-Changes since 0.4.3, the version uploaded here before: gas generators, and changes to the menus, the machines' Status and the mod's answers. Tested on Project Zomboid 42.22.2.
 
 [b]New: gas generators[/b]
 • A generator converted to gas runs on propane or on wood gas. "Start: Gas generator conversion", gone from the Workshop menu since 0.4.2, is back. The work stops after its first half hour until the generator's fuel is drained into a can. A converted generator takes no liquid fuel; "Remove the conversion" makes it a petrol generator again.
@@ -41,7 +40,7 @@ Changes since 0.4.3, the version uploaded here before: gas generators, and chang
 [b]Checked in game[/b]
 • In single player: the conversion, the tank drained, the handbook read, the gasifier made, loaded and lit, and a generator run three hours on its gas; propane for four hours, through a save and a trip; eight hours asleep beside a wood-gas generator without a stop; one gasifier feeding two generators; the Status card and Repair; the tooltips and the manual's new pages, in English and Italian.
 • On a dedicated server, on one computer: propane; the gasifier from two players, a player joining while it burns and a server restart; with one player, the Status card, the tank entries, the drain and the station pour.
-• This version's package installed clean and played.
+• This version's package installed clean and played. With the same package: a save made with 0.4.3 continued; a save played without the mod gained it; the mod taken off a save and put back, in a save without a gasifier or a gas generator.
 
 [b]Not checked in game[/b]
 • The conversion refused without its skills or recipe; a gas generator switched on from its own menu; how long a propane tank lasts; wet wood; a filter filled by real hours of burning; the Generator Info window of a generator on gas.

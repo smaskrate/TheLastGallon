@@ -979,8 +979,11 @@ The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
 `docs/workshop-change-note-0.5.0.txt`, written on 2026-11-16: the changes
 from 0.4.3, which the item serves, to 0.5.0, what was checked in game and
-what was not, in the form with bullet characters described below (52
-lines, 6,536 bytes). It is not in the package. Its 0.4.1 form,
+what was not, in the form with bullet characters described below (51
+lines, 6,546 bytes). The owner took out its line under the title
+("Changes since 0.4.3, …"); the existing-save and removal scenarios of
+launches 542–543 went into its "Checked in game". It is not in the
+package. Its 0.4.1 form,
 `docs/workshop-change-note-0.4.1.txt` (the changes from 0.1.1), was
 pasted by the owner at the 0.4.1 upload
 (2026-11-11), who sent a picture of the item's change-notes page: `[b]`
