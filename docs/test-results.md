@@ -10252,3 +10252,70 @@ Evidence:
 [run 539](evidence/2026-11-16_rt-sp_harness_run539_gas_probe_0.5.0_zip_42.22.2.txt),
 [run 540](evidence/2026-11-16_rt-sp_harness_run540_gas_measures_0.5.0_zip_42.22.2.txt),
 [run 541](evidence/2026-11-16_rt-sp_harness_run541_pot_still_0.5.0_zip_42.22.2.txt).
+
+## 2026-11-16 — RT-SP launches 542–543 (the 0.5.0 package on an existing save and removed from a save, gate 7)
+
+Build 42.22.2. The package is the zip of `b686cce` on `main`
+(`E6D1BF5C…0ACB1652`), the one in the upload folder since that morning.
+The harness and its dev driver were at `62ce5cd`, unchanged since.
+`tools\rehearse-install.ps1 -NoBuild -Scenario <name>` checked the zip
+against its manifest (189 files) and installed it into a fresh cache.
+After each launch the batch driver compared the cache's mod folder with
+the zip's `Contents\mods\TheLastGallon`: the same 187 files.
+
+| Launch | Scenario | Game starts and results (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 542 | `existing`: 10 game days without the mod, then with it | without the mod 3/0; first load with it 15/0; after save and continue 4/0 | launch 254 (0.2.0), the same |
+| 543 | `removal`: a new world with the mod, a day without it, the mod back, the save continued again | 7/0; 2/0; 7/0; 2/0 | launch 305 (0.3.2), the same |
+
+Launch 542:
+* On its first load the mod created the world record as an existing save:
+  `createdAsNewGame=false`, policy `transition` over 30 days,
+  `modVersion=0.5.0`, no diesel vehicles. The ambulance and the trade van
+  read as petrol (`engine_si_stock`), and all eight pumps gave petrol.
+* A can looked at and a pump drawn from at installation were fresh
+  (0.000014297 and 0.000013830, each the rule's value). A can found 6
+  days later was a fifth of the way to the world's age (0.135580913,
+  share 0.2000, the rule's value).
+* After save and continue, the world record, both cans' records and
+  `dieselVehicles=false` stood.
+* Launch 2's console logged "The Last Gallon 0.5.0 ready" at both loads
+  and holds no warning, error or exception. Launch 1's console, without
+  the mod, was not kept: the script keeps only its results.
+
+Launch 543:
+* Launch 1, a new world with diesel vehicles: the ambulance on diesel, 2
+  of the 8 pumps giving diesel. Cans P and Q of petrol and E of the mod's
+  ethanol were recorded, a Diesel Generator with 5 L of biodiesel and a
+  Wood Retort put down, and a fermenter set working.
+* Launch 2, without the mod: P and Q kept their petrol and their records,
+  E was empty, and the fermenter's and the retort's tiles held nothing.
+  The Diesel Generator stood with its 5 L and its record, without a
+  sprite. The driver poured 2 L out of P and 3 L of fresh petrol into Q.
+* Launch 3, the mod back: the cans' records were as launch 1 left them,
+  the world record was the same one, and the pumps gave what they gave.
+  P kept its condition with its 7 L; Q's 3 L were mixed in at the
+  untracked baseline, D-006's rule (0.292399773). The Diesel Generator
+  had its sprite and picture back, and the console holds the mod's line
+  for it. The fermenter and the retort were gone and E held nothing, as
+  "Removing the mod" in the player guide says.
+* Launch 4: the sprite stayed through the save with nothing repaired,
+  and the generator kept its record.
+* The consoles with the mod loaded hold its ready line and no warning,
+  error or exception. Launch 2's two exceptions are the dev driver's own
+  lookup on the emptied ethanol can (`Driver.lua:183`, inside a `pcall`),
+  as in launches 254–257 and run 54.
+
+Neither scenario puts down a Wood Gasifier or converts a generator to
+gas: what a save loaded without the mod does with them is not run.
+
+Not run on this zip:
+* `performance-gas` and `gaswood2 -Restart`;
+* the other single-player modes and server cases;
+* a generator converted to gas in a save from an earlier release
+  (`migrations.md`, D-040);
+* an install through the Steam Workshop.
+
+Evidence:
+[run 542](evidence/2026-11-16_rt-sp_harness_run542_existing_save_0.5.0_zip_42.22.2.txt),
+[run 543](evidence/2026-11-16_rt-sp_harness_run543_removal_0.5.0_zip_42.22.2.txt).
