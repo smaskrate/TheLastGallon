@@ -372,7 +372,7 @@ Release art (audit R01–R04):
 | `preview.png`, 256×256 | Workshop upload (required) | taken from `art-src/preview.png`, made by `tools/make-preview.ps1` from the mod's own models (D-033) |
 | poster | in-game mod list (`poster=` in `mod.info`) | `42/poster.png`, the preview; loaded by the game from the installed zip (run 190) |
 | mod icon | in-game mod list (`icon=` in `mod.info`) | `42/icon.png`, the vessel's inventory icon; loaded likewise (run 190) |
-| Workshop screenshots | Workshop page | `art-src/workshop/01`–`13` (JPEG, 16:9, 672×378 to 1040×585), cut by `tools/make-workshop-shots.ps1` from the harness's screenshots (launch 432 and earlier scene shots; 05, the Status card, from launch 444; 12, the wood gasifier, from launch 448); not uploaded |
+| Workshop screenshots | Workshop page | `art-src/workshop/01`–`13` (JPEG, 16:9, 672×378 to 1040×585), cut by `tools/make-workshop-shots.ps1` from the harness's screenshots (launch 432 and earlier scene shots; 05, the Status card, from launch 444; 12, the wood gasifier, from launch 448); which of them the Workshop page carries since the 0.5.0 upload of 2026-11-16 was not looked at |
 | Workshop banner | Workshop page | spec §22; not made (R04) |
 
 ### B and C

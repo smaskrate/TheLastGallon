@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 519 Italian strings as shipped in a client set to Italian, and the Status card read in Italian (launch 445); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.4.3 package is the zip of `14a36ed` (SHA-256 `4A7897A0…F9A472ED`), installed clean and played on 42.22.2 in launch 373 (106/0, 14/0), and a save made with the 0.4.2 zip continued with it (launch 375: 3/0, 22/0); each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.4.3 since 2026-11-13; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, and one made with 0.2.0 with a 0.3.0 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.5.0 package is the zip of `b686cce` (SHA-256 `E6D1BF5C…0ACB1652`), installed clean and played on 42.22.2 in launch 519 (106/0, 14/0); a save made with the 0.4.3 zip continued with it (launch 538: 3/0, 22/0), a world played without the mod gained it (launch 542) and the mod was taken off a save and put back (launch 543). Each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.5.0 since 2026-11-16; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, one made with 0.2.0 with a 0.3.0 zip, and one made with 0.4.2 with the 0.4.3 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -362,7 +362,7 @@ download, and how the Workshop page shows the change note.
 Version 0.5.0 is the release commit on `main`, which took the branch
 `feature/gas-generators` by fast-forward; its `mod.info` and
 `TLG/Core.lua` read 0.5.0, and `mod.info`'s description names the gas.
-Nothing has been uploaded. What it adds over 0.4.3, as the shipped
+The owner uploaded it to the Workshop on 2026-11-16 (gate 12 below). What it adds over 0.4.3, as the shipped
 changelog's 0.5.0 section lists it:
 
 * Gas generators, the third pathway (D-039, D-040, D-041): **Start: Gas
@@ -391,10 +391,10 @@ Where it stands against the gates:
 | 6 | PARTIAL | Propane through a save, a reload and a trip (launch 352); a wood-gas save continued (launch 358); a server restart with the gasifier lit (launch 392); a generator taken up and put down with its tank (launch 352) and with its wood-gas record (launches 397, 408–409); a lit gasifier taken up goes out and keeps its wood (launches 358, 361). Open: as for 0.4.3 |
 | 7 | PARTIAL | A save made with the 0.4.3 zip continued with the 0.5.0 zip (launch 538: 3/0, then 22/0): the records as 0.4.3 left them, the fermenter's batch kept, a refused start on the old blend at a cost, the Wood Gasifier and the Wood Gas Handbook among this version's items. With the 0.5.0 zip: a world played without the mod gaining it, created as an existing save without diesel, its fuel first found fresh and later a fifth aged (launch 542: 3/0, 15/0, 4/0, the checks of launch 254 on 0.2.0); the mod taken off a save and put back, the petrol records kept, the Diesel Generator's sprite back, the machines and the ethanol gone (launch 543: 7/0, 2/0, 7/0, 2/0, the checks of launch 305 on 0.3.2). Open: a generator converted to gas in a save from 0.4.1 or earlier taking gas, once drained; a Wood Gasifier or a gas generator in a save loaded without the mod |
 | 8 | PARTIAL | The gas runs on the game's own generator, converted; `support-matrix.md` has the gas rows |
-| 9 | PARTIAL | The Wood Gasifier's floor model is the one the owner supplied, with its provenance in `art-src/woodgasifier`, and its icon is rendered from it (launch 448); the Wood Gas Handbook's icon is made from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; the Workshop page's picture 05 of the Status card (launch 444) and picture 12 of the gasifier (launch 448) are not uploaded |
+| 9 | PARTIAL | The Wood Gasifier's floor model is the one the owner supplied, with its provenance in `art-src/woodgasifier`, and its icon is rendered from it (launch 448); the Wood Gas Handbook's icon is made from the Field Manual's (`asset-requirements.md`). Open: as for 0.4.3; whether the Workshop page carries picture 05 of the Status card (launch 444) and picture 12 of the gasifier (launch 448) since the upload of 2026-11-16 was not looked at |
 | 10 | PARTIAL | All 532 Italian strings as shipped, among them "It is full: there is no room for more fuel." and the feminine state words, and the Status card read in Italian, its retorts' line ending "Pronta" (launches 445, 517; D-045); the manual's biodiesel and gas pages in both languages (launches 436–437); the player guide's "A generator on gas"; the changelog's gas entries. "It is full: …" said on a server's client in English (launch 473). A gas generator's Generator Info line names propane and wood gas, no biogas (launch 518; D-045). The package's Workshop text (`tools/package.ps1`) has a gas section, and its "Not in this version" names biogas and electrical networks (D-045); since 2026-11-16 the upload folder's `workshop.txt`, the owner's, has that section and that line, keeping the owner's "Coming soon". Open: "It is full: …" on screen in Italian |
 | 11 | PARTIAL | Single player's whole performance mode passed its 53 budgets with the gas (launches 405–407); the gas's cost on a server with one client (launches 410–411). Open: the mode since the nearest-first order; several Status cards open and what their refreshes cost; several clients |
-| 12 | PARTIAL | The 0.5.0 package is the zip of `b686cce` on `main` (189 files, 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Installed clean and played on 42.22.2 (launch 519: 106/0, then 14/0); its mod folder through the eight gas modes (`gas-propane`, `gas-sleep`, `gas-wood`, `gas-player`, `gas-moves`, `handbook-loot-woodgas`, `gas-probe`, `gas-measures`), the gas server cases, `ux` and `pot-still` (launches 521–535, 537, 539–541, each with the counts of its last run on the tree once `gas-sleep`'s first sleep ran its 8 hours); a 0.4.3 save continued with it (launch 538). The upload folder holds it since 2026-11-16: its `Contents` and `preview.png` match the manifest, both ways, and its `workshop.txt` is the owner's. The existing-save and removal scenarios on it (launches 542–543), each as its last run. Not run on it: `performance-gas`. Open: an install through the Workshop |
+| 12 | PARTIAL | The 0.5.0 package is the zip of `b686cce` on `main` (189 files, 8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`), built by `tools/package.ps1` from a clean tree after its own run of the tests (384/384), the compile check (165/0) and the translation check (532 keys). Unpacked, its 189 files match its manifest, and its `42` and `common` folders are the repository's file for file; its `workshop.txt` has the gas section. Installed clean and played on 42.22.2 (launch 519: 106/0, then 14/0); its mod folder through the eight gas modes (`gas-propane`, `gas-sleep`, `gas-wood`, `gas-player`, `gas-moves`, `handbook-loot-woodgas`, `gas-probe`, `gas-measures`), the gas server cases, `ux` and `pot-still` (launches 521–535, 537, 539–541, each with the counts of its last run on the tree once `gas-sleep`'s first sleep ran its 8 hours); a 0.4.3 save continued with it (launch 538). The upload folder holds it since 2026-11-16: its `Contents` and `preview.png` match the manifest, both ways, and its `workshop.txt` is the owner's. The existing-save and removal scenarios on it (launches 542–543), each as its last run. Not run on it: `performance-gas`. Uploaded by the owner on 2026-11-16; Steam's download of it (manifest `4775087241732198306`) held exactly its 187 mod files by SHA-256, `mod.info` reading 0.5.0. Open: the game loading the mod from that download |
 | 13 | PARTIAL | The Wood Gasifier's model is the owner's, supplied on 2026-11-15 (D-039 amendment), drawn whole on the floor in launch 448; its size, 1.2 m wide, the owner judged right. Open: one look for every state, cold, warming and running not drawn apart; its icon not looked at in the game's interface; a turned gasifier; its look on a server |
 
 Of the single-player modes, the full run (launch 435: 106/0, 14/0),
@@ -431,10 +431,12 @@ Not decided, put to the owner on 2026-11-15: whether a client's Fuel
 menu names the engine now that its copy of the world record carries
 `dieselVehicles` (D-042; launch 446).
 
-Before release: the owner uploads it from the upload folder, with the
-Workshop page's new pictures, and pastes
-`docs/workshop-change-note-0.5.0.txt` into the uploader's change-notes
-box.
+Released on 2026-11-16: the owner uploaded it from the upload folder at
+07:45, as Steam records, before launches 542–543 ran and before the
+change note named them. Steam's download of it holds exactly the
+package's 187 mod files ("Gate 12" under "Gate details"). Not looked at
+from here: the Workshop page, the change note it carries, and whether
+pictures 05 and 12 are on it.
 
 Done on 2026-11-16, on the owner's word ("Yes, run them", to the question
 whether to run the removal and existing-save scenarios on the zip before
@@ -936,8 +938,18 @@ restored it. The zip built from `cfae118` on 2026-11-10 has that defect
 and two malformed lines in `workshop.txt`; it was not uploaded. The commit
 itself was pushed.
 
-The Steam Workshop item (id 3835496461) serves 0.4.3 since 2026-11-13:
-the owner uploaded it from the upload folder that morning and said so
+The Steam Workshop item (id 3835496461) serves 0.5.0 since 2026-11-16:
+the owner uploaded it from the upload folder that morning (Steam's record
+of the item: updated at 07:45:58). After the upload the folder's 188
+other files still matched the 0.5.0 manifest, and its `workshop.txt` had
+been written again (07:45:25) with the same bytes. By 08:05 the copy
+Steam downloads to this computer for the owner's subscription (manifest
+`4775087241732198306`, the item's latest, 10,343,869 bytes) held the
+0.5.0 package's 187 mod files, each matching its SHA-256 in
+`dist/TheLastGallon-0.5.0.sha256`, and no other file; its `mod.info`
+reads 0.5.0. The Workshop page, its change note and its pictures were
+not looked at from here. The item served 0.4.3 from 2026-11-13 to
+2026-11-16: the owner uploaded it from the upload folder that morning and said so
 (Steam's record of the item: updated at 09:54). After the upload the
 folder's 168 files still matched the 0.4.3 package's manifest, and its
 `workshop.txt` had been written again (09:54) with the same lines. The
