@@ -1,0 +1,47 @@
+===== launch 520: tools/rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.4.3 -TimeoutMinutes 20: a world made with the 0.4.3 zip (4A7897A0...F9A472ED, launch 1), continued with the 0.5.0 zip of b686cce (E6D1BF5C...0ACB1652, launch 2), the harness at 6417690. Each launch's results file follows; the consoles were kept in the cache and read for the mod's errors.
+===== upgrade launch 1: %LOCALAPPDATA%\TheLastGallon\installcache\Lua\TLG_upgrade_launch1.results.txt
+# TLG single-player harness, upgrade launch 1: a new world with the earlier release
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=74929257178296634116 hours=2.0096 DayLength=4
+STEP rtx_setup begin
+STEP rtm_stock begin
+STEPERR rtm_stock :: Object tried to call nil in machineClick java.lang.RuntimeException
+STEP rtu_stock begin
+PASS RTU.wrong_blends_as_the_earlier_release_judges_them :: release 0.4.3; car on 40 % diesel: grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel; Diesel Generator on petrol: grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline
+OBS  RTU.pump_to_can transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTU.recorded_by_the_earlier_release :: mod version 0.4.3; ambulance {cond=1,deg={diesel=0.11252546873188626},id=V2109475818-7,mic=0,prov={},q={diesel=9.99910942349755,water=8.905765024502799E-4},rev=0,stab=0,t=2.0196657180786133,v=1}; car {cond=1,deg={diesel=0,gasoline=0},id=V2109475818-8,mic=0,prov={},q={diesel=4,gasoline=6},rev=0,stab=0,t=2.0196657180786133,v=1}; generator {cond=1,deg={gasoline=0.1775739124905743},id=G2109475818-9,kind=generator,mic=0,profile=generator_si_stock,prov={},q={gasoline=4.999876759197023,water=1.2324080297720919E-4},rev=0,stab=0,t=2.0196657180786133,v=1}; pump 10654,10630 transfer ok=true, record {cap=11205,cond=1,deg={gasoline=0.37499343970027144},frac=-1.8189894035458565E-12,id=R2109475818-11,mic=0,product=gasoline,prov={},q={gasoline=11193.517995846843,sediment=6.311731714825362,water=3.1702724383298397},rev=1,stab=0,t=2.0196657180786133,v=1}
+STEP rtu_save_and_quit begin
+EXIT -> main menu, then the desktop
+SUMMARY pass=2 fail=0
+DONE
+===== upgrade launch 2: %LOCALAPPDATA%\TheLastGallon\installcache\Lua\TLG_upgrade_launch2.results.txt
+# TLG single-player harness, upgrade launch 2: this version on the earlier save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtu_back begin
+OBS  RTU.no expectations from launch 1
+STEP rtu_world_diesel begin
+FAIL RTU.older_world_has_no_diesel :: dieselVehicles=true createdAsNewGame=true policy=new_world modVersion=0.4.3; the mod loaded is 0.5.0
+FAIL RTU.ambulance_is_petrol :: script Base.VanAmbulance; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9992,water=0.0008] deg[diesel=0.1040] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+FAIL RTU.every_pump_gives_petrol :: 8 pumps, 2 of them diesel: 10636,10622:gasoline 10636,10623:diesel 10636,10629:diesel 10636,10630:gasoline 10654,10622:gasoline 10654,10623:gasoline 10654,10629:gasoline 10654,10630:gasoline
+STEP RTU.ambulance_starts_on_its_fuel begin
+SKIP RTU.ambulance_starts_on_its_fuel
+STEP rtu_car_before begin
+STEP RTU.car_on_the_wrong_blend begin
+SKIP RTU.car_on_the_wrong_blend
+STEP rtu_car_after begin
+STEP rtu_roll_held begin
+STEP RTU.diesel_generator_on_petrol begin
+SKIP RTU.diesel_generator_on_petrol: no generator
+STEP rtu_diesel_generator_after begin
+STEP rtu_roll_free begin
+STEP rtu_new_content begin
+PASS RTU.this_versions_items_exist :: the five biodiesel machines, the Diesel Generator, the Wood Gasifier, the Wood Gas Handbook, biodiesel, methanol and plant oil
+PASS RTU.diesel_generator_on_the_earlier_save :: sprite tlg_generators_01_0, picture true (128x256), item type TLG.DieselGenerator, profile generator_ci_bio
+STEP rt_finish begin
+OBS  RT.summary replies: 0 over the character, 0 in a window; last line (-): none
+OBS  RT.summary game hours -1.00 -> 2.06
+SUMMARY pass=2 fail=3
+DONE

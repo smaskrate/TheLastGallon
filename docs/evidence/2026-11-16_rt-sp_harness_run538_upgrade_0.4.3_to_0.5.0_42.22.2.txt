@@ -1,0 +1,69 @@
+===== launch 538: tools/rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.4.3 -TimeoutMinutes 20: a world made with the 0.4.3 zip (4A7897A0...F9A472ED, launch 1), continued with the 0.5.0 zip of b686cce (E6D1BF5C...0ACB1652, launch 2), the harness at 62ce5cd. Each launch's results file follows; the consoles were kept in the cache and read for the mod's errors.
+===== upgrade launch 1: %LOCALAPPDATA%\TheLastGallon\installcache\Lua\TLG_upgrade_launch1.results.txt
+# TLG single-player harness, upgrade launch 1: a new world with the earlier release
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rt_wait_world begin
+worldName=8569127952700940462 hours=2.0096 DayLength=4
+STEP rtx_setup begin
+STEP rtm_stock begin
+OBS  RTM.load_mash_F menu "Load mash and start fermenting" -> ok=true reason=nil state=Processing stage=nil outputs={} consumed=nil
+PASS RTM.stocked_and_recorded :: P 9.0000 L, Q 4.0000 L, E 4.0000 L, each recorded=true; fermenter on 10661,10645 Processing since 2.014187812805176
+OBS  RTM.world record seed=1287758555 installedAt=2 policy=new_world epoch=0 nextId=8; saving at world hour 2.0142
+STEP rtu_stock begin
+PASS RTU.wrong_blends_as_the_earlier_release_judges_them :: release 0.4.3; car on 40 % diesel: grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel; Diesel Generator on petrol: grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline
+OBS  RTU.pump_to_can transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTU.recorded_by_the_earlier_release :: mod version 0.4.3; ambulance {cond=1,deg={diesel=0.1823216455174892},id=V1287758555-8,mic=0,prov={},q={diesel=9.998537847466022,water=0.0014621525339775232},rev=0,stab=0,t=2.019540786743164,v=1}; car {cond=1,deg={diesel=0,gasoline=0},id=V1287758555-9,mic=0,prov={},q={diesel=4,gasoline=6},rev=0,stab=0,t=2.019540786743164,v=1}; generator {cond=1,deg={gasoline=0.279734335988643},id=G1287758555-10,kind=generator,mic=0,profile=generator_si_stock,prov={},q={gasoline=4.999807208591626,water=1.927914083732496E-4},rev=0,stab=0,t=2.019540786743164,v=1}; pump 10654,10630 transfer ok=true, record {cap=11316,cond=1,deg={gasoline=0.37990213835796816},frac=0,id=R1287758555-12,mic=0,product=gasoline,prov={},q={gasoline=11295.191058531464,sediment=10.8138568988646,water=7.995084569671688},rev=1,stab=0,t=2.019540786743164,v=1}
+STEP rtu_save_and_quit begin
+EXIT -> main menu, then the desktop
+SUMMARY pass=3 fail=0
+DONE
+===== upgrade launch 2: %LOCALAPPDATA%\TheLastGallon\installcache\Lua\TLG_upgrade_launch2.results.txt
+# TLG single-player harness, upgrade launch 2: this version on the earlier save
+game=42.22.2 3d39148846 classpath=1
+isServer=false isClient=false
+STEP rtu_back begin
+PASS RTU.this_version_on_the_earlier_save :: the save was made with 0.4.3 (world hour 2.019540786743164); the mod loaded now is 0.5.0
+PASS RTU.records_as_the_earlier_release_left_them :: can P as saved; can Q as saved; can E as saved; pump as saved; ambulance as saved; car as saved; generator as saved; diesel generator as saved
+PASS RTU.world_record_the_same_one :: seed 1287758555 (1287758555), installedAt 2 (2), policy new_world (new_world), epoch 0 (0), nextId 14 (8 at launch 1), modVersion 0.4.3, dieselVehicles true (true)
+PASS RTU.wrong_fuel_damage_on_in_the_earlier_save :: SandboxVars.TheLastGallon.WrongFuelDamage=true
+PASS RTU.petrol_can_reads_as_its_record_aged :: read ok; condition 0.143299512, its record aged to now 0.143299512; 9.0000 L recorded of 9.0000 L in the can
+PASS RTU.ethanol_can_reads :: ok id=S1287758555-5 rev=1 total=4.0000 q[ethanol=4.0000] deg[ethanol=0.0081] mic=0 stab=0; 4.0000 L in the can
+PASS RTU.fermenter_batch_kept :: on 10661,10645: TLG.FermenterVessel, process P1287758555-7 started 2.014187812805176 (2.014187812805176 at launch 1), Processing
+PASS RTU.ambulance_keeps_its_engine_and_fuel :: script Base.VanAmbulance; profile engine_ci_stock (engine_ci_stock under 0.4.3); record ok id=V1287758555-8 rev=0 total=10.0000 q[diesel=9.9985,water=0.0015] deg[diesel=0.1823] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTU.wrong_blend_in_the_car_now_damages :: record ok id=V1287758555-9 rev=0 total=10.0000 q[diesel=4.0000,gasoline=6.0000] deg[diesel=0.0000,gasoline=0.0000] mic=0 stab=0; grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel; a refused start costs {1=1,2=2}
+PASS RTU.petrol_in_the_diesel_generator_now_runs_and_harms :: grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline; failure chance 0.02; record - id=G1287758555-11 rev=0 total=5.0000 q[gasoline=5.0000] deg[gasoline=0.0000] mic=0 stab=0
+PASS RTU.generator_keeps_its_petrol :: generator generatorFullType=Base.Generator sprite=appliances_misc_01_0 picture=true fuel=5.0000; profile generator_si_stock; record ok id=G1287758555-10 rev=0 total=5.0000 q[gasoline=4.9998,water=0.0002] deg[gasoline=0.2797] mic=0 stab=0
+OBS  RTU.pump_to_can transfer -> ok=true reason=nil state=nil pause=nil stage=nil blocked=nil missing=nil outputs=nil
+PASS RTU.pump_recorded_earlier_gives_what_it_gave :: its record named product gasoline before (gasoline at launch 1); the mod reads gasoline; record ok id=R1287758555-12 rev=1 total=11314.0000 q[gasoline=11295.1911,sediment=10.8139,water=7.9951] deg[gasoline=0.3799] mic=0 stab=0; transfer ok=true; the record now names gasoline; the can: ok id=S1287758555-14 rev=1 total=2.0000 q[gasoline=1.9967,sediment=0.0019,water=0.0014] deg[gasoline=0.3799] mic=0 stab=0
+STEP rtu_world_diesel begin
+PASS RTU.new_world_has_diesel :: dieselVehicles=true createdAsNewGame=true policy=new_world modVersion=0.4.3; the mod loaded is 0.5.0
+PASS RTU.ambulance_is_diesel :: script Base.VanAmbulance; profile engine_ci_stock; record initialized id=nil rev=0 total=10.0000 q[diesel=9.9986,water=0.0014] deg[diesel=0.1743] mic=0 stab=0; grade=good compatible=true startFactor=1 reasons=
+PASS RTU.pumps_have_a_product :: 8 pumps, 3 of them diesel: 10636,10622:gasoline 10636,10623:gasoline 10636,10629:gasoline 10636,10630:diesel 10654,10622:gasoline 10654,10623:diesel 10654,10629:diesel 10654,10630:gasoline
+STEP RTU.ambulance_starts_on_its_fuel begin
+OBS  RTU.ambulance_starts_on_its_fuel driver=true battery=1.00 engine=100 grade=good compatible=true startFactor=1 reasons=
+OBS  RTU.ambulance_starts_on_its_fuel state=Running running=true attempts=1 refusal=nil
+PASS RTU.ambulance_starts_on_its_fuel.running :: state=Running attempts=1 refusal=nil
+STEP rtu_car_before begin
+STEP RTU.car_on_the_wrong_blend begin
+OBS  RTU.car_on_the_wrong_blend driver=true battery=1.00 engine=100 grade=unsuitable compatible=false startFactor=0 reasons=wrong_fuel_4_diesel
+OBS  RTU.car_on_the_wrong_blend state=Idle running=false attempts=1 refusal=vehicle start refused: wrong_fuel_4_diesel
+PASS RTU.car_on_the_wrong_blend.refused_by_tlg :: vehicle start refused: wrong_fuel_4_diesel
+STEP rtu_car_after begin
+PASS RTU.refused_start_on_the_old_blend_costs_and_tells :: engine 100 -> 98; battery charge 0.0200 used; line: Wrong fuel (Diesel): the engine will not start, and trying damages it
+STEP rtu_roll_held begin
+STEP RTU.diesel_generator_on_petrol begin
+OBS  RTU.diesel_generator_on_petrol fuel=5.0000 grade=poor compatible=true startFactor=0.25 reasons=wrong_fuel_3_gasoline
+OBS  RTU.diesel_generator_on_petrol activated=true refusal=nil
+PASS RTU.diesel_generator_on_petrol.activated :: nil
+STEP rtu_diesel_generator_after begin
+PASS RTU.diesel_generator_start_on_petrol_tells :: Wrong fuel (Gasoline): it damages this engine while it runs
+STEP rtu_roll_free begin
+STEP rtu_new_content begin
+PASS RTU.this_versions_items_exist :: the five biodiesel machines, the Diesel Generator, the Wood Gasifier, the Wood Gas Handbook, biodiesel, methanol and plant oil
+PASS RTU.diesel_generator_on_the_earlier_save :: sprite tlg_generators_01_0, picture true (128x256), item type TLG.DieselGenerator, profile generator_ci_bio
+STEP rt_finish begin
+OBS  RT.summary replies: 0 over the character, 0 in a window; last line (-): none
+OBS  RT.summary game hours -1.00 -> 2.10
+SUMMARY pass=22 fail=0
+DONE

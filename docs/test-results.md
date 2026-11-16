@@ -10105,3 +10105,138 @@ Evidence:
 [run 517](evidence/2026-11-15_rt-sp_harness_run517_italian_feminine_state_words_42.22.2.txt),
 [the card](evidence/2026-11-15_run517_machine_card_italian_pronta.png),
 [run 518](evidence/2026-11-15_rt-sp_harness_run518_gas_player_generator_info_line_42.22.2.txt).
+
+## 2026-11-16 — RT-SP and RT-MP launches 519–538 (the 0.5.0 package installed clean, a 0.4.3 save continued, the gas modes and server cases on its mod folder, gate 12)
+
+Build 42.22.2. The package is the zip of `b686cce` on `main`: 189 files,
+8,628,225 bytes, SHA-256 `E6D1BF5C…0ACB1652`, built by
+`tools\package.ps1` on 2026-11-15. The harness was at `6417690` for
+launches 519–535, `cbd3458` for 536–537 and `62ce5cd` for 538; the harness
+does not ship, and none of these commits changes the package. A driver
+ran the launches one after the other and kept each one's result files
+before the next began. After each launch it compared the mod folder of
+every cache the launch used with the zip's
+`Contents\mods\TheLastGallon`, file for file by SHA-256: the same 187
+files every time.
+
+Launches 519, 520, 536 and 538 installed the zip into a fresh cache
+(`tools\rehearse-install.ps1 -NoBuild`), after checking it against its
+manifest both ways. The others deployed the zip's mod folder, unpacked
+once and checked against the manifest, into the dev caches with
+`-ModSource`.
+
+| Launch | Command | Result (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 519 | `rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 106/0, then 14/0 | launch 435 on the tree, the same |
+| 520 | `rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.4.3` | 2/0, then 2/3 | launch 375 (0.4.2 to 0.4.3), 3/0, then 22/0 |
+| 521 | `run-sp-harness.ps1 -Mode gas-propane` | 10/0, then 6/0 | launch 475, the same |
+| 522 | `run-sp-harness.ps1 -Mode gas-sleep` | 4/1 | launch 455, 5/0 |
+| 523 | `run-sp-harness.ps1 -Mode gas-wood` | 19/0, then 4/0 | launch 439, the same |
+| 524 | `run-sp-harness.ps1 -Mode gas-player` | 16/0 | launch 518, the same |
+| 525 | `run-sp-harness.ps1 -Mode gas-moves` | 20/0 | launch 456, the same |
+| 526 | `run-sp-harness.ps1 -Mode handbook-loot-woodgas` | 4/0 | launch 395, the same |
+| 527 | `run-mp-harness.ps1 -Only gaspropane` | 11/0 | launch 464, the same |
+| 528 | `run-mp-harness.ps1 -Only gaswood` | 18/0 | launch 465, the same |
+| 529 | `run-mp-harness.ps1 -Clients 2 -Only gaswood2` | A 9/0, B 9/0 | launch 466, the same |
+| 530 | `run-mp-harness.ps1 -Only gasmoves` | 24/0 | launch 468, the same |
+| 531 | `run-mp-harness.ps1 -Only gasfeed` | 7/0 | launch 509, the same |
+| 532 | `run-mp-harness.ps1 -Only gastimers` | 49/0 | launch 510, the same |
+| 533 | `run-mp-harness.ps1 -Only gasshare` | 9/0 | launch 511, the same |
+| 534 | `run-mp-harness.ps1 -Only handbookgas` | 9/0 | launch 508, the same |
+| 535 | `run-mp-harness.ps1 -Only ux` | 15/0 | launch 477, the same |
+| 536 | as 520, the harness fixed (`cbd3458`) | 3/0, then 22/0 | launch 375, the same |
+| 537 | as 522, the wake logged (`cbd3458`) | 5/0 | launch 455, the same |
+| 538 | as 536, one harness call guarded (`62ce5cd`) | 3/0, then 22/0 | launch 375, the same |
+
+Launch 519: the game read `mod.info` 0.5.0, equal to `TLG.VERSION`, and
+the mod logged "The Last Gallon 0.5.0 ready" at both loads. The
+console's one exception is the harness's deep-recursion probe.
+
+The 0.4.3 save continued (520, 536, 538). Launch 1 plays a new world
+with the 0.4.3 zip and saves it; launch 2 puts the 0.5.0 zip in the mods
+folder and continues the save.
+* Launch 520's first launch stopped at its first step (`rtm_stock`): the
+  harness's `machineClick` looked for the machine menu's root entry
+  through `TLG.UI.MachineMenu.rootTitle`, which 0.5.0 adds (UX review
+  R12). Until 0.4.3 every machine's root entry was "Machine (The Last
+  Gallon)" (`ContextMenu_TLG_Machine`). No expectations were written, and
+  launch 2 judged the save as a 0.1.x world, without diesel: its three
+  failures and three skips follow from that. `cbd3458` takes the 0.4.3 entry when
+  `rootTitle` is missing.
+* Launch 536 passed. Its first launch's console held one exception of the
+  harness's own: `closeDialogs` called `TLG.UI.Say.closeCards()`, and
+  0.4.3 has no `TLG.UI.Say`. The `pcall` caught it and `-debug` logged it
+  anyway. `62ce5cd` calls it only when it is there.
+* Launch 538 passed with no warning, error or exception in either
+  console. The mod logged "The Last Gallon 0.4.3 ready" at launch 1 and
+  "The Last Gallon 0.5.0 ready" at launch 2. Launch 2 found:
+  * the records as 0.4.3 left them;
+  * the same world record, with diesel vehicles;
+  * the running fermenter's batch kept;
+  * the ambulance on its diesel, started at its first try;
+  * the car's 40 % diesel blend refused at a cost;
+  * the Diesel Generator on petrol starting and doing harm;
+  * the petrol generator keeping its fuel;
+  * the pump recorded under 0.4.3 still giving petrol.
+
+  This version's items exist, the Wood Gasifier and the Wood Gas
+  Handbook among them (`RTU.this_versions_items_exist`, extended in
+  `6417690`). A Diesel Generator put down has its sprite's picture.
+
+The gas modes and server cases (521–537):
+* Each passed with the counts of its last run on the tree, but `gas-sleep`
+  in launch 522.
+* Every load of every game, server and client logged "The Last Gallon
+  0.5.0 ready". Client B of launch 529 logged it twice, because it leaves
+  and joins again.
+* The single-player consoles hold no warning, error or exception.
+* The servers' and clients' logs hold only these, each known before:
+  * the game's own `visitFileFailed` for the animation folders the mods
+    do not have;
+  * `WindowShape` on the server;
+  * the harness's deep-recursion probe.
+
+`gas-sleep` (522, 537):
+* In launch 522 the first sleep, on generator A's own fuel, ended after
+  5.012 game hours: woken at 14:02, where `setForceWakeUpTime` named
+  17:02. Launch 357's ended after 4.
+* In those 5 hours each of the 5 boundaries burned its step while A ran,
+  with no stop. The second sleep, with the minute refill, ran its 8 hours
+  and passed.
+* `cbd3458` logs the character's state when it falls asleep and when it
+  wakes: fatigue, traits, zombies within 20 tiles, rain, and whether it
+  is outdoors. In launch 537 both sleeps ran their 8 hours: fatigue 0.900
+  falling asleep and 0.000 at the wake, no traits, no zombie within 20
+  tiles, no rain, outdoors.
+* Why launches 357 and 522 woke early is still not known.
+
+Not run on this zip:
+* `gas-probe`, `gas-measures` and `performance-gas`;
+* `gaswood2 -Restart`;
+* the other single-player modes and server cases;
+* the removal and existing-save scenarios;
+* a generator converted to gas in a save from an earlier release
+  (`migrations.md`, D-040);
+* an install through the Steam Workshop.
+
+Evidence:
+[run 519](evidence/2026-11-16_rt-sp_harness_run519_install_rehearsal_0.5.0_release_42.22.2.txt),
+[run 520](evidence/2026-11-16_rt-sp_harness_run520_upgrade_0.4.3_to_0.5.0_menu_lookup_of_0.5.0_42.22.2.txt),
+[run 521](evidence/2026-11-16_rt-sp_harness_run521_gas_propane_0.5.0_zip_42.22.2.txt),
+[run 522](evidence/2026-11-16_rt-sp_harness_run522_gas_sleep_0.5.0_zip_first_sleep_woke_early_42.22.2.txt),
+[run 523](evidence/2026-11-16_rt-sp_harness_run523_gas_wood_0.5.0_zip_42.22.2.txt),
+[run 524](evidence/2026-11-16_rt-sp_harness_run524_gas_player_0.5.0_zip_42.22.2.txt),
+[run 525](evidence/2026-11-16_rt-sp_harness_run525_gas_moves_0.5.0_zip_42.22.2.txt),
+[run 526](evidence/2026-11-16_rt-sp_harness_run526_handbook_loot_woodgas_0.5.0_zip_42.22.2.txt),
+[run 527](evidence/2026-11-16_rt-mp_harness_run527_gaspropane_0.5.0_zip_42.22.2.txt),
+[run 528](evidence/2026-11-16_rt-mp_harness_run528_gaswood_0.5.0_zip_42.22.2.txt),
+[run 529](evidence/2026-11-16_rt-mp_harness_run529_gaswood2_two_clients_0.5.0_zip_42.22.2.txt),
+[run 530](evidence/2026-11-16_rt-mp_harness_run530_gasmoves_0.5.0_zip_42.22.2.txt),
+[run 531](evidence/2026-11-16_rt-mp_harness_run531_gasfeed_0.5.0_zip_42.22.2.txt),
+[run 532](evidence/2026-11-16_rt-mp_harness_run532_gastimers_0.5.0_zip_42.22.2.txt),
+[run 533](evidence/2026-11-16_rt-mp_harness_run533_gasshare_0.5.0_zip_42.22.2.txt),
+[run 534](evidence/2026-11-16_rt-mp_harness_run534_handbookgas_0.5.0_zip_42.22.2.txt),
+[run 535](evidence/2026-11-16_rt-mp_harness_run535_ux_0.5.0_zip_42.22.2.txt),
+[run 536](evidence/2026-11-16_rt-sp_harness_run536_upgrade_0.4.3_to_0.5.0_one_harness_exception_42.22.2.txt),
+[run 537](evidence/2026-11-16_rt-sp_harness_run537_gas_sleep_0.5.0_zip_42.22.2.txt),
+[run 538](evidence/2026-11-16_rt-sp_harness_run538_upgrade_0.4.3_to_0.5.0_42.22.2.txt).
