@@ -1,5 +1,27 @@
 # Changelog
 
+## 0.5.1 (2026-11-16)
+
+* Nothing in the mod's behaviour changed: only its documents and its
+  version number did.
+* The player guide, the support matrix and `migrations.md` say
+  "gasoline", as the game and the mod's English texts do, where they
+  said "petrol".
+* The player guide said that a wrong fuel's wear adds to the wear of
+  stale fuel. The two multiply.
+* The player guide said that nothing reads the engine's verdict on a
+  tank already filled. A kit sample of the tank says what the fuel it
+  found means for the engine, in steps of 5 %.
+* The player guide says that diesel vehicles and diesel pumps come only
+  with a world started as a new game with 0.2.0 or later, where it said
+  "with this version".
+* The player guide lists the drain from the Fuel menu, 2 L moved from a
+  generator into a can in single player (launch 438 in
+  `docs/test-results.md`), among what has been checked in game.
+* The Workshop text says that a save loaded without the mod loses its
+  machines and its fluids in containers (ethanol, diesel, biodiesel, and
+  the water and sediment in old fuel), where it named the ethanol alone.
+
 ## 0.5.0 (2026-11-15)
 
 * Gas generators. A generator converted to gas runs on propane from the

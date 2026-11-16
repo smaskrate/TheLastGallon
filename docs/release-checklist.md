@@ -480,8 +480,8 @@ manifest; its `Contents` was mirrored over the folder's and its
 files now match the 0.5.0 manifest, both ways, but for `workshop.txt`.
 That file, the owner's, took the package's gas section and "Not in this
 version" line (D-045) and "Version 0.5.0", nothing else ("Gate 12" under
-"Gate details" says how it differs from the package's). The change note is
-`docs/workshop-change-note-0.5.0.txt`. The 0.4.3 package, kept in
+"Gate details" says how it differs from the package's). The change note
+was `docs/workshop-change-note-0.5.0.txt`, renamed for 0.5.1. The 0.4.3 package, kept in
 `dist`, can put the folder's `Contents` and `preview.png` back;
 `workshop.txt`'s three edits, recorded under "Gate 12", can be undone by
 hand. The Workshop page's new pictures are
@@ -516,6 +516,25 @@ what applies in each state", whose stand-in inventory list has a size
 and no `get` (traced with `-Filter`), and one from
 `test_menu_replies.lua`, whose preview fails on purpose ("no
 inventory").
+
+## Version 0.5.1 (2026-11-16)
+
+Version 0.5.1 changes only documents and the version number, so that the
+guide players download and the Workshop text carry what was corrected
+after the 0.5.0 upload (the entries of 2026-11-16 under 0.5.0): the
+player guide, the support matrix and `migrations.md` (`4a99b78`,
+`f003c41`), the Workshop text in `tools/package.ps1`, the shipped
+changelog, `mod.info` and `TLG.VERSION` in `Core.lua`. No other Lua, no
+string and no script. Not in it: D-042's open question, whether a
+client's Fuel menu names the engine.
+
+Done on 2026-11-16, on the owner's word ("Yes, start step 1"):
+`mod.info`, `Core.lua` and the player guide's version line give 0.5.1,
+the changelog has a 0.5.1 section, and the change note is
+`docs/workshop-change-note-0.5.1.txt`. The domain tests passed (384/384)
+and the compile check read 165 files without an error. Not done yet: the
+package, its comparison with the 0.5.0 package, the clean install and
+the upgrade from 0.5.0, the upload folder and the upload.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -1010,13 +1029,15 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.5.0.txt`, written on 2026-11-16: the changes
-from 0.4.3, which the item serves, to 0.5.0, what was checked in game and
-what was not, in the form with bullet characters described below (51
-lines, 6,546 bytes). The owner took out its line under the title
-("Changes since 0.4.3, …"); the existing-save and removal scenarios of
-launches 542–543 went into its "Checked in game". It is not in the
-package. Its 0.4.1 form,
+`docs/workshop-change-note-0.5.1.txt`, written on 2026-11-16: the changes
+from 0.5.0, which the item serves, to 0.5.1, all in the documents, in the
+form with bullet characters described below (12 lines, 959 bytes). It is
+not in the package. Its 0.5.0 form, `docs/workshop-change-note-0.5.0.txt`
+(the changes from 0.4.3, what was checked in game and what was not; 51
+lines, 6,546 bytes), was written for the 0.5.0 upload; the owner took out
+its line under the title ("Changes since 0.4.3, …"), and the
+existing-save and removal scenarios of launches 542–543 went into its
+"Checked in game". Its 0.4.1 form,
 `docs/workshop-change-note-0.4.1.txt` (the changes from 0.1.1), was
 pasted by the owner at the 0.4.1 upload
 (2026-11-11), who sent a picture of the item's change-notes page: `[b]`

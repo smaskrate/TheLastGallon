@@ -1,0 +1,12 @@
+[b]Version 0.5.1[/b]
+
+Only the documents and the version number changed: the mod plays as 0.5.0 did.
+
+[b]Corrected[/b]
+• The player guide, the support matrix and the migration notes say "gasoline", as the game does, where they said "petrol".
+• A wrong fuel's wear and the wear of stale fuel multiply; the guide said one adds to the other.
+• A kit sample of a vehicle's or generator's tank says what the fuel it found means for the engine; the guide said nothing reads that verdict once the tank is filled.
+• Diesel vehicles and diesel pumps come only with a world started as a new game with version 0.2.0 or later.
+• This page says what a save loaded without the mod loses: its machines and its fluids in containers (ethanol, diesel, biodiesel, and the water and sediment in old fuel), not the ethanol alone.
+
+The player guide (docs/player-guide.md in the mod's folder) has the steps and the numbers. docs/CHANGELOG.md lists the changes by version.
