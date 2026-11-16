@@ -10319,3 +10319,58 @@ Not run on this zip:
 Evidence:
 [run 542](evidence/2026-11-16_rt-sp_harness_run542_existing_save_0.5.0_zip_42.22.2.txt),
 [run 543](evidence/2026-11-16_rt-sp_harness_run543_removal_0.5.0_zip_42.22.2.txt).
+
+## 2026-11-16 — RT-SP launch 544 (the gas stages of the performance mode on the 0.5.0 package's mod folder, gate 11)
+
+Build 42.22.2, the reference machine (`performance.md`). The mod is the
+0.5.0 package's, the zip of `b686cce` (`E6D1BF5C…0ACB1652`), unpacked,
+checked against its manifest (189 files) and deployed into the dev cache
+with `-ModSource`; after the launch the cache's mod folder matched the
+zip's 187 files by SHA-256. The harness was at `62ce5cd`. Command:
+`tools/run-sp-harness.ps1 -Mode performance-gas -TimeoutMinutes 30`.
+**22/0**, the checks of launch 404, the last run of this mode.
+
+These are the first gas timings since D-040's amendment of 2026-11-14
+(the pass fills the generators nearest a gasifier first, and a generator
+in reach of two gasifiers draws from the nearer; launch 412) and since
+the UX review's menus. The budgets are those of the whole mode in launch 407. Medians per
+call, in ms:
+
+| Timing | 544 | 407 | Budget |
+| --- | --- | --- | --- |
+| Gas menu, propane | 0.143 | 0.141 | 0.42 |
+| Gas menu, wood gas | 0.188 | 0.155 | 0.46 |
+| A lit gasifier brought forward 24 h, 720 h, 8,760 h | 0.140 | 0.136 | 0.41 |
+| Gasifier menu | 0.400 | 0.353 | 1.0 |
+| Square-load handler, gas generator | 0.0035 | 0.0034 | 0.011 |
+| Gas minute pass, no gas generator | 0.0017 | 0.0018 | 0.005 |
+| 8 propane generators, full | 0.092 | 0.090 | 0.27 |
+| 8 propane generators, a part of a use below the cap | 0.137 | 0.137 | 0.39 |
+| A refill moving a use, 8 generators | 0.64 | 0.62 | 1.7 |
+| 8 wood-gas generators, full | 0.100 | 0.099 | 0.30 |
+| A draw of a step, 8 generators | 1.68 | 1.62 | 4.8 |
+
+* Every budget held. The figures are within 5 % of launch 407's but the
+  two menus: the Gas menu on wood gas costs 22 % more and the Gasifier
+  menu 13 % more. Both menus changed in the UX review after launch 407
+  (named entries, the reasons of greyed entries, **Repair** and the
+  condition); what in them costs the difference was not timed apart. Each
+  is paid once a right-click.
+* The four gasifiers now gave 0.0192 to each of the eight generators at
+  their caps, each drawn from its nearer gasifier. In launch 404, by id
+  alone, two gave 0.0384 and two none. After 50 draws they gave 5.12 Nm3 in all, every generator's
+  step, as in launch 404.
+* Frames, mean main-thread step: 1.32 ms on the bare road, 1.25 ms with
+  the gas running (launch 404: 1.33 and 1.24).
+* The console logged "The Last Gallon 0.5.0 ready" and holds no warning
+  or error of the mod. Its one Lua exception is the harness's own
+  `getLockFPS` probe (`RTPF.environment`, `lockFPS=?`), as in launches
+  398–404.
+
+Not run: the whole performance mode (`-Mode performance`), its other 40
+budgets and its frames with petrol generators, since the nearest-first
+order and on the package; several Status cards open; the cost on a
+server with more than one client.
+
+Evidence:
+[run 544](evidence/2026-11-16_rt-sp_harness_run544_performance_gas_0.5.0_zip_42.22.2.txt).
