@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 519 Italian strings as shipped in a client set to Italian, and the Status card read in Italian (launch 445); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.5.0 package is the zip of `b686cce` (SHA-256 `E6D1BF5C…0ACB1652`), installed clean and played on 42.22.2 in launch 519 (106/0, 14/0); a save made with the 0.4.3 zip continued with it (launch 538: 3/0, 22/0), a world played without the mod gained it (launch 542) and the mod was taken off a save and put back (launch 543). Each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.5.0 since 2026-11-16; Steam's download of it held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, one made with 0.2.0 with a 0.3.0 zip, and one made with 0.4.2 with the 0.4.3 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.5.1 package is the zip of `018dcca` (SHA-256 `5EBC59D8…5518025A`): the 0.5.0 package's mod files but for the version line of `mod.info` and `Core.lua`, with the corrected documents; not installed or played, the owner's choice. The 0.5.0 package, the zip of `b686cce` (SHA-256 `E6D1BF5C…0ACB1652`), was installed clean and played on 42.22.2 in launch 519 (106/0, 14/0); a save made with the 0.4.3 zip continued with it (launch 538: 3/0, 22/0), a world played without the mod gained it (launch 542) and the mod was taken off a save and put back (launch 543). Each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.5.1 since 2026-11-16, after 0.5.0 that morning; Steam's download of each held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, one made with 0.2.0 with a 0.3.0 zip, and one made with 0.4.2 with the 0.4.3 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -433,8 +433,9 @@ menu names the engine now that its copy of the world record carries
 
 Released on 2026-11-16: the owner uploaded it from the upload folder at
 07:45, as Steam records, before launches 542–543 ran and before the
-change note named them. Steam's download of it holds exactly the
-package's 187 mod files ("Gate 12" under "Gate details"). Not looked at
+change note named them. Steam's download of it held exactly the
+package's 187 mod files ("Gate 12" under "Gate details") until 0.5.1
+replaced it at 13:44. Not looked at
 from here: the Workshop page, the change note it carries, and whether
 pictures 05 and 12 are on it.
 
@@ -528,6 +529,11 @@ changelog, `mod.info` and `TLG.VERSION` in `Core.lua`. No other Lua, no
 string and no script. Not in it: D-042's open question, whether a
 client's Fuel menu names the engine.
 
+Released on 2026-11-16: the owner uploaded it from the upload folder at
+13:44, as Steam records. Steam's download of it holds exactly the
+package's 187 mod files ("Gate 12" under "Gate details"). Not looked at
+from here: the Workshop page and the change note it carries.
+
 Done on 2026-11-16, on the owner's word ("Yes, prepare it"): the
 package went into the upload folder. The folder's 189 files matched the
 0.5.0 package's manifest, both ways, but for the owner's `workshop.txt`,
@@ -538,9 +544,7 @@ same picture). The folder's 189 files now match the 0.5.1 manifest,
 both ways, but for `workshop.txt`, whose first description line now
 names 0.5.1: one byte changed, its CRLF line ends stay ("Gate 12" under
 "Gate details"). The zip of `b686cce`, kept in `dist`, can put the
-folder's `Contents` back, and the byte can be set back by hand. Not done
-yet: the upload, with `docs/workshop-change-note-0.5.1.txt` as its
-change note.
+folder's `Contents` back, and the byte can be set back by hand.
 
 Not run on 0.5.1, the owner's choice on 2026-11-16 ("No need for the
 rehearsals since we changed only docs"): the clean install of its zip
@@ -1013,7 +1017,17 @@ restored it. The zip built from `cfae118` on 2026-11-10 has that defect
 and two malformed lines in `workshop.txt`; it was not uploaded. The commit
 itself was pushed.
 
-The Steam Workshop item (id 3835496461) serves 0.5.0 since 2026-11-16:
+The Steam Workshop item (id 3835496461) serves 0.5.1 since 2026-11-16:
+the owner uploaded it from the upload folder that afternoon (Steam's
+record of the item: updated at 13:44:36). After the upload the folder's
+188 other files still matched the 0.5.1 manifest, and its `workshop.txt`
+had been written again (13:44:09) with the same bytes. By 13:48 the copy
+Steam downloads to this computer for the owner's subscription (manifest
+`3562102375021986666`, the item's latest, 10,345,362 bytes) held the
+0.5.1 package's 187 mod files, each matching its SHA-256 in
+`dist/TheLastGallon-0.5.1.sha256`, and no other file; its `mod.info`
+reads 0.5.1. The Workshop page and the change note it carries were not
+looked at from here. The item served 0.5.0 earlier that day:
 the owner uploaded it from the upload folder that morning (Steam's record
 of the item: updated at 07:45:58). After the upload the folder's 188
 other files still matched the 0.5.0 manifest, and its `workshop.txt` had
