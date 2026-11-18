@@ -591,17 +591,38 @@ one client, with the version number still 0.5.1. Not run: two players
 on a server. The moment after joining, before a vehicle's line appears,
 is checked offline only (`test_tank_menu.lua`).
 
+Done on 2026-11-18, on the owner's word ("Yes, build it"): the 0.5.2
+package is the zip of `92bc5ba` (189 files, 8,629,346 bytes, SHA-256
+`2DFC611A…506392D8`), built by `tools/package.ps1` from a clean tree
+after its own run of the tests (385/385, with the five `load preview`
+lines described under 0.5.0), the compile check (165/0) and the
+translation check (532 keys). Unpacked, its 189 files match its
+manifest, both ways, its entry names use forward slashes, and its `42`
+and `common` folders are the repository's file for file. Against the
+0.5.1 package's manifest it has the same 189 paths, and eight files
+differ: `42/mod.info` and `TLG/Core.lua` in their version line alone,
+`FuelContextMenu.lua` and `World.lua`, the shipped changelog, player
+guide and support matrix, and `workshop.txt` in its version line alone.
+The zip of `018dcca` is unchanged (`5EBC59D8…5518025A`). The files
+`FuelContextMenu.lua` and `World.lua` are byte for byte the ones
+launches 546–549 ran: the repository's were last written at 13:55 on
+2026-11-16, before launch 546 began at 14:42, and the mod deployed for
+launch 549, still in the server's and the client's cache, is the
+package's `42` and `common` but for the two version lines. Those four
+launches are carried over, not run again; every earlier run on a
+package ran the earlier form of the two files. Not done yet: the clean
+install and the upgrade from 0.5.1, the upload folder and the upload.
+
 Done on 2026-11-18, on the owner's word ("Yes, start step 1"):
 `mod.info`, `Core.lua` and the player guide's version line give 0.5.2,
 the changelog has a 0.5.2 section, and the change note is
-`docs/workshop-change-note-0.5.2.txt`, the draft the owner approved with
-one line added under "Not checked": the moment after joining. Before
-this step, the support matrix gained the engine line on a client, and
-the guide's "Not checked in game" that moment (`a4f6314`). The domain
-tests passed (385/385, with the five `load preview` lines described
-under 0.5.0) and the compile check read 165 files without an error. Not
-done yet: the package, its comparison with the 0.5.1 package, the clean
-install and the upgrade from 0.5.1, the upload folder and the upload.
+`docs/workshop-change-note-0.5.2.txt` (`92bc5ba`), the draft the owner
+approved with one line added under "Not checked": the moment after
+joining. Before this step, the support matrix gained the engine line on
+a client, and the guide's "Not checked in game" that moment
+(`a4f6314`). The domain tests passed (385/385, with the five
+`load preview` lines described under 0.5.0) and the compile check read
+165 files without an error.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
