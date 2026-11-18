@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner and screenshots (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 519 Italian strings as shipped in a client set to Italian, and the Status card read in Italian (launch 445); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.5.1 package is the zip of `018dcca` (SHA-256 `5EBC59D8…5518025A`): the 0.5.0 package's mod files but for the version line of `mod.info` and `Core.lua`, with the corrected documents; not installed or played, the owner's choice. The 0.5.0 package, the zip of `b686cce` (SHA-256 `E6D1BF5C…0ACB1652`), was installed clean and played on 42.22.2 in launch 519 (106/0, 14/0); a save made with the 0.4.3 zip continued with it (launch 538: 3/0, 22/0), a world played without the mod gained it (launch 542) and the mod was taken off a save and put back (launch 543). Each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.5.1 since 2026-11-16, after 0.5.0 that morning; Steam's download of each held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, one made with 0.2.0 with a 0.3.0 zip, and one made with 0.4.2 with the 0.4.3 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.5.2 package, the zip of `92bc5ba` (SHA-256 `2DFC611A…506392D8`), was installed clean and played on 42.22.2 in launch 550 (106/0, 14/0), and a save made with the 0.5.1 zip continued with it (launch 551: 3/0, 22/0). The 0.5.1 package is the zip of `018dcca` (SHA-256 `5EBC59D8…5518025A`): the 0.5.0 package's mod files but for the version line of `mod.info` and `Core.lua`, with the corrected documents; not installed or played, the owner's choice. The 0.5.0 package, the zip of `b686cce` (SHA-256 `E6D1BF5C…0ACB1652`), was installed clean and played on 42.22.2 in launch 519 (106/0, 14/0); a save made with the 0.4.3 zip continued with it (launch 538: 3/0, 22/0), a world played without the mod gained it (launch 542) and the mod was taken off a save and put back (launch 543). Each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.5.1 since 2026-11-16, after 0.5.0 that morning; Steam's download of each held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, one made with 0.2.0 with a 0.3.0 zip, and one made with 0.4.2 with the 0.4.3 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -591,6 +591,16 @@ one client, with the version number still 0.5.1. Not run: two players
 on a server. The moment after joining, before a vehicle's line appears,
 is checked offline only (`test_tank_menu.lua`).
 
+Done on 2026-11-18, on the owner's word ("Yes, run them"): the zip of
+`92bc5ba` installed clean and played (launch 550: 106/0, then 14/0),
+and a save made with the 0.5.1 zip continued with it (launch 551: 3/0,
+then 22/0). Each time the cache's mod folder was the zip's, file for
+file, and the consoles hold no warning or error from the mod
+(`test-results.md`, launches 550–551). Neither mode opens a tank's Fuel
+menu: in single player the engine line was last on screen in launch 419
+(`wrong-fuel`), on the code before D-042's amendment. Not done yet: the
+upload folder and the upload.
+
 Done on 2026-11-18, on the owner's word ("Yes, build it"): the 0.5.2
 package is the zip of `92bc5ba` (189 files, 8,629,346 bytes, SHA-256
 `2DFC611A…506392D8`), built by `tools/package.ps1` from a clean tree
@@ -610,8 +620,7 @@ launches 546–549 ran: the repository's were last written at 13:55 on
 launch 549, still in the server's and the client's cache, is the
 package's `42` and `common` but for the two version lines. Those four
 launches are carried over, not run again; every earlier run on a
-package ran the earlier form of the two files. Not done yet: the clean
-install and the upgrade from 0.5.1, the upload folder and the upload.
+package ran the earlier form of the two files.
 
 Done on 2026-11-18, on the owner's word ("Yes, start step 1"):
 `mod.info`, `Core.lua` and the player guide's version line give 0.5.2,

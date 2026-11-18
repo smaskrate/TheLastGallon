@@ -10501,3 +10501,58 @@ Evidence:
 [run 547](evidence/2026-11-16_rt-mp_harness_run547_wrongfuel_client_engine_line_42.22.2.txt),
 [run 548](evidence/2026-11-16_rt-mp_harness_run548_conversion_client_engine_line_42.22.2.txt),
 [run 549](evidence/2026-11-16_rt-mp_harness_run549_carconv_client_engine_line_42.22.2.txt).
+
+## 2026-11-18 — RT-SP launches 550–551 (the 0.5.2 package installed clean, a 0.5.1 save continued, gate 12)
+
+Build 42.22.2. The package is the zip of `92bc5ba` on `main`: 189 files,
+8,629,346 bytes, SHA-256 `2DFC611A…506392D8`, built by
+`tools\package.ps1` on 2026-11-18. The harness was at `075a5e3`; it does
+not ship. Both launches installed into a fresh cache
+(`tools\rehearse-install.ps1 -NoBuild`), each zip checked against its
+manifest both ways first. A driver ran them one after the other and kept
+each one's result files and consoles before the next began. After each
+it compared the cache's mod folder, as the last game left it, with the
+0.5.2 zip's `Contents\mods\TheLastGallon`, file for file by SHA-256: the
+same 187 files both times.
+
+| Launch | Command | Result (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 550 | `rehearse-install.ps1 -NoBuild`, full: phase A, save, reload, phase B | 106/0, then 14/0 | launch 519 (0.5.0), the same |
+| 551 | `rehearse-install.ps1 -NoBuild -Scenario upgrade -FromVersion 0.5.1` | 3/0, then 22/0 | launch 538 (0.4.3 to 0.5.0), the same |
+
+Launch 550: the game read `mod.info` 0.5.2, equal to `TLG.VERSION`, and
+the mod logged "The Last Gallon 0.5.2 ready" at both loads. The console
+holds no warning or error from the mod; its one exception is the
+harness's deep-recursion probe.
+
+Launch 551 continued a 0.5.1 save. Its first game played a new world
+with the 0.5.1 zip and saved it; the mod logged "The Last Gallon 0.5.1
+ready". Its second put the 0.5.2 zip in the mods folder and continued
+the save; the mod logged "The Last Gallon 0.5.2 ready" and found:
+* the records as 0.5.1 left them;
+* the same world record, with diesel vehicles;
+* the running fermenter's batch kept;
+* the ambulance on its diesel, started at its first try;
+* the car's 40 % diesel blend refused at a cost;
+* the Diesel Generator on gasoline starting and doing harm;
+* the gasoline generator keeping its fuel;
+* the pump recorded under 0.5.1 still giving gasoline.
+
+This version's items exist, and a Diesel Generator put down has its
+sprite's picture. Neither console of launch 551 holds a warning, error
+or exception from the mod or the harness.
+
+Neither mode opens a tank's Fuel menu, so the engine line, the one
+behaviour 0.5.2 changes, was not on screen in these launches. In single
+player the `wrong-fuel` mode shows it (launch 419, on the code before
+D-042's amendment); on a server, launches 546–549 showed it with this
+package's two Lua files.
+
+Not run on this zip:
+* `wrong-fuel` and the other single-player modes, and the server cases;
+* the existing-save and removal scenarios;
+* an install through the Steam Workshop.
+
+Evidence:
+[run 550](evidence/2026-11-18_rt-sp_harness_run550_install_rehearsal_0.5.2_release_42.22.2.txt),
+[run 551](evidence/2026-11-18_rt-sp_harness_run551_upgrade_0.5.1_to_0.5.2_42.22.2.txt).
