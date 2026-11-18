@@ -591,6 +591,17 @@ one client, with the version number still 0.5.1. Not run: two players
 on a server. The moment after joining, before a vehicle's line appears,
 is checked offline only (`test_tank_menu.lua`).
 
+Done on 2026-11-18, on the owner's word ("Yes, run it"): the
+`wrong-fuel` mode on the zip's mod folder, unpacked afresh, checked
+against the manifest and deployed with `-ModSource` (launch 552: 57/0,
+as launch 460). The ambulance's tank entry reads "Engine: stock diesel
+engine" at the fuel cap and the Diesel Generator's "Engine: diesel
+generator, biodiesel-ready" beside it: the engine line, the one
+behaviour 0.5.2 changes, on this package's files in single player. The
+cache's mod folder was the zip's afterwards, file for file
+(`test-results.md`, launch 552). Not done yet: the upload folder and
+the upload.
+
 Done on 2026-11-18, on the owner's word ("Yes, run them"): the zip of
 `92bc5ba` installed clean and played (launch 550: 106/0, then 14/0),
 and a save made with the 0.5.1 zip continued with it (launch 551: 3/0,
@@ -598,8 +609,7 @@ then 22/0). Each time the cache's mod folder was the zip's, file for
 file, and the consoles hold no warning or error from the mod
 (`test-results.md`, launches 550–551). Neither mode opens a tank's Fuel
 menu: in single player the engine line was last on screen in launch 419
-(`wrong-fuel`), on the code before D-042's amendment. Not done yet: the
-upload folder and the upload.
+(`wrong-fuel`), on the code before D-042's amendment.
 
 Done on 2026-11-18, on the owner's word ("Yes, build it"): the 0.5.2
 package is the zip of `92bc5ba` (189 files, 8,629,346 bytes, SHA-256

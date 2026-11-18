@@ -10556,3 +10556,42 @@ Not run on this zip:
 Evidence:
 [run 550](evidence/2026-11-18_rt-sp_harness_run550_install_rehearsal_0.5.2_release_42.22.2.txt),
 [run 551](evidence/2026-11-18_rt-sp_harness_run551_upgrade_0.5.1_to_0.5.2_42.22.2.txt).
+
+## 2026-11-18 — RT-SP launch 552 (the wrong-fuel mode on the 0.5.2 package's mod folder: a tank's engine line)
+
+Build 42.22.2. The package is the zip of `92bc5ba` (SHA-256
+`2DFC611A…506392D8`), unpacked afresh and checked against its manifest
+both ways (189 files). Its mod folder went into the dev cache with
+`-ModSource`; the harness was at `a6d401f` and does not ship. After the
+launch the cache's mod folder was the zip's 187 files, file for file by
+SHA-256. The command was `tools\run-sp-harness.ps1 -Mode wrong-fuel
+-ModSource <folder> -TimeoutMinutes 40`, where `<folder>` is the
+unpacked zip's `Contents\mods\TheLastGallon`:
+
+| Launch | Result (pass/fail) | Last run before |
+| --- | --- | --- |
+| 552 | 57/0 | launch 460, the same |
+
+The mod logged "The Last Gallon 0.5.2 ready". Neither the results nor
+the console hold a warning, error or exception from the mod or the
+harness.
+
+This is the single-player run of the one behaviour 0.5.2 changes, the
+engine line of a tank's Fuel menu (D-042, amended), on this package's
+files:
+* `RTWF.tank_entry_at_the_fuel_cap_only`: on the ambulance, no
+  **Fuel in this vehicle** entry away from the fuel cap; at the cap
+  "Engine: stock diesel engine | What I know about it | Look and smell |
+  Take a sample (kit)".
+* `RTWF.generator_tank_entry_within_reach_only`: no entry 4 tiles from
+  the Diesel Generator; beside it "Engine: diesel generator,
+  biodiesel-ready" and the same three entries.
+* A look, a kit sample and **What I know about it** on the ambulance's
+  tank, and a kit sample of the generator's, name the engine as in
+  launch 460.
+
+As in launches 419 and 460, the vehicle under the cursor was stood in
+for (`Clicked.vehicle`); the rest of the menu ran as it is.
+
+Evidence:
+[run 552](evidence/2026-11-18_rt-sp_harness_run552_wrong_fuel_0.5.2_zip_42.22.2.txt).
