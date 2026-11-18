@@ -172,7 +172,8 @@ Generator, the kit's line for the engine. On a server with one player
 (launches 546–549): the engine line in both menus, and the engine named
 as the server has it for a diesel ambulance, a Diesel Generator and
 converted engines. **Not checked in game:** a real right-click on a
-vehicle, a save and reload, two players on a server.
+vehicle, a save and reload, two players on a server, the moment after
+joining before a vehicle's line appears.
 
 ## Treating fuel
 
