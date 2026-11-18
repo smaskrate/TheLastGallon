@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.5.2 (2026-11-18)
 
 * On a server, **Fuel in this vehicle** and **Fuel in this generator**
   name the engine in their first line, as in single player ("Engine:

@@ -574,9 +574,34 @@ folder hold for this one's: they are carried over, not run again.
 
 Done on 2026-11-16, on the owner's word ("Yes, start step 1"):
 `mod.info`, `Core.lua` and the player guide's version line give 0.5.1,
-the changelog has a 0.5.1 section, and the change note is
-`docs/workshop-change-note-0.5.1.txt` (`018dcca`). The domain tests
-passed (384/384) and the compile check read 165 files without an error.
+the changelog has a 0.5.1 section, and the change note was
+`docs/workshop-change-note-0.5.1.txt` (`018dcca`), renamed for 0.5.2.
+The domain tests passed (384/384) and the compile check read 165 files
+without an error.
+
+## Version 0.5.2 (2026-11-18)
+
+Version 0.5.2 makes a tank's Fuel menu name the engine on a server's
+client, as it does in single player (D-042, amended). It changes
+`FuelContextMenu.lua` and `World.lua` (`62b4dc7`), the shipped
+changelog, player guide and support matrix (`62b4dc7`, `a4f6314`),
+`mod.info` and `TLG.VERSION` in `Core.lua`. No other Lua, no string and
+no script. Launches 546–549 ran the change on a dedicated server with
+one client, with the version number still 0.5.1. Not run: two players
+on a server. The moment after joining, before a vehicle's line appears,
+is checked offline only (`test_tank_menu.lua`).
+
+Done on 2026-11-18, on the owner's word ("Yes, start step 1"):
+`mod.info`, `Core.lua` and the player guide's version line give 0.5.2,
+the changelog has a 0.5.2 section, and the change note is
+`docs/workshop-change-note-0.5.2.txt`, the draft the owner approved with
+one line added under "Not checked": the moment after joining. Before
+this step, the support matrix gained the engine line on a client, and
+the guide's "Not checked in game" that moment (`a4f6314`). The domain
+tests passed (385/385, with the five `load preview` lines described
+under 0.5.0) and the compile check read 165 files without an error. Not
+done yet: the package, its comparison with the 0.5.1 package, the clean
+install and the upgrade from 0.5.1, the upload folder and the upload.
 
 ## Gate details
 What each gate has verified now, with the runs that verify it, and what is
@@ -1082,10 +1107,13 @@ edits. On the owner's word its first description line was set to "Version 0.3.1"
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
-`docs/workshop-change-note-0.5.1.txt`, written on 2026-11-16: the changes
-from 0.5.0, which the item serves, to 0.5.1, all in the documents, in the
-form with bullet characters described below (12 lines, 959 bytes). It is
-not in the package. Its 0.5.0 form, `docs/workshop-change-note-0.5.0.txt`
+`docs/workshop-change-note-0.5.2.txt`, written on 2026-11-18: the change
+from 0.5.1, which the item serves, to 0.5.2, what was checked in game and
+what was not, in the form with bullet characters described below (15
+lines, 881 bytes). It is not in the package. Its 0.5.1 form,
+`docs/workshop-change-note-0.5.1.txt` (the changes from 0.5.0, all in
+the documents; 12 lines, 959 bytes), was written for the 0.5.1 upload.
+Its 0.5.0 form, `docs/workshop-change-note-0.5.0.txt`
 (the changes from 0.4.3, what was checked in game and what was not; 51
 lines, 6,546 bytes), was written for the 0.5.0 upload; the owner took out
 its line under the title ("Changes since 0.4.3, …"), and the

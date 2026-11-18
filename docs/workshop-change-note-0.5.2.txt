@@ -1,0 +1,15 @@
+[b]Version 0.5.2[/b]
+
+This version changes the mod on servers only: in single player it plays as 0.5.1 did.
+
+[b]New[/b]
+• On a server, "Fuel in this vehicle" and "Fuel in this generator" name the engine in their first line, as in single player ("Engine: stock diesel engine"). A vehicle's line is missing for a moment after you join, until the server has sent your game the world's details.
+
+[b]Checked in game[/b]
+• On a dedicated server with one player: the line in both menus, with the engine named as the server has it for a gasoline car and generator, a diesel ambulance, a Diesel Generator and converted flex engines.
+
+[b]Not checked[/b]
+• Two players on a server.
+• The moment after you join, before a vehicle's line appears.
+
+The player guide (docs/player-guide.md in the mod's folder) has the steps and the numbers. docs/CHANGELOG.md lists the changes by version.
