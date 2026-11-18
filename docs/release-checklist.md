@@ -591,6 +591,19 @@ one client, with the version number still 0.5.1. Not run: two players
 on a server. The moment after joining, before a vehicle's line appears,
 is checked offline only (`test_tank_menu.lua`).
 
+Done on 2026-11-18, on the owner's word ("Yes, prepare it"): the
+package went into the upload folder. The folder's 189 files matched the
+0.5.1 package's manifest, both ways, but for the owner's `workshop.txt`,
+so the mirror removed nothing of the owner's. The zip of `92bc5ba`, its
+hash checked, unpacked, its 189 files matching its manifest, had its
+`Contents` mirrored over the folder's; its `preview.png` is the
+folder's, byte for byte, and was left as it was. The folder's 189 files
+now match the 0.5.2 manifest, both ways, but for `workshop.txt`, whose
+first description line now names 0.5.2: one byte changed, its CRLF line
+ends stay ("Gate 12" under "Gate details"). The zip of `018dcca`, kept
+in `dist`, can put the folder's `Contents` back, and the byte can be set
+back by hand. Not done yet: the upload.
+
 Done on 2026-11-18, on the owner's word ("Yes, run it"): the
 `wrong-fuel` mode on the zip's mod folder, unpacked afresh, checked
 against the manifest and deployed with `-ModSource` (launch 552: 57/0,
@@ -599,8 +612,7 @@ engine" at the fuel cap and the Diesel Generator's "Engine: diesel
 generator, biodiesel-ready" beside it: the engine line, the one
 behaviour 0.5.2 changes, on this package's files in single player. The
 cache's mod folder was the zip's afterwards, file for file
-(`test-results.md`, launch 552). Not done yet: the upload folder and
-the upload.
+(`test-results.md`, launch 552).
 
 Done on 2026-11-18, on the owner's word ("Yes, run them"): the zip of
 `92bc5ba` installed clean and played (launch 550: 106/0, then 14/0),
@@ -1143,7 +1155,7 @@ were added to it: the wrong-fuel bullet, the biodiesel section, the
 note on diesel in new worlds and the package's licence line; biodiesel
 left its "Not in this version" line, which keeps the owner's "Coming
 soon". Copying the package's `workshop.txt` over it would lose the hand
-edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line. On 2026-11-16, on the owner's word ("Yes, do it"), it was set to "Version 0.5.0", the package's eight lines of "Make your own: gas" went in after the biodiesel section, and its "Not in this version" line now names biogas and electrical networks, keeping the owner's "Coming soon"; nothing else changed. It now differs from the package's text in five lines: the id, "not tested/supported", "Coming soon", the tags and the visibility. Its CRLF line ends stay. On 2026-11-16, after the upload, on the owner's word ("Yes, fix both"), its removal line and the package's took the same new wording: the player guide's path stands beside "the player guide", and the game drops "the mod's fluids in your containers (ethanol, diesel, biodiesel, and the water and sediment in old fuel)" instead of "the ethanol", as the player guide and `migrations.md` say; only ethanol was seen dropped in game (run 54). Nothing else changed, and the five differing lines are as before. The Workshop page keeps the old line until the owner uploads again. On 2026-11-16, on the owner's word ("Yes, change both"), its wrong-fuel line and the package's took "diesel in a gasoline engine, gasoline or ethanol in a diesel" where they said "petrol", the mod's English term since 0.5.0; nothing else changed, and the five differing lines are as before. The Workshop page keeps that old line too until the next upload. On 2026-11-16, on the owner's word ("Yes, prepare it"), its first description line was set to "Version 0.5.1", one byte, and nothing else changed: the 0.5.1 package's text differs from 0.5.0's in that line and the two above, and the five differing lines are as before.
+edits. On the owner's word its first description line was set to "Version 0.3.1" on 2026-11-11, nothing else in it changed; likewise to "Version 0.3.2" and then "Version 0.4.0" later that day, with the package's line on the skills and the handbook added to its biodiesel section; and to "Version 0.4.1", with that line replaced by the 0.4.1 package's. On 2026-11-12, on the owner's word, the line was set to "Version 0.4.2" and nothing else in the file changed: the package's text differs from 0.4.1's only in that line. On 2026-11-13, on the owner's word, it was set to "Version 0.4.3", one byte, and nothing else changed: the package's text differs from 0.4.2's only in that line. On 2026-11-16, on the owner's word ("Yes, do it"), it was set to "Version 0.5.0", the package's eight lines of "Make your own: gas" went in after the biodiesel section, and its "Not in this version" line now names biogas and electrical networks, keeping the owner's "Coming soon"; nothing else changed. It now differs from the package's text in five lines: the id, "not tested/supported", "Coming soon", the tags and the visibility. Its CRLF line ends stay. On 2026-11-16, after the upload, on the owner's word ("Yes, fix both"), its removal line and the package's took the same new wording: the player guide's path stands beside "the player guide", and the game drops "the mod's fluids in your containers (ethanol, diesel, biodiesel, and the water and sediment in old fuel)" instead of "the ethanol", as the player guide and `migrations.md` say; only ethanol was seen dropped in game (run 54). Nothing else changed, and the five differing lines are as before. The Workshop page keeps the old line until the owner uploads again. On 2026-11-16, on the owner's word ("Yes, change both"), its wrong-fuel line and the package's took "diesel in a gasoline engine, gasoline or ethanol in a diesel" where they said "petrol", the mod's English term since 0.5.0; nothing else changed, and the five differing lines are as before. The Workshop page keeps that old line too until the next upload. On 2026-11-16, on the owner's word ("Yes, prepare it"), its first description line was set to "Version 0.5.1", one byte, and nothing else changed: the 0.5.1 package's text differs from 0.5.0's in that line and the two above, and the five differing lines are as before. On 2026-11-18, on the owner's word ("Yes, prepare it"), it was set to "Version 0.5.2", one byte, and nothing else changed: the 0.5.2 package's text differs from 0.5.1's only in that line, and the five differing lines are as before.
 
 The text for the uploader's change-notes box (a box of up to 512 lines on
 the "change notes" page of the game's `WorkshopSubmitScreen.lua`) is
