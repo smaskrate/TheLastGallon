@@ -593,8 +593,9 @@ is checked offline only (`test_tank_menu.lua`).
 
 Released on 2026-11-19: the owner uploaded it from the upload folder at
 14:32, as Steam records. Steam's download of it holds exactly the
-package's 187 mod files ("Gate 12" under "Gate details"). Not looked at
-from here: the Workshop page and the change note it carries.
+package's 187 mod files ("Gate 12" under "Gate details"). The item's
+page, read the same day, names 0.5.2 in its description and shows the
+change note as written, its bullets inside the note's box.
 
 Done on 2026-11-18, on the owner's word ("Yes, prepare it"): the
 package went into the upload folder. The folder's 189 files matched the
@@ -1112,8 +1113,13 @@ folder's 188 other files still matched the 0.5.2 manifest, and its
 subscription (manifest `1890328263119381027`, the item's latest,
 10,347,768 bytes) held the 0.5.2 package's 187 mod files, each matching
 its SHA-256 in `dist/TheLastGallon-0.5.2.sha256`, and no other file; its
-`mod.info` reads 0.5.2. The Workshop page and the change note it carries
-were not looked at from here. The item served 0.5.1 from 2026-11-16:
+`mod.info` reads 0.5.2. On 2026-11-19, on the owner's word ("Yes, check
+it"), the item's page was read in the built-in browser without signing
+in: 10.348 MB, updated at 14:32, eight change notes. Its description
+names 0.5.2 in its first line and carries the wrong-fuel, removal,
+tested and "Coming soon" lines of the upload folder's `workshop.txt`; its
+newest change note is the text of `docs/workshop-change-note-0.5.2.txt`.
+The item served 0.5.1 from 2026-11-16:
 the owner uploaded it from the upload folder that afternoon (Steam's
 record of the item: updated at 13:44:36). After the upload the folder's
 188 other files still matched the 0.5.1 manifest, and its `workshop.txt`
@@ -1197,8 +1203,9 @@ note is now written without `[list]`. A form with each entry on a line
 beginning with a dash stayed inside the box (the owner pasted it and
 said so, 2026-11-12), but the owner liked the list's bullets better, so
 each entry now begins with a bullet character (•), one entry a line.
-That form is not seen on the page yet. Why the box closes at a list was
-not looked up.
+On the item's change-notes page (read 2026-11-19) the 0.5.2 note in that
+form stands whole inside its box: the title and headings bold, one
+bullet a line. Why the box closes at a list was not looked up.
 What changed in the package since the last rehearsed one (run 206, 0.1.0):
 the death fix on a server (D-015 amendment, run 210: `Machines.lua`,
 `Boot.lua`), the **Transfer Liquid** fix (D-035, run 215:
