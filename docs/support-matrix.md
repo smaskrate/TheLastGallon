@@ -6,7 +6,7 @@ build until it is tested there again. The rows below were verified on
 modes were run again and all passed (launches 216–226, `test-results.md`);
 the other modes have not been run again on this build. The biodiesel
 pathway, the diesel generator, the diesel vehicles and the diesel pumps
-(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), wrong-fuel damage (version 0.3.0, D-037) in launches 261–282, the menus that follow the click (version 0.3.1) in launches 289–294, the Diesel Generator's sprite given back (version 0.3.2) in launches 299–302, and the biodiesel recipes' skill levels and handbook (version 0.4.0, D-038) in launches 308–312. Launches 318–338 (version 0.4.1, which changes documents only) ran what those versions had left: driving on diesel, biodiesel and wrong fuel, the cold, a converted engine with diesel, repairs, draws left to chance, wrong fuel and the crafting window on a server. Version 0.4.2 takes the gas conversion off the generator's Workshop menu (D-040, amended); launch 343 showed the menu without it. Version 0.4.3 makes the machine menu and the Fuel menu follow the server's records of items on the floor and in containers (D-023 amendment, D-041); launches 362–367 and 371–372 showed both on a server. Version 0.5.0 runs a generator converted to gas on propane or on wood gas from the Wood Gasifier (D-039, D-040), with the UX review's changes; launches 345–518 ran it in single player and on a server. Version 0.5.2 names the engine in a tank's Fuel menu on a server's client, as single player does (D-042, amended); launches 546–549 showed it on a server with one player.
+(version 0.2.0, D-036) were built and run on 42.22.2 (launches 229–250), wrong-fuel damage (version 0.3.0, D-037) in launches 261–282, the menus that follow the click (version 0.3.1) in launches 289–294, the Diesel Generator's sprite given back (version 0.3.2) in launches 299–302, and the biodiesel recipes' skill levels and handbook (version 0.4.0, D-038) in launches 308–312. Launches 318–338 (version 0.4.1, which changes documents only) ran what those versions had left: driving on diesel, biodiesel and wrong fuel, the cold, a converted engine with diesel, repairs, draws left to chance, wrong fuel and the crafting window on a server. Version 0.4.2 takes the gas conversion off the generator's Workshop menu (D-040, amended); launch 343 showed the menu without it. Version 0.4.3 makes the machine menu and the Fuel menu follow the server's records of items on the floor and in containers (D-023 amendment, D-041); launches 362–367 and 371–372 showed both on a server. Version 0.5.0 runs a generator converted to gas on propane or on wood gas from the Wood Gasifier (D-039, D-040), with the UX review's changes; launches 345–518 ran it in single player and on a server. Version 0.5.2 names the engine in a tank's Fuel menu on a server's client, as single player does (D-042, amended); launches 546–549 showed it on a server with one player, and launch 554 with two, the second also on an ambulance after joining again.
 
 Evidence levels:
 
@@ -326,7 +326,9 @@ both on one computer (RT-MP, 2026-11-03 to 2026-11-06):
     **Fuel in this generator** naming the engine as the server has it: a
     gasoline car and generator, a diesel ambulance, a Diesel Generator, and
     a generator and a car converted to flex fuel (launches 546–549, one
-    client).
+    client); with two clients, the second client naming the car's, the
+    ambulance's and both generators' engines the same way, and the
+    ambulance's again after it left and joined again (launch 554).
 - **The game's own limit (42.21):** on a dedicated server no heavy item can
   be taken off the floor through the loot window (double-click or drag);
   the server fails the action and the item stays where it is. Vanilla's

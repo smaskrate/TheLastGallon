@@ -430,9 +430,9 @@ one found was the other pump of a pair); checked on a server in launch
 Put to the owner on 2026-11-15 and decided on 2026-11-16, after 0.5.1
 ("Show it on clients"): a client's Fuel menu names the engine from its
 copies, a vehicle's once its copy of the world record has come (D-042,
-amended). In the repository, not in a release; checked on a server with
-one client in launches 546–549 (`ux`, `wrongfuel`, `conversion`,
-`carconv`).
+amended). Released in 0.5.2; checked on a server with one client in
+launches 546–549 (`ux`, `wrongfuel`, `conversion`, `carconv`) and with
+two in launch 554 (`wrongfuel2`).
 
 Released on 2026-11-16: the owner uploaded it from the upload folder at
 07:45, as Steam records, before launches 542–543 ran and before the

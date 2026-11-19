@@ -61,6 +61,11 @@
   harms as the server's draws give, power, wear and exhaust by the litre,
   a failure, the mod's pour refused until confirmed, and the sandbox
   option off, each seen on the server and on the client (one client).
+  wrongfuel2: the same with two clients (-Clients 2). B asks A for the
+  site until A answers, names the four engines from its own copies,
+  leaves to the main menu and joins again, and reads the ambulance's line
+  when the game starts and on every tick until its copy of the world
+  record has come (D-042). A waits for B before its cleanup.
   handbook3: the crafting window for the Wood Retort, the Wash Tank and
   the Reactor with the handbook read: refused below the level, made at it.
   handbook3u: the three refused at Welding 5 with nothing read (one
@@ -191,7 +196,7 @@
   on a world that has records and adopts them.
 #>
 param([string]$GameDir = "", [ValidateRange(1, 2)][int]$Clients = 1, [int]$TimeoutMinutes = 30, [string]$ModSource = "",
-    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "handbookgas", "wrongfuel", "menus", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers", "gasshare", "machinemenu", "machinemenus", "machinemenus2", "ux")][string]$Only = "",
+    [ValidateSet("", "carry", "heavy", "machines", "fuel", "conversion", "carconv", "stills", "effects", "timers", "audit", "knowledge", "death", "biodiesel", "gensprite", "handbook", "handbook3", "handbook3u", "onebelow", "onebelow2", "onebelow3", "onebelow4", "handbookgas", "wrongfuel", "wrongfuel2", "menus", "gasfeed", "gaspropane", "gaswood", "gaswood2", "gasmoves", "gastimers", "gasshare", "machinemenu", "machinemenus", "machinemenus2", "ux")][string]$Only = "",
     [switch]$NoMod,
     [switch]$NonAdmin, [switch]$Restart, [switch]$DropVault, [switch]$ModAway)
 $ErrorActionPreference = "Stop"

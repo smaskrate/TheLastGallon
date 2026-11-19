@@ -2255,7 +2255,12 @@ with the engine's exact verdict on it, and no menu asked.
   generator (`ux`), the diesel ambulance and the Diesel Generator
   (`wrongfuel`), and the flex generator and car once commissioned
   (`conversion`, `carconv`). The moment before the copy comes is checked
-  offline only; two clients NOT RUN.
+  offline only. Two clients ran on 2026-11-19 (launch 554,
+  `wrongfuel2`): the second client's own copies named the four engines as
+  the server has them, and after it left and joined again its line named
+  the ambulance's engine once its copy had come. That copy came 13 ms
+  after its game started, before its first tick and before the ambulance
+  reached it, so no moment without the line was seen in game.
 
 ## D-043 Machines show their wear and can be repaired
 

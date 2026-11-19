@@ -5537,6 +5537,224 @@ if MP.only == "menus" then
 elseif MP.only == "wrongfuel" then
     MP.stepsA = WFC.steps
     MP.stepsB = { MP.waitWorld, waitFrom("mp_wait_finish", "finish"), MP.finish }
+elseif MP.only == "wrongfuel2" then
+    -- wrongfuel2 (two clients; D-042 amended): A runs wrongfuel as it is and
+    -- answers B's requests for the site with the server's four engines. B
+    -- names the same four from its own copies, then leaves to the main menu
+    -- and joins again. B reads the ambulance's line when the game starts
+    -- and on every tick until its copy of the world record has come, and
+    -- logs each copy as it comes: no line before the copy, the server's
+    -- engine after. A waits for B before undoing its fixtures. What B needs
+    -- after joining again is kept in TLG_harness_wf2.txt, since joining
+    -- reloads the Lua.
+    -- In a function of its own: the main chunk is near the -debug
+    -- compiler's 200 locals (machinemenus).
+    (function()
+        local FILE = "TLG_harness_wf2.txt"
+        local KEYS = { "car", "amb", "g1x", "g1y", "g2x", "g2y", "carProfile", "ambProfile", "g1Profile", "g2Profile" }
+        local R = {}
+        local function engineOf(kind, owner)
+            local p
+            if owner then pcall(function() p = TLG.UI.FuelMenu.engineOf({ kind = kind, owner = owner }) end) end
+            return p
+        end
+        local function vehicleOf(site, k)
+            local id = site and tonumber(site[k])
+            return id and getVehicleById(id) or nil
+        end
+        local function generatorAt(site, n)
+            local x, y = site and tonumber(site["g" .. n .. "x"]), site and tonumber(site["g" .. n .. "y"])
+            local sq = x and y and getCell():getGridSquare(x, y, 0)
+            local objs = sq and sq:getObjects()
+            for i = 0, (objs and objs:size() or 0) - 1 do
+                if instanceof(objs:get(i), "IsoGenerator") then return objs:get(i) end
+            end
+            return nil
+        end
+        local function tilesTo(v)
+            local p = player()
+            if not (p and v) then return -1 end
+            local dx, dy = p:getX() - v:getX(), p:getY() - v:getY()
+            return math.sqrt(dx * dx + dy * dy)
+        end
+
+        -- B joining again: what B holds when the game starts and each copy of
+        -- the world record as it comes, timed from the game's start (the
+        -- first tick of launch 553's new session already had the copy).
+        if MP.role == "B" and TLGH.readKeyValues("TLG_harness_mpstate.txt").phase == "rejoining" then
+            R.site = TLGH.readKeyValues(FILE)
+            R.copies = {}
+            local function sample()
+                local amb = vehicleOf(R.site, "amb")
+                return TLG.World.hasRecord(), amb ~= nil, amb and engineOf("vehicle", amb) or nil
+            end
+            Events.OnGameStart.Add(function()
+                R.t0 = getTimestampMs()
+                local ok, has, here, line = pcall(sample)
+                R.atStart = ok and { has = has, here = here, line = line } or { error = tostring(has) }
+            end)
+            if Events.OnReceiveGlobalModData then
+                Events.OnReceiveGlobalModData.Add(function(key, data)
+                    if key ~= TLG.World.KEY then return end
+                    local when = R.t0 and (tostring(getTimestampMs() - R.t0) .. " ms after the start") or "before the start"
+                    local ok, has, here, line = pcall(sample)
+                    table.insert(R.copies, ok and string.format("%s: a created record %s, counted %s, ambulance here "
+                        .. "%s, line %s", when, tostring(type(data) == "table" and data.v ~= nil), tostring(has),
+                        tostring(here), tostring(line)) or (when .. ": " .. tostring(has)))
+                end)
+            end
+        end
+
+        -- A: wrongfuel, and B's end awaited before the fixtures are undone.
+        local stepsA = {}
+        for _, s in ipairs(WFC.steps) do
+            if s.name == "wf_cleanup" then
+                table.insert(stepsA, waitFrom("mp_wf2_wait_b_done", "wf2_b_done", function(m)
+                    report():line("OBS  MP.wf2 B is done: %s", tostring(m.summary))
+                end, 36000))
+            end
+            table.insert(stepsA, s)
+        end
+        -- A answers each of B's requests for the site once it has the site:
+        -- in launch 553 the site sent once, before B had joined, never
+        -- reached B (the server relays only to the clients online).
+        if MP.role == "A" then
+            Events.OnTick.Add(function()
+                if not WFC.site then return end
+                local ok, err = pcall(function()
+                    if not nextFrom("wf2_site_please") then return end
+                    local out = {}
+                    for _, k in ipairs(KEYS) do out[k] = tostring(WFC.site[k]) end
+                    send("wf2_site", out)
+                    report():line("OBS  MP.wf2 the site sent to B, who asked for it")
+                end)
+                if not ok and not R.answerFailed then
+                    R.answerFailed = true
+                    report():line("STEPERR MP.wf2_answer :: %s", tostring(err))
+                end
+            end)
+        end
+
+        -- B, first session: the four engines from its own copies, then away.
+        local stepsB = {
+            MP.waitWorld,
+            once("mp_wf2_b_copy_at_join", function()
+                report():line("OBS  MP.wf2 B's copy of the world record at its first step: %s",
+                    tostring(TLG.World.hasRecord()))
+            end),
+            { name = "mp_wf2_ask_site", timeout = 18000, fn = function(ctx, ticks)
+                local m = nextFrom("wf2_site")
+                if m then
+                    R.site = m
+                    report():line("OBS  MP.wf2 B has the site after %d ticks", ticks)
+                    return true
+                end
+                if ticks % 300 == 1 then send("wf2_site_please", {}) end
+                return nil
+            end },
+            wait("mp_wf2_site_settles", 120),
+            once("mp_wf2_b_engines", function()
+                local s = R.site or {}
+                local got = { engineOf("vehicle", vehicleOf(s, "car")), engineOf("vehicle", vehicleOf(s, "amb")),
+                    engineOf("generator", generatorAt(s, 1)), engineOf("generator", generatorAt(s, 2)) }
+                local want = { s.carProfile, s.ambProfile, s.g1Profile, s.g2Profile }
+                check("wf2_b_menu_names_each_engine_as_the_server", function()
+                    local same = true
+                    for i = 1, 4 do same = same and got[i] ~= nil and got[i] == want[i] end
+                    return same, string.format("this client: car %s, ambulance %s, generators %s and %s; the server: "
+                        .. "%s, %s, %s, %s; world record copy %s; the ambulance %.1f tiles away", tostring(got[1]),
+                        tostring(got[2]), tostring(got[3]), tostring(got[4]), tostring(want[1]), tostring(want[2]),
+                        tostring(want[3]), tostring(want[4]), tostring(TLG.World.hasRecord()),
+                        tilesTo(vehicleOf(s, "amb")))
+                end)
+                local lines = {}
+                for _, k in ipairs(KEYS) do lines[#lines + 1] = k .. "=" .. tostring(s[k]) end
+                TLGH.writeFile(FILE, lines)
+            end),
+            { name = "mp_wf2_b_leave", timeout = 600, fn = function(ctx, ticks)
+                if ticks < 60 then return nil end
+                h.setPhase("rejoin")
+                report():line("OBS  MP.wf2 B leaving to the main menu, %.1f tiles from the ambulance",
+                    tilesTo(vehicleOf(R.site, "amb")))
+                setGameSpeed(1)
+                getCore():quit()
+                return true
+            end },
+        }
+
+        -- B, after joining again: from the first tick, the ambulance's line
+        -- while the copy of the world record has not come and once it has.
+        local rejoinedB = {
+            { name = "mp_wf2_b_rejoin_watch", timeout = 3600, fn = function(ctx, ticks)
+                if ticks == 1 then
+                    R.site = R.site or TLGH.readKeyValues(FILE)
+                    R.before, R.wrong = 0, 0
+                    local s = R.atStart
+                    report():line("OBS  MP.wf2 B joined again; at the game's start: copy %s, ambulance here %s, line %s",
+                        tostring(s and s.has), tostring(s and s.here), tostring(s and s.line))
+                    -- The game's start counts as a moment before the copy.
+                    if s and not s.has and s.here then
+                        R.before = R.before + 1
+                        if s.line ~= nil then R.wrong, R.wrongLine = R.wrong + 1, s.line end
+                    end
+                end
+                local amb = vehicleOf(R.site, "amb")
+                local has = TLG.World.hasRecord()
+                local line = amb and engineOf("vehicle", amb) or nil
+                if ticks == 1 then
+                    report():line("OBS  MP.wf2 B's first tick, %s ms after the start: copy %s, ambulance here %s, line %s",
+                        R.t0 and tostring(getTimestampMs() - R.t0) or "?", tostring(has), tostring(amb ~= nil),
+                        tostring(line))
+                    for _, c in ipairs(R.copies or {}) do report():line("OBS  MP.wf2 a copy came, %s", c) end
+                    R.copiesLogged = #(R.copies or {})
+                end
+                if amb and not R.ambAt then R.ambAt = ticks end
+                if not has then
+                    if amb then
+                        R.before = R.before + 1
+                        if line ~= nil then R.wrong, R.wrongLine = R.wrong + 1, line end
+                    end
+                    return nil
+                end
+                R.copyAt = R.copyAt or ticks
+                if not amb or ticks - R.copyAt < 60 then return nil end
+                R.after, R.done = line, true
+                return true
+            end },
+            once("mp_wf2_b_rejoin_judged", function()
+                report():line("OBS  MP.wf2 B's new session: the copy counted from tick %s, the ambulance here from tick "
+                    .. "%s; %d moments with the ambulance here before the copy; %.1f tiles away", tostring(R.copyAt),
+                    tostring(R.ambAt), R.before or 0, tilesTo(vehicleOf(R.site, "amb")))
+                for i = (R.copiesLogged or 0) + 1, #(R.copies or {}) do
+                    report():line("OBS  MP.wf2 a later copy came, %s", R.copies[i])
+                end
+                if (R.before or 0) > 0 then
+                    check("wf2_b_rejoin_no_line_before_the_copy", function()
+                        return R.wrong == 0, string.format("%d moments with the ambulance here and no copy; a line in "
+                            .. "%d of them (%s)", R.before, R.wrong, tostring(R.wrongLine))
+                    end)
+                else
+                    report():line("SKIP MP.wf2_b_rejoin_no_line_before_the_copy_B :: the ambulance was not on this "
+                        .. "client before the copy came (copy at tick %s, ambulance at tick %s)", tostring(R.copyAt),
+                        tostring(R.ambAt))
+                end
+                check("wf2_b_rejoin_line_once_the_copy_came", function()
+                    return R.done == true and R.after ~= nil and R.after == (R.site and R.site.ambProfile),
+                        string.format("the ambulance's line %s; the server's engine %s", tostring(R.after),
+                            tostring(R.site and R.site.ambProfile))
+                end)
+            end),
+            MP.waitWorld,
+            once("mp_wf2_b_done", function()
+                local r = report()
+                send("wf2_b_done", { summary = string.format("pass=%d fail=%d", r.pass, r.fail) })
+            end),
+            MP.finish,
+        }
+
+        MP.stepsA, MP.stepsB = stepsA, stepsB
+        if MP.role == "B" then MP.stepsRejoined = rejoinedB end
+    end)()
 elseif MP.only == "machines" then
     local bx0, by0, vx, vy = h.bx0, h.by0, h.vx, h.vy
     MP.stepsA = {

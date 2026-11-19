@@ -166,14 +166,18 @@ Gallon)** is its own.
   2 % of gasoline, does not show in it. A look finds no blend and gets no
   such line.
 
-**Checked in game** (single player, launch 419): the entry at the fuel cap
-and not away from it, the three tests on an ambulance and on a Diesel
-Generator, the kit's line for the engine. On a server with one player
-(launches 546–549): the engine line in both menus, and the engine named
-as the server has it for a diesel ambulance, a Diesel Generator and
-converted engines. **Not checked in game:** a real right-click on a
-vehicle, a save and reload, two players on a server, the moment after
-joining before a vehicle's line appears.
+**Checked in game** (single player, launches 419 and 552): the entry at
+the fuel cap and not away from it, the three tests on an ambulance and on
+a Diesel Generator, the kit's line for the engine. On a server with one
+player (launches 546–549): the engine line in both menus, and the engine
+named as the server has it for a diesel ambulance, a Diesel Generator and
+converted engines. With two players (launch 554), the second player's
+game named the engines of a gasoline car and generator, a diesel
+ambulance and a Diesel Generator as the server has them, and the
+ambulance's again after that player left and joined again. **Not checked
+in game:** a real right-click on a vehicle, a save and reload, the moment
+after joining before a vehicle's line appears (in launch 554, on a server
+on the same computer, the world's details came before the vehicle did).
 
 ## Treating fuel
 

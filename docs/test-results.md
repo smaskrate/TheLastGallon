@@ -22,7 +22,7 @@ runtime tests.
 | RT-SP: walking away from the conversion work (the harness moves the character away: launches 9 and 12); cancelling or removing a conversion; two workers at once | Not in the harness yet |
 | RT-SP and RT-MP: loads leaving favourite items alone, the firebox's planks entry and the loads' tooltips (offline only: `test_biodiesel_commands.lua`, `test_menu_replies.lua`). On a server the mark a client sets with the game's own menu function reaches the server's copy of the item, which the loads read (`TLG/Integration/Picks.lua`; launch 446) | Written 2026-11-14; no load with a favourite is in the harness yet |
 | RT-MP: the Workshop menu choosing its entries from a client's copy of the project (`WorkshopMenu.projectState`: a generator's mod data, a vehicle's Engine part's). RT-SP and RT-MP: the yes/no question before **Cancel the project**, **Remove the conversion** and a second **Abort batch**, which the harness answers without opening it (`TLGHarness/Confirm.lua`); a controller on it | Written 2026-11-14. If a client's copy lacked a project the server has, the menu would offer only **Start: …**, which the server refuses, and nothing to carry on with: to be run on a server before a release for servers |
-| RT-SP: the Fuel entry of a tank from a real right-click on a vehicle (launch 419 stood in for the game's pick under the cursor), a tank's samples after a save and reload, the line after a refuel at a pump or a stopped refuel (offline only: `test_tank_fuel.lua`), the Generator Info window on screen (its text: launch 419). RT-MP: that the refuel line reaches only the player who poured (two clients). On a server's client the tank entries of a generator and a car, their dialogs naming the engine, and Generator Info from the client's copy were run, and the client's world record carries `dieselVehicles` (launch 446); the client's menu still leaves the engine line out (D-042) | UX review R5, 2026-11-14; single player run in launch 419, the server's client in launch 446 (`ux`, one client) |
+| RT-SP: the Fuel entry of a tank from a real right-click on a vehicle (launch 419 stood in for the game's pick under the cursor), a tank's samples after a save and reload, the line after a refuel at a pump or a stopped refuel (offline only: `test_tank_fuel.lua`), the Generator Info window on screen (its text: launch 419). RT-MP: that the refuel line reaches only the player who poured (two clients). On a server's client the tank entries of a generator and a car, their dialogs naming the engine, and Generator Info from the client's copy were run, and the client's world record carries `dieselVehicles` (launch 446); since D-042's amendment the client's menu names the engine (launches 546–549; two clients, launch 554), but a vehicle's line in the moment after joining, before the world record's copy, is checked offline only (`test_tank_menu.lua`; in launch 554 the copy came before the first tick and before the vehicle) | UX review R5, 2026-11-14; single player run in launch 419, the server's client in launch 446 (`ux`, one client) |
 | RT-SP and RT-MP: a reply said over the character (`TLG/UI/Say.lua`; on a server's client a can's **Open** answered by the server was said as a line with no window: launch 446): how the line looks, two lines sent one after the other, a line while the game is paused, a controller's second player (offline only: `test_say.lua`). The screenshot modes (`docs-shots`, `sp-rtds`) expect a window for every reply they photograph and were not run since | UX review R6, 2026-11-14: the harness reads a line's text where the menu says it and cannot see the screen. To be looked at in play |
 | RT-SP: a machine's wear from real batches up to a refused load and the load after a repair, a busy machine's greyed **Repair**, a favourite part left alone, a gasifier worn by its own filter cycles (offline only: `test_machine_commands.lua`, `test_gasifier_handlers.lua`, `test_say.lua`; a pot still, a fermenter and a gasifier with the condition written into the record: launches 424 and 425). RT-MP: all of R8 | Not in the harness yet (UX review R8, D-043, 2026-11-14) |
 | RT-MP: a real network | Needs a second machine, so it stays NOT RUN (decided 2026-11-03). Every other multiplayer test runs on this machine (all RT-MP launches, 136–210; two clients from launch 139) |
@@ -10595,3 +10595,56 @@ for (`Clicked.vehicle`); the rest of the menu ran as it is.
 
 Evidence:
 [run 552](evidence/2026-11-18_rt-sp_harness_run552_wrong_fuel_0.5.2_zip_42.22.2.txt).
+
+## 2026-11-19 — RT-MP launches 553–554 (two players: a second client names the engines, also after joining again; D-042)
+
+Build 42.22.2, `main` at `f0b120f` with a new case not yet committed:
+`wrongfuel2` in `MPHarnessCases.lua` and `run-mp-harness.ps1`. Client A
+runs `wrongfuel` unchanged. Client B gets the site from A, names the four
+engines from its own copies (`TLG.UI.FuelMenu.engineOf`), leaves to the
+main menu and joins again. Then it reads the ambulance's line when its
+game starts and on every tick until its copy of the world record has
+come, and logs each copy as it comes. A waits for B before undoing its
+fixtures. After each launch the mod deployed to the server and to both
+clients was the 0.5.2 package's `42` and `common` folders, 164 files,
+file for file by SHA-256. `tools\run-mp-harness.ps1 -Clients 2 -Only
+wrongfuel2 -TimeoutMinutes 40`:
+
+| Launch | Result (pass/fail) | Last run before |
+| --- | --- | --- |
+| 553 | A 31/0, B 2/2 | launch 547 (`wrongfuel`, one client), A 31/0 |
+| 554 | A 31/0, B 4/0 and one skip | the same, for A |
+
+* Launch 553: A sent the site once, as soon as the server had built it,
+  and B had not joined yet (A's first line: one player online). The
+  server relays a message only to the clients online, so B waited 18,000
+  ticks for it and judged the engines with no site: its two failures are
+  the harness's. The case was changed before launch 554: B asks for the
+  site until A answers.
+* Launch 554: B had the site 7 ticks after asking. Its own copies named
+  each engine as the server has it, 8.9 tiles from the ambulance: the
+  gasoline car and generator (`engine_si_stock`, `generator_si_stock`),
+  the diesel ambulance (`engine_ci_stock`) and the Diesel Generator
+  (`generator_ci_bio`).
+* B then left and joined again. When its game started it had no copy of
+  the world record and no ambulance; the copy came 13 ms after the
+  start, the first tick at 105 ms already had it, and the ambulance
+  reached B at its 9th tick. Its line then named the server's engine
+  (`engine_ci_stock`). No moment had the ambulance on B's client without
+  the copy, so the check that the line is missing before the copy was
+  skipped, not passed.
+
+In launch 554 the mod logged "The Last Gallon 0.5.2 ready" at every
+load: once on the server, once on A and twice on B. None of the three
+logs holds a warning or error from the mod. Their stack traces are the
+game's own, for the `actiongroups` and `AnimSets` folders the mods do not
+have and for `WindowShape` on the server, and, on the server, the
+harness's deep-recursion probe. Launch 553's logs were not read before
+launch 554 replaced them.
+
+Not run: the moment before the copy on a server where the copy comes
+after the vehicles; a real right-click; more than two players.
+
+Evidence:
+[run 553](evidence/2026-11-19_rt-mp_harness_run553_wrongfuel2_site_sent_before_b_joined_42.22.2.txt),
+[run 554](evidence/2026-11-19_rt-mp_harness_run554_wrongfuel2_two_clients_42.22.2.txt).

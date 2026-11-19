@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+* The player guide lists among what has been checked in game a tank's
+  engine line with two players on a server, also for a player who left
+  and joined again (launch 554 in `docs/test-results.md`), and the
+  single-player check of that line on the 0.5.2 package (launch 552).
+
 ## 0.5.2 (2026-11-18)
 
 * On a server, **Fuel in this vehicle** and **Fuel in this generator**
