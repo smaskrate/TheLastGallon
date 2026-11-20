@@ -372,7 +372,7 @@ Release art (audit R01–R04):
 | `preview.png`, 256×256 | Workshop upload (required) | taken from `art-src/preview.png`, made by `tools/make-preview.ps1` from the mod's own models (D-033) |
 | poster | in-game mod list (`poster=` in `mod.info`) | `42/poster.png`, the preview; loaded by the game from the installed zip (run 190) |
 | mod icon | in-game mod list (`icon=` in `mod.info`) | `42/icon.png`, the vessel's inventory icon; loaded likewise (run 190) |
-| Workshop screenshots | Workshop page | `art-src/workshop/01`–`13` (JPEG, 16:9, 672×378 to 1040×585), cut by `tools/make-workshop-shots.ps1` from the harness's screenshots (launch 432 and earlier scene shots; 05, the Status card, from launch 444; 12, the wood gasifier, from launch 448); which of them the Workshop page carries since the 0.5.0 upload of 2026-11-16 was not looked at |
+| Workshop screenshots | Workshop page | `art-src/workshop/01`–`13` (JPEG, 16:9, 672×378 to 1040×585), cut by `tools/make-workshop-shots.ps1` from the harness's screenshots (launch 432 and earlier scene shots; 05, the Status card, from launch 444; 12, the wood gasifier, from launch 448); read on 2026-11-20, the Workshop page carries all thirteen, in order: the hash in each picture's address equals the file's SHA-1 |
 | Workshop banner | Workshop page | spec §22; not made (R04) |
 
 ### B and C
@@ -468,7 +468,7 @@ the first to cut.
 
 | Tier | New 3D models | Icons | UI symbols | Original sounds | Release art |
 | --- | --- | --- | --- | --- | --- |
-| A | 9, all made: 5 supplied, 4 the mod's own | 9, all made: the vessel's drawn, 8 rendered | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster and icon made; 13 Workshop screenshots cut, not uploaded; banner not made |
+| A | 9, all made: 5 supplied, 4 the mod's own | 9, all made: the vessel's drawn, 8 rendered | 32 | 1–4, plus 7 actions on vanilla sounds | preview (required), poster and icon made; 13 Workshop screenshots cut and on the Workshop page (read 2026-11-20); banner not made |
 | B | 15: 6 made, all supplied by the owner: 5 for the biodiesel chain (D-036) and the gasifier's (D-040, since 0.5.0); of the other 9, 2 blocked on G11, 1 optional. Also 1 tile sprite, the diesel generator's, made from vanilla's (recoloured) | 18: 9 made: 6 rendered from the supplied models, the gasifier's among them, the two handbooks' from the manual's icon, the diesel generator's from vanilla's (recoloured) | 2 badges | about 10 | — |
 | C | 13 (1 blocked on G11, 1 optional) | 9 | about 5 | about 9 | — |
 
