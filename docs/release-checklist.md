@@ -23,7 +23,7 @@ game's own Lua, BC its bytecode.
 | 9 | Required assets verified and licensed | PARTIAL | The supplied models and carry clips drawn or played in game, their rights recorded; the mod's own floor models and release art (run 190); the thirteen Workshop pictures, on the page when read on 2026-11-20; licence CC BY-NC-SA 4.0. Open: three commissioning decisions, the banner (R04) |
 | 10 | English/Italian text and player docs complete | PARTIAL | Every shipped key in English and Italian; all 519 Italian strings as shipped in a client set to Italian, and the Status card read in Italian (launch 445); the field manual read in both languages (runs 101–103). Docs for unfinished pathways pending |
 | 11 | Performance measured against a baseline | PARTIAL | Single player measured on a reference machine, its 22 budgets all passed (run 185); a server's timers measured with one client (run 189). NOT RUN: several clients sharing storage, other machines |
-| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.5.2 package, the zip of `92bc5ba` (SHA-256 `2DFC611A…506392D8`), was installed clean and played on 42.22.2 in launch 550 (106/0, 14/0), and a save made with the 0.5.1 zip continued with it (launch 551: 3/0, 22/0). The 0.5.1 package is the zip of `018dcca` (SHA-256 `5EBC59D8…5518025A`): the 0.5.0 package's mod files but for the version line of `mod.info` and `Core.lua`, with the corrected documents. Its own rehearsals, a clean install and a 0.5.0 save continued, were not run, the owner's choice; launch 551's first game installed it into a fresh cache and played a new world with it (3/0). The 0.5.0 package, the zip of `b686cce` (SHA-256 `E6D1BF5C…0ACB1652`), was installed clean and played on 42.22.2 in launch 519 (106/0, 14/0); a save made with the 0.4.3 zip continued with it (launch 538: 3/0, 22/0), a world played without the mod gained it (launch 542) and the mod was taken off a save and put back (launch 543). Each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.5.2 since 2026-11-19, after 0.5.1 from the afternoon of 2026-11-16 and 0.5.0 that morning; Steam's download of each held exactly that package's mod files. A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, one made with 0.2.0 with a 0.3.0 zip, and one made with 0.4.2 with the 0.4.3 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: the game loading the mod from a Workshop download; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
+| 12 | Clean install and upgrade pass with the packaged artifact | PARTIAL | The 0.5.2 package, the zip of `92bc5ba` (SHA-256 `2DFC611A…506392D8`), was installed clean and played on 42.22.2 in launch 550 (106/0, 14/0), and a save made with the 0.5.1 zip continued with it (launch 551: 3/0, 22/0). The 0.5.1 package is the zip of `018dcca` (SHA-256 `5EBC59D8…5518025A`): the 0.5.0 package's mod files but for the version line of `mod.info` and `Core.lua`, with the corrected documents. Its own rehearsals, a clean install and a 0.5.0 save continued, were not run, the owner's choice; launch 551's first game installed it into a fresh cache and played a new world with it (3/0). The 0.5.0 package, the zip of `b686cce` (SHA-256 `E6D1BF5C…0ACB1652`), was installed clean and played on 42.22.2 in launch 519 (106/0, 14/0); a save made with the 0.4.3 zip continued with it (launch 538: 3/0, 22/0), a world played without the mod gained it (launch 542) and the mod was taken off a save and put back (launch 543). Each package before it back to 0.1.2 was installed clean and played too (the version sections, gate 12 below). The Workshop item serves 0.5.2 since 2026-11-19, after 0.5.1 from the afternoon of 2026-11-16 and 0.5.0 that morning; Steam's download of each held exactly that package's mod files, and the game loaded 0.5.2 from that download, in Steam mode with no other copy of the mod (launch 555: 106/0, 14/0). A save made with the 0.1.2 zip was continued with zips of 0.3.0 to 0.4.0, one made with 0.2.0 with a 0.3.0 zip, and one made with 0.4.2 with the 0.4.3 zip; 0.1.2 differs from 0.1.1, which the item served until 2026-11-11, only in its version number and documents, and no 0.1.1 save was continued. NOT RUN: from the Workshop, a first download after subscribing, a launch from Steam's Play button and a server that fetches the item; a save from 0.2.0 to 0.4.1 continued with a later 0.4 package |
 | 13 | No core behaviour represented only by a placeholder | PARTIAL | The fermentation vessel, both stills, the drying column and the filter cartridge have their own models and icons, every other item its own icon, the four small items their own floor models, and the vessel its own carry pose |
 | 14 | Optional integrations distinguished from shipped scope | DONE | No external integrations claimed |
 
@@ -599,6 +599,13 @@ package's 187 mod files ("Gate 12" under "Gate details"). The item's
 page, read the same day, names 0.5.2 in its description and shows the
 change note as written, its bullets inside the note's box.
 
+Done on 2026-11-20, on the owner's word ("Yes, build and run"): the
+game loaded the mod from that download, in Steam mode with no other copy
+of the mod, and passed the full harness as on the zip (launch 555:
+106/0, then 14/0; `tools/rehearse-install.ps1 -Scenario workshop`). The
+client was started by `java` from the game folder, not from Steam's
+Play button ("Gate 12" under "Gate details").
+
 Done on 2026-11-18, on the owner's word ("Yes, prepare it"): the
 package went into the upload folder. The folder's 189 files matched the
 0.5.1 package's manifest, both ways, but for the owner's `workshop.txt`,
@@ -1129,6 +1136,18 @@ in: 10.348 MB, updated at 14:32, eight change notes. Its description
 names 0.5.2 in its first line and carries the wrong-fuel, removal,
 tested and "Coming soon" lines of the upload folder's `workshop.txt`; its
 newest change note is the text of `docs/workshop-change-note-0.5.2.txt`.
+On 2026-11-20, on the owner's word ("Yes, build and run"), the game
+loaded the mod from that download (launch 555,
+`tools/rehearse-install.ps1 -Scenario workshop`). The client ran in
+Steam mode (`-Dzomboid.steam=1`, `-modfolders steam,mods`), started by
+`java` from the game folder with Steam running and signed in, not from
+Steam's Play button, and its cache held no copy of the mod. It read
+`mod.info` 0.5.2 from the download's `mods/TheLastGallon`, the mod
+logged "The Last Gallon 0.5.2 ready" at both loads, and the full harness
+passed 106/0, then 14/0, as on the zip in launch 550. The download held
+the same 187 files before and after, and Steam's record of the item did
+not change. Not run: a first download after subscribing, a launch from
+the Play button, a server that fetches the item.
 The item served 0.5.1 from 2026-11-16:
 the owner uploaded it from the upload folder that afternoon (Steam's
 record of the item: updated at 13:44:36). After the upload the folder's
@@ -1166,7 +1185,8 @@ passed for 0.4.2, uploaded on 2026-11-12 (manifest
 evening of 2026-11-11 (manifest `8946080603226782332`, checked on
 2026-11-12). The game loading the mod
 from that folder was not run: it scans Workshop folders only in Steam
-mode, and the harness runs with `-nosteam`. Before 0.4.1 the item served
+mode, and the harness then ran only with `-nosteam` (for 0.5.2, launch
+555 ran it in Steam mode). Before 0.4.1 the item served
 0.1.1, uploaded by the owner on 2026-11-08 and public. No rehearsal of the 0.1.1 zip is recorded:
 its menus on placed items were checked from the repository's mod
 (`test-results.md`, 2026-11-08). The upload folder
@@ -1281,9 +1301,14 @@ packages' sizes, file counts and contents are in `test-results.md`.
 | run 42 | `d1a6f5e1…` | |
 | run 38 | — | |
 
-- Install through the Steam Workshop (staged or subscribed) NOT RUN: the
-  game scans those folders only in Steam mode (BC), and the harness does
-  not run in it. A subscribed copy of 0.1.1 is on this computer.
+- Install through the Steam Workshop: the subscribed copy, already
+  downloaded, was loaded for 0.5.2 (launch 555,
+  `tools/rehearse-install.ps1 -Scenario workshop`: the client in Steam
+  mode with `-modfolders steam,mods` and no copy of the mod in its
+  cache). NOT RUN: a first download after subscribing, a launch from
+  Steam's Play button, a server that fetches the item, and the
+  uploader's staged folder (`<cachedir>/Workshop`), which
+  `-modfolders steam,mods` leaves out.
 - Upgrade NOT RUN: a save played with 0.1.1 has not been continued with
   0.1.2, and `tools/rehearse-install.ps1` has no scenario for it. The
   subscribed 0.1.1 and the 0.1.2 package differ in five files: `mod.info`,
@@ -1422,5 +1447,6 @@ tools\rehearse-install.ps1            # that zip installed in a fresh cache and 
 tools\rehearse-install.ps1 -Scenario existing   # a save played 10 days without the mod, then with it; ~30 min
 tools\rehearse-install.ps1 -Scenario removal    # a save with the mod, continued without it, then with it again; ~4 min
 tools\rehearse-install.ps1 -Scenario upgrade    # a world played with the 0.1.2 zip (-FromVersion), continued with this version's; ~2 min
+tools\rehearse-install.ps1 -Scenario workshop   # the mod loaded from Steam's download of the Workshop item, in Steam mode; Steam running and signed in, the account shown playing; no build; ~9 min
 # -Mode existing-a, existing-b, removal-a, -b, -c and upgrade-a, -b are the launches the three rehearsals above make; they are not run by hand.
 ```

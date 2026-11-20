@@ -3,7 +3,8 @@
   Runs the automated single-player harness (phase A + reload + phase B).
 .DESCRIPTION
   Deploys into the isolated dev cache, writes the harness request "sp-a" and
-  starts the client in debug mode (-debug -nosteam -nosound -cachedir=...).
+  starts the client in debug mode (-debug -nosteam -nosound -cachedir=...;
+  in Steam mode with -SteamModDir).
   The harness mod force-launches its debug scenario, runs the experiments,
   exits to the menu, continues the save, verifies persistence and quits.
   A watchdog kills the client if it has not finished in time.
@@ -376,13 +377,31 @@
   Folder deployed as the mod (default: the repository's; see setup-devenv.ps1).
 .PARAMETER ActiveMods
   Mods the client loads (default: the mod and the harness; see setup-devenv.ps1).
+.PARAMETER SteamModDir
+  The mod folder of Steam's download of the Workshop item
+  (<library>\steamapps\workshop\content\108600\<item id>\mods\TheLastGallon).
+  The client then runs in Steam mode (-Dzomboid.steam=1, no -nosteam) and
+  scans only the folders of the user's subscribed items and the cache's mods
+  folder (-modfolders steam,mods); the cache holds no copy of the mod
+  (setup-devenv.ps1 -NoMod), so the game can load it only from Steam. The
+  checks before the launch (XML, Italian texts) read this folder. Steam must
+  be running and signed in, and shows the account playing Project Zomboid
+  while the client runs. A client that cannot reach Steam carries on
+  without it; the run stops as soon as its console says so, or when the
+  harness, which requires the mod, did not load. Which folder the game
+  read is in the results (G01c.mod_info_found).
+.PARAMETER PrintArgs
+  Prepare the cache as for a launch, print the client's arguments and exit
+  without starting it. Like a launch, it deletes the cache's last results
+  file: copy it first.
 #>
 param([string]$GameDir = "", [string]$DevCache = "", [int]$TimeoutMinutes = 30,
     [ValidateSet("full", "realtime", "winter", "fireplace", "fireplace-reload", "pickup", "pot-still", "biodiesel", "biodiesel-models", "diesel-generator", "gas-probe", "gas-measures", "gas-sleep", "gas-propane", "gas-wood", "gas-player", "gas-moves", "diesel-vehicles", "diesel-pumps", "wrong-fuel", "fuel-drives", "wrong-fuel-more", "biodiesel-cold", "context-menus", "context-menus-zoom", "handbook", "handbook-loot", "handbook-loot-woodgas", "controls", "still-pickup",
         "still-save", "still-controls", "late-find", "can-water", "chassis", "driving", "engine-effects", "performance", "performance-gas", "model-import", "fermenter-model", "held", "heavy",
         "generator-unequip", "pose", "pose-hold", "pose-freeze", "pose-carry", "pose-carry-wide", "pose-carry-mid", "pose-carry-offsets", "vessel-carry", "vessel-actions",
         "vessel-gaits", "pose-crouch", "pose-sprint", "machine-models", "manual", "manual-italian", "crafting", "successor", "knowledge", "knowledge-save", "fires", "existing-a", "existing-b", "removal-a", "removal-b", "removal-c", "removal-d", "upgrade-a", "upgrade-b", "italian", "docs-shots", "transfer-liquid")][string]$Mode = "full",
-    [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
+    [string]$ModSource = "", [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"),
+    [string]$SteamModDir = "", [switch]$PrintArgs)
 $ErrorActionPreference = "Stop"
 . (Join-Path $PSScriptRoot "desktop-lock.ps1")
 if (Test-SessionLocked) {
@@ -395,11 +414,14 @@ $repo = Split-Path -Parent $PSScriptRoot
 if (-not $GameDir) { $GameDir = $env:PZ_GAME_DIR }
 if (-not $GameDir) { $GameDir = (Resolve-Path (Join-Path $repo "..\..")).Path }
 if (-not $DevCache) { $DevCache = Join-Path $env:LOCALAPPDATA "TheLastGallon\devcache" }
-& (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $DevCache -ModSource $ModSource -ActiveMods $ActiveMods | Out-Null
+$steam = [bool]$SteamModDir
+if ($steam -and -not (Test-Path (Join-Path $SteamModDir "42\mod.info"))) { throw "no 42\mod.info in $SteamModDir" }
+& (Join-Path $PSScriptRoot "setup-devenv.ps1") -DevCache $DevCache -ModSource $ModSource -ActiveMods $ActiveMods -NoMod:$steam | Out-Null
+if ($steam -and (Test-Path (Join-Path $DevCache "mods\TheLastGallon"))) { throw "$DevCache\mods\TheLastGallon is still there" }
 # The game skips a pose file it cannot parse, with only a console line, so
 # its node never plays (run 109: "--" inside a comment): check the deployed
 # mods' XML before launching.
-$badXml = @($ActiveMods | ForEach-Object { Join-Path $DevCache "mods\$_" } | Where-Object { Test-Path $_ } |
+$badXml = @($ActiveMods | ForEach-Object { if ($steam -and $_ -eq "TheLastGallon") { $SteamModDir } else { Join-Path $DevCache "mods\$_" } } | Where-Object { Test-Path $_ } |
     ForEach-Object { Get-ChildItem -Recurse -File -Filter *.xml $_ } | Where-Object {
         try { [void]([xml](Get-Content -Raw -LiteralPath $_.FullName)); $false } catch { $true } })
 if ($badXml.Count -gt 0) { $badXml | ForEach-Object { Write-Host "XML ERROR $($_.FullName)" }; exit 3 }
@@ -439,7 +461,7 @@ if ($Mode -eq "italian") {
     # Every Italian string the deployed mod ships, as category|key=value in
     # ASCII: letters past ASCII and backslashes as \uXXXX, which the harness
     # decodes, so no file encoding stands between the file and the check.
-    $src = if ($ModSource) { $ModSource } else { Join-Path $repo "Contents\mods\TheLastGallon" }
+    $src = if ($steam) { $SteamModDir } elseif ($ModSource) { $ModSource } else { Join-Path $repo "Contents\mods\TheLastGallon" }
     $lines = foreach ($f in Get-ChildItem (Join-Path $src "common\media\lua\shared\Translate\IT") -Filter *.json | Sort-Object Name) {
         $obj = Get-Content $f.FullName -Raw -Encoding UTF8 | ConvertFrom-Json
         foreach ($p in $obj.PSObject.Properties) {
@@ -455,9 +477,16 @@ $request = switch ($Mode) { "realtime" { "sp-rt" } "winter" { "sp-rtw" } "firepl
 Set-Content -Path (Join-Path $luaDir "TLG_harness_request.txt") -Value $request -Encoding ascii
 
 $json = Get-Content (Join-Path $GameDir "ProjectZomboid64.json") -Raw | ConvertFrom-Json
-$vm = @($json.vmArgs | Where-Object { $_ -notmatch '^-Dzomboid.steam=' }) + @("-Dzomboid.steam=0", "-XX:+UseZGC")
-$clientArgs = $vm + @("-cp", ($json.classpath -join ";"), ($json.mainClass -replace "/", "."),
-    "-debug", "-nosteam", "-nosound", "-cachedir=$DevCache")
+# Steam mode needs zomboid.steam=1 and no -nosteam, which sets it to 0 (BC
+# SteamUtils.init, MainScreenState.main). -modfolders takes the next argument
+# as the folders to scan, in order: "steam" is the subscribed items' folders,
+# read only in Steam mode; "mods" is <cachedir>/mods, kept for the harness;
+# the default also scans "workshop", the staged uploads in <cachedir>/Workshop
+# (BC ZomboidFileSystem.getAllModFolders).
+$vm = @($json.vmArgs | Where-Object { $_ -notmatch '^-Dzomboid.steam=' }) + @("-Dzomboid.steam=$(if ($steam) { 1 } else { 0 })", "-XX:+UseZGC")
+$gameArgs = if ($steam) { @("-debug", "-modfolders", "steam,mods", "-nosound", "-cachedir=$DevCache") } else { @("-debug", "-nosteam", "-nosound", "-cachedir=$DevCache") }
+$clientArgs = $vm + @("-cp", ($json.classpath -join ";"), ($json.mainClass -replace "/", ".")) + $gameArgs
+if ($PrintArgs) { $clientArgs | ForEach-Object { Write-Host "arg: $_" }; exit 0 }
 $out = Join-Path $DevCache "client-stdout.txt"
 $err = Join-Path $DevCache "client-stderr.txt"
 $started = Get-Date
@@ -503,6 +532,15 @@ while ((Get-Date) -lt $deadline -and -not $p.HasExited) {
     if ((Test-Path $results) -and (Get-Item $results).LastWriteTime -ge $started -and
         ((Read-Shared $results) -match "(?m)^DONE")) { $finished = $true; break }
     $log = Read-Shared $console
+    if ($steam) {
+        # Without Steam the client carries on (BC SteamUtils.init); without
+        # the mod the harness, which requires it, does not load, and the
+        # client would wait at the main menu until the watchdog. The harness
+        # logs "SPHarness loaded" when the game loads Lua, before "Game booting".
+        $why = if ($log -match "Could not initialise SteamUtils") { "the client could not reach Steam" }
+            elseif ($log -match "> Game booting" -and $log -notmatch "\[TLGH\] SPHarness loaded") { "the harness did not load (no TheLastGallon?)" }
+        if ($why) { Write-Host "stopping early: $why"; break }
+    }
     $loads = ([regex]::Matches($log, "game loading took")).Count
     $exits = ([regex]::Matches($log, "STATE: exit zombie\.gameStates\.GameLoadingState")).Count
     if ($loads -gt $exits) {

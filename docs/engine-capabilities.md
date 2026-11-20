@@ -73,14 +73,32 @@ small (the vault's digests: below 2^26).
 
 ## G01 Packaging — PASS (dedicated server and client)
 
-* **BC** `ZomboidFileSystem.getAllModFolders`: scan order `workshop,steam,mods`;
-  `mods` = `getCacheDirSub("mods")` only. `workshop` (staged items,
-  `getStagedItemModsFolders`) and `steam` (subscribed items,
-  `getInstalledItemModsFolders`) are scanned only when
-  `SteamUtils.isSteamModeEnabled()`. With `-nosteam` a client sees
-  `<cachedir>/mods` alone, so the manual install from the release zip is
-  the path a launch without Steam can rehearse
-  (`tools/rehearse-install.ps1`). `getAllModFoldersAux` skips a folder
+* **BC** `ZomboidFileSystem.getAllModFolders`: scan order `workshop,steam,mods`,
+  or the list given with `-modfolders <list>` (`MainScreenState.main`
+  passes the argument after it to `setModFoldersOrder`, split at commas;
+  only the names listed are scanned). `mods` = `getCacheDirSub("mods")`
+  only. `workshop` (staged items in `<cachedir>/Workshop`,
+  `getStagedItemModsFolders`) and `steam` (`getInstalledItemModsFolders`:
+  each folder of the native `SteamWorkshop.GetInstalledItemFolders()`,
+  the user's subscribed items, with `\mods` added, if that exists) are
+  scanned only when `SteamUtils.isSteamModeEnabled()`. With `-nosteam` a
+  client sees `<cachedir>/mods` alone, so the manual install from the
+  release zip is the path a launch without Steam can rehearse
+  (`tools/rehearse-install.ps1`). A single-player client never asks Steam
+  to download an item; only joining a server does (`ConnectToServerState`).
+* **BC** Steam mode: `SteamUtils.init` turns it on when the property
+  `zomboid.steam` is `1`, which `ProjectZomboid64.json` sets; `-nosteam`
+  sets it to `0`. If the client cannot reach Steam it logs "Could not
+  initialise SteamUtils" and carries on without Steam, with no dialog;
+  otherwise it logs "SteamUtils initialised successfully" (without Steam
+  mode: "SteamUtils started without Steam"). The name
+  `SteamAPI_RestartAppIfNecessary` is in no Java class and, among the
+  game's DLLs, only in `steam_api64.dll`, which exports it.
+* **BC** Two folders with the same `id=`: the first in scan order wins.
+  `ChooseGameInfo.getModDetails` returns the first folder whose id
+  matches, and `setModIdToDir` keeps the first (`putIfAbsent`). The id is
+  the bare `id=` value; a Workshop item's id is not part of it.
+* **BC** `getAllModFoldersAux` skips a folder
   named `examplemod` and accepts a mod when `common/mod.info` or
   `<versionDir>/mod.info` exists. `getModVersionDirName` picks the highest
   folder whose `getGameVersionIntFromName` (`major*1000 + min(minor, 999)`) is
@@ -147,6 +165,18 @@ small (the vault's digests: below 2^26).
   237 strings, item display names included. The game stores a placeholder
   `%N` as `%N$s`, so `getText(key)` without arguments returns `"Avvia:
   %1$s"` for a shipped `"Avvia: %1"`, while `getText(key, ...)` fills it.
+* **RT-SP** Workshop download (launch 555, 2026-11-20): a client started
+  by `java` from the game folder, beside `steam_appid.txt` (108600), with
+  `-Dzomboid.steam=1 -modfolders steam,mods` and no `-nosteam`, reached
+  Steam, which was signed in, and was not restarted through it. It
+  loaded the mod from Steam's download of the owner's subscribed item,
+  `steamapps/workshop/content/108600/3835496461/mods/TheLastGallon`
+  (`getModInfoByID("TheLastGallon"):getDir()`), with no copy in
+  `<cachedir>/mods`, and the full harness passed as on the zip (106/0,
+  14/0). It copied the game's `ModTemplate` into `<cachedir>/Workshop`
+  and wrote nothing in the game folder, under `steamapps/workshop` or in
+  the user's `Zomboid` folder (`tools/rehearse-install.ps1 -Scenario
+  workshop`).
 
 ## G02 Fluids — PASS (DS + SP)
 
@@ -1900,6 +1930,11 @@ Used by the performance mode (`docs/performance.md`):
 `tools/run-sp-harness.ps1` starts the client with
 `-debug -nosteam -nosound -cachedir=<devcache>`. A launch needs no input
 (since run 3), and the full run (both phases) takes about 12 minutes.
+With `-SteamModDir` it starts the client in Steam mode instead
+(`-Dzomboid.steam=1`, then `-debug -modfolders steam,mods -nosound
+-cachedir=<cache>`). Steam must be running and signed in, and the game
+folder, the client's working directory, holds `steam_appid.txt`. Launch
+555 ran to its end with no input but the launcher's own clicks.
 What the game does that an unattended launch has to answer:
 
 1. The Windows session must be unlocked.

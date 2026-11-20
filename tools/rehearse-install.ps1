@@ -2,7 +2,8 @@
 .SYNOPSIS
   Rehearses a clean installation of the release zip (release gate 12).
 .DESCRIPTION
-  1. Builds the package with tools/package.ps1 (unless -NoBuild).
+  1. Builds the package with tools/package.ps1 (unless -NoBuild or
+     -Scenario workshop).
   2. Unpacks dist/TheLastGallon-<version>.zip into a fresh folder and checks
      the unpacked files against the SHA-256 manifest, both ways.
   3. Installs the mod as the player guide says: the zip's
@@ -32,6 +33,20 @@
      package then replaces it in the mods folder, as a player replaces the
      folder; launch 2 continues the save ("up-b"). Results and consoles are
      kept as TLG_upgrade_launch<n>.results.txt and .console.txt.
+     -Scenario workshop (release gate 12): the game loads the mod from the
+     copy Steam downloaded for the user's subscription to the Workshop item,
+     not from a zip; nothing is built or unpacked. The download is checked
+     against the manifest in dist/ of the version its mod.info names, both
+     ways (Steam stores the package's Contents folder as the item folder).
+     Then the full harness runs in Steam mode with no copy of the mod in the
+     cache (tools/run-sp-harness.ps1 -SteamModDir). It passes only if the
+     harness finished with no failed check, the client reached Steam, the
+     game read mod.info from the download's folder at the version the
+     download names, the cache still holds no copy of the mod and the
+     download still matches the manifest. Exit code 0 if it passes, 1 if
+     not, 2 if the client was not started. Results and console are kept as
+     TLG_workshop.results.txt and .console.txt. Steam must be running and
+     signed in; it shows the account playing Project Zomboid meanwhile.
   The rehearsal folders are removed and recreated only when they carry this
   script's marker file. Nothing is uploaded.
 .PARAMETER NoBuild
@@ -39,22 +54,27 @@
 .PARAMETER TimeoutMinutes
   Watchdog limit for each game launch (default 40).
 .PARAMETER Scenario
-  clean, existing, removal or upgrade (see above).
+  clean, existing, removal, upgrade or workshop (see above).
 .PARAMETER FromVersion
   The earlier release the upgrade scenario starts from (default 0.1.2).
+.PARAMETER WorkshopDir
+  The item folder of Steam's download for the workshop scenario (default
+  <library>\steamapps\workshop\content\108600\3835496461, the library this
+  game is installed in).
 #>
 param([switch]$NoBuild, [int]$TimeoutMinutes = 40,
-    [ValidateSet("clean", "existing", "removal", "upgrade")][string]$Scenario = "clean", [string]$FromVersion = "0.1.2")
+    [ValidateSet("clean", "existing", "removal", "upgrade", "workshop")][string]$Scenario = "clean", [string]$FromVersion = "0.1.2",
+    [string]$WorkshopDir = "")
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 $version = (Select-String -Path (Join-Path $repo "Contents\mods\TheLastGallon\42\mod.info") -Pattern '^modversion=(.+)$').Matches[0].Groups[1].Value
-if (-not $NoBuild) {
+if (-not $NoBuild -and $Scenario -ne "workshop") {
     & (Join-Path $PSScriptRoot "package.ps1")
     if ($LASTEXITCODE -ne 0) { throw "package build failed" }
 }
 $zip = Join-Path $repo "dist\TheLastGallon-$version.zip"
 $manifest = Join-Path $repo "dist\TheLastGallon-$version.sha256"
-if (-not (Test-Path $zip) -or -not (Test-Path $manifest)) { throw "no $zip or its manifest: build the package first" }
+if ($Scenario -ne "workshop" -and (-not (Test-Path $zip) -or -not (Test-Path $manifest))) { throw "no $zip or its manifest: build the package first" }
 
 $root = Join-Path $env:LOCALAPPDATA "TheLastGallon"
 $cache = Join-Path $root "installcache"
@@ -93,6 +113,72 @@ function Expand-Release([string]$zip, [string]$manifest, [string]$name) {
     $modDir = Join-Path $files "Contents\mods\TheLastGallon"
     if (-not (Test-Path (Join-Path $modDir "42\mod.info"))) { throw "$zip has no Contents/mods/TheLastGallon/42/mod.info" }
     return $modDir
+}
+
+if ($Scenario -eq "workshop") {
+    if (-not $WorkshopDir) { $WorkshopDir = Join-Path $repo "..\..\..\..\workshop\content\108600\3835496461" }
+    $item = (Resolve-Path $WorkshopDir).Path
+    $steamMod = Join-Path $item "mods\TheLastGallon"
+    # The item folder against the manifest of the version its mod.info names,
+    # both ways; the manifest's paths start with the package's Contents/.
+    function Test-Download {
+        $info = Join-Path $steamMod "42\mod.info"
+        if (-not (Test-Path $info)) { throw "no $info; is the item subscribed and downloaded?" }
+        $v = (Select-String -Path $info -Pattern '^modversion=(.+)$').Matches[0].Groups[1].Value
+        $man = Join-Path $repo "dist\TheLastGallon-$v.sha256"
+        if (-not (Test-Path $man)) { throw "no $man for the downloaded version" }
+        $want = @{}
+        foreach ($line in Get-Content $man) {
+            $hash, $path = $line -split "  ", 2
+            if ($path -like "Contents/*") { $want[$path.Substring(9)] = $hash }
+        }
+        $got = @{}
+        Get-ChildItem -Recurse -File -Force $item | ForEach-Object {
+            $got[$_.FullName.Substring($item.Length + 1).Replace('\', '/')] = (Get-FileHash -Algorithm SHA256 $_.FullName).Hash.ToLower()
+        }
+        $bad = @()
+        foreach ($p in $want.Keys) { if ($got[$p] -ne $want[$p]) { $bad += "missing from the download or different: $p" } }
+        foreach ($p in $got.Keys) { if (-not $want.ContainsKey($p)) { $bad += "not in the manifest: $p" } }
+        $bad | ForEach-Object { Write-Host $_ }
+        Write-Host "Steam's download $item`: $($got.Count) files, mod.info $v, $(if ($bad) { 'does NOT match' } else { 'matches' }) $(Split-Path -Leaf $man) both ways"
+        return [pscustomobject]@{ Ok = ($bad.Count -eq 0); Version = $v }
+    }
+    $before = Test-Download
+    if (-not $before.Ok) { throw "Steam's download does not match its manifest; not launching" }
+    & (Join-Path $PSScriptRoot "run-sp-harness.ps1") -DevCache $cache -SteamModDir $steamMod -Mode full -TimeoutMinutes $TimeoutMinutes
+    $code = $LASTEXITCODE
+    $lua = Join-Path $cache "Lua"
+    $resultsCopy = Join-Path $lua "TLG_workshop.results.txt"
+    $consoleCopy = Join-Path $lua "TLG_workshop.console.txt"
+    Copy-Item (Join-Path $lua "TLG_harness_sp.txt") $resultsCopy -ErrorAction SilentlyContinue
+    Copy-Item (Join-Path $cache "console.txt") $consoleCopy -ErrorAction SilentlyContinue
+    Write-Host "results and console: $resultsCopy, $consoleCopy"
+    if ($code -eq 2 -or $code -eq 3) { Write-Host "workshop rehearsal: NOT LAUNCHED (run-sp-harness.ps1 exit $code)"; exit 2 }
+    $res = @(if (Test-Path $resultsCopy) { Get-Content $resultsCopy })
+    $con = if (Test-Path $consoleCopy) { Get-Content -Raw $consoleCopy } else { "" }
+    function Get-Detail([string]$check) {
+        $line = $res | Where-Object { $_.StartsWith("PASS $check :: ") } | Select-Object -First 1
+        if ($line) { return $line.Substring("PASS $check :: ".Length) }
+        return ""
+    }
+    function Get-FullPath([string]$p) { return [System.IO.Path]::GetFullPath($p).TrimEnd('\').ToLowerInvariant() }
+    $dir = Get-Detail "G01c.mod_info_found"
+    $ver = Get-Detail "G01c.mod_info_version"
+    $sums = @($res | Where-Object { $_ -match '^SUMMARY ' })
+    $after = Test-Download
+    $checks = [ordered]@{
+        "the harness finished (DONE)" = ($code -eq 0)
+        "no check failed: $($sums -join '; ')" = ($sums.Count -gt 0 -and @($sums | Where-Object { $_ -notmatch ' fail=0$' }).Count -eq 0)
+        "the client reached Steam (SteamUtils initialised successfully)" = ($con -match "SteamUtils initialised successfully")
+        "the game read mod.info from Steam's download: $dir" = ($dir -ne "" -and (Get-FullPath $dir) -eq (Get-FullPath $steamMod))
+        "at the version the download names: $ver" = ($ver -eq "mod.info $($before.Version), TLG.VERSION $($before.Version)")
+        "the cache holds no copy of the mod" = (-not (Test-Path (Join-Path $cache "mods\TheLastGallon")))
+        "Steam's download still matches the manifest" = $after.Ok
+    }
+    foreach ($k in $checks.Keys) { Write-Host "$(if ($checks[$k]) { 'PASS' } else { 'FAIL' }) $k" }
+    if (@($checks.Values | Where-Object { -not $_ }).Count -eq 0) { Write-Host "workshop rehearsal: PASS"; exit 0 }
+    Write-Host "workshop rehearsal: FAIL"
+    exit 1
 }
 $mod = Expand-Release $zip $manifest "zip"
 

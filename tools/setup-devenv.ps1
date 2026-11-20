@@ -25,9 +25,13 @@
   Mod ids written to mods/default.txt, the mods the client loads (default:
   the mod and the harness; the existing-save rehearsal's first launch
   activates only TheLastGallonPreInstall).
+.PARAMETER NoMod
+  Leave mods/TheLastGallon out of the cache, removing the copy an earlier
+  launch left, so the client can load the mod only from elsewhere: Steam's
+  download of the Workshop item (run-sp-harness.ps1 -SteamModDir).
 #>
 param([string]$DevCache = "", [switch]$Force, [string]$ModSource = "",
-    [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"))
+    [string[]]$ActiveMods = @("TheLastGallon", "TheLastGallonHarness"), [switch]$NoMod)
 $ErrorActionPreference = "Stop"
 $repo = Split-Path -Parent $PSScriptRoot
 if (-not $DevCache) { $DevCache = Join-Path $env:LOCALAPPDATA "TheLastGallon\devcache" }
@@ -56,8 +60,17 @@ function Sync-Mod([string]$source, [string]$target) {
     robocopy $source $target /MIR /NFL /NDL /NJH /NJS /NP /R:1 /W:1 | Out-Null
     if ($LASTEXITCODE -ge 8) { throw "robocopy failed ($LASTEXITCODE) for $source" }
 }
-if (-not $ModSource) { $ModSource = Join-Path $repo "Contents\mods\TheLastGallon" }
-Sync-Mod $ModSource (Join-Path $mods "TheLastGallon")
+$modTarget = Join-Path $mods "TheLastGallon"
+if ($NoMod) {
+    # The game takes the first folder with the mod's id, Steam's before the
+    # cache's: a copy left here would load in place of a missing download.
+    $item = Get-Item -Force $modTarget -ErrorAction SilentlyContinue
+    if ($item -and $item.LinkType) { throw "$modTarget is a link; remove it (rmdir without /s) and rerun" }
+    if ($item) { Remove-Item -Recurse -Force $modTarget }
+} else {
+    if (-not $ModSource) { $ModSource = Join-Path $repo "Contents\mods\TheLastGallon" }
+    Sync-Mod $ModSource $modTarget
+}
 Sync-Mod (Join-Path $repo "tests\ingame\TheLastGallonHarness") (Join-Path $mods "TheLastGallonHarness")
 Sync-Mod (Join-Path $repo "tests\ingame\TheLastGallonPreInstall") (Join-Path $mods "TheLastGallonPreInstall")
 

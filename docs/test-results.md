@@ -29,7 +29,7 @@ runtime tests.
 | RT-MP: a still or drying column picked up while working; a crate as such (launch 167 used a bin, the nearest container); driving on poor fuel (the engine effects while idling: launch 188); a successor after a death (single player: launches 199 and 202; the death itself on a server: launches 209–210); a climb's drop (the same watch as a death on a server, launch 210) | Not in the multiplayer harness yet |
 | RT-MP: a Diesel Generator's sprite taken away on the server reaching a client, and the mod's repair bringing it back there (launch 302). In launches 304 and 501 the strip left the generator with no sprite and the client kept the sprite, so `client_sees_the_generator_sprite_back` passed without the client having lost it; in launch 501's server log the game's `transmitUpdatedSpriteToClients` threw a `NullPointerException` on the generator without a sprite (launch 304's log was read for the mod's lines only). The server's side held in each | The harness's strip step (`MPServer.lua`, `services.sprite_repair`) sends a generator with no sprite |
 | Performance with several clients sharing storage, and on other machines; on a server, the biodiesel machines, diesel engines and wrong fuel, and the gas with more than one client | The performance mode runs single player on the reference machine (launches 181–185, 340–341, 398–401 and 404–407, `performance.md`); the server's timers were timed with the ethanol machines and one client (launch 189), its vehicle pass with two (launch 188), the gas with one (launches 410–411). Electrical networks are not built in game in this build |
-| Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); install through the Steam Workshop; the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.5.0 since 2026-11-16, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.4.3, 0.4.2 and 0.4.1 |
+| Upgrade from 0.1.0 or 0.1.1 (0.1.2 to 0.2.0: launch 257); from the Steam Workshop, a first download after subscribing, a launch from Steam's Play button, a server that fetches the item and the uploader's staged folder (the subscribed copy, already downloaded, loaded in single player: launch 555); the Workshop uploader's own checks (preview, folders, file types) | The upgrade rehearsal was run from the 0.1.2 zip only (the subscribed 0.1.1 and the 0.1.2 package differ in `mod.info`, the version values in `Core.lua` and three shipped documents). The game scans Workshop folders only in Steam mode; launch 555 started the client by `java` in Steam mode with the download already there (`rehearse-install.ps1 -Scenario workshop`), and the zip's manual install is rehearsed (`release-checklist.md` gate 12). Uploading is the owner's manual step: the item serves 0.5.2 since 2026-11-19, and Steam's download of it on this computer held exactly the package's mod files, as it did for 0.5.1, 0.5.0, 0.4.3, 0.4.2 and 0.4.1 |
 
 ## 2026-10-30 — Kahlua runtime probe
 
@@ -10648,3 +10648,63 @@ after the vehicles; a real right-click; more than two players.
 Evidence:
 [run 553](evidence/2026-11-19_rt-mp_harness_run553_wrongfuel2_site_sent_before_b_joined_42.22.2.txt),
 [run 554](evidence/2026-11-19_rt-mp_harness_run554_wrongfuel2_two_clients_42.22.2.txt).
+
+## 2026-11-20 — RT-SP launch 555 (0.5.2 loaded from Steam's download of the Workshop item, gate 12)
+
+Build 42.22.2. On the owner's word ("Yes, build and run"), the game
+loaded the mod from the copy Steam downloaded for the owner's
+subscription to the Workshop item 3835496461, not from a zip. The
+command, `tools\rehearse-install.ps1 -Scenario workshop`, is new with
+this record. Before and after the launch the item folder held the 0.5.2
+package's 187 mod files, each matching its SHA-256 in
+`dist/TheLastGallon-0.5.2.sha256`, and no other file. Steam's record of
+the item (manifest `1890328263119381027`) was the same after as before.
+The client ran in Steam mode: `-Dzomboid.steam=1` and
+`-modfolders steam,mods`, without `-nosteam`. By the bytecode, that list
+makes the game scan the subscribed items' folders and the cache's `mods`
+folder and leave out the staged uploads; in the run the mod came from
+Steam's folder and the harness from the cache's `mods` folder, which
+held no copy of the mod. The client was started by `java` from the game
+folder, beside `steam_appid.txt`, with Steam running and signed in, not
+from Steam's Play button. The harness was at `0753c23`; it does not
+ship.
+
+| Launch | Command | Result (pass/fail) | Last run before |
+| --- | --- | --- | --- |
+| 555 | `rehearse-install.ps1 -Scenario workshop`, full: phase A, save, reload, phase B | 106/0, then 14/0 | launch 550 (the 0.5.2 zip), the same |
+
+The console shows `zomboid.steam=1` and "SteamUtils initialised
+successfully", where a launch without Steam shows "SteamUtils started
+without Steam". The game read `mod.info` 0.5.2, equal to `TLG.VERSION`,
+from `G:\SteamLibrary\steamapps\workshop\content\108600\3835496461\mods\TheLastGallon`
+(`G01c.mod_info_found`), and the poster and icon from its `42` folder.
+The mod logged "The Last Gallon 0.5.2 ready" at both loads. After the
+run the cache still held no copy of the mod. The rehearsal checked each
+of these itself and passed. The console holds no warning or error from
+the mod; its one exception is the harness's deep-recursion probe.
+
+In Steam mode the client copied the game's `ModTemplate` into the
+cache's `Workshop` folder, the folder of staged uploads. Nothing was
+written in the game folder outside the repository, under
+`steamapps/workshop` or in the user's `Zomboid` folder. The launch took
+about 9 minutes.
+
+Before the launch the scripts' new paths were checked without the game:
+* the default launch's 17 java arguments are those the script built
+  before the change;
+* the Steam launch's differ in `-Dzomboid.steam=1`,
+  `-modfolders steam,mods` and the missing `-nosteam`;
+* a copy of the mod left in a cache was removed;
+* the rehearsal's verdict and its early stop, for a client that cannot
+  reach Steam or a harness that does not load, gave the expected answers
+  on saved results and consoles.
+
+Not run:
+* a first download after subscribing;
+* a launch from Steam's Play button (`ProjectZomboid64.exe`);
+* a server that fetches the item, and a client joining it;
+* the uploader's staged folder (`<cachedir>/Workshop`), which
+  `-modfolders steam,mods` leaves out.
+
+Evidence:
+[run 555](evidence/2026-11-20_rt-sp_harness_run555_workshop_download_0.5.2_42.22.2.txt).
